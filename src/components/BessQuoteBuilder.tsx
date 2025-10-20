@@ -10,6 +10,7 @@ import AuthModal from './AuthModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
 import merlinImage from "../assets/images/new_Merlin.png";
+import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
 
 
@@ -901,11 +902,19 @@ export default function BessQuoteBuilder() {
           >
             📦 Vendor Quotes
           </button>
+          {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-yellow-400/30"
+            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-white px-12 py-6 rounded-2xl font-extrabold shadow-xl transition-all duration-150 border-2 border-yellow-300/60 text-2xl transform hover:scale-105 hover:-translate-y-1"
+            aria-label="Open Smart Wizard"
           >
-            🪄 Smart Wizard
+            <div className="flex items-center space-x-4">
+              <span className="text-4xl">🪄</span>
+              <span className="drop-shadow-lg">Smart Wizard</span>
+            </div>
+            <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              START
+            </div>
           </button>
         </div>
         
@@ -921,11 +930,19 @@ export default function BessQuoteBuilder() {
            <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-purple-500/10 via-transparent to-transparent animate-spin-slow pointer-events-none"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-center mb-4">
-              <img 
-                src={merlinImage} 
-                alt="Merlin the Wizard" 
-                className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]"
-              />
+              <video
+                src={merlinDancingVideo}
+                poster={merlinImage}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)] rounded-full"
+                aria-label="Merlin dancing animation"
+              >
+                {/* Fallback content for browsers that don't support video */}
+                <img src={merlinImage} alt="Merlin the Wizard" className="w-48 h-48 object-contain" />
+              </video>
               <div>
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
@@ -1037,11 +1054,11 @@ export default function BessQuoteBuilder() {
                 <h2 className="text-3xl font-bold text-blue-300">Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-orange-400/30 flex items-center space-x-2"
+                  className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow-md transition-all duration-200 border border-orange-400/30 flex items-center space-x-1"
                   title="Reset all values to default settings"
                 >
-                  <span>🔄</span>
-                  <span>Reset to Defaults</span>
+                  <span className="text-sm">🔄</span>
+                  <span>Reset</span>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
