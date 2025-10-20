@@ -862,9 +862,9 @@ export default function BessQuoteBuilder() {
   const annualSavings = peakShavingSavings + demandChargeSavings;
   const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : Infinity;
 
-  const inputStyle = "w-full px-4 py-3 bg-gray-700/70 border-2 border-purple-400/40 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-medium text-white placeholder-gray-400 transition-all shadow-inner";
-  const labelStyle = "block text-base font-semibold text-purple-300/90 mb-2 tracking-wide";
-  const cardStyle = "bg-gradient-to-br from-gray-800/60 via-gray-800/50 to-gray-900/60 border border-purple-500/40 rounded-2xl p-8 shadow-2xl shadow-purple-900/20 backdrop-blur-md relative overflow-hidden";
+  const inputStyle = "w-full px-4 py-3 bg-white/90 border-4 border-purple-600/60 rounded-xl focus:ring-4 focus:ring-purple-500 focus:border-purple-700 text-lg font-bold text-gray-900 placeholder-gray-500 transition-all shadow-lg";
+  const labelStyle = "block text-base font-black text-purple-900 mb-2 tracking-wide uppercase";
+  const cardStyle = "bg-gradient-to-br from-white/95 via-purple-50/90 to-pink-50/85 border-4 border-purple-600/50 rounded-2xl p-8 shadow-2xl shadow-purple-700/30 backdrop-blur-sm relative overflow-hidden";
 
   // Currency symbol helper
   const getCurrencySymbol = () => {
@@ -885,40 +885,39 @@ export default function BessQuoteBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans bg-gradient-to-br from-gray-900 via-purple-900/50 to-blue-900/50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-200 via-purple-300/70 to-pink-200/80 text-gray-900 font-sans">
+      {/* Subtle pattern overlay for depth */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(147_51_234_/_0.15)_1px,transparent_0)] bg-[length:40px_40px] pointer-events-none"></div>
       
       {/* Top Header Bar */}
-      <header className="p-6 flex justify-between items-center sticky top-0 z-40 bg-gray-900/70 backdrop-blur-xl border-b border-purple-500/20">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 backdrop-blur-xl border-b-4 border-purple-800 shadow-2xl">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 text-lg overflow-hidden group"
+            className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(88_28_135)] hover:shadow-[0_4px_0_rgb(88_28_135)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(88_28_135)] transition-all duration-100 border-4 border-purple-800 text-2xl uppercase tracking-wider overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span className="relative z-10">👤 User Profile</span>
-            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-purple-400/20 rounded-full blur-xl group-hover:bg-purple-300/30 transition-all"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">👤 USER PROFILE</span>
           </button>
           <button 
             onClick={() => setShowVendorManager(true)}
-            className="relative bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 text-lg overflow-hidden group"
+            className="relative bg-gradient-to-br from-green-600 via-emerald-700 to-teal-700 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(5_150_105)] hover:shadow-[0_4px_0_rgb(5_150_105)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(5_150_105)] transition-all duration-100 border-4 border-green-900 text-2xl uppercase tracking-wider overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span className="relative z-10">📦 Vendor Quotes</span>
-            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-green-400/20 rounded-full blur-xl group-hover:bg-green-300/30 transition-all"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">📦 VENDOR QUOTES</span>
           </button>
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-yellow-300/30 text-lg overflow-hidden group"
+            className="relative bg-gradient-to-br from-yellow-500 via-orange-600 to-red-600 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(153_27_27)] hover:shadow-[0_4px_0_rgb(153_27_27)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(153_27_27)] transition-all duration-100 border-4 border-red-900 text-2xl uppercase tracking-wider overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span className="relative z-10">🪄 Smart Wizard</span>
-            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-yellow-400/20 rounded-full blur-xl group-hover:bg-yellow-300/30 transition-all"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">🪄 SMART WIZARD</span>
           </button>
         </div>
         
-        <div className="text-right bg-gray-800/50 px-4 py-2 rounded-xl shadow-md border-2 border-blue-400/30">
-          <div className="text-sm font-semibold text-blue-300/70">Current kWh Price:</div>
-          <div className="text-2xl font-bold text-blue-300">${valueKwh.toFixed(4)}/kWh</div>
+        <div className="text-right bg-white/90 px-6 py-3 rounded-2xl shadow-2xl border-4 border-purple-700">
+          <div className="text-sm font-black text-purple-700 uppercase tracking-wide">Current kWh Price:</div>
+          <div className="text-3xl font-black text-purple-900">${valueKwh.toFixed(4)}/kWh</div>
         </div>
       </header>
       
@@ -931,13 +930,13 @@ export default function BessQuoteBuilder() {
               <img 
                 src={merlinImage} 
                 alt="Merlin the Wizard" 
-                className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]"
+                className="w-48 h-48 object-contain drop-shadow-[0_0_25px_rgba(147,51,234,0.8)]"
               />
               <div>
-                <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
+                <h1 className="text-6xl font-black bg-gradient-to-r from-purple-800 via-fuchsia-700 to-purple-800 bg-clip-text text-transparent mb-2 drop-shadow-lg uppercase tracking-wider">
                   Merlin BESS Quote Builder
                 </h1>
-                <p className="text-xl text-purple-300/80 italic font-semibold">"Where Magic Meets Energy Innovation"</p>
+                <p className="text-2xl text-purple-900 italic font-bold drop-shadow-sm">"Where Magic Meets Energy Innovation"</p>
               </div>
             </div>
             
@@ -951,33 +950,30 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-blue-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
+                className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(30_58_138)] hover:shadow-[0_4px_0_rgb(30_58_138)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(30_58_138)] transition-all duration-100 border-4 border-blue-900 flex items-center justify-center space-x-3 text-2xl uppercase tracking-wider min-w-[240px] overflow-hidden group"
                 onClick={handleSaveProject}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <span className="text-xl relative z-10">💾</span>
-                <span className="relative z-10">Save Project</span>
-                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-blue-400/20 rounded-full blur-xl group-hover:bg-blue-300/30 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <span className="text-3xl relative z-10">💾</span>
+                <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Save Project</span>
               </button>
               
               <button 
-                className="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
+                className="relative bg-gradient-to-br from-green-500 via-green-600 to-green-800 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(20_83_45)] hover:shadow-[0_4px_0_rgb(20_83_45)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(20_83_45)] transition-all duration-100 border-4 border-green-900 flex items-center justify-center space-x-3 text-2xl uppercase tracking-wider min-w-[240px] overflow-hidden group"
                 onClick={handleLoadProject}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <span className="text-xl relative z-10">📂</span>
-                <span className="relative z-10">Load Project</span>
-                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-green-400/20 rounded-full blur-xl group-hover:bg-green-300/30 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <span className="text-3xl relative z-10">📂</span>
+                <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Load Project</span>
               </button>
               
               <button 
-                className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
+                className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 text-white px-8 py-4 rounded-2xl font-black shadow-[0_8px_0_rgb(88_28_135)] hover:shadow-[0_4px_0_rgb(88_28_135)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(88_28_135)] transition-all duration-100 border-4 border-purple-900 flex items-center justify-center space-x-3 text-2xl uppercase tracking-wider min-w-[240px] overflow-hidden group"
                 onClick={handlePortfolio}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <span className="text-xl relative z-10">📊</span>
-                <span className="relative z-10">Portfolio</span>
-                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-purple-400/20 rounded-full blur-xl group-hover:bg-purple-300/30 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <span className="text-3xl relative z-10">📊</span>
+                <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Portfolio</span>
               </button>
             </div>
           </div>
@@ -988,7 +984,7 @@ export default function BessQuoteBuilder() {
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
             <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-purple-300 mb-8">System Configuration</h2>
+              <h2 className="text-3xl font-black text-purple-900 mb-8 uppercase tracking-wide">System Configuration</h2>
               <div className="space-y-6">
                 <div>
                   <label className={labelStyle}>Power (MW)</label>
@@ -1047,14 +1043,15 @@ export default function BessQuoteBuilder() {
             {/* ASSUMPTIONS PANEL */}
             <section className={cardStyle}>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-blue-300">Assumptions</h2>
+                <h2 className="text-3xl font-black text-purple-900 uppercase tracking-wide">Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500/80 to-orange-500/80 hover:from-amber-400 hover:to-orange-400 text-white font-bold rounded-lg shadow-lg transition-all duration-200 border-2 border-amber-300/30 flex items-center space-x-2"
+                  className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-amber-700 text-white px-6 py-3 rounded-2xl font-black shadow-[0_6px_0_rgb(146_64_14)] hover:shadow-[0_3px_0_rgb(146_64_14)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(146_64_14)] transition-all duration-100 border-4 border-amber-900 flex items-center space-x-2 text-xl uppercase tracking-wider overflow-hidden group"
                   title="Reset all values to default settings"
                 >
-                  <span>�</span>
-                  <span>Reset to Defaults</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <span className="text-2xl relative z-10">🔄</span>
+                  <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Reset to Defaults</span>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -1111,7 +1108,7 @@ export default function BessQuoteBuilder() {
             {/* FINANCIAL SUMMARY PANEL */}
             <section className={cardStyle}>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-green-300">Financial Summary</h2>
+                <h2 className="text-3xl font-black text-green-900 uppercase tracking-wide">Financial Summary</h2>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -1132,70 +1129,67 @@ export default function BessQuoteBuilder() {
               </div>
               <div className="space-y-4 text-lg">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">BESS CapEx:</span>
-                  <span className="font-bold text-green-400 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="text-gray-900 font-bold">BESS CapEx:</span>
+                  <span className="font-black text-green-700 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Grand CapEx:</span>
-                  <span className="font-bold text-green-300 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="text-gray-900 font-bold">Grand CapEx:</span>
+                  <span className="font-black text-green-600 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <hr className="border-purple-500/30 my-4" />
+                <hr className="border-purple-700/50 my-4 border-2" />
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Annual Savings:</span>
-                  <span className="font-bold text-yellow-400 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
+                  <span className="text-gray-900 font-bold">Annual Savings:</span>
+                  <span className="font-black text-yellow-700 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Simple ROI:</span>
-                  <span className="font-bold text-yellow-300 text-2xl">{roiYears.toFixed(2)} years</span>
+                  <span className="text-gray-900 font-bold">Simple ROI:</span>
+                  <span className="font-black text-yellow-600 text-2xl">{roiYears.toFixed(2)} years</span>
                 </div>
               </div>
-              <div className="mt-8 space-y-3">
+              <div className="mt-8 space-y-4">
                 <button 
-                  className="relative w-full bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 text-xl overflow-hidden group"
+                  className="relative w-full bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 text-white px-8 py-5 rounded-2xl font-black shadow-[0_8px_0_rgb(20_83_45)] hover:shadow-[0_4px_0_rgb(20_83_45)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(20_83_45)] transition-all duration-100 border-4 border-green-900 text-2xl uppercase tracking-wider overflow-hidden group"
                   onClick={handleExportWord}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10">📄 Export to Word</span>
-                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-green-400/20 rounded-full blur-2xl group-hover:bg-green-300/30 transition-all"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">📄 Export to Word</span>
                 </button>
                 <button 
-                  className="relative w-full bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-blue-400/30 text-xl overflow-hidden group flex items-center justify-center space-x-2"
+                  className="relative w-full bg-gradient-to-br from-blue-500 via-indigo-600 to-blue-800 text-white px-8 py-5 rounded-2xl font-black shadow-[0_8px_0_rgb(30_58_138)] hover:shadow-[0_4px_0_rgb(30_58_138)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(30_58_138)] transition-all duration-100 border-4 border-blue-900 text-2xl uppercase tracking-wider overflow-hidden group flex items-center justify-center space-x-3"
                   onClick={() => setShowCalculationModal(true)}
                   title="View detailed formulas and assumptions"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10">🧮</span>
-                  <span className="relative z-10">View Calculation Details</span>
-                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-blue-400/20 rounded-full blur-2xl group-hover:bg-blue-300/30 transition-all"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <span className="relative z-10 text-3xl">🧮</span>
+                  <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">View Calculation Details</span>
                 </button>
                 <button 
-                  className="relative w-full bg-gradient-to-br from-purple-500 via-fuchsia-600 to-pink-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 text-xl overflow-hidden group flex items-center justify-center space-x-2"
+                  className="relative w-full bg-gradient-to-br from-purple-500 via-fuchsia-600 to-purple-800 text-white px-8 py-5 rounded-2xl font-black shadow-[0_8px_0_rgb(88_28_135)] hover:shadow-[0_4px_0_rgb(88_28_135)] transform hover:translate-y-1 active:translate-y-2 active:shadow-[0_0px_0_rgb(88_28_135)] transition-all duration-100 border-4 border-purple-900 text-2xl uppercase tracking-wider overflow-hidden group flex items-center justify-center space-x-3"
                   onClick={handleExportCalculations}
                   title="Export detailed formulas to text file"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10">💾</span>
-                  <span className="relative z-10">Export Formulas (TXT)</span>
-                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl group-hover:bg-purple-300/30 transition-all"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <span className="relative z-10 text-3xl">💾</span>
+                  <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Export Formulas (TXT)</span>
                 </button>
               </div>
             </section>
 
             {/* SYSTEM DETAILS PANEL */}
             <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-cyan-300 mb-6">System Details</h2>
+              <h2 className="text-3xl font-black text-blue-900 mb-6 uppercase tracking-wide">System Details</h2>
               <div className="space-y-3 text-lg">
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Total Energy:</span>
-                  <span className="font-bold text-cyan-400">{totalMWh.toFixed(2)} MWh</span>
+                  <span className="text-gray-900 font-bold">Total Energy:</span>
+                  <span className="font-black text-blue-700">{totalMWh.toFixed(2)} MWh</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">PCS Power:</span>
-                  <span className="font-bold text-cyan-400">{pcsKW.toFixed(2)} kW</span>
+                  <span className="text-gray-900 font-bold">PCS Power:</span>
+                  <span className="font-black text-blue-700">{pcsKW.toFixed(2)} kW</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Annual Energy:</span>
-                  <span className="font-bold text-cyan-400">{annualEnergyMWh.toFixed(2)} MWh</span>
+                  <span className="text-gray-900 font-bold">Annual Energy:</span>
+                  <span className="font-black text-blue-700">{annualEnergyMWh.toFixed(2)} MWh</span>
                 </div>
               </div>
             </section>
