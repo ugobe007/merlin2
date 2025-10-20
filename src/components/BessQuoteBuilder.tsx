@@ -862,9 +862,9 @@ export default function BessQuoteBuilder() {
   const annualSavings = peakShavingSavings + demandChargeSavings;
   const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : Infinity;
 
-  const inputStyle = "w-full px-4 py-3 bg-gray-700/50 border-2 border-purple-400/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-medium text-white placeholder-gray-400 transition-all";
-  const labelStyle = "block text-base font-semibold text-purple-300/80 mb-2";
-  const cardStyle = "bg-gray-800/50 border border-purple-500/30 rounded-2xl p-8 shadow-2xl shadow-black/30 backdrop-blur-sm";
+  const inputStyle = "w-full px-4 py-3 bg-gray-700/70 border-2 border-purple-400/40 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-medium text-white placeholder-gray-400 transition-all shadow-inner";
+  const labelStyle = "block text-base font-semibold text-purple-300/90 mb-2 tracking-wide";
+  const cardStyle = "bg-gradient-to-br from-gray-800/60 via-gray-800/50 to-gray-900/60 border border-purple-500/40 rounded-2xl p-8 shadow-2xl shadow-purple-900/20 backdrop-blur-md relative overflow-hidden";
 
   // Currency symbol helper
   const getCurrencySymbol = () => {
@@ -892,21 +892,27 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-br from-purple-600/80 to-blue-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-700/50 hover:border-purple-500 text-lg"
+            className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 text-lg overflow-hidden group"
           >
-            👤 User Profile
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <span className="relative z-10">👤 User Profile</span>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-purple-400/20 rounded-full blur-xl group-hover:bg-purple-300/30 transition-all"></div>
           </button>
           <button 
             onClick={() => setShowVendorManager(true)}
-            className="bg-gradient-to-br from-green-500/80 to-emerald-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-green-600/50 hover:border-green-400 text-lg"
+            className="relative bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 text-lg overflow-hidden group"
           >
-            📦 Vendor Quotes
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <span className="relative z-10">📦 Vendor Quotes</span>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-green-400/20 rounded-full blur-xl group-hover:bg-green-300/30 transition-all"></div>
           </button>
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-br from-yellow-400/80 to-orange-500/80 text-white px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-yellow-600/50 hover:border-yellow-400 text-lg"
+            className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-yellow-300/30 text-lg overflow-hidden group"
           >
-            🪄 Smart Wizard
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <span className="relative z-10">🪄 Smart Wizard</span>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-yellow-400/20 rounded-full blur-xl group-hover:bg-yellow-300/30 transition-all"></div>
           </button>
         </div>
         
@@ -945,27 +951,33 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-blue-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-blue-800/50 hover:border-blue-600 flex items-center justify-center space-x-2 text-lg min-w-[180px]"
+                className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-blue-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
                 onClick={handleSaveProject}
               >
-                <span className="text-xl">💾</span>
-                <span>Save Project</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="text-xl relative z-10">💾</span>
+                <span className="relative z-10">Save Project</span>
+                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-blue-400/20 rounded-full blur-xl group-hover:bg-blue-300/30 transition-all"></div>
               </button>
               
               <button 
-                className="bg-green-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-green-800/50 hover:border-green-600 flex items-center justify-center space-x-2 text-lg min-w-[180px]"
+                className="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
                 onClick={handleLoadProject}
               >
-                <span className="text-xl">📂</span>
-                <span>Load Project</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="text-xl relative z-10">📂</span>
+                <span className="relative z-10">Load Project</span>
+                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-green-400/20 rounded-full blur-xl group-hover:bg-green-300/30 transition-all"></div>
               </button>
               
               <button 
-                className="bg-purple-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-purple-800/50 hover:border-purple-600 flex items-center justify-center space-x-2 text-lg min-w-[180px]"
+                className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 flex items-center justify-center space-x-2 text-lg min-w-[180px] overflow-hidden group"
                 onClick={handlePortfolio}
               >
-                <span className="text-xl">📊</span>
-                <span>Portfolio</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="text-xl relative z-10">📊</span>
+                <span className="relative z-10">Portfolio</span>
+                <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-purple-400/20 rounded-full blur-xl group-hover:bg-purple-300/30 transition-all"></div>
               </button>
             </div>
           </div>
@@ -1139,26 +1151,32 @@ export default function BessQuoteBuilder() {
               </div>
               <div className="mt-8 space-y-3">
                 <button 
-                  className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-4 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-green-700/50 hover:border-green-500 text-xl"
+                  className="relative w-full bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-green-400/30 text-xl overflow-hidden group"
                   onClick={handleExportWord}
                 >
-                  📄 Export to Word
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <span className="relative z-10">📄 Export to Word</span>
+                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-green-400/20 rounded-full blur-2xl group-hover:bg-green-300/30 transition-all"></div>
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-4 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-blue-700/50 hover:border-blue-500 text-xl flex items-center justify-center space-x-2"
+                  className="relative w-full bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-blue-400/30 text-xl overflow-hidden group flex items-center justify-center space-x-2"
                   onClick={() => setShowCalculationModal(true)}
                   title="View detailed formulas and assumptions"
                 >
-                  <span>🧮</span>
-                  <span>View Calculation Details</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <span className="relative z-10">🧮</span>
+                  <span className="relative z-10">View Calculation Details</span>
+                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-blue-400/20 rounded-full blur-2xl group-hover:bg-blue-300/30 transition-all"></div>
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-4 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-700/50 hover:border-purple-500 text-xl flex items-center justify-center space-x-2"
+                  className="relative w-full bg-gradient-to-br from-purple-500 via-fuchsia-600 to-pink-600 text-white px-6 py-4 rounded-xl font-bold shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-200 border border-purple-400/30 text-xl overflow-hidden group flex items-center justify-center space-x-2"
                   onClick={handleExportCalculations}
                   title="Export detailed formulas to text file"
                 >
-                  <span>💾</span>
-                  <span>Export Formulas (TXT)</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <span className="relative z-10">💾</span>
+                  <span className="relative z-10">Export Formulas (TXT)</span>
+                  <div className="absolute -bottom-2 -right-2 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl group-hover:bg-purple-300/30 transition-all"></div>
                 </button>
               </div>
             </section>
