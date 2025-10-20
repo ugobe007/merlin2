@@ -937,7 +937,8 @@ export default function BessQuoteBuilder() {
                 loop
                 muted
                 playsInline
-                className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)] rounded-full"
+                className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]"
+                style={{ mixBlendMode: 'screen' }}
                 aria-label="Merlin dancing animation"
               >
                 {/* Fallback content for browsers that don't support video */}
