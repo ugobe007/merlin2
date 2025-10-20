@@ -905,7 +905,7 @@ export default function BessQuoteBuilder() {
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-white px-12 py-6 rounded-2xl font-extrabold shadow-xl transition-colors duration-200 border-2 border-yellow-300/60 text-2xl"
+            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white px-12 py-6 rounded-2xl font-extrabold shadow-xl border-2 border-yellow-300/60 text-2xl cursor-pointer"
             aria-label="Open Smart Wizard"
           >
             <div className="flex items-center space-x-4">
