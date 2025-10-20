@@ -905,7 +905,7 @@ export default function BessQuoteBuilder() {
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-white px-12 py-6 rounded-2xl font-extrabold shadow-xl transition-all duration-200 border-2 border-yellow-300/60 text-2xl transform hover:scale-102"
+            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-white px-12 py-6 rounded-2xl font-extrabold shadow-xl transition-colors duration-200 border-2 border-yellow-300/60 text-2xl"
             aria-label="Open Smart Wizard"
           >
             <div className="flex items-center space-x-4">
@@ -930,25 +930,11 @@ export default function BessQuoteBuilder() {
            <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-purple-500/10 via-transparent to-transparent animate-spin-slow pointer-events-none"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-center mb-4">
-              <div className="relative">
-                <video
-                  src={merlinDancingVideo}
-                  poster={merlinImage}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]"
-                  style={{ 
-                    mixBlendMode: 'screen',
-                    filter: 'contrast(1.2) brightness(1.1)'
-                  }}
-                  aria-label="Merlin dancing animation"
-                >
-                  {/* Fallback content for browsers that don't support video */}
-                  <img src={merlinImage} alt="Merlin the Wizard" className="w-48 h-48 object-contain" />
-                </video>
-              </div>
+              <img 
+                src={merlinImage} 
+                alt="Merlin the Wizard" 
+                className="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(147,51,234,0.8)] filter brightness-110"
+              />
               <div>
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
