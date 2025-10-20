@@ -1,6 +1,8 @@
 import React from 'react';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
+import { generateCalculationBreakdown } from '../../utils/calculationFormulas';
+import { createCalculationTables } from '../../utils/wordHelpers';
 
 interface QuotePreviewModalProps {
   isOpen: boolean;
@@ -48,6 +50,28 @@ interface QuotePreviewModalProps {
   };
 }
 
+// Helper functions for Word document
+const boldParagraph = (text: string) => new Paragraph({
+  children: [new TextRun({ text, bold: true })],
+});
+
+const createHeaderRow = (headers: string[], bgColor: string = "2563EB") => new TableRow({
+  children: headers.map(header =>
+    new TableCell({
+      children: [boldParagraph(header)],
+      shading: { fill: bgColor },
+    })
+  ),
+});
+
+const createDataRow = (cells: string[]) => new TableRow({
+  children: cells.map(cell =>
+    new TableCell({
+      children: [new Paragraph(cell)],
+    })
+  ),
+});
+
 const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, quoteData }) => {
   if (!isOpen) return null;
 
@@ -57,6 +81,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       projectName,
       bessPowerMW,
       batteryMWh,
+      duration,
       solarMW,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       windMW,
@@ -75,19 +100,34 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       budget,
     } = quoteData;
 
+    // Generate calculation breakdown for appendix
+    const calculations = generateCalculationBreakdown(
+      bessPowerMW,
+      duration || 4,
+      solarMW,
+      windMW || 0,
+      generatorMW,
+      batteryMWh * 1000, // Convert to kWh
+      bessPowerMW * 1000, // Convert to kW
+      0.12, // BOS percent
+      0.15, // EPC percent
+      generatorMW * 1000, // Gen kW
+      solarMW * 1000, // Solar kWp
+      (windMW || 0) * 1000, // Wind kW
+      location
+    );
+    console.log('📊 SmartWizard: Generated calculations for appendix:', calculations.length, 'items');
+
+    const calcTables = createCalculationTables(calculations);
+    console.log('📋 SmartWizard: Created calculation tables:', calcTables.length, 'elements');
+
     const doc = new Document({
       sections: [{
         properties: {},
         children: [
-          // Header with Title
+          // Professional Header with larger Merlin icon
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
-            borders: {
-              top: { style: BorderStyle.SINGLE, size: 2, color: "0000FF" },
-              bottom: { style: BorderStyle.SINGLE, size: 2, color: "0000FF" },
-              left: { style: BorderStyle.SINGLE, size: 2, color: "0000FF" },
-              right: { style: BorderStyle.SINGLE, size: 2, color: "0000FF" },
-            },
             rows: [
               new TableRow({
                 children: [
@@ -96,17 +136,35 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                     children: [
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "BATTERY ENERGY STORAGE", bold: true, size: 32, color: "0000FF" }),
+                          new TextRun({ 
+                            text: "BATTERY ENERGY STORAGE", 
+                            bold: true, 
+                            size: 32, 
+                            color: "1E3A8A",
+                            font: "Helvetica"
+                          }),
                         ],
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "SYSTEM", bold: true, size: 32, color: "0000FF" }),
+                          new TextRun({ 
+                            text: "SYSTEM", 
+                            bold: true, 
+                            size: 32, 
+                            color: "1E3A8A",
+                            font: "Helvetica"
+                          }),
                         ],
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "COMMERCIAL QUOTE PROPOSAL", bold: true, size: 20, color: "0000FF" }),
+                          new TextRun({ 
+                            text: "COMMERCIAL QUOTE PROPOSAL", 
+                            bold: true, 
+                            size: 20, 
+                            color: "2563EB",
+                            font: "Helvetica"
+                          }),
                         ],
                         spacing: { before: 100 },
                       }),
@@ -117,15 +175,40 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                     children: [
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "🧙‍♂️ MERLIN", bold: true, size: 24 }),
+                          new TextRun({ 
+                            text: "🧙‍♂️",
+                            bold: true, 
+                            size: 72,
+                            font: "Helvetica"
+                          }),
                         ],
-                        alignment: AlignmentType.CENTER,
+                        alignment: AlignmentType.RIGHT,
+                        spacing: { after: 100 },
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: "[MERLIN_LOGO_PLACEHOLDER]", italics: true, size: 16 }),
+                          new TextRun({ 
+                            text: "MERLIN", 
+                            bold: true, 
+                            size: 32,
+                            color: "9333EA",
+                            font: "Helvetica"
+                          }),
                         ],
-                        alignment: AlignmentType.CENTER,
+                        alignment: AlignmentType.RIGHT,
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ 
+                            text: "Energy Storage Solutions", 
+                            italics: true, 
+                            size: 16,
+                            color: "6B7280",
+                            font: "Helvetica"
+                          }),
+                        ],
+                        alignment: AlignmentType.RIGHT,
+                        spacing: { before: 50 },
                       }),
                     ],
                   }),
@@ -569,6 +652,47 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             ],
             spacing: { after: 400 },
           }),
+          
+          // APPENDIX: Calculation Reference
+          new Paragraph({
+            text: "",
+            children: [new PageBreak()],
+          }),
+          new Paragraph({
+            text: "APPENDIX A: CALCULATION REFERENCE",
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            text: "This appendix provides the formulas used in this quote. All calculations are based on industry-standard methodologies and current market data (Q4 2025).",
+            spacing: { after: 300 },
+          }),
+          
+          // Add calculation tables
+          ...calcTables,
+          
+          // Data Sources
+          new Paragraph({
+            text: "Data Sources & References",
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            text: "• NREL (National Renewable Energy Laboratory) - Energy Storage Cost Data",
+            bullet: { level: 0 },
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            text: "• BloombergNEF - Q4 2025 Battery Pack Pricing Report",
+            bullet: { level: 0 },
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            text: "• Wood Mackenzie - Power & Renewables Market Analysis",
+            bullet: { level: 0 },
+            spacing: { after: 300 },
+          }),
+          
           new Paragraph({
             children: [new TextRun({ text: "Confidential & Proprietary", italics: true })],
             alignment: AlignmentType.CENTER,
