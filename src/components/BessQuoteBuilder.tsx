@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, HeadingLevel, PageBreak } from "docx";
 import { saveAs } from 'file-saver';
 import { UTILITY_RATES } from '../utils/energyCalculations';
-import { applyIndustryStandards } from '../utils/industryPricing';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
-import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createHighlightRow, createCalculationTables } from '../utils/wordHelpers';
+import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import UserProfile from './UserProfile';
 import Portfolio from './Portfolio';
 import AuthModal from './AuthModal';
@@ -51,6 +50,7 @@ export default function BessQuoteBuilder() {
   const [genKw, setGenKw] = useState(500);
   const [solarKwp, setSolarKwp] = useState(1500);
   const [windKw, setWindKw] = useState(3000);
+  const [tariffPercent, setTariffPercent] = useState(0.10);
 
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
