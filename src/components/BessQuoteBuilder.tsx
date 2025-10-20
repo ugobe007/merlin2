@@ -8,6 +8,7 @@ import UserProfile from './UserProfile';
 import Portfolio from './Portfolio';
 import AuthModal from './AuthModal';
 import CalculationModal from './modals/CalculationModal';
+import VendorManager from './VendorManager';
 import merlinImage from "../assets/images/new_Merlin.png";
 import SmartWizard from './wizard/SmartWizard';
 
@@ -16,6 +17,7 @@ export default function BessQuoteBuilder() {
   const [quoteName, setQuoteName] = useState('My BESS Project');
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSmartWizard, setShowSmartWizard] = useState(false);
+  const [showVendorManager, setShowVendorManager] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -895,6 +897,12 @@ export default function BessQuoteBuilder() {
             👤 User Profile
           </button>
           <button 
+            onClick={() => setShowVendorManager(true)}
+            className="bg-gradient-to-br from-green-500/80 to-emerald-600/80 text-white px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-green-600/50 hover:border-green-400 text-lg"
+          >
+            📦 Vendor Quotes
+          </button>
+          <button 
             onClick={() => setShowSmartWizard(true)}
             className="bg-gradient-to-br from-yellow-400/80 to-orange-500/80 text-white px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-yellow-600/50 hover:border-yellow-400 text-lg"
           >
@@ -1181,6 +1189,7 @@ export default function BessQuoteBuilder() {
       {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={() => setIsLoggedIn(true)} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={() => { setIsLoggedIn(true); setShowAuthModal(false); }} />}
+      {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
       <SmartWizard
         show={showSmartWizard}
         onClose={() => setShowSmartWizard(false)}
