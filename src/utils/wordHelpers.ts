@@ -78,7 +78,13 @@ export const createHighlightRow = (cells: string[], shadeColor: string): TableRo
  * Simplified version showing only formulas used
  */
 export const createCalculationTables = (calculations: CalculationBreakdown[]): (Paragraph | Table)[] => {
+  console.log('🔧 createCalculationTables called with:', calculations.length, 'calculations');
   const content: (Paragraph | Table)[] = [];
+
+  if (!calculations || calculations.length === 0) {
+    console.warn('⚠️ No calculations provided to createCalculationTables');
+    return content;
+  }
 
   // Group by section
   const groupedCalcs = calculations.reduce((acc, calc) => {
@@ -87,8 +93,11 @@ export const createCalculationTables = (calculations: CalculationBreakdown[]): (
     return acc;
   }, {} as Record<string, CalculationBreakdown[]>);
 
+  console.log('📊 Grouped calculations by section:', Object.keys(groupedCalcs));
+
   // Create content for each section
   Object.entries(groupedCalcs).forEach(([section, calcs]) => {
+    console.log(`  → Section "${section}": ${calcs.length} calculations`);
     content.push(
       new Paragraph({
         text: section,
@@ -143,5 +152,6 @@ export const createCalculationTables = (calculations: CalculationBreakdown[]): (
     );
   });
 
+  console.log('✅ Created', content.length, 'content elements for appendix');
   return content;
 };
