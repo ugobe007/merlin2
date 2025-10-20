@@ -1,4 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface VendorQuote {
+  id: string;
+  vendor_name?: string;
+  pricing_data?: {
+    battery_kwh?: number;
+    pcs_kw?: number;
+    bos_percent?: number;
+    epc_percent?: number;
+  };
+}
 
 interface Step5CostBreakdownProps {
   bessPowerMW: number;
@@ -19,18 +30,38 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
   duration,
   pcsIncluded,
 }) => {
+  const [vendorQuotes, setVendorQuotes] = useState<VendorQuote[]>([]);
+  const [selectedQuote, setSelectedQuote] = useState<VendorQuote | null>(null);
+  const [showVendorComparison, setShowVendorComparison] = useState(false);
+
+  useEffect(() => {
+    // Load vendor quotes from localStorage
+    const stored = localStorage.getItem('vendor_quotes');
+    if (stored) {
+      const quotes = JSON.parse(stored);
+      setVendorQuotes(quotes);
+    }
+  }, []);
+
   // Calculate battery capacity
   const batteryMWh = bessPowerMW * duration;
   
-  // Industry-standard pricing
+  // Industry-standard pricing (Merlin Estimate)
   const batteryPricePerKWh = bessPowerMW >= 5 ? 120 : 140; // Large vs Small BESS
-  const batteryCostTotal = batteryMWh * 1000 * batteryPricePerKWh;
+  
+  // Use vendor pricing if selected, otherwise use Merlin estimates
+  const activeBatteryPrice = selectedQuote?.pricing_data?.battery_kwh || batteryPricePerKWh;
+  const activePcsPrice = selectedQuote?.pricing_data?.pcs_kw ? selectedQuote.pricing_data.pcs_kw / 1000 : 80; // Convert $/kW to $/MW*1000
+  const activeBosPercent = selectedQuote?.pricing_data?.bos_percent || 0.12;
+  const activeEpcPercent = selectedQuote?.pricing_data?.epc_percent || 0.15;
+  
+  const batteryCostTotal = batteryMWh * 1000 * activeBatteryPrice;
 
   // Cost breakdown per component
   const costs = {
     // Battery costs (PCS and controls typically included in $/kWh price)
     batteryPacks: batteryCostTotal,
-    pcs: pcsIncluded ? 0 : bessPowerMW * 80000, // Only if not included in BESS price
+    pcs: pcsIncluded ? 0 : bessPowerMW * activePcsPrice * 1000, // Only if not included in BESS price
     transformers: bessPowerMW * 50000, // $50k per MW
     inverters: bessPowerMW * 40000, // $40k per MW
     switchgear: bessPowerMW * 30000, // $30k per MW
@@ -54,15 +85,15 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
 
   // Calculate subtotals
   const equipmentSubtotal = Object.values(costs).reduce((a, b) => a + b, 0);
-  costs.bos = equipmentSubtotal * 0.12; // 12% for Balance of System
-  costs.epc = equipmentSubtotal * 0.15; // 15% for EPC
+  costs.bos = equipmentSubtotal * activeBosPercent;
+  costs.epc = equipmentSubtotal * activeEpcPercent;
 
   const totalCost = equipmentSubtotal + costs.bos + costs.epc;
 
   const costItems = [
     { category: '🔋 Battery Energy Storage System (BESS)', items: [
-      { name: 'Battery System (LFP Chemistry)', cost: costs.batteryPacks, detail: `${batteryMWh.toFixed(1)} MWh @ $${batteryPricePerKWh}/kWh (${bessPowerMW >= 5 ? 'Large' : 'Small'} system)${pcsIncluded ? ' - PCS & Controls included' : ''}` },
-      ...(costs.pcs > 0 ? [{ name: 'Power Conversion System (PCS)', cost: costs.pcs, detail: `${bessPowerMW} MW @ $80k/MW (not included in BESS price)` }] : []),
+      { name: 'Battery System (LFP Chemistry)', cost: costs.batteryPacks, detail: `${batteryMWh.toFixed(1)} MWh @ $${activeBatteryPrice}/kWh${selectedQuote ? ` (${selectedQuote.vendor_name} quote)` : ' (Merlin estimate)'}${pcsIncluded ? ' - PCS & Controls included' : ''}` },
+      ...(costs.pcs > 0 ? [{ name: 'Power Conversion System (PCS)', cost: costs.pcs, detail: `${bessPowerMW} MW @ $${(activePcsPrice * 1000).toFixed(0)}/MW${selectedQuote ? ` (${selectedQuote.vendor_name} quote)` : ' (Merlin estimate)'}` }] : []),
       { name: 'Transformers', cost: costs.transformers, detail: `${bessPowerMW} MW @ $50k/MW` },
       { name: 'Bi-directional Inverters', cost: costs.inverters, detail: `${bessPowerMW} MW @ $40k/MW` },
       { name: 'Switchgear & Protection', cost: costs.switchgear, detail: `${bessPowerMW} MW @ $30k/MW` },
@@ -105,8 +136,8 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
   costItems.push({
     category: '🏗️ Installation & Integration',
     items: [
-      { name: 'Balance of System (BoS)', cost: costs.bos, detail: '12% of equipment cost' },
-      { name: 'Engineering, Procurement & Construction (EPC)', cost: costs.epc, detail: '15% of equipment cost' },
+      { name: 'Balance of System (BoS)', cost: costs.bos, detail: `${(activeBosPercent * 100).toFixed(1)}% of equipment cost${selectedQuote ? ` (${selectedQuote.vendor_name})` : ''}` },
+      { name: 'Engineering, Procurement & Construction (EPC)', cost: costs.epc, detail: `${(activeEpcPercent * 100).toFixed(1)}% of equipment cost${selectedQuote ? ` (${selectedQuote.vendor_name})` : ''}` },
     ]
   });
 
@@ -116,6 +147,67 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
         <h2 className="text-3xl font-bold text-white mb-2">Detailed Cost Breakdown</h2>
         <p className="text-purple-200">Review component costs and system pricing</p>
       </div>
+
+      {/* Vendor Quote Selector */}
+      {vendorQuotes.length > 0 && (
+        <div className="bg-gradient-to-r from-green-600/40 to-emerald-600/40 p-4 rounded-xl shadow-lg border-2 border-green-500/50 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📦</span>
+              <div>
+                <p className="text-white font-bold">Vendor Quote Comparison</p>
+                <p className="text-green-200 text-sm">{vendorQuotes.length} quote{vendorQuotes.length > 1 ? 's' : ''} available</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowVendorComparison(!showVendorComparison)}
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white text-sm transition-all"
+            >
+              {showVendorComparison ? '✓ Hide' : '📊 Compare'}
+            </button>
+          </div>
+          
+          {showVendorComparison && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="merlin-estimate"
+                  name="pricing-source"
+                  checked={!selectedQuote}
+                  onChange={() => setSelectedQuote(null)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="merlin-estimate" className="text-white cursor-pointer flex-1">
+                  <span className="font-semibold">Merlin Estimate</span>
+                  <span className="text-green-200 text-sm ml-2">(Industry Standard)</span>
+                </label>
+              </div>
+              
+              {vendorQuotes.map((quote) => (
+                <div key={quote.id} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`quote-${quote.id}`}
+                    name="pricing-source"
+                    checked={selectedQuote?.id === quote.id}
+                    onChange={() => setSelectedQuote(quote)}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor={`quote-${quote.id}`} className="text-white cursor-pointer flex-1">
+                    <span className="font-semibold">{quote.vendor_name || 'Vendor Quote'}</span>
+                    {quote.pricing_data && (
+                      <span className="text-green-200 text-sm ml-2">
+                        ({quote.pricing_data.battery_kwh ? `$${quote.pricing_data.battery_kwh}/kWh` : 'Custom pricing'})
+                      </span>
+                    )}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Total Cost Header */}
       <div className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 p-6 rounded-2xl shadow-xl border-2 border-purple-500/50 mb-6">
