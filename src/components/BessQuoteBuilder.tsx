@@ -939,7 +939,7 @@ export default function BessQuoteBuilder() {
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
                 </h1>
-                <p className="text-xl text-purple-300/80 italic font-semibold">"Where Magic Meets Energy Innovation"</p>
+                <p className="text-xl text-purple-300/80 italic font-semibold">"Where Magic Meets Energy"</p>
               </div>
             </div>
             
