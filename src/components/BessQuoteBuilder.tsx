@@ -270,9 +270,21 @@ export default function BessQuoteBuilder() {
                       alignment: AlignmentType.RIGHT,
                       children: [
                         new TextRun({
-                          text: "🧙 MERLIN",
+                          text: "🧙‍♂️",
                           bold: true,
-                          size: 44,
+                          size: 72, // Much bigger icon
+                          font: "Helvetica",
+                        }),
+                      ],
+                      spacing: { after: 100 },
+                    }),
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        new TextRun({
+                          text: "MERLIN",
+                          bold: true,
+                          size: 32,
                           color: "9333EA", // Purple-600 matching site
                           font: "Helvetica",
                         }),
@@ -720,8 +732,11 @@ export default function BessQuoteBuilder() {
 
       // APPENDIX: Calculation Reference
       console.log('Creating appendix content...');
+      console.log('📊 Calculations to convert:', calculations);
+      console.log('📊 Number of calculations:', calculations.length);
       const calcTables = createCalculationTables(calculations);
       console.log('Calculation tables created:', calcTables.length, 'elements');
+      console.log('📋 First few table elements:', calcTables.slice(0, 3));
       
       const appendixContent = [
         new Paragraph({
