@@ -41,7 +41,9 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
   const [generatorMW, setGeneratorMW] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generatorFuelType, setGeneratorFuelType] = useState('diesel');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [availableSpaceSqFt, setAvailableSpaceSqFt] = useState(0);
   const [pcsIncluded, setPcsIncluded] = useState(true);
 

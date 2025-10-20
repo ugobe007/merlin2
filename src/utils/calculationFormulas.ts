@@ -25,6 +25,7 @@ export const generateCalculationBreakdown = (
   genKw: number,
   solarKwp: number,
   windKw: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   location: string,
   selectedApplications?: string[],
   applicationConfigs?: any

@@ -50,6 +50,7 @@ export default function BessQuoteBuilder() {
   const [genKw, setGenKw] = useState(500);
   const [solarKwp, setSolarKwp] = useState(1500);
   const [windKw, setWindKw] = useState(3000);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tariffPercent, setTariffPercent] = useState(0.10);
 
   const [showPortfolio, setShowPortfolio] = useState(false);

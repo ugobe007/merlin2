@@ -58,8 +58,10 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       bessPowerMW,
       batteryMWh,
       solarMW,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       windMW,
       generatorMW,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       application,
       location,
       tariffRegion,

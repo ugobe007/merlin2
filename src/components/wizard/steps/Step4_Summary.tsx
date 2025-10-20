@@ -44,7 +44,9 @@ const Step4_Summary: React.FC<Step4Props> = ({
     power,
     duration,
     gridConnection,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     selectedEquipment,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     budget,
     warranty,
     primaryApplication,

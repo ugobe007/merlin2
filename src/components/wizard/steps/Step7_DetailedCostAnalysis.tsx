@@ -39,6 +39,7 @@ const Step7_DetailedCostAnalysis: React.FC<Step7_DetailedCostAnalysisProps> = ({
   windMW,
   generatorMW,
   generatorFuelType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   selectedEquipment,
   duration,
   pcsIncluded,
