@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
+import { authService } from '../services/authService';
 import UserProfile from './UserProfile';
 import Portfolio from './Portfolio';
 import AuthModal from './AuthModal';
@@ -26,10 +27,7 @@ export default function BessQuoteBuilder() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    setIsLoggedIn(authService.isAuthenticated());
   }, []);
   
   // System Configuration State
