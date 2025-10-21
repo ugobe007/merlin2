@@ -9,6 +9,7 @@ import Portfolio from './Portfolio';
 import AuthModal from './AuthModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
+import PricingPlans from './PricingPlans';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
@@ -20,6 +21,7 @@ export default function BessQuoteBuilder() {
   const [showSmartWizard, setShowSmartWizard] = useState(false);
   const [showVendorManager, setShowVendorManager] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -1028,6 +1030,14 @@ export default function BessQuoteBuilder() {
                 <span>📊</span>
                 <span>Portfolio</span>
               </button>
+              
+              <button 
+                className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-yellow-400/30 flex items-center space-x-2"
+                onClick={() => setShowPricingPlans(true)}
+              >
+                <span>💎</span>
+                <span>Pricing</span>
+              </button>
             </div>
           </div>
         </section>
@@ -1249,6 +1259,7 @@ export default function BessQuoteBuilder() {
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={() => { setIsLoggedIn(true); setShowAuthModal(false); }} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
+      {showPricingPlans && <PricingPlans onClose={() => setShowPricingPlans(false)} currentTier="free" />}
       <SmartWizard
         show={showSmartWizard}
         onClose={() => setShowSmartWizard(false)}

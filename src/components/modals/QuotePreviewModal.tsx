@@ -3,9 +3,7 @@ import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Width
 import { saveAs } from 'file-saver';
 import { generateCalculationBreakdown } from '../../utils/calculationFormulas';
 import { createCalculationTables } from '../../utils/wordHelpers';
-
-// TODO: Add sound file to /src/assets/sounds/puff.mp3 and uncomment:
-// import puffSound from '../../assets/sounds/puff.mp3';
+import magicPoofSound from '../../assets/sounds/Magic_Poof.mp3';
 
 interface QuotePreviewModalProps {
   isOpen: boolean;
@@ -79,14 +77,13 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   const playDownloadSound = () => {
-    // TODO: Uncomment when sound file is added to /src/assets/sounds/puff.mp3
-    // try {
-    //   const audio = new Audio(puffSound);
-    //   audio.volume = 0.5;
-    //   audio.play().catch(err => console.log('Audio play failed:', err));
-    // } catch (err) {
-    //   console.log('Sound file not found');
-    // }
+    try {
+      const audio = new Audio(magicPoofSound);
+      audio.volume = 0.5;
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    } catch (err) {
+      console.log('Sound file not found:', err);
+    }
   };
 
   const generateWordDocument = async () => {
