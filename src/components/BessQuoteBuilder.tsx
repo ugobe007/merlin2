@@ -11,6 +11,9 @@ import AuthModal from './AuthModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
 import PricingPlans from './PricingPlans';
+import WelcomeModal from './modals/WelcomeModal';
+import AccountSetup from './modals/AccountSetup';
+import type { ProfileData } from './modals/AccountSetup';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
@@ -24,11 +27,64 @@ export default function BessQuoteBuilder() {
   const [showVendorManager, setShowVendorManager] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showAccountSetup, setShowAccountSetup] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
   }, []);
+
+  // Check if user needs to complete profile after login
+  useEffect(() => {
+    if (isLoggedIn) {
+      const user = authService.getCurrentUser();
+      if (user && !user.profileCompleted) {
+        setShowWelcomeModal(true);
+      }
+    }
+  }, [isLoggedIn]);
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    const user = authService.getCurrentUser();
+    if (user && !user.profileCompleted) {
+      setShowWelcomeModal(true);
+    }
+  };
+
+  const handleProfileSetup = () => {
+    setShowWelcomeModal(false);
+    setShowAccountSetup(true);
+  };
+
+  const handleStartWizard = () => {
+    setShowWelcomeModal(false);
+    setShowSmartWizard(true);
+  };
+
+  const handleGoHome = () => {
+    setShowWelcomeModal(false);
+    // Mark profile as completed even if skipped
+    const user = authService.getCurrentUser();
+    if (user && !user.profileCompleted) {
+      authService.updateUserProfile(user.id, { profileCompleted: true });
+    }
+  };
+
+  const handleProfileComplete = (profileData: ProfileData) => {
+    setShowAccountSetup(false);
+    const user = authService.getCurrentUser();
+    if (user) {
+      authService.updateUserProfile(user.id, {
+        jobTitle: profileData.jobTitle,
+        company: profileData.companyName || user.company,
+        preferences: profileData.preferences,
+        profileCompleted: true,
+      });
+    }
+  };
+  
   
   // System Configuration State
   const [powerMW, setPowerMW] = useState(1);
@@ -1264,11 +1320,32 @@ export default function BessQuoteBuilder() {
       </main>
 
       {/* Modals */}
-      {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={() => setIsLoggedIn(true)} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
+      {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={handleLoginSuccess} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
-      {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={() => { setIsLoggedIn(true); setShowAuthModal(false); }} />}
+      {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
       {showPricingPlans && <PricingPlans onClose={() => setShowPricingPlans(false)} currentTier="free" />}
+      
+      {/* Welcome and Account Setup Modals */}
+      {showWelcomeModal && (
+        <WelcomeModal
+          onClose={handleGoHome}
+          userName={authService.getCurrentUser()?.firstName || 'User'}
+          onSetupProfile={handleProfileSetup}
+          onStartWizard={handleStartWizard}
+          onGoHome={handleGoHome}
+        />
+      )}
+      {showAccountSetup && (
+        <AccountSetup
+          onClose={() => setShowAccountSetup(false)}
+          onComplete={handleProfileComplete}
+          userName={authService.getCurrentUser()?.firstName || 'User'}
+          accountType={authService.getCurrentUser()?.accountType || 'individual'}
+          companyName={authService.getCurrentUser()?.company}
+        />
+      )}
+      
       <SmartWizard
         show={showSmartWizard}
         onClose={() => setShowSmartWizard(false)}
