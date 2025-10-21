@@ -1077,9 +1077,25 @@ export default function BessQuoteBuilder() {
           </button>
         </div>
         
-        <div className="text-right bg-gray-800/80 px-4 py-2 rounded-lg shadow-md border border-blue-400/20">
-          <div className="text-sm font-medium text-blue-300/70">Current kWh Price:</div>
-          <div className="text-2xl font-bold text-blue-300">${valueKwh.toFixed(4)}/kWh</div>
+        <div className="flex items-center gap-4">
+          <div className="text-right bg-gray-800/80 px-4 py-2 rounded-lg shadow-md border border-blue-400/20">
+            <div className="text-sm font-medium text-blue-300/70">Current kWh Price:</div>
+            <div className="text-2xl font-bold text-blue-300">${valueKwh.toFixed(4)}/kWh</div>
+          </div>
+          
+          {isLoggedIn && (
+            <button 
+              onClick={() => {
+                authService.signOut();
+                setIsLoggedIn(false);
+                alert('You have been logged out successfully');
+              }}
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-red-400/30"
+              title="Sign Out"
+            >
+              🚪 Sign Out
+            </button>
+          )}
         </div>
       </header>
       
