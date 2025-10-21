@@ -68,11 +68,64 @@ export default function BessQuoteBuilder() {
   };
 
   const handleLoadProject = () => {
-    if (isLoggedIn) {
-      setShowPortfolio(true);
-    } else {
-      setShowAuthModal(true);
-    }
+    // Create file input element to load JSON/CSV project file
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          // Load the project data
+          loadProjectData(data);
+          
+          // Ask if they want to save to cloud (requires login)
+          if (!isLoggedIn) {
+            const shouldLogin = confirm('Project loaded! Would you like to sign up/sign in to save it to the cloud?');
+            if (shouldLogin) {
+              setShowAuthModal(true);
+            }
+          }
+        } catch (error) {
+          alert('❌ Error loading project file. Please check the file format.');
+          console.error('Load error:', error);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+  
+  const loadProjectData = (data: any) => {
+    // Load all project data
+    setQuoteName(data.quoteName || 'My BESS Project');
+    setPowerMW(data.powerMW || 1);
+    setStandbyHours(data.standbyHours || 2);
+    setGridMode(data.gridMode || 'On-grid');
+    setUseCase(data.useCase || 'EV Charging Stations');
+    setGeneratorMW(data.generatorMW || 0);
+    setSolarMWp(data.solarMWp || 0);
+    setWindMW(data.windMW || 0);
+    setValueKwh(data.valueKwh || 0.25);
+    setUtilization(data.utilization || 0.3);
+    setWarranty(data.warranty || '10 years');
+    setLocation(data.location || 'UK (6%)');
+    setCurrency(data.currency || 'USD');
+    setBatteryKwh(data.batteryKwh || 250);
+    setPcsKw(data.pcsKw || 200);
+    setBosPercent(data.bosPercent || 0.15);
+    setEpcPercent(data.epcPercent || 0.10);
+    setOffGridPcsFactor(data.offGridPcsFactor || 1.25);
+    setOnGridPcsFactor(data.onGridPcsFactor || 1);
+    setGenKw(data.genKw || 500);
+    setSolarKwp(data.solarKwp || 1500);
+    setWindKw(data.windKw || 3000);
+    
+    alert(`✅ Project "${data.quoteName || 'Unnamed'}" loaded successfully!`);
   };
 
   const loadProjectFromStorage = (quote: any) => {

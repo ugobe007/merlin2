@@ -81,7 +81,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                     required
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none"
+                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -91,7 +91,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                     required
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none"
+                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                   type="text"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none"
+                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
                 />
               </div>
             </>
@@ -117,7 +117,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full border-2 border-gray-300 rounded-xl px-12 py-3 focus:border-purple-400 focus:outline-none"
+                className="w-full border-2 border-gray-300 rounded-xl px-12 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
                 placeholder="your@email.com"
               />
             </div>
@@ -132,7 +132,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full border-2 border-gray-300 rounded-xl px-12 py-3 pr-12 focus:border-purple-400 focus:outline-none"
+                className="w-full border-2 border-gray-300 rounded-xl px-12 py-3 pr-12 focus:border-purple-400 focus:outline-none text-gray-900"
                 placeholder="••••••••"
               />
               <button

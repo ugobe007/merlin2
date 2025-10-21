@@ -5,13 +5,19 @@ import AdminDashboard from './components/AdminDashboard';
 function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Simple admin toggle for now (will be replaced with proper auth)
+  // Admin authentication with email and password
   const handleAdminAccess = () => {
+    const email = prompt('Enter admin email:');
+    if (!email) return;
+    
     const password = prompt('Enter admin password:');
-    if (password === 'merlin2025') {
+    if (!password) return;
+    
+    // Check admin credentials (hardcoded for now, can be moved to backend)
+    if (email === 'admin@merlin.energy' && password === 'merlin2025') {
       setShowAdmin(true);
     } else {
-      alert('Incorrect password');
+      alert('Incorrect email or password');
     }
   };
 
