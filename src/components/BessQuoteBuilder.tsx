@@ -1213,7 +1213,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 flex items-center space-x-2"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 flex items-center space-x-2"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
