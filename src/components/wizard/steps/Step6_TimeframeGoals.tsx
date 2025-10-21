@@ -68,23 +68,23 @@ const Step6_TimeframeGoals: React.FC<Step6_TimeframeGoalsProps> = ({
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+        <h2 className="text-3xl font-bold text-gray-800">
           Final Details
         </h2>
-        <p className="text-gray-400 text-lg">
+        <p className="text-gray-700 font-semibold text-lg">
           Just a few more details to optimize your configuration.
         </p>
       </div>
 
       {/* Project Timeframe */}
-      <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-6 rounded-2xl border border-gray-700/50">
-        <label className="block text-xl font-semibold text-gray-200 mb-4">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-400">
+        <label className="block text-xl font-semibold text-gray-800 mb-4">
           What's your project timeframe?
         </label>
         <select
           value={projectTimeframe}
           onChange={(e) => setProjectTimeframe(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-600 rounded-xl text-white text-lg focus:outline-none focus:border-purple-500 transition-all"
+          className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 text-lg focus:outline-none focus:border-purple-500 transition-all"
         >
           <option value="">Select timeframe...</option>
           <option value="0-3 months">Immediate (0-3 months)</option>
@@ -97,11 +97,11 @@ const Step6_TimeframeGoals: React.FC<Step6_TimeframeGoalsProps> = ({
       </div>
 
       {/* Primary Goal */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 p-6 rounded-2xl border border-purple-500/30">
-        <h3 className="text-xl font-semibold text-gray-200 mb-2">
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-6 rounded-2xl border-2 border-purple-400">
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">
           What are your primary goals?
         </h3>
-        <p className="text-gray-400 text-sm mb-4">
+        <p className="text-gray-700 font-semibold text-sm mb-4">
           Select all that apply - we'll optimize for multiple objectives
         </p>
         
@@ -112,18 +112,18 @@ const Step6_TimeframeGoals: React.FC<Step6_TimeframeGoalsProps> = ({
               onClick={() => toggleGoal(goal.id)}
               className={`p-6 rounded-xl border-2 transition-all text-left ${
                 selectedGoals.includes(goal.id)
-                  ? `bg-gradient-to-br ${getColorClass(goal.color, true)} shadow-lg`
-                  : getColorClass(goal.color, false) + ' hover:shadow-md'
+                  ? 'bg-gradient-to-br from-green-100 to-green-200 border-green-500 shadow-lg'
+                  : 'bg-white border-gray-300 hover:border-purple-400 hover:shadow-md'
               }`}
             >
               <div className="flex items-start space-x-4">
                 <span className="text-4xl">{goal.icon}</span>
                 <div className="flex-1">
-                  <h4 className="text-lg font-bold text-white mb-1">{goal.title}</h4>
-                  <p className="text-gray-400 text-sm">{goal.description}</p>
+                  <h4 className="text-lg font-bold text-gray-900 mb-1">{goal.title}</h4>
+                  <p className="text-gray-700 text-sm">{goal.description}</p>
                 </div>
                 {selectedGoals.includes(goal.id) && (
-                  <span className="text-green-400 text-2xl">✓</span>
+                  <span className="text-green-700 text-2xl font-bold">✓</span>
                 )}
               </div>
             </button>
@@ -133,14 +133,14 @@ const Step6_TimeframeGoals: React.FC<Step6_TimeframeGoalsProps> = ({
 
       {/* Additional Context */}
       {selectedGoals.length > 0 && (
-        <div className="bg-blue-900/20 p-5 rounded-xl border border-blue-500/30">
+        <div className="bg-blue-50 p-5 rounded-xl border-2 border-blue-400">
           <div className="flex items-start space-x-3">
             <span className="text-2xl">💡</span>
             <div className="flex-1">
-              <h4 className="font-bold text-blue-300 mb-2">
+              <h4 className="font-bold text-gray-800 mb-2">
                 Optimization Focus ({selectedGoals.length} goal{selectedGoals.length > 1 ? 's' : ''})
               </h4>
-              <div className="space-y-2 text-gray-300 text-sm">
+              <div className="space-y-2 text-gray-700 text-sm">
                 {selectedGoals.includes('cost-savings') && (
                   <p>• <strong>Cost Savings:</strong> Optimize for maximum ROI and energy bill reduction through peak shaving and demand charge management.</p>
                 )}
