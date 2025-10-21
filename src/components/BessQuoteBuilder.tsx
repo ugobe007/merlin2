@@ -160,7 +160,71 @@ export default function BessQuoteBuilder() {
       setShowAuthModal(true);
       return;
     }
-    // ... (rest of the save logic)
+
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      alert('Please sign in to save projects');
+      return;
+    }
+
+    // Create quote object with all current values
+    const quote = {
+      id: Date.now().toString(),
+      user_id: token,
+      project_name: quoteName,
+      inputs: {
+        powerMW,
+        standbyHours,
+        gridMode,
+        useCase,
+        generatorMW,
+        solarMWp,
+        windMW,
+        valueKwh,
+        utilization,
+        warranty,
+        location,
+        currency
+      },
+      assumptions: {
+        batteryKwh,
+        pcsKw,
+        bosPercent,
+        epcPercent,
+        offGridPcsFactor,
+        onGridPcsFactor,
+        genKw,
+        solarKwp,
+        windKw
+      },
+      outputs: {
+        // Store calculated values for display in portfolio
+        totalMWh: powerMW * standbyHours,
+        bessCapEx: 0, // Will be recalculated when loaded
+        gridMode,
+        useCase
+      },
+      tags: useCase,
+      notes: '',
+      is_favorite: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Load existing quotes
+    const savedQuotes = localStorage.getItem('merlin_quotes');
+    const allQuotes = savedQuotes ? JSON.parse(savedQuotes) : [];
+    
+    // Add new quote
+    allQuotes.push(quote);
+    
+    // Save back to localStorage
+    localStorage.setItem('merlin_quotes', JSON.stringify(allQuotes));
+    
+    alert(`✅ Project "${quoteName}" saved successfully!`);
+    
+    // Trigger portfolio refresh event
+    window.dispatchEvent(new Event('portfolio-refresh'));
   };
 
   const handleLoadProject = () => {

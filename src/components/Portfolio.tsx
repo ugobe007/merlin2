@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface PortfolioQuote {
   id: string;
+  user_id?: string;
   project_name: string;
   inputs: any;
   assumptions: any;
@@ -52,24 +53,18 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
         return;
       }
 
-      const response = await fetch('/api/auth/quotes', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('auth_token');
-          setError('Your session has expired. Please sign in again.');
-        } else {
-          setError('Failed to fetch quotes');
-        }
-        return;
+      // Load quotes from localStorage
+      const savedQuotes = localStorage.getItem('merlin_quotes');
+      if (savedQuotes) {
+        const allQuotes = JSON.parse(savedQuotes);
+        // Filter quotes for current user
+        const userQuotes = allQuotes.filter((q: PortfolioQuote) => q.user_id === token);
+        setQuotes(userQuotes);
+      } else {
+        setQuotes([]);
       }
-
-      const data = await response.json();
-      setQuotes(data.quotes || []);
+      
+      setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load portfolio');
     } finally {
@@ -82,22 +77,19 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/auth/quotes/${quoteId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('auth_token');
-          alert('Your session has expired. Please sign in again.');
-          return;
-        }
-        throw new Error('Failed to delete quote');
-      }
-
+      
+      // Load all quotes from localStorage
+      const savedQuotes = localStorage.getItem('merlin_quotes');
+      if (!savedQuotes) return;
+      
+      const allQuotes = JSON.parse(savedQuotes);
+      // Remove the quote
+      const updatedQuotes = allQuotes.filter((q: PortfolioQuote) => q.id !== quoteId);
+      
+      // Save back to localStorage
+      localStorage.setItem('merlin_quotes', JSON.stringify(updatedQuotes));
+      
+      // Update UI
       setQuotes(quotes.filter(q => q.id !== quoteId));
       alert('Quote deleted successfully');
     } catch (err: any) {
@@ -108,24 +100,23 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
   const toggleFavorite = async (quoteId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/auth/quotes/${quoteId}/favorite`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('auth_token');
-          alert('Your session has expired. Please sign in again.');
-          return;
-        }
-        throw new Error('Failed to update favorite');
-      }
-
-      const data = await response.json();
-      setQuotes(quotes.map(q => q.id === quoteId ? { ...q, is_favorite: data.quote.is_favorite } : q));
+      
+      // Load all quotes from localStorage
+      const savedQuotes = localStorage.getItem('merlin_quotes');
+      if (!savedQuotes) return;
+      
+      const allQuotes = JSON.parse(savedQuotes);
+      
+      // Toggle favorite
+      const updatedQuotes = allQuotes.map((q: PortfolioQuote) => 
+        q.id === quoteId ? { ...q, is_favorite: !q.is_favorite } : q
+      );
+      
+      // Save back to localStorage
+      localStorage.setItem('merlin_quotes', JSON.stringify(updatedQuotes));
+      
+      // Update UI
+      setQuotes(quotes.map(q => q.id === quoteId ? { ...q, is_favorite: !q.is_favorite } : q));
     } catch (err: any) {
       alert(`Failed to update favorite: ${err.message}`);
     }
