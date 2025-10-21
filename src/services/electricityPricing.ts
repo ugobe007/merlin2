@@ -1,6 +1,6 @@
 /**
  * Electricity Pricing Service
- * Fetches live market prices for electricity to use in BESS calculations
+ * Fetches live market prices from ComEd API for electricity to use in BESS calculations
  */
 
 export interface ElectricityPrice {
@@ -11,12 +11,12 @@ export interface ElectricityPrice {
 }
 
 /**
- * Fetch live electricity price from external API
- * @param apiUrl - The API endpoint URL
+ * Fetch live electricity price from ComEd API
+ * @param apiUrl - The API endpoint URL (defaults to ComEd current hour average)
  * @returns Current electricity price data
  */
 export const fetchLiveElectricityPrice = async (
-  apiUrl: string
+  apiUrl: string = 'https://hourlypricing.comed.com/api?type=currenthouraverage&format=json'
 ): Promise<ElectricityPrice> => {
   try {
     const response = await fetch(apiUrl, {
@@ -32,24 +32,34 @@ export const fetchLiveElectricityPrice = async (
 
     const data = await response.json();
     
-    // TODO: Parse the API response based on the actual structure
-    // This is a placeholder that needs to be updated based on your API
+    // ComEd API returns: [{"millisUTC":"1438798200000","price":"8.3"}]
+    // Price is in cents, we need to convert to dollars
+    const latestData = Array.isArray(data) ? data[0] : data;
+    const priceInCents = parseFloat(latestData.price || 0);
+    const priceInDollars = priceInCents / 100; // Convert cents to dollars
+    
     const price: ElectricityPrice = {
-      pricePerKwh: parseFloat(data.price || data.value || data.rate || 0.25),
-      timestamp: new Date(data.timestamp || Date.now()),
-      source: data.source || 'External API',
-      currency: data.currency || 'USD',
+      pricePerKwh: priceInDollars,
+      timestamp: new Date(parseInt(latestData.millisUTC || Date.now())),
+      source: 'ComEd Real-Time Market',
+      currency: 'USD',
     };
+
+    console.log('⚡ ComEd price fetched:', {
+      cents: priceInCents,
+      dollars: priceInDollars,
+      time: price.timestamp.toLocaleString()
+    });
 
     return price;
   } catch (error) {
-    console.error('Failed to fetch electricity price:', error);
+    console.error('Failed to fetch electricity price from ComEd:', error);
     
     // Return default fallback price
     return {
-      pricePerKwh: 0.25,
+      pricePerKwh: 0.05, // Updated default to match typical ComEd rates
       timestamp: new Date(),
-      source: 'Default (API unavailable)',
+      source: 'Default (ComEd API unavailable)',
       currency: 'USD',
     };
   }
@@ -57,22 +67,20 @@ export const fetchLiveElectricityPrice = async (
 
 /**
  * Initialize price fetching with periodic updates
- * @param apiUrl - The API endpoint URL
  * @param updateInterval - How often to fetch (in milliseconds)
  * @param onPriceUpdate - Callback when price updates
  * @returns Function to stop the updates
  */
 export const startPriceMonitoring = (
-  apiUrl: string,
   updateInterval: number,
   onPriceUpdate: (price: ElectricityPrice) => void
 ): (() => void) => {
   // Fetch immediately
-  fetchLiveElectricityPrice(apiUrl).then(onPriceUpdate);
+  fetchLiveElectricityPrice().then(onPriceUpdate);
 
   // Set up periodic fetching
   const intervalId = setInterval(async () => {
-    const price = await fetchLiveElectricityPrice(apiUrl);
+    const price = await fetchLiveElectricityPrice();
     onPriceUpdate(price);
   }, updateInterval);
 
@@ -81,14 +89,6 @@ export const startPriceMonitoring = (
 };
 
 /**
- * Common API endpoints (examples)
+ * ComEd API endpoint
  */
-export const API_ENDPOINTS = {
-  // Add your API endpoint here when you provide it
-  CUSTOM: '', // You'll provide this
-  
-  // Common examples (may require API keys):
-  EIA: 'https://api.eia.gov/v2/electricity/retail-sales',
-  // CAISO: 'http://oasis.caiso.com/oasisapi/...',
-  // etc.
-};
+export const COMED_API_URL = 'https://hourlypricing.comed.com/api?type=currenthouraverage&format=json';

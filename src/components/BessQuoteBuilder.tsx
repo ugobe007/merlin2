@@ -162,31 +162,26 @@ export default function BessQuoteBuilder() {
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
 
-  // Live Electricity Pricing - Monitor market prices
+  // Live Electricity Pricing - Monitor ComEd market prices
   useEffect(() => {
-    // TODO: Replace with your actual API endpoint URL
-    const API_URL = ''; // You'll provide this URL
-    
-    if (!API_URL) {
-      console.log('⚡ Waiting for electricity pricing API URL...');
-      return;
-    }
-
-    console.log('⚡ Starting live electricity price monitoring...');
+    console.log('⚡ Starting ComEd live electricity price monitoring...');
     
     // Update price every 5 minutes (300000 ms)
     const stopMonitoring = startPriceMonitoring(
-      API_URL,
       300000, // 5 minutes
       (priceData: ElectricityPrice) => {
-        console.log('⚡ Market price updated:', priceData);
+        console.log('⚡ ComEd market price updated:', {
+          price: `$${priceData.pricePerKwh.toFixed(4)}/kWh`,
+          source: priceData.source,
+          time: priceData.timestamp.toLocaleString()
+        });
         setValueKwh(priceData.pricePerKwh);
       }
     );
 
     // Cleanup on unmount
     return () => {
-      console.log('⚡ Stopped price monitoring');
+      console.log('⚡ Stopped ComEd price monitoring');
       stopMonitoring();
     };
   }, []); // Run once on mount
@@ -1294,8 +1289,8 @@ export default function BessQuoteBuilder() {
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* SYSTEM CONFIGURATION PANEL */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-purple-300 bg-gradient-to-b from-purple-50 via-purple-100 to-white relative overflow-hidden">
+            {/* SYSTEM CONFIGURATION PANEL - Professional Silver Gradient */}
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-300 bg-gradient-to-b from-gray-100 via-gray-50 to-white relative overflow-hidden">
               <h2 className="text-3xl font-bold text-gray-800 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
