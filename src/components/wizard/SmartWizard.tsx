@@ -364,30 +364,30 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gradient-to-br from-gray-800 via-purple-900/50 to-blue-900/50 rounded-2xl shadow-2xl w-full max-w-5xl border-2 border-purple-500/30 my-8 flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl border-2 border-blue-300 my-8 flex flex-col max-h-[90vh]">
+        <div className="p-6 border-b border-blue-200 bg-gradient-to-r from-blue-500 to-purple-600">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold text-white">
                 Smart BESS Wizard
               </h2>
               {advancedMode && (
                 <div className="mt-2 flex items-center space-x-2">
-                  <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-full text-xs font-bold text-orange-300">
+                  <span className="px-3 py-1 bg-orange-200 border border-orange-400 rounded-full text-xs font-bold text-orange-700">
                     ⚙️ ADVANCED MODE
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-white/90">
                     All 9 steps • Full configuration options unlocked
                   </span>
                 </div>
               )}
               {!advancedMode && (
                 <div className="mt-2 flex items-center space-x-2">
-                  <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded-full text-xs font-bold text-blue-300">
+                  <span className="px-3 py-1 bg-blue-100 border border-blue-400 rounded-full text-xs font-bold text-blue-700">
                     🚀 SIMPLE MODE
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-white/90">
                     6 essential steps • Streamlined wizard for quick quotes
                   </span>
                 </div>
@@ -398,9 +398,9 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
               onClick={() => setAdvancedMode(!advancedMode)}
               className={`px-4 py-2 ${
                 advancedMode 
-                  ? 'bg-gradient-to-br from-orange-500 to-red-500 border-orange-600' 
-                  : 'bg-gradient-to-br from-blue-600/80 to-indigo-600/80 border-blue-700/50'
-              } text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center space-x-2 border-b-4`}
+                  ? 'bg-gradient-to-r from-orange-400 to-red-500 border-orange-500' 
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-600 border-blue-600'
+              } text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center space-x-2 border-2`}
               title={advancedMode ? "Switch to Simple Mode" : "Enable Advanced Options"}
             >
               <span>⚙️</span>
@@ -408,14 +408,14 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
             </button>
             <button 
               onClick={onClose}
-              className="px-4 py-2 bg-gradient-to-br from-purple-600/80 to-blue-600/80 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center space-x-2"
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center space-x-2"
             >
               <span>🏠</span>
               <span>Home</span>
             </button>
             <button 
               onClick={onClose} 
-              className="px-4 py-2 bg-gray-600/80 hover:bg-gray-600 text-white rounded-xl font-bold shadow-lg transition-all flex items-center space-x-2"
+              className="px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white rounded-xl font-bold shadow-lg transition-all flex items-center space-x-2"
             >
               <span>✕</span>
               <span>Close</span>
@@ -425,32 +425,32 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
         </div>
         
         {/* Progress Bar */}
-        <div className="px-6 py-3 bg-gray-900/30 border-b border-purple-500/10">
+        <div className="px-6 py-3 bg-blue-50 border-b border-blue-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-600">
               Step {step + 1} of {getTotalSteps() + 1}
             </span>
-            <span className="text-xs text-purple-300">
+            <span className="text-xs text-purple-600 font-semibold">
               {Math.round(((step + 1) / (getTotalSteps() + 1)) * 100)}% Complete
             </span>
           </div>
-          <div className="w-full bg-gray-700/50 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-purple-500 to-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / (getTotalSteps() + 1)) * 100}%` }}
             />
           </div>
         </div>
         
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-8 flex-1 overflow-y-auto bg-gradient-to-br from-blue-50/50 to-purple-50/50">
           {renderStep()}
         </div>
-        <div className="p-6 border-t border-purple-500/20 flex justify-between bg-gray-900/50 backdrop-blur-xl flex-shrink-0">
+        <div className="p-6 border-t border-blue-200 flex justify-between bg-white flex-shrink-0">
           <div>
             {step > 0 && (
               <button 
                 onClick={() => setStep(step - 1)} 
-                className="px-6 py-3 bg-gray-600/80 hover:bg-gray-600 text-white rounded-xl font-bold shadow-lg transition-all border-b-4 border-gray-700/50 hover:border-gray-600 flex items-center space-x-2"
+                className="px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white rounded-xl font-bold shadow-lg transition-all flex items-center space-x-2"
               >
                 <span>←</span>
                 <span>Back</span>
@@ -461,7 +461,7 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
             {step < getTotalSteps() && (
               <button 
                 onClick={() => setStep(step + 1)} 
-                className="px-6 py-3 bg-gradient-to-br from-purple-600/80 to-blue-600/80 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-700/50 hover:border-purple-500 flex items-center space-x-2"
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all flex items-center space-x-2"
               >
                 <span>Next</span>
                 <span>→</span>
@@ -470,7 +470,7 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
             {step === getTotalSteps() && (
               <button 
                 onClick={handleGenerateQuote}
-                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-green-700/50 hover:border-green-500 flex items-center space-x-2 text-lg"
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all flex items-center space-x-2 text-lg"
               >
                 <span>🪄</span>
                 <span>Generate My BESS Configuration</span>
