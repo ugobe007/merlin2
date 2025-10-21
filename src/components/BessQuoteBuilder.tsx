@@ -13,6 +13,7 @@ import PricingPlans from './PricingPlans';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
+import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
 
 
 export default function BessQuoteBuilder() {
@@ -236,6 +237,16 @@ export default function BessQuoteBuilder() {
 
   const handleExportWord = async () => {
     console.log('🚀 Export to Word button clicked!');
+    
+    // Play magical sound effect
+    try {
+      const audio = new Audio(magicPoofSound);
+      audio.volume = 0.5;
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    } catch (err) {
+      console.log('Sound file error:', err);
+    }
+    
     try {
       const totalMWh = powerMW * standbyHours;
       const pcsKW = powerMW * 1000;
