@@ -33,6 +33,15 @@ export interface User {
     defaultCurrency?: string;
     defaultLocation?: string;
     emailNotifications?: boolean;
+    profileType?: 'energy_professional' | 'vendor' | 'general_user';
+    energyFocus?: string[];
+    projectTypes?: string[];
+    partnerTypes?: string[];
+    targetUseCases?: string[];
+    targetCustomers?: string[];
+    channelPartners?: string[];
+    learningGoals?: string[];
+    interestedIndustry?: string[];
   };
 }
 
