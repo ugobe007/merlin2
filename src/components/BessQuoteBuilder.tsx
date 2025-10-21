@@ -1149,17 +1149,27 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-orange-700 hover:border-orange-800"
+            className="bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 hover:from-amber-300 hover:to-orange-400 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl transition-all duration-200 border-b-4 border-orange-800 hover:border-orange-900 text-lg flex items-center gap-2"
           >
-            👤 User Profile
+            <span className="text-2xl">👤</span>
+            <div className="text-left">
+              <div className="text-xs opacity-90">My</div>
+              <div>Profile</div>
+            </div>
           </button>
-          {/* PROMINENT SMART WIZARD BUTTON */}
+          {/* PROMINENT SMART WIZARD BUTTON - START HERE */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+            className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 hover:from-green-300 hover:to-emerald-500 text-white px-10 py-5 rounded-2xl font-bold shadow-2xl transition-all duration-200 border-b-4 border-green-800 hover:border-green-900 text-2xl relative"
             aria-label="Open Smart Wizard"
           >
-            🪄 Smart Wizard
+            <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1 rounded-full border-2 border-yellow-600 animate-bounce">
+              START HERE!
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-3xl">🪄</span>
+              <span>Smart Wizard</span>
+            </div>
           </button>
         </div>
         
@@ -1190,10 +1200,10 @@ export default function BessQuoteBuilder() {
         <section className="max-w-[1600px] mx-auto my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20 animate-pulse"></div>
           
-          {/* Join Now Button - Upper Right */}
-          <div className="absolute top-6 right-6 z-20">
+          {/* Join Now Button - Upper Right - Compact */}
+          <div className="absolute top-4 right-4 z-20">
             <button 
-              className="bg-gradient-to-br from-purple-300 via-purple-500 via-purple-600 to-purple-900 text-white px-10 py-5 rounded-xl font-bold shadow-2xl border-b-4 border-purple-950 text-2xl drop-shadow-[0_0_25px_rgba(168,85,247,0.9)]"
+              className="bg-gradient-to-br from-purple-400 via-purple-600 to-purple-800 text-white px-6 py-2 rounded-lg font-bold shadow-xl border-b-4 border-purple-950 text-lg drop-shadow-[0_0_15px_rgba(168,85,247,0.7)]"
               onClick={() => setShowWhyJoinUs(true)}
             >
               ✨ Join Now
