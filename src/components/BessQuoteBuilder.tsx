@@ -1122,15 +1122,16 @@ export default function BessQuoteBuilder() {
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-b from-yellow-400 via-orange-400 to-red-500 text-white px-10 py-4 rounded-xl font-bold shadow-xl border-b-4 border-red-700 hover:border-red-900 text-lg cursor-pointer hover:scale-105 transition-all transform"
+            className="relative bg-gradient-to-b from-yellow-400 via-orange-400 to-red-500 text-yellow-100 px-12 py-5 rounded-xl font-black shadow-2xl border-b-8 border-red-800 hover:border-red-900 text-3xl cursor-pointer hover:scale-110 transition-all transform"
             aria-label="Open Smart Wizard"
+            style={{ textShadow: '3px 3px 6px rgba(0,0,0,0.8), -1px -1px 0 rgba(0,0,0,0.5)' }}
           >
             <div className="flex items-center space-x-3">
-              <span className="text-3xl">🪄</span>
-              <span className="drop-shadow-lg">Smart Wizard</span>
+              <span className="text-5xl animate-bounce">🪄</span>
+              <span className="tracking-wider font-black" style={{ fontFamily: 'Impact, Arial Black, sans-serif' }}>SMART WIZARD</span>
             </div>
-            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
-              START
+            <div className="absolute -top-3 -right-3 bg-red-600 text-yellow-200 text-sm font-black px-3 py-1.5 rounded-full shadow-xl animate-pulse border-2 border-yellow-400">
+              START HERE!
             </div>
           </button>
         </div>
@@ -1197,23 +1198,23 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center space-x-2 transform hover:scale-105"
+                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center space-x-2 transform hover:scale-105 text-xl"
                 onClick={handleSaveProject}
               >
-                <span>💾</span>
+                <span className="text-2xl">💾</span>
                 <span>Save Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center space-x-2 transform hover:scale-105"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center space-x-2 transform hover:scale-105 text-xl"
                 onClick={handleLoadProject}
               >
-                <span>📂</span>
+                <span className="text-2xl">📂</span>
                 <span>Load Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center space-x-2 transform hover:scale-105"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center space-x-2 transform hover:scale-105 text-xl"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
@@ -1227,8 +1228,8 @@ export default function BessQuoteBuilder() {
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
-            <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-purple-600 mb-8">System Configuration</h2>
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-300 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+              <h2 className="text-3xl font-bold text-gray-800 mb-8">⚡ System Configuration</h2>
               <div className="space-y-6">
                 <div>
                   <label className={labelStyle}>Power (MW)</label>
@@ -1285,12 +1286,12 @@ export default function BessQuoteBuilder() {
             </section>
 
             {/* ASSUMPTIONS PANEL */}
-            <section className={cardStyle}>
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-300 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-blue-300">Assumptions</h2>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">💰 Pricing Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow-md transition-all duration-200 border border-orange-400/30 flex items-center space-x-1"
+                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2 transform hover:scale-105"
                   title="Reset all values to default settings"
                 >
                   <span className="text-sm">🔄</span>
@@ -1349,13 +1350,13 @@ export default function BessQuoteBuilder() {
           {/* RIGHT COLUMN */}
           <div className="space-y-8">
             {/* FINANCIAL SUMMARY PANEL */}
-            <section className={cardStyle}>
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-green-300 bg-gradient-to-b from-green-50 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-green-300">Financial Summary</h2>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-green-700 via-emerald-600 to-green-800 bg-clip-text text-transparent drop-shadow-sm">📊 Financial Summary</h2>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="px-3 py-2 bg-gray-700/80 border-2 border-green-500/30 rounded-lg text-white font-semibold focus:outline-none focus:border-green-400"
+                  className="px-4 py-2 bg-white border-2 border-green-400 rounded-xl text-gray-800 font-bold focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-300 shadow-md"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
