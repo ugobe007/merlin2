@@ -121,6 +121,54 @@ class LocalStorageAuthService {
     localStorage.removeItem(this.CURRENT_USER_KEY);
   }
 
+  // Delete account (useful for cleaning up broken accounts)
+  async deleteAccount(email: string): Promise<boolean> {
+    try {
+      const users = this.getUsers();
+      const updatedUsers = users.filter(u => u.email !== email);
+      localStorage.setItem(this.USERS_KEY, JSON.stringify(updatedUsers));
+
+      const passwords = this.getPasswords();
+      delete passwords[email];
+      localStorage.setItem(this.PASSWORDS_KEY, JSON.stringify(passwords));
+
+      return true;
+    } catch (error) {
+      console.error('Delete account error:', error);
+      return false;
+    }
+  }
+
+  // Reset password (for debugging/development)
+  async resetPassword(email: string, newPassword: string): Promise<AuthResponse> {
+    try {
+      const users = this.getUsers();
+      const user = users.find(u => u.email === email);
+
+      if (!user) {
+        return { success: false, error: 'No account found with this email' };
+      }
+
+      const passwords = this.getPasswords();
+      passwords[email] = simpleHash(newPassword);
+      localStorage.setItem(this.PASSWORDS_KEY, JSON.stringify(passwords));
+
+      return { success: true, user, error: 'Password reset successfully' };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return { success: false, error: 'Password reset failed' };
+    }
+  }
+
+  // Debug: View all accounts (for development)
+  getAllAccounts(): { email: string; firstName: string; lastName: string }[] {
+    return this.getUsers().map(u => ({
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName
+    }));
+  }
+
   getCurrentUser(): User | null {
     try {
       const userJson = localStorage.getItem(this.CURRENT_USER_KEY);
@@ -171,6 +219,54 @@ class LocalStorageAuthService {
 
 // Export singleton instance
 export const authService = new LocalStorageAuthService();
+
+// Debug helper: Make auth utilities available in browser console
+if (typeof window !== 'undefined') {
+  (window as any).authDebug = {
+    // List all accounts
+    listAccounts: () => {
+      const accounts = authService.getAllAccounts();
+      console.table(accounts);
+      return accounts;
+    },
+    
+    // Delete an account by email
+    deleteAccount: async (email: string) => {
+      const result = await authService.deleteAccount(email);
+      console.log(result ? `✅ Deleted account: ${email}` : `❌ Failed to delete: ${email}`);
+      return result;
+    },
+    
+    // Reset password
+    resetPassword: async (email: string, newPassword: string) => {
+      const result = await authService.resetPassword(email, newPassword);
+      console.log(result.success ? `✅ Password reset for: ${email}` : `❌ ${result.error}`);
+      return result;
+    },
+    
+    // Clear all auth data (nuclear option)
+    clearAll: () => {
+      localStorage.removeItem('merlin_users');
+      localStorage.removeItem('merlin_passwords');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('current_user');
+      console.log('✅ All auth data cleared. Refresh the page.');
+    },
+    
+    help: () => {
+      console.log(`
+🔧 Auth Debug Commands:
+  authDebug.listAccounts()              - Show all registered accounts
+  authDebug.deleteAccount("email")      - Delete a specific account
+  authDebug.resetPassword("email", "pw") - Reset password for account
+  authDebug.clearAll()                  - Clear ALL auth data (nuclear)
+  authDebug.help()                      - Show this help
+      `);
+    }
+  };
+  
+  console.log('🔧 Auth debug tools loaded. Type authDebug.help() for commands.');
+}
 
 // Note: When Supabase is ready, we'll create SupabaseAuthService
 // and swap it here without changing any component code!
