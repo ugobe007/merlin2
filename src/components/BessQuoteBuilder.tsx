@@ -1115,7 +1115,7 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 hover:from-purple-400 hover:to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-purple-900 hover:border-black transform hover:scale-105"
+            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 transform hover:scale-105"
           >
             👤 User Profile
           </button>
