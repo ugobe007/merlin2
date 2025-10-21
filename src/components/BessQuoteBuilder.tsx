@@ -1111,46 +1111,33 @@ export default function BessQuoteBuilder() {
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 shadow-xl">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-purple-500/30 shadow-xl">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-slate-400/30"
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30"
           >
             👤 User Profile
-          </button>
-          <button 
-            onClick={() => setShowVendorManager(true)}
-            className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-slate-400/30"
-          >
-            📦 Vendor Quotes
           </button>
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-10 py-4 rounded-xl font-bold shadow-lg border border-cyan-300/50 text-lg cursor-pointer hover:from-cyan-300 hover:to-blue-400 transition-all"
+            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-10 py-4 rounded-xl font-bold shadow-xl border-2 border-yellow-300/60 text-lg cursor-pointer hover:from-yellow-300 hover:to-pink-400 transition-all"
             aria-label="Open Smart Wizard"
           >
             <div className="flex items-center space-x-3">
               <span className="text-3xl">🪄</span>
               <span className="drop-shadow-lg">Smart Wizard</span>
             </div>
-            <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
               START
             </div>
           </button>
         </div>
         
         <div className="flex items-center gap-4">
-          <button 
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-cyan-400/30"
-            onClick={() => setShowPricingPlans(true)}
-          >
-            ✨ Join Now
-          </button>
-          
-          <div className="text-right bg-gray-800/80 px-4 py-2 rounded-lg shadow-md border border-gray-700/50">
-            <div className="text-sm font-medium text-gray-400">Current kWh Price:</div>
+          <div className="text-right bg-gray-800/80 px-4 py-2 rounded-lg shadow-md border border-purple-400/20">
+            <div className="text-sm font-medium text-purple-300/70">Current kWh Price:</div>
             <div className="text-xl font-bold text-cyan-400">${valueKwh.toFixed(4)}/kWh</div>
           </div>
           
@@ -1161,7 +1148,7 @@ export default function BessQuoteBuilder() {
                 setIsLoggedIn(false);
                 alert('You have been logged out successfully');
               }}
-              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-200 border border-gray-400/30"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-200 border border-gray-400/30"
               title="Sign Out"
             >
               🚪 Sign Out
@@ -1174,6 +1161,17 @@ export default function BessQuoteBuilder() {
         {/* MERLIN Hero Section */}
         <section className={`${cardStyle} mb-8 text-center relative overflow-hidden`}>
            <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-purple-500/10 via-transparent to-transparent animate-spin-slow pointer-events-none"></div>
+          
+          {/* Join Now Button - Upper Right */}
+          <div className="absolute top-6 right-6 z-20">
+            <button 
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-2 border-cyan-400/50 text-lg"
+              onClick={() => setShowPricingPlans(true)}
+            >
+              ✨ Join Now
+            </button>
+          </div>
+          
           <div className="relative z-10">
             <div className="flex items-center justify-center mb-4">
               <img 
@@ -1199,7 +1197,7 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-blue-400/30 flex items-center space-x-2"
+                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-blue-400/30 flex items-center space-x-2"
                 onClick={handleSaveProject}
               >
                 <span>💾</span>
@@ -1207,7 +1205,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-cyan-400/30 flex items-center space-x-2"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-emerald-400/30 flex items-center space-x-2"
                 onClick={handleLoadProject}
               >
                 <span>📂</span>
@@ -1215,7 +1213,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-slate-400/30 flex items-center space-x-2"
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 flex items-center space-x-2"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
@@ -1437,7 +1435,7 @@ export default function BessQuoteBuilder() {
         </div>
 
         {/* Footer with Admin Access */}
-        <footer className="mt-12 border-t border-gray-700/50 pt-8 pb-6">
+        <footer className="mt-12 border-t border-purple-500/30 pt-8 pb-6">
           <div className="text-center">
             <p className="text-gray-500 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
@@ -1445,9 +1443,10 @@ export default function BessQuoteBuilder() {
             {isLoggedIn && (
               <button
                 onClick={() => setShowVendorManager(true)}
-                className="text-gray-600 hover:text-gray-400 text-xs font-medium transition-colors"
+                className="text-gray-600 hover:text-purple-400 text-xs font-medium transition-colors inline-flex items-center gap-1"
               >
-                🔧 Admin Panel
+                <span>🔧</span>
+                <span>Admin Panel</span>
               </button>
             )}
           </div>
