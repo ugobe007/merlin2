@@ -98,7 +98,7 @@ const Step4_Summary: React.FC<Step4Props> = ({
   };
 
   return (
-    <div className="p-4 text-white">
+    <div className="p-4">
       <div className="text-center mb-6 flex flex-col items-center">
         <video 
           src="/Merlin_video1.mp4" 
@@ -108,38 +108,38 @@ const Step4_Summary: React.FC<Step4Props> = ({
           playsInline
           className="w-48 h-48 object-contain mb-4 drop-shadow-[0_0_20px_rgba(192,132,252,0.6)] rounded-2xl"
         />
-        <h2 className="text-3xl font-bold text-white mb-2">🎉 Configuration Complete!</h2>
-        <p className="text-purple-200">Here's your comprehensive BESS system summary</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">🎉 Configuration Complete!</h2>
+        <p className="text-gray-700 font-semibold">Here's your comprehensive BESS system summary</p>
       </div>
 
       {/* ROI Summary - Prominent Display */}
-      <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 p-8 rounded-2xl border-2 border-green-400/50 mb-6 shadow-2xl">
-        <h3 className="text-2xl font-bold text-green-300 mb-6 text-center">� Financial Summary</h3>
+      <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-2xl border-2 border-green-500 mb-6 shadow-2xl">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">💵 Financial Summary</h3>
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-green-900/40 p-6 rounded-xl border border-green-500/30 text-center">
-            <p className="text-green-300 text-sm font-semibold mb-2 uppercase tracking-wide">Total Investment</p>
-            <p className="text-white font-bold text-4xl">${costs.grandTotal.toLocaleString()}</p>
-            <p className="text-green-200 text-xs mt-2">Including all equipment, BoS, EPC, tariffs & shipping</p>
+          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+            <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">Total Investment</p>
+            <p className="text-gray-900 font-bold text-4xl">${costs.grandTotal.toLocaleString()}</p>
+            <p className="text-gray-600 text-xs mt-2">Including all equipment, BoS, EPC, tariffs & shipping</p>
           </div>
-          <div className="bg-green-900/40 p-6 rounded-xl border border-green-500/30 text-center">
-            <p className="text-green-300 text-sm font-semibold mb-2 uppercase tracking-wide">💰 Annual Savings</p>
-            <p className="text-green-400 font-bold text-4xl">${Math.round(annualSavings).toLocaleString()}</p>
-            <p className="text-green-200 text-xs mt-2">${Math.round(peakShavingSavings).toLocaleString()} peak + ${Math.round(demandChargeSavings).toLocaleString()} demand</p>
+          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+            <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">💰 Annual Savings</p>
+            <p className="text-green-700 font-bold text-4xl">${Math.round(annualSavings).toLocaleString()}</p>
+            <p className="text-gray-600 text-xs mt-2">${Math.round(peakShavingSavings).toLocaleString()} peak + ${Math.round(demandChargeSavings).toLocaleString()} demand</p>
           </div>
-          <div className="bg-green-900/40 p-6 rounded-xl border border-green-500/30 text-center">
-            <p className="text-green-300 text-sm font-semibold mb-2 uppercase tracking-wide">ROI Period</p>
-            <p className="text-green-400 font-bold text-4xl">
+          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+            <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">ROI Period</p>
+            <p className="text-green-700 font-bold text-4xl">
               {simplePaybackYears < 100 ? simplePaybackYears.toFixed(1) : '∞'} <span className="text-2xl">years</span>
             </p>
-            <p className="text-green-200 text-xs mt-2">10-year ROI: {tenYearROI.toFixed(0)}%</p>
+            <p className="text-gray-600 text-xs mt-2">10-year ROI: {tenYearROI.toFixed(0)}%</p>
           </div>
         </div>
-        <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-400">
           <div className="flex items-start space-x-3">
             <span className="text-2xl">💡</span>
             <div className="flex-1 text-sm">
-              <p className="text-blue-200 font-semibold mb-1">Savings Calculation</p>
-              <p className="text-gray-300">
+              <p className="text-gray-800 font-semibold mb-1">Savings Calculation</p>
+              <p className="text-gray-700">
                 Based on {projectLocation} utility rates: Peak ${utilityRates.peakRateKWh.toFixed(3)}/kWh, 
                 Off-peak ${utilityRates.offPeakRateKWh.toFixed(3)}/kWh, 
                 Demand ${utilityRates.demandChargeKW.toFixed(2)}/kW/month
@@ -150,66 +150,66 @@ const Step4_Summary: React.FC<Step4Props> = ({
       </div>
 
       {/* System Configuration */}
-      <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 p-6 rounded-xl border border-blue-500/30 mb-4">
-        <h3 className="text-xl font-bold text-blue-300 mb-4">🔋 Energy Storage System</h3>
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-400 mb-4">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">🔋 Energy Storage System</h3>
         <div className="space-y-2 text-lg">
           <div className="flex justify-between">
-            <span className="text-blue-200">BESS Power:</span>
-            <span className="text-white font-bold">{power} MW</span>
+            <span className="text-gray-700 font-semibold">BESS Power:</span>
+            <span className="text-gray-900 font-bold">{power} MW</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-blue-200">Storage Capacity:</span>
-            <span className="text-white font-bold">{batteryMWh.toFixed(1)} MWh</span>
+            <span className="text-gray-700 font-semibold">Storage Capacity:</span>
+            <span className="text-gray-900 font-bold">{batteryMWh.toFixed(1)} MWh</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-blue-200">PCS Included:</span>
-            <span className="text-white font-bold">{pcsIncluded ? 'Yes' : 'No'}</span>
+            <span className="text-gray-700 font-semibold">PCS Included:</span>
+            <span className="text-gray-900 font-bold">{pcsIncluded ? 'Yes' : 'No'}</span>
           </div>
-          <div className="flex justify-between border-t border-blue-500/30 pt-2 mt-2">
-            <span className="text-blue-300 font-semibold">BESS Cost:</span>
-            <span className="text-white font-bold text-xl">${costs.batterySystem.toLocaleString()}</span>
+          <div className="flex justify-between border-t-2 border-blue-500 pt-2 mt-2">
+            <span className="text-gray-800 font-semibold">BESS Cost:</span>
+            <span className="text-blue-700 font-bold text-xl">${costs.batterySystem.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Renewable Energy */}
       {(solarMW > 0 || windMW > 0 || generatorMW > 0) && (
-        <div className="bg-gradient-to-br from-green-900/30 to-emerald-800/30 p-6 rounded-xl border border-green-500/30 mb-4">
-          <h3 className="text-xl font-bold text-green-300 mb-4">⚡ Alternative Energy Sources</h3>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-400 mb-4">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">⚡ Alternative Energy Sources</h3>
           <div className="space-y-2 text-lg">
             {solarMW > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-yellow-200">☀️ Solar Capacity:</span>
-                  <span className="text-white font-bold">{solarMW} MW</span>
+                  <span className="text-gray-700 font-semibold">☀️ Solar Capacity:</span>
+                  <span className="text-gray-900 font-bold">{solarMW} MW</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-yellow-200">Solar Cost:</span>
-                  <span className="text-white font-bold">${costs.solar.toLocaleString()}</span>
+                  <span className="text-gray-700 font-semibold">Solar Cost:</span>
+                  <span className="text-yellow-700 font-bold">${costs.solar.toLocaleString()}</span>
                 </div>
               </>
             )}
             {windMW > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-cyan-200">💨 Wind Capacity:</span>
-                  <span className="text-white font-bold">{windMW} MW</span>
+                  <span className="text-gray-700 font-semibold">💨 Wind Capacity:</span>
+                  <span className="text-gray-900 font-bold">{windMW} MW</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-cyan-200">Wind Cost:</span>
-                  <span className="text-white font-bold">${costs.wind.toLocaleString()}</span>
+                  <span className="text-gray-700 font-semibold">Wind Cost:</span>
+                  <span className="text-cyan-700 font-bold">${costs.wind.toLocaleString()}</span>
                 </div>
               </>
             )}
             {generatorMW > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-red-200">🔥 Generator Capacity:</span>
-                  <span className="text-white font-bold">{generatorMW} MW ({generatorFuelType})</span>
+                  <span className="text-gray-700 font-semibold">🔥 Generator Capacity:</span>
+                  <span className="text-gray-900 font-bold">{generatorMW} MW ({generatorFuelType})</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-red-200">Generator Cost:</span>
-                  <span className="text-white font-bold">${costs.generator.toLocaleString()}</span>
+                  <span className="text-gray-700 font-semibold">Generator Cost:</span>
+                  <span className="text-red-700 font-bold">${costs.generator.toLocaleString()}</span>
                 </div>
               </>
             )}
@@ -218,55 +218,55 @@ const Step4_Summary: React.FC<Step4Props> = ({
       )}
 
       {/* Total Cost Breakdown */}
-      <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 p-6 rounded-xl border-2 border-purple-500/40 mb-4">
-        <h3 className="text-xl font-bold text-purple-300 mb-4">💰 Total Project Cost</h3>
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-500 mb-4">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">💰 Total Project Cost</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-lg">
-            <span className="text-purple-200">Equipment Subtotal:</span>
-            <span className="text-white font-bold">${(costs.batterySystem + costs.solar + costs.wind + costs.generator).toLocaleString()}</span>
+            <span className="text-gray-700 font-semibold">Equipment Subtotal:</span>
+            <span className="text-gray-900 font-bold">${(costs.batterySystem + costs.solar + costs.wind + costs.generator).toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-purple-200">Balance of System (12%):</span>
-            <span className="text-white">${costs.bos.toLocaleString()}</span>
+            <span className="text-gray-700 font-semibold">Balance of System (12%):</span>
+            <span className="text-gray-900 font-bold">${costs.bos.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-purple-200">EPC & Installation (15%):</span>
-            <span className="text-white">${costs.epc.toLocaleString()}</span>
+            <span className="text-gray-700 font-semibold">EPC & Installation (15%):</span>
+            <span className="text-gray-900 font-bold">${costs.epc.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-orange-200">Import Tariffs:</span>
-            <span className="text-white">${costs.tariffs.toLocaleString()}</span>
+            <span className="text-gray-700 font-semibold">Import Tariffs:</span>
+            <span className="text-orange-700 font-bold">${costs.tariffs.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-cyan-200">Shipping & Logistics:</span>
-            <span className="text-white">${costs.shipping.toLocaleString()}</span>
+            <span className="text-gray-700 font-semibold">Shipping & Logistics:</span>
+            <span className="text-cyan-700 font-bold">${costs.shipping.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between border-t-2 border-purple-500/50 pt-3 mt-3">
-            <span className="text-purple-300 font-bold text-xl">GRAND TOTAL:</span>
-            <span className="text-white font-bold text-2xl">${costs.grandTotal.toLocaleString()}</span>
+          <div className="flex justify-between border-t-2 border-purple-500 pt-3 mt-3">
+            <span className="text-gray-800 font-bold text-xl">GRAND TOTAL:</span>
+            <span className="text-purple-700 font-bold text-2xl">${costs.grandTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Additional Details */}
-      <div className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-6 rounded-xl border border-gray-600/30">
-        <h3 className="text-xl font-bold text-gray-300 mb-4">📝 Project Details</h3>
+      <div className="bg-gradient-to-br from-gray-100 to-gray-50 p-6 rounded-xl border-2 border-gray-400">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">📝 Project Details</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-gray-400">Grid Connection:</p>
-            <p className="text-white font-semibold">{gridConnection === 'behind' ? 'Behind the meter' : 'Front of meter'}</p>
+            <p className="text-gray-600 font-semibold">Grid Connection:</p>
+            <p className="text-gray-900 font-bold">{gridConnection === 'behind' ? 'Behind the meter' : 'Front of meter'}</p>
           </div>
           <div>
-            <p className="text-gray-400">Primary Application:</p>
-            <p className="text-white font-semibold">{applicationNames[primaryApplication]}</p>
+            <p className="text-gray-600 font-semibold">Primary Application:</p>
+            <p className="text-gray-900 font-bold">{applicationNames[primaryApplication]}</p>
           </div>
           <div>
-            <p className="text-gray-400">Warranty:</p>
-            <p className="text-white font-semibold">{warranty} years</p>
+            <p className="text-gray-600 font-semibold">Warranty:</p>
+            <p className="text-gray-900 font-bold">{warranty} years</p>
           </div>
           <div>
-            <p className="text-gray-400">Location:</p>
-            <p className="text-white font-semibold">United States</p>
+            <p className="text-gray-600 font-semibold">Location:</p>
+            <p className="text-gray-900 font-bold">United States</p>
           </div>
         </div>
       </div>

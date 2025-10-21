@@ -15,6 +15,9 @@ import PricingPlans from './PricingPlans';
 import WelcomeModal from './modals/WelcomeModal';
 import AccountSetup from './modals/AccountSetup';
 import EnhancedProfile from './EnhancedProfile';
+import LoadProjectModal from './modals/LoadProjectModal';
+import SaveProjectModal from './modals/SaveProjectModal';
+import WhyJoinUs from './WhyJoinUs';
 import type { ProfileData } from './modals/AccountSetup';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
@@ -60,6 +63,9 @@ export default function BessQuoteBuilder() {
   const [showEnhancedProfile, setShowEnhancedProfile] = useState(false);
   const [isFirstTimeProfile, setIsFirstTimeProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showWhyJoinUs, setShowWhyJoinUs] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -161,17 +167,75 @@ export default function BessQuoteBuilder() {
       return;
     }
 
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      alert('Please sign in to save projects');
-      return;
-    }
+    // Show save modal to let user choose what to save
+    setShowSaveModal(true);
+  };
 
-    // Create quote object with all current values
+  const handleLoadProject = () => {
+    // Show load modal with options
+    setShowLoadModal(true);
+  };
+
+  // Handler for uploading a file from computer
+  const handleUploadFile = () => {
+    setShowLoadModal(false);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          loadProjectData(data);
+          
+          if (!isLoggedIn) {
+            const shouldLogin = confirm('Project loaded! Would you like to sign up/sign in to save it to the cloud?');
+            if (shouldLogin) {
+              setShowAuthModal(true);
+            }
+          }
+        } catch (error) {
+          alert('❌ Error loading project file. Please check the file format.');
+          console.error('Load error:', error);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  // Handler for selecting from portfolio
+  const handleSelectFromPortfolio = () => {
+    setShowLoadModal(false);
+    // Open the portfolio directly
+    if (isLoggedIn) {
+      setShowPortfolio(true);
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  // Handler for creating with wizard
+  const handleCreateWithWizard = () => {
+    setShowLoadModal(false);
+    setShowSmartWizard(true);
+  };
+
+  // Handler for actual save operation
+  const handleActualSave = async (projectName: string, saveLocation: 'local' | 'portfolio' | 'cloud') => {
+    setShowSaveModal(false);
+
+    const token = localStorage.getItem('auth_token');
+    
+    // Create quote object
     const quote = {
       id: Date.now().toString(),
-      user_id: token,
-      project_name: quoteName,
+      user_id: token || 'guest',
+      project_name: projectName,
       inputs: {
         powerMW,
         standbyHours,
@@ -198,9 +262,8 @@ export default function BessQuoteBuilder() {
         windKw
       },
       outputs: {
-        // Store calculated values for display in portfolio
         totalMWh: powerMW * standbyHours,
-        bessCapEx: 0, // Will be recalculated when loaded
+        bessCapEx: 0,
         gridMode,
         useCase
       },
@@ -211,53 +274,24 @@ export default function BessQuoteBuilder() {
       updated_at: new Date().toISOString()
     };
 
-    // Load existing quotes
-    const savedQuotes = localStorage.getItem('merlin_quotes');
-    const allQuotes = savedQuotes ? JSON.parse(savedQuotes) : [];
-    
-    // Add new quote
-    allQuotes.push(quote);
-    
-    // Save back to localStorage
-    localStorage.setItem('merlin_quotes', JSON.stringify(allQuotes));
-    
-    alert(`✅ Project "${quoteName}" saved successfully!`);
-    
-    // Trigger portfolio refresh event
-    window.dispatchEvent(new Event('portfolio-refresh'));
-  };
-
-  const handleLoadProject = () => {
-    // Create file input element to load JSON/CSV project file
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          // Load the project data
-          loadProjectData(data);
-          
-          // Ask if they want to save to cloud (requires login)
-          if (!isLoggedIn) {
-            const shouldLogin = confirm('Project loaded! Would you like to sign up/sign in to save it to the cloud?');
-            if (shouldLogin) {
-              setShowAuthModal(true);
-            }
-          }
-        } catch (error) {
-          alert('❌ Error loading project file. Please check the file format.');
-          console.error('Load error:', error);
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+    if (saveLocation === 'portfolio') {
+      // Save to portfolio (localStorage for now)
+      const savedQuotes = localStorage.getItem('merlin_quotes');
+      const allQuotes = savedQuotes ? JSON.parse(savedQuotes) : [];
+      allQuotes.push(quote);
+      localStorage.setItem('merlin_quotes', JSON.stringify(allQuotes));
+      alert(`✅ Project "${projectName}" saved to portfolio!`);
+      window.dispatchEvent(new Event('portfolio-refresh'));
+    } else if (saveLocation === 'local') {
+      // Download as JSON file
+      const dataStr = JSON.stringify(quote, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      saveAs(dataBlob, `${projectName.replace(/[^a-z0-9]/gi, '_')}.json`);
+      alert(`✅ Project "${projectName}" downloaded successfully!`);
+    } else if (saveLocation === 'cloud') {
+      // Future: implement cloud storage (Google Drive, Dropbox, etc.)
+      alert('☁️ Cloud storage coming soon! For now, use Portfolio or Download options.');
+    }
   };
   
   const loadProjectData = (data: any) => {
@@ -1111,18 +1145,18 @@ export default function BessQuoteBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-blue-200 shadow-xl">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-br from-blue-50 via-white to-purple-50 border-b border-blue-200">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 transform hover:scale-105"
+            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-orange-700 hover:border-orange-800"
           >
             👤 User Profile
           </button>
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg"
             aria-label="Open Smart Wizard"
           >
             🪄 Smart Wizard
@@ -1152,14 +1186,14 @@ export default function BessQuoteBuilder() {
       </header>
       
       <main className="p-8">
-        {/* MERLIN Hero Section */}
-        <section className="mx-8 my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
+        {/* MERLIN Hero Section - Wider to align with 3-column layout */}
+        <section className="max-w-[1600px] mx-auto my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20 animate-pulse"></div>
           
           {/* Join Now Button - Upper Right */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-b from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 text-lg transform hover:scale-105"
+              className="bg-gradient-to-br from-purple-300 via-purple-500 via-purple-600 to-purple-900 text-white px-10 py-5 rounded-xl font-bold shadow-2xl border-b-4 border-purple-950 text-2xl drop-shadow-[0_0_25px_rgba(168,85,247,0.9)]"
               onClick={() => setShowPricingPlans(true)}
             >
               ✨ Join Now
@@ -1191,7 +1225,7 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-blue-800 flex items-center justify-center space-x-2 text-xl w-48 h-16"
                 onClick={handleSaveProject}
               >
                 <span className="text-2xl">💾</span>
@@ -1199,7 +1233,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-br from-gray-300 via-gray-400 to-gray-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-gray-700 flex items-center justify-center space-x-2 text-xl w-48 h-16"
                 onClick={handleLoadProject}
               >
                 <span className="text-2xl">📂</span>
@@ -1207,17 +1241,17 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-purple-900 flex items-center justify-center space-x-2 text-xl w-48 h-16"
                 onClick={handlePortfolio}
               >
-                <span>📊</span>
+                <span className="text-2xl">📊</span>
                 <span>Portfolio</span>
               </button>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
@@ -1284,7 +1318,7 @@ export default function BessQuoteBuilder() {
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">Pricing Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2 transform hover:scale-105"
+                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2"
                   title="Reset all values to default settings"
                 >
                   <span className="text-sm">🔄</span>
@@ -1434,15 +1468,24 @@ export default function BessQuoteBuilder() {
             <p className="text-gray-600 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
             </p>
-            {isLoggedIn && (
+            <div className="flex justify-center items-center gap-6 mb-4">
               <button
-                onClick={() => setShowVendorManager(true)}
-                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                onClick={() => setShowWhyJoinUs(true)}
+                className="text-purple-600 hover:text-purple-800 text-sm font-medium transition-colors inline-flex items-center gap-1"
               >
-                <span>🔧</span>
-                <span>Admin Panel</span>
+                <span>🪄</span>
+                <span>Why Join Us?</span>
               </button>
-            )}
+              {isLoggedIn && (
+                <button
+                  onClick={() => setShowVendorManager(true)}
+                  className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                >
+                  <span>🔧</span>
+                  <span>Admin Panel</span>
+                </button>
+              )}
+            </div>
           </div>
         </footer>
       </main>
@@ -1453,6 +1496,32 @@ export default function BessQuoteBuilder() {
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
       {showPricingPlans && <PricingPlans onClose={() => setShowPricingPlans(false)} currentTier="free" />}
+      
+      {/* Load and Save Project Modals */}
+      <LoadProjectModal
+        isOpen={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        onUploadFile={handleUploadFile}
+        onSelectFromPortfolio={handleSelectFromPortfolio}
+        onCreateWithWizard={handleCreateWithWizard}
+      />
+      <SaveProjectModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        quoteName={quoteName}
+        onSave={handleActualSave}
+      />
+
+      {/* Why Join Us Modal */}
+      {showWhyJoinUs && (
+        <WhyJoinUs
+          onClose={() => setShowWhyJoinUs(false)}
+          onJoinNow={() => {
+            setShowWhyJoinUs(false);
+            setShowPricingPlans(true);
+          }}
+        />
+      )}
       
       {/* Welcome and Account Setup Modals */}
       {showWelcomeModal && (

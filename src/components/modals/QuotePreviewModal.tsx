@@ -756,68 +756,68 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="bg-gradient-to-br from-gray-800 via-purple-900/50 to-blue-900/50 rounded-2xl shadow-2xl w-full max-w-4xl border-2 border-purple-500/30 max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-purple-500/20 flex justify-between items-center bg-gray-900/50 sticky top-0 z-10">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl border-2 border-purple-400 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b-2 border-purple-300 flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 sticky top-0 z-10">
+          <h2 className="text-3xl font-bold text-gray-800">
             📋 Quote Preview & Download
           </h2>
           <button 
             onClick={onClose}
-            className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg p-2 transition-all text-2xl"
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg p-2 transition-all text-2xl"
           >
             ✕
           </button>
         </div>
 
-        <div className="p-8 text-white space-y-6">
+        <div className="p-8 space-y-6">
           {/* Summary */}
-          <div className="bg-gradient-to-r from-purple-600/30 to-blue-600/30 p-6 rounded-xl border border-purple-500/30">
-            <h3 className="text-2xl font-bold text-purple-300 mb-4">System Configuration</h3>
+          <div className="bg-gradient-to-br from-purple-200 via-blue-100 to-white p-6 rounded-xl border-2 border-purple-400">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">System Configuration</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-purple-200">BESS Capacity:</p>
-                <p className="text-white font-bold text-lg">{quoteData.batteryMWh.toFixed(1)} MWh</p>
+                <p className="text-gray-700 font-semibold">BESS Capacity:</p>
+                <p className="text-gray-900 font-bold text-lg">{quoteData.batteryMWh.toFixed(1)} MWh</p>
               </div>
               <div>
-                <p className="text-purple-200">Power Rating:</p>
-                <p className="text-white font-bold text-lg">{quoteData.bessPowerMW} MW</p>
+                <p className="text-gray-700 font-semibold">Power Rating:</p>
+                <p className="text-gray-900 font-bold text-lg">{quoteData.bessPowerMW} MW</p>
               </div>
               {quoteData.solarMW > 0 && (
                 <div>
-                  <p className="text-yellow-200">Solar Capacity:</p>
-                  <p className="text-white font-bold text-lg">{quoteData.solarMW} MW</p>
+                  <p className="text-gray-700 font-semibold">Solar Capacity:</p>
+                  <p className="text-yellow-700 font-bold text-lg">{quoteData.solarMW} MW</p>
                 </div>
               )}
               {quoteData.windMW > 0 && (
                 <div>
-                  <p className="text-cyan-200">Wind Capacity:</p>
-                  <p className="text-white font-bold text-lg">{quoteData.windMW} MW</p>
+                  <p className="text-gray-700 font-semibold">Wind Capacity:</p>
+                  <p className="text-cyan-700 font-bold text-lg">{quoteData.windMW} MW</p>
                 </div>
               )}
               {quoteData.generatorMW > 0 && (
                 <div>
-                  <p className="text-red-200">Generator Backup:</p>
-                  <p className="text-white font-bold text-lg">{quoteData.generatorMW} MW</p>
+                  <p className="text-gray-700 font-semibold">Generator Backup:</p>
+                  <p className="text-red-700 font-bold text-lg">{quoteData.generatorMW} MW</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Financial Summary */}
-          <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 p-6 rounded-xl border border-green-500/30">
-            <h3 className="text-2xl font-bold text-green-300 mb-4">Financial Summary</h3>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-400">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Financial Summary</h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span>Total Investment:</span>
-                <span className="font-bold text-xl">${quoteData.costs.grandTotal.toLocaleString()}</span>
+                <span className="text-gray-700 font-semibold">Total Investment:</span>
+                <span className="font-bold text-xl text-gray-900">${quoteData.costs.grandTotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span>Annual Savings:</span>
-                <span className="font-bold text-xl">${quoteData.annualSavings.toLocaleString()}</span>
+                <span className="text-gray-700 font-semibold">Annual Savings:</span>
+                <span className="font-bold text-xl text-green-700">${quoteData.annualSavings.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span>Payback Period:</span>
-                <span className="font-bold text-xl">{quoteData.paybackPeriod.toFixed(2)} years</span>
+                <span className="text-gray-700 font-semibold">Payback Period:</span>
+                <span className="font-bold text-xl text-gray-900">{quoteData.paybackPeriod.toFixed(2)} years</span>
               </div>
             </div>
           </div>
