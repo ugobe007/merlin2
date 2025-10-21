@@ -4,6 +4,7 @@ import { X, ChevronRight, Check, Briefcase, Building2, Globe, DollarSign, Bell }
 interface AccountSetupProps {
   onClose: () => void;
   onComplete: (profileData: ProfileData) => void;
+  onContinueToProfile: () => void; // New prop to navigate to enhanced profile
   userName: string;
   accountType: 'individual' | 'company';
   companyName?: string;
@@ -21,7 +22,8 @@ export type ProfileData = {
 
 export default function AccountSetup({ 
   onClose, 
-  onComplete, 
+  onComplete,
+  onContinueToProfile,
   userName, 
   accountType,
   companyName 
@@ -38,12 +40,13 @@ export default function AccountSetup({
   });
 
   const totalSteps = 3;
-
   const handleNext = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
       onComplete(profileData);
+      // After saving basic profile, redirect to enhanced profile page
+      onContinueToProfile();
     }
   };
 

@@ -13,6 +13,7 @@ import VendorManager from './VendorManager';
 import PricingPlans from './PricingPlans';
 import WelcomeModal from './modals/WelcomeModal';
 import AccountSetup from './modals/AccountSetup';
+import EnhancedProfile from './EnhancedProfile';
 import type { ProfileData } from './modals/AccountSetup';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
@@ -29,6 +30,8 @@ export default function BessQuoteBuilder() {
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showAccountSetup, setShowAccountSetup] = useState(false);
+  const [showEnhancedProfile, setShowEnhancedProfile] = useState(false);
+  const [isFirstTimeProfile, setIsFirstTimeProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -73,7 +76,6 @@ export default function BessQuoteBuilder() {
   };
 
   const handleProfileComplete = (profileData: ProfileData) => {
-    setShowAccountSetup(false);
     const user = authService.getCurrentUser();
     if (user) {
       authService.updateUserProfile(user.id, {
@@ -84,7 +86,17 @@ export default function BessQuoteBuilder() {
       });
     }
   };
-  
+
+  const handleContinueToEnhancedProfile = () => {
+    setShowAccountSetup(false);
+    setIsFirstTimeProfile(true);
+    setShowEnhancedProfile(true);
+  };
+
+  const handleEnhancedProfileClose = () => {
+    setShowEnhancedProfile(false);
+    setIsFirstTimeProfile(false);
+  };
   
   // System Configuration State
   const [powerMW, setPowerMW] = useState(1);
@@ -1340,9 +1352,16 @@ export default function BessQuoteBuilder() {
         <AccountSetup
           onClose={() => setShowAccountSetup(false)}
           onComplete={handleProfileComplete}
+          onContinueToProfile={handleContinueToEnhancedProfile}
           userName={authService.getCurrentUser()?.firstName || 'User'}
           accountType={authService.getCurrentUser()?.accountType || 'individual'}
           companyName={authService.getCurrentUser()?.company}
+        />
+      )}
+      {showEnhancedProfile && (
+        <EnhancedProfile
+          onClose={handleEnhancedProfileClose}
+          isFirstTime={isFirstTimeProfile}
         />
       )}
       
