@@ -1147,12 +1147,12 @@ export default function BessQuoteBuilder() {
       {/* Top Header Bar */}
       <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-br from-blue-50 via-white to-purple-50 border-b border-blue-200">
         <div className="flex items-center space-x-4">
-          {/* Clean User Profile Button */}
+          {/* Light Blue Merlin Profile Button */}
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-blue-900 text-base"
+            className="bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-xl"
           >
-            👤 My Profile
+            🧙‍♂️ My Profile
           </button>
           {/* FAT Purple Smart Wizard Button with YELLOW text */}
           <button 

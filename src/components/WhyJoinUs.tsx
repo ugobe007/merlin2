@@ -9,8 +9,8 @@ const WhyJoinUs: React.FC<WhyJoinUsProps> = ({ onClose, onJoinNow }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto border-2 border-purple-400">
-        {/* Header - Compact */}
-        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 p-4 border-b-2 border-purple-400 rounded-t-2xl sticky top-0 z-10">
+        {/* Header - Compact and scrollable (not sticky) */}
+        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 p-4 border-b-2 border-purple-400 rounded-t-2xl">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-800 mb-1">
