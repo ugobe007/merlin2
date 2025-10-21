@@ -1086,9 +1086,9 @@ export default function BessQuoteBuilder() {
   const annualSavings = peakShavingSavings + demandChargeSavings;
   const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : Infinity;
 
-  const inputStyle = "w-full px-4 py-3 bg-gray-700/70 border-2 border-purple-400/40 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-medium text-white placeholder-gray-400 transition-all shadow-inner";
-  const labelStyle = "block text-base font-semibold text-purple-300/90 mb-2 tracking-wide";
-  const cardStyle = "bg-gradient-to-br from-gray-800/60 via-gray-800/50 to-gray-900/60 border border-purple-500/40 rounded-2xl p-8 shadow-2xl shadow-purple-900/20 backdrop-blur-md relative overflow-hidden";
+  const inputStyle = "w-full px-4 py-3 bg-white border-2 border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium text-gray-900 placeholder-gray-400 transition-all shadow-sm";
+  const labelStyle = "block text-base font-semibold text-gray-700 mb-2 tracking-wide";
+  const cardStyle = "bg-white/80 backdrop-blur-md border-2 border-blue-200 rounded-2xl p-8 shadow-xl relative overflow-hidden";
 
   // Currency symbol helper
   const getCurrencySymbol = () => {
@@ -1109,20 +1109,20 @@ export default function BessQuoteBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 text-gray-900 font-sans">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-purple-500/30 shadow-xl">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-purple-300 shadow-xl">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-300"
           >
             👤 User Profile
           </button>
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-10 py-4 rounded-xl font-bold shadow-xl border-2 border-yellow-300/60 text-lg cursor-pointer hover:from-yellow-300 hover:to-pink-400 transition-all"
+            className="relative bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 text-white px-10 py-4 rounded-xl font-bold shadow-xl border-2 border-yellow-300 text-lg cursor-pointer hover:from-yellow-300 hover:to-pink-400 transition-all"
             aria-label="Open Smart Wizard"
           >
             <div className="flex items-center space-x-3">
@@ -1136,9 +1136,9 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-right bg-gray-800/80 px-4 py-2 rounded-lg shadow-md border border-purple-400/20">
-            <div className="text-sm font-medium text-purple-300/70">Current kWh Price:</div>
-            <div className="text-xl font-bold text-cyan-400">${valueKwh.toFixed(4)}/kWh</div>
+          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
+            <div className="text-sm font-medium text-blue-600">Current kWh Price:</div>
+            <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
           </div>
           
           {isLoggedIn && (
@@ -1148,7 +1148,7 @@ export default function BessQuoteBuilder() {
                 setIsLoggedIn(false);
                 alert('You have been logged out successfully');
               }}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-200 border border-gray-400/30"
+              className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-200 border border-gray-300"
               title="Sign Out"
             >
               🚪 Sign Out
@@ -1180,10 +1180,10 @@ export default function BessQuoteBuilder() {
                 className="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(147,51,234,0.8)] filter brightness-110"
               />
               <div>
-                <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
+                <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
                 </h1>
-                <p className="text-xl text-purple-300/80 italic font-semibold">"Where Magic Meets Energy"</p>
+                <p className="text-xl text-purple-600 italic font-semibold">"Where Magic Meets Energy"</p>
               </div>
             </div>
             
@@ -1228,7 +1228,7 @@ export default function BessQuoteBuilder() {
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
             <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-purple-300 mb-8">System Configuration</h2>
+              <h2 className="text-3xl font-bold text-purple-600 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
                   <label className={labelStyle}>Power (MW)</label>
@@ -1419,15 +1419,15 @@ export default function BessQuoteBuilder() {
               <div className="space-y-3 text-lg">
                 <div className="flex justify-between">
                   <span className="text-gray-300">Total Energy:</span>
-                  <span className="font-bold text-cyan-400">{totalMWh.toFixed(2)} MWh</span>
+                  <span className="font-bold text-blue-600">{totalMWh.toFixed(2)} MWh</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">PCS Power:</span>
-                  <span className="font-bold text-cyan-400">{pcsKW.toFixed(2)} kW</span>
+                  <span className="font-bold text-blue-600">{pcsKW.toFixed(2)} kW</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Annual Energy:</span>
-                  <span className="font-bold text-cyan-400">{annualEnergyMWh.toFixed(2)} MWh</span>
+                  <span className="font-bold text-blue-600">{annualEnergyMWh.toFixed(2)} MWh</span>
                 </div>
               </div>
             </section>
@@ -1435,15 +1435,15 @@ export default function BessQuoteBuilder() {
         </div>
 
         {/* Footer with Admin Access */}
-        <footer className="mt-12 border-t border-purple-500/30 pt-8 pb-6">
+        <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
           <div className="text-center">
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-gray-600 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
             </p>
             {isLoggedIn && (
               <button
                 onClick={() => setShowVendorManager(true)}
-                className="text-gray-600 hover:text-purple-400 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
               >
                 <span>🔧</span>
                 <span>Admin Panel</span>
