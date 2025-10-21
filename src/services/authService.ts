@@ -28,7 +28,16 @@ export interface User {
   // Profile completion
   profileCompleted: boolean;
   
-  // Preferences
+  // Extended profile fields
+  bio?: string;                    // About me section
+  profilePhoto?: string;           // Base64 image or URL
+  companyWebsite?: string;         // Company website URL
+  linkedIn?: string;               // LinkedIn profile
+  phone?: string;                  // Phone number
+  publicProfileSlug?: string;      // e.g., "john-doe-energy"
+  profileVisibility?: 'public' | 'private';  // Public profiles can be shared
+  
+  // User preferences
   preferences?: {
     defaultCurrency?: string;
     defaultLocation?: string;
@@ -420,6 +429,45 @@ class LocalStorageAuthService {
   getCompanyMembers(companyId: string): User[] {
     const users = this.getUsers();
     return users.filter(u => u.companyId === companyId);
+  }
+
+  // Generate unique profile slug
+  generateProfileSlug(firstName: string, lastName: string): string {
+    const baseSlug = `${firstName}-${lastName}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const users = this.getUsers();
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (users.some(u => u.publicProfileSlug === slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    
+    return slug;
+  }
+
+  // Get public profile by slug (for sharing)
+  async getPublicProfile(slug: string): Promise<User | null> {
+    const users = this.getUsers();
+    const user = users.find(u => u.publicProfileSlug === slug && u.profileVisibility === 'public');
+    
+    if (!user) return null;
+    
+    // Return sanitized user data (no sensitive info)
+    const { email, ...publicData } = user;
+    return { ...publicData, email: '' } as User;
+  }
+
+  // Track visitor (non-user visiting a shared profile)
+  async trackVisitor(profileSlug: string, source: string = 'profile_share'): Promise<void> {
+    const visitors = JSON.parse(localStorage.getItem('merlin_visitors') || '[]');
+    visitors.push({
+      profileSlug,
+      source,
+      timestamp: new Date().toISOString(),
+      sessionId: Date.now().toString()
+    });
+    localStorage.setItem('merlin_visitors', JSON.stringify(visitors));
   }
 }
 

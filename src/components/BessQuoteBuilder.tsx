@@ -5,8 +5,9 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
-import UserProfile from './UserProfile';
+import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
+import PublicProfileViewer from './PublicProfileViewer';
 import AuthModal from './AuthModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
@@ -22,6 +23,32 @@ import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
 
 
 export default function BessQuoteBuilder() {
+  // Check for public profile route
+  const [viewMode, setViewMode] = useState<'app' | 'public-profile'>('app');
+  const [publicProfileSlug, setPublicProfileSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Simple routing check - look for /profile/ in URL
+    const path = window.location.pathname;
+    if (path.startsWith('/profile/')) {
+      const slug = path.split('/profile/')[1];
+      setPublicProfileSlug(slug);
+      setViewMode('public-profile');
+    }
+  }, []);
+
+  const handleNavigateToApp = () => {
+    window.history.pushState({}, '', '/');
+    setViewMode('app');
+    setShowAuthModal(true);
+  };
+
+  // If viewing a public profile, show that instead
+  if (viewMode === 'public-profile' && publicProfileSlug) {
+    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={handleNavigateToApp} />;
+  }
+
+  // Regular app state
   const [quoteName, setQuoteName] = useState('My BESS Project');
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSmartWizard, setShowSmartWizard] = useState(false);
@@ -1332,7 +1359,7 @@ export default function BessQuoteBuilder() {
       </main>
 
       {/* Modals */}
-      {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={handleLoginSuccess} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
+      {showUserProfile && <EditableUserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={handleLoginSuccess} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
