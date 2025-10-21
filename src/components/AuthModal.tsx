@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { authService } from '../services/authService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -28,85 +29,37 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
 
     try {
       if (mode === 'signup') {
-        // Validate required fields
-        if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-          alert('Please fill in all required fields');
-          setLoading(false);
-          return;
+        const result = await authService.signUp(
+          formData.email,
+          formData.password,
+          formData.firstName,
+          formData.lastName,
+          formData.company
+        );
+
+        if (result.success && result.user) {
+          alert(`✅ Welcome to Merlin Energy, ${result.user.firstName}!\n\nYour account has been created successfully.`);
+          onLoginSuccess(result.user);
+          onClose();
+        } else {
+          alert(result.error || 'Signup failed');
+          if (result.error?.includes('already exists')) {
+            setMode('login');
+          }
         }
-
-        // Check if user already exists
-        const existingUsers = JSON.parse(localStorage.getItem('merlin_users') || '[]');
-        const userExists = existingUsers.find((u: any) => u.email === formData.email);
-        
-        if (userExists) {
-          alert('An account with this email already exists. Please sign in.');
-          setMode('login');
-          setLoading(false);
-          return;
-        }
-
-        // Create new user
-        const newUser = {
-          id: Date.now().toString(),
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          company: formData.company,
-          createdAt: new Date().toISOString(),
-          tier: 'free'
-        };
-
-        // Save to users list (without password in storage for security)
-        existingUsers.push(newUser);
-        localStorage.setItem('merlin_users', JSON.stringify(existingUsers));
-        
-        // Save password separately (in production, this would be hashed on backend)
-        const passwords = JSON.parse(localStorage.getItem('merlin_passwords') || '{}');
-        passwords[formData.email] = formData.password;
-        localStorage.setItem('merlin_passwords', JSON.stringify(passwords));
-
-        // Set auth token
-        localStorage.setItem('auth_token', newUser.id);
-        localStorage.setItem('current_user', JSON.stringify(newUser));
-
-        alert(`✅ Welcome to Merlin Energy, ${newUser.firstName}!\n\nYour account has been created successfully.`);
-        onLoginSuccess(newUser);
-        onClose();
-        
       } else {
-        // Login mode
-        if (!formData.email || !formData.password) {
-          alert('Please enter your email and password');
-          setLoading(false);
-          return;
+        const result = await authService.signIn(formData.email, formData.password);
+
+        if (result.success && result.user) {
+          alert(`✅ Welcome back, ${result.user.firstName}!`);
+          onLoginSuccess(result.user);
+          onClose();
+        } else {
+          alert(result.error || 'Login failed');
+          if (result.error?.includes('No account found')) {
+            setMode('signup');
+          }
         }
-
-        const existingUsers = JSON.parse(localStorage.getItem('merlin_users') || '[]');
-        const user = existingUsers.find((u: any) => u.email === formData.email);
-
-        if (!user) {
-          alert('No account found with this email. Please sign up first.');
-          setMode('signup');
-          setLoading(false);
-          return;
-        }
-
-        // Check password
-        const passwords = JSON.parse(localStorage.getItem('merlin_passwords') || '{}');
-        if (passwords[formData.email] !== formData.password) {
-          alert('Incorrect password. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        // Set auth token
-        localStorage.setItem('auth_token', user.id);
-        localStorage.setItem('current_user', JSON.stringify(user));
-
-        alert(`✅ Welcome back, ${user.firstName}!`);
-        onLoginSuccess(user);
-        onClose();
       }
     } catch (error) {
       console.error('Auth error:', error);
