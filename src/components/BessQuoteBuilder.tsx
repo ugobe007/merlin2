@@ -1130,19 +1130,19 @@ export default function BessQuoteBuilder() {
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                   <label className={labelStyle}>Battery ({getCurrencySymbol()}/kWh)</label>
-                  <input type="number" value={batteryKwh} onChange={(e) => setBatteryKwh(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <input type="number" step="1" value={batteryKwh} onChange={(e) => setBatteryKwh(parseFloat(e.target.value) || 0)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>PCS ({getCurrencySymbol()}/kW)</label>
-                  <input type="number" value={pcsKw} onChange={(e) => setPcsKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <input type="number" step="1" value={pcsKw} onChange={(e) => setPcsKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>BOS (%)</label>
-                  <input type="number" step="0.01" value={(bosPercent * 100).toFixed(0)} onChange={(e) => setBosPercent((parseFloat(e.target.value) || 0) / 100)} className={inputStyle} />
+                  <input type="number" step="1" value={(bosPercent * 100).toFixed(0)} onChange={(e) => setBosPercent((parseFloat(e.target.value) || 0) / 100)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>EPC (%)</label>
-                  <input type="number" step="0.01" value={(epcPercent * 100).toFixed(0)} onChange={(e) => setEpcPercent((parseFloat(e.target.value) || 0) / 100)} className={inputStyle} />
+                  <input type="number" step="1" value={(epcPercent * 100).toFixed(0)} onChange={(e) => setEpcPercent((parseFloat(e.target.value) || 0) / 100)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>Off-Grid PCS Factor</label>
@@ -1154,15 +1154,15 @@ export default function BessQuoteBuilder() {
                 </div>
                 <div>
                   <label className={labelStyle}>Gen ({getCurrencySymbol()}/kW)</label>
-                  <input type="number" value={genKw} onChange={(e) => setGenKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <input type="number" step="1" value={genKw} onChange={(e) => setGenKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>Solar ({getCurrencySymbol()}/kWp)</label>
-                  <input type="number" value={solarKwp} onChange={(e) => setSolarKwp(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <input type="number" step="1" value={solarKwp} onChange={(e) => setSolarKwp(parseFloat(e.target.value) || 0)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>Wind ({getCurrencySymbol()}/kW)</label>
-                  <input type="number" value={windKw} onChange={(e) => setWindKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <input type="number" step="1" value={windKw} onChange={(e) => setWindKw(parseFloat(e.target.value) || 0)} className={inputStyle} />
                 </div>
                 <div>
                   <label className={labelStyle}>Battery Tariff (%)</label>
