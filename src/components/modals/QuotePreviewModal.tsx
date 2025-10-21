@@ -4,6 +4,9 @@ import { saveAs } from 'file-saver';
 import { generateCalculationBreakdown } from '../../utils/calculationFormulas';
 import { createCalculationTables } from '../../utils/wordHelpers';
 
+// TODO: Add sound file to /src/assets/sounds/puff.mp3 and uncomment:
+// import puffSound from '../../assets/sounds/puff.mp3';
+
 interface QuotePreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -75,7 +78,21 @@ const createDataRow = (cells: string[]) => new TableRow({
 const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, quoteData }) => {
   if (!isOpen) return null;
 
+  const playDownloadSound = () => {
+    // TODO: Uncomment when sound file is added to /src/assets/sounds/puff.mp3
+    // try {
+    //   const audio = new Audio(puffSound);
+    //   audio.volume = 0.5;
+    //   audio.play().catch(err => console.log('Audio play failed:', err));
+    // } catch (err) {
+    //   console.log('Sound file not found');
+    // }
+  };
+
   const generateWordDocument = async () => {
+    // Play magical sound effect
+    playDownloadSound();
+    
     const {
       clientName,
       projectName,
@@ -706,6 +723,9 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
   };
 
   const generateExcelData = () => {
+    // Play magical sound effect
+    playDownloadSound();
+    
     // For now, create a CSV that can be opened in Excel
     const { costs, bessPowerMW, batteryMWh, solarMW, windMW, generatorMW } = quoteData;
     
