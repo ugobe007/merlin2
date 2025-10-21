@@ -625,6 +625,29 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
               </div>
             </div>
           )}
+
+          {/* Helpful reminder for users in view mode */}
+          {!isEditing && (
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-6 mt-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">💡</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    Want to update your profile?
+                  </h3>
+                  <p className="text-gray-700 mb-3">
+                    Click the <strong className="text-purple-600">"Edit Profile"</strong> button at the top of this page to customize your photo, bio, contact information, and more.
+                  </p>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all"
+                  >
+                    ✏️ Edit Profile Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
