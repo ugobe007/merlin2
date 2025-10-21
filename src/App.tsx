@@ -37,15 +37,6 @@ function App() {
 
   return (
     <div>
-      {/* Admin Access Button - Fixed in top right */}
-      <button
-        onClick={handleAdminAccess}
-        className="fixed top-4 right-4 z-50 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-all flex items-center gap-2"
-      >
-        <span>🧙‍♂️</span>
-        Admin
-      </button>
-      
       <BessQuoteBuilder />
     </div>
   );
