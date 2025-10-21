@@ -1191,23 +1191,23 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center space-x-2 transform hover:scale-105 text-lg"
+                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handleSaveProject}
               >
-                <span>💾</span>
+                <span className="text-2xl">💾</span>
                 <span>Save Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center space-x-2 transform hover:scale-105 text-lg"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handleLoadProject}
               >
-                <span>📂</span>
+                <span className="text-2xl">📂</span>
                 <span>Load Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center space-x-2 transform hover:scale-105 text-lg"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
@@ -1221,7 +1221,7 @@ export default function BessQuoteBuilder() {
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-300 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-purple-300 bg-gradient-to-b from-purple-50 via-purple-100 to-white relative overflow-hidden">
               <h2 className="text-3xl font-bold text-gray-800 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
@@ -1279,7 +1279,7 @@ export default function BessQuoteBuilder() {
             </section>
 
             {/* ASSUMPTIONS PANEL */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-300 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-b from-blue-100 via-blue-50 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">Pricing Assumptions</h2>
                 <button
@@ -1365,22 +1365,22 @@ export default function BessQuoteBuilder() {
                 </select>
               </div>
               <div className="space-y-4 text-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">BESS CapEx:</span>
-                  <span className="font-bold text-green-400 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-700 font-semibold">BESS CapEx:</span>
+                  <span className="font-bold text-green-700 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Grand CapEx:</span>
-                  <span className="font-bold text-green-300 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                <div className="flex justify-between items-center p-3 bg-green-100 rounded-lg">
+                  <span className="text-gray-700 font-semibold">Grand CapEx:</span>
+                  <span className="font-bold text-green-800 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <hr className="border-purple-500/30 my-4" />
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Annual Savings:</span>
-                  <span className="font-bold text-yellow-400 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
+                <hr className="border-green-300 my-4" />
+                <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                  <span className="text-gray-700 font-semibold">Annual Savings:</span>
+                  <span className="font-bold text-yellow-700 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Simple ROI:</span>
-                  <span className="font-bold text-yellow-300 text-2xl">{roiYears.toFixed(2)} years</span>
+                <div className="flex justify-between items-center p-3 bg-yellow-100 rounded-lg">
+                  <span className="text-gray-700 font-semibold">Simple ROI:</span>
+                  <span className="font-bold text-orange-700 text-2xl">{roiYears.toFixed(2)} years</span>
                 </div>
               </div>
               <div className="mt-8 space-y-3">
@@ -1408,20 +1408,20 @@ export default function BessQuoteBuilder() {
             </section>
 
             {/* SYSTEM DETAILS PANEL */}
-            <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-cyan-300 mb-6">System Details</h2>
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-cyan-300 bg-gradient-to-b from-cyan-50 to-white relative overflow-hidden">
+              <h2 className="text-3xl font-bold text-gray-800 mb-6">System Details</h2>
               <div className="space-y-3 text-lg">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Total Energy:</span>
-                  <span className="font-bold text-blue-600">{totalMWh.toFixed(2)} MWh</span>
+                <div className="flex justify-between p-3 bg-cyan-50 rounded-lg">
+                  <span className="text-gray-700 font-semibold">Total Energy:</span>
+                  <span className="font-bold text-cyan-700 text-xl">{totalMWh.toFixed(2)} MWh</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">PCS Power:</span>
-                  <span className="font-bold text-blue-600">{pcsKW.toFixed(2)} kW</span>
+                <div className="flex justify-between p-3 bg-blue-50 rounded-lg">
+                  <span className="text-gray-700 font-semibold">PCS Power:</span>
+                  <span className="font-bold text-blue-700 text-xl">{pcsKW.toFixed(2)} kW</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Annual Energy:</span>
-                  <span className="font-bold text-blue-600">{annualEnergyMWh.toFixed(2)} MWh</span>
+                <div className="flex justify-between p-3 bg-cyan-50 rounded-lg">
+                  <span className="text-gray-700 font-semibold">Annual Energy:</span>
+                  <span className="font-bold text-cyan-700 text-xl">{annualEnergyMWh.toFixed(2)} MWh</span>
                 </div>
               </div>
             </section>
