@@ -14,8 +14,37 @@ export interface User {
   firstName: string;
   lastName: string;
   company?: string;
+  jobTitle?: string;
   tier: 'free' | 'professional' | 'enterprise_pro' | 'business';
   createdAt: string;
+  
+  // Account type
+  accountType: 'individual' | 'company';
+  
+  // Company-specific fields
+  companyId?: string;  // Links to company record
+  companyRole?: 'owner' | 'admin' | 'member';
+  
+  // Profile completion
+  profileCompleted: boolean;
+  
+  // Preferences
+  preferences?: {
+    defaultCurrency?: string;
+    defaultLocation?: string;
+    emailNotifications?: boolean;
+  };
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: string;
+  tier: 'free' | 'professional' | 'enterprise_pro' | 'business';
+  seatLimit: number;  // 5 for free, more for paid
+  seatsUsed: number;
+  memberIds: string[];
 }
 
 export interface AuthResponse {
@@ -40,11 +69,19 @@ const simpleHash = (password: string): string => {
 class LocalStorageAuthService {
   private USERS_KEY = 'merlin_users';
   private PASSWORDS_KEY = 'merlin_passwords';
+  private COMPANIES_KEY = 'merlin_companies';
   private TOKEN_KEY = 'auth_token';
   private CURRENT_USER_KEY = 'current_user';
   private SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-  async signUp(email: string, password: string, firstName: string, lastName: string, company?: string): Promise<AuthResponse> {
+  async signUp(
+    email: string, 
+    password: string, 
+    firstName: string, 
+    lastName: string, 
+    company?: string,
+    accountType: 'individual' | 'company' = 'individual'
+  ): Promise<AuthResponse> {
     try {
       // Validate
       if (!email || !password || !firstName || !lastName) {
@@ -65,8 +102,37 @@ class LocalStorageAuthService {
         lastName,
         company,
         tier: 'free',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        accountType,
+        profileCompleted: false,
+        preferences: {
+          defaultCurrency: 'USD',
+          defaultLocation: 'United States',
+          emailNotifications: true
+        }
       };
+
+      // If company account, create company record
+      if (accountType === 'company' && company) {
+        const companyRecord: Company = {
+          id: `company_${Date.now()}`,
+          name: company,
+          ownerId: user.id,
+          createdAt: new Date().toISOString(),
+          tier: 'free',
+          seatLimit: 5, // Free tier gets 5 seats
+          seatsUsed: 1,
+          memberIds: [user.id]
+        };
+
+        user.companyId = companyRecord.id;
+        user.companyRole = 'owner';
+
+        // Save company
+        const companies = this.getCompanies();
+        companies.push(companyRecord);
+        localStorage.setItem(this.COMPANIES_KEY, JSON.stringify(companies));
+      }
 
       // Save user
       existingUsers.push(user);
@@ -214,6 +280,137 @@ class LocalStorageAuthService {
     } catch {
       return {};
     }
+  }
+
+  private getCompanies(): Company[] {
+    try {
+      return JSON.parse(localStorage.getItem(this.COMPANIES_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  // Company management methods
+  getCompanyById(companyId: string): Company | null {
+    const companies = this.getCompanies();
+    return companies.find(c => c.id === companyId) || null;
+  }
+
+  async updateUserProfile(userId: string, updates: Partial<User>): Promise<AuthResponse> {
+    try {
+      const users = this.getUsers();
+      const userIndex = users.findIndex(u => u.id === userId);
+      
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+
+      users[userIndex] = { ...users[userIndex], ...updates };
+      localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+
+      // Update current session if this is the current user
+      const currentUser = this.getCurrentUser();
+      if (currentUser && currentUser.id === userId) {
+        this.createSession(users[userIndex]);
+      }
+
+      return { success: true, user: users[userIndex] };
+    } catch (error) {
+      return { success: false, error: 'Failed to update profile' };
+    }
+  }
+
+  async inviteTeamMember(companyId: string, inviterEmail: string): Promise<{ success: boolean; inviteCode?: string; error?: string }> {
+    try {
+      const company = this.getCompanyById(companyId);
+      if (!company) {
+        return { success: false, error: 'Company not found' };
+      }
+
+      // Check seat limit
+      if (company.seatsUsed >= company.seatLimit) {
+        return { 
+          success: false, 
+          error: `Seat limit reached (${company.seatLimit} seats). Upgrade to add more team members.` 
+        };
+      }
+
+      // Generate invite code
+      const inviteCode = `MERLIN-${company.id.slice(-6)}-${Date.now().toString(36).toUpperCase()}`;
+      
+      // Store invite code (in production, this would have expiry, etc.)
+      const invites = JSON.parse(localStorage.getItem('merlin_invites') || '{}');
+      invites[inviteCode] = {
+        companyId,
+        inviterEmail,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+      };
+      localStorage.setItem('merlin_invites', JSON.stringify(invites));
+
+      return { success: true, inviteCode };
+    } catch (error) {
+      return { success: false, error: 'Failed to create invite' };
+    }
+  }
+
+  async joinCompanyWithInvite(userId: string, inviteCode: string): Promise<AuthResponse> {
+    try {
+      const invites = JSON.parse(localStorage.getItem('merlin_invites') || '{}');
+      const invite = invites[inviteCode];
+
+      if (!invite) {
+        return { success: false, error: 'Invalid invite code' };
+      }
+
+      // Check expiry
+      if (new Date(invite.expiresAt) < new Date()) {
+        return { success: false, error: 'Invite code expired' };
+      }
+
+      const company = this.getCompanyById(invite.companyId);
+      if (!company) {
+        return { success: false, error: 'Company not found' };
+      }
+
+      // Check seat limit
+      if (company.seatsUsed >= company.seatLimit) {
+        return { success: false, error: 'Company seat limit reached' };
+      }
+
+      // Update user
+      const users = this.getUsers();
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+
+      users[userIndex].companyId = company.id;
+      users[userIndex].companyRole = 'member';
+      users[userIndex].accountType = 'company';
+      users[userIndex].company = company.name;
+      localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+
+      // Update company
+      const companies = this.getCompanies();
+      const companyIndex = companies.findIndex(c => c.id === company.id);
+      companies[companyIndex].memberIds.push(userId);
+      companies[companyIndex].seatsUsed++;
+      localStorage.setItem(this.COMPANIES_KEY, JSON.stringify(companies));
+
+      // Delete used invite
+      delete invites[inviteCode];
+      localStorage.setItem('merlin_invites', JSON.stringify(invites));
+
+      return { success: true, user: users[userIndex] };
+    } catch (error) {
+      return { success: false, error: 'Failed to join company' };
+    }
+  }
+
+  getCompanyMembers(companyId: string): User[] {
+    const users = this.getUsers();
+    return users.filter(u => u.companyId === companyId);
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, User, Building2 } from 'lucide-react';
 import { authService } from '../services/authService';
 
 interface AuthModalProps {
@@ -12,6 +12,7 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode = 'login' }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
+  const [accountType, setAccountType] = useState<'individual' | 'company'>('individual');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -34,7 +35,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
           formData.password,
           formData.firstName,
           formData.lastName,
-          formData.company
+          formData.company,
+          accountType
         );
 
         if (result.success && result.user) {
@@ -92,6 +94,43 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
             <>
+              {/* Account Type Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-3">Account Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('individual')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      accountType === 'individual'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-300 hover:border-purple-300'
+                    }`}
+                  >
+                    <User className={`mx-auto mb-2 ${accountType === 'individual' ? 'text-purple-600' : 'text-gray-400'}`} size={32} />
+                    <div className="text-center">
+                      <div className="font-bold text-gray-900">Individual</div>
+                      <div className="text-xs text-gray-600 mt-1">Personal account</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('company')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      accountType === 'company'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-300 hover:border-purple-300'
+                    }`}
+                  >
+                    <Building2 className={`mx-auto mb-2 ${accountType === 'company' ? 'text-purple-600' : 'text-gray-400'}`} size={32} />
+                    <div className="text-center">
+                      <div className="font-bold text-gray-900">Company</div>
+                      <div className="text-xs text-gray-600 mt-1">Team account (5 free seats)</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
@@ -115,14 +154,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
                 </div>
               </div>
               
+              {/* Company Name - Required for company accounts, optional for individual */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Company</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Company {accountType === 'company' && <span className="text-red-500">*</span>}
+                </label>
                 <input
                   type="text"
+                  required={accountType === 'company'}
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
+                  placeholder={accountType === 'company' ? 'Your Company Name' : 'Optional'}
                 />
+                {accountType === 'company' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your team gets 5 free user seats
+                  </p>
+                )}
               </div>
             </>
           )}
