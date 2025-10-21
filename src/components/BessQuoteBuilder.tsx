@@ -1194,7 +1194,7 @@ export default function BessQuoteBuilder() {
           <div className="absolute top-6 right-6 z-20">
             <button 
               className="bg-gradient-to-br from-purple-300 via-purple-500 via-purple-600 to-purple-900 text-white px-10 py-5 rounded-xl font-bold shadow-2xl border-b-4 border-purple-950 text-2xl drop-shadow-[0_0_25px_rgba(168,85,247,0.9)]"
-              onClick={() => setShowPricingPlans(true)}
+              onClick={() => setShowWhyJoinUs(true)}
             >
               ✨ Join Now
             </button>
