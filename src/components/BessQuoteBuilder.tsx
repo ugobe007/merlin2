@@ -1290,7 +1290,7 @@ export default function BessQuoteBuilder() {
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL - Professional Silver Gradient */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-300 bg-gradient-to-b from-gray-100 via-gray-50 to-white relative overflow-hidden">
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-400 bg-gradient-to-b from-gray-200 via-gray-100 to-white relative overflow-hidden">
               <h2 className="text-3xl font-bold text-gray-800 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
@@ -1454,20 +1454,20 @@ export default function BessQuoteBuilder() {
               </div>
               <div className="mt-8 space-y-3">
                 <button 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-green-400/30"
+                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
                   onClick={handleExportWord}
                 >
                   📄 Export to Word
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-blue-400/30"
+                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
                   onClick={() => setShowCalculationModal(true)}
                   title="View detailed formulas and assumptions"
                 >
                   🧮 View Calculation Details
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-700 hover:from-purple-500 hover:to-fuchsia-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30"
+                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
                   onClick={handleExportCalculations}
                   title="Export detailed formulas to text file"
                 >
