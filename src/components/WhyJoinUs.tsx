@@ -8,21 +8,18 @@ interface WhyJoinUsProps {
 const WhyJoinUs: React.FC<WhyJoinUsProps> = ({ onClose, onJoinNow }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col border-2 border-purple-400">
-        {/* Header - Fixed at top, not scrolling */}
-        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 p-3 border-b-2 border-purple-400 rounded-t-2xl flex-shrink-0">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col border-2 border-purple-400">
+        {/* Header - Ultra compact, fixed at top */}
+        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 px-4 py-2 border-b-2 border-purple-400 rounded-t-2xl flex-shrink-0">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-lg font-bold text-gray-800">
                 🪄 Why Join Merlin?
               </h2>
-              <p className="text-xs text-gray-700 italic">
-                "Where Magic Meets Energy Storage"
-              </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50"
+              className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/50"
             >
               ×
             </button>
