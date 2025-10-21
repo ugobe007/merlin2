@@ -1122,15 +1122,19 @@ export default function BessQuoteBuilder() {
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-b from-yellow-400 via-orange-400 to-red-500 text-yellow-100 px-12 py-5 rounded-xl font-black shadow-2xl border-b-8 border-red-800 hover:border-red-900 text-3xl cursor-pointer hover:scale-110 transition-all transform"
+            className="relative bg-gradient-to-b from-yellow-400 via-orange-400 to-red-500 text-yellow-100 px-16 py-6 rounded-2xl font-black shadow-2xl border-b-8 border-red-800 hover:border-red-900 text-4xl cursor-pointer hover:scale-110 transition-all transform"
             aria-label="Open Smart Wizard"
-            style={{ textShadow: '3px 3px 6px rgba(0,0,0,0.8), -1px -1px 0 rgba(0,0,0,0.5)' }}
+            style={{ 
+              textShadow: '4px 4px 8px rgba(0,0,0,0.9), -2px -2px 0 rgba(0,0,0,0.6)',
+              fontFamily: 'Impact, "Arial Black", "Franklin Gothic Bold", Arial, sans-serif',
+              letterSpacing: '0.05em'
+            }}
           >
-            <div className="flex items-center space-x-3">
-              <span className="text-5xl animate-bounce">🪄</span>
-              <span className="tracking-wider font-black" style={{ fontFamily: 'Impact, Arial Black, sans-serif' }}>SMART WIZARD</span>
+            <div className="flex items-center space-x-4">
+              <span className="text-6xl animate-bounce">🪄</span>
+              <span className="tracking-wider font-black italic">SMART WIZARD</span>
             </div>
-            <div className="absolute -top-3 -right-3 bg-red-600 text-yellow-200 text-sm font-black px-3 py-1.5 rounded-full shadow-xl animate-pulse border-2 border-yellow-400">
+            <div className="absolute -top-3 -right-3 bg-red-600 text-yellow-200 text-base font-black px-4 py-2 rounded-full shadow-xl animate-pulse border-3 border-yellow-400" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
               START HERE!
             </div>
           </button>
