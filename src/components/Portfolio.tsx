@@ -203,18 +203,78 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
         {/* Content */}
         <div className="flex-1 overflow-hidden">
           {filteredQuotes.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📊</div>
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  {quotes.length === 0 ? 'No Saved Projects' : 'No Matching Projects'}
+            <div className="flex items-center justify-center h-full p-8">
+              <div className="text-center max-w-2xl">
+                <div className="text-6xl mb-6">📊</div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  {quotes.length === 0 ? 'Welcome to Your Portfolio!' : 'No Matching Projects'}
                 </h3>
-                <p className="text-gray-500 mb-4">
-                  {quotes.length === 0 
-                    ? 'Start by creating and saving your first BESS quote!'
-                    : 'Try adjusting your search terms.'
-                  }
-                </p>
+                
+                {quotes.length === 0 ? (
+                  <>
+                    <p className="text-gray-600 mb-8">
+                      Your portfolio is empty. Get started by creating your first BESS quote or uploading an existing project.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      {/* Option 1: Create New Project */}
+                      <div className="border-2 border-purple-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-white">
+                        <div className="text-4xl mb-3">✨</div>
+                        <h4 className="font-bold text-lg text-purple-800 mb-2">Create New Quote</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Start building a BESS quote from scratch with our intuitive builder
+                        </p>
+                        <button
+                          onClick={() => {
+                            onClose();
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+                        >
+                          Get Started
+                        </button>
+                      </div>
+
+                      {/* Option 2: Use Smart Wizard */}
+                      <div className="border-2 border-yellow-200 rounded-xl p-6 hover:border-yellow-400 hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-yellow-50 to-white">
+                        <div className="text-4xl mb-3">🪄</div>
+                        <h4 className="font-bold text-lg text-yellow-800 mb-2">Smart Wizard</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Answer a few questions and let AI guide you through the quoting process
+                        </p>
+                        <button
+                          onClick={() => {
+                            onClose();
+                            // Trigger smart wizard
+                            setTimeout(() => {
+                              document.querySelector<HTMLButtonElement>('[aria-label="Open Smart Wizard"]')?.click();
+                            }, 100);
+                          }}
+                          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+                        >
+                          Start Wizard
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">💡</div>
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-blue-900 mb-1">Pro Tip</h5>
+                          <p className="text-sm text-blue-800">
+                            Once you create a quote, click the <strong>"Save Project"</strong> button to add it to your portfolio. 
+                            You can then load, edit, or share it anytime!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-500">
+                    Try adjusting your search terms to find your projects.
+                  </p>
+                )}
               </div>
             </div>
           ) : (
