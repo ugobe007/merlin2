@@ -9,20 +9,20 @@ const WhyJoinUs: React.FC<WhyJoinUsProps> = ({ onClose, onJoinNow }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto border-2 border-purple-400">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 p-8 border-b-2 border-purple-400 rounded-t-2xl sticky top-0 z-10">
+        {/* Header - Compact */}
+        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 p-4 border-b-2 border-purple-400 rounded-t-2xl sticky top-0 z-10">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-800 mb-2">
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">
                 🪄 Why Join Merlin?
               </h2>
-              <p className="text-xl text-gray-700 italic">
+              <p className="text-sm text-gray-700 italic">
                 "Where Magic Meets Energy Storage"
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-600 hover:text-gray-900 text-3xl font-bold w-12 h-12 flex items-center justify-center rounded-lg hover:bg-white/50"
+              className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50"
             >
               ×
             </button>
