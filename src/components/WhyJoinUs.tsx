@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface WhyJoinUsProps {
   onClose: () => void;
@@ -6,11 +6,26 @@ interface WhyJoinUsProps {
 }
 
 const WhyJoinUs: React.FC<WhyJoinUsProps> = ({ onClose, onJoinNow }) => {
+  const [showBanner, setShowBanner] = useState(true);
+
+  // Auto-hide banner after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowBanner(false);
+    }, 3000); // 3 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col border-2 border-purple-400">
-        {/* Header - Ultra compact, fixed at top */}
-        <div className="bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 px-4 py-2 border-b-2 border-purple-400 rounded-t-2xl flex-shrink-0">
+        {/* Header - Auto-hiding with smooth animation */}
+        <div 
+          className={`bg-gradient-to-r from-purple-200 via-blue-200 to-cyan-200 px-4 border-b-2 border-purple-400 rounded-t-2xl flex-shrink-0 transition-all duration-500 ease-in-out overflow-hidden ${
+            showBanner ? 'py-2 opacity-100' : 'py-0 opacity-0 h-0 border-0'
+          }`}
+        >
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-lg font-bold text-gray-800">

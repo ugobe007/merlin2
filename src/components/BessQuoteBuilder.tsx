@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, HeadingLevel, PageBreak } from "docx";
 import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
@@ -424,30 +425,89 @@ export default function BessQuoteBuilder() {
 
   const handleExportCalculations = () => {
     try {
+      // Play magical sound effect
+      const audio = new Audio(magicPoofSound);
+      audio.volume = 0.5;
+      audio.play().catch(err => console.log('Audio play failed:', err));
+
+      // Prepare data for Excel
+      const totalMWh = powerMW * standbyHours;
+      const pcsKW = powerMW * 1000;
+      const batterySubtotal = totalMWh * 1000 * batteryKwh;
+      const pcsSubtotal = pcsKW * pcsKw;
+      const bosAmount = (batterySubtotal + pcsSubtotal) * bosPercent;
+      const epcAmount = (batterySubtotal + pcsSubtotal + bosAmount) * epcPercent;
+      const bessCapEx = batterySubtotal + pcsSubtotal + bosAmount + epcAmount;
+      
+      const generatorSubtotal = generatorMW * 1000 * genKw;
+      const solarSubtotal = solarMWp * 1000 * (solarKwp / 1000);
+      const windSubtotal = windMW * 1000 * (windKw / 1000);
+      
+      const batteryTariff = bessCapEx * 0.21;
+      const otherTariff = (generatorSubtotal + solarSubtotal + windSubtotal) * 0.06;
+      const totalTariffs = batteryTariff + otherTariff;
+      
+      const grandCapEx = bessCapEx + generatorSubtotal + solarSubtotal + windSubtotal + totalTariffs;
+
+      // Create Excel workbook
+      const workbook = XLSX.utils.book_new();
+
+      // Summary Sheet
+      const summaryData = [
+        ['BESS QUOTE SUMMARY'],
+        ['Project Name:', quoteName],
+        ['Date:', new Date().toLocaleDateString()],
+        ['Currency:', currency],
+        [],
+        ['FINANCIAL SUMMARY'],
+        ['BESS CapEx:', `${getCurrencySymbol()}${bessCapEx.toLocaleString()}`],
+        ['Grand CapEx:', `${getCurrencySymbol()}${grandCapEx.toLocaleString()}`],
+        ['Annual Savings:', `${getCurrencySymbol()}${annualSavings.toLocaleString()}`],
+        ['Simple ROI:', `${roiYears.toFixed(2)} years`],
+        [],
+        ['SYSTEM CONFIGURATION'],
+        ['Power (MW):', powerMW],
+        ['Duration (hours):', standbyHours],
+        ['Total Energy (MWh):', totalMWh.toFixed(2)],
+        ['Grid Mode:', gridMode],
+        ['Use Case:', useCase],
+        [],
+        ['COST BREAKDOWN'],
+        ['Battery Subtotal:', `${getCurrencySymbol()}${batterySubtotal.toLocaleString()}`],
+        ['PCS Subtotal:', `${getCurrencySymbol()}${pcsSubtotal.toLocaleString()}`],
+        ['BOS Amount:', `${getCurrencySymbol()}${bosAmount.toLocaleString()}`],
+        ['EPC Amount:', `${getCurrencySymbol()}${epcAmount.toLocaleString()}`],
+        ['Battery Tariff (21%):', `${getCurrencySymbol()}${batteryTariff.toLocaleString()}`],
+        ['Other Tariffs (6%):', `${getCurrencySymbol()}${otherTariff.toLocaleString()}`],
+      ];
+
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+      // Calculations Sheet
       const calculations = generateCalculationBreakdown(
-        powerMW,
-        standbyHours,
-        solarMWp,
-        windMW,
-        generatorMW,
-        batteryKwh,
-        pcsKw,
-        bosPercent,
-        epcPercent,
-        genKw,
-        solarKwp,
-        windKw,
-        location
+        powerMW, standbyHours, solarMWp, windMW, generatorMW,
+        batteryKwh, pcsKw, bosPercent, epcPercent,
+        genKw, solarKwp, windKw, location
       );
 
-      const textContent = exportCalculationsToText(calculations);
-      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-      saveAs(blob, `${quoteName}_Calculations_${new Date().toISOString().split('T')[0]}.txt`);
+      const calcData = [
+        ['DETAILED CALCULATIONS'],
+        ['Section', 'Formula', 'Result'],
+        [],
+        ...calculations.map(calc => [calc.section, calc.formula, `${calc.result} ${calc.resultUnit}`])
+      ];
+
+      const calcSheet = XLSX.utils.aoa_to_sheet(calcData);
+      XLSX.utils.book_append_sheet(workbook, calcSheet, 'Calculations');
+
+      // Generate Excel file
+      XLSX.writeFile(workbook, `${quoteName}_BESS_Quote_${new Date().toISOString().split('T')[0]}.xlsx`);
       
-      alert('✅ Calculation formulas exported successfully!\n\nThis file shows every formula, variable, and assumption used in your quote.');
+      console.log('✅ Excel file exported successfully');
     } catch (error) {
-      console.error('Error exporting calculations:', error);
-      alert('❌ Failed to export calculations. Please try again.');
+      console.error('Error exporting to Excel:', error);
+      alert('❌ Failed to export Excel file. Please try again.');
     }
   };
 
@@ -1223,7 +1283,7 @@ export default function BessQuoteBuilder() {
       <main className="p-8">
         {/* MERLIN Hero Section - Wider to align with 3-column layout */}
         <section className="max-w-[1600px] mx-auto my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20"></div>
           
           {/* Join Now Button - Matching profile style in purple */}
           <div className="absolute top-6 right-6 z-20">
@@ -1469,9 +1529,9 @@ export default function BessQuoteBuilder() {
                 <button 
                   className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
                   onClick={handleExportCalculations}
-                  title="Export detailed formulas to text file"
+                  title="Export quote to Excel spreadsheet"
                 >
-                  💾 Export Formulas (TXT)
+                  📊 Export to Excel
                 </button>
               </div>
             </section>
