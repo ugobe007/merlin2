@@ -5,6 +5,7 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
+import { startPriceMonitoring, type ElectricityPrice } from '../services/electricityPricing';
 import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
@@ -160,6 +161,35 @@ export default function BessQuoteBuilder() {
 
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
+
+  // Live Electricity Pricing - Monitor market prices
+  useEffect(() => {
+    // TODO: Replace with your actual API endpoint URL
+    const API_URL = ''; // You'll provide this URL
+    
+    if (!API_URL) {
+      console.log('⚡ Waiting for electricity pricing API URL...');
+      return;
+    }
+
+    console.log('⚡ Starting live electricity price monitoring...');
+    
+    // Update price every 5 minutes (300000 ms)
+    const stopMonitoring = startPriceMonitoring(
+      API_URL,
+      300000, // 5 minutes
+      (priceData: ElectricityPrice) => {
+        console.log('⚡ Market price updated:', priceData);
+        setValueKwh(priceData.pricePerKwh);
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      console.log('⚡ Stopped price monitoring');
+      stopMonitoring();
+    };
+  }, []); // Run once on mount
 
   const handleSaveProject = async () => {
     if (!isLoggedIn) {
@@ -1168,9 +1198,15 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
-            <div className="text-sm font-medium text-blue-600">Current kWh Price:</div>
+          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300 relative group">
+            <div className="text-sm font-medium text-blue-600 flex items-center gap-2">
+              <span>Market kWh Price:</span>
+              <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
+            </div>
             <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
+            <div className="absolute hidden group-hover:block top-full right-0 mt-2 p-2 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-nowrap z-50">
+              Real-time market pricing for accurate BESS quotes
+            </div>
           </div>
           
           {isLoggedIn && (
@@ -1194,10 +1230,10 @@ export default function BessQuoteBuilder() {
         <section className="max-w-[1600px] mx-auto my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20 animate-pulse"></div>
           
-          {/* Join Now Button - Professional & Eye-catching */}
+          {/* Join Now Button - Matching profile style in purple */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 text-white px-8 py-3 rounded-xl font-bold shadow-2xl border-b-4 border-purple-950 text-xl hover:from-purple-400 hover:to-purple-700 transition-all duration-200"
+              className="bg-gradient-to-br from-purple-100 via-purple-200 to-purple-300 hover:from-purple-200 hover:to-purple-400 text-purple-900 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-400 text-xl"
               onClick={() => setShowWhyJoinUs(true)}
             >
               ✨ Join Now
