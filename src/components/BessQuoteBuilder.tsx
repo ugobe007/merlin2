@@ -1122,21 +1122,10 @@ export default function BessQuoteBuilder() {
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="relative bg-gradient-to-b from-yellow-400 via-orange-400 to-red-500 text-yellow-100 px-16 py-6 rounded-2xl font-black shadow-2xl border-b-8 border-red-800 hover:border-red-900 text-4xl cursor-pointer hover:scale-110 transition-all transform"
+            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
             aria-label="Open Smart Wizard"
-            style={{ 
-              textShadow: '4px 4px 8px rgba(0,0,0,0.9), -2px -2px 0 rgba(0,0,0,0.6)',
-              fontFamily: 'Impact, "Arial Black", "Franklin Gothic Bold", Arial, sans-serif',
-              letterSpacing: '0.05em'
-            }}
           >
-            <div className="flex items-center space-x-4">
-              <span className="text-6xl animate-bounce">🪄</span>
-              <span className="tracking-wider font-black italic">SMART WIZARD</span>
-            </div>
-            <div className="absolute -top-3 -right-3 bg-red-600 text-yellow-200 text-base font-black px-4 py-2 rounded-full shadow-xl animate-pulse border-3 border-yellow-400" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-              START HERE!
-            </div>
+            🪄 Smart Wizard
           </button>
         </div>
         
@@ -1188,7 +1177,7 @@ export default function BessQuoteBuilder() {
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
                 </h1>
-                <p className="text-xl text-purple-600 italic font-semibold">"Where Magic Meets Energy"</p>
+                <p className="text-xl text-blue-700 italic font-semibold drop-shadow-md">"Where Magic Meets Energy"</p>
               </div>
             </div>
             
@@ -1202,23 +1191,23 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center space-x-2 transform hover:scale-105 text-xl"
+                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 flex items-center space-x-2 transform hover:scale-105 text-lg"
                 onClick={handleSaveProject}
               >
-                <span className="text-2xl">💾</span>
+                <span>💾</span>
                 <span>Save Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center space-x-2 transform hover:scale-105 text-xl"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-green-700 hover:border-green-800 flex items-center space-x-2 transform hover:scale-105 text-lg"
                 onClick={handleLoadProject}
               >
-                <span className="text-2xl">📂</span>
+                <span>📂</span>
                 <span>Load Project</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center space-x-2 transform hover:scale-105 text-xl"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-5 py-3 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-900 hover:border-black flex items-center space-x-2 transform hover:scale-105 text-lg"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
@@ -1233,7 +1222,7 @@ export default function BessQuoteBuilder() {
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* SYSTEM CONFIGURATION PANEL */}
             <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-300 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-              <h2 className="text-3xl font-bold text-gray-800 mb-8">⚡ System Configuration</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
                   <label className={labelStyle}>Power (MW)</label>
@@ -1292,7 +1281,7 @@ export default function BessQuoteBuilder() {
             {/* ASSUMPTIONS PANEL */}
             <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-300 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">💰 Pricing Assumptions</h2>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">Pricing Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
                   className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2 transform hover:scale-105"
@@ -1356,7 +1345,7 @@ export default function BessQuoteBuilder() {
             {/* FINANCIAL SUMMARY PANEL */}
             <section className="rounded-2xl p-8 shadow-2xl border-2 border-green-300 bg-gradient-to-b from-green-50 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-green-700 via-emerald-600 to-green-800 bg-clip-text text-transparent drop-shadow-sm">📊 Financial Summary</h2>
+                <h2 className="text-3xl font-bold text-green-800 mb-8">Financial Summary</h2>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
