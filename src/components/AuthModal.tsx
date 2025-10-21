@@ -27,20 +27,86 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
     setLoading(true);
 
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      if (mode === 'signup') {
+        // Validate required fields
+        if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+          alert('Please fill in all required fields');
+          setLoading(false);
+          return;
+        }
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        onLoginSuccess(data.user);
+        // Check if user already exists
+        const existingUsers = JSON.parse(localStorage.getItem('merlin_users') || '[]');
+        const userExists = existingUsers.find((u: any) => u.email === formData.email);
+        
+        if (userExists) {
+          alert('An account with this email already exists. Please sign in.');
+          setMode('login');
+          setLoading(false);
+          return;
+        }
+
+        // Create new user
+        const newUser = {
+          id: Date.now().toString(),
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          company: formData.company,
+          createdAt: new Date().toISOString(),
+          tier: 'free'
+        };
+
+        // Save to users list (without password in storage for security)
+        existingUsers.push(newUser);
+        localStorage.setItem('merlin_users', JSON.stringify(existingUsers));
+        
+        // Save password separately (in production, this would be hashed on backend)
+        const passwords = JSON.parse(localStorage.getItem('merlin_passwords') || '{}');
+        passwords[formData.email] = formData.password;
+        localStorage.setItem('merlin_passwords', JSON.stringify(passwords));
+
+        // Set auth token
+        localStorage.setItem('auth_token', newUser.id);
+        localStorage.setItem('current_user', JSON.stringify(newUser));
+
+        alert(`✅ Welcome to Merlin Energy, ${newUser.firstName}!\n\nYour account has been created successfully.`);
+        onLoginSuccess(newUser);
         onClose();
+        
       } else {
-        alert(data.message || 'Authentication failed');
+        // Login mode
+        if (!formData.email || !formData.password) {
+          alert('Please enter your email and password');
+          setLoading(false);
+          return;
+        }
+
+        const existingUsers = JSON.parse(localStorage.getItem('merlin_users') || '[]');
+        const user = existingUsers.find((u: any) => u.email === formData.email);
+
+        if (!user) {
+          alert('No account found with this email. Please sign up first.');
+          setMode('signup');
+          setLoading(false);
+          return;
+        }
+
+        // Check password
+        const passwords = JSON.parse(localStorage.getItem('merlin_passwords') || '{}');
+        if (passwords[formData.email] !== formData.password) {
+          alert('Incorrect password. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        // Set auth token
+        localStorage.setItem('auth_token', user.id);
+        localStorage.setItem('current_user', JSON.stringify(user));
+
+        alert(`✅ Welcome back, ${user.firstName}!`);
+        onLoginSuccess(user);
+        onClose();
       }
     } catch (error) {
       console.error('Auth error:', error);
