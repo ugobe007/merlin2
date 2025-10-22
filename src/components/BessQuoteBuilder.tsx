@@ -5,6 +5,7 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
+import { calculateBESSPricing, PRICING_SOURCES, formatPricingForDisplay } from '../utils/bessPricing';
 import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
@@ -141,6 +142,7 @@ export default function BessQuoteBuilder() {
   const [utilization, setUtilization] = useState(0.3);
   const [warranty, setWarranty] = useState('10 years');
   const [location, setLocation] = useState('UK (6%)');
+  const [selectedCountry, setSelectedCountry] = useState('United States');
   const [currency, setCurrency] = useState('USD');
  
   // Exchange rates (relative to USD)
@@ -1123,7 +1125,14 @@ export default function BessQuoteBuilder() {
   const actualPcsFactor = gridMode === 'Off-grid' ? offGridPcsFactor : onGridPcsFactor;
   const adjustedPcsKw = pcsKW * actualPcsFactor;
   
-  const batterySubtotal = totalMWh * 1000 * batteryKwh;
+  // Use dynamic pricing system based on market data
+  const dynamicPricing = calculateBESSPricing(powerMW, standbyHours, selectedCountry, false);
+  const dynamicBatteryKwh = dynamicPricing.contractAveragePerKWh;
+  
+  // Allow manual override via batteryKwh state, but default to dynamic pricing
+  const effectiveBatteryKwh = batteryKwh === 120 || batteryKwh === 140 ? dynamicBatteryKwh : batteryKwh;
+  
+  const batterySubtotal = totalMWh * 1000 * effectiveBatteryKwh;
   const pcsSubtotal = pcsKW * adjustedPcsKw;
   const bosAmount = (batterySubtotal + pcsSubtotal) * bosPercent;
   const epcAmount = (batterySubtotal + pcsSubtotal + bosAmount) * epcPercent;
@@ -1285,6 +1294,122 @@ export default function BessQuoteBuilder() {
           </div>
         </section>
 
+        {/* MARKET PRICING INTELLIGENCE SECTION */}
+        <section className="rounded-2xl p-6 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-8">
+          <div className="text-center mb-4">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+              <span className="text-4xl mr-3">📊</span>
+              Current BESS Market Pricing
+              <span className="text-4xl ml-3">💰</span>
+            </h2>
+            <p className="text-sm text-gray-600 italic">Real-time pricing intelligence from BNEF, NREL ATB, and industry sources</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Market Price Card */}
+            <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-4 rounded-xl border-2 border-blue-400 shadow-md">
+              <div className="text-center">
+                <p className="text-sm font-semibold text-blue-800 mb-1">📈 Market Average</p>
+                <p className="text-3xl font-bold text-blue-900">
+                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
+                  <span className="text-lg">/kWh</span>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">Based on {powerMW}MW × {standbyHours}hr system</p>
+                <p className="text-xs text-green-600 font-semibold mt-1">📉 Trending DOWN (-40% YoY)</p>
+              </div>
+            </div>
+
+            {/* Contract Price Card */}
+            <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-4 rounded-xl border-2 border-purple-400 shadow-md">
+              <div className="text-center">
+                <p className="text-sm font-semibold text-purple-800 mb-1">📋 Contract Average</p>
+                <p className="text-3xl font-bold text-purple-900">
+                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
+                  <span className="text-lg">/kWh</span>
+                </p>
+                <p className="text-xs text-purple-700 mt-1">Industry standard pricing</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">
+                  {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
+                </p>
+              </div>
+            </div>
+
+            {/* Confidence & Sources Card */}
+            <div className="bg-gradient-to-br from-green-100 to-green-50 p-4 rounded-xl border-2 border-green-400 shadow-md">
+              <div className="text-center">
+                <p className="text-sm font-semibold text-green-800 mb-1">✅ Data Confidence</p>
+                <p className="text-3xl font-bold text-green-900 uppercase">
+                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).confidenceLevel}
+                </p>
+                <p className="text-xs text-green-700 mt-1">Multi-source validation</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">
+                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).regionalVariation > 0 ? '+' : ''}
+                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).regionalVariation.toFixed(1)}% regional variation
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Sources */}
+          <div className="bg-white p-4 rounded-xl border border-gray-300 shadow-sm">
+            <p className="text-sm font-semibold text-gray-800 mb-2">📚 Pricing Sources & References:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">•</span>
+                <span><strong>BNEF 2024:</strong> $165/kWh turnkey (40% YoY drop)</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">•</span>
+                <span><strong>NREL ATB 2024:</strong> $135-180/kWh range</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">•</span>
+                <span><strong>Industry (≥2MW):</strong> $150/kWh contract standard</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">•</span>
+                <span><strong>Industry (1MW):</strong> $130/kWh contract standard</span>
+              </div>
+            </div>
+            <div className="mt-3 flex justify-center space-x-4 text-xs">
+              <a 
+                href="https://www.energy-storage.news/behind-the-numbers-bnef-finds-40-year-on-year-drop-in-bess-costs/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline font-semibold"
+              >
+                🔗 BNEF Report
+              </a>
+              <a 
+                href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline font-semibold"
+              >
+                🔗 NREL ATB Database
+              </a>
+            </div>
+          </div>
+
+          {/* Your System Estimate */}
+          <div className="mt-4 bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-4 rounded-xl border-2 border-yellow-400 shadow-md">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm font-semibold text-gray-700">🎯 Your System Estimate ({powerMW}MW × {standbyHours}hr = {(powerMW * standbyHours).toFixed(1)}MWh):</p>
+                <p className="text-xs text-gray-600 mt-1">Using Merlin's contract average pricing for {selectedCountry}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-orange-700">
+                  ${((powerMW * standbyHours * 1000) * calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-700 font-semibold">
+                  @ ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1359,10 +1484,34 @@ export default function BessQuoteBuilder() {
                   <span>Reset</span>
                 </button>
               </div>
+              
+              {/* Dynamic Pricing Info Box */}
+              <div className="mb-4 p-4 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl border-2 border-green-400">
+                <p className="text-sm font-bold text-gray-800 mb-2">💡 Dynamic Market Pricing Active</p>
+                <p className="text-xs text-gray-700">
+                  Battery pricing auto-adjusts based on system size, duration, and location.
+                  Current rate: <strong className="text-blue-700">${effectiveBatteryKwh}/kWh</strong>
+                  {' '}({powerMW >= 2 ? 'Large Scale ≥2MW' : 'Small Scale <2MW'})
+                </p>
+                <p className="text-xs text-green-700 font-semibold mt-1">
+                  ✅ Based on BNEF 2024, NREL ATB, and industry contracts
+                </p>
+              </div>
+              
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <label className={labelStyle}>Battery ({getCurrencySymbol()}/kWh)</label>
-                  <input type="number" step="1" value={batteryKwh} onChange={(e) => setBatteryKwh(parseFloat(e.target.value) || 0)} className={inputStyle} />
+                  <label className={labelStyle}>
+                    Battery ({getCurrencySymbol()}/kWh)
+                    <span className="text-xs text-blue-600 ml-2">📊 Auto</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    step="1" 
+                    value={effectiveBatteryKwh} 
+                    onChange={(e) => setBatteryKwh(parseFloat(e.target.value) || 0)} 
+                    className={inputStyle}
+                    title="Automatically calculated from market data. You can override manually."
+                  />
                 </div>
                 <div>
                   <label className={labelStyle}>PCS ({getCurrencySymbol()}/kW)</label>
