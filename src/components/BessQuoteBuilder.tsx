@@ -1211,7 +1211,7 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-purple-100 to-purple-200 hover:from-purple-200 hover:to-purple-300 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+            className="bg-gradient-to-b from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-500 hover:border-purple-600 transform hover:scale-105"
           >
             🧙‍♂️ User Profile
           </button>
@@ -1244,6 +1244,25 @@ export default function BessQuoteBuilder() {
       </header>
       
       <main className="p-8">
+        {/* PROMINENT SMART WIZARD BUTTON - Top of page */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <button 
+              onClick={() => setShowSmartWizard(true)}
+              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-2xl"
+              aria-label="Open Smart Wizard"
+              title="Open Smart Wizard"
+            >
+              🪄 Smart Wizard
+            </button>
+            
+            {/* "START HERE" Indicator Bubble */}
+            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
+              ⭐ START
+            </div>
+          </div>
+        </div>
+        
         {/* MERLIN Hero Section */}
         <section className="mx-8 my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
@@ -1270,25 +1289,6 @@ export default function BessQuoteBuilder() {
                   Merlin BESS Quote Builder
                 </h1>
                 <p className="text-xl text-blue-700 italic font-semibold drop-shadow-md">"Where Magic Meets Energy"</p>
-              </div>
-            </div>
-            
-            {/* PROMINENT SMART WIZARD BUTTON - Centered in main content */}
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                <button 
-                  onClick={() => setShowSmartWizard(true)}
-                  className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
-                  aria-label="Open Smart Wizard"
-                  title="Open Smart Wizard"
-                >
-                  🪄 Smart Wizard
-                </button>
-                
-                {/* "START HERE" Indicator Bubble - Reduced size */}
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
-                  ⭐ START
-                </div>
               </div>
             </div>
             
