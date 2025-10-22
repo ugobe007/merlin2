@@ -1209,42 +1209,38 @@ export default function BessQuoteBuilder() {
       {/* Top Header Bar */}
       <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-blue-200 shadow-xl">
         <div className="flex items-center space-x-4">
-          <div className="flex flex-col space-y-2">
-            <button 
-              onClick={handleUserProfile}
-              className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-2 border-orange-700 hover:border-orange-800 transform hover:scale-105 text-sm"
-              title="User Profile"
-            >
-              👤 User Profile
-            </button>
-            
-            <button 
-              onClick={() => {
-                setIsLoggedIn(false);
-                alert('You have been logged out successfully');
-              }}
-              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-2 border-red-700 hover:scale-105 text-sm"
-              title="Sign Out"
-            >
-              🚪 Sign Out
-            </button>
-          </div>
+          <button 
+            onClick={handleUserProfile}
+            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+          >
+            🧙‍♂️ User Profile
+          </button>
           
-          {/* PROMINENT SMART WIZARD BUTTON - Separate for emphasis */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowSmartWizard(true)}
-              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-lg font-bold shadow-md transform hover:scale-105 transition-all border-b-2 border-purple-800 hover:border-purple-900 text-2xl"
-              aria-label="Open Smart Wizard"
-              title="Open Smart Wizard"
-            >
-              🪄 <span className="align-middle font-extrabold">Smart Wizard</span>
-            </button>
-            
-            {/* "START HERE" Indicator Bubble */}
-            <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
-              ⭐ START HERE
-            </div>
+          <button 
+            onClick={() => {
+              setIsLoggedIn(false);
+              alert('You have been logged out successfully');
+            }}
+            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-red-600 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-red-300 hover:border-red-400 transform hover:scale-105"
+          >
+            🚪 Sign Out
+          </button>
+        </div>
+        
+        {/* PROMINENT SMART WIZARD BUTTON - Centered for emphasis */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 relative">
+          <button 
+            onClick={() => setShowSmartWizard(true)}
+            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+            aria-label="Open Smart Wizard"
+            title="Open Smart Wizard"
+          >
+            🪄 Smart Wizard
+          </button>
+          
+          {/* "START HERE" Indicator Bubble - Reduced size */}
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
+            ⭐ START
           </div>
         </div>
         
