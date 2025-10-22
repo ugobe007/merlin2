@@ -107,12 +107,12 @@ const Step0_ProjectType: React.FC<Step0_ProjectTypeProps> = ({
                     <li>Taking advantage of time-of-use rates</li>
                     <li>Grid stabilization and frequency regulation</li>
                   </ul>
-                  <p className="mt-3 text-sm text-blue-200">
+                  <p className="mt-3 text-sm text-blue-700 font-semibold">
                     We'll help you size the battery system and calculate ROI based on your local utility rates.
                   </p>
                 </div>
               ) : (
-                <div className="text-gray-300 space-y-2">
+                <div className="text-gray-700 space-y-2 font-medium">
                   <p>
                     A hybrid BESS combines battery storage with renewable energy generation and/or backup power. 
                     It's perfect for:
@@ -123,7 +123,7 @@ const Step0_ProjectType: React.FC<Step0_ProjectTypeProps> = ({
                     <li>Reducing grid reliance and utility bills</li>
                     <li>Meeting sustainability goals</li>
                   </ul>
-                  <p className="mt-3 text-sm text-green-200">
+                  <p className="mt-3 text-sm text-green-700 font-semibold">
                     We'll analyze solar/wind potential, calculate space requirements, and include fuel costs for generators.
                   </p>
                 </div>
