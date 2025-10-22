@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface PricingPlansProps {
   onClose: () => void;
@@ -6,8 +6,19 @@ interface PricingPlansProps {
   currentTier?: 'free' | 'professional' | 'enterprise_pro' | 'business';
 }
 
-const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier = 'free' }) => {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier }) => {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+
+  // ESC key to close
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const handleSelectPlan = (tier: string) => {
     if (tier === 'free') {
@@ -51,9 +62,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </h2>
               <p className="text-gray-600 text-lg">Select the perfect plan for your BESS quoting needs</p>
             </div>
-            <button 
+            <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-3xl leading-none transition-colors"
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg px-3 py-1 text-3xl leading-none transition-all"
+              title="Close (ESC)"
             >
               ×
             </button>
@@ -110,26 +122,38 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
             </div>
 
-            <div className="space-y-3 text-sm">
+                        <div className="space-y-3 text-sm">
               <div className="flex items-start">
-                <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">3 quote generations/month</span>
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">3 quote generations per month</span>
               </div>
               <div className="flex items-start">
-                <span className="text-blue-600 mr-2">✓</span>
+                <span className="text-green-600 mr-2">✓</span>
                 <span className="text-gray-700">Basic BESS calculator</span>
               </div>
               <div className="flex items-start">
-                <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">2 use case templates</span>
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">2 standard use case templates</span>
               </div>
               <div className="flex items-start">
-                <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">Word/Excel export</span>
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Word & Excel export</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Email support</span>
               </div>
               <div className="flex items-start">
                 <span className="text-gray-400 mr-2">✗</span>
-                <span className="text-gray-500">No saved projects</span>
+                <span className="text-gray-400 line-through">Save & load projects</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-400 mr-2">✗</span>
+                <span className="text-gray-400 line-through">Advanced analytics</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-400 mr-2">✗</span>
+                <span className="text-gray-400 line-through">Custom branding</span>
               </div>
             </div>
           </div>
@@ -187,15 +211,23 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Full hybrid configurations</span>
+                <span className="text-gray-700">Full hybrid configurations (Solar + Storage)</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Smart Wizard AI guidance</span>
+                <span className="text-gray-700">🪄 Smart Wizard AI guidance</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">ROI analysis & calculations</span>
+                <span className="text-gray-700">Advanced analytics dashboard</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">NPV, IRR, ROI & payback calculations</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Financing calculator (Loan/Lease/PPA)</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
@@ -203,7 +235,15 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">All standard use cases</span>
+                <span className="text-gray-700">All 8 standard use case templates</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Portfolio management tools</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Priority email support</span>
               </div>
             </div>
           </div>
@@ -255,23 +295,31 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">All premium use cases</span>
+                <span className="text-gray-700">All premium use case templates</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Multi-user collaboration (5 users)</span>
+                <span className="text-gray-700">Multi-user collaboration (up to 5 team members)</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Vendor quote management</span>
+                <span className="text-gray-700">Vendor quote management system</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Priority support + phone</span>
+                <span className="text-gray-700">Sensitivity analysis & scenario modeling</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">White-label branding</span>
+                <span className="text-gray-700">White-label branding (custom colors & logos)</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-purple-600 mr-2">✓</span>
+                <span className="text-gray-700">Priority support with phone access</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-purple-600 mr-2">✓</span>
+                <span className="text-gray-700">Advanced export options (PDF, DOCX, XLSX)</span>
               </div>
             </div>
           </div>
@@ -305,11 +353,11 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">Unlimited users</span>
+                <span className="text-gray-700">Unlimited team members</span>
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">Custom use case creation</span>
+                <span className="text-gray-700">Custom use case template creation</span>
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
@@ -317,15 +365,27 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">Training & onboarding</span>
+                <span className="text-gray-700">Personalized training & onboarding</span>
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">Custom integrations</span>
+                <span className="text-gray-700">Custom integrations & workflows</span>
               </div>
               <div className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span className="text-gray-700">API access</span>
+                <span className="text-gray-700">Full API access for automation</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">✓</span>
+                <span className="text-gray-700">99.9% SLA with priority support</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">✓</span>
+                <span className="text-gray-700">Quarterly business reviews</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-blue-600 mr-2">✓</span>
+                <span className="text-gray-700">Custom feature development</span>
               </div>
             </div>
           </div>
