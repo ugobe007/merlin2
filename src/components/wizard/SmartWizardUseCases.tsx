@@ -69,15 +69,23 @@ const SmartWizardUseCases: React.FC<SmartWizardUseCasesProps> = ({
             key={useCase.id}
             className={`p-6 rounded-lg transition-all duration-300 cursor-pointer ${
               selectedUseCase?.id === useCase.id
-                ? 'bg-blue-600 text-white shadow-2xl transform -translate-y-2'
+                ? 'bg-blue-600 shadow-2xl transform -translate-y-2'
                 : 'bg-white hover:bg-gray-50 hover:shadow-xl'
             }`}
             onClick={() => onUseCaseSelect(useCase)}
           >
             <div className="text-center">
               <div className="text-4xl mb-3">{useCase.icon}</div>
-              <h3 className="text-lg font-semibold">{useCase.name}</h3>
-              <p className="text-sm">{useCase.description}</p>
+              <h3 className={`text-lg font-semibold ${
+                selectedUseCase?.id === useCase.id ? 'text-white' : 'text-gray-900'
+              }`}>
+                {useCase.name}
+              </h3>
+              <p className={`text-sm ${
+                selectedUseCase?.id === useCase.id ? 'text-blue-100' : 'text-gray-600'
+              }`}>
+                {useCase.description}
+              </p>
             </div>
 
             {selectedUseCase?.id === useCase.id && (
