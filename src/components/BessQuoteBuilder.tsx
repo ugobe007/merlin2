@@ -141,6 +141,26 @@ export default function BessQuoteBuilder() {
   const [location, setLocation] = useState('UK (6%)');
   const [currency, setCurrency] = useState('USD');
  
+  // Exchange rates (relative to USD)
+  const exchangeRates: { [key: string]: number } = {
+    'USD': 1.0,
+    'EUR': 0.92,
+    'GBP': 0.79,
+    'JPY': 149.50,
+    'CNY': 7.24,
+    'CAD': 1.36,
+    'AUD': 1.53,
+    'INR': 83.12,
+    'BRL': 4.97,
+    'MXN': 17.08,
+    'KRW': 1337.50,
+  };
+
+  // Convert USD amount to selected currency
+  const convertCurrency = (amountUSD: number): number => {
+    return amountUSD * exchangeRates[currency];
+  };
+
   // Assumptions State (default values)
   const [batteryKwh, setBatteryKwh] = useState(250);
   const [pcsKw, setPcsKw] = useState(200);
@@ -1413,16 +1433,16 @@ export default function BessQuoteBuilder() {
               <div className="space-y-3">
                 <div className="bg-green-50 p-4 rounded-xl border-2 border-green-200 flex justify-between items-center">
                   <span className="text-gray-700 font-semibold text-lg">BESS CapEx:</span>
-                  <span className="font-bold text-green-700 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="font-bold text-green-700 text-2xl">{getCurrencySymbol()}{convertCurrency(bessCapEx).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
                 <div className="bg-green-100 p-4 rounded-xl border-2 border-green-300 flex justify-between items-center">
                   <span className="text-gray-700 font-semibold text-lg">Grand CapEx:</span>
-                  <span className="font-bold text-green-800 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="font-bold text-green-800 text-2xl">{getCurrencySymbol()}{convertCurrency(grandCapEx).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
                 <hr className="border-green-300 my-4" />
                 <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200 flex justify-between items-center">
                   <span className="text-gray-700 font-semibold text-lg">Annual Savings:</span>
-                  <span className="font-bold text-yellow-700 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
+                  <span className="font-bold text-yellow-700 text-2xl">{getCurrencySymbol()}{convertCurrency(annualSavings).toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
                 </div>
                 <div className="bg-yellow-100 p-4 rounded-xl border-2 border-yellow-300 flex justify-between items-center">
                   <span className="text-gray-700 font-semibold text-lg">Simple ROI:</span>
