@@ -2,15 +2,20 @@ import React, { useState } from 'react';
 
 interface PricingPlansProps {
   onClose: () => void;
+  onSignUp?: () => void;
   currentTier?: 'free' | 'professional' | 'enterprise_pro' | 'business';
 }
 
-const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'free' }) => {
+const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier = 'free' }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
   const handleSelectPlan = (tier: string) => {
     if (tier === 'free') {
-      alert('You are already on the Free Starter plan! 🎉');
+      // Allow free signup
+      if (onSignUp) {
+        onClose();
+        onSignUp();
+      }
       return;
     }
     
@@ -99,14 +104,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
 
               <button
                 onClick={() => handleSelectPlan('free')}
-                className={`w-full py-3 rounded-xl font-bold transition-all ${
-                  currentTier === 'free'
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
-                }`}
-                disabled={currentTier === 'free'}
+                className="w-full py-3 rounded-xl font-bold transition-all bg-purple-600 text-white hover:bg-purple-700 shadow-md"
               >
-                {currentTier === 'free' ? 'Current Plan' : 'Start Free'}
+                Start Free
               </button>
             </div>
 
@@ -135,14 +135,14 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
           </div>
 
           {/* PROFESSIONAL - MOST POPULAR */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-purple-400 relative hover:shadow-2xl transition-all">
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-purple-400 relative hover:shadow-2xl transition-all mt-6">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
               <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase shadow-md">
                 Most Popular
               </span>
             </div>
 
-            <div className="mb-4 mt-2">
+            <div className="mb-4 mt-4">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
               <p className="text-sm text-gray-600 mb-4">For energy consultants and project developers</p>
               

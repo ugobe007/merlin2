@@ -1520,7 +1520,16 @@ export default function BessQuoteBuilder() {
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
-      {showPricingPlans && <PricingPlans onClose={() => setShowPricingPlans(false)} currentTier="free" />}
+      {showPricingPlans && (
+        <PricingPlans 
+          onClose={() => setShowPricingPlans(false)} 
+          onSignUp={() => {
+            setShowPricingPlans(false);
+            setShowAuthModal(true);
+          }}
+          currentTier="free" 
+        />
+      )}
       
       {/* Welcome and Account Setup Modals */}
       {showWelcomeModal && (
