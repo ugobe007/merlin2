@@ -18,16 +18,16 @@ const Step2_Budget: React.FC<Step2Props> = ({
   setWarranty,
 }) => {
   return (
-    <div className="p-4 text-white">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Budget & System Requirements</h2>
-        <p className="text-purple-200">Help us understand your budget and system sizing needs.</p>
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold text-gray-800">Budget & System Requirements</h2>
+        <p className="text-gray-700 text-lg font-semibold">Help us understand your budget and system sizing needs.</p>
       </div>
 
       <div className="space-y-6">
         {/* Budget Selection Cards */}
-        <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/40 p-6 rounded-xl shadow-md border border-purple-500/30">
-          <label className="block text-xl font-semibold text-purple-200 mb-4">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl shadow-lg border-2 border-purple-400">
+          <label className="block text-xl font-semibold text-purple-800 mb-4">
             What's your approximate budget range?
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -48,14 +48,18 @@ const Step2_Budget: React.FC<Step2Props> = ({
                   onClick={() => setBudget(option.value)}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-purple-600/30 border-purple-400 shadow-lg scale-105'
-                      : 'bg-gray-800/50 border-gray-600/50 hover:border-purple-500/50'
+                      ? 'bg-purple-600 border-purple-700 shadow-xl scale-105'
+                      : 'bg-white border-purple-300 hover:border-purple-500 hover:shadow-md'
                   }`}
                 >
-                  <h4 className="font-bold text-lg text-white">{option.label}</h4>
-                  <p className="text-sm text-gray-300">{option.subtitle}</p>
+                  <h4 className={`font-bold text-lg ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                    {option.label}
+                  </h4>
+                  <p className={`text-sm ${isSelected ? 'text-purple-100' : 'text-gray-600'}`}>
+                    {option.subtitle}
+                  </p>
                   {isSelected && (
-                    <p className="text-purple-400 font-bold mt-2 text-sm">✓</p>
+                    <p className="text-white font-bold mt-2 text-sm">✓</p>
                   )}
                 </div>
               );
@@ -64,8 +68,8 @@ const Step2_Budget: React.FC<Step2Props> = ({
         </div>
 
         {/* System Size Selection */}
-        <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/40 p-6 rounded-xl shadow-md border border-blue-500/30">
-          <label className="block text-xl font-semibold text-blue-200 mb-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl shadow-lg border-2 border-blue-400">
+          <label className="block text-xl font-semibold text-blue-800 mb-4">
             What size system category fits your needs?
           </label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -79,14 +83,18 @@ const Step2_Budget: React.FC<Step2Props> = ({
                 onClick={() => setDuration(option.value)}
                 className={`p-6 rounded-lg border-2 cursor-pointer transition-all text-center ${
                   duration === option.value
-                    ? 'bg-blue-600/30 border-blue-400 shadow-lg scale-105'
-                    : 'bg-gray-800/50 border-gray-600/50 hover:border-blue-500/50'
+                    ? 'bg-blue-600 border-blue-700 shadow-xl scale-105'
+                    : 'bg-white border-blue-300 hover:border-blue-500 hover:shadow-md'
                 }`}
               >
-                <h4 className="font-bold text-xl text-white mb-1">{option.label}</h4>
-                <p className="text-sm text-gray-300">{option.subtitle}</p>
+                <h4 className={`font-bold text-xl mb-1 ${duration === option.value ? 'text-white' : 'text-gray-900'}`}>
+                  {option.label}
+                </h4>
+                <p className={`text-sm ${duration === option.value ? 'text-blue-100' : 'text-gray-600'}`}>
+                  {option.subtitle}
+                </p>
                 {duration === option.value && (
-                  <p className="text-blue-400 font-bold mt-3 text-lg">✓</p>
+                  <p className="text-white font-bold mt-3 text-lg">✓</p>
                 )}
               </div>
             ))}
@@ -94,15 +102,15 @@ const Step2_Budget: React.FC<Step2Props> = ({
         </div>
 
         {/* Warranty */}
-        <div className="bg-gradient-to-br from-green-900/40 to-emerald-800/40 p-6 rounded-xl shadow-md border border-green-500/30">
-          <label htmlFor="warranty-select" className="block text-xl font-semibold text-green-200 mb-4">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl shadow-lg border-2 border-green-400">
+          <label htmlFor="warranty-select" className="block text-xl font-semibold text-green-800 mb-4">
             System Warranty
           </label>
           <select
             id="warranty-select"
             value={warranty}
             onChange={(e) => setWarranty(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-800/50 border-2 border-green-500/30 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg font-medium text-white"
+            className="w-full px-4 py-3 bg-white border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-600 text-lg font-medium text-gray-900 shadow-sm"
           >
             <option value="5">5 Years</option>
             <option value="10">10 Years</option>
