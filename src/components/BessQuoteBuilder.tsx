@@ -1190,12 +1190,29 @@ export default function BessQuoteBuilder() {
       {/* Top Header Bar */}
       <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-blue-200 shadow-xl">
         <div className="flex items-center space-x-4">
-          <button 
-            onClick={handleUserProfile}
-            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
-          >
-            🧙‍♂️ User Profile
-          </button>
+          <div className="flex flex-col space-y-2">
+            <button 
+              onClick={handleUserProfile}
+              className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+            >
+              🧙‍♂️ User Profile
+            </button>
+            
+            {isLoggedIn && (
+              <button 
+                onClick={() => {
+                  authService.signOut();
+                  setIsLoggedIn(false);
+                  alert('You have been logged out successfully');
+                }}
+                className="bg-gradient-to-r from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-purple-900 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 border-2 border-purple-500 hover:scale-105 text-sm"
+                title="Sign Out"
+              >
+                🚪 Sign Out
+              </button>
+            )}
+          </div>
+          
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
@@ -1219,20 +1236,6 @@ export default function BessQuoteBuilder() {
               </div>
             </div>
           </div>
-          
-          {isLoggedIn && (
-            <button 
-              onClick={() => {
-                authService.signOut();
-                setIsLoggedIn(false);
-                alert('You have been logged out successfully');
-              }}
-              className="bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-4 border-blue-600 hover:scale-105 text-sm"
-              title="Sign Out"
-            >
-              🚪 Sign Out
-            </button>
-          )}
         </div>
       </header>
       
