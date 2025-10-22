@@ -1297,11 +1297,31 @@ export default function BessQuoteBuilder() {
         {/* MARKET PRICING INTELLIGENCE SECTION */}
         <section className="rounded-2xl p-6 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-8">
           <div className="text-center mb-4">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
               <span className="text-4xl mr-3">📊</span>
               Current BESS Market Pricing
               <span className="text-4xl ml-3">💰</span>
             </h2>
+            
+            {/* Prominent Pricing Display */}
+            <div className="flex justify-center items-center space-x-8 mb-3">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-4 rounded-2xl shadow-xl border-2 border-blue-700">
+                <p className="text-sm font-semibold mb-1 opacity-90">Market Average kWh Price</p>
+                <p className="text-5xl font-bold">
+                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
+                </p>
+                <p className="text-xs mt-1 opacity-80">Based on multiple sources</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-xl border-2 border-green-700">
+                <p className="text-sm font-semibold mb-1 opacity-90">Contract Average (What People Pay)</p>
+                <p className="text-5xl font-bold">
+                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
+                </p>
+                <p className="text-xs mt-1 opacity-80">Industry standard pricing</p>
+              </div>
+            </div>
+            
             <p className="text-sm text-gray-600 italic">Real-time pricing intelligence from BNEF, NREL ATB, and industry sources</p>
           </div>
 
