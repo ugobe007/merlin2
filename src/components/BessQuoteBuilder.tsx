@@ -1207,9 +1207,17 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
-            <div className="text-sm font-medium text-blue-600">Current kWh Price:</div>
-            <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
+          <div className="space-y-2">
+            <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
+              <div className="text-sm font-medium text-blue-600">Utility kWh Price:</div>
+              <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
+            </div>
+            <div className="text-right bg-green-100/80 px-4 py-2 rounded-lg shadow-md border border-green-400">
+              <div className="text-sm font-medium text-green-700">BESS Contract Price:</div>
+              <div className="text-xl font-bold text-green-800">
+                ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
+              </div>
+            </div>
           </div>
           
           {isLoggedIn && (
