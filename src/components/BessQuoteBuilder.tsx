@@ -1211,7 +1211,7 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+            className="bg-gradient-to-b from-purple-100 to-purple-200 hover:from-purple-200 hover:to-purple-300 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
           >
             🧙‍♂️ User Profile
           </button>
@@ -1221,14 +1221,14 @@ export default function BessQuoteBuilder() {
               setIsLoggedIn(false);
               alert('You have been logged out successfully');
             }}
-            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-red-600 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-red-300 hover:border-red-400 transform hover:scale-105"
+            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-orange-600 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
           >
             🚪 Sign Out
           </button>
         </div>
         
         {/* PROMINENT SMART WIZARD BUTTON - Centered for emphasis */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 relative">
+        <div className="flex items-center justify-center relative">
           <button 
             onClick={() => setShowSmartWizard(true)}
             className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
@@ -1276,13 +1276,13 @@ export default function BessQuoteBuilder() {
           </div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center mb-4">
               <img 
                 src={merlinImage} 
                 alt="Merlin the Wizard" 
                 className="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(147,51,234,0.8)] filter brightness-110"
               />
-              <div>
+              <div className="text-center">
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
                 </h1>
