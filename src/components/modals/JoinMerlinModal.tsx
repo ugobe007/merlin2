@@ -4,10 +4,10 @@ import { X, Sparkles, Zap, Save, Users, Shield, TrendingUp } from 'lucide-react'
 interface JoinMerlinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSignUp: () => void;
+  onViewPricing: () => void;
 }
 
-export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerlinModalProps) {
+export default function JoinMerlinModal({ isOpen, onClose, onViewPricing }: JoinMerlinModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -135,10 +135,10 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={onSignUp}
+              onClick={onViewPricing}
               className="flex-1 bg-gradient-to-b from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-8 py-5 rounded-xl font-bold text-xl shadow-xl transition-all duration-200 border-b-4 border-purple-800 hover:border-purple-900 transform hover:scale-105"
             >
-              🚀 Try Merlin Free
+              🚀 Try Merlin Now
             </button>
             <button
               onClick={onClose}

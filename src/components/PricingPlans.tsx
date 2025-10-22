@@ -35,20 +35,20 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20 rounded-2xl w-full max-w-7xl border-2 border-purple-500/30 my-8">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl w-full max-w-7xl border border-gray-200 shadow-2xl my-8">
         {/* Header */}
-        <div className="p-6 border-b border-purple-500/20 bg-gray-900/50 sticky top-0 z-10">
+        <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">
                 Choose Your Plan
               </h2>
-              <p className="text-gray-400 text-lg">Select the perfect plan for your BESS quoting needs</p>
+              <p className="text-gray-600 text-lg">Select the perfect plan for your BESS quoting needs</p>
             </div>
             <button 
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-3xl leading-none"
+              className="text-gray-400 hover:text-gray-600 text-3xl leading-none transition-colors"
             >
               ×
             </button>
@@ -56,13 +56,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
 
           {/* Billing Toggle */}
           <div className="flex justify-center mt-6">
-            <div className="bg-gray-800/50 rounded-xl p-1 inline-flex border border-gray-700">
+            <div className="bg-white rounded-xl p-1 inline-flex border-2 border-gray-200 shadow-sm">
               <button
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                   billingCycle === 'monthly'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Monthly
@@ -71,21 +71,21 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
                 onClick={() => setBillingCycle('annual')}
                 className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                   billingCycle === 'annual'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Annual <span className="text-green-400 text-xs ml-1">Save 17%</span>
+                Annual <span className="text-green-600 text-xs ml-1">Save 17%</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* STARTER - FREE */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 hover:border-gray-300 transition-all">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all">
             <div className="mb-4">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
               <p className="text-sm text-gray-600 mb-4">For new creators getting started with BESS quotes</p>
@@ -99,10 +99,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
 
               <button
                 onClick={() => handleSelectPlan('free')}
-                className={`w-full py-3 rounded-lg font-bold transition-all ${
+                className={`w-full py-3 rounded-xl font-bold transition-all ${
                   currentTier === 'free'
-                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
                 }`}
                 disabled={currentTier === 'free'}
               >
@@ -135,9 +135,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
           </div>
 
           {/* PROFESSIONAL - MOST POPULAR */}
-          <div className="bg-white rounded-xl shadow-2xl p-6 border-2 border-yellow-400 relative transform scale-105 hover:scale-[1.07] transition-all">
+          <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-purple-400 relative hover:shadow-2xl transition-all">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span className="bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-xs font-bold uppercase">
+              <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase shadow-md">
                 Most Popular
               </span>
             </div>
@@ -166,7 +166,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, currentTier = 'fre
 
               <button
                 onClick={() => handleSelectPlan('professional')}
-                className="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-lg"
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-bold hover:from-purple-700 hover:to-purple-800 transition-all shadow-md"
               >
                 Select Plan
               </button>
