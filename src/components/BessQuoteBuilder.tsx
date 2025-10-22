@@ -1227,6 +1227,23 @@ export default function BessQuoteBuilder() {
           </button>
         </div>
         
+        {/* PROMINENT SMART WIZARD BUTTON - Center of header */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowSmartWizard(true)}
+            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-2xl"
+            aria-label="Open Smart Wizard"
+            title="Open Smart Wizard"
+          >
+            🪄 Smart Wizard
+          </button>
+          
+          {/* "START HERE" Indicator Bubble */}
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
+            ⭐ START
+          </div>
+        </div>
+        
         <div className="flex items-center gap-4">
           <div className="space-y-2">
             <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
@@ -1244,25 +1261,6 @@ export default function BessQuoteBuilder() {
       </header>
       
       <main className="p-8">
-        {/* PROMINENT SMART WIZARD BUTTON - Top of page */}
-        <div className="flex justify-center mb-6">
-          <div className="relative">
-            <button 
-              onClick={() => setShowSmartWizard(true)}
-              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-2xl"
-              aria-label="Open Smart Wizard"
-              title="Open Smart Wizard"
-            >
-              🪄 Smart Wizard
-            </button>
-            
-            {/* "START HERE" Indicator Bubble */}
-            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
-              ⭐ START
-            </div>
-          </div>
-        </div>
-        
         {/* MERLIN Hero Section */}
         <section className="mx-8 my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
