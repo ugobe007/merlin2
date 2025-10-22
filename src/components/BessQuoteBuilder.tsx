@@ -1193,34 +1193,40 @@ export default function BessQuoteBuilder() {
           <div className="flex flex-col space-y-2">
             <button 
               onClick={handleUserProfile}
-              className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+              className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-2 border-orange-700 hover:border-orange-800 transform hover:scale-105 text-sm"
+              title="User Profile"
             >
-              🧙‍♂️ User Profile
+              👤 User Profile
             </button>
             
-            {isLoggedIn && (
-              <button 
-                onClick={() => {
-                  authService.signOut();
-                  setIsLoggedIn(false);
-                  alert('You have been logged out successfully');
-                }}
-                className="bg-gradient-to-r from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-purple-900 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 border-2 border-purple-500 hover:scale-105 text-sm"
-                title="Sign Out"
-              >
-                🚪 Sign Out
-              </button>
-            )}
+            <button 
+              onClick={() => {
+                setIsLoggedIn(false);
+                alert('You have been logged out successfully');
+              }}
+              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-2 border-red-700 hover:scale-105 text-sm"
+              title="Sign Out"
+            >
+              🚪 Sign Out
+            </button>
           </div>
           
-          {/* PROMINENT SMART WIZARD BUTTON */}
-          <button 
-            onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
-            aria-label="Open Smart Wizard"
-          >
-            🪄 Smart Wizard
-          </button>
+          {/* PROMINENT SMART WIZARD BUTTON - Separate for emphasis */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowSmartWizard(true)}
+              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-lg font-bold shadow-md transform hover:scale-105 transition-all border-b-2 border-purple-800 hover:border-purple-900 text-2xl"
+              aria-label="Open Smart Wizard"
+              title="Open Smart Wizard"
+            >
+              🪄 <span className="align-middle font-extrabold">Smart Wizard</span>
+            </button>
+            
+            {/* "START HERE" Indicator Bubble */}
+            <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
+              ⭐ START HERE
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-4">
@@ -1317,22 +1323,24 @@ export default function BessQuoteBuilder() {
             {/* Prominent Pricing Display */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-4">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-blue-700 transform hover:scale-105 transition-all">
-                <p className="text-sm font-semibold mb-2 opacity-90">📈 Market Average kWh Price</p>
+                <p className="text-sm font-semibold mb-2 opacity-90">📈 Market Average Price</p>
                 <p className="text-6xl font-bold mb-2">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
                 </p>
-                <p className="text-sm opacity-90">Based on multiple sources</p>
+                <p className="text-sm font-semibold opacity-90 mb-1">per kWh</p>
+                <p className="text-xs opacity-90">Weighted avg from BNEF, NREL, Industry</p>
                 <p className="text-xs mt-2 opacity-75 bg-blue-700/30 rounded-lg px-3 py-1 inline-block">
                   📉 Trending DOWN (-40% YoY)
                 </p>
               </div>
               
               <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-green-700 transform hover:scale-105 transition-all">
-                <p className="text-sm font-semibold mb-2 opacity-90">💰 Contract Average (What People Pay)</p>
+                <p className="text-sm font-semibold mb-2 opacity-90">💰 What People Are Paying Now</p>
                 <p className="text-6xl font-bold mb-2">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
                 </p>
-                <p className="text-sm opacity-90">Industry standard pricing</p>
+                <p className="text-sm font-semibold opacity-90 mb-1">per kWh (Contract Average)</p>
+                <p className="text-xs opacity-90">Industry standard contract pricing</p>
                 <p className="text-xs mt-2 opacity-75 bg-green-700/30 rounded-lg px-3 py-1 inline-block">
                   {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
                 </p>
@@ -1662,20 +1670,20 @@ export default function BessQuoteBuilder() {
             </section>
 
             {/* SYSTEM DETAILS PANEL */}
-            <section className={cardStyle}>
-              <h2 className="text-3xl font-bold text-cyan-300 mb-6">System Details</h2>
-              <div className="space-y-3 text-lg">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Total Energy:</span>
-                  <span className="font-bold text-blue-600">{totalMWh.toFixed(2)} MWh</span>
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-cyan-300 bg-gradient-to-b from-cyan-50 via-blue-50 to-white relative overflow-hidden">
+              <h2 className="text-3xl font-bold text-cyan-800 mb-6">System Details</h2>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 flex justify-between items-center">
+                  <span className="text-gray-800 font-semibold text-lg">Total Energy:</span>
+                  <span className="font-bold text-blue-700 text-2xl">{totalMWh.toFixed(2)} MWh</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">PCS Power:</span>
-                  <span className="font-bold text-blue-600">{pcsKW.toFixed(2)} kW</span>
+                <div className="bg-blue-100 p-4 rounded-xl border-2 border-blue-300 flex justify-between items-center">
+                  <span className="text-gray-800 font-semibold text-lg">PCS Power:</span>
+                  <span className="font-bold text-blue-800 text-2xl">{pcsKW.toFixed(2)} kW</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Annual Energy:</span>
-                  <span className="font-bold text-blue-600">{annualEnergyMWh.toFixed(2)} MWh</span>
+                <div className="bg-cyan-50 p-4 rounded-xl border-2 border-cyan-200 flex justify-between items-center">
+                  <span className="text-gray-800 font-semibold text-lg">Annual Energy:</span>
+                  <span className="font-bold text-cyan-700 text-2xl">{annualEnergyMWh.toFixed(2)} MWh</span>
                 </div>
               </div>
             </section>
