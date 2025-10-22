@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, HeadingLevel, PageBreak } from "docx";
 import { saveAs } from 'file-saver';
-import * as XLSX from 'xlsx';
 import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
-import { startPriceMonitoring, type ElectricityPrice } from '../services/electricityPricing';
 import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
@@ -17,14 +15,13 @@ import PricingPlans from './PricingPlans';
 import WelcomeModal from './modals/WelcomeModal';
 import AccountSetup from './modals/AccountSetup';
 import EnhancedProfile from './EnhancedProfile';
-import LoadProjectModal from './modals/LoadProjectModal';
-import SaveProjectModal from './modals/SaveProjectModal';
-import WhyJoinUs from './WhyJoinUs';
 import type { ProfileData } from './modals/AccountSetup';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
 import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
+import SaveProjectModal from './modals/SaveProjectModal';
+import LoadProjectModal from './modals/LoadProjectModal';
 
 
 export default function BessQuoteBuilder() {
@@ -65,9 +62,6 @@ export default function BessQuoteBuilder() {
   const [showEnhancedProfile, setShowEnhancedProfile] = useState(false);
   const [isFirstTimeProfile, setIsFirstTimeProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showWhyJoinUs, setShowWhyJoinUs] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -162,49 +156,15 @@ export default function BessQuoteBuilder() {
 
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
-
-  // Live Electricity Pricing - Monitor ComEd market prices
-  useEffect(() => {
-    console.log('⚡ Starting ComEd live electricity price monitoring...');
-    
-    // Update price every 5 minutes (300000 ms)
-    const stopMonitoring = startPriceMonitoring(
-      300000, // 5 minutes
-      (priceData: ElectricityPrice) => {
-        console.log('⚡ ComEd market price updated:', {
-          price: `$${priceData.pricePerKwh.toFixed(4)}/kWh`,
-          source: priceData.source,
-          time: priceData.timestamp.toLocaleString()
-        });
-        setValueKwh(priceData.pricePerKwh);
-      }
-    );
-
-    // Cleanup on unmount
-    return () => {
-      console.log('⚡ Stopped ComEd price monitoring');
-      stopMonitoring();
-    };
-  }, []); // Run once on mount
+  const [showSaveProjectModal, setShowSaveProjectModal] = useState(false);
+  const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
 
   const handleSaveProject = async () => {
-    if (!isLoggedIn) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    // Show save modal to let user choose what to save
-    setShowSaveModal(true);
+    setShowSaveProjectModal(true);
   };
 
-  const handleLoadProject = () => {
-    // Show load modal with options
-    setShowLoadModal(true);
-  };
-
-  // Handler for uploading a file from computer
-  const handleUploadFile = () => {
-    setShowLoadModal(false);
+  const handleUploadProject = () => {
+    // Create file input element to load JSON project file
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -216,17 +176,12 @@ export default function BessQuoteBuilder() {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
+          // Load the project data
           loadProjectData(data);
-          
-          if (!isLoggedIn) {
-            const shouldLogin = confirm('Project loaded! Would you like to sign up/sign in to save it to the cloud?');
-            if (shouldLogin) {
-              setShowAuthModal(true);
-            }
-          }
+          alert(`✅ Project "${data.project_name || 'Unnamed'}" uploaded successfully!`);
         } catch (error) {
           alert('❌ Error loading project file. Please check the file format.');
-          console.error('Load error:', error);
+          console.error(error);
         }
       };
       reader.readAsText(file);
@@ -234,34 +189,27 @@ export default function BessQuoteBuilder() {
     input.click();
   };
 
-  // Handler for selecting from portfolio
-  const handleSelectFromPortfolio = () => {
-    setShowLoadModal(false);
-    // Open the portfolio directly
-    if (isLoggedIn) {
-      setShowPortfolio(true);
-    } else {
-      setShowAuthModal(true);
-    }
-  };
-
-  // Handler for creating with wizard
   const handleCreateWithWizard = () => {
-    setShowLoadModal(false);
     setShowSmartWizard(true);
   };
 
-  // Handler for actual save operation
-  const handleActualSave = async (projectName: string, saveLocation: 'local' | 'portfolio' | 'cloud') => {
-    setShowSaveModal(false);
+  const handleSaveToPortfolio = async () => {
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
 
     const token = localStorage.getItem('auth_token');
-    
-    // Create quote object
+    if (!token) {
+      alert('Please sign in to save projects');
+      return;
+    }
+
+    // Create quote object with all current values
     const quote = {
       id: Date.now().toString(),
-      user_id: token || 'guest',
-      project_name: projectName,
+      user_id: token,
+      project_name: quoteName,
       inputs: {
         powerMW,
         standbyHours,
@@ -288,8 +236,9 @@ export default function BessQuoteBuilder() {
         windKw
       },
       outputs: {
+        // Store calculated values for display in portfolio
         totalMWh: powerMW * standbyHours,
-        bessCapEx: 0,
+        bessCapEx: 0, // Will be recalculated when loaded
         gridMode,
         useCase
       },
@@ -300,24 +249,57 @@ export default function BessQuoteBuilder() {
       updated_at: new Date().toISOString()
     };
 
-    if (saveLocation === 'portfolio') {
-      // Save to portfolio (localStorage for now)
-      const savedQuotes = localStorage.getItem('merlin_quotes');
-      const allQuotes = savedQuotes ? JSON.parse(savedQuotes) : [];
-      allQuotes.push(quote);
-      localStorage.setItem('merlin_quotes', JSON.stringify(allQuotes));
-      alert(`✅ Project "${projectName}" saved to portfolio!`);
-      window.dispatchEvent(new Event('portfolio-refresh'));
-    } else if (saveLocation === 'local') {
-      // Download as JSON file
-      const dataStr = JSON.stringify(quote, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      saveAs(dataBlob, `${projectName.replace(/[^a-z0-9]/gi, '_')}.json`);
-      alert(`✅ Project "${projectName}" downloaded successfully!`);
-    } else if (saveLocation === 'cloud') {
-      // Future: implement cloud storage (Google Drive, Dropbox, etc.)
-      alert('☁️ Cloud storage coming soon! For now, use Portfolio or Download options.');
-    }
+    // Load existing quotes
+    const savedQuotes = localStorage.getItem('merlin_quotes');
+    const allQuotes = savedQuotes ? JSON.parse(savedQuotes) : [];
+    
+    // Add new quote
+    allQuotes.push(quote);
+    
+    // Save back to localStorage
+    localStorage.setItem('merlin_quotes', JSON.stringify(allQuotes));
+    
+    alert(`✅ Project "${quoteName}" saved successfully!`);
+    
+    // Trigger portfolio refresh event
+    window.dispatchEvent(new Event('portfolio-refresh'));
+  };
+
+  const handleLoadProject = () => {
+    setShowLoadProjectModal(true);
+  };
+
+  const handleUploadFromComputer = () => {
+    // Create file input element to load JSON/CSV project file
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          // Load the project data
+          loadProjectData(data);
+          
+          // Ask if they want to save to cloud (requires login)
+          if (!isLoggedIn) {
+            const shouldLogin = confirm('Project loaded! Would you like to sign up/sign in to save it to the cloud?');
+            if (shouldLogin) {
+              setShowAuthModal(true);
+            }
+          }
+        } catch (error) {
+          alert('❌ Error loading project file. Please check the file format.');
+          console.error('Load error:', error);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
   
   const loadProjectData = (data: any) => {
@@ -346,6 +328,10 @@ export default function BessQuoteBuilder() {
     setWindKw(data.windKw || 3000);
     
     alert(`✅ Project "${data.quoteName || 'Unnamed'}" loaded successfully!`);
+  };
+
+  const handleUploadFromPortfolio = () => {
+    setShowPortfolio(true);
   };
 
   const loadProjectFromStorage = (quote: any) => {
@@ -425,89 +411,30 @@ export default function BessQuoteBuilder() {
 
   const handleExportCalculations = () => {
     try {
-      // Play magical sound effect
-      const audio = new Audio(magicPoofSound);
-      audio.volume = 0.5;
-      audio.play().catch(err => console.log('Audio play failed:', err));
-
-      // Prepare data for Excel
-      const totalMWh = powerMW * standbyHours;
-      const pcsKW = powerMW * 1000;
-      const batterySubtotal = totalMWh * 1000 * batteryKwh;
-      const pcsSubtotal = pcsKW * pcsKw;
-      const bosAmount = (batterySubtotal + pcsSubtotal) * bosPercent;
-      const epcAmount = (batterySubtotal + pcsSubtotal + bosAmount) * epcPercent;
-      const bessCapEx = batterySubtotal + pcsSubtotal + bosAmount + epcAmount;
-      
-      const generatorSubtotal = generatorMW * 1000 * genKw;
-      const solarSubtotal = solarMWp * 1000 * (solarKwp / 1000);
-      const windSubtotal = windMW * 1000 * (windKw / 1000);
-      
-      const batteryTariff = bessCapEx * 0.21;
-      const otherTariff = (generatorSubtotal + solarSubtotal + windSubtotal) * 0.06;
-      const totalTariffs = batteryTariff + otherTariff;
-      
-      const grandCapEx = bessCapEx + generatorSubtotal + solarSubtotal + windSubtotal + totalTariffs;
-
-      // Create Excel workbook
-      const workbook = XLSX.utils.book_new();
-
-      // Summary Sheet
-      const summaryData = [
-        ['BESS QUOTE SUMMARY'],
-        ['Project Name:', quoteName],
-        ['Date:', new Date().toLocaleDateString()],
-        ['Currency:', currency],
-        [],
-        ['FINANCIAL SUMMARY'],
-        ['BESS CapEx:', `${getCurrencySymbol()}${bessCapEx.toLocaleString()}`],
-        ['Grand CapEx:', `${getCurrencySymbol()}${grandCapEx.toLocaleString()}`],
-        ['Annual Savings:', `${getCurrencySymbol()}${annualSavings.toLocaleString()}`],
-        ['Simple ROI:', `${roiYears.toFixed(2)} years`],
-        [],
-        ['SYSTEM CONFIGURATION'],
-        ['Power (MW):', powerMW],
-        ['Duration (hours):', standbyHours],
-        ['Total Energy (MWh):', totalMWh.toFixed(2)],
-        ['Grid Mode:', gridMode],
-        ['Use Case:', useCase],
-        [],
-        ['COST BREAKDOWN'],
-        ['Battery Subtotal:', `${getCurrencySymbol()}${batterySubtotal.toLocaleString()}`],
-        ['PCS Subtotal:', `${getCurrencySymbol()}${pcsSubtotal.toLocaleString()}`],
-        ['BOS Amount:', `${getCurrencySymbol()}${bosAmount.toLocaleString()}`],
-        ['EPC Amount:', `${getCurrencySymbol()}${epcAmount.toLocaleString()}`],
-        ['Battery Tariff (21%):', `${getCurrencySymbol()}${batteryTariff.toLocaleString()}`],
-        ['Other Tariffs (6%):', `${getCurrencySymbol()}${otherTariff.toLocaleString()}`],
-      ];
-
-      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
-
-      // Calculations Sheet
       const calculations = generateCalculationBreakdown(
-        powerMW, standbyHours, solarMWp, windMW, generatorMW,
-        batteryKwh, pcsKw, bosPercent, epcPercent,
-        genKw, solarKwp, windKw, location
+        powerMW,
+        standbyHours,
+        solarMWp,
+        windMW,
+        generatorMW,
+        batteryKwh,
+        pcsKw,
+        bosPercent,
+        epcPercent,
+        genKw,
+        solarKwp,
+        windKw,
+        location
       );
 
-      const calcData = [
-        ['DETAILED CALCULATIONS'],
-        ['Section', 'Formula', 'Result'],
-        [],
-        ...calculations.map(calc => [calc.section, calc.formula, `${calc.result} ${calc.resultUnit}`])
-      ];
-
-      const calcSheet = XLSX.utils.aoa_to_sheet(calcData);
-      XLSX.utils.book_append_sheet(workbook, calcSheet, 'Calculations');
-
-      // Generate Excel file
-      XLSX.writeFile(workbook, `${quoteName}_BESS_Quote_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const textContent = exportCalculationsToText(calculations);
+      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, `${quoteName}_Calculations_${new Date().toISOString().split('T')[0]}.txt`);
       
-      console.log('✅ Excel file exported successfully');
+      alert('✅ Calculation formulas exported successfully!\n\nThis file shows every formula, variable, and assumption used in your quote.');
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      alert('❌ Failed to export Excel file. Please try again.');
+      console.error('Error exporting calculations:', error);
+      alert('❌ Failed to export calculations. Please try again.');
     }
   };
 
@@ -1230,38 +1157,28 @@ export default function BessQuoteBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-br from-blue-50 via-white to-purple-50 border-b border-blue-200">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-blue-200 shadow-xl">
         <div className="flex items-center space-x-4">
-          {/* Light Blue Merlin Profile Button */}
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-xl"
+            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 transform hover:scale-105"
           >
-            🧙‍♂️ My Profile
+            👤 User Profile
           </button>
-          {/* FAT Purple Smart Wizard Button with YELLOW text */}
+          {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
             onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 hover:from-purple-400 hover:to-purple-700 text-yellow-300 px-10 py-4 rounded-2xl font-black shadow-2xl transition-all duration-200 border-b-4 border-purple-950 text-2xl relative"
+            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
             aria-label="Open Smart Wizard"
           >
-            <div className="absolute -top-2 -right-2 bg-yellow-400 text-purple-900 text-xs font-black px-3 py-1 rounded-full border-2 border-yellow-600 animate-bounce">
-              START HERE!
-            </div>
             🪄 Smart Wizard
           </button>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300 relative group">
-            <div className="text-sm font-medium text-blue-600 flex items-center gap-2">
-              <span>Market kWh Price:</span>
-              <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
-            </div>
+          <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
+            <div className="text-sm font-medium text-blue-600">Current kWh Price:</div>
             <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
-            <div className="absolute hidden group-hover:block top-full right-0 mt-2 p-2 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-nowrap z-50">
-              Real-time market pricing for accurate BESS quotes
-            </div>
           </div>
           
           {isLoggedIn && (
@@ -1281,15 +1198,15 @@ export default function BessQuoteBuilder() {
       </header>
       
       <main className="p-8">
-        {/* MERLIN Hero Section - Wider to align with 3-column layout */}
-        <section className="max-w-[1600px] mx-auto my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-blue-600/20"></div>
+        {/* MERLIN Hero Section */}
+        <section className="mx-8 my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
           
-          {/* Join Now Button - Matching profile style in purple */}
+          {/* Join Now Button - Upper Right */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-br from-purple-100 via-purple-200 to-purple-300 hover:from-purple-200 hover:to-purple-400 text-purple-900 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-400 text-xl"
-              onClick={() => setShowWhyJoinUs(true)}
+              className="bg-gradient-to-b from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 text-lg transform hover:scale-105"
+              onClick={() => setShowPricingPlans(true)}
             >
               ✨ Join Now
             </button>
@@ -1320,37 +1237,37 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-blue-800 flex items-center justify-center space-x-2 text-xl w-48 h-16"
+                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-blue-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handleSaveProject}
               >
                 <span className="text-2xl">💾</span>
-                <span>Save Project</span>
+                <span>Save</span>
               </button>
               
               <button 
-                className="bg-gradient-to-br from-gray-300 via-gray-400 to-gray-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-gray-700 flex items-center justify-center space-x-2 text-xl w-48 h-16"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-green-800 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handleLoadProject}
               >
                 <span className="text-2xl">📂</span>
-                <span>Load Project</span>
+                <span>Load</span>
               </button>
               
               <button 
-                className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl border-b-4 border-purple-900 flex items-center justify-center space-x-2 text-xl w-48 h-16"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-purple-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
                 onClick={handlePortfolio}
               >
-                <span className="text-2xl">📊</span>
+                <span>📊</span>
                 <span>Portfolio</span>
               </button>
             </div>
           </div>
         </section>
 
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* SYSTEM CONFIGURATION PANEL - Professional Silver Gradient */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-gray-400 bg-gradient-to-b from-gray-200 via-gray-100 to-white relative overflow-hidden">
+            {/* SYSTEM CONFIGURATION PANEL */}
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-purple-300 bg-gradient-to-b from-purple-50 via-purple-100 to-white relative overflow-hidden">
               <h2 className="text-3xl font-bold text-gray-800 mb-8">System Configuration</h2>
               <div className="space-y-6">
                 <div>
@@ -1408,12 +1325,12 @@ export default function BessQuoteBuilder() {
             </section>
 
             {/* ASSUMPTIONS PANEL */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-b from-blue-100 via-blue-50 to-white relative overflow-hidden">
+            <section className="rounded-2xl p-8 shadow-2xl border-2 border-blue-300 bg-gradient-to-b from-blue-50 via-blue-100 to-white relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">Pricing Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2"
+                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2 transform hover:scale-105"
                   title="Reset all values to default settings"
                 >
                   <span className="text-sm">🔄</span>
@@ -1494,63 +1411,63 @@ export default function BessQuoteBuilder() {
                 </select>
               </div>
               <div className="space-y-4 text-lg">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">BESS CapEx:</span>
-                  <span className="font-bold text-green-700 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">BESS CapEx:</span>
+                  <span className="font-bold text-green-400 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-green-100 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Grand CapEx:</span>
-                  <span className="font-bold text-green-800 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Grand CapEx:</span>
+                  <span className="font-bold text-green-300 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <hr className="border-green-300 my-4" />
-                <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Annual Savings:</span>
-                  <span className="font-bold text-yellow-700 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
+                <hr className="border-purple-500/30 my-4" />
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Annual Savings:</span>
+                  <span className="font-bold text-yellow-400 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-yellow-100 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Simple ROI:</span>
-                  <span className="font-bold text-orange-700 text-2xl">{roiYears.toFixed(2)} years</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Simple ROI:</span>
+                  <span className="font-bold text-yellow-300 text-2xl">{roiYears.toFixed(2)} years</span>
                 </div>
               </div>
               <div className="mt-8 space-y-3">
                 <button 
-                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-green-400/30"
                   onClick={handleExportWord}
                 >
                   📄 Export to Word
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-blue-400/30"
                   onClick={() => setShowCalculationModal(true)}
                   title="View detailed formulas and assumptions"
                 >
                   🧮 View Calculation Details
                 </button>
                 <button 
-                  className="w-full bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-900 px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-blue-400 text-lg"
+                  className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-700 hover:from-purple-500 hover:to-fuchsia-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30"
                   onClick={handleExportCalculations}
-                  title="Export quote to Excel spreadsheet"
+                  title="Export detailed formulas to text file"
                 >
-                  📊 Export to Excel
+                  💾 Export Formulas (TXT)
                 </button>
               </div>
             </section>
 
             {/* SYSTEM DETAILS PANEL */}
-            <section className="rounded-2xl p-8 shadow-2xl border-2 border-cyan-300 bg-gradient-to-b from-cyan-50 to-white relative overflow-hidden">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">System Details</h2>
+            <section className={cardStyle}>
+              <h2 className="text-3xl font-bold text-cyan-300 mb-6">System Details</h2>
               <div className="space-y-3 text-lg">
-                <div className="flex justify-between p-3 bg-cyan-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Total Energy:</span>
-                  <span className="font-bold text-cyan-700 text-xl">{totalMWh.toFixed(2)} MWh</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Total Energy:</span>
+                  <span className="font-bold text-blue-600">{totalMWh.toFixed(2)} MWh</span>
                 </div>
-                <div className="flex justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">PCS Power:</span>
-                  <span className="font-bold text-blue-700 text-xl">{pcsKW.toFixed(2)} kW</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">PCS Power:</span>
+                  <span className="font-bold text-blue-600">{pcsKW.toFixed(2)} kW</span>
                 </div>
-                <div className="flex justify-between p-3 bg-cyan-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Annual Energy:</span>
-                  <span className="font-bold text-cyan-700 text-xl">{annualEnergyMWh.toFixed(2)} MWh</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Annual Energy:</span>
+                  <span className="font-bold text-blue-600">{annualEnergyMWh.toFixed(2)} MWh</span>
                 </div>
               </div>
             </section>
@@ -1563,24 +1480,15 @@ export default function BessQuoteBuilder() {
             <p className="text-gray-600 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
             </p>
-            <div className="flex justify-center items-center gap-6 mb-4">
+            {isLoggedIn && (
               <button
-                onClick={() => setShowWhyJoinUs(true)}
-                className="text-purple-600 hover:text-purple-800 text-sm font-medium transition-colors inline-flex items-center gap-1"
+                onClick={() => setShowVendorManager(true)}
+                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
               >
-                <span>🪄</span>
-                <span>Why Join Us?</span>
+                <span>🔧</span>
+                <span>Admin Panel</span>
               </button>
-              {isLoggedIn && (
-                <button
-                  onClick={() => setShowVendorManager(true)}
-                  className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
-                >
-                  <span>🔧</span>
-                  <span>Admin Panel</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </footer>
       </main>
@@ -1591,32 +1499,6 @@ export default function BessQuoteBuilder() {
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
       {showPricingPlans && <PricingPlans onClose={() => setShowPricingPlans(false)} currentTier="free" />}
-      
-      {/* Load and Save Project Modals */}
-      <LoadProjectModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
-        onUploadFile={handleUploadFile}
-        onSelectFromPortfolio={handleSelectFromPortfolio}
-        onCreateWithWizard={handleCreateWithWizard}
-      />
-      <SaveProjectModal
-        isOpen={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-        quoteName={quoteName}
-        onSave={handleActualSave}
-      />
-
-      {/* Why Join Us Modal */}
-      {showWhyJoinUs && (
-        <WhyJoinUs
-          onClose={() => setShowWhyJoinUs(false)}
-          onJoinNow={() => {
-            setShowWhyJoinUs(false);
-            setShowPricingPlans(true);
-          }}
-        />
-      )}
       
       {/* Welcome and Account Setup Modals */}
       {showWelcomeModal && (
@@ -1717,6 +1599,22 @@ export default function BessQuoteBuilder() {
           projectName={quoteName}
         />
       )}
+
+      {/* Save Project Modal */}
+      <SaveProjectModal
+        isOpen={showSaveProjectModal}
+        onClose={() => setShowSaveProjectModal(false)}
+        onUploadProject={handleUploadProject}
+        onCreateWithWizard={handleCreateWithWizard}
+      />
+
+      {/* Load Project Modal */}
+      <LoadProjectModal
+        isOpen={showLoadProjectModal}
+        onClose={() => setShowLoadProjectModal(false)}
+        onUploadFromComputer={handleUploadFromComputer}
+        onUploadFromPortfolio={handleUploadFromPortfolio}
+      />
     </div>
   );
 }

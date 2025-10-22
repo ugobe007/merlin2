@@ -109,24 +109,24 @@ const Step4_Summary: React.FC<Step4Props> = ({
           className="w-48 h-48 object-contain mb-4 drop-shadow-[0_0_20px_rgba(192,132,252,0.6)] rounded-2xl"
         />
         <h2 className="text-3xl font-bold text-gray-800 mb-2">🎉 Configuration Complete!</h2>
-        <p className="text-gray-700 font-semibold">Here's your comprehensive BESS system summary</p>
+        <p className="text-purple-700 font-semibold">Here's your comprehensive BESS system summary</p>
       </div>
 
       {/* ROI Summary - Prominent Display */}
-      <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-2xl border-2 border-green-500 mb-6 shadow-2xl">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">💵 Financial Summary</h3>
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl border-2 border-green-400 mb-6 shadow-2xl">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">💰 Financial Summary</h3>
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+          <div className="bg-white p-6 rounded-xl border-2 border-green-300 text-center shadow-lg">
             <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">Total Investment</p>
             <p className="text-gray-900 font-bold text-4xl">${costs.grandTotal.toLocaleString()}</p>
             <p className="text-gray-600 text-xs mt-2">Including all equipment, BoS, EPC, tariffs & shipping</p>
           </div>
-          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+          <div className="bg-green-100 p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
             <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">💰 Annual Savings</p>
             <p className="text-green-700 font-bold text-4xl">${Math.round(annualSavings).toLocaleString()}</p>
             <p className="text-gray-600 text-xs mt-2">${Math.round(peakShavingSavings).toLocaleString()} peak + ${Math.round(demandChargeSavings).toLocaleString()} demand</p>
           </div>
-          <div className="bg-white p-6 rounded-xl border-2 border-green-400 text-center shadow-lg">
+          <div className="bg-green-50 p-6 rounded-xl border-2 border-green-300 text-center shadow-lg">
             <p className="text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">ROI Period</p>
             <p className="text-green-700 font-bold text-4xl">
               {simplePaybackYears < 100 ? simplePaybackYears.toFixed(1) : '∞'} <span className="text-2xl">years</span>
@@ -134,11 +134,11 @@ const Step4_Summary: React.FC<Step4Props> = ({
             <p className="text-gray-600 text-xs mt-2">10-year ROI: {tenYearROI.toFixed(0)}%</p>
           </div>
         </div>
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-400">
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
           <div className="flex items-start space-x-3">
             <span className="text-2xl">💡</span>
             <div className="flex-1 text-sm">
-              <p className="text-gray-800 font-semibold mb-1">Savings Calculation</p>
+              <p className="text-blue-700 font-semibold mb-1">Savings Calculation</p>
               <p className="text-gray-700">
                 Based on {projectLocation} utility rates: Peak ${utilityRates.peakRateKWh.toFixed(3)}/kWh, 
                 Off-peak ${utilityRates.offPeakRateKWh.toFixed(3)}/kWh, 
@@ -150,7 +150,7 @@ const Step4_Summary: React.FC<Step4Props> = ({
       </div>
 
       {/* System Configuration */}
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-400 mb-4">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-400 mb-4 shadow-lg">
         <h3 className="text-xl font-bold text-gray-800 mb-4">🔋 Energy Storage System</h3>
         <div className="space-y-2 text-lg">
           <div className="flex justify-between">
@@ -165,8 +165,8 @@ const Step4_Summary: React.FC<Step4Props> = ({
             <span className="text-gray-700 font-semibold">PCS Included:</span>
             <span className="text-gray-900 font-bold">{pcsIncluded ? 'Yes' : 'No'}</span>
           </div>
-          <div className="flex justify-between border-t-2 border-blue-500 pt-2 mt-2">
-            <span className="text-gray-800 font-semibold">BESS Cost:</span>
+          <div className="flex justify-between border-t-2 border-blue-400 pt-2 mt-2">
+            <span className="text-blue-700 font-semibold">BESS Cost:</span>
             <span className="text-blue-700 font-bold text-xl">${costs.batterySystem.toLocaleString()}</span>
           </div>
         </div>
@@ -174,7 +174,7 @@ const Step4_Summary: React.FC<Step4Props> = ({
 
       {/* Renewable Energy */}
       {(solarMW > 0 || windMW > 0 || generatorMW > 0) && (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-400 mb-4">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-400 mb-4 shadow-lg">
           <h3 className="text-xl font-bold text-gray-800 mb-4">⚡ Alternative Energy Sources</h3>
           <div className="space-y-2 text-lg">
             {solarMW > 0 && (
@@ -218,7 +218,7 @@ const Step4_Summary: React.FC<Step4Props> = ({
       )}
 
       {/* Total Cost Breakdown */}
-      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-500 mb-4">
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-400 mb-4 shadow-lg">
         <h3 className="text-xl font-bold text-gray-800 mb-4">💰 Total Project Cost</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-lg">
@@ -241,15 +241,15 @@ const Step4_Summary: React.FC<Step4Props> = ({
             <span className="text-gray-700 font-semibold">Shipping & Logistics:</span>
             <span className="text-cyan-700 font-bold">${costs.shipping.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between border-t-2 border-purple-500 pt-3 mt-3">
-            <span className="text-gray-800 font-bold text-xl">GRAND TOTAL:</span>
+          <div className="flex justify-between border-t-2 border-purple-500 pt-3 mt-3 bg-purple-50 p-3 rounded-lg">
+            <span className="text-purple-700 font-bold text-xl">GRAND TOTAL:</span>
             <span className="text-purple-700 font-bold text-2xl">${costs.grandTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Additional Details */}
-      <div className="bg-gradient-to-br from-gray-100 to-gray-50 p-6 rounded-xl border-2 border-gray-400">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border-2 border-gray-400 shadow-lg">
         <h3 className="text-xl font-bold text-gray-800 mb-4">📝 Project Details</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
