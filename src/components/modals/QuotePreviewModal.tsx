@@ -139,7 +139,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       sections: [{
         properties: {},
         children: [
-          // Professional Header with Merlin branding
+          // Professional Header with grey and light blue theme
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
@@ -147,69 +147,80 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                 children: [
                   new TableCell({
                     width: { size: 70, type: WidthType.PERCENTAGE },
-                    shading: { fill: "F3F4F6" },
+                    shading: { fill: "E5E7EB" }, // Light grey
                     children: [
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "BATTERY ENERGY STORAGE", 
                             bold: true, 
-                            size: 36, 
-                            color: "3B82F6",
-                            font: "Helvetica"
+                            size: 40, 
+                            color: "1F2937", // Dark grey
+                            font: "Arial"
                           }),
                         ],
-                        spacing: { before: 200 },
+                        spacing: { before: 300 },
                       }),
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "SYSTEM PROPOSAL", 
                             bold: true, 
-                            size: 36, 
-                            color: "9333EA",
-                            font: "Helvetica"
+                            size: 40, 
+                            color: "1F2937", // Dark grey
+                            font: "Arial"
                           }),
                         ],
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ 
+                            text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 
+                            size: 16, 
+                            color: "60A5FA", // Light blue
+                            font: "Arial"
+                          }),
+                        ],
+                        spacing: { before: 100, after: 100 },
                       }),
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "Professional Energy Storage Solution", 
                             bold: true, 
-                            size: 18, 
-                            color: "6B7280",
-                            font: "Helvetica"
+                            size: 20, 
+                            color: "3B82F6", // Blue
+                            font: "Arial"
                           }),
                         ],
-                        spacing: { before: 100, after: 200 },
+                        spacing: { after: 300 },
                       }),
                     ],
                   }),
                   new TableCell({
                     width: { size: 30, type: WidthType.PERCENTAGE },
-                    shading: { fill: "EEF2FF" },
+                    shading: { fill: "DBEAFE" }, // Light blue background
                     children: [
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "🧙‍♂️",
                             bold: true, 
-                            size: 96,
-                            font: "Helvetica"
+                            size: 120,
+                            font: "Arial"
                           }),
                         ],
                         alignment: AlignmentType.CENTER,
-                        spacing: { before: 100, after: 100 },
+                        spacing: { before: 200, after: 100 },
                       }),
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "MERLIN", 
                             bold: true, 
-                            size: 40,
-                            color: "9333EA",
-                            font: "Helvetica"
+                            size: 44,
+                            color: "1E40AF", // Dark blue
+                            font: "Arial"
                           }),
                         ],
                         alignment: AlignmentType.CENTER,
@@ -217,15 +228,27 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                       new Paragraph({
                         children: [
                           new TextRun({ 
-                            text: "Energy Solutions", 
-                            italics: true, 
-                            size: 16,
-                            color: "6366F1",
-                            font: "Helvetica"
+                            text: "━━━━━━━━━━━━━", 
+                            size: 16, 
+                            color: "60A5FA", // Light blue
+                            font: "Arial"
                           }),
                         ],
                         alignment: AlignmentType.CENTER,
-                        spacing: { before: 50, after: 100 },
+                        spacing: { before: 50, after: 50 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ 
+                            text: "Energy Solutions", 
+                            italics: true, 
+                            size: 18,
+                            color: "6B7280", // Grey
+                            font: "Arial"
+                          }),
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { after: 200 },
                       }),
                     ],
                   }),
@@ -238,8 +261,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // PROJECT INFORMATION Table
           new Paragraph({
-            children: [new TextRun({ text: "PROJECT INFORMATION", bold: true, size: 24 })],
-            spacing: { before: 200, after: 200 },
+            children: [
+              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "60A5FA", size: 20 }),
+            ],
+            spacing: { before: 300, after: 100 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "PROJECT INFORMATION", bold: true, size: 28, color: "1F2937" })],
+            spacing: { before: 100, after: 200 },
+            shading: { fill: "F3F4F6" },
           }),
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -307,8 +337,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 1. EXECUTIVE SUMMARY
           new Paragraph({
-            children: [new TextRun({ text: "1. EXECUTIVE SUMMARY", bold: true, size: 24 })],
-            spacing: { before: 400, after: 200 },
+            children: [
+              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "60A5FA", size: 20 }),
+            ],
+            spacing: { before: 400, after: 100 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "1. EXECUTIVE SUMMARY", bold: true, size: 28, color: "1F2937" })],
+            spacing: { before: 100, after: 200 },
+            shading: { fill: "DBEAFE" },
           }),
           new Paragraph({
             text: `This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your specific energy requirements and deliver exceptional return on investment.`,
@@ -409,8 +446,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 2. PROJECT OVERVIEW & VISUALIZATION
           new Paragraph({
-            children: [new TextRun({ text: "2. PROJECT OVERVIEW & VISUALIZATION", bold: true, size: 24 })],
-            spacing: { before: 400, after: 200 },
+            children: [
+              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "60A5FA", size: 20 }),
+            ],
+            spacing: { before: 400, after: 100 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "2. PROJECT OVERVIEW & VISUALIZATION", bold: true, size: 28, color: "1F2937" })],
+            spacing: { before: 100, after: 200 },
+            shading: { fill: "F3F4F6" },
           }),
           new Paragraph({
             text: `The proposed BESS installation will integrate seamlessly with your existing infrastructure to provide reliable energy storage, peak shaving, and grid stabilization capabilities.`,
@@ -462,8 +506,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 3. TECHNICAL SPECIFICATIONS & PRICING
           new Paragraph({
-            children: [new TextRun({ text: "3. TECHNICAL SPECIFICATIONS & PRICING", bold: true, size: 24 })],
-            spacing: { before: 400, after: 200 },
+            children: [
+              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "60A5FA", size: 20 }),
+            ],
+            spacing: { before: 400, after: 100 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "3. TECHNICAL SPECIFICATIONS & PRICING", bold: true, size: 28, color: "1F2937" })],
+            spacing: { before: 100, after: 200 },
+            shading: { fill: "DBEAFE" },
           }),
 
           // Component Table
@@ -592,8 +643,15 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 4. FINANCIAL ANALYSIS & ROI
           new Paragraph({
-            children: [new TextRun({ text: "4. ENHANCED FINANCIAL ANALYSIS", bold: true, size: 24 })],
-            spacing: { before: 400, after: 200 },
+            children: [
+              new TextRun({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", color: "60A5FA", size: 20 }),
+            ],
+            spacing: { before: 400, after: 100 },
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: "4. ENHANCED FINANCIAL ANALYSIS", bold: true, size: 28, color: "1F2937" })],
+            spacing: { before: 100, after: 200 },
+            shading: { fill: "DBEAFE" },
           }),
           new Paragraph({
             text: `This comprehensive financial analysis demonstrates the strong return on investment and long-term value of this BESS installation.`,
@@ -845,71 +903,89 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     // Play magical sound effect
     playDownloadSound();
     
-    // Enhanced CSV with financial metrics that can be opened in Excel
+    // Enhanced CSV with proper alignment and formatting for Excel
     const { costs, bessPowerMW, batteryMWh, solarMW, windMW, generatorMW, annualSavings, paybackPeriod, budget } = quoteData;
     
-    let csv = "🧙‍♂️ MERLIN ENERGY - BATTERY ENERGY STORAGE SYSTEM QUOTE\n";
-    csv += `Generated: ${new Date().toLocaleDateString()}\n`;
-    csv += `Project: ${quoteData.projectName}\n`;
-    csv += `Client: ${quoteData.clientName}\n\n`;
+    // Helper function to right-align numbers with padding
+    const formatCurrency = (amount: number) => {
+      return `$${amount.toLocaleString()}`.padStart(20);
+    };
     
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += "SYSTEM CONFIGURATION\n";
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += `BESS Capacity,${batteryMWh.toFixed(1)} MWh\n`;
-    csv += `Power Rating,${bessPowerMW} MW\n`;
-    if (solarMW > 0) csv += `Solar Capacity,${solarMW} MW\n`;
-    if (windMW > 0) csv += `Wind Capacity,${windMW} MW\n`;
-    if (generatorMW > 0) csv += `Generator Backup,${generatorMW} MW\n`;
-    csv += `Warranty,${quoteData.warranty} Years\n\n`;
+    const formatValue = (value: string | number) => {
+      return String(value).padStart(20);
+    };
     
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += "COMPONENT BREAKDOWN\n";
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += "COMPONENT,SPECIFICATION,COST (USD)\n";
-    csv += `Battery System,${batteryMWh.toFixed(1)} MWh LFP,$${costs.batterySystem.toLocaleString()}\n`;
-    if (costs.pcs > 0) csv += `Power Conversion System,${bessPowerMW} MW,$${costs.pcs.toLocaleString()}\n`;
-    csv += `Transformers,${bessPowerMW} MW,$${costs.transformers.toLocaleString()}\n`;
-    csv += `Inverters,${bessPowerMW} MW,$${costs.inverters.toLocaleString()}\n`;
-    csv += `Switchgear & Protection,${bessPowerMW} MW,$${costs.switchgear.toLocaleString()}\n`;
-    if (costs.microgridControls > 0) csv += `Microgrid Controls,System-wide,$${costs.microgridControls.toLocaleString()}\n`;
+    let csv = "\"🧙‍♂️ MERLIN ENERGY\",\"BATTERY ENERGY STORAGE SYSTEM\"\n";
+    csv += `\"Generated:\",\"${new Date().toLocaleDateString()}\"\n`;
+    csv += `\"Project:\",\"${quoteData.projectName}\"\n`;
+    csv += `\"Client:\",\"${quoteData.clientName}\"\n`;
+    csv += "\n";
+    
+    // Section header with color coding (light blue background in Excel)
+    csv += "\"═══ SYSTEM CONFIGURATION ═══════════════════════════════════\"\n";
+    csv += "\"Metric\",\"Value\"\n";
+    csv += `\"BESS Capacity\",\"${batteryMWh.toFixed(1)} MWh\"\n`;
+    csv += `\"Power Rating\",\"${bessPowerMW} MW\"\n`;
+    if (solarMW > 0) csv += `\"Solar Capacity\",\"${solarMW} MW\"\n`;
+    if (windMW > 0) csv += `\"Wind Capacity\",\"${windMW} MW\"\n`;
+    if (generatorMW > 0) csv += `\"Generator Backup\",\"${generatorMW} MW\"\n`;
+    csv += `\"Warranty Period\",\"${quoteData.warranty} Years\"\n`;
+    csv += "\n";
+    
+    // Component breakdown with aligned numbers
+    csv += "\"═══ COMPONENT BREAKDOWN ═══════════════════════════════════\"\n";
+    csv += "\"Component\",\"Specification\",\"Cost (USD)\"\n";
+    csv += `\"Battery System\",\"${batteryMWh.toFixed(1)} MWh LFP\",${costs.batterySystem}\n`;
+    if (costs.pcs > 0) csv += `\"Power Conversion System\",\"${bessPowerMW} MW\",${costs.pcs}\n`;
+    csv += `\"Transformers\",\"${bessPowerMW} MW\",${costs.transformers}\n`;
+    csv += `\"Inverters\",\"${bessPowerMW} MW\",${costs.inverters}\n`;
+    csv += `\"Switchgear & Protection\",\"${bessPowerMW} MW\",${costs.switchgear}\n`;
+    if (costs.microgridControls > 0) csv += `\"Microgrid Controls\",\"System-wide\",${costs.microgridControls}\n`;
+    
     if (solarMW > 0) {
-      csv += `Solar Array,${solarMW} MW,$${costs.solar.toLocaleString()}\n`;
-      csv += `Solar Inverters,${solarMW} MW,$${costs.solarInverters.toLocaleString()}\n`;
+      csv += `\"Solar Array\",\"${solarMW} MW\",${costs.solar}\n`;
+      csv += `\"Solar Inverters\",\"${solarMW} MW\",${costs.solarInverters}\n`;
     }
     if (windMW > 0) {
-      csv += `Wind Turbines,${windMW} MW,$${costs.wind.toLocaleString()}\n`;
-      csv += `Wind Converters,${windMW} MW,$${costs.windConverters.toLocaleString()}\n`;
+      csv += `\"Wind Turbines\",\"${windMW} MW\",${costs.wind}\n`;
+      csv += `\"Wind Converters\",\"${windMW} MW\",${costs.windConverters}\n`;
     }
     if (generatorMW > 0) {
-      csv += `Backup Generator,${generatorMW} MW,$${costs.generator.toLocaleString()}\n`;
-      csv += `Generator Controls,${generatorMW} MW,$${costs.generatorControls.toLocaleString()}\n`;
+      csv += `\"Backup Generator\",\"${generatorMW} MW\",${costs.generator}\n`;
+      csv += `\"Generator Controls\",\"${generatorMW} MW\",${costs.generatorControls}\n`;
     }
-    csv += `Balance of System,12% of equipment,$${costs.bos.toLocaleString()}\n`;
-    csv += `Engineering & Installation,15% of equipment,$${costs.epc.toLocaleString()}\n`;
-    csv += `Import Tariffs,${quoteData.tariffRegion || 'Regional'},$${costs.tariffs.toLocaleString()}\n`;
-    csv += `Shipping & Logistics,To ${quoteData.shippingDestination || quoteData.location},$${costs.shipping.toLocaleString()}\n\n`;
-    csv += `GRAND TOTAL,,$${costs.grandTotal.toLocaleString()}\n\n`;
+    
+    csv += `\"Balance of System\",\"12% of equipment\",${costs.bos}\n`;
+    csv += `\"Engineering & Installation\",\"15% of equipment\",${costs.epc}\n`;
+    csv += `\"Import Tariffs\",\"${quoteData.tariffRegion || 'Regional'}\",${costs.tariffs}\n`;
+    csv += `\"Shipping & Logistics\",\"To ${quoteData.shippingDestination || quoteData.location}\",${costs.shipping}\n`;
+    csv += "\n";
+    csv += `\"GRAND TOTAL\",\"\",${costs.grandTotal}\n`;
+    csv += "\n";
 
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += "ENHANCED FINANCIAL ANALYSIS\n";
-    csv += "═══════════════════════════════════════════════════════════\n";
-    csv += "METRIC,VALUE\n";
-    csv += `Annual Energy Savings,$${annualSavings.toLocaleString()}/year\n`;
-    csv += `Simple Payback Period,${paybackPeriod.toFixed(2)} years\n`;
-    csv += `5-Year Net Savings,$${((annualSavings * 5) - costs.grandTotal).toLocaleString()}\n`;
-    csv += `10-Year Net Savings,$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}\n`;
-    csv += `10-Year ROI,${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%\n`;
-    csv += `20-Year Net Savings,$${((annualSavings * 20) - costs.grandTotal).toLocaleString()}\n`;
-    csv += `Cost per kWh Storage,$${(costs.grandTotal / (batteryMWh * 1000)).toFixed(0)}/kWh\n`;
+    // Financial Analysis with aligned numbers
+    csv += "\"═══ ENHANCED FINANCIAL ANALYSIS ═══════════════════════════\"\n";
+    csv += "\"Financial Metric\",\"Value\"\n";
+    csv += `\"Annual Energy Savings\",${annualSavings}\n`;
+    csv += `\"Simple Payback Period\",\"${paybackPeriod.toFixed(2)} years\"\n`;
+    csv += `\"5-Year Net Savings\",${(annualSavings * 5) - costs.grandTotal}\n`;
+    csv += `\"10-Year Net Savings\",${(annualSavings * 10) - costs.grandTotal}\n`;
+    csv += `\"10-Year ROI\",\"${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%\"\n`;
+    csv += `\"20-Year Net Savings\",${(annualSavings * 20) - costs.grandTotal}\n`;
+    csv += `\"Cost per kWh Storage\",\"$${(costs.grandTotal / (batteryMWh * 1000)).toFixed(0)}/kWh\"\n`;
+    
     if (budget) {
-      csv += `Budget Status,${costs.grandTotal <= budget 
-        ? `Under by $${(budget - costs.grandTotal).toLocaleString()}` 
-        : `Over by $${(costs.grandTotal - budget).toLocaleString()}`}\n`;
+      const budgetStatus = costs.grandTotal <= budget 
+        ? `\"Under budget by $${(budget - costs.grandTotal).toLocaleString()}\"` 
+        : `\"Over budget by $${(costs.grandTotal - budget).toLocaleString()}\"`;
+      csv += `\"Budget Status\",${budgetStatus}\n`;
     }
-    csv += `\n`;
-    csv += `Generated by MERLIN Energy Storage Solutions\n`;
-    csv += `🧙‍♂️ Professional BESS Quote System\n`;
+    
+    csv += "\n";
+    csv += "\"═══════════════════════════════════════════════════════════\"\n";
+    csv += "\"Generated by MERLIN Energy Solutions\"\n";
+    csv += "\"🧙‍♂️ Professional BESS Quote System\"\n";
+    csv += `\"Document Date: ${new Date().toISOString().split('T')[0]}\"\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, `Merlin_BESS_Quote_${quoteData.projectName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
