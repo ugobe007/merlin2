@@ -1192,9 +1192,9 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 transform hover:scale-105"
+            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
           >
-            👤 User Profile
+            🧙‍♂️ User Profile
           </button>
           {/* PROMINENT SMART WIZARD BUTTON */}
           <button 
@@ -1219,7 +1219,7 @@ export default function BessQuoteBuilder() {
                 setIsLoggedIn(false);
                 alert('You have been logged out successfully');
               }}
-              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-4 border-red-700 hover:scale-105 text-sm"
+              className="bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-4 border-blue-600 hover:scale-105 text-sm"
               title="Sign Out"
             >
               🚪 Sign Out
@@ -1296,29 +1296,35 @@ export default function BessQuoteBuilder() {
 
         {/* MARKET PRICING INTELLIGENCE SECTION */}
         <section className="rounded-2xl p-6 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-8">
-          <div className="text-center mb-4">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
               <span className="text-4xl mr-3">📊</span>
               Current BESS Market Pricing
               <span className="text-4xl ml-3">💰</span>
             </h2>
             
             {/* Prominent Pricing Display */}
-            <div className="flex justify-center items-center space-x-8 mb-3">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-4 rounded-2xl shadow-xl border-2 border-blue-700">
-                <p className="text-sm font-semibold mb-1 opacity-90">Market Average kWh Price</p>
-                <p className="text-5xl font-bold">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-blue-700 transform hover:scale-105 transition-all">
+                <p className="text-sm font-semibold mb-2 opacity-90">📈 Market Average kWh Price</p>
+                <p className="text-6xl font-bold mb-2">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
                 </p>
-                <p className="text-xs mt-1 opacity-80">Based on multiple sources</p>
+                <p className="text-sm opacity-90">Based on multiple sources</p>
+                <p className="text-xs mt-2 opacity-75 bg-blue-700/30 rounded-lg px-3 py-1 inline-block">
+                  📉 Trending DOWN (-40% YoY)
+                </p>
               </div>
               
-              <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl shadow-xl border-2 border-green-700">
-                <p className="text-sm font-semibold mb-1 opacity-90">Contract Average (What People Pay)</p>
-                <p className="text-5xl font-bold">
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-green-700 transform hover:scale-105 transition-all">
+                <p className="text-sm font-semibold mb-2 opacity-90">💰 Contract Average (What People Pay)</p>
+                <p className="text-6xl font-bold mb-2">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
                 </p>
-                <p className="text-xs mt-1 opacity-80">Industry standard pricing</p>
+                <p className="text-sm opacity-90">Industry standard pricing</p>
+                <p className="text-xs mt-2 opacity-75 bg-green-700/30 rounded-lg px-3 py-1 inline-block">
+                  {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
+                </p>
               </div>
             </div>
             
