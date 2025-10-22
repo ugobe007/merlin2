@@ -1207,7 +1207,7 @@ export default function BessQuoteBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-blue-200 shadow-xl">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-r from-blue-50 via-cyan-50 to-purple-50 backdrop-blur-xl border-b-2 border-blue-300 shadow-xl">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
@@ -1245,12 +1245,12 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
-            <div className="text-sm font-medium text-blue-600">Utility kWh Price:</div>
-            <div className="text-xl font-bold text-blue-700">${valueKwh.toFixed(4)}/kWh</div>
+          <div className="bg-gradient-to-br from-blue-100 via-cyan-100 to-blue-200 px-4 py-2 rounded-lg shadow-lg border-2 border-blue-400">
+            <div className="text-sm font-semibold text-blue-700">Market Average:</div>
+            <div className="text-xl font-bold text-blue-800">${valueKwh.toFixed(4)}/kWh</div>
           </div>
-          <div className="bg-green-100/80 px-4 py-2 rounded-lg shadow-md border border-green-400">
-            <div className="text-sm font-medium text-green-700">BESS Contract Price:</div>
+          <div className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-200 px-4 py-2 rounded-lg shadow-lg border-2 border-green-500">
+            <div className="text-sm font-semibold text-green-700">What People Pay:</div>
             <div className="text-xl font-bold text-green-800">
               ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
             </div>
