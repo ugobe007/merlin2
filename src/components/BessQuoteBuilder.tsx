@@ -1227,23 +1227,6 @@ export default function BessQuoteBuilder() {
           </button>
         </div>
         
-        {/* PROMINENT SMART WIZARD BUTTON - Centered for emphasis */}
-        <div className="flex items-center justify-center relative">
-          <button 
-            onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
-            aria-label="Open Smart Wizard"
-            title="Open Smart Wizard"
-          >
-            🪄 Smart Wizard
-          </button>
-          
-          {/* "START HERE" Indicator Bubble - Reduced size */}
-          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
-            ⭐ START
-          </div>
-        </div>
-        
         <div className="flex items-center gap-4">
           <div className="space-y-2">
             <div className="text-right bg-blue-100/80 px-4 py-2 rounded-lg shadow-md border border-blue-300">
@@ -1276,17 +1259,36 @@ export default function BessQuoteBuilder() {
           </div>
           
           <div className="relative z-10">
-            <div className="flex flex-col items-center justify-center mb-4">
+            <div className="flex items-center justify-center mb-4">
               <img 
                 src={merlinImage} 
                 alt="Merlin the Wizard" 
                 className="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(147,51,234,0.8)] filter brightness-110"
               />
-              <div className="text-center">
+              <div>
                 <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-lg">
                   Merlin BESS Quote Builder
                 </h1>
                 <p className="text-xl text-blue-700 italic font-semibold drop-shadow-md">"Where Magic Meets Energy"</p>
+              </div>
+            </div>
+            
+            {/* PROMINENT SMART WIZARD BUTTON - Centered in main content */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <button 
+                  onClick={() => setShowSmartWizard(true)}
+                  className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+                  aria-label="Open Smart Wizard"
+                  title="Open Smart Wizard"
+                >
+                  🪄 Smart Wizard
+                </button>
+                
+                {/* "START HERE" Indicator Bubble - Reduced size */}
+                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
+                  ⭐ START
+                </div>
               </div>
             </div>
             
