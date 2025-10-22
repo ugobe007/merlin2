@@ -1298,7 +1298,7 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-blue-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-b from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-2 border-blue-400 flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handleSaveProject}
               >
                 <span className="text-2xl">💾</span>
@@ -1306,7 +1306,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-green-800 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-green-800 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handleLoadProject}
               >
                 <span className="text-2xl">📂</span>
@@ -1314,7 +1314,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-purple-900 hover:border-black flex items-center justify-center space-x-2 transform hover:scale-105 text-xl w-48"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-purple-900 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
