@@ -142,26 +142,26 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
   });
 
   return (
-    <div className="p-4 text-white">
+    <div className="p-4">
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-white mb-2">Detailed Cost Breakdown</h2>
-        <p className="text-purple-200">Review component costs and system pricing</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Detailed Cost Breakdown</h2>
+        <p className="text-purple-700 font-semibold">Review component costs and system pricing</p>
       </div>
 
       {/* Vendor Quote Selector */}
       {vendorQuotes.length > 0 && (
-        <div className="bg-gradient-to-r from-green-600/40 to-emerald-600/40 p-4 rounded-xl shadow-lg border-2 border-green-500/50 mb-6">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-lg border-2 border-green-400 mb-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <span className="text-2xl">📦</span>
               <div>
-                <p className="text-white font-bold">Vendor Quote Comparison</p>
-                <p className="text-green-200 text-sm">{vendorQuotes.length} quote{vendorQuotes.length > 1 ? 's' : ''} available</p>
+                <p className="text-gray-800 font-bold">Vendor Quote Comparison</p>
+                <p className="text-green-700 text-sm">{vendorQuotes.length} quote{vendorQuotes.length > 1 ? 's' : ''} available</p>
               </div>
             </div>
             <button
               onClick={() => setShowVendorComparison(!showVendorComparison)}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white text-sm transition-all"
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white text-sm transition-all"
             >
               {showVendorComparison ? '✓ Hide' : '📊 Compare'}
             </button>
@@ -178,9 +178,9 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
                   onChange={() => setSelectedQuote(null)}
                   className="w-4 h-4"
                 />
-                <label htmlFor="merlin-estimate" className="text-white cursor-pointer flex-1">
+                <label htmlFor="merlin-estimate" className="text-gray-800 cursor-pointer flex-1">
                   <span className="font-semibold">Merlin Estimate</span>
-                  <span className="text-green-200 text-sm ml-2">(Industry Standard)</span>
+                  <span className="text-green-700 text-sm ml-2">(Industry Standard)</span>
                 </label>
               </div>
               
@@ -194,10 +194,10 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
                     onChange={() => setSelectedQuote(quote)}
                     className="w-4 h-4"
                   />
-                  <label htmlFor={`quote-${quote.id}`} className="text-white cursor-pointer flex-1">
+                  <label htmlFor={`quote-${quote.id}`} className="text-gray-800 cursor-pointer flex-1">
                     <span className="font-semibold">{quote.vendor_name || 'Vendor Quote'}</span>
                     {quote.pricing_data && (
-                      <span className="text-green-200 text-sm ml-2">
+                      <span className="text-green-700 text-sm ml-2">
                         ({quote.pricing_data.battery_kwh ? `$${quote.pricing_data.battery_kwh}/kWh` : 'Custom pricing'})
                       </span>
                     )}
@@ -210,30 +210,30 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
       )}
 
       {/* Total Cost Header */}
-      <div className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 p-6 rounded-2xl shadow-xl border-2 border-purple-500/50 mb-6">
+      <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-6 rounded-2xl shadow-xl border-2 border-purple-400 mb-6">
         <div className="text-center">
-          <p className="text-purple-200 text-lg mb-2">Total Project Cost</p>
-          <p className="text-5xl font-bold text-white mb-2">${totalCost.toLocaleString()}</p>
-          <p className="text-purple-300 text-sm">All components included</p>
+          <p className="text-purple-700 text-lg font-semibold mb-2">Total Project Cost</p>
+          <p className="text-5xl font-bold text-gray-900 mb-2">${totalCost.toLocaleString()}</p>
+          <p className="text-gray-700 text-sm font-semibold">All components included</p>
         </div>
       </div>
 
       {/* Detailed Breakdown */}
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
         {costItems.map((category, idx) => (
-          <div key={idx} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-purple-500/20 overflow-hidden">
-            <div className="bg-purple-900/30 px-4 py-3 border-b border-purple-500/20">
-              <h3 className="text-lg font-bold text-purple-300">{category.category}</h3>
+          <div key={idx} className="bg-white rounded-xl border-2 border-purple-300 overflow-hidden shadow-lg">
+            <div className="bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-3 border-b-2 border-purple-300">
+              <h3 className="text-lg font-bold text-gray-800">{category.category}</h3>
             </div>
             <div className="p-4 space-y-2">
               {category.items.map((item, itemIdx) => (
-                <div key={itemIdx} className="flex justify-between items-start py-2 border-b border-gray-700/30 last:border-0">
+                <div key={itemIdx} className="flex justify-between items-start py-2 border-b border-gray-200 last:border-0">
                   <div className="flex-1">
-                    <p className="text-white font-semibold">{item.name}</p>
-                    <p className="text-gray-400 text-sm">{item.detail}</p>
+                    <p className="text-gray-900 font-semibold">{item.name}</p>
+                    <p className="text-gray-600 text-sm">{item.detail}</p>
                   </div>
                   <div className="text-right ml-4">
-                    <p className="text-green-400 font-bold text-lg">${item.cost.toLocaleString()}</p>
+                    <p className="text-green-700 font-bold text-lg">${item.cost.toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -244,20 +244,20 @@ const Step5_CostBreakdown: React.FC<Step5CostBreakdownProps> = ({
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mt-6">
-        <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-500/30 text-center">
-          <p className="text-blue-300 text-sm mb-1">Total Capacity</p>
-          <p className="text-white font-bold text-xl">{bessPowerMW} MW</p>
-          <p className="text-blue-200 text-xs">{batteryMWh.toFixed(1)} MWh storage</p>
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border-2 border-blue-400 text-center">
+          <p className="text-blue-700 text-sm font-semibold mb-1">Total Capacity</p>
+          <p className="text-gray-900 font-bold text-xl">{bessPowerMW} MW</p>
+          <p className="text-blue-600 text-xs">{batteryMWh.toFixed(1)} MWh storage</p>
         </div>
-        <div className="bg-green-900/30 p-4 rounded-lg border border-green-500/30 text-center">
-          <p className="text-green-300 text-sm mb-1">Cost per kW</p>
-          <p className="text-white font-bold text-xl">${(totalCost / (bessPowerMW * 1000)).toFixed(0)}</p>
-          <p className="text-green-200 text-xs">$/kW installed</p>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border-2 border-green-400 text-center">
+          <p className="text-green-700 text-sm font-semibold mb-1">Cost per kW</p>
+          <p className="text-gray-900 font-bold text-xl">${(totalCost / (bessPowerMW * 1000)).toFixed(0)}</p>
+          <p className="text-green-600 text-xs">$/kW installed</p>
         </div>
-        <div className="bg-purple-900/30 p-4 rounded-lg border border-purple-500/30 text-center">
-          <p className="text-purple-300 text-sm mb-1">Cost per kWh</p>
-          <p className="text-white font-bold text-xl">${(totalCost / (batteryMWh * 1000)).toFixed(0)}</p>
-          <p className="text-purple-200 text-xs">$/kWh storage</p>
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-400 text-center">
+          <p className="text-purple-700 text-sm font-semibold mb-1">Cost per kWh</p>
+          <p className="text-gray-900 font-bold text-xl">${(totalCost / (batteryMWh * 1000)).toFixed(0)}</p>
+          <p className="text-purple-600 text-xs">$/kWh storage</p>
         </div>
       </div>
     </div>
