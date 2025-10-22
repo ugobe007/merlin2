@@ -1227,7 +1227,7 @@ export default function BessQuoteBuilder() {
           {/* Join Now Button - Upper Right */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-b from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 text-lg transform hover:scale-105"
+              className="bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-300 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg transform hover:scale-105"
               onClick={() => setShowJoinModal(true)}
             >
               ✨ Join Now
@@ -1553,9 +1553,9 @@ export default function BessQuoteBuilder() {
       <JoinMerlinModal 
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
-        onSignUp={() => {
+        onViewPricing={() => {
           setShowJoinModal(false);
-          setShowAuthModal(true);
+          setShowPricingPlans(true);
         }}
       />
       
