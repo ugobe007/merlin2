@@ -1230,11 +1230,14 @@ export default function BessQuoteBuilder() {
           <div className="relative">
             <button 
               onClick={() => setShowSmartWizard(true)}
-              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900"
               aria-label="Open Smart Wizard"
               title="Open Smart Wizard"
             >
-              🪄 Smart Wizard
+              <div className="flex flex-col items-center">
+                <div className="text-lg">🪄 Smart Wizard</div>
+                <div className="text-xs font-normal opacity-90">start building</div>
+              </div>
             </button>
             
             {/* "START HERE" Indicator Bubble - Smaller */}
