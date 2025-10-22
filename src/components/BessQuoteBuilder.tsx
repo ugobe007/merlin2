@@ -17,7 +17,11 @@ import PricingPlans from './PricingPlans';
 import WelcomeModal from './modals/WelcomeModal';
 import AccountSetup from './modals/AccountSetup';
 import EnhancedProfile from './EnhancedProfile';
+import AdvancedAnalytics from './AdvancedAnalytics';
+import FinancingCalculator from './FinancingCalculator';
+import UseCaseTemplates from './UseCaseTemplates';
 import type { ProfileData } from './modals/AccountSetup';
+import type { UseCaseTemplate } from './UseCaseTemplates';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
 import SmartWizard from './wizard/SmartWizard';
@@ -65,6 +69,9 @@ export default function BessQuoteBuilder() {
   const [showEnhancedProfile, setShowEnhancedProfile] = useState(false);
   const [isFirstTimeProfile, setIsFirstTimeProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showFinancing, setShowFinancing] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -460,6 +467,18 @@ export default function BessQuoteBuilder() {
       console.error('Error exporting calculations:', error);
       alert('❌ Failed to export calculations. Please try again.');
     }
+  };
+
+  const handleApplyTemplate = (template: UseCaseTemplate) => {
+    setPowerMW(template.configuration.powerMW);
+    setStandbyHours(template.configuration.durationHours);
+    setGridMode(template.configuration.gridMode);
+    setGeneratorMW(template.configuration.generatorMW || 0);
+    setSolarMWp(template.configuration.solarMW || 0);
+    setWindMW(template.configuration.windMW || 0);
+    setUtilization(template.configuration.utilization);
+    setWarranty(template.configuration.warranty);
+    setShowTemplates(false);
   };
 
   const handleExportWord = async () => {
@@ -1666,6 +1685,32 @@ export default function BessQuoteBuilder() {
                 >
                   💾 Export Formulas (TXT)
                 </button>
+                <div className="mt-6 pt-6 border-t-2 border-green-200">
+                  <p className="text-sm text-gray-600 font-semibold mb-3 text-center">Advanced Tools</p>
+                  <div className="space-y-3">
+                    <button 
+                      className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-cyan-400/30"
+                      onClick={() => setShowAnalytics(true)}
+                      title="NPV, IRR, ROI, and sensitivity analysis"
+                    >
+                      📊 Advanced Analytics
+                    </button>
+                    <button 
+                      className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-emerald-400/30"
+                      onClick={() => setShowFinancing(true)}
+                      title="Compare loan, lease, and PPA options"
+                    >
+                      💰 Financing Calculator
+                    </button>
+                    <button 
+                      className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-violet-400/30"
+                      onClick={() => setShowTemplates(true)}
+                      title="Pre-configured BESS templates for common use cases"
+                    >
+                      🎯 Use Case Templates
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1850,6 +1895,45 @@ export default function BessQuoteBuilder() {
         onUploadFromComputer={handleUploadFromComputer}
         onUploadFromPortfolio={handleUploadFromPortfolio}
       />
+
+      {/* Advanced Analytics Modal */}
+      {showAnalytics && (
+        <AdvancedAnalytics
+          isOpen={showAnalytics}
+          onClose={() => setShowAnalytics(false)}
+          projectData={{
+            quoteName,
+            powerMW,
+            durationHours: standbyHours,
+            totalCapEx: grandCapEx,
+            annualSavings,
+          }}
+        />
+      )}
+
+      {/* Financing Calculator Modal */}
+      {showFinancing && (
+        <FinancingCalculator
+          isOpen={showFinancing}
+          onClose={() => setShowFinancing(false)}
+          projectData={{
+            quoteName,
+            totalCapEx: grandCapEx,
+            annualSavings,
+            powerMW,
+            durationHours: standbyHours,
+          }}
+        />
+      )}
+
+      {/* Use Case Templates Modal */}
+      {showTemplates && (
+        <UseCaseTemplates
+          isOpen={showTemplates}
+          onClose={() => setShowTemplates(false)}
+          onApplyTemplate={handleApplyTemplate}
+        />
+      )}
     </div>
   );
 }
