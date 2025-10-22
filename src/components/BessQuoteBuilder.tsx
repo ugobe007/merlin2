@@ -1207,7 +1207,7 @@ export default function BessQuoteBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-gradient-to-r from-blue-50 via-cyan-50 to-purple-50 backdrop-blur-xl border-b-2 border-blue-300 shadow-xl">
+      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-blue-200/50 shadow-md">
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
@@ -1245,13 +1245,13 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-br from-blue-100 via-cyan-100 to-blue-200 px-4 py-2 rounded-lg shadow-lg border-2 border-blue-400">
-            <div className="text-sm font-semibold text-blue-700">Market Average:</div>
-            <div className="text-xl font-bold text-blue-800">${valueKwh.toFixed(4)}/kWh</div>
+          <div className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-5 py-3 rounded-xl shadow-xl border-2 border-blue-400 hover:shadow-2xl transition-all duration-200">
+            <div className="text-sm font-bold text-blue-800 mb-1">📊 Market Average</div>
+            <div className="text-2xl font-extrabold text-blue-900">${valueKwh.toFixed(4)}/kWh</div>
           </div>
-          <div className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-200 px-4 py-2 rounded-lg shadow-lg border-2 border-green-500">
-            <div className="text-sm font-semibold text-green-700">What People Pay:</div>
-            <div className="text-xl font-bold text-green-800">
+          <div className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-5 py-3 rounded-xl shadow-xl border-2 border-green-500 hover:shadow-2xl transition-all duration-200">
+            <div className="text-sm font-bold text-green-800 mb-1">💰 What People Pay</div>
+            <div className="text-2xl font-extrabold text-green-900">
               ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
             </div>
           </div>
