@@ -1335,26 +1335,26 @@ export default function BessQuoteBuilder() {
             
             {/* Prominent Pricing Display */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-4">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-blue-700 transform hover:scale-105 transition-all">
+              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 text-white p-8 rounded-2xl shadow-2xl border-4 border-blue-800 transform hover:scale-105 transition-all hover:shadow-blue-500/50">
                 <p className="text-sm font-semibold mb-2 opacity-90">📈 Market Average Price</p>
-                <p className="text-6xl font-bold mb-2">
+                <p className="text-6xl font-bold mb-2 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
                 </p>
                 <p className="text-sm font-semibold opacity-90 mb-1">per kWh</p>
                 <p className="text-xs opacity-90">Weighted avg from BNEF, NREL, Industry</p>
-                <p className="text-xs mt-2 opacity-75 bg-blue-700/30 rounded-lg px-3 py-1 inline-block">
+                <p className="text-xs mt-2 opacity-90 bg-blue-800/40 rounded-lg px-3 py-1 inline-block font-bold">
                   📉 Trending DOWN (-40% YoY)
                 </p>
               </div>
               
-              <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-green-700 transform hover:scale-105 transition-all">
+              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-700 text-white p-8 rounded-2xl shadow-2xl border-4 border-green-800 transform hover:scale-105 transition-all hover:shadow-green-500/50">
                 <p className="text-sm font-semibold mb-2 opacity-90">💰 What People Are Paying Now</p>
-                <p className="text-6xl font-bold mb-2">
+                <p className="text-6xl font-bold mb-2 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
                 </p>
                 <p className="text-sm font-semibold opacity-90 mb-1">per kWh (Contract Average)</p>
                 <p className="text-xs opacity-90">Industry standard contract pricing</p>
-                <p className="text-xs mt-2 opacity-75 bg-green-700/30 rounded-lg px-3 py-1 inline-block">
+                <p className="text-xs mt-2 opacity-90 bg-green-800/40 rounded-lg px-3 py-1 inline-block font-bold">
                   {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
                 </p>
               </div>
