@@ -9,6 +9,7 @@ import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
 import AuthModal from './AuthModal';
+import JoinMerlinModal from './modals/JoinMerlinModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
 import PricingPlans from './PricingPlans';
@@ -55,6 +56,7 @@ export default function BessQuoteBuilder() {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSmartWizard, setShowSmartWizard] = useState(false);
   const [showVendorManager, setShowVendorManager] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingPlans, setShowPricingPlans] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -1226,7 +1228,7 @@ export default function BessQuoteBuilder() {
           <div className="absolute top-6 right-6 z-20">
             <button 
               className="bg-gradient-to-b from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-blue-800 hover:border-blue-900 text-lg transform hover:scale-105"
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => setShowJoinModal(true)}
             >
               ✨ Join Now
             </button>
@@ -1546,6 +1548,16 @@ export default function BessQuoteBuilder() {
           isFirstTime={isFirstTimeProfile}
         />
       )}
+
+      {/* Join Merlin Modal - Shows benefits first */}
+      <JoinMerlinModal 
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSignUp={() => {
+          setShowJoinModal(false);
+          setShowAuthModal(true);
+        }}
+      />
       
       <SmartWizard
         show={showSmartWizard}
