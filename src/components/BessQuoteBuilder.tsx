@@ -1410,23 +1410,23 @@ export default function BessQuoteBuilder() {
                   <option value="KRW">KRW (₩)</option>
                 </select>
               </div>
-              <div className="space-y-4 text-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">BESS CapEx:</span>
-                  <span className="font-bold text-green-400 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+              <div className="space-y-3">
+                <div className="bg-green-50 p-4 rounded-xl border-2 border-green-200 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold text-lg">BESS CapEx:</span>
+                  <span className="font-bold text-green-700 text-2xl">{getCurrencySymbol()}{bessCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Grand CapEx:</span>
-                  <span className="font-bold text-green-300 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                <div className="bg-green-100 p-4 rounded-xl border-2 border-green-300 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold text-lg">Grand CapEx:</span>
+                  <span className="font-bold text-green-800 text-2xl">{getCurrencySymbol()}{grandCapEx.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <hr className="border-purple-500/30 my-4" />
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Annual Savings:</span>
-                  <span className="font-bold text-yellow-400 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
+                <hr className="border-green-300 my-4" />
+                <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold text-lg">Annual Savings:</span>
+                  <span className="font-bold text-yellow-700 text-2xl">{getCurrencySymbol()}{annualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}/yr</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Simple ROI:</span>
-                  <span className="font-bold text-yellow-300 text-2xl">{roiYears.toFixed(2)} years</span>
+                <div className="bg-yellow-100 p-4 rounded-xl border-2 border-yellow-300 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold text-lg">Simple ROI:</span>
+                  <span className="font-bold text-orange-700 text-2xl">{roiYears.toFixed(2)} years</span>
                 </div>
               </div>
               <div className="mt-8 space-y-3">
