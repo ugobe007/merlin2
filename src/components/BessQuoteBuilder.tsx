@@ -1221,26 +1221,26 @@ export default function BessQuoteBuilder() {
               setIsLoggedIn(false);
               alert('You have been logged out successfully');
             }}
-            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-orange-600 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
+            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
           >
             🚪 Sign Out
           </button>
-        </div>
-        
-        {/* PROMINENT SMART WIZARD BUTTON - Center of header */}
-        <div className="relative">
-          <button 
-            onClick={() => setShowSmartWizard(true)}
-            className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-8 py-4 rounded-xl font-bold shadow-xl transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-2xl"
-            aria-label="Open Smart Wizard"
-            title="Open Smart Wizard"
-          >
-            🪄 Smart Wizard
-          </button>
           
-          {/* "START HERE" Indicator Bubble */}
-          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse border-2 border-yellow-500">
-            ⭐ START
+          {/* PROMINENT SMART WIZARD BUTTON */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowSmartWizard(true)}
+              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+              aria-label="Open Smart Wizard"
+              title="Open Smart Wizard"
+            >
+              🪄 Smart Wizard
+            </button>
+            
+            {/* "START HERE" Indicator Bubble - Smaller */}
+            <div className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
+              ⭐
+            </div>
           </div>
         </div>
         
