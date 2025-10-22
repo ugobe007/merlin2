@@ -1210,7 +1210,7 @@ export default function BessQuoteBuilder() {
                 setIsLoggedIn(false);
                 alert('You have been logged out successfully');
               }}
-              className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-200 border border-gray-300"
+              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md transition-all duration-200 border-b-4 border-red-700 hover:scale-105 text-sm"
               title="Sign Out"
             >
               🚪 Sign Out
