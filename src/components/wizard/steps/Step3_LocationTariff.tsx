@@ -131,7 +131,7 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
 
           {/* Shipping Destination */}
           <div className="space-y-3">
-            <label className="block text-lg font-semibold text-gray-200">
+            <label className="block text-lg font-semibold text-gray-800">
               Shipping Destination
             </label>
             <input
@@ -139,25 +139,25 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
               value={shippingDestination}
               onChange={(e) => setShippingDestination(e.target.value)}
               placeholder="e.g., California, USA or London, UK"
-              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all"
+              className="w-full px-4 py-3 bg-blue-50 border-2 border-gray-300 rounded-xl text-gray-900 font-medium placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
             />
           </div>
         </div>
 
         {/* Explanatory Info */}
         <div className="mt-6 space-y-3 text-sm">
-          <div className="flex items-start space-x-3 bg-yellow-900/20 p-3 rounded-lg border border-yellow-600/30">
+          <div className="flex items-start space-x-3 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-400">
             <span className="text-2xl">💡</span>
             <div>
-              <span className="font-bold text-yellow-300">Tariff Region: </span>
-              <span className="text-gray-300">Used for calculating import duties and energy pricing</span>
+              <span className="font-bold text-yellow-700">Tariff Region: </span>
+              <span className="text-gray-700">Used for calculating import duties and energy pricing</span>
             </div>
           </div>
-          <div className="flex items-start space-x-3 bg-brown-900/20 p-3 rounded-lg border border-orange-600/30">
+          <div className="flex items-start space-x-3 bg-orange-50 p-3 rounded-lg border-2 border-orange-400">
             <span className="text-2xl">📦</span>
             <div>
-              <span className="font-bold text-orange-300">Shipping: </span>
-              <span className="text-gray-300">Helps estimate logistics and delivery costs</span>
+              <span className="font-bold text-orange-700">Shipping: </span>
+              <span className="text-gray-700">Helps estimate logistics and delivery costs</span>
             </div>
           </div>
         </div>
@@ -165,53 +165,53 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
         {/* Tariff Information Display */}
         <div className="mt-6 space-y-4">
           {/* Cost Breakdown */}
-          <div className="p-5 bg-gradient-to-br from-orange-900/30 to-red-900/30 rounded-xl border border-orange-500/30">
-            <h4 className="text-lg font-bold text-orange-300 mb-4">📊 Cost Estimates Based on Configuration</h4>
+          <div className="p-5 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border-2 border-orange-400 shadow-lg">
+            <h4 className="text-lg font-bold text-orange-700 mb-4">📊 Cost Estimates Based on Configuration</h4>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">Equipment Subtotal:</span>
-                <span className="text-white font-bold text-lg">${equipmentSubtotal.toLocaleString()}</span>
+                <span className="text-gray-700 font-medium">Equipment Subtotal:</span>
+                <span className="text-gray-900 font-bold text-lg">${equipmentSubtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">Tariff Rate ({tariffRegion}):</span>
-                <span className="text-orange-400 font-bold">{(getTariffRate() * 100).toFixed(2)}%</span>
+                <span className="text-gray-700 font-medium">Tariff Rate ({tariffRegion}):</span>
+                <span className="text-orange-600 font-bold">{(getTariffRate() * 100).toFixed(2)}%</span>
               </div>
-              <div className="flex justify-between items-center bg-orange-800/20 p-3 rounded-lg">
-                <span className="text-orange-300 font-semibold">💰 Estimated Tariff Cost:</span>
-                <span className="text-orange-400 font-bold text-xl">${tariffAmount.toLocaleString()}</span>
+              <div className="flex justify-between items-center bg-orange-100 p-3 rounded-lg border border-orange-300">
+                <span className="text-orange-800 font-semibold">💰 Estimated Tariff Cost:</span>
+                <span className="text-orange-700 font-bold text-xl">${tariffAmount.toLocaleString()}</span>
               </div>
             </div>
           </div>
 
           {/* Shipping Breakdown */}
-          <div className="p-5 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-xl border border-blue-500/30">
-            <h4 className="text-lg font-bold text-blue-300 mb-4">🚢 Shipping Estimates</h4>
+          <div className="p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-400 shadow-lg">
+            <h4 className="text-lg font-bold text-blue-700 mb-4">🚢 Shipping Estimates</h4>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">Total Equipment Weight:</span>
-                <span className="text-white font-bold">{totalEquipmentWeight.toLocaleString()} kg</span>
+                <span className="text-gray-700 font-medium">Total Equipment Weight:</span>
+                <span className="text-gray-900 font-bold">{totalEquipmentWeight.toLocaleString()} kg</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">Shipping Rate:</span>
-                <span className="text-blue-400 font-bold">${getShippingRatePerKg().toFixed(2)}/kg</span>
+                <span className="text-gray-700 font-medium">Shipping Rate:</span>
+                <span className="text-blue-600 font-bold">${getShippingRatePerKg().toFixed(2)}/kg</span>
               </div>
-              <div className="flex justify-between items-center bg-blue-800/20 p-3 rounded-lg">
-                <span className="text-blue-300 font-semibold">📦 Estimated Shipping Cost:</span>
-                <span className="text-blue-400 font-bold text-xl">${shippingAmount.toLocaleString()}</span>
+              <div className="flex justify-between items-center bg-blue-100 p-3 rounded-lg border border-blue-300">
+                <span className="text-blue-800 font-semibold">📦 Estimated Shipping Cost:</span>
+                <span className="text-blue-700 font-bold text-xl">${shippingAmount.toLocaleString()}</span>
               </div>
             </div>
           </div>
 
           {/* Total Additional Costs */}
-          <div className="p-5 bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl border-2 border-purple-500/40">
+          <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-400 shadow-lg">
             <div className="flex justify-between items-center">
               <div>
-                <h4 className="text-xl font-bold text-purple-300 mb-1">Total Tariffs + Shipping</h4>
-                <p className="text-sm text-gray-400">Additional costs beyond equipment</p>
+                <h4 className="text-xl font-bold text-purple-700 mb-1">Total Tariffs + Shipping</h4>
+                <p className="text-sm text-gray-600 font-medium">Additional costs beyond equipment</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-purple-400">${(tariffAmount + shippingAmount).toLocaleString()}</p>
-                <p className="text-sm text-purple-300 mt-1">{((tariffAmount + shippingAmount) / equipmentSubtotal * 100).toFixed(1)}% of equipment</p>
+                <p className="text-3xl font-bold text-purple-700">${(tariffAmount + shippingAmount).toLocaleString()}</p>
+                <p className="text-sm text-purple-600 mt-1 font-semibold">{((tariffAmount + shippingAmount) / equipmentSubtotal * 100).toFixed(1)}% of equipment</p>
               </div>
             </div>
           </div>
