@@ -29,7 +29,7 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
             </div>
             <h2 className="text-5xl font-bold mb-4">Join Merlin Energy</h2>
             <p className="text-xl text-purple-100">
-              Create an account and unlock powerful tools for BESS quoting
+              Try it free, then unlock powerful features for professional BESS quoting
             </p>
           </div>
         </div>
@@ -37,7 +37,7 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
         {/* Benefits Section */}
         <div className="p-8">
           <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Why Join Merlin? 🚀
+            Experience Merlin's Power 🚀
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -48,9 +48,9 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
                   <Save className="text-purple-600" size={32} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Save Your Projects</h4>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Save Your Projects 💎</h4>
                   <p className="text-gray-700">
-                    Never lose your work! Save unlimited BESS configurations and quotes to your personal portfolio.
+                    Premium members get unlimited saves for all BESS configurations and quotes.
                   </p>
                 </div>
               </div>
@@ -78,9 +78,9 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
                   <Users className="text-green-600" size={32} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Team Collaboration</h4>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Team Collaboration 💎</h4>
                   <p className="text-gray-700">
-                    Company accounts get 5 free user seats. Share projects and collaborate with your team.
+                    Business plans include team seats. Share projects and collaborate seamlessly.
                   </p>
                 </div>
               </div>
@@ -93,34 +93,42 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
                   <TrendingUp className="text-orange-600" size={32} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Advanced Analytics</h4>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Advanced Analytics 💎</h4>
                   <p className="text-gray-700">
-                    Track ROI, compare scenarios, and generate professional reports for clients.
+                    Premium: Track ROI, compare scenarios, and generate professional client reports.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Free Forever Section */}
+          {/* Try It Now Section */}
           <div className="bg-gradient-to-br from-purple-100 to-blue-100 p-8 rounded-2xl border-2 border-purple-300 mb-8">
             <div className="flex items-center justify-center space-x-4 mb-4">
-              <Shield className="text-purple-600" size={48} />
-              <h3 className="text-3xl font-bold text-gray-900">100% Free Forever</h3>
+              <Sparkles className="text-purple-600" size={48} />
+              <h3 className="text-3xl font-bold text-gray-900">Start Free - Upgrade Anytime</h3>
             </div>
-            <div className="text-center space-y-2">
-              <p className="text-xl text-gray-700">
-                ✅ No credit card required
+            <div className="text-center space-y-3">
+              <p className="text-2xl font-bold text-purple-700 mb-2">
+                Try Merlin with Limited Features
               </p>
-              <p className="text-xl text-gray-700">
-                ✅ Unlimited projects and quotes
+              <p className="text-lg text-gray-700">
+                ✅ No credit card required to start
               </p>
-              <p className="text-xl text-gray-700">
-                ✅ All features included
+              <p className="text-lg text-gray-700">
+                ✅ Create and explore basic BESS quotes
               </p>
-              <p className="text-xl text-gray-700">
-                ✅ Company accounts get 5 team seats
+              <p className="text-lg text-gray-700">
+                ✅ See how Merlin can transform your workflow
               </p>
+              <div className="mt-6 pt-4 border-t-2 border-purple-300">
+                <p className="text-lg font-bold text-gray-900 mb-2">
+                  🚀 Upgrade for Full Power:
+                </p>
+                <p className="text-base text-gray-700">
+                  Unlimited saves, advanced analytics, team collaboration, and more
+                </p>
+              </div>
             </div>
           </div>
 
@@ -130,19 +138,19 @@ export default function JoinMerlinModal({ isOpen, onClose, onSignUp }: JoinMerli
               onClick={onSignUp}
               className="flex-1 bg-gradient-to-b from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-8 py-5 rounded-xl font-bold text-xl shadow-xl transition-all duration-200 border-b-4 border-purple-800 hover:border-purple-900 transform hover:scale-105"
             >
-              🎉 Create Free Account
+              🚀 Try Merlin Free
             </button>
             <button
               onClick={onClose}
               className="flex-1 bg-white border-2 border-gray-300 hover:border-purple-400 text-gray-700 hover:text-purple-700 px-8 py-5 rounded-xl font-bold text-xl transition-all duration-200"
             >
-              Maybe Later
+              Not Right Now
             </button>
           </div>
 
           {/* Fine Print */}
           <p className="text-center text-sm text-gray-500 mt-6">
-            Join thousands of energy professionals using Merlin to create winning BESS quotes
+            Join thousands of energy professionals creating winning BESS quotes with Merlin
           </p>
         </div>
       </div>
