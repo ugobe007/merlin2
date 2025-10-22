@@ -139,7 +139,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
       sections: [{
         properties: {},
         children: [
-          // Professional Header with larger Merlin icon
+          // Professional Header with Merlin branding
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
@@ -147,14 +147,27 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                 children: [
                   new TableCell({
                     width: { size: 70, type: WidthType.PERCENTAGE },
+                    shading: { fill: "F3F4F6" },
                     children: [
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "BATTERY ENERGY STORAGE", 
                             bold: true, 
-                            size: 32, 
-                            color: "1E3A8A",
+                            size: 36, 
+                            color: "3B82F6",
+                            font: "Helvetica"
+                          }),
+                        ],
+                        spacing: { before: 200 },
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ 
+                            text: "SYSTEM PROPOSAL", 
+                            bold: true, 
+                            size: 36, 
+                            color: "9333EA",
                             font: "Helvetica"
                           }),
                         ],
@@ -162,67 +175,57 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
                       new Paragraph({
                         children: [
                           new TextRun({ 
-                            text: "SYSTEM", 
+                            text: "Professional Energy Storage Solution", 
                             bold: true, 
-                            size: 32, 
-                            color: "1E3A8A",
+                            size: 18, 
+                            color: "6B7280",
                             font: "Helvetica"
                           }),
                         ],
-                      }),
-                      new Paragraph({
-                        children: [
-                          new TextRun({ 
-                            text: "COMMERCIAL QUOTE PROPOSAL", 
-                            bold: true, 
-                            size: 20, 
-                            color: "2563EB",
-                            font: "Helvetica"
-                          }),
-                        ],
-                        spacing: { before: 100 },
+                        spacing: { before: 100, after: 200 },
                       }),
                     ],
                   }),
                   new TableCell({
                     width: { size: 30, type: WidthType.PERCENTAGE },
+                    shading: { fill: "EEF2FF" },
                     children: [
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "🧙‍♂️",
                             bold: true, 
-                            size: 72,
+                            size: 96,
                             font: "Helvetica"
                           }),
                         ],
-                        alignment: AlignmentType.RIGHT,
-                        spacing: { after: 100 },
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 100, after: 100 },
                       }),
                       new Paragraph({
                         children: [
                           new TextRun({ 
                             text: "MERLIN", 
                             bold: true, 
-                            size: 32,
+                            size: 40,
                             color: "9333EA",
                             font: "Helvetica"
                           }),
                         ],
-                        alignment: AlignmentType.RIGHT,
+                        alignment: AlignmentType.CENTER,
                       }),
                       new Paragraph({
                         children: [
                           new TextRun({ 
-                            text: "Energy Storage Solutions", 
+                            text: "Energy Solutions", 
                             italics: true, 
                             size: 16,
-                            color: "6B7280",
+                            color: "6366F1",
                             font: "Helvetica"
                           }),
                         ],
-                        alignment: AlignmentType.RIGHT,
-                        spacing: { before: 50 },
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 50, after: 100 },
                       }),
                     ],
                   }),
@@ -319,43 +322,84 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
               new TableRow({
                 children: [
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "METRIC", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "0000FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "KEY METRIC", bold: true, size: 24, color: "FFFFFF" })] })],
+                    shading: { fill: "9333EA" }, // Merlin purple
                   }),
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "VALUE", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "0000FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "VALUE", bold: true, size: 24, color: "FFFFFF" })] })],
+                    shading: { fill: "9333EA" }, // Merlin purple
                   }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "System Capacity", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`${batteryMWh.toFixed(1)} MWh`)] }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "System Capacity", bold: true, size: 22 })] })],
+                    shading: { fill: "EEF2FF" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: `${batteryMWh.toFixed(1)} MWh`, bold: true, size: 22, color: "3B82F6" })] })],
+                    shading: { fill: "EEF2FF" },
+                  }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Power Rating", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`${bessPowerMW} MW`)] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Power Rating", bold: true, size: 22 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${bessPowerMW} MW`, bold: true, size: 22, color: "3B82F6" })] })] }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Total Investment", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`$${costs.grandTotal.toLocaleString()}`)] }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "Total Investment", bold: true, size: 22 })] })],
+                    shading: { fill: "DBEAFE" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: `$${costs.grandTotal.toLocaleString()}`, bold: true, size: 22, color: "1E40AF" })] })],
+                    shading: { fill: "DBEAFE" },
+                  }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Annual Savings", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`$${annualSavings.toLocaleString()}`)] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Annual Energy Savings", bold: true, size: 22 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `$${annualSavings.toLocaleString()}/year`, bold: true, size: 22, color: "059669" })] })] }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Payback Period", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`${paybackPeriod.toFixed(2)} years`)] }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "Simple Payback Period", bold: true, size: 22 })] })],
+                    shading: { fill: "FEF3C7" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: `${paybackPeriod.toFixed(2)} years`, bold: true, size: 22, color: "D97706" })] })],
+                    shading: { fill: "FEF3C7" },
+                  }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "10-Year ROI", bold: true, size: 22 })] })],
+                    shading: { fill: "D1FAE5" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ 
+                      text: `${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%`, 
+                      bold: true, 
+                      size: 22, 
+                      color: "059669" 
+                    })] })],
+                    shading: { fill: "D1FAE5" },
+                  }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "System Warranty", bold: true, size: 22 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${warranty} Years`, bold: true, size: 22, color: "7C3AED" })] })] }),
                 ],
               }),
             ],
@@ -429,16 +473,16 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
               new TableRow({
                 children: [
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "COMPONENT", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "0000FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "COMPONENT", bold: true, size: 22, color: "FFFFFF" })] })],
+                    shading: { fill: "3B82F6" }, // Merlin blue
                   }),
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "SPECIFICATION", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "0000FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "SPECIFICATION", bold: true, size: 22, color: "FFFFFF" })] })],
+                    shading: { fill: "3B82F6" }, // Merlin blue
                   }),
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "COST (USD)", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "0000FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "COST (USD)", bold: true, size: 22, color: "FFFFFF" })] })],
+                    shading: { fill: "3B82F6" }, // Merlin blue
                   }),
                 ],
               }),
@@ -528,16 +572,16 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
               new TableRow({
                 children: [
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "GRAND TOTAL", bold: true, size: 24 })] })],
-                    shading: { fill: "00FF00" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "GRAND TOTAL", bold: true, size: 28 })] })],
+                    shading: { fill: "10B981" }, // Merlin green
                   }),
                   new TableCell({ 
                     children: [new Paragraph("")],
-                    shading: { fill: "00FF00" },
+                    shading: { fill: "10B981" }, // Merlin green
                   }),
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: `$${costs.grandTotal.toLocaleString()}`, bold: true, size: 24 })] })],
-                    shading: { fill: "00FF00" },
+                    children: [new Paragraph({ children: [new TextRun({ text: `$${costs.grandTotal.toLocaleString()}`, bold: true, size: 28, color: "FFFFFF" })] })],
+                    shading: { fill: "10B981" }, // Merlin green
                   }),
                 ],
               }),
@@ -548,8 +592,12 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
 
           // 4. FINANCIAL ANALYSIS & ROI
           new Paragraph({
-            children: [new TextRun({ text: "4. FINANCIAL ANALYSIS & ROI", bold: true, size: 24 })],
+            children: [new TextRun({ text: "4. ENHANCED FINANCIAL ANALYSIS", bold: true, size: 24 })],
             spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            text: `This comprehensive financial analysis demonstrates the strong return on investment and long-term value of this BESS installation.`,
+            spacing: { after: 200 },
           }),
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -557,45 +605,119 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
               new TableRow({
                 children: [
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "FINANCIAL METRIC", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "9900FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "FINANCIAL METRIC", bold: true, size: 22, color: "FFFFFF" })] })],
+                    shading: { fill: "9333EA" }, // Merlin purple
                   }),
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "VALUE", bold: true, color: "FFFFFF" })] })],
-                    shading: { fill: "9900FF" },
+                    children: [new Paragraph({ children: [new TextRun({ text: "VALUE", bold: true, size: 22, color: "FFFFFF" })] })],
+                    shading: { fill: "9333EA" }, // Merlin purple
                   }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Annual Energy Savings", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`$${annualSavings.toLocaleString()}`)] }),
-                ],
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Simple Payback Period", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph(`${paybackPeriod.toFixed(2)} years`)] }),
-                ],
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Budget Variance", bold: true })] })] }),
                   new TableCell({ 
-                    children: [new Paragraph(
-                      budget 
+                    children: [new Paragraph({ children: [new TextRun({ text: "Annual Energy Savings", bold: true, size: 20 })] })],
+                    shading: { fill: "D1FAE5" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: `$${annualSavings.toLocaleString()}/year`, bold: true, size: 20, color: "059669" })] })],
+                    shading: { fill: "D1FAE5" },
+                  }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Simple Payback Period", bold: true, size: 20 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${paybackPeriod.toFixed(2)} years`, bold: true, size: 20, color: "D97706" })] })] }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "5-Year Net Savings", bold: true, size: 20 })] })],
+                    shading: { fill: "FEF3C7" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ 
+                      text: `$${((annualSavings * 5) - costs.grandTotal).toLocaleString()}`, 
+                      bold: true, 
+                      size: 20, 
+                      color: ((annualSavings * 5) - costs.grandTotal) > 0 ? "059669" : "DC2626" 
+                    })] })],
+                    shading: { fill: "FEF3C7" },
+                  }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "10-Year Net Savings", bold: true, size: 20 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ 
+                    text: `$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}`, 
+                    bold: true, 
+                    size: 20, 
+                    color: "059669" 
+                  })] })] }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "10-Year ROI", bold: true, size: 20 })] })],
+                    shading: { fill: "DBEAFE" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ 
+                      text: `${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%`, 
+                      bold: true, 
+                      size: 20, 
+                      color: "1E40AF" 
+                    })] })],
+                    shading: { fill: "DBEAFE" },
+                  }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "20-Year Net Savings", bold: true, size: 20 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ 
+                    text: `$${((annualSavings * 20) - costs.grandTotal).toLocaleString()}`, 
+                    bold: true, 
+                    size: 20, 
+                    color: "059669" 
+                  })] })] }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ text: "Budget Status", bold: true, size: 20 })] })],
+                    shading: { fill: "EEF2FF" },
+                  }),
+                  new TableCell({ 
+                    children: [new Paragraph({ children: [new TextRun({ 
+                      text: budget 
                         ? costs.grandTotal <= budget 
-                          ? `Under budget by $${(budget - costs.grandTotal).toLocaleString()}`
-                          : `Over budget by $${(costs.grandTotal - budget).toLocaleString()}`
-                        : "No budget specified"
-                    )] 
+                          ? `✓ Under budget by $${(budget - costs.grandTotal).toLocaleString()}`
+                          : `⚠ Over budget by $${(costs.grandTotal - budget).toLocaleString()}`
+                        : "No budget specified",
+                      bold: true,
+                      size: 18,
+                      color: budget && costs.grandTotal <= budget ? "059669" : "D97706"
+                    })] })],
+                    shading: { fill: "EEF2FF" },
                   }),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "System Utilization", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph("20%")] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Cost per kWh Storage", bold: true, size: 20 })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ 
+                    text: `$${(costs.grandTotal / (batteryMWh * 1000)).toFixed(0)}/kWh`, 
+                    bold: true, 
+                    size: 20, 
+                    color: "6366F1" 
+                  })] })] }),
                 ],
               }),
             ],
@@ -723,10 +845,27 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     // Play magical sound effect
     playDownloadSound();
     
-    // For now, create a CSV that can be opened in Excel
-    const { costs, bessPowerMW, batteryMWh, solarMW, windMW, generatorMW } = quoteData;
+    // Enhanced CSV with financial metrics that can be opened in Excel
+    const { costs, bessPowerMW, batteryMWh, solarMW, windMW, generatorMW, annualSavings, paybackPeriod, budget } = quoteData;
     
-    let csv = "BATTERY ENERGY STORAGE SYSTEM - QUOTE\n\n";
+    let csv = "🧙‍♂️ MERLIN ENERGY - BATTERY ENERGY STORAGE SYSTEM QUOTE\n";
+    csv += `Generated: ${new Date().toLocaleDateString()}\n`;
+    csv += `Project: ${quoteData.projectName}\n`;
+    csv += `Client: ${quoteData.clientName}\n\n`;
+    
+    csv += "═══════════════════════════════════════════════════════════\n";
+    csv += "SYSTEM CONFIGURATION\n";
+    csv += "═══════════════════════════════════════════════════════════\n";
+    csv += `BESS Capacity,${batteryMWh.toFixed(1)} MWh\n`;
+    csv += `Power Rating,${bessPowerMW} MW\n`;
+    if (solarMW > 0) csv += `Solar Capacity,${solarMW} MW\n`;
+    if (windMW > 0) csv += `Wind Capacity,${windMW} MW\n`;
+    if (generatorMW > 0) csv += `Generator Backup,${generatorMW} MW\n`;
+    csv += `Warranty,${quoteData.warranty} Years\n\n`;
+    
+    csv += "═══════════════════════════════════════════════════════════\n";
+    csv += "COMPONENT BREAKDOWN\n";
+    csv += "═══════════════════════════════════════════════════════════\n";
     csv += "COMPONENT,SPECIFICATION,COST (USD)\n";
     csv += `Battery System,${batteryMWh.toFixed(1)} MWh LFP,$${costs.batterySystem.toLocaleString()}\n`;
     if (costs.pcs > 0) csv += `Power Conversion System,${bessPowerMW} MW,$${costs.pcs.toLocaleString()}\n`;
@@ -748,10 +887,32 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     }
     csv += `Balance of System,12% of equipment,$${costs.bos.toLocaleString()}\n`;
     csv += `Engineering & Installation,15% of equipment,$${costs.epc.toLocaleString()}\n`;
-    csv += `\nGRAND TOTAL,,$${costs.grandTotal.toLocaleString()}\n`;
+    csv += `Import Tariffs,${quoteData.tariffRegion || 'Regional'},$${costs.tariffs.toLocaleString()}\n`;
+    csv += `Shipping & Logistics,To ${quoteData.shippingDestination || quoteData.location},$${costs.shipping.toLocaleString()}\n\n`;
+    csv += `GRAND TOTAL,,$${costs.grandTotal.toLocaleString()}\n\n`;
+
+    csv += "═══════════════════════════════════════════════════════════\n";
+    csv += "ENHANCED FINANCIAL ANALYSIS\n";
+    csv += "═══════════════════════════════════════════════════════════\n";
+    csv += "METRIC,VALUE\n";
+    csv += `Annual Energy Savings,$${annualSavings.toLocaleString()}/year\n`;
+    csv += `Simple Payback Period,${paybackPeriod.toFixed(2)} years\n`;
+    csv += `5-Year Net Savings,$${((annualSavings * 5) - costs.grandTotal).toLocaleString()}\n`;
+    csv += `10-Year Net Savings,$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}\n`;
+    csv += `10-Year ROI,${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%\n`;
+    csv += `20-Year Net Savings,$${((annualSavings * 20) - costs.grandTotal).toLocaleString()}\n`;
+    csv += `Cost per kWh Storage,$${(costs.grandTotal / (batteryMWh * 1000)).toFixed(0)}/kWh\n`;
+    if (budget) {
+      csv += `Budget Status,${costs.grandTotal <= budget 
+        ? `Under by $${(budget - costs.grandTotal).toLocaleString()}` 
+        : `Over by $${(costs.grandTotal - budget).toLocaleString()}`}\n`;
+    }
+    csv += `\n`;
+    csv += `Generated by MERLIN Energy Storage Solutions\n`;
+    csv += `🧙‍♂️ Professional BESS Quote System\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, `BESS_Quote_${quoteData.projectName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+    saveAs(blob, `Merlin_BESS_Quote_${quoteData.projectName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   return (
