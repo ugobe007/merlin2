@@ -20,6 +20,7 @@ import EnhancedProfile from './EnhancedProfile';
 import AdvancedAnalytics from './AdvancedAnalytics';
 import FinancingCalculator from './FinancingCalculator';
 import UseCaseTemplates from './UseCaseTemplates';
+import PricingDataCapture from './PricingDataCapture';
 import type { ProfileData } from './modals/AccountSetup';
 import type { UseCaseTemplate } from './UseCaseTemplates';
 import merlinImage from "../assets/images/new_Merlin.png";
@@ -189,6 +190,7 @@ export default function BessQuoteBuilder() {
   const [showCalculationModal, setShowCalculationModal] = useState(false);
   const [showSaveProjectModal, setShowSaveProjectModal] = useState(false);
   const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
+  const [showPricingDataCapture, setShowPricingDataCapture] = useState(false);
 
   const handleSaveProject = async () => {
     setShowSaveProjectModal(true);
@@ -1323,6 +1325,15 @@ export default function BessQuoteBuilder() {
                 <span>📊</span>
                 <span>Portfolio</span>
               </button>
+              
+              <button 
+                className="bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-red-800 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
+                onClick={() => setShowPricingDataCapture(true)}
+                title="Upload quotes to earn credits and improve pricing data"
+              >
+                <span>📊</span>
+                <span>Pricing Data</span>
+              </button>
             </div>
           </div>
         </section>
@@ -1929,6 +1940,14 @@ export default function BessQuoteBuilder() {
           isOpen={showTemplates}
           onClose={() => setShowTemplates(false)}
           onApplyTemplate={handleApplyTemplate}
+        />
+      )}
+
+      {/* Pricing Data Capture Modal */}
+      {showPricingDataCapture && (
+        <PricingDataCapture
+          onClose={() => setShowPricingDataCapture(false)}
+          userEmail={authService.getCurrentUser()?.email}
         />
       )}
     </div>
