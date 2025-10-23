@@ -21,6 +21,7 @@ import AdvancedAnalytics from './AdvancedAnalytics';
 import FinancingCalculator from './FinancingCalculator';
 import UseCaseTemplates from './UseCaseTemplates';
 import PricingDataCapture from './PricingDataCapture';
+import MarketIntelligenceDashboard from './MarketIntelligenceDashboard';
 import type { ProfileData } from './modals/AccountSetup';
 import type { UseCaseTemplate } from './UseCaseTemplates';
 import merlinImage from "../assets/images/new_Merlin.png";
@@ -191,6 +192,7 @@ export default function BessQuoteBuilder() {
   const [showSaveProjectModal, setShowSaveProjectModal] = useState(false);
   const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
   const [showPricingDataCapture, setShowPricingDataCapture] = useState(false);
+  const [showMarketIntelligence, setShowMarketIntelligence] = useState(false);
 
   const handleSaveProject = async () => {
     setShowSaveProjectModal(true);
@@ -1250,10 +1252,15 @@ export default function BessQuoteBuilder() {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 hover:shadow-lg transition-all duration-200">
+          <button
+            onClick={() => setShowMarketIntelligence(true)}
+            className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+            title="Click to view detailed market intelligence"
+          >
             <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
             <div className="text-lg font-extrabold text-blue-900">${valueKwh.toFixed(4)}/kWh</div>
-          </div>
+            <div className="text-xs text-blue-700 mt-0.5">Click for details →</div>
+          </button>
           <div className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 hover:shadow-lg transition-all duration-200">
             <div className="text-xs font-bold text-green-800">💰 What People Pay</div>
             <div className="text-lg font-extrabold text-green-900">
@@ -1948,6 +1955,14 @@ export default function BessQuoteBuilder() {
         <PricingDataCapture
           onClose={() => setShowPricingDataCapture(false)}
           userEmail={authService.getCurrentUser()?.email}
+        />
+      )}
+
+      {/* Market Intelligence Dashboard */}
+      {showMarketIntelligence && (
+        <MarketIntelligenceDashboard
+          onClose={() => setShowMarketIntelligence(false)}
+          userTier={authService.getCurrentUser()?.tier as 'free' | 'professional' | 'enterprise_pro' | 'business'}
         />
       )}
     </div>
