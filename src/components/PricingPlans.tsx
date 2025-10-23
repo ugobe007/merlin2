@@ -120,6 +120,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               >
                 Start Free
               </button>
+              
+              <button
+                onClick={() => window.open('https://docs.merlin.energy/plans/starter', '_blank')}
+                className="w-full mt-2 py-2 text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors"
+              >
+                Learn More →
+              </button>
             </div>
 
                         <div className="space-y-3 text-sm">
@@ -193,6 +200,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
                 className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-bold hover:from-purple-700 hover:to-purple-800 transition-all shadow-md"
               >
                 Select Plan
+              </button>
+              
+              <button
+                onClick={() => window.open('https://docs.merlin.energy/plans/professional', '_blank')}
+                className="w-full mt-2 py-2 text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors"
+              >
+                Learn More →
               </button>
             </div>
 
@@ -278,6 +292,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               >
                 Select Plan
               </button>
+              
+              <button
+                onClick={() => window.open('https://docs.merlin.energy/plans/enterprise-pro', '_blank')}
+                className="w-full mt-2 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              >
+                Learn More →
+              </button>
             </div>
 
             <div className="text-xs text-gray-600 mb-4 pb-4 border-b border-gray-200">
@@ -339,6 +360,13 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
                 className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all"
               >
                 Talk to Sales
+              </button>
+              
+              <button
+                onClick={() => window.open('https://docs.merlin.energy/plans/business', '_blank')}
+                className="w-full mt-2 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              >
+                Learn More →
               </button>
             </div>
 
