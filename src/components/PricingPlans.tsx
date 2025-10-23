@@ -127,26 +127,24 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl w-full max-w-7xl border border-gray-200 shadow-2xl my-8 relative">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl w-full max-w-7xl border border-gray-200 shadow-2xl max-h-[95vh] flex flex-col relative">
         {/* Close Button - Positioned Absolutely */}
         <button
           onClick={onClose}
-          className="absolute -top-4 -right-4 z-10 bg-white text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full w-12 h-12 flex items-center justify-center text-4xl font-bold transition-all shadow-lg hover:shadow-xl border-2 border-gray-300 hover:border-red-400"
+          className="absolute top-4 right-4 z-20 bg-white text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full w-12 h-12 flex items-center justify-center text-4xl font-bold transition-all shadow-lg hover:shadow-xl border-2 border-gray-300 hover:border-red-400"
           title="Close (ESC)"
         >
           ×
         </button>
 
-        {/* Header */}
-        <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-2">
-                Choose Your Plan
-              </h2>
-              <p className="text-gray-600 text-lg">Select the perfect plan for your BESS quoting needs</p>
-            </div>
+        {/* Header - Fixed at top */}
+        <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-3xl flex-shrink-0">
+          <div className="pr-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-2">
+              Choose Your Plan
+            </h2>
+            <p className="text-gray-600 text-lg">Select the perfect plan for your BESS quoting needs</p>
           </div>
 
           {/* Billing Toggle */}
@@ -176,8 +174,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Scrollable Content Area */}
+        <div className="overflow-y-auto flex-1">
+          {/* Pricing Cards */}
+          <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* STARTER - FREE */}
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all">
@@ -498,7 +498,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
         </div>
 
         {/* Trust Signals */}
-        <div className="p-8 bg-gray-800/30 border-t border-purple-500/20">
+        <div className="p-8 bg-gray-800/30 border-t border-purple-500/20 rounded-b-3xl">
           <p className="text-center text-gray-400 text-sm mb-4">
             Trusted by leading energy professionals worldwide
           </p>
@@ -517,6 +517,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
             </div>
           </div>
         </div>
+        </div>
+        {/* End Scrollable Content */}
       </div>
 
       {/* Learn More Modal */}
