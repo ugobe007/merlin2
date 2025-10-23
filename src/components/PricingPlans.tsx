@@ -8,17 +8,22 @@ interface PricingPlansProps {
 
 const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [showLearnMore, setShowLearnMore] = useState<string | null>(null);
 
   // ESC key to close
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        if (showLearnMore) {
+          setShowLearnMore(null);
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, showLearnMore]);
 
   const handleSelectPlan = (tier: string) => {
     if (tier === 'free') {
@@ -48,6 +53,77 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
 
   const getSavings = (monthly: number) => {
     return monthly * 2; // 2 months free = 2 months of savings
+  };
+
+  const getLearnMoreContent = (tier: string) => {
+    const content: Record<string, { title: string; description: string; highlights: string[] }> = {
+      'starter': {
+        title: 'Starter Plan - Perfect for Getting Started',
+        description: 'The Starter plan is ideal for individuals exploring BESS technology or working on occasional quotes. You can test out the platform\'s core features with no commitment.',
+        highlights: [
+          'Generate up to 3 professional quotes per month',
+          'Access to basic BESS calculator with essential configurations',
+          'Choose from 2 industry-standard use case templates',
+          'Export your quotes to Word or Excel formats',
+          'Email support for any questions',
+          'No credit card required - completely free forever',
+          'Perfect for learning and small-scale projects'
+        ]
+      },
+      'professional': {
+        title: 'Professional Plan - For Serious Energy Professionals',
+        description: 'The Professional plan unlocks unlimited quoting power and advanced features. Perfect for consultants, developers, and energy professionals who need comprehensive tools and analytics.',
+        highlights: [
+          'Unlimited quote generations - no monthly limits',
+          'Save and manage up to 25 projects for easy access',
+          'Full hybrid system configurations (Solar + Storage)',
+          'AI-powered Smart Wizard for guided quote building',
+          'Advanced analytics dashboard with NPV, IRR, and ROI calculations',
+          'Comprehensive financing calculator (Loan, Lease, PPA options)',
+          'Add your custom logo to all quotes for professional branding',
+          'Access to all 8 standard industry use case templates',
+          'Portfolio management tools for tracking multiple projects',
+          'Priority email support with faster response times',
+          'Perfect for consultants, developers, and growing businesses'
+        ]
+      },
+      'enterprise_pro': {
+        title: 'Enterprise Pro - Scale Your Team',
+        description: 'Enterprise Pro is designed for teams that need collaboration, unlimited projects, and advanced customization. Ideal for established firms producing quotes at scale.',
+        highlights: [
+          'Everything included in Professional plan',
+          'Unlimited saved projects - no storage limits',
+          'Multi-user collaboration with up to 5 team members',
+          'All premium use case templates for specialized industries',
+          'Vendor quote management system for tracking bids',
+          'Sensitivity analysis and scenario modeling tools',
+          'White-label branding with custom colors and logos',
+          'Priority support with phone access for urgent needs',
+          'Advanced export options (PDF, DOCX, XLSX)',
+          'Team workspace for shared projects and resources',
+          'Perfect for engineering firms, EPCs, and growing enterprises'
+        ]
+      },
+      'business': {
+        title: 'Business Plan - Enterprise-Grade Solution',
+        description: 'The Business plan provides a fully customized, enterprise-grade solution with dedicated support and unlimited capabilities. Built for organizations that need maximum flexibility and control.',
+        highlights: [
+          'Everything included in Enterprise Pro',
+          'Unlimited team members - scale without restrictions',
+          'Custom use case template creation tailored to your workflows',
+          'Dedicated account manager for personalized support',
+          'Comprehensive training and onboarding for your team',
+          'Custom integrations with your existing systems',
+          'Full API access for automation and custom applications',
+          '99.9% SLA with priority support and rapid response',
+          'Quarterly business reviews to optimize your usage',
+          'Custom feature development based on your needs',
+          'Volume pricing based on your organization\'s requirements',
+          'Perfect for large enterprises, utilities, and high-volume operations'
+        ]
+      }
+    };
+    return content[tier] || content['starter'];
   };
 
   return (
@@ -122,7 +198,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
               
               <button
-                onClick={() => window.open('https://docs.merlin.energy/plans/starter', '_blank')}
+                onClick={() => setShowLearnMore('starter')}
                 className="w-full mt-2 py-2 text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors"
               >
                 Learn More →
@@ -203,7 +279,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
               
               <button
-                onClick={() => window.open('https://docs.merlin.energy/plans/professional', '_blank')}
+                onClick={() => setShowLearnMore('professional')}
                 className="w-full mt-2 py-2 text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors"
               >
                 Learn More →
@@ -294,7 +370,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
               
               <button
-                onClick={() => window.open('https://docs.merlin.energy/plans/enterprise-pro', '_blank')}
+                onClick={() => setShowLearnMore('enterprise_pro')}
                 className="w-full mt-2 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Learn More →
@@ -363,7 +439,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
               
               <button
-                onClick={() => window.open('https://docs.merlin.energy/plans/business', '_blank')}
+                onClick={() => setShowLearnMore('business')}
                 className="w-full mt-2 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Learn More →
@@ -440,6 +516,60 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
           </div>
         </div>
       </div>
+
+      {/* Learn More Modal */}
+      {showLearnMore && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">
+                {getLearnMoreContent(showLearnMore).title}
+              </h2>
+              <button
+                onClick={() => setShowLearnMore(null)}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg px-3 py-1 text-3xl leading-none transition-all"
+                title="Close (ESC)"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              {getLearnMoreContent(showLearnMore).description}
+            </p>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Key Features & Benefits:</h3>
+              <div className="space-y-3">
+                {getLearnMoreContent(showLearnMore).highlights.map((highlight, idx) => (
+                  <div key={idx} className="flex items-start">
+                    <span className="text-purple-600 mr-3 mt-1 text-lg">✓</span>
+                    <span className="text-gray-700">{highlight}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              <button
+                onClick={() => {
+                  setShowLearnMore(null);
+                  handleSelectPlan(showLearnMore);
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-bold hover:from-purple-700 hover:to-purple-800 transition-all shadow-md"
+              >
+                {showLearnMore === 'business' ? 'Contact Sales' : 'Select This Plan'}
+              </button>
+              <button
+                onClick={() => setShowLearnMore(null)}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
