@@ -128,7 +128,16 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl w-full max-w-7xl border border-gray-200 shadow-2xl my-8">
+      <div className="bg-white rounded-3xl w-full max-w-7xl border border-gray-200 shadow-2xl my-8 relative">
+        {/* Close Button - Positioned Absolutely */}
+        <button
+          onClick={onClose}
+          className="absolute -top-4 -right-4 z-10 bg-white text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full w-12 h-12 flex items-center justify-center text-4xl font-bold transition-all shadow-lg hover:shadow-xl border-2 border-gray-300 hover:border-red-400"
+          title="Close (ESC)"
+        >
+          ×
+        </button>
+
         {/* Header */}
         <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
           <div className="flex justify-between items-start">
@@ -138,13 +147,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </h2>
               <p className="text-gray-600 text-lg">Select the perfect plan for your BESS quoting needs</p>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full w-10 h-10 flex items-center justify-center text-4xl font-light transition-all shadow-sm hover:shadow-md"
-              title="Close (ESC)"
-            >
-              ×
-            </button>
           </div>
 
           {/* Billing Toggle */}
