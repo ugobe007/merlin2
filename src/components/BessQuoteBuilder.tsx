@@ -1249,6 +1249,19 @@ export default function BessQuoteBuilder() {
               ⭐
             </div>
           </div>
+          
+          {/* Pricing Data Button - Professional */}
+          <button
+            onClick={() => setShowPricingDataCapture(true)}
+            className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-200 text-gray-800 px-4 py-2 rounded-lg shadow-sm border border-green-300 hover:shadow-md hover:border-green-400 transition-all duration-200 flex items-center gap-2"
+            title="Upload pricing data to improve market intelligence"
+          >
+            <span className="text-sm">📊</span>
+            <div className="text-left">
+              <div className="text-xs font-semibold text-green-800">Pricing Data</div>
+              <div className="text-[10px] text-green-700">Upload & Earn</div>
+            </div>
+          </button>
         </div>
         
         <div className="flex items-center gap-3">
@@ -1331,15 +1344,6 @@ export default function BessQuoteBuilder() {
               >
                 <span>📊</span>
                 <span>Portfolio</span>
-              </button>
-              
-              <button 
-                className="bg-gradient-to-b from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-red-800 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
-                onClick={() => setShowPricingDataCapture(true)}
-                title="Upload quotes to earn credits and improve pricing data"
-              >
-                <span>📊</span>
-                <span>Pricing Data</span>
               </button>
             </div>
           </div>
