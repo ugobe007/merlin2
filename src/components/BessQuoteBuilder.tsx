@@ -439,7 +439,13 @@ export default function BessQuoteBuilder() {
   };
 
   const handleUserProfile = () => {
-    setShowUserProfile(true);
+    if (isLoggedIn) {
+      // If logged in, show the profile viewer (not edit mode)
+      setShowEnhancedProfile(true);
+    } else {
+      // If not logged in, show auth modal for sign in / join
+      setShowAuthModal(true);
+    }
   };
 
   const handleResetToDefaults = () => {
@@ -1328,7 +1334,7 @@ export default function BessQuoteBuilder() {
           {/* Join Now Button - Upper Right */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-300 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg"
+              className="bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-300 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-800 text-lg"
               onClick={() => setShowJoinModal(true)}
             >
               ✨ Join Now
@@ -1360,7 +1366,7 @@ export default function BessQuoteBuilder() {
               />
               
               <button 
-                className="bg-gradient-to-b from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-2 border-blue-400 flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-2 border-blue-400 flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handleSaveProject}
               >
                 <span className="text-2xl">💾</span>
@@ -1368,7 +1374,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-green-800 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-green-400 to-green-600 hover:from-green-300 hover:to-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-green-800 flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handleLoadProject}
               >
                 <span className="text-2xl">📂</span>
@@ -1376,7 +1382,7 @@ export default function BessQuoteBuilder() {
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-2xl transition-all duration-200 border-b-6 border-purple-900 hover:border-black flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-900 flex items-center justify-center space-x-2 text-xl w-48"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
