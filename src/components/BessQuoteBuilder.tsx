@@ -1304,14 +1304,16 @@ export default function BessQuoteBuilder() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => setShowMarketIntelligence(true)}
             className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 transition-colors duration-200 cursor-pointer"
-            title="Click to view detailed market intelligence"
+            title="Market average battery pack pricing (cell level) - Click to view detailed market intelligence"
           >
             <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
-            <div className="text-lg font-extrabold text-blue-900">${valueKwh.toFixed(4)}/kWh</div>
+            <div className="text-lg font-extrabold text-blue-900">
+              ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}/kWh
+            </div>
           </button>
           <button
             onClick={() => setShowMarketIntelligence(true)}
