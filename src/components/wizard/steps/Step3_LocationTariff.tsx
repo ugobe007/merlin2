@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Step3_LocationTariffProps {
   projectLocation: string;
@@ -12,6 +12,8 @@ interface Step3_LocationTariffProps {
   solarMW?: number;
   windMW?: number;
   generatorMW?: number;
+  onShowUtilityRates?: () => void;
+  onShowPricingPresets?: () => void;
 }
 
 const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
@@ -26,7 +28,12 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
   solarMW = 0,
   windMW = 0,
   generatorMW = 0,
+  onShowUtilityRates,
+  onShowPricingPresets,
 }) => {
+  const [utilityRateApplied, setUtilityRateApplied] = useState(false);
+  const [pricingPresetApplied, setPricingPresetApplied] = useState(false);
+  
   // Calculate equipment costs for tariff display
   const getTariffRate = () => {
     const tariffRates: { [key: string]: number } = {
@@ -160,6 +167,49 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
               <span className="text-gray-700">Helps estimate logistics and delivery costs</span>
             </div>
           </div>
+        </div>
+
+        {/* Quick Access Buttons */}
+        <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-300 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">⚡ Quick Access Tools</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={() => {
+                if (onShowUtilityRates) {
+                  onShowUtilityRates();
+                  setUtilityRateApplied(true);
+                }
+              }}
+              className="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-300 hover:to-blue-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-sky-300/30 flex items-center justify-center gap-2"
+            >
+              <span className="text-2xl">⚡</span>
+              <div className="text-left">
+                <div className="font-bold">Regional Utility Rates</div>
+                <div className="text-xs opacity-90">Auto-populate electricity costs</div>
+                {utilityRateApplied && <div className="text-xs mt-1">✓ Applied</div>}
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onShowPricingPresets) {
+                  onShowPricingPresets();
+                  setPricingPresetApplied(true);
+                }
+              }}
+              className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center justify-center gap-2"
+            >
+              <span className="text-2xl">💰</span>
+              <div className="text-left">
+                <div className="font-bold">My Pricing Presets</div>
+                <div className="text-xs opacity-90">Use saved pricing & EPC fees</div>
+                {pricingPresetApplied && <div className="text-xs mt-1">✓ Applied</div>}
+              </div>
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mt-4 text-center italic">
+            💡 Tip: Set up your pricing once, use it in every quote!
+          </p>
         </div>
 
         {/* Tariff Information Display */}

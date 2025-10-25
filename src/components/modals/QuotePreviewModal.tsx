@@ -1007,6 +1007,12 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
         </div>
 
         <div className="p-8 space-y-6">
+          {/* Instruction Header */}
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-xl shadow-lg text-center">
+            <h3 className="text-2xl font-bold mb-2">✨ Your Quote is Ready!</h3>
+            <p className="text-lg">Review the details below and download your professional quote documents</p>
+          </div>
+
           {/* Summary */}
           <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-6 rounded-xl border-2 border-purple-400 shadow-lg">
             <h3 className="text-2xl font-bold text-purple-700 mb-4">System Configuration</h3>
@@ -1060,21 +1066,26 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
           </div>
 
           {/* Download Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={generateWordDocument}
-              className="flex-1 px-6 py-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center space-x-2 border-b-4 border-blue-900"
-            >
-              <span>📄</span>
-              <span>Download Word Document</span>
-            </button>
-            <button
-              onClick={generateExcelData}
-              className="flex-1 px-6 py-4 bg-gradient-to-br from-green-600 to-green-700 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center space-x-2 border-b-4 border-green-900"
-            >
-              <span>📊</span>
-              <span>Download Excel/CSV</span>
-            </button>
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-400">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">📥 Download Your Quote Documents</h3>
+            <p className="text-sm text-gray-600 mb-4 text-center">Click below to generate and download your professional quote files</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={generateWordDocument}
+                className="flex-1 px-6 py-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center space-x-3 border-b-4 border-blue-900"
+              >
+                <span className="text-2xl">📄</span>
+                <span>Download Word Document</span>
+              </button>
+              <button
+                onClick={generateExcelData}
+                className="flex-1 px-6 py-5 bg-gradient-to-br from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-xl hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center space-x-3 border-b-4 border-green-900"
+              >
+                <span className="text-2xl">📊</span>
+                <span>Download Excel/CSV</span>
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-3 text-center">💡 Pro tip: Download both formats for maximum compatibility</p>
           </div>
         </div>
       </div>

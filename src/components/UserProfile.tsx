@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, LogIn, UserPlus, LogOut, Settings, Users, Mail, Building2, Copy, Check, UserCog, Shield } from 'lucide-react';
+import { X, User, LogIn, UserPlus, LogOut, Settings, Users, Mail, Building2, Copy, Check, UserCog, Shield, Palette, Upload, ImageIcon } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { authService } from '../services/authService';
 
@@ -10,7 +10,7 @@ interface UserProfileProps {
   onLogout: () => void;
 }
 
-type Tab = 'profile' | 'team' | 'invites';
+type Tab = 'profile' | 'team' | 'invites' | 'branding';
 
 const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginSuccess, onLogout }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -21,6 +21,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginS
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [inviteCode, setInviteCode] = useState<string>('');
   const [copiedInvite, setCopiedInvite] = useState(false);
+  
+  // Branding state
+  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [brandColor, setBrandColor] = useState<string>('#6B46C1');
+  const [secondaryColor, setSecondaryColor] = useState<string>('#3B82F6');
+  const [quoteTemplate, setQuoteTemplate] = useState<string>('professional');
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -40,6 +47,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginS
         const members = authService.getCompanyMembers(companyData.id);
         setTeamMembers(members);
       }
+    }
+    
+    // Load branding settings
+    const savedBranding = localStorage.getItem(`branding_${currentUser?.id || 'default'}`);
+    if (savedBranding) {
+      const branding = JSON.parse(savedBranding);
+      setLogoUrl(branding.logoUrl || '');
+      setBrandColor(branding.brandColor || '#6B46C1');
+      setSecondaryColor(branding.secondaryColor || '#3B82F6');
+      setQuoteTemplate(branding.quoteTemplate || 'professional');
     }
   };
 
@@ -62,6 +79,31 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginS
     navigator.clipboard.writeText(inviteLink);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2000);
+  };
+  
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleSaveBranding = () => {
+    const branding = {
+      logoUrl,
+      brandColor,
+      secondaryColor,
+      quoteTemplate,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`branding_${user?.id || 'default'}`, JSON.stringify(branding));
+    alert('Branding settings saved successfully!');
   };
 
   const getRoleBadge = (role?: string) => {
@@ -109,6 +151,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginS
                 >
                   <Settings size={20} />
                   Profile
+                </button>
+                <button
+                  onClick={() => setActiveTab('branding')}
+                  className={`flex items-center gap-2 px-6 py-3 font-bold transition-colors ${
+                    activeTab === 'branding'
+                      ? 'border-b-4 border-purple-600 text-purple-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Palette size={20} />
+                  Quote Branding
                 </button>
                 {isCompanyAccount && (
                   <>
@@ -223,6 +276,153 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoggedIn, onClose, onLoginS
                     >
                       <LogOut className="mr-2" />
                       Sign Out
+                    </button>
+                  </div>
+                )}
+
+                {/* Branding Tab */}
+                {activeTab === 'branding' && (
+                  <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-4">📄 Quote Customization</h3>
+                      <p className="text-gray-600 mb-4">
+                        Customize your quotes with your company logo, brand colors, and preferred template style.
+                      </p>
+                    </div>
+
+                    {/* Logo Upload */}
+                    <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+                      <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <ImageIcon size={20} className="text-purple-600" />
+                        Company Logo
+                      </h4>
+                      <div className="space-y-4">
+                        {logoUrl && (
+                          <div className="flex justify-center p-4 bg-gray-50 rounded-lg">
+                            <img src={logoUrl} alt="Company Logo" className="max-h-32 max-w-full object-contain" />
+                          </div>
+                        )}
+                        <div>
+                          <label className="block w-full">
+                            <div className="flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all cursor-pointer">
+                              <Upload size={24} className="text-gray-500" />
+                              <span className="font-bold text-gray-700">
+                                {logoUrl ? 'Replace Logo' : 'Upload Logo'}
+                              </span>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Recommended: PNG or SVG with transparent background, max 2MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Brand Colors */}
+                    <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+                      <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <Palette size={20} className="text-purple-600" />
+                        Brand Colors
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Primary Color</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={brandColor}
+                              onChange={(e) => setBrandColor(e.target.value)}
+                              className="h-12 w-20 rounded-lg border-2 border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={brandColor}
+                              onChange={(e) => setBrandColor(e.target.value)}
+                              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 font-mono text-sm"
+                              placeholder="#6B46C1"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Secondary Color</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="h-12 w-20 rounded-lg border-2 border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 font-mono text-sm"
+                              placeholder="#3B82F6"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-4 rounded-lg" style={{ background: `linear-gradient(to right, ${brandColor}, ${secondaryColor})` }}>
+                        <p className="text-white font-bold text-center">Color Preview</p>
+                      </div>
+                    </div>
+
+                    {/* Quote Template Selection */}
+                    <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+                      <h4 className="text-lg font-bold text-gray-900 mb-3">Quote Template Style</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button
+                          onClick={() => setQuoteTemplate('professional')}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            quoteTemplate === 'professional'
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="text-4xl mb-2">💼</div>
+                          <div className="font-bold text-gray-900">Professional</div>
+                          <div className="text-xs text-gray-600 mt-1">Clean, corporate design</div>
+                        </button>
+                        <button
+                          onClick={() => setQuoteTemplate('modern')}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            quoteTemplate === 'modern'
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="text-4xl mb-2">✨</div>
+                          <div className="font-bold text-gray-900">Modern</div>
+                          <div className="text-xs text-gray-600 mt-1">Bold colors, graphics</div>
+                        </button>
+                        <button
+                          onClick={() => setQuoteTemplate('minimal')}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            quoteTemplate === 'minimal'
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="text-4xl mb-2">📋</div>
+                          <div className="font-bold text-gray-900">Minimal</div>
+                          <div className="text-xs text-gray-600 mt-1">Simple, text-focused</div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <button
+                      onClick={handleSaveBranding}
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <Check size={20} />
+                      Save Branding Settings
                     </button>
                   </div>
                 )}

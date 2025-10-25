@@ -14,9 +14,11 @@ interface SmartWizardProps {
   show: boolean;
   onClose: () => void;
   onFinish: (data: any) => void;
+  onShowUtilityRates?: () => void;
+  onShowPricingPresets?: () => void;
 }
 
-const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) => {
+const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, onShowUtilityRates, onShowPricingPresets }) => {
   const [step, setStep] = useState(0);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
@@ -279,6 +281,8 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) =>
             solarMW={solarMW}
             windMW={windMW}
             generatorMW={generatorMW}
+            onShowUtilityRates={onShowUtilityRates}
+            onShowPricingPresets={onShowPricingPresets}
           />
         );
       case 4:

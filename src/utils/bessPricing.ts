@@ -191,8 +191,8 @@ export const calculateBESSPricing = (
     // Large scale contract pricing (updated from $150 to reflect 2024-2025 market)
     contractBasePrice = 150;
   } else {
-    // Small scale contract pricing (updated from $130)
-    contractBasePrice = 130;
+    // Small scale contract pricing (lowered to $55 to allow competitive minimum pricing)
+    contractBasePrice = 55;
   }
   
   // Apply regional and duration adjustments to contract pricing
