@@ -5,7 +5,7 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
-import { calculateBESSPricing, PRICING_SOURCES, formatPricingForDisplay } from '../utils/bessPricing';
+import { calculateBESSPricing, PRICING_SOURCES, formatPricingForDisplay, calculateRealWorldPrice } from '../utils/bessPricing';
 import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
@@ -1307,12 +1307,19 @@ export default function BessQuoteBuilder() {
             <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
             <div className="text-lg font-extrabold text-blue-900">${valueKwh.toFixed(4)}/kWh</div>
           </button>
-          <div className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 hover:shadow-lg transition-all duration-200">
-            <div className="text-xs font-bold text-green-800">💰 What People Pay</div>
+          <button
+            onClick={() => setShowMarketIntelligence(true)}
+            className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+            title="Click to see detailed breakdown of installed system costs"
+          >
+            <div className="text-xs font-bold text-green-800">💰 Installed Price</div>
             <div className="text-lg font-extrabold text-green-900">
-              ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
+              ${calculateRealWorldPrice()}/kWh
             </div>
-          </div>
+            <div className="text-[9px] text-green-700 mt-0.5">
+              Turnkey (Battery+PCS+Controls)
+            </div>
+          </button>
         </div>
       </header>
       
