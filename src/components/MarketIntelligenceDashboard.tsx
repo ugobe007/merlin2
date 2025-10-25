@@ -31,7 +31,7 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
   onClose, 
   userTier = 'free' 
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'regional' | 'manufacturers'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'regional' | 'manufacturers' | 'breakdown'>('overview');
   const [timeRange, setTimeRange] = useState<'1M' | '3M' | '6M' | '1Y' | 'ALL'>('6M');
 
   // Mock data - in production, this would come from your API
@@ -127,10 +127,20 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 px-6 bg-gray-50 flex-shrink-0">
+        <div className="flex border-b border-gray-200 px-6 bg-gray-50 flex-shrink-0 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('breakdown')}
+            className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
+              activeTab === 'breakdown'
+                ? 'border-b-2 border-purple-600 text-purple-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            💰 Cost Breakdown
+          </button>
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 font-semibold transition-all ${
+            className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-b-2 border-purple-600 text-purple-600'
                 : 'text-gray-600 hover:text-gray-900'
@@ -140,7 +150,7 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
           </button>
           <button
             onClick={() => setActiveTab('trends')}
-            className={`px-6 py-3 font-semibold transition-all ${
+            className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
               activeTab === 'trends'
                 ? 'border-b-2 border-purple-600 text-purple-600'
                 : 'text-gray-600 hover:text-gray-900'
@@ -172,7 +182,109 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {!hasPremiumAccess && (
+          {/* Cost Breakdown Tab */}
+          {activeTab === 'breakdown' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">💰 Installed Price Breakdown</h3>
+                <p className="text-gray-700 mb-6">
+                  This shows how we calculate the realistic "Installed Price" that buyers actually pay for turnkey BESS systems.
+                  Based on Q4 2024 BNEF data and industry standards.
+                </p>
+                
+                <div className="bg-white rounded-lg p-6 shadow-sm border-2 border-gray-200">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                      <div>
+                        <p className="font-semibold text-gray-900">Battery Packs (Cells)</p>
+                        <p className="text-sm text-gray-600">BNEF Q4 2024 pricing data</p>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-600">$132/kWh</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                      <div>
+                        <p className="font-semibold text-gray-900">PCS (Power Conversion System)</p>
+                        <p className="text-sm text-gray-600">~22% of battery cost</p>
+                      </div>
+                      <p className="text-2xl font-bold text-purple-600">$29/kWh</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                      <div>
+                        <p className="font-semibold text-gray-900">Microgrid Controller & EMS Software</p>
+                        <p className="text-sm text-gray-600">$50-80k fixed cost amortized</p>
+                      </div>
+                      <p className="text-2xl font-bold text-orange-600">$17/kWh</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                      <div>
+                        <p className="font-semibold text-gray-900">BOS (Balance of System)</p>
+                        <p className="text-sm text-gray-600">Wiring, enclosures, HVAC, fire suppression (~12%)</p>
+                      </div>
+                      <p className="text-2xl font-bold text-green-600">$16/kWh</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pb-3 border-b-2 border-gray-300">
+                      <div>
+                        <p className="font-semibold text-gray-900">Integration & Commissioning</p>
+                        <p className="text-sm text-gray-600">~5% of subtotal</p>
+                      </div>
+                      <p className="text-2xl font-bold text-indigo-600">$11/kWh</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-3 bg-green-50 -mx-6 px-6 py-4 rounded-b-lg">
+                      <div>
+                        <p className="font-bold text-xl text-gray-900">Total Installed Price</p>
+                        <p className="text-sm text-gray-600">Turnkey system ready for operation</p>
+                      </div>
+                      <p className="text-3xl font-bold text-green-700">~$205/kWh</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700">
+                    <strong>Note:</strong> This price includes small daily market fluctuations (±2%) to reflect real-time market conditions.
+                    It represents what commercial/industrial buyers actually pay for fully installed, turnkey BESS systems in 2024-2025.
+                  </p>
+                </div>
+                
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <a 
+                    href="https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white border-2 border-blue-200 rounded-lg p-4 hover:shadow-lg transition-all"
+                  >
+                    <p className="text-xs font-bold text-blue-700 mb-1">🔗 Source:</p>
+                    <p className="text-sm text-gray-900">BNEF Battery Pack Pricing</p>
+                  </a>
+                  <a 
+                    href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white border-2 border-green-200 rounded-lg p-4 hover:shadow-lg transition-all"
+                  >
+                    <p className="text-xs font-bold text-green-700 mb-1">🔗 Source:</p>
+                    <p className="text-sm text-gray-900">NREL ATB 2024</p>
+                  </a>
+                  <a 
+                    href="https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white border-2 border-purple-200 rounded-lg p-4 hover:shadow-lg transition-all"
+                  >
+                    <p className="text-xs font-bold text-purple-700 mb-1">🔗 Source:</p>
+                    <p className="text-sm text-gray-900">HighJoule BESS Guide</p>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!hasPremiumAccess && activeTab !== 'breakdown' && (
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 rounded-xl p-6 mb-6">
               <div className="flex items-start gap-4">
                 <div className="text-4xl">🔒</div>
