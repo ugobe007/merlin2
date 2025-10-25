@@ -1109,23 +1109,53 @@ export default function BessQuoteBuilder() {
           spacing: { before: 400, after: 200 },
         }),
         new Paragraph({
-          text: "• NREL (National Renewable Energy Laboratory) - Energy Storage Cost Data",
-          bullet: { level: 0 },
+          children: [
+            new TextRun({ text: "• NREL ATB 2024 - Utility-Scale Battery Storage: ", bold: true }),
+            new TextRun({
+              text: "https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage",
+              style: "Hyperlink",
+            }),
+          ],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "• BloombergNEF - Q4 2025 Battery Pack Pricing Report",
-          bullet: { level: 0 },
+          children: [
+            new TextRun({ text: "• BloombergNEF - Li-ion Battery Pack Prices 2024: ", bold: true }),
+            new TextRun({
+              text: "https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/",
+              style: "Hyperlink",
+            }),
+          ],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "• Wood Mackenzie - Power & Renewables Market Analysis",
-          bullet: { level: 0 },
+          children: [
+            new TextRun({ text: "• HighJoule BESS Cost Guide 2024-2025: ", bold: true }),
+            new TextRun({
+              text: "https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html",
+              style: "Hyperlink",
+            }),
+          ],
           spacing: { after: 100 },
         }),
         new Paragraph({
-          text: "• Local utility tariff schedules and demand charge structures",
-          bullet: { level: 0 },
+          children: [
+            new TextRun({ text: "• Catalyst Power - Microgrid Installation Costs: ", bold: true }),
+            new TextRun({
+              text: "https://blog.catalystpower.com/more-power-to-you/what-are-the-upfront-costs-of-installing-a-microgrid-system",
+              style: "Hyperlink",
+            }),
+          ],
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: "• ComEd Hourly Pricing (Real-Time Rates): ", bold: true }),
+            new TextRun({
+              text: "https://hourlypricing.comed.com/live-prices/",
+              style: "Hyperlink",
+            }),
+          ],
           spacing: { after: 200 },
         }),
         italicParagraph("Last Updated: Q4 2025", {
@@ -1386,7 +1416,56 @@ export default function BessQuoteBuilder() {
               </div>
             </div>
             
-            <p className="text-xs text-gray-600 italic mt-3">BNEF, NREL ATB, Industry Sources</p>
+            <div className="mt-3 pt-2 border-t border-green-300">
+              <p className="text-xs text-gray-600 italic mb-2">Data Sources:</p>
+              <div className="flex flex-wrap gap-2">
+                <a 
+                  href="https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  title="Bloomberg NEF Battery Pricing Report"
+                >
+                  🔗 BNEF
+                </a>
+                <a 
+                  href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  title="NREL Annual Technology Baseline - Battery Storage"
+                >
+                  🔗 NREL ATB
+                </a>
+                <a 
+                  href="https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  title="HighJoule BESS Cost Guide 2024-2025"
+                >
+                  🔗 HighJoule
+                </a>
+                <a 
+                  href="https://blog.catalystpower.com/more-power-to-you/what-are-the-upfront-costs-of-installing-a-microgrid-system#:~:text=Larger%20microgrid%20projects%20(between%202%20MW%20and,higher%20normalized%20costs%2C%20averaging%20around%20$4%20million/MW."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  title="Catalyst Power - Microgrid Installation Costs"
+                >
+                  🔗 Catalyst
+                </a>
+                <a 
+                  href="https://hourlypricing.comed.com/live-prices/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  title="ComEd Live Hourly Pricing"
+                >
+                  🔗 ComEd Rates
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Your System Estimate - Compact */}

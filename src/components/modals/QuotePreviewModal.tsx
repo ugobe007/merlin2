@@ -872,18 +872,53 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             spacing: { before: 400, after: 200 },
           }),
           new Paragraph({
-            text: "• NREL (National Renewable Energy Laboratory) - Energy Storage Cost Data",
-            bullet: { level: 0 },
+            children: [
+              new TextRun({ text: "• NREL ATB 2024 - Utility-Scale Battery Storage: ", bold: true }),
+              new TextRun({
+                text: "https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage",
+                style: "Hyperlink",
+              }),
+            ],
             spacing: { after: 100 },
           }),
           new Paragraph({
-            text: "• BloombergNEF - Q4 2025 Battery Pack Pricing Report",
-            bullet: { level: 0 },
+            children: [
+              new TextRun({ text: "• BloombergNEF - Li-ion Battery Pack Prices 2024: ", bold: true }),
+              new TextRun({
+                text: "https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/",
+                style: "Hyperlink",
+              }),
+            ],
             spacing: { after: 100 },
           }),
           new Paragraph({
-            text: "• Wood Mackenzie - Power & Renewables Market Analysis",
-            bullet: { level: 0 },
+            children: [
+              new TextRun({ text: "• HighJoule BESS Cost Guide 2024-2025: ", bold: true }),
+              new TextRun({
+                text: "https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html",
+                style: "Hyperlink",
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "• Catalyst Power - Microgrid Installation Costs: ", bold: true }),
+              new TextRun({
+                text: "https://blog.catalystpower.com/more-power-to-you/what-are-the-upfront-costs-of-installing-a-microgrid-system",
+                style: "Hyperlink",
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "• ComEd Hourly Pricing (Real-Time Rates): ", bold: true }),
+              new TextRun({
+                text: "https://hourlypricing.comed.com/live-prices/",
+                style: "Hyperlink",
+              }),
+            ],
             spacing: { after: 300 },
           }),
           
