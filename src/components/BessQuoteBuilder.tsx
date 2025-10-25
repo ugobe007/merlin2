@@ -22,6 +22,18 @@ import FinancingCalculator from './FinancingCalculator';
 import UseCaseTemplates from './UseCaseTemplates';
 import PricingDataCapture from './PricingDataCapture';
 import MarketIntelligenceDashboard from './MarketIntelligenceDashboard';
+import VendorSponsorship from './VendorSponsorship';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
+import SecurityPrivacySettings from './SecurityPrivacySettings';
+import SystemHealth from './SystemHealth';
+import StatusPage from './StatusPage';
+import UtilityRatesManager from './UtilityRatesManager';
+import QuoteTemplates from './QuoteTemplates';
+import PricingPresets from './PricingPresets';
+import QuoteReviewWorkflow from './QuoteReviewWorkflow';
+import UseCaseROI from './UseCaseROI';
+import type { UseCaseData } from './UseCaseROI';
 import type { ProfileData } from './modals/AccountSetup';
 import type { UseCaseTemplate } from './UseCaseTemplates';
 import merlinImage from "../assets/images/new_Merlin.png";
@@ -30,6 +42,7 @@ import SmartWizard from './wizard/SmartWizard';
 import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
 import SaveProjectModal from './modals/SaveProjectModal';
 import LoadProjectModal from './modals/LoadProjectModal';
+import QuotePreviewModal from './modals/QuotePreviewModal';
 
 
 export default function BessQuoteBuilder() {
@@ -193,6 +206,20 @@ export default function BessQuoteBuilder() {
   const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
   const [showPricingDataCapture, setShowPricingDataCapture] = useState(false);
   const [showMarketIntelligence, setShowMarketIntelligence] = useState(false);
+  const [showVendorSponsorship, setShowVendorSponsorship] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showSecuritySettings, setShowSecuritySettings] = useState(false);
+  const [showSystemHealth, setShowSystemHealth] = useState(false);
+  const [showStatusPage, setShowStatusPage] = useState(false);
+  const [showUtilityRates, setShowUtilityRates] = useState(false);
+  const [showQuoteTemplates, setShowQuoteTemplates] = useState(false);
+  const [showPricingPresets, setShowPricingPresets] = useState(false);
+  const [showReviewWorkflow, setShowReviewWorkflow] = useState(false);
+  const [currentQuoteStatus, setCurrentQuoteStatus] = useState<'draft' | 'in-review' | 'approved' | 'rejected' | 'shared'>('draft');
+
+  const [currentQuote, setCurrentQuote] = useState<any>(null);
+  const [showQuotePreview, setShowQuotePreview] = useState(false);
 
   const handleSaveProject = async () => {
     setShowSaveProjectModal(true);
@@ -1220,16 +1247,6 @@ export default function BessQuoteBuilder() {
             🧙‍♂️ User Profile
           </button>
           
-          <button 
-            onClick={() => {
-              setIsLoggedIn(false);
-              alert('You have been logged out successfully');
-            }}
-            className="bg-gradient-to-b from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-purple-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-300 hover:border-purple-400 transform hover:scale-105"
-          >
-            🚪 Sign Out
-          </button>
-          
           {/* PROMINENT SMART WIZARD BUTTON */}
           <div className="relative">
             <button 
@@ -1249,19 +1266,6 @@ export default function BessQuoteBuilder() {
               ⭐
             </div>
           </div>
-          
-          {/* Pricing Data Button - Professional */}
-          <button
-            onClick={() => setShowPricingDataCapture(true)}
-            className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-200 text-gray-800 px-4 py-2 rounded-lg shadow-sm border border-green-300 hover:shadow-md hover:border-green-400 transition-all duration-200 flex items-center gap-2"
-            title="Upload pricing data to improve market intelligence"
-          >
-            <span className="text-sm">📊</span>
-            <div className="text-left">
-              <div className="text-xs font-semibold text-green-800">Pricing Data</div>
-              <div className="text-[10px] text-green-700">Upload & Earn</div>
-            </div>
-          </button>
         </div>
         
         <div className="flex items-center gap-3">
@@ -1272,7 +1276,6 @@ export default function BessQuoteBuilder() {
           >
             <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
             <div className="text-lg font-extrabold text-blue-900">${valueKwh.toFixed(4)}/kWh</div>
-            <div className="text-xs text-blue-700 mt-0.5">Click for details →</div>
           </button>
           <div className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 hover:shadow-lg transition-all duration-200">
             <div className="text-xs font-bold text-green-800">💰 What People Pay</div>
@@ -1285,7 +1288,7 @@ export default function BessQuoteBuilder() {
       
       <main className="p-8">
         {/* MERLIN Hero Section */}
-        <section className="mx-8 my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
+  <section className="my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
           
           {/* Join Now Button - Upper Right */}
@@ -1349,149 +1352,153 @@ export default function BessQuoteBuilder() {
           </div>
         </section>
 
-        {/* MARKET PRICING INTELLIGENCE SECTION */}
-        <section className="rounded-2xl p-6 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-8">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-              <span className="text-4xl mr-3">📊</span>
+        {/* MARKET PRICING INTELLIGENCE SECTION - COMPACT */}
+        <section className="rounded-2xl p-4 shadow-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-6">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+              <span className="text-3xl mr-2">📊</span>
               Current BESS Market Pricing
-              <span className="text-4xl ml-3">💰</span>
+              <span className="text-3xl ml-2">💰</span>
             </h2>
             
-            {/* Prominent Pricing Display */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-4">
-              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 text-white p-8 rounded-2xl shadow-2xl border-4 border-blue-800 transform hover:scale-105 transition-all hover:shadow-blue-500/50">
-                <p className="text-sm font-semibold mb-2 opacity-90">📈 Market Average Price</p>
-                <p className="text-6xl font-bold mb-2 drop-shadow-lg">
+            {/* Compact Pricing Display */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg border-2 border-blue-700">
+                <p className="text-xs font-semibold mb-1 opacity-90">📈 Market Average</p>
+                <p className="text-4xl font-bold mb-1 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
                 </p>
-                <p className="text-sm font-semibold opacity-90 mb-1">per kWh</p>
-                <p className="text-xs opacity-90">Weighted avg from BNEF, NREL, Industry</p>
-                <p className="text-xs mt-2 opacity-90 bg-blue-800/40 rounded-lg px-3 py-1 inline-block font-bold">
-                  📉 Trending DOWN (-40% YoY)
+                <p className="text-xs font-semibold opacity-90">per kWh</p>
+                <p className="text-[10px] mt-1 opacity-80 bg-blue-700/30 rounded px-2 py-0.5 inline-block">
+                  📉 -40% YoY
                 </p>
               </div>
               
-              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-700 text-white p-8 rounded-2xl shadow-2xl border-4 border-green-800 transform hover:scale-105 transition-all hover:shadow-green-500/50">
-                <p className="text-sm font-semibold mb-2 opacity-90">💰 What People Are Paying Now</p>
-                <p className="text-6xl font-bold mb-2 drop-shadow-lg">
+              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg border-2 border-green-700">
+                <p className="text-xs font-semibold mb-1 opacity-90">💰 Contract Average</p>
+                <p className="text-4xl font-bold mb-1 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
                 </p>
-                <p className="text-sm font-semibold opacity-90 mb-1">per kWh (Contract Average)</p>
-                <p className="text-xs opacity-90">Industry standard contract pricing</p>
-                <p className="text-xs mt-2 opacity-90 bg-green-800/40 rounded-lg px-3 py-1 inline-block font-bold">
-                  {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
+                <p className="text-xs font-semibold opacity-90">per kWh</p>
+                <p className="text-[10px] mt-1 opacity-80 bg-green-700/30 rounded px-2 py-0.5 inline-block">
+                  {powerMW >= 2 ? '🏭 ≥2MW' : '🏢 <2MW'}
                 </p>
               </div>
             </div>
             
-            <p className="text-sm text-gray-600 italic">Real-time pricing intelligence from BNEF, NREL ATB, and industry sources</p>
+            <p className="text-xs text-gray-600 italic mt-3">BNEF, NREL ATB, Industry Sources</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Market Price Card */}
-            <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-4 rounded-xl border-2 border-blue-400 shadow-md">
-              <div className="text-center">
-                <p className="text-sm font-semibold text-blue-800 mb-1">📈 Market Average</p>
-                <p className="text-3xl font-bold text-blue-900">
-                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
-                  <span className="text-lg">/kWh</span>
-                </p>
-                <p className="text-xs text-blue-700 mt-1">Based on {powerMW}MW × {standbyHours}hr system</p>
-                <p className="text-xs text-green-600 font-semibold mt-1">📉 Trending DOWN (-40% YoY)</p>
-              </div>
-            </div>
-
-            {/* Contract Price Card */}
-            <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-4 rounded-xl border-2 border-purple-400 shadow-md">
-              <div className="text-center">
-                <p className="text-sm font-semibold text-purple-800 mb-1">📋 Contract Average</p>
-                <p className="text-3xl font-bold text-purple-900">
-                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
-                  <span className="text-lg">/kWh</span>
-                </p>
-                <p className="text-xs text-purple-700 mt-1">Industry standard pricing</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">
-                  {powerMW >= 2 ? '🏭 Large Scale (≥2MW)' : '🏢 Small Scale (<2MW)'}
-                </p>
-              </div>
-            </div>
-
-            {/* Confidence & Sources Card */}
-            <div className="bg-gradient-to-br from-green-100 to-green-50 p-4 rounded-xl border-2 border-green-400 shadow-md">
-              <div className="text-center">
-                <p className="text-sm font-semibold text-green-800 mb-1">✅ Data Confidence</p>
-                <p className="text-3xl font-bold text-green-900 uppercase">
-                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).confidenceLevel}
-                </p>
-                <p className="text-xs text-green-700 mt-1">Multi-source validation</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">
-                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).regionalVariation > 0 ? '+' : ''}
-                  {calculateBESSPricing(powerMW, standbyHours, selectedCountry).regionalVariation.toFixed(1)}% regional variation
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Pricing Sources */}
-          <div className="bg-white p-4 rounded-xl border border-gray-300 shadow-sm">
-            <p className="text-sm font-semibold text-gray-800 mb-2">📚 Pricing Sources & References:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
-                <span><strong>BNEF 2024:</strong> $165/kWh turnkey (40% YoY drop)</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
-                <span><strong>NREL ATB 2024:</strong> $135-180/kWh range</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
-                <span><strong>Industry (≥2MW):</strong> $150/kWh contract standard</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
-                <span><strong>Industry (1MW):</strong> $130/kWh contract standard</span>
-              </div>
-            </div>
-            <div className="mt-3 flex justify-center space-x-4 text-xs">
-              <a 
-                href="https://www.energy-storage.news/behind-the-numbers-bnef-finds-40-year-on-year-drop-in-bess-costs/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline font-semibold"
-              >
-                🔗 BNEF Report
-              </a>
-              <a 
-                href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline font-semibold"
-              >
-                🔗 NREL ATB Database
-              </a>
-            </div>
-          </div>
-
-          {/* Your System Estimate */}
-          <div className="mt-4 bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-4 rounded-xl border-2 border-yellow-400 shadow-md">
+          {/* Your System Estimate - Compact */}
+          <div className="bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-3 rounded-lg border border-yellow-400 shadow-sm">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm font-semibold text-gray-700">🎯 Your System Estimate ({powerMW}MW × {standbyHours}hr = {(powerMW * standbyHours).toFixed(1)}MWh):</p>
-                <p className="text-xs text-gray-600 mt-1">Using Merlin's contract average pricing for {selectedCountry}</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">🎯 Your System ({powerMW}MW × {standbyHours}hr = {(powerMW * standbyHours).toFixed(1)}MWh)</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-orange-700">
+                <p className="text-2xl font-bold text-orange-700">
                   ${((powerMW * standbyHours * 1000) * calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh).toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-700 font-semibold">
+                <p className="text-xs text-gray-600">
                   @ ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
                 </p>
               </div>
             </div>
           </div>
         </section>
+
+        {/* USE CASE ROI SHOWCASE - ROTATING (Full Width & Centered) */}
+        <section className="my-6 rounded-2xl p-8 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-white via-green-50 to-green-200 relative overflow-hidden text-center">
+          <UseCaseROI 
+            autoRotate={true}
+            rotationInterval={10000}
+            onLoadTemplate={(useCase: UseCaseData) => {
+              // Calculate costs based on use case specifications
+              const useCasePowerMW = useCase.systemSizeMW;
+              const useCaseDuration = useCase.duration;
+              const useCaseMWh = useCase.systemSizeMWh;
+              
+              // Use dynamic pricing for this use case
+              const useCasePricing = calculateBESSPricing(useCasePowerMW, useCaseDuration, selectedCountry, false);
+              const useCaseBatteryKwh = useCasePricing.contractAveragePerKWh;
+              
+              // Calculate all cost components
+              const batterySystemCost = useCaseMWh * 1000 * useCaseBatteryKwh;
+              const pcsKW = useCasePowerMW * 1000;
+              const pcsCost = pcsKW * pcsKw;
+              const transformersCost = pcsKW * 50; // Standard $50/kW for transformers
+              const invertersCost = pcsKW * 100; // Standard $100/kW for inverters
+              const switchgearCost = pcsKW * 75; // Standard $75/kW for switchgear
+              const microgridControlsCost = 50000; // Fixed cost for controls
+              
+              const equipmentSubtotal = batterySystemCost + pcsCost + transformersCost + invertersCost + switchgearCost + microgridControlsCost;
+              const bosCost = equipmentSubtotal * bosPercent;
+              const epcCost = (equipmentSubtotal + bosCost) * epcPercent;
+              const tariffsCost = (batterySystemCost + pcsCost) * 0.21; // 21% battery tariff
+              const shippingCost = equipmentSubtotal * 0.05; // Estimate 5% for shipping
+              
+              const grandTotalCost = equipmentSubtotal + bosCost + epcCost + tariffsCost + shippingCost;
+              
+              // Build complete quote object matching QuotePreviewModal interface
+              const quote = {
+                clientName: 'Prospective Client',
+                projectName: `${useCase.industry} BESS Project`,
+                bessPowerMW: useCasePowerMW,
+                duration: useCaseDuration,
+                batteryMWh: useCaseMWh,
+                solarMW: 0,
+                windMW: 0,
+                generatorMW: 0,
+                gridConnection: 'On-grid',
+                application: useCase.industry,
+                location: selectedCountry,
+                tariffRegion: selectedCountry,
+                shippingDestination: selectedCountry,
+                projectTimeframe: '12-18 months',
+                primaryGoal: `Peak shaving and demand charge reduction for ${useCase.industry}`,
+                warranty: '10 years',
+                pcsIncluded: true,
+                costs: {
+                  batterySystem: Math.round(batterySystemCost),
+                  pcs: Math.round(pcsCost),
+                  transformers: Math.round(transformersCost),
+                  inverters: Math.round(invertersCost),
+                  switchgear: Math.round(switchgearCost),
+                  microgridControls: Math.round(microgridControlsCost),
+                  solar: 0,
+                  solarInverters: 0,
+                  wind: 0,
+                  windConverters: 0,
+                  generator: 0,
+                  generatorControls: 0,
+                  bos: Math.round(bosCost),
+                  epc: Math.round(epcCost),
+                  tariffs: Math.round(tariffsCost),
+                  shipping: Math.round(shippingCost),
+                  grandTotal: Math.round(grandTotalCost),
+                },
+                annualSavings: useCase.totalAnnualSavings,
+                paybackPeriod: useCase.paybackYears,
+                budget: Math.round(grandTotalCost * 1.1), // 10% buffer
+              };
+              
+              // Store quote and show preview modal with download options
+              setCurrentQuote(quote);
+              setShowQuotePreview(true);
+            }}
+          />
+        </section>
+
+        {/* Quote Preview Modal for Use Case ROI */}
+        {showQuotePreview && currentQuote && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)' }}>
+            <QuotePreviewModal
+              isOpen={showQuotePreview}
+              onClose={() => setShowQuotePreview(false)}
+              quoteData={currentQuote}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
@@ -1637,6 +1644,25 @@ export default function BessQuoteBuilder() {
                   <input type="number" step="1" value="6" disabled className={inputStyle + " opacity-60"} title="Fixed at 6% for solar, wind, and generators" />
                 </div>
               </div>
+              
+              {/* Upload Pricing Data Button - Below Input Fields */}
+              <div className="mt-8 pt-6 border-t-2 border-blue-300">
+                <p className="text-sm font-semibold text-gray-700 mb-3 text-center">📊 Contribute to Market Intelligence</p>
+                <button
+                  onClick={() => {
+                    console.log('📊 Upload Pricing Data clicked');
+                    setShowPricingDataCapture(true);
+                  }}
+                  className="w-full bg-gradient-to-br from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-[1.02]"
+                  title="Upload your pricing data to improve market intelligence and earn credits"
+                >
+                  <span className="text-2xl">📊</span>
+                  <div className="text-center">
+                    <div className="text-base font-bold">Upload Pricing Data</div>
+                    <div className="text-sm opacity-90">Contribute & Earn Credits</div>
+                  </div>
+                </button>
+              </div>
             </section>
           </div>
 
@@ -1730,6 +1756,52 @@ export default function BessQuoteBuilder() {
                     </button>
                   </div>
                 </div>
+
+                {/* Quote Customization Section */}
+                <div className="mt-6 pt-6 border-t-2 border-blue-200">
+                  <p className="text-sm text-gray-600 font-semibold mb-3 text-center">Quote Customization</p>
+                  <div className="space-y-3">
+                    <button 
+                      className="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-300 hover:to-blue-400 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-sky-300/30"
+                      onClick={() => setShowUtilityRates(true)}
+                      title="Select regional utility rates for accurate pricing"
+                    >
+                      ⚡ Regional Utility Rates
+                    </button>
+                    <button 
+                      className="w-full bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-gray-300/30"
+                      onClick={() => setShowQuoteTemplates(true)}
+                      title="Customize quote templates for different project types"
+                    >
+                      📋 Quote Templates
+                    </button>
+                    <button 
+                      className="w-full bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-gray-300/30"
+                      onClick={() => setShowPricingPresets(true)}
+                      title="Save your pricing presets & EPC contractor fees"
+                    >
+                      💰 My Pricing Presets
+                    </button>
+                    <button 
+                      className="w-full bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 relative"
+                      onClick={() => setShowReviewWorkflow(true)}
+                      title="Manage quote review and approval workflow"
+                    >
+                      <span>✓ Review Workflow</span>
+                      {currentQuoteStatus !== 'draft' && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-white/20 rounded capitalize">
+                          {currentQuoteStatus}
+                        </span>
+                      )}
+                      {currentQuoteStatus === 'in-review' && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></span>
+                      )}
+                      {currentQuoteStatus === 'approved' && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></span>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1757,24 +1829,86 @@ export default function BessQuoteBuilder() {
         {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
           <div className="text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <button
+                onClick={() => setShowStatusPage(true)}
+                className="text-gray-600 hover:text-green-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+              >
+                <span>🟢</span>
+                <span>System Status</span>
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setShowTermsOfService(true)}
+                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors"
+              >
+                Terms of Service
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setShowSecuritySettings(true)}
+                className="text-gray-600 hover:text-green-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+              >
+                <span>🔒</span>
+                <span>Security & Privacy</span>
+              </button>
+            </div>
             <p className="text-gray-600 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
             </p>
             {isLoggedIn && (
-              <button
-                onClick={() => setShowVendorManager(true)}
-                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
-              >
-                <span>🔧</span>
-                <span>Admin Panel</span>
-              </button>
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setShowSystemHealth(true)}
+                  className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                >
+                  <span>📊</span>
+                  <span>System Health</span>
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  onClick={() => setShowVendorManager(true)}
+                  className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                >
+                  <span>🔧</span>
+                  <span>Admin Panel</span>
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  onClick={() => {
+                    setIsLoggedIn(false);
+                    alert('You have been logged out successfully');
+                  }}
+                  className="text-gray-600 hover:text-red-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                >
+                  <span>🚪</span>
+                  <span>Sign Out</span>
+                </button>
+              </div>
             )}
           </div>
         </footer>
       </main>
 
       {/* Modals */}
-      {showUserProfile && <EditableUserProfile onClose={() => setShowUserProfile(false)} onLoginSuccess={handleLoginSuccess} onLogout={() => setIsLoggedIn(false)} isLoggedIn={isLoggedIn} />}
+      {showUserProfile && (
+        <EditableUserProfile 
+          onClose={() => setShowUserProfile(false)} 
+          onLoginSuccess={handleLoginSuccess} 
+          onLogout={() => setIsLoggedIn(false)} 
+          isLoggedIn={isLoggedIn}
+          onShowQuoteTemplates={() => setShowQuoteTemplates(true)}
+          onShowPricingPresets={() => setShowPricingPresets(true)}
+          onShowVendorLeads={() => setShowVendorSponsorship(true)}
+        />
+      )}
       {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
       {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
@@ -1815,7 +1949,7 @@ export default function BessQuoteBuilder() {
           isFirstTime={isFirstTimeProfile}
         />
       )}
-
+  
       {/* Join Merlin Modal - Shows benefits first */}
       <JoinMerlinModal 
         isOpen={showJoinModal}
@@ -1829,6 +1963,8 @@ export default function BessQuoteBuilder() {
       <SmartWizard
         show={showSmartWizard}
         onClose={() => setShowSmartWizard(false)}
+        onShowUtilityRates={() => setShowUtilityRates(true)}
+        onShowPricingPresets={() => setShowPricingPresets(true)}
         onFinish={(wizardData) => {
           // Map wizard data to the main form
           setPowerMW(wizardData.power || 1);
@@ -1967,6 +2103,103 @@ export default function BessQuoteBuilder() {
         <MarketIntelligenceDashboard
           onClose={() => setShowMarketIntelligence(false)}
           userTier={authService.getCurrentUser()?.tier as 'free' | 'professional' | 'enterprise_pro' | 'business'}
+        />
+      )}
+
+      {/* Vendor Sponsorship Marketplace */}
+      {showVendorSponsorship && (
+        <VendorSponsorship
+          onClose={() => setShowVendorSponsorship(false)}
+        />
+      )}
+
+      {/* Privacy Policy */}
+      {showPrivacyPolicy && (
+        <PrivacyPolicy
+          onClose={() => setShowPrivacyPolicy(false)}
+        />
+      )}
+
+      {/* Terms of Service */}
+      {showTermsOfService && (
+        <TermsOfService
+          onClose={() => setShowTermsOfService(false)}
+        />
+      )}
+
+      {/* Security & Privacy Settings */}
+      {showSecuritySettings && (
+        <SecurityPrivacySettings
+          onClose={() => setShowSecuritySettings(false)}
+        />
+      )}
+
+      {/* System Health Dashboard */}
+      {showSystemHealth && (
+        <SystemHealth
+          onClose={() => setShowSystemHealth(false)}
+        />
+      )}
+
+      {/* Public Status Page */}
+      {showStatusPage && (
+        <StatusPage
+          onClose={() => setShowStatusPage(false)}
+        />
+      )}
+
+      {/* Utility Rates Manager */}
+      {showUtilityRates && (
+        <UtilityRatesManager
+          onClose={() => setShowUtilityRates(false)}
+          onSelectRate={(rate, rateType) => {
+            // Apply selected utility rate to the quote
+            const selectedRate = rateType === 'residential' ? rate.residentialRate :
+                                rateType === 'commercial' ? rate.commercialRate :
+                                rate.industrialRate;
+            setValueKwh(selectedRate);
+            alert(`Utility rate updated to $${selectedRate.toFixed(3)}/kWh from ${rate.utility}`);
+          }}
+          currentRate={valueKwh}
+        />
+      )}
+
+      {/* Quote Templates */}
+      {showQuoteTemplates && (
+        <QuoteTemplates
+          onClose={() => setShowQuoteTemplates(false)}
+          onSelectTemplate={(template) => {
+            alert(`Template "${template.name}" selected! Quote generation will use this template.`);
+            // Template will be used when generating the quote document
+          }}
+          userId={authService.getCurrentUser()?.email || 'guest'}
+        />
+      )}
+
+      {/* Pricing Presets */}
+      {showPricingPresets && (
+        <PricingPresets
+          onClose={() => setShowPricingPresets(false)}
+          onSelectPreset={(preset) => {
+            // Apply preset pricing to quote builder
+            alert(`Pricing preset "${preset.name}" applied!\n\nBattery: $${preset.battery.pricePerKWh}/kWh\nInverter: $${preset.inverter.pricePerKW}/kW\n${preset.epc.enabled ? 'EPC fees included' : ''}`);
+            // Pricing will be applied to calculations
+          }}
+          userId={authService.getCurrentUser()?.email || 'guest'}
+        />
+      )}
+
+      {/* Quote Review Workflow */}
+      {showReviewWorkflow && (
+        <QuoteReviewWorkflow
+          onClose={() => setShowReviewWorkflow(false)}
+          quoteId={`quote-${quoteName.replace(/\s+/g, '-').toLowerCase()}`}
+          quoteName={quoteName}
+          userId={authService.getCurrentUser()?.email || 'guest'}
+          userName={authService.getCurrentUser()?.email || 'Guest User'}
+          onStatusChange={(status) => {
+            setCurrentQuoteStatus(status);
+          }}
         />
       )}
     </div>

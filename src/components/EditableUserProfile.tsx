@@ -7,11 +7,14 @@ interface EditableUserProfileProps {
   onClose: () => void;
   onLoginSuccess: () => void;
   onLogout: () => void;
+  onShowQuoteTemplates?: () => void;
+  onShowPricingPresets?: () => void;
+  onShowVendorLeads?: () => void;
 }
 
 type Tab = 'profile' | 'team' | 'invites';
 
-const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, onClose, onLoginSuccess, onLogout }) => {
+const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, onClose, onLoginSuccess, onLogout, onShowQuoteTemplates, onShowPricingPresets, onShowVendorLeads }) => {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [user, setUser] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
@@ -291,6 +294,106 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Quick Actions - Quote Customization */}
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Settings size={20} className="text-blue-600" />
+                  Quote Customization Preferences
+                </h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Set up your default templates and pricing to speed up quote creation.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => {
+                      if (onShowQuoteTemplates) {
+                        onShowQuoteTemplates();
+                      }
+                    }}
+                    className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center gap-3"
+                  >
+                    <span className="text-2xl">📋</span>
+                    <div className="text-left">
+                      <div className="font-bold">Quote Templates</div>
+                      <div className="text-xs opacity-90">Customize & save templates</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (onShowPricingPresets) {
+                        onShowPricingPresets();
+                      }
+                    }}
+                    className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center gap-3"
+                  >
+                    <span className="text-2xl">💰</span>
+                    <div className="text-left">
+                      <div className="font-bold">Pricing Presets</div>
+                      <div className="text-xs opacity-90">Save your pricing & EPC fees</div>
+                    </div>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-4 italic">
+                  💡 Once configured, your templates and pricing will auto-populate in all future quotes
+                </p>
+              </div>
+
+              {/* Vendor Marketplace - Premium Feature */}
+              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border-2 border-orange-300 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🤝</span>
+                  Vendor Marketplace
+                </h4>
+                <p className="text-sm text-gray-700 mb-4">
+                  <strong>Are you a vendor?</strong> Submit competitive pricing and win qualified project leads from Merlin2 users.
+                </p>
+                <div className="bg-white rounded-lg p-4 mb-4 border border-orange-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-600 font-bold text-lg">✓</span>
+                      <div>
+                        <strong className="text-gray-900">Qualified Leads</strong>
+                        <p className="text-xs text-gray-600">Real projects with budget</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-600 font-bold text-lg">✓</span>
+                      <div>
+                        <strong className="text-gray-900">Win Rate Tracking</strong>
+                        <p className="text-xs text-gray-600">Analytics & insights</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-600 font-bold text-lg">✓</span>
+                      <div>
+                        <strong className="text-gray-900">Direct Connection</strong>
+                        <p className="text-xs text-gray-600">No middleman fees</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (onShowVendorLeads) {
+                      onShowVendorLeads();
+                    } else {
+                      alert('🤝 Vendor Marketplace\n\nSubmit your pricing to win qualified project leads!\n\nFeatures:\n• Real project opportunities\n• Direct client connections\n• Win rate analytics\n• No middleman fees\n\nSign up as a vendor to access this feature.');
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border border-orange-300/30 flex items-center justify-center gap-3 transform hover:scale-105"
+                >
+                  <span className="text-2xl">🚀</span>
+                  <div className="text-left">
+                    <div className="font-bold text-lg">Join Vendor Marketplace</div>
+                    <div className="text-xs opacity-90">Submit pricing & win projects</div>
+                  </div>
+                </button>
+                <p className="text-xs text-orange-700 mt-3 font-semibold text-center">
+                  ⭐ Premium Feature - Available to verified vendors
+                </p>
               </div>
 
               {/* About Me / Bio */}
