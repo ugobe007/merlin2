@@ -1393,104 +1393,90 @@ export default function BessQuoteBuilder() {
         </section>
 
         {/* MARKET PRICING INTELLIGENCE SECTION - COMPACT */}
-        <section className="rounded-2xl p-4 shadow-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-6">
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center justify-center">
-              <span className="text-3xl mr-2">📊</span>
+        <section className="rounded-2xl p-3 shadow-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+              <span className="text-2xl mr-2">📊</span>
               Current BESS Market Pricing
-              <span className="text-3xl ml-2">💰</span>
+              <span className="text-2xl ml-2">💰</span>
             </h2>
             
             {/* Compact Pricing Display */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg border-2 border-blue-700">
-                <p className="text-xs font-semibold mb-1 opacity-90">📈 Market Average</p>
-                <p className="text-4xl font-bold mb-1 drop-shadow-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto mb-2">
+              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white p-3 rounded-xl shadow-lg border-2 border-blue-700">
+                <p className="text-xs font-semibold mb-0.5 opacity-90">📈 Market Average</p>
+                <p className="text-3xl font-bold mb-0.5 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
                 </p>
                 <p className="text-xs font-semibold opacity-90">per kWh</p>
-                <p className="text-[10px] mt-1 opacity-80 bg-blue-700/30 rounded px-2 py-0.5 inline-block">
-                  📉 -40% YoY
-                </p>
               </div>
               
-              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg border-2 border-green-700">
-                <p className="text-xs font-semibold mb-1 opacity-90">💰 Contract Average</p>
-                <p className="text-4xl font-bold mb-1 drop-shadow-lg">
+              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 text-white p-3 rounded-xl shadow-lg border-2 border-green-700">
+                <p className="text-xs font-semibold mb-0.5 opacity-90">💰 Contract Average</p>
+                <p className="text-3xl font-bold mb-0.5 drop-shadow-lg">
                   ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
                 </p>
-                <p className="text-xs font-semibold opacity-90">per kWh</p>
-                <p className="text-[10px] mt-1 opacity-80 bg-green-700/30 rounded px-2 py-0.5 inline-block">
-                  {powerMW >= 2 ? '🏭 ≥2MW' : '🏢 <2MW'}
-                </p>
+                <p className="text-xs font-semibold opacity-90">per kWh ({powerMW >= 2 ? '≥2MW' : '<2MW'})</p>
               </div>
             </div>
             
-            <div className="mt-3 pt-2 border-t border-green-300">
-              <p className="text-xs text-gray-600 italic mb-2">Data Sources:</p>
-              <div className="flex flex-wrap gap-2">
+            {/* Your System Estimate - Inline Compact */}
+            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-2 rounded-lg border border-yellow-400 shadow-sm max-w-2xl mx-auto mb-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-700">🎯 Your System ({powerMW}MW × {standbyHours}hr)</span>
+                <span className="text-xl font-bold text-orange-700">
+                  ${((powerMW * standbyHours * 1000) * calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Data Sources - Condensed */}
+            <div className="pt-1 border-t border-green-300 max-w-2xl mx-auto">
+              <div className="flex flex-wrap gap-1 justify-center items-center">
+                <span className="text-[10px] text-gray-600 italic mr-1">Sources:</span>
                 <a 
                   href="https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  className="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-1.5 py-0.5 rounded transition-colors"
                   title="Bloomberg NEF Battery Pricing Report"
                 >
-                  🔗 BNEF
+                  BNEF
                 </a>
                 <a 
                   href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  className="text-[10px] bg-green-100 hover:bg-green-200 text-green-700 px-1.5 py-0.5 rounded transition-colors"
                   title="NREL Annual Technology Baseline - Battery Storage"
                 >
-                  🔗 NREL ATB
+                  NREL
                 </a>
                 <a 
                   href="https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  className="text-[10px] bg-purple-100 hover:bg-purple-200 text-purple-700 px-1.5 py-0.5 rounded transition-colors"
                   title="HighJoule BESS Cost Guide 2024-2025"
                 >
-                  🔗 HighJoule
+                  HighJoule
                 </a>
                 <a 
                   href="https://blog.catalystpower.com/more-power-to-you/what-are-the-upfront-costs-of-installing-a-microgrid-system#:~:text=Larger%20microgrid%20projects%20(between%202%20MW%20and,higher%20normalized%20costs%2C%20averaging%20around%20$4%20million/MW."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
+                  className="text-[10px] bg-orange-100 hover:bg-orange-200 text-orange-700 px-1.5 py-0.5 rounded transition-colors"
                   title="Catalyst Power - Microgrid Installation Costs"
                 >
-                  🔗 Catalyst
+                  Catalyst
                 </a>
-                <a 
-                  href="https://hourlypricing.comed.com/live-prices/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded transition-colors inline-flex items-center gap-1"
-                  title="ComEd Live Hourly Pricing"
+                <button
+                  onClick={() => setShowMarketIntelligence(true)}
+                  className="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded transition-colors font-semibold"
+                  title="Open Full Market Intelligence Dashboard"
                 >
-                  🔗 ComEd Rates
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Your System Estimate - Compact */}
-          <div className="bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-3 rounded-lg border border-yellow-400 shadow-sm">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">🎯 Your System ({powerMW}MW × {standbyHours}hr = {(powerMW * standbyHours).toFixed(1)}MWh)</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-orange-700">
-                  ${((powerMW * standbyHours * 1000) * calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh).toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-600">
-                  @ ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}/kWh
-                </p>
+                  📊 More Details
+                </button>
               </div>
             </div>
           </div>
