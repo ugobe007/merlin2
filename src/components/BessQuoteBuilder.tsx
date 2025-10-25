@@ -1272,7 +1272,7 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleUserProfile}
-            className="bg-gradient-to-b from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 border-2 border-purple-500 hover:border-purple-600 transform hover:scale-105"
+            className="bg-gradient-to-b from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-2 border-purple-500 hover:border-purple-600"
           >
             🧙‍♂️ User Profile
           </button>
@@ -1281,7 +1281,7 @@ export default function BessQuoteBuilder() {
           <div className="relative">
             <button 
               onClick={() => setShowSmartWizard(true)}
-              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all border-b-4 border-purple-800 hover:border-purple-900"
+              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors border-b-4 border-purple-800 hover:border-purple-900"
               aria-label="Open Smart Wizard"
               title="Open Smart Wizard"
             >
@@ -1301,7 +1301,7 @@ export default function BessQuoteBuilder() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowMarketIntelligence(true)}
-            className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+            className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 transition-colors duration-200 cursor-pointer"
             title="Click to view detailed market intelligence"
           >
             <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
@@ -1309,15 +1309,12 @@ export default function BessQuoteBuilder() {
           </button>
           <button
             onClick={() => setShowMarketIntelligence(true)}
-            className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
-            title="Click to see detailed breakdown of installed system costs"
+            className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 transition-colors duration-200 cursor-pointer"
+            title="Turnkey system: Battery + PCS + Microgrid Controls + BOS + Integration"
           >
             <div className="text-xs font-bold text-green-800">💰 Installed Price</div>
             <div className="text-lg font-extrabold text-green-900">
               ${calculateRealWorldPrice()}/kWh
-            </div>
-            <div className="text-[9px] text-green-700 mt-0.5">
-              Turnkey (Battery+PCS+Controls)
             </div>
           </button>
         </div>
@@ -1331,7 +1328,7 @@ export default function BessQuoteBuilder() {
           {/* Join Now Button - Upper Right */}
           <div className="absolute top-6 right-6 z-20">
             <button 
-              className="bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-300 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg transform hover:scale-105"
+              className="bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-300 hover:to-purple-500 text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-purple-800 hover:border-purple-900 text-lg"
               onClick={() => setShowJoinModal(true)}
             >
               ✨ Join Now
@@ -1653,7 +1650,7 @@ export default function BessQuoteBuilder() {
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-900 bg-clip-text text-transparent drop-shadow-sm">Pricing Assumptions</h2>
                 <button
                   onClick={handleResetToDefaults}
-                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2 transform hover:scale-105"
+                  className="bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors duration-200 border-b-4 border-orange-700 hover:border-orange-800 flex items-center space-x-2"
                   title="Reset all values to default settings"
                 >
                   <span className="text-sm">🔄</span>
@@ -1739,7 +1736,7 @@ export default function BessQuoteBuilder() {
                     console.log('📊 Upload Pricing Data clicked');
                     setShowPricingDataCapture(true);
                   }}
-                  className="w-full bg-gradient-to-br from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-[1.02]"
+                  className="w-full bg-gradient-to-br from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-emerald-700 transition-colors duration-200 flex items-center justify-center gap-3"
                   title="Upload your pricing data to improve market intelligence and earn credits"
                 >
                   <span className="text-2xl">📊</span>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { calculateRealWorldPrice } from '../utils/bessPricing';
 
 interface MarketIntelligenceDashboardProps {
   onClose: () => void;
@@ -62,9 +63,11 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
     { name: 'Others', avgPricePerKWh: 450, marketShare: 5, avgWarranty: 8 },
   ]);
 
+  const installedPrice = calculateRealWorldPrice();
+
   const [marketStats] = useState({
     totalDataPoints: 1159,
-    avgPricePerKWh: 431,
+    avgPricePerKWh: installedPrice,
     avgPricePerKW: 885,
     priceChange30d: -1.8,
     priceChange90d: -4.2,
@@ -99,9 +102,9 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-200">
-              <p className="text-xs text-gray-600 mb-1">Average $/kWh</p>
-              <p className="text-2xl font-bold text-blue-600">${marketStats.avgPricePerKWh}</p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200">
+              <p className="text-xs text-gray-600 mb-1">💰 Installed Price</p>
+              <p className="text-2xl font-bold text-green-600">${marketStats.avgPricePerKWh}/kWh</p>
               <p className={`text-xs ${marketStats.priceChange30d < 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {marketStats.priceChange30d}% (30d)
               </p>
