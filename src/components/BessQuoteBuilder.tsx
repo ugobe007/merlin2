@@ -1286,7 +1286,7 @@ export default function BessQuoteBuilder() {
         {/* NEW CUSTOMER-FOCUSED HERO SECTION */}
         <section className="my-6 rounded-3xl overflow-hidden shadow-2xl border-2 border-purple-400 bg-gradient-to-br from-white via-purple-50 to-blue-100">
           {/* Hero Header */}
-          <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-12 text-center">
+          <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-12">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-purple-600/20 animate-pulse"></div>
             
             {/* Join Now Button - Upper Right */}
@@ -1299,55 +1299,96 @@ export default function BessQuoteBuilder() {
               </button>
             </div>
             
-            <div className="relative z-10">
-              {/* Merlin Mascot */}
-              <div className="flex items-center justify-center mb-6">
-                <img 
-                  src={merlinImage} 
-                  alt="Merlin - Your Energy Advisor" 
-                  className="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter brightness-110"
-                />
-              </div>
-              
-              <h1 className="text-6xl font-extrabold mb-2 drop-shadow-lg">
-                Cut Energy Costs. Earn Revenue. Go Green.
-              </h1>
-              <p className="text-xl mb-2 font-light italic opacity-90">
-                "Let me help you find the perfect energy solution" - Merlin, Your Energy Advisor
-              </p>
-              <p className="text-2xl mb-8 font-light">
-                Get a custom energy storage quote in 3 minutes
-              </p>
-              
-              {/* Primary CTA - Smart Wizard - REDESIGNED */}
-              <div className="relative inline-block">
-                {/* Glow effect behind button - More vibrant */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-70 animate-pulse"></div>
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left Side - Content */}
+              <div className="lg:col-span-8 text-left">
+                <h1 className="text-6xl font-extrabold mb-4 drop-shadow-lg">
+                  Cut Energy Costs. Earn Revenue. Go Green.
+                </h1>
+                <p className="text-2xl mb-8 font-light">
+                  Get a custom energy storage quote in 3 minutes
+                </p>
                 
-                <button 
-                  onClick={() => setShowSmartWizard(true)}
-                  className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-16 py-6 rounded-3xl font-extrabold text-3xl shadow-2xl border-4 border-cyan-300"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-5xl animate-bounce">🪄</span>
-                    <div className="text-left">
-                      <div className="text-3xl">Start Smart Wizard</div>
-                      <div className="text-sm font-normal text-cyan-100 mt-1">Get your custom solution in 3 minutes</div>
+                {/* Smart Wizard Benefits */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border-2 border-white/20">
+                  <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <span className="text-3xl">🪄</span>
+                    Smart Wizard Benefits:
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">💰</span>
+                      <div>
+                        <p className="font-bold text-lg">See Your Savings</p>
+                        <p className="text-sm text-white/80">Instant ROI calculation with payback timeline</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">⚡</span>
+                      <div>
+                        <p className="font-bold text-lg">Personalized Configuration</p>
+                        <p className="text-sm text-white/80">Sized perfectly for your energy needs</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">📊</span>
+                      <div>
+                        <p className="font-bold text-lg">Compare Options</p>
+                        <p className="text-sm text-white/80">Installation, shipping & financing side-by-side</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">📄</span>
+                      <div>
+                        <p className="font-bold text-lg">Download Your Quote</p>
+                        <p className="text-sm text-white/80">PDF & Excel formats ready to share</p>
+                      </div>
                     </div>
                   </div>
-                </button>
+                </div>
+                
+                {/* Primary CTA - Smart Wizard */}
+                <div className="relative inline-block">
+                  {/* Glow effect behind button */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-70 animate-pulse"></div>
+                  
+                  <button 
+                    onClick={() => setShowSmartWizard(true)}
+                    className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-12 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl border-4 border-cyan-300 hover:scale-105 transition-transform"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl animate-bounce">🪄</span>
+                      <div className="text-left">
+                        <div className="text-2xl">Start Smart Wizard</div>
+                        <div className="text-xs font-normal text-cyan-100 mt-1">7 simple steps • 3 minutes • No signup</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
               </div>
               
-              <div className="mt-6 flex items-center justify-center gap-6 text-sm">
-                <span className="flex items-center gap-2 text-white/90">
-                  <span className="text-green-400">✓</span>
-                  <span>No signup required</span>
-                </span>
-                <span className="text-white/50">•</span>
-                <span className="flex items-center gap-2 text-white/90">
-                  <span className="text-blue-400">✓</span>
-                  <span>Instant results</span>
-                </span>
+              {/* Right Side - Merlin Mascot */}
+              <div className="lg:col-span-4 flex justify-center items-center">
+                <div className="relative">
+                  {/* Glow effect behind Merlin */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 via-purple-400/50 to-blue-400/50 rounded-full blur-3xl opacity-60 animate-pulse"></div>
+                  
+                  <div className="relative bg-white/10 backdrop-blur-sm rounded-3xl p-6 border-4 border-white/30 shadow-2xl">
+                    <img 
+                      src={merlinImage} 
+                      alt="Merlin - Your Energy Advisor" 
+                      className="w-64 h-64 object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.8)] filter brightness-110"
+                    />
+                    <div className="mt-4 text-center">
+                      <p className="text-lg font-light italic opacity-90 bg-white/20 rounded-xl p-3 backdrop-blur-sm">
+                        "Let me guide you to the perfect energy solution"
+                      </p>
+                      <p className="text-sm font-bold mt-2 text-cyan-200">
+                        - Merlin, Your Energy Advisor
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2107,13 +2148,10 @@ export default function BessQuoteBuilder() {
       <SmartWizard
         show={showSmartWizard}
         onClose={() => setShowSmartWizard(false)}
-        onShowUtilityRates={() => setShowUtilityRates(true)}
-        onShowPricingPresets={() => setShowPricingPresets(true)}
         onFinish={(wizardData) => {
           // Map wizard data to the main form
-          setPowerMW(wizardData.power || 1);
-          setStandbyHours(wizardData.duration || 2);
-          setGridMode(wizardData.gridConnection === 'behind' ? 'On-grid' : 'Off-grid');
+          setPowerMW(wizardData.storageSizeMW || 1);
+          setStandbyHours(wizardData.durationHours || 2);
           
           // Map application to use case
           const applicationMap: { [key: string]: string } = {
