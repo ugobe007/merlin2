@@ -45,6 +45,7 @@ import LoadProjectModal from './modals/LoadProjectModal';
 import QuotePreviewModal from './modals/QuotePreviewModal';
 import AboutMerlin from './AboutMerlin';
 import VendorPortal from './VendorPortal';
+import EnergyNewsTicker from './EnergyNewsTicker';
 
 
 export default function BessQuoteBuilder() {
@@ -1337,13 +1338,18 @@ export default function BessQuoteBuilder() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       
       <main className="p-8">
+        {/* Energy News Ticker - Matches hero width */}
+        <div className="my-6">
+          <EnergyNewsTicker />
+        </div>
+        
         {/* NEW CUSTOMER-FOCUSED HERO SECTION */}
         <section className="my-6 rounded-3xl overflow-hidden shadow-2xl border-2 border-purple-400 bg-gradient-to-br from-white via-purple-50 to-blue-100">
           {/* Hero Header */}
           <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-12">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-purple-600/20 animate-pulse"></div>
             
-            {/* Join Now Button - Upper Right */}
+            {/* Top Right Buttons - Customer Focused */}
             <div className="absolute top-6 right-6 z-20 flex gap-3">
               <button 
                 className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30"
@@ -1351,18 +1357,6 @@ export default function BessQuoteBuilder() {
               >
                 About Merlin
               </button>
-              <button 
-                className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30"
-                onClick={() => setShowVendorPortal(true)}
-              >
-                🏢 Vendors
-              </button>
-              <a 
-                href="mailto:info@merlinenergy.com"
-                className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30 flex items-center gap-2"
-              >
-                📧 Contact
-              </a>
               <button 
                 className="bg-gradient-to-b from-blue-100 to-blue-200 text-blue-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-200 hover:to-blue-300 transition-colors border-2 border-blue-300"
                 onClick={() => setShowJoinModal(true)}
@@ -1581,39 +1575,21 @@ export default function BessQuoteBuilder() {
         </section>
 
         {/* EXAMPLE CONFIGURATIONS SECTION - Use Case ROI Showcase */}
-        <section className="my-12">
-          {/* Section Header with Visual Flair */}
-          <div className="text-center mb-10 relative">
-            {/* Background Decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 rounded-3xl -z-10 opacity-50"></div>
-            <div className="py-8">
-              <div className="inline-block mb-4">
-                <span className="text-6xl">🏢</span>
-              </div>
-              <h2 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 mb-4">
-                Real-World Applications
-              </h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto font-medium">
-                See how businesses across different industries are using energy storage to 
-                <span className="text-green-600 font-bold"> reduce costs</span>, 
-                <span className="text-blue-600 font-bold"> generate revenue</span>, and 
-                <span className="text-purple-600 font-bold"> go green</span>
-              </p>
-              <div className="mt-6 flex items-center justify-center gap-6">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
-                  <span className="text-green-600 text-xl">✓</span>
-                  <span className="text-sm font-semibold text-gray-700">Real ROI Data</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
-                  <span className="text-blue-600 text-xl">✓</span>
-                  <span className="text-sm font-semibold text-gray-700">Actual Payback Periods</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
-                  <span className="text-purple-600 text-xl">✓</span>
-                  <span className="text-sm font-semibold text-gray-700">Verified Savings</span>
-                </div>
-              </div>
+        <section className="my-8">
+          {/* Section Header - Tightened */}
+          <div className="text-center mb-6">
+            <div className="inline-block mb-2">
+              <span className="text-4xl">🏢</span>
             </div>
+            <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 mb-2">
+              Real-World Applications
+            </h2>
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+              See how businesses are using energy storage to 
+              <span className="text-green-600 font-bold"> reduce costs</span>, 
+              <span className="text-blue-600 font-bold"> generate revenue</span>, and 
+              <span className="text-purple-600 font-bold"> go green</span>
+            </p>
           </div>
 
           {/* Use Case Showcase - Enhanced Visual Design */}
@@ -1718,18 +1694,45 @@ export default function BessQuoteBuilder() {
 
         {/* Advanced Quote Builder Toggle - Show only when not already shown */}
         {!showAdvancedQuoteBuilder && (
-          <section className="my-6 text-center">
-            <button
-              onClick={() => setShowAdvancedQuoteBuilder(true)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
-            >
-              <span className="text-3xl">🔧</span>
-              <div className="text-left">
-                <div>Advanced Quote Builder</div>
-                <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>
+          <section className="my-6">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
+              {/* Advanced Quote Builder Button */}
+              <button
+                onClick={() => setShowAdvancedQuoteBuilder(true)}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
+              >
+                <span className="text-3xl">🔧</span>
+                <div className="text-left">
+                  <div>Advanced Quote Builder</div>
+                  <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>
+                </div>
+              </button>
+
+              {/* Vendor & Contact Buttons */}
+              <div className="flex gap-3">
+                <button 
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all inline-flex items-center gap-2"
+                  onClick={() => setShowVendorPortal(true)}
+                >
+                  <span className="text-xl">🏢</span>
+                  <div className="text-left">
+                    <div className="text-sm">Vendor Portal</div>
+                    <div className="text-xs opacity-90">For suppliers & partners</div>
+                  </div>
+                </button>
+                <a 
+                  href="mailto:info@merlinenergy.com"
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all inline-flex items-center gap-2"
+                >
+                  <span className="text-xl">📧</span>
+                  <div className="text-left">
+                    <div className="text-sm">Contact Us</div>
+                    <div className="text-xs opacity-90">Get in touch</div>
+                  </div>
+                </a>
               </div>
-            </button>
-            <p className="text-sm text-gray-500 mt-3">For technical users who want full control over pricing and configuration</p>
+            </div>
+            <p className="text-sm text-gray-500 mt-3 text-center">For technical users who want full control over pricing and configuration</p>
           </section>
         )}
 
