@@ -7,7 +7,7 @@ import Step2_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
 import Step3_AddRenewables from './steps/Step3_AddRenewables';
 import Step4_LocationPricing from './steps/Step4_LocationPricing';
 import Step5_QuoteSummary from './steps/Step4_QuoteSummary'; // Renamed import to avoid confusion
-import Step6_FinalOutput from './steps/Step6_FinalOutput';
+import QuoteCompletePage from './QuoteCompletePage';
 
 interface SmartWizardProps {
   show: boolean;
@@ -17,6 +17,7 @@ interface SmartWizardProps {
 
 const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) => {
   const [step, setStep] = useState(0);
+  const [showCompletePage, setShowCompletePage] = useState(false);
 
   // Step 0: Goals
   const [selectedGoal, setSelectedGoal] = useState('');
@@ -55,7 +56,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'warehouse': { mw: 2, hours: 3 },
         'hotel': { mw: 1, hours: 4 },
         'retail': { mw: 0.5, hours: 3 },
-        'agriculture': { mw: 1.5, hours: 6 }
+        'agriculture': { mw: 1.5, hours: 6 },
+        'car-wash': { mw: 0.25, hours: 2 },
+        'ev-charging': { mw: 1, hours: 2 },
+        'apartment': { mw: 1, hours: 4 },
+        'university': { mw: 5, hours: 5 },
+        'indoor-farm': { mw: 0.4, hours: 4 }
       };
       
       const template = templates[selectedTemplate];
@@ -147,26 +153,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const costs = calculateCosts();
 
   const handleNext = () => {
-    if (step < 6) {
+    if (step < 5) {
       setStep(step + 1);
-    } else {
-      // Final step - finish wizard
-      const finalData = {
-        selectedGoal,
-        selectedTemplate,
-        storageSizeMW,
-        durationHours,
-        solarMW,
-        windMW,
-        generatorMW,
-        location,
-        electricityRate,
-        selectedInstallation,
-        selectedShipping,
-        selectedFinancing,
-        ...costs
-      };
-      onFinish(finalData);
+    } else if (step === 5) {
+      // After quote summary, show complete page
+      setShowCompletePage(true);
     }
   };
 
@@ -184,7 +175,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       case 3: return true; // Optional step
       case 4: return location !== '' && electricityRate > 0;
       case 5: return true; // Options step, defaults are set
-      case 6: return true; // Final output
       default: return false;
     }
   };
@@ -196,8 +186,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       'Configure Your System',
       'Add Renewables?',
       'Location & Pricing',
-      'Review Your Quote',
-      'Get Your Quote'
+      'Review Your Quote'
     ];
     return titles[step] || '';
   };
@@ -276,38 +265,45 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             netCostAfterTaxCredit={costs.netCost}
           />
         );
-      case 6:
-        return (
-          <Step6_FinalOutput
-            quoteData={{
-              storageSizeMW,
-              durationHours,
-              solarMW,
-              windMW,
-              generatorMW,
-              location,
-              selectedGoal,
-              industryTemplate: selectedTemplate,
-              totalProjectCost: costs.totalProjectCost,
-              annualSavings: costs.annualSavings,
-              paybackYears: costs.paybackYears,
-              taxCredit: costs.taxCredit,
-              netCost: costs.netCost,
-              installationOption: selectedInstallation,
-              shippingOption: selectedShipping,
-              financingOption: selectedFinancing
-            }}
-            onDownloadPDF={() => console.log('Download PDF')}
-            onDownloadExcel={() => console.log('Download Excel')}
-            onEmailQuote={(email) => console.log('Email to:', email)}
-            onSaveProject={() => console.log('Save project')}
-            onRequestConsultation={() => console.log('Request consultation')}
-          />
-        );
       default:
         return null;
     }
   };
+
+  // Show complete page instead of modal for final step
+  if (showCompletePage) {
+    return (
+      <QuoteCompletePage
+        quoteData={{
+          storageSizeMW,
+          durationHours,
+          solarMW,
+          windMW,
+          generatorMW,
+          location,
+          selectedGoal,
+          industryTemplate: selectedTemplate,
+          totalProjectCost: costs.totalProjectCost,
+          annualSavings: costs.annualSavings,
+          paybackYears: costs.paybackYears,
+          taxCredit: costs.taxCredit,
+          netCost: costs.netCost,
+          installationOption: selectedInstallation,
+          shippingOption: selectedShipping,
+          financingOption: selectedFinancing
+        }}
+        onDownloadPDF={() => console.log('Download PDF')}
+        onDownloadExcel={() => console.log('Download Excel')}
+        onEmailQuote={(email: string) => console.log('Email to:', email)}
+        onSaveProject={() => console.log('Save project')}
+        onRequestConsultation={() => console.log('Request consultation')}
+        onClose={() => {
+          setShowCompletePage(false);
+          onClose();
+        }}
+      />
+    );
+  }
 
   if (!show) return null;
 
@@ -321,7 +317,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
               <span className="text-4xl">🪄</span>
               <div>
                 <h2 className="text-2xl font-bold">Smart Wizard</h2>
-                <p className="text-sm opacity-90">Step {step + 1} of 7: {getStepTitle()}</p>
+                <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
               </div>
             </div>
             <button
@@ -361,7 +357,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           </button>
 
           <div className="text-sm text-gray-500">
-            Step {step + 1} of 7
+            Step {step + 1} of 6
           </div>
 
           <button
@@ -373,7 +369,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {step === 6 ? 'Finish →' : 'Next →'}
+            {step === 5 ? 'Get My Quote →' : 'Next →'}
           </button>
         </div>
       </div>
