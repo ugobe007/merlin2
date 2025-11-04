@@ -544,8 +544,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           alert('Quote saved successfully!');
         }}
         onRequestConsultation={() => {
-          // Open consultation request form
-          alert('Consultation request form would open here\n(Integration pending)');
+          // Open email with consultation request
+          window.location.href = 'mailto:info@merlinenergy.com?subject=Consultation Request&body=Hi, I completed my BESS quote and would like to schedule a consultation to discuss my project.';
         }}
         onClose={() => {
           setShowCompletePage(false);

@@ -218,10 +218,10 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
         {useTemplate ? (
           <>
             <p className="text-center text-gray-600 mb-6">
-              Choose your industry to get started with pre-configured values
+              Choose your industry to get started with pre-configured values (all options are shown below)
             </p>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2">
               {templates.map((template) => {
                 const isSelected = selectedTemplate === template.id;
                 const colorClasses = getColorClasses(template.color, isSelected);

@@ -1,7 +1,11 @@
 import React from 'react';
 import { Battery, Zap, Target, Users, LineChart, Shield, Sparkles, Award, TrendingUp } from 'lucide-react';
 
-const AboutMerlin: React.FC = () => {
+interface AboutMerlinProps {
+  onStartWizard?: () => void;
+}
+
+const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -265,7 +269,11 @@ const AboutMerlin: React.FC = () => {
             and backed by decades of industry expertise.
           </p>
           <button 
-            onClick={() => window.location.href = '#smart-wizard'}
+            onClick={() => {
+              if (onStartWizard) {
+                onStartWizard();
+              }
+            }}
             className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all transform hover:scale-105"
           >
             Start Your Smart Wizard 🧙‍♂️

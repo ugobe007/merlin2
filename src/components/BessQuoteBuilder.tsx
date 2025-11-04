@@ -1304,7 +1304,10 @@ export default function BessQuoteBuilder() {
             </button>
           </div>
         </div>
-        <AboutMerlin />
+        <AboutMerlin onStartWizard={() => {
+          setShowAbout(false);
+          setShowSmartWizard(true);
+        }} />
       </div>
     );
   }
