@@ -43,6 +43,8 @@ import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
 import SaveProjectModal from './modals/SaveProjectModal';
 import LoadProjectModal from './modals/LoadProjectModal';
 import QuotePreviewModal from './modals/QuotePreviewModal';
+import AboutMerlin from './AboutMerlin';
+import VendorPortal from './VendorPortal';
 
 
 export default function BessQuoteBuilder() {
@@ -87,6 +89,8 @@ export default function BessQuoteBuilder() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showFinancing, setShowFinancing] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [showVendorPortal, setShowVendorPortal] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -1279,6 +1283,56 @@ export default function BessQuoteBuilder() {
     return symbols[currency] || '$';
   };
 
+  // Show About page if active
+  if (showAbout) {
+    return (
+      <div>
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <button
+              onClick={() => setShowAbout(false)}
+              className="text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2"
+            >
+              ← Back to Home
+            </button>
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+            >
+              ✨ Join Now
+            </button>
+          </div>
+        </div>
+        <AboutMerlin />
+      </div>
+    );
+  }
+
+  // Show Vendor Portal if active
+  if (showVendorPortal) {
+    return (
+      <div>
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <button
+              onClick={() => setShowVendorPortal(false)}
+              className="text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2"
+            >
+              ← Back to Home
+            </button>
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+            >
+              ✨ Join Customer Platform
+            </button>
+          </div>
+        </div>
+        <VendorPortal />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       
@@ -1290,7 +1344,25 @@ export default function BessQuoteBuilder() {
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-purple-600/20 animate-pulse"></div>
             
             {/* Join Now Button - Upper Right */}
-            <div className="absolute top-6 right-6 z-20">
+            <div className="absolute top-6 right-6 z-20 flex gap-3">
+              <button 
+                className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30"
+                onClick={() => setShowAbout(true)}
+              >
+                About Merlin
+              </button>
+              <button 
+                className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30"
+                onClick={() => setShowVendorPortal(true)}
+              >
+                🏢 Vendors
+              </button>
+              <a 
+                href="mailto:info@merlinenergy.com"
+                className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30 flex items-center gap-2"
+              >
+                📧 Contact
+              </a>
               <button 
                 className="bg-gradient-to-b from-blue-100 to-blue-200 text-blue-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-200 hover:to-blue-300 transition-colors border-2 border-blue-300"
                 onClick={() => setShowJoinModal(true)}
