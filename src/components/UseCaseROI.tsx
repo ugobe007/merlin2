@@ -386,8 +386,8 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
   const energySavingsPct = ((energySavings / currentUseCase.energyCostBefore) * 100).toFixed(0);
 
   return (
-    <div className="bg-gradient-to-br from-green-100/80 via-emerald-50 to-teal-100/80 rounded-2xl p-6 shadow-xl border-4 border-emerald-300">
-      {/* Header - Enhanced */}
+    <div className="bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-indigo-50/40 rounded-2xl p-6 shadow-xl border-2 border-purple-200">
+      {/* Header - Refined */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <span className="text-4xl">{currentUseCase.icon}</span>
@@ -397,19 +397,19 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevious}
-            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-gray-300 hover:border-emerald-400"
+            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-300 hover:border-purple-400"
             title="Previous use case"
           >
             <ChevronLeft size={20} className="text-gray-700" />
           </button>
-          <div className="px-4 py-2 bg-white rounded-lg shadow-md border-2 border-gray-300">
+          <div className="px-4 py-2 bg-white rounded-lg shadow-md border border-gray-300">
             <span className="text-sm font-bold text-gray-700">
               {currentIndex + 1}/{useCases.length}
             </span>
           </div>
           <button
             onClick={handleNext}
-            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-gray-300 hover:border-emerald-400"
+            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-300 hover:border-purple-400"
             title="Next use case"
           >
             <ChevronRight size={20} className="text-gray-700" />
@@ -419,12 +419,12 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Chart - Professional with vibrant colors */}
-        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200">
-          {/* Annual Savings Badge - More prominent */}
+        {/* Left: Chart - Professional with refined colors */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+          {/* Annual Savings Badge - Strategic green for financial positive */}
           <div className="flex justify-center mb-4">
             <span
-              className="inline-block bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white text-xl font-bold px-8 py-2.5 rounded-full shadow-lg"
+              className="inline-block bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xl font-bold px-8 py-2.5 rounded-full shadow-lg"
             >
               Annual Savings: ${ (currentUseCase.totalAnnualSavings / 1000).toLocaleString() }K
             </span>
@@ -433,7 +433,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
             Annual Savings — Before vs After BESS
           </h4>
           
-          {/* Chart - Full Height with vibrant colors */}
+          {/* Chart - Refined color palette */}
           <div className="relative" style={{ height: '300px' }}>
             <div className="absolute inset-0 flex items-end justify-around px-4">
               {(() => {
@@ -455,23 +455,23 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
                     {/* Demand Charges Group */}
                     <div className="flex flex-col items-center gap-3 w-40">
                       <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar - Vibrant Blue */}
+                        {/* Before Bar - Blue */}
                         <div className="flex flex-col items-center w-20">
                           <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.demandChargeBefore / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-xl border-2 border-blue-700"
+                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-lg border border-blue-700"
                             style={{ height: getBarHeight(currentUseCase.demandChargeBefore) + 'px' }}
                           ></div>
                         </div>
-                        {/* After Bar - Vibrant Teal */}
+                        {/* After Bar - Teal (single accent color) */}
                         <div className="flex flex-col items-center w-20">
                           <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.demandChargeAfter / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-emerald-500 via-teal-400 to-teal-300 rounded-t-xl shadow-xl border-2 border-emerald-600"
+                            className="w-full bg-gradient-to-t from-teal-500 via-teal-400 to-cyan-300 rounded-t-xl shadow-lg border border-teal-600"
                             style={{ height: getBarHeight(currentUseCase.demandChargeAfter) + 'px' }}
                           ></div>
                         </div>
@@ -481,23 +481,23 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
                     {/* Energy (TOU) Group */}
                     <div className="flex flex-col items-center gap-3 w-40">
                       <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar - Vibrant Blue */}
+                        {/* Before Bar - Blue */}
                         <div className="flex flex-col items-center w-20">
                           <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.energyCostBefore / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-xl border-2 border-blue-700"
+                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-lg border border-blue-700"
                             style={{ height: getBarHeight(currentUseCase.energyCostBefore) + 'px' }}
                           ></div>
                         </div>
-                        {/* After Bar - Vibrant Teal */}
+                        {/* After Bar - Teal */}
                         <div className="flex flex-col items-center w-20">
                           <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.energyCostAfter / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-emerald-500 via-teal-400 to-teal-300 rounded-t-xl shadow-xl border-2 border-emerald-600"
+                            className="w-full bg-gradient-to-t from-teal-500 via-teal-400 to-cyan-300 rounded-t-xl shadow-lg border border-teal-600"
                             style={{ height: getBarHeight(currentUseCase.energyCostAfter) + 'px' }}
                           ></div>
                         </div>
@@ -510,109 +510,109 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
             </div>
           </div>
 
-          {/* Legend - Enhanced */}
-          <div className="flex justify-center gap-8 mt-4 pt-4 border-t-2 border-gray-200">
+          {/* Legend */}
+          <div className="flex justify-center gap-8 mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-blue-400 rounded border-2 border-blue-700 shadow-md"></div>
-              <span className="text-sm font-bold text-gray-800">Before BESS</span>
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-blue-400 rounded border border-blue-700 shadow-sm"></div>
+              <span className="text-sm font-semibold text-gray-800">Before BESS</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-teal-300 rounded border-2 border-emerald-600 shadow-md"></div>
-              <span className="text-sm font-bold text-gray-800">After BESS</span>
+              <div className="w-5 h-5 bg-gradient-to-br from-teal-500 to-cyan-300 rounded border border-teal-600 shadow-sm"></div>
+              <span className="text-sm font-semibold text-gray-800">After BESS</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Metrics & Benefits - Enhanced with vibrant colors */}
+        {/* Right: Metrics & Benefits - Refined palette */}
         <div className="space-y-4">
-          {/* ROI Metrics - Larger, more vibrant */}
-          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+          {/* ROI Metrics - Refined colors */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
             <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl border-2 border-emerald-400 shadow-md">
-                <div className="text-3xl font-bold text-emerald-700">
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-300 shadow-sm">
+                <div className="text-3xl font-bold text-green-700">
                   ${(currentUseCase.totalAnnualSavings / 1000).toFixed(0)}K
                 </div>
-                <div className="text-xs text-gray-800 font-semibold mt-1">Annual Savings</div>
+                <div className="text-xs text-gray-700 font-semibold mt-1">Annual Savings</div>
               </div>
               
-              <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-sky-100 rounded-xl border-2 border-blue-400 shadow-md">
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-300 shadow-sm">
                 <div className="text-3xl font-bold text-blue-700">
                   {currentUseCase.paybackYears < 1 
                     ? `${(currentUseCase.paybackYears * 12).toFixed(0)} mo`
                     : `${currentUseCase.paybackYears.toFixed(1)} yr`
                   }
                 </div>
-                <div className="text-xs text-gray-800 font-semibold mt-1">Payback Period</div>
+                <div className="text-xs text-gray-700 font-semibold mt-1">Payback Period</div>
               </div>
               
-              <div className="text-center p-4 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl border-2 border-purple-400 shadow-md">
+              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-300 shadow-sm">
                 <div className="text-3xl font-bold text-purple-700">
                   {currentUseCase.roi25Year}
                 </div>
-                <div className="text-xs text-gray-800 font-semibold mt-1">25-Year ROI</div>
+                <div className="text-xs text-gray-700 font-semibold mt-1">25-Year ROI</div>
               </div>
               
-              <div className="text-center p-4 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border-2 border-orange-400 shadow-md">
-                <div className="text-3xl font-bold text-orange-700">
+              <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-300 shadow-sm">
+                <div className="text-3xl font-bold text-indigo-700">
                   {currentUseCase.systemSizeMW < 1 
                     ? `${(currentUseCase.systemSizeMW * 1000).toFixed(0)} kW`
                     : `${currentUseCase.systemSizeMW.toFixed(1)} MW`
                   }
                 </div>
-                <div className="text-xs text-gray-800 font-semibold mt-1">System Size</div>
+                <div className="text-xs text-gray-700 font-semibold mt-1">System Size</div>
               </div>
             </div>
           </div>
 
-          {/* Savings Breakdown - Enhanced */}
-          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+          {/* Savings Breakdown - Strategic green for savings */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
             <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
               <span>💰</span>
               <span>Savings Breakdown</span>
             </h5>
             <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                <span className="text-sm text-gray-800 font-medium">Demand Charges</span>
-                <span className="text-sm font-bold text-emerald-600">
+              <div className="flex justify-between items-center p-2 bg-green-50/50 rounded-lg border border-green-200/60">
+                <span className="text-sm text-gray-700 font-medium">Demand Charges</span>
+                <span className="text-sm font-bold text-green-600">
                   -${(demandSavings / 1000).toFixed(0)}K ({demandSavingsPct}%)
                 </span>
               </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                <span className="text-sm text-gray-800 font-medium">Energy (TOU)</span>
-                <span className="text-sm font-bold text-emerald-600">
+              <div className="flex justify-between items-center p-2 bg-green-50/50 rounded-lg border border-green-200/60">
+                <span className="text-sm text-gray-700 font-medium">Energy (TOU)</span>
+                <span className="text-sm font-bold text-green-600">
                   -${(energySavings / 1000).toFixed(0)}K ({energySavingsPct}%)
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Key Benefits - Enhanced */}
-          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+          {/* Key Benefits - Strategic green for positives */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
             <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
               <span>✨</span>
               <span>Key Benefits</span>
             </h5>
             <div className="space-y-2">
-              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <span className="text-emerald-600 font-bold text-base">✓</span>
-                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit1}</span>
+              <div className="flex items-start gap-2 p-2 bg-green-50/50 rounded-lg border border-green-200/60">
+                <span className="text-green-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-700">{currentUseCase.keyBenefit1}</span>
               </div>
-              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <span className="text-emerald-600 font-bold text-base">✓</span>
-                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit2}</span>
+              <div className="flex items-start gap-2 p-2 bg-green-50/50 rounded-lg border border-green-200/60">
+                <span className="text-green-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-700">{currentUseCase.keyBenefit2}</span>
               </div>
-              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <span className="text-emerald-600 font-bold text-base">✓</span>
-                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit3}</span>
+              <div className="flex items-start gap-2 p-2 bg-green-50/50 rounded-lg border border-green-200/60">
+                <span className="text-green-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-700">{currentUseCase.keyBenefit3}</span>
               </div>
             </div>
           </div>
 
-          {/* CTA Button - Enhanced, professional */}
+          {/* CTA Button - Refined purple/blue gradient */}
           {onLoadTemplate && (
             <button
               onClick={() => onLoadTemplate(currentUseCase)}
-              className="w-full bg-gradient-to-r from-emerald-500 via-green-500 to-blue-500 hover:from-emerald-600 hover:via-green-600 hover:to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-105 border-2 border-white/30"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-105"
             >
               <span className="text-2xl">🚀</span>
               <div className="text-left">
@@ -625,7 +625,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
         </div>
       </div>
 
-      {/* Auto-rotation indicator */}
+      {/* Auto-rotation indicator - Purple/blue theme */}
       {autoRotate && (
         <div className="mt-4 flex justify-center items-center gap-3">
           <div className="flex gap-2">
@@ -634,7 +634,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
                 key={idx}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   idx === currentIndex 
-                    ? 'w-8 bg-gradient-to-r from-emerald-500 to-green-500 shadow-md' 
+                    ? 'w-8 bg-gradient-to-r from-purple-500 to-blue-500 shadow-md' 
                     : 'w-2 bg-gray-300'
                 }`}
               />
