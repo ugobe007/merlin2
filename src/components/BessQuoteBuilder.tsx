@@ -208,6 +208,11 @@ export default function BessQuoteBuilder() {
   const [showMarketIntelligence, setShowMarketIntelligence] = useState(false);
   const [showVendorSponsorship, setShowVendorSponsorship] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  
+  // Benefit explanation modals
+  const [showCostSavingsModal, setShowCostSavingsModal] = useState(false);
+  const [showRevenueModal, setShowRevenueModal] = useState(false);
+  const [showSustainabilityModal, setShowSustainabilityModal] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
   const [showSystemHealth, setShowSystemHealth] = useState(false);
@@ -1276,60 +1281,6 @@ export default function BessQuoteBuilder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Top Header Bar */}
-      <header className="relative p-6 flex justify-between items-center sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-blue-200/50 shadow-md">
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={handleUserProfile}
-            className="bg-gradient-to-b from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-colors duration-200 border-2 border-purple-500 hover:border-purple-600"
-          >
-            🧙‍♂️ User Profile
-          </button>
-          
-          {/* PROMINENT SMART WIZARD BUTTON */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowSmartWizard(true)}
-              className="bg-gradient-to-b from-purple-500 to-purple-700 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg transition-colors border-b-4 border-purple-800 hover:border-purple-900"
-              aria-label="Open Smart Wizard"
-              title="Open Smart Wizard"
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-lg">🪄 Smart Wizard</div>
-                <div className="text-xs font-normal opacity-90">start building</div>
-              </div>
-            </button>
-            
-            {/* "START HERE" Indicator Bubble - Smaller */}
-            <div className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-lg animate-pulse border border-yellow-500">
-              ⭐
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShowMarketIntelligence(true)}
-            className="bg-gradient-to-br from-blue-200 via-cyan-200 to-sky-300 px-3 py-2 rounded-lg shadow-md border-2 border-blue-400 transition-colors duration-200 cursor-pointer"
-            title="Market average battery pack pricing (cell level) - Click to view detailed market intelligence"
-          >
-            <div className="text-xs font-bold text-blue-800">📊 Market Average</div>
-            <div className="text-lg font-extrabold text-blue-900">
-              ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}/kWh
-            </div>
-          </button>
-          <button
-            onClick={() => setShowMarketIntelligence(true)}
-            className="bg-gradient-to-br from-emerald-200 via-green-300 to-teal-300 px-3 py-2 rounded-lg shadow-md border-2 border-green-500 transition-colors duration-200 cursor-pointer"
-            title="Turnkey system: Battery + PCS + Microgrid Controls + BOS + Integration"
-          >
-            <div className="text-xs font-bold text-green-800">💰 Installed Price</div>
-            <div className="text-lg font-extrabold text-green-900">
-              ${calculateRealWorldPrice()}/kWh
-            </div>
-          </button>
-        </div>
-      </header>
       
       <main className="p-8">
         {/* NEW CUSTOMER-FOCUSED HERO SECTION */}
@@ -1341,7 +1292,7 @@ export default function BessQuoteBuilder() {
             {/* Join Now Button - Upper Right */}
             <div className="absolute top-6 right-6 z-20">
               <button 
-                className="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-purple-50 transition-colors"
+                className="bg-gradient-to-b from-blue-100 to-blue-200 text-blue-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-200 hover:to-blue-300 transition-colors border-2 border-blue-300"
                 onClick={() => setShowJoinModal(true)}
               >
                 ✨ Join Now
@@ -1359,33 +1310,55 @@ export default function BessQuoteBuilder() {
               </div>
               
               <h1 className="text-6xl font-extrabold mb-2 drop-shadow-lg">
-                Transform Your Energy Into Revenue
+                Cut Energy Costs. Earn Revenue. Go Green.
               </h1>
               <p className="text-xl mb-2 font-light italic opacity-90">
                 "Let me help you find the perfect energy solution" - Merlin, Your Energy Advisor
               </p>
               <p className="text-2xl mb-8 font-light">
-                Battery energy storage systems that pay for themselves
+                Get a custom energy storage quote in 3 minutes
               </p>
               
-              {/* Primary CTA - Smart Wizard */}
-              <button 
-                onClick={() => setShowSmartWizard(true)}
-                className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-12 py-5 rounded-2xl font-bold text-2xl shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-3"
-              >
-                <span className="text-3xl">🪄</span>
-                <span>Start Smart Wizard</span>
-                <span className="text-sm font-normal bg-gray-900 text-yellow-400 px-3 py-1 rounded-full">3 mins</span>
-              </button>
+              {/* Primary CTA - Smart Wizard - REDESIGNED */}
+              <div className="relative inline-block">
+                {/* Glow effect behind button - More vibrant */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-70 animate-pulse"></div>
+                
+                <button 
+                  onClick={() => setShowSmartWizard(true)}
+                  className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-16 py-6 rounded-3xl font-extrabold text-3xl shadow-2xl border-4 border-cyan-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-5xl animate-bounce">🪄</span>
+                    <div className="text-left">
+                      <div className="text-3xl">Start Smart Wizard</div>
+                      <div className="text-sm font-normal text-cyan-100 mt-1">Get your custom solution in 3 minutes</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
               
-              <p className="text-sm mt-4 opacity-90">Answer 3 questions, get your custom energy solution</p>
+              <div className="mt-6 flex items-center justify-center gap-6 text-sm">
+                <span className="flex items-center gap-2 text-white/90">
+                  <span className="text-green-400">✓</span>
+                  <span>No signup required</span>
+                </span>
+                <span className="text-white/50">•</span>
+                <span className="flex items-center gap-2 text-white/90">
+                  <span className="text-blue-400">✓</span>
+                  <span>Instant results</span>
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Three Value Pillars */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
             {/* Cost Savings Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+            <div 
+              onClick={() => setShowCostSavingsModal(true)}
+              className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            >
               <div className="text-5xl mb-4 text-center">💰</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Reduce Energy Costs</h3>
               <p className="text-gray-600 mb-4 text-center">
@@ -1413,10 +1386,16 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-green-600">$50K+</span>
                 <p className="text-sm text-gray-500">Average annual savings</p>
               </div>
+              <div className="mt-4 text-center text-sm text-green-600 font-semibold">
+                Click to learn more →
+              </div>
             </div>
 
             {/* Revenue Generation Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+            <div 
+              onClick={() => setShowRevenueModal(true)}
+              className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            >
               <div className="text-5xl mb-4 text-center">📈</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Generate Revenue</h3>
               <p className="text-gray-600 mb-4 text-center">
@@ -1444,10 +1423,16 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-blue-600">3-5 year</span>
                 <p className="text-sm text-gray-500">Typical ROI timeline</p>
               </div>
+              <div className="mt-4 text-center text-sm text-blue-600 font-semibold">
+                Click to learn more →
+              </div>
             </div>
 
             {/* Sustainability Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-emerald-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+            <div 
+              onClick={() => setShowSustainabilityModal(true)}
+              className="bg-white rounded-2xl p-6 shadow-xl border-2 border-emerald-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            >
               <div className="text-5xl mb-4 text-center">🌱</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Achieve Sustainability</h3>
               <p className="text-gray-600 mb-4 text-center">
@@ -1475,49 +1460,27 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-emerald-600">Net Zero</span>
                 <p className="text-sm text-gray-500">Energy independence ready</p>
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions Bar */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-t-2 border-gray-200">
-            <div className="flex justify-center items-center space-x-4">
-              <input 
-                type="text" 
-                placeholder="My BESS Project"
-                value={quoteName}
-                onChange={(e) => setQuoteName(e.target.value)}
-                className={`${inputStyle} w-64 text-center`}
-              />
-              
-              <button 
-                className="bg-gradient-to-b from-gray-200 to-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-blue-400 flex items-center justify-center space-x-2"
-                onClick={handleSaveProject}
-              >
-                <span className="text-xl">💾</span>
-                <span>Save</span>
-              </button>
-              
-              <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-green-800 flex items-center justify-center space-x-2"
-                onClick={handleLoadProject}
-              >
-                <span className="text-xl">📂</span>
-                <span>Load</span>
-              </button>
-              
-              <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-purple-900 flex items-center justify-center space-x-2"
-                onClick={handlePortfolio}
-              >
-                <span>📊</span>
-                <span>Portfolio</span>
-              </button>
+              <div className="mt-4 text-center text-sm text-emerald-600 font-semibold">
+                Click to learn more →
+              </div>
             </div>
           </div>
         </section>
 
-        {/* USE CASE ROI SHOWCASE - ROTATING (Full Width & Centered) */}
-        <section className="my-6 rounded-2xl p-8 shadow-2xl border-2 border-green-400 bg-gradient-to-br from-white via-green-50 to-green-200 relative overflow-hidden text-center">
+        {/* EXAMPLE CONFIGURATIONS SECTION - Use Case ROI Showcase */}
+        <section className="my-12">
+          {/* Section Header */}
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Real-World Applications
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              See how businesses across different industries are using battery storage to reduce costs and increase profitability
+            </p>
+          </div>
+
+          {/* Use Case Showcase - Clean Professional Design */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           <UseCaseROI 
             autoRotate={true}
             rotationInterval={10000}
@@ -1596,6 +1559,7 @@ export default function BessQuoteBuilder() {
               setShowQuotePreview(true);
             }}
           />
+          </div>
         </section>
 
         {/* Quote Preview Modal for Use Case ROI */}
@@ -1638,6 +1602,44 @@ export default function BessQuoteBuilder() {
                 <span>←</span>
                 <span>Back to Simple View</span>
               </button>
+            </section>
+
+            {/* Project Management Section - Only in Advanced Mode */}
+            <section className="my-6 rounded-2xl p-6 shadow-xl border-2 border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Project Management</h3>
+              <div className="flex justify-center items-center space-x-4">
+                <input 
+                  type="text" 
+                  placeholder="My BESS Project"
+                  value={quoteName}
+                  onChange={(e) => setQuoteName(e.target.value)}
+                  className={`${inputStyle} w-64 text-center`}
+                />
+                
+                <button 
+                  className="bg-gradient-to-b from-gray-200 to-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-blue-400 flex items-center justify-center space-x-2"
+                  onClick={handleSaveProject}
+                >
+                  <span className="text-xl">💾</span>
+                  <span>Save</span>
+                </button>
+                
+                <button 
+                  className="bg-gradient-to-b from-green-400 to-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-green-800 flex items-center justify-center space-x-2"
+                  onClick={handleLoadProject}
+                >
+                  <span className="text-xl">📂</span>
+                  <span>Load</span>
+                </button>
+                
+                <button 
+                  className="bg-gradient-to-b from-purple-600 to-purple-800 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-purple-900 flex items-center justify-center space-x-2"
+                  onClick={handlePortfolio}
+                >
+                  <span>📊</span>
+                  <span>Portfolio</span>
+                </button>
+              </div>
             </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2343,6 +2345,243 @@ export default function BessQuoteBuilder() {
             setCurrentQuoteStatus(status);
           }}
         />
+      )}
+
+      {/* Cost Savings Benefits Modal */}
+      {showCostSavingsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold">💰 Reduce Energy Costs</h2>
+                <button 
+                  onClick={() => setShowCostSavingsModal(false)}
+                  className="text-white hover:text-gray-200 text-3xl font-bold"
+                >×</button>
+              </div>
+            </div>
+            <div className="p-8">
+              <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+                Energy storage systems help you dramatically reduce electricity costs by storing energy when it's cheap and using it when prices are high.
+              </p>
+              
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">How It Works</h3>
+              <div className="space-y-4 mb-6">
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                  <h4 className="font-bold text-green-900 mb-2">Peak Shaving</h4>
+                  <p className="text-gray-700">Store energy during off-peak hours (when electricity is cheap) and discharge during peak hours (when rates are highest). Save 30-50% on peak energy charges.</p>
+                </div>
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                  <h4 className="font-bold text-green-900 mb-2">Demand Charge Reduction</h4>
+                  <p className="text-gray-700">Reduce your peak demand by supplementing grid power with battery power. Commercial customers can save thousands per month on demand charges alone.</p>
+                </div>
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                  <h4 className="font-bold text-green-900 mb-2">Time-of-Use Optimization</h4>
+                  <p className="text-gray-700">Automatically shift your energy consumption to the lowest-cost periods, maximizing savings without any operational changes.</p>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Real-World Savings</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">$50,000+</div>
+                  <p className="text-gray-600">Average annual savings for manufacturing facilities</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">30-50%</div>
+                  <p className="text-gray-600">Reduction in peak energy charges</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">$0.10-0.25</div>
+                  <p className="text-gray-600">Savings per kWh with arbitrage</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">4-7 years</div>
+                  <p className="text-gray-600">Typical payback period</p>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+                <p className="text-gray-700"><strong>Example:</strong> A 2 MW / 4 MWh system for a manufacturing facility can save $50,000-$100,000 annually through peak shaving and demand charge reduction alone.</p>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setShowCostSavingsModal(false);
+                  setShowSmartWizard(true);
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-colors"
+              >
+                Calculate Your Savings with Smart Wizard →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revenue Generation Benefits Modal */}
+      {showRevenueModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold">📈 Generate Revenue</h2>
+                <button 
+                  onClick={() => setShowRevenueModal(false)}
+                  className="text-white hover:text-gray-200 text-3xl font-bold"
+                >×</button>
+              </div>
+            </div>
+            <div className="p-8">
+              <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+                Transform your energy storage system from a cost-saving tool into an active revenue generator by participating in grid services and energy markets.
+              </p>
+              
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Revenue Streams</h3>
+              <div className="space-y-4 mb-6">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <h4 className="font-bold text-blue-900 mb-2">Frequency Regulation</h4>
+                  <p className="text-gray-700">Get paid to help stabilize the electric grid by providing fast-response power. Earn $10-50/kW-year depending on your market.</p>
+                </div>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <h4 className="font-bold text-blue-900 mb-2">Demand Response Programs</h4>
+                  <p className="text-gray-700">Utilities pay you to reduce consumption during peak events. Typical payments: $50-200/kW-year.</p>
+                </div>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <h4 className="font-bold text-blue-900 mb-2">Energy Arbitrage</h4>
+                  <p className="text-gray-700">Buy low, sell high. Charge when electricity is cheap, discharge when prices spike. Can generate $20-100/kWh-year.</p>
+                </div>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <h4 className="font-bold text-blue-900 mb-2">Capacity Markets</h4>
+                  <p className="text-gray-700">Get paid simply for having capacity available when the grid needs it. Steady income stream of $30-150/kW-year.</p>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Revenue Potential</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">$100K-300K</div>
+                  <p className="text-gray-600">Annual revenue for 5 MW system in ERCOT</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">3-5 years</div>
+                  <p className="text-gray-600">Typical ROI with stacked revenue</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">15-25%</div>
+                  <p className="text-gray-600">IRR for well-optimized systems</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">Multiple</div>
+                  <p className="text-gray-600">Stack 3-5 revenue streams simultaneously</p>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded mb-6">
+                <p className="text-gray-700"><strong>Best Markets:</strong> ERCOT (Texas), CAISO (California), PJM (Mid-Atlantic), and ISO-NE (New England) offer the most lucrative opportunities for battery storage revenue.</p>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setShowRevenueModal(false);
+                  setShowSmartWizard(true);
+                }}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-colors"
+              >
+                Model Your Revenue with Smart Wizard →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sustainability Benefits Modal */}
+      {showSustainabilityModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold">🌱 Achieve Sustainability</h2>
+                <button 
+                  onClick={() => setShowSustainabilityModal(false)}
+                  className="text-white hover:text-gray-200 text-3xl font-bold"
+                >×</button>
+              </div>
+            </div>
+            <div className="p-8">
+              <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+                Energy storage is essential for achieving net-zero goals, maximizing renewable energy use, and qualifying for valuable tax incentives.
+              </p>
+              
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Environmental Benefits</h3>
+              <div className="space-y-4 mb-6">
+                <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded">
+                  <h4 className="font-bold text-emerald-900 mb-2">Maximize Renewable Energy</h4>
+                  <p className="text-gray-700">Store excess solar and wind energy for use when the sun isn't shining or wind isn't blowing. Increase renewable usage from 30% to 80%+.</p>
+                </div>
+                <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded">
+                  <h4 className="font-bold text-emerald-900 mb-2">Reduce Carbon Footprint</h4>
+                  <p className="text-gray-700">Offset fossil fuel consumption by using stored clean energy. A 2 MW / 4 MWh system can eliminate 500+ tons of CO₂ annually.</p>
+                </div>
+                <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded">
+                  <h4 className="font-bold text-emerald-900 mb-2">Enable Grid Decarbonization</h4>
+                  <p className="text-gray-700">Help integrate more renewable energy onto the grid by providing essential grid services and reducing curtailment.</p>
+                </div>
+                <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded">
+                  <h4 className="font-bold text-emerald-900 mb-2">Energy Independence</h4>
+                  <p className="text-gray-700">Combined with solar, achieve near-complete energy independence. Protect against outages while reducing grid reliance.</p>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Financial Incentives</h3>
+              <div className="space-y-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg border-2 border-green-400">
+                  <h4 className="font-bold text-green-900 mb-2 text-xl">30% Federal Investment Tax Credit (ITC)</h4>
+                  <p className="text-gray-700 mb-2">Reduces your system cost by 30% when paired with solar. A $1M system becomes $700K after the credit.</p>
+                  <p className="text-sm text-gray-600">Available through 2032, then phases down to 26% (2033), 22% (2034)</p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-bold text-blue-900 mb-2">Accelerated Depreciation (MACRS)</h4>
+                  <p className="text-gray-700">Depreciate 85% of system value over 5 years. Additional $150K-300K in tax savings for typical commercial systems.</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-bold text-purple-900 mb-2">State & Local Incentives</h4>
+                  <p className="text-gray-700">Many states offer additional rebates, grants, and incentives. California's SGIP program offers up to $200/kWh.</p>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Corporate Benefits</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-emerald-600 mb-2">✓ ESG Reporting</div>
+                  <p className="text-gray-600">Demonstrate environmental commitment to stakeholders</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-emerald-600 mb-2">✓ Brand Value</div>
+                  <p className="text-gray-600">Enhance reputation with sustainability leadership</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-emerald-600 mb-2">✓ Future-Proof</div>
+                  <p className="text-gray-600">Prepare for carbon pricing and regulations</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-emerald-600 mb-2">✓ Certifications</div>
+                  <p className="text-gray-600">Qualify for LEED, ENERGY STAR, and more</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setShowSustainabilityModal(false);
+                  setShowSmartWizard(true);
+                }}
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-700 transition-colors"
+              >
+                Calculate Your Environmental Impact →
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
