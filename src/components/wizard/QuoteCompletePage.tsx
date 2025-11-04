@@ -27,6 +27,7 @@ interface QuoteCompletePageProps {
   };
   onDownloadPDF: () => void;
   onDownloadExcel: () => void;
+  onDownloadWord: () => void;
   onEmailQuote: (email: string) => void;
   onSaveProject: () => void;
   onRequestConsultation: () => void;
@@ -37,6 +38,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   quoteData,
   onDownloadPDF,
   onDownloadExcel,
+  onDownloadWord,
   onEmailQuote,
   onSaveProject,
   onRequestConsultation,
@@ -333,6 +335,13 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 >
                   <span className="text-2xl">📊</span>
                   <span>Download Excel</span>
+                </button>
+                <button
+                  onClick={onDownloadWord}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                >
+                  <span className="text-2xl">📝</span>
+                  <span>Download Word</span>
                 </button>
               </div>
             </div>
