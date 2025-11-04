@@ -1510,18 +1510,47 @@ export default function BessQuoteBuilder() {
 
         {/* EXAMPLE CONFIGURATIONS SECTION - Use Case ROI Showcase */}
         <section className="my-12">
-          {/* Section Header */}
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Real-World Applications
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              See how businesses across different industries are using battery storage to reduce costs and increase profitability
-            </p>
+          {/* Section Header with Visual Flair */}
+          <div className="text-center mb-10 relative">
+            {/* Background Decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 rounded-3xl -z-10 opacity-50"></div>
+            <div className="py-8">
+              <div className="inline-block mb-4">
+                <span className="text-6xl">🏢</span>
+              </div>
+              <h2 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 mb-4">
+                Real-World Applications
+              </h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto font-medium">
+                See how businesses across different industries are using energy storage to 
+                <span className="text-green-600 font-bold"> reduce costs</span>, 
+                <span className="text-blue-600 font-bold"> generate revenue</span>, and 
+                <span className="text-purple-600 font-bold"> go green</span>
+              </p>
+              <div className="mt-6 flex items-center justify-center gap-6">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
+                  <span className="text-green-600 text-xl">✓</span>
+                  <span className="text-sm font-semibold text-gray-700">Real ROI Data</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
+                  <span className="text-blue-600 text-xl">✓</span>
+                  <span className="text-sm font-semibold text-gray-700">Actual Payback Periods</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
+                  <span className="text-purple-600 text-xl">✓</span>
+                  <span className="text-sm font-semibold text-gray-700">Verified Savings</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Use Case Showcase - Clean Professional Design */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+          {/* Use Case Showcase - Enhanced Visual Design */}
+          <div className="relative bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-3xl shadow-2xl border-2 border-blue-200 p-10">
+            {/* Decorative corners */}
+            <div className="absolute top-4 left-4 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-2xl"></div>
+            <div className="absolute bottom-4 right-4 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10">
           <UseCaseROI 
             autoRotate={true}
             rotationInterval={10000}
@@ -1600,6 +1629,7 @@ export default function BessQuoteBuilder() {
               setShowQuotePreview(true);
             }}
           />
+            </div>
           </div>
         </section>
 

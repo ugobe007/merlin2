@@ -78,6 +78,51 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
       color: 'emerald'
     },
     {
+      id: 'car-wash',
+      icon: '🚗',
+      name: 'Car Wash',
+      description: 'High dryer loads during peak hours',
+      typical: '250 kW - 500 kW / 2-3 hours',
+      savings: '$40K-80K/year',
+      color: 'cyan'
+    },
+    {
+      id: 'ev-charging',
+      icon: '⚡',
+      name: 'EV Charging Hub',
+      description: 'Fast chargers with demand management',
+      typical: '500 kW - 2 MW / 1-2 hours',
+      savings: '$50K-150K/year',
+      color: 'blue'
+    },
+    {
+      id: 'apartment',
+      icon: '🏘️',
+      name: 'Apartment Building',
+      description: 'Multi-tenant with EV charging & amenities',
+      typical: '500 kW - 1.5 MW / 3-4 hours',
+      savings: '$35K-90K/year',
+      color: 'pink'
+    },
+    {
+      id: 'university',
+      icon: '🎓',
+      name: 'University/College',
+      description: 'Campus-wide energy management',
+      typical: '3-10 MW / 4-6 hours',
+      savings: '$150K-500K/year',
+      color: 'purple'
+    },
+    {
+      id: 'indoor-farm',
+      icon: '🌱',
+      name: 'Indoor Farm',
+      description: '24/7 LED grow lights & climate control',
+      typical: '400 kW - 1 MW / 4-6 hours',
+      savings: '$60K-150K/year',
+      color: 'emerald'
+    },
+    {
       id: 'custom',
       icon: '⚙️',
       name: 'Custom Configuration',
