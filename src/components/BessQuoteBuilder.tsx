@@ -217,6 +217,9 @@ export default function BessQuoteBuilder() {
   const [showPricingPresets, setShowPricingPresets] = useState(false);
   const [showReviewWorkflow, setShowReviewWorkflow] = useState(false);
   const [currentQuoteStatus, setCurrentQuoteStatus] = useState<'draft' | 'in-review' | 'approved' | 'rejected' | 'shared'>('draft');
+  
+  // New: Control visibility of technical quote building sections
+  const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState(false);
 
   const [currentQuote, setCurrentQuote] = useState<any>(null);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
@@ -1329,157 +1332,186 @@ export default function BessQuoteBuilder() {
       </header>
       
       <main className="p-8">
-        {/* MERLIN Hero Section */}
-  <section className="my-6 rounded-2xl p-8 shadow-2xl border-2 border-blue-400 bg-gradient-to-br from-white via-blue-50 to-blue-200 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-blue-600/10 animate-pulse"></div>
-          
-          {/* Join Now Button - Upper Right */}
-          <div className="absolute top-6 right-6 z-20">
-            <button 
-              className="bg-gradient-to-b from-purple-400 to-purple-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg border-2 border-purple-800 text-lg"
-              onClick={() => setShowJoinModal(true)}
-            >
-              ✨ Join Now
-            </button>
-          </div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center justify-center mb-4">
-              <img 
-                src={merlinImage} 
-                alt="Merlin the Wizard" 
-                className="w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(147,51,234,0.8)] filter brightness-110"
-              />
-              <div>
-                <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-lg">
-                  Merlin BESS Quote Builder
-                </h1>
-                <p className="text-xl text-blue-700 italic font-semibold drop-shadow-md">"Where Magic Meets Energy"</p>
-              </div>
+        {/* NEW CUSTOMER-FOCUSED HERO SECTION */}
+        <section className="my-6 rounded-3xl overflow-hidden shadow-2xl border-2 border-purple-400 bg-gradient-to-br from-white via-purple-50 to-blue-100">
+          {/* Hero Header */}
+          <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-12 text-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-purple-600/20 animate-pulse"></div>
+            
+            {/* Join Now Button - Upper Right */}
+            <div className="absolute top-6 right-6 z-20">
+              <button 
+                className="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-purple-50 transition-colors"
+                onClick={() => setShowJoinModal(true)}
+              >
+                ✨ Join Now
+              </button>
             </div>
             
-            <div className="flex justify-center items-center space-x-4 mt-8">
+            <div className="relative z-10">
+              {/* Merlin Mascot */}
+              <div className="flex items-center justify-center mb-6">
+                <img 
+                  src={merlinImage} 
+                  alt="Merlin - Your Energy Advisor" 
+                  className="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter brightness-110"
+                />
+              </div>
+              
+              <h1 className="text-6xl font-extrabold mb-2 drop-shadow-lg">
+                Transform Your Energy Into Revenue
+              </h1>
+              <p className="text-xl mb-2 font-light italic opacity-90">
+                "Let me help you find the perfect energy solution" - Merlin, Your Energy Advisor
+              </p>
+              <p className="text-2xl mb-8 font-light">
+                Battery energy storage systems that pay for themselves
+              </p>
+              
+              {/* Primary CTA - Smart Wizard */}
+              <button 
+                onClick={() => setShowSmartWizard(true)}
+                className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-12 py-5 rounded-2xl font-bold text-2xl shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-3"
+              >
+                <span className="text-3xl">🪄</span>
+                <span>Start Smart Wizard</span>
+                <span className="text-sm font-normal bg-gray-900 text-yellow-400 px-3 py-1 rounded-full">3 mins</span>
+              </button>
+              
+              <p className="text-sm mt-4 opacity-90">Answer 3 questions, get your custom energy solution</p>
+            </div>
+          </div>
+
+          {/* Three Value Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
+            {/* Cost Savings Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+              <div className="text-5xl mb-4 text-center">💰</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Reduce Energy Costs</h3>
+              <p className="text-gray-600 mb-4 text-center">
+                Cut your electricity bills by 30-50% with smart energy storage and peak shaving
+              </p>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Store cheap off-peak energy</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Avoid expensive peak rates</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Reduce demand charges</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Lower utility bills permanently</span>
+                </li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-3xl font-bold text-green-600">$50K+</span>
+                <p className="text-sm text-gray-500">Average annual savings</p>
+              </div>
+            </div>
+
+            {/* Revenue Generation Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+              <div className="text-5xl mb-4 text-center">📈</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Generate Revenue</h3>
+              <p className="text-gray-600 mb-4 text-center">
+                Turn your battery into a profit center with grid services and energy arbitrage
+              </p>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">✓</span>
+                  <span>Frequency regulation services</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">✓</span>
+                  <span>Demand response programs</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">✓</span>
+                  <span>Energy arbitrage opportunities</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">✓</span>
+                  <span>Capacity market payments</span>
+                </li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-3xl font-bold text-blue-600">3-5 year</span>
+                <p className="text-sm text-gray-500">Typical ROI timeline</p>
+              </div>
+            </div>
+
+            {/* Sustainability Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-emerald-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer">
+              <div className="text-5xl mb-4 text-center">🌱</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Achieve Sustainability</h3>
+              <p className="text-gray-600 mb-4 text-center">
+                Meet your environmental goals and qualify for valuable tax incentives
+              </p>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-emerald-500 mr-2">✓</span>
+                  <span>Reduce carbon footprint</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-500 mr-2">✓</span>
+                  <span>Maximize solar/wind usage</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-500 mr-2">✓</span>
+                  <span>30% Federal tax credit (ITC)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-500 mr-2">✓</span>
+                  <span>State & local incentives</span>
+                </li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-3xl font-bold text-emerald-600">Net Zero</span>
+                <p className="text-sm text-gray-500">Energy independence ready</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Bar */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-t-2 border-gray-200">
+            <div className="flex justify-center items-center space-x-4">
               <input 
                 type="text" 
                 placeholder="My BESS Project"
                 value={quoteName}
                 onChange={(e) => setQuoteName(e.target.value)}
-                className={`${inputStyle} w-72 text-center`}
+                className={`${inputStyle} w-64 text-center`}
               />
               
               <button 
-                className="bg-gradient-to-b from-gray-200 to-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-blue-400 flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-gray-200 to-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-blue-400 flex items-center justify-center space-x-2"
                 onClick={handleSaveProject}
               >
-                <span className="text-2xl">💾</span>
+                <span className="text-xl">💾</span>
                 <span>Save</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-green-400 to-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-green-800 flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-green-400 to-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-green-800 flex items-center justify-center space-x-2"
                 onClick={handleLoadProject}
               >
-                <span className="text-2xl">📂</span>
+                <span className="text-xl">📂</span>
                 <span>Load</span>
               </button>
               
               <button 
-                className="bg-gradient-to-b from-purple-600 to-purple-800 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-purple-900 flex items-center justify-center space-x-2 text-xl w-48"
+                className="bg-gradient-to-b from-purple-600 to-purple-800 text-yellow-300 px-6 py-3 rounded-xl font-bold shadow-lg border-2 border-purple-900 flex items-center justify-center space-x-2"
                 onClick={handlePortfolio}
               >
                 <span>📊</span>
                 <span>Portfolio</span>
               </button>
-            </div>
-          </div>
-        </section>
-
-        {/* MARKET PRICING INTELLIGENCE SECTION - COMPACT */}
-        <section className="rounded-2xl p-3 shadow-xl border-2 border-green-400 bg-gradient-to-br from-green-50 via-emerald-50 to-white mb-6">
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center justify-center">
-              <span className="text-2xl mr-2">📊</span>
-              Current BESS Market Pricing
-              <span className="text-2xl ml-2">💰</span>
-            </h2>
-            
-            {/* Compact Pricing Display */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto mb-2">
-              <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white p-3 rounded-xl shadow-lg border-2 border-blue-700">
-                <p className="text-xs font-semibold mb-0.5 opacity-90">📈 Market Average</p>
-                <p className="text-3xl font-bold mb-0.5 drop-shadow-lg">
-                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).marketPricePerKWh}
-                </p>
-                <p className="text-xs font-semibold opacity-90">per kWh</p>
-              </div>
-              
-              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 text-white p-3 rounded-xl shadow-lg border-2 border-green-700">
-                <p className="text-xs font-semibold mb-0.5 opacity-90">💰 Contract Average</p>
-                <p className="text-3xl font-bold mb-0.5 drop-shadow-lg">
-                  ${calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh}
-                </p>
-                <p className="text-xs font-semibold opacity-90">per kWh ({powerMW >= 2 ? '≥2MW' : '<2MW'})</p>
-              </div>
-            </div>
-            
-            {/* Your System Estimate - Inline Compact */}
-            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-2 rounded-lg border border-yellow-400 shadow-sm max-w-2xl mx-auto mb-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold text-gray-700">🎯 Your System ({powerMW}MW × {standbyHours}hr)</span>
-                <span className="text-xl font-bold text-orange-700">
-                  ${((powerMW * standbyHours * 1000) * calculateBESSPricing(powerMW, standbyHours, selectedCountry).contractAveragePerKWh).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Data Sources - Condensed */}
-            <div className="pt-1 border-t border-green-300 max-w-2xl mx-auto">
-              <div className="flex flex-wrap gap-1 justify-center items-center">
-                <span className="text-[10px] text-gray-600 italic mr-1">Sources:</span>
-                <a 
-                  href="https://about.bnef.com/insights/commodities/lithium-ion-battery-pack-prices-see-largest-drop-since-2017-falling-to-115-per-kilowatt-hour-bloombergnef/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-1.5 py-0.5 rounded transition-colors"
-                  title="Bloomberg NEF Battery Pricing Report"
-                >
-                  BNEF
-                </a>
-                <a 
-                  href="https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] bg-green-100 hover:bg-green-200 text-green-700 px-1.5 py-0.5 rounded transition-colors"
-                  title="NREL Annual Technology Baseline - Battery Storage"
-                >
-                  NREL
-                </a>
-                <a 
-                  href="https://www.highjoule.com/blog/battery-energy-storage-system-bess-costs-in-2024-2025-the-ultimate-guide-to-lcos-market-trends.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] bg-purple-100 hover:bg-purple-200 text-purple-700 px-1.5 py-0.5 rounded transition-colors"
-                  title="HighJoule BESS Cost Guide 2024-2025"
-                >
-                  HighJoule
-                </a>
-                <a 
-                  href="https://blog.catalystpower.com/more-power-to-you/what-are-the-upfront-costs-of-installing-a-microgrid-system#:~:text=Larger%20microgrid%20projects%20(between%202%20MW%20and,higher%20normalized%20costs%2C%20averaging%20around%20$4%20million/MW."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] bg-orange-100 hover:bg-orange-200 text-orange-700 px-1.5 py-0.5 rounded transition-colors"
-                  title="Catalyst Power - Microgrid Installation Costs"
-                >
-                  Catalyst
-                </a>
-                <button
-                  onClick={() => setShowMarketIntelligence(true)}
-                  className="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded transition-colors font-semibold"
-                  title="Open Full Market Intelligence Dashboard"
-                >
-                  📊 More Details
-                </button>
-              </div>
             </div>
           </div>
         </section>
@@ -1576,6 +1608,37 @@ export default function BessQuoteBuilder() {
             />
           </div>
         )}
+
+        {/* Advanced Quote Builder Toggle - Show only when not already shown */}
+        {!showAdvancedQuoteBuilder && (
+          <section className="my-6 text-center">
+            <button
+              onClick={() => setShowAdvancedQuoteBuilder(true)}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
+            >
+              <span className="text-3xl">🔧</span>
+              <div className="text-left">
+                <div>Advanced Quote Builder</div>
+                <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>
+              </div>
+            </button>
+            <p className="text-sm text-gray-500 mt-3">For technical users who want full control over pricing and configuration</p>
+          </section>
+        )}
+
+        {/* Technical Quote Building Sections - Only shown in Advanced Mode */}
+        {showAdvancedQuoteBuilder && (
+          <>
+            {/* Back to Simple View Button */}
+            <section className="my-6 text-center">
+              <button
+                onClick={() => setShowAdvancedQuoteBuilder(false)}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-xl font-semibold shadow-md transition-all inline-flex items-center gap-2"
+              >
+                <span>←</span>
+                <span>Back to Simple View</span>
+              </button>
+            </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
@@ -1902,6 +1965,8 @@ export default function BessQuoteBuilder() {
             </section>
           </div>
         </div>
+          </>
+        )}
 
         {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
