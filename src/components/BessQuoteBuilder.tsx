@@ -38,7 +38,7 @@ import type { ProfileData } from './modals/AccountSetup';
 import type { UseCaseTemplate } from './UseCaseTemplates';
 import merlinImage from "../assets/images/new_Merlin.png";
 import merlinDancingVideo from "../assets/images/Merlin_video.mp4";
-import SmartWizard from './wizard/SmartWizard';
+import SmartWizard from './wizard/SmartWizardV2';
 import magicPoofSound from "../assets/sounds/Magic_Poof.mp3";
 import SaveProjectModal from './modals/SaveProjectModal';
 import LoadProjectModal from './modals/LoadProjectModal';
