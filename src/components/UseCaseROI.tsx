@@ -386,55 +386,55 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
   const energySavingsPct = ((energySavings / currentUseCase.energyCostBefore) * 100).toFixed(0);
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 rounded-xl p-4 shadow-lg border-2 border-green-300">
-      {/* Header - Compact */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl mr-2">{currentUseCase.icon}</span>
-          <span className="text-lg font-bold text-gray-900">{currentUseCase.industry}</span>
+    <div className="bg-gradient-to-br from-green-100/80 via-emerald-50 to-teal-100/80 rounded-2xl p-6 shadow-xl border-4 border-emerald-300">
+      {/* Header - Enhanced */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">{currentUseCase.icon}</span>
+          <span className="text-2xl font-bold text-gray-900">{currentUseCase.industry}</span>
         </div>
-        {/* Navigation Controls - Compact */}
-        <div className="flex items-center gap-1">
+        {/* Navigation Controls */}
+        <div className="flex items-center gap-2">
           <button
             onClick={handlePrevious}
-            className="p-1.5 bg-white rounded-md shadow hover:shadow-md transition-all duration-200 border border-gray-300"
+            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-gray-300 hover:border-emerald-400"
             title="Previous use case"
           >
-            <ChevronLeft size={16} className="text-gray-700" />
+            <ChevronLeft size={20} className="text-gray-700" />
           </button>
-          <div className="px-2 py-0.5 bg-white rounded-md shadow border border-gray-300">
-            <span className="text-xs font-semibold text-gray-700">
+          <div className="px-4 py-2 bg-white rounded-lg shadow-md border-2 border-gray-300">
+            <span className="text-sm font-bold text-gray-700">
               {currentIndex + 1}/{useCases.length}
             </span>
           </div>
           <button
             onClick={handleNext}
-            className="p-1.5 bg-white rounded-md shadow hover:shadow-md transition-all duration-200 border border-gray-300"
+            className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 border-gray-300 hover:border-emerald-400"
             title="Next use case"
           >
-            <ChevronRight size={16} className="text-gray-700" />
+            <ChevronRight size={20} className="text-gray-700" />
           </button>
         </div>
       </div>
 
-      {/* Main Content Grid - Compact */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left: Chart - Professional */}
-        <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
-          {/* Annual Savings Static Label */}
-          <div className="flex justify-center mb-2">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Chart - Professional with vibrant colors */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200">
+          {/* Annual Savings Badge - More prominent */}
+          <div className="flex justify-center mb-4">
             <span
-              className="inline-block bg-gradient-to-r from-green-500 to-blue-600 text-white text-lg font-bold px-5 py-1 rounded-full"
+              className="inline-block bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white text-xl font-bold px-8 py-2.5 rounded-full shadow-lg"
             >
               Annual Savings: ${ (currentUseCase.totalAnnualSavings / 1000).toLocaleString() }K
             </span>
           </div>
-          <h4 className="text-base font-bold text-gray-900 mb-4 text-center">
+          <h4 className="text-lg font-bold text-gray-900 mb-6 text-center">
             Annual Savings — Before vs After BESS
           </h4>
           
-          {/* Chart - Full Height */}
-          <div className="relative" style={{ height: '280px' }}>
+          {/* Chart - Full Height with vibrant colors */}
+          <div className="relative" style={{ height: '300px' }}>
             <div className="absolute inset-0 flex items-end justify-around px-4">
               {(() => {
                 const maxValue = Math.max(
@@ -443,7 +443,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
                   currentUseCase.energyCostBefore,
                   currentUseCase.energyCostAfter
                 );
-                const chartHeightPx = 240;
+                const chartHeightPx = 260;
                 const minBarPx = 20;
                 const getBarHeight = (value: number) => {
                   if (maxValue === 0) return minBarPx;
@@ -453,56 +453,56 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
                 return (
                   <>
                     {/* Demand Charges Group */}
-                    <div className="flex flex-col items-center gap-2 w-36">
-                      <div className="flex gap-3 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar */}
-                        <div className="flex flex-col items-center w-16">
-                          <div className="text-sm font-bold text-gray-800 mb-1">
+                    <div className="flex flex-col items-center gap-3 w-40">
+                      <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
+                        {/* Before Bar - Vibrant Blue */}
+                        <div className="flex flex-col items-center w-20">
+                          <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.demandChargeBefore / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-blue-600 to-blue-500 rounded-t-lg shadow-lg border-2 border-blue-700"
+                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-xl border-2 border-blue-700"
                             style={{ height: getBarHeight(currentUseCase.demandChargeBefore) + 'px' }}
                           ></div>
                         </div>
-                        {/* After Bar */}
-                        <div className="flex flex-col items-center w-16">
-                          <div className="text-sm font-bold text-gray-800 mb-1">
+                        {/* After Bar - Vibrant Teal */}
+                        <div className="flex flex-col items-center w-20">
+                          <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.demandChargeAfter / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-teal-500 to-teal-400 rounded-t-lg shadow-lg border-2 border-teal-600"
+                            className="w-full bg-gradient-to-t from-emerald-500 via-teal-400 to-teal-300 rounded-t-xl shadow-xl border-2 border-emerald-600"
                             style={{ height: getBarHeight(currentUseCase.demandChargeAfter) + 'px' }}
                           ></div>
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-gray-800 mt-1">Demand Charges</div>
+                      <div className="text-sm font-bold text-gray-900 mt-2">Demand Charges</div>
                     </div>
                     {/* Energy (TOU) Group */}
-                    <div className="flex flex-col items-center gap-2 w-36">
-                      <div className="flex gap-3 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar */}
-                        <div className="flex flex-col items-center w-16">
-                          <div className="text-sm font-bold text-gray-800 mb-1">
+                    <div className="flex flex-col items-center gap-3 w-40">
+                      <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
+                        {/* Before Bar - Vibrant Blue */}
+                        <div className="flex flex-col items-center w-20">
+                          <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.energyCostBefore / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-blue-600 to-blue-500 rounded-t-lg shadow-lg border-2 border-blue-700"
+                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-xl border-2 border-blue-700"
                             style={{ height: getBarHeight(currentUseCase.energyCostBefore) + 'px' }}
                           ></div>
                         </div>
-                        {/* After Bar */}
-                        <div className="flex flex-col items-center w-16">
-                          <div className="text-sm font-bold text-gray-800 mb-1">
+                        {/* After Bar - Vibrant Teal */}
+                        <div className="flex flex-col items-center w-20">
+                          <div className="text-base font-bold text-gray-900 mb-2">
                             ${(currentUseCase.energyCostAfter / 1000).toFixed(0)}K
                           </div>
                           <div 
-                            className="w-full bg-gradient-to-t from-teal-500 to-teal-400 rounded-t-lg shadow-lg border-2 border-teal-600"
+                            className="w-full bg-gradient-to-t from-emerald-500 via-teal-400 to-teal-300 rounded-t-xl shadow-xl border-2 border-emerald-600"
                             style={{ height: getBarHeight(currentUseCase.energyCostAfter) + 'px' }}
                           ></div>
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-gray-800 mt-1">Energy (TOU)</div>
+                      <div className="text-sm font-bold text-gray-900 mt-2">Energy (TOU)</div>
                     </div>
                   </>
                 );
@@ -510,141 +510,138 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="flex justify-center gap-6 mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gradient-to-br from-blue-600 to-blue-500 rounded border-2 border-blue-700"></div>
-              <span className="text-sm font-semibold text-gray-700">Before BESS</span>
+          {/* Legend - Enhanced */}
+          <div className="flex justify-center gap-8 mt-4 pt-4 border-t-2 border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-blue-400 rounded border-2 border-blue-700 shadow-md"></div>
+              <span className="text-sm font-bold text-gray-800">Before BESS</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gradient-to-br from-teal-500 to-teal-400 rounded border-2 border-teal-600"></div>
-              <span className="text-sm font-semibold text-gray-700">After BESS</span>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-teal-300 rounded border-2 border-emerald-600 shadow-md"></div>
+              <span className="text-sm font-bold text-gray-800">After BESS</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Metrics & Benefits - Compact */}
-        <div className="space-y-2">
-          {/* ROI Metrics - Compact */}
-          <div className="bg-white rounded-lg p-3 shadow-md border border-gray-200">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="text-center p-2 bg-gradient-to-br from-green-50 to-green-100 rounded border border-green-300">
-                <div className="text-xl font-bold text-green-700">
+        {/* Right: Metrics & Benefits - Enhanced with vibrant colors */}
+        <div className="space-y-4">
+          {/* ROI Metrics - Larger, more vibrant */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl border-2 border-emerald-400 shadow-md">
+                <div className="text-3xl font-bold text-emerald-700">
                   ${(currentUseCase.totalAnnualSavings / 1000).toFixed(0)}K
                 </div>
-                <div className="text-[10px] text-gray-700 font-medium">Annual Savings</div>
+                <div className="text-xs text-gray-800 font-semibold mt-1">Annual Savings</div>
               </div>
               
-              <div className="text-center p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded border border-blue-300">
-                <div className="text-xl font-bold text-blue-700">
+              <div className="text-center p-4 bg-gradient-to-br from-blue-100 to-sky-100 rounded-xl border-2 border-blue-400 shadow-md">
+                <div className="text-3xl font-bold text-blue-700">
                   {currentUseCase.paybackYears < 1 
                     ? `${(currentUseCase.paybackYears * 12).toFixed(0)} mo`
                     : `${currentUseCase.paybackYears.toFixed(1)} yr`
                   }
                 </div>
-                <div className="text-[10px] text-gray-700 font-medium">Payback Period</div>
+                <div className="text-xs text-gray-800 font-semibold mt-1">Payback Period</div>
               </div>
               
-              <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded border border-purple-300">
-                <div className="text-xl font-bold text-purple-700">
+              <div className="text-center p-4 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl border-2 border-purple-400 shadow-md">
+                <div className="text-3xl font-bold text-purple-700">
                   {currentUseCase.roi25Year}
                 </div>
-                <div className="text-[10px] text-gray-700 font-medium">25-Year ROI</div>
+                <div className="text-xs text-gray-800 font-semibold mt-1">25-Year ROI</div>
               </div>
               
-              <div className="text-center p-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded border border-orange-300">
-                <div className="text-xl font-bold text-orange-700">
+              <div className="text-center p-4 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border-2 border-orange-400 shadow-md">
+                <div className="text-3xl font-bold text-orange-700">
                   {currentUseCase.systemSizeMW < 1 
                     ? `${(currentUseCase.systemSizeMW * 1000).toFixed(0)} kW`
                     : `${currentUseCase.systemSizeMW.toFixed(1)} MW`
                   }
                 </div>
-                <div className="text-[10px] text-gray-700 font-medium">System Size</div>
+                <div className="text-xs text-gray-800 font-semibold mt-1">System Size</div>
               </div>
             </div>
           </div>
 
-          {/* Savings Breakdown - Compact */}
-          <div className="bg-white rounded-lg p-2 shadow-md border border-gray-200">
-            <h5 className="text-xs font-bold text-gray-900 mb-2">💰 Savings Breakdown</h5>
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-700">Demand Charges</span>
-                <span className="text-xs font-bold text-green-600">
+          {/* Savings Breakdown - Enhanced */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+            <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>💰</span>
+              <span>Savings Breakdown</span>
+            </h5>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-800 font-medium">Demand Charges</span>
+                <span className="text-sm font-bold text-emerald-600">
                   -${(demandSavings / 1000).toFixed(0)}K ({demandSavingsPct}%)
-                                          {/* Annual Savings Overlay */}
-                                          {showAnnualSavings && (
-                                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none">
-                                              <div className="bg-green-600 text-white text-lg font-bold px-4 py-2 rounded-full shadow-lg border-2 border-green-700 animate-pulse">
-                                                Annual Savings: ${ (currentUseCase.totalAnnualSavings / 1000).toLocaleString() }K
-                                              </div>
-                                              <div className="text-xs text-green-900 mt-1 font-semibold">(Demand + Energy)</div>
-                                            </div>
-                                          )}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-700">Energy (TOU)</span>
-                <span className="text-xs font-bold text-green-600">
+              <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-800 font-medium">Energy (TOU)</span>
+                <span className="text-sm font-bold text-emerald-600">
                   -${(energySavings / 1000).toFixed(0)}K ({energySavingsPct}%)
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Key Benefits - Compact */}
-          <div className="bg-white rounded-lg p-2 shadow-md border border-gray-200">
-            <h5 className="text-xs font-bold text-gray-900 mb-2">✨ Key Benefits</h5>
-            <div className="space-y-1">
-              <div className="flex items-start gap-1">
-                <span className="text-green-600 font-bold text-xs">✓</span>
-                <span className="text-xs text-gray-700">{currentUseCase.keyBenefit1}</span>
+          {/* Key Benefits - Enhanced */}
+          <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-200">
+            <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>✨</span>
+              <span>Key Benefits</span>
+            </h5>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                <span className="text-emerald-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit1}</span>
               </div>
-              <div className="flex items-start gap-1">
-                <span className="text-green-600 font-bold text-xs">✓</span>
-                <span className="text-xs text-gray-700">{currentUseCase.keyBenefit2}</span>
+              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                <span className="text-emerald-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit2}</span>
               </div>
-              <div className="flex items-start gap-1">
-                <span className="text-green-600 font-bold text-xs">✓</span>
-                <span className="text-xs text-gray-700">{currentUseCase.keyBenefit3}</span>
+              <div className="flex items-start gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                <span className="text-emerald-600 font-bold text-base">✓</span>
+                <span className="text-sm text-gray-800">{currentUseCase.keyBenefit3}</span>
               </div>
             </div>
           </div>
 
-          {/* CTA Button - Compact */}
+          {/* CTA Button - Enhanced, professional */}
           {onLoadTemplate && (
             <button
               onClick={() => onLoadTemplate(currentUseCase)}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-400 hover:to-blue-500 text-white px-4 py-3 rounded-lg font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 transform hover:scale-105 border border-green-400/30"
+              className="w-full bg-gradient-to-r from-emerald-500 via-green-500 to-blue-500 hover:from-emerald-600 hover:via-green-600 hover:to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-xl transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-105 border-2 border-white/30"
             >
-              <span className="text-lg">🚀</span>
+              <span className="text-2xl">🚀</span>
               <div className="text-left">
-                <div className="text-sm">Build This Quote</div>
-                <div className="text-[10px] opacity-90">Pre-filled data</div>
+                <div className="text-base">Build This Quote</div>
+                <div className="text-xs opacity-90">Pre-filled data</div>
               </div>
-              <ArrowRight size={16} />
+              <ArrowRight size={20} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Auto-rotation indicator - Compact */}
+      {/* Auto-rotation indicator */}
       {autoRotate && (
-        <div className="mt-2 flex justify-center items-center gap-2">
-          <div className="flex gap-1">
+        <div className="mt-4 flex justify-center items-center gap-3">
+          <div className="flex gap-2">
             {useCases.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-1 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full transition-all duration-300 ${
                   idx === currentIndex 
-                    ? 'w-6 bg-green-600' 
-                    : 'w-1 bg-gray-300'
+                    ? 'w-8 bg-gradient-to-r from-emerald-500 to-green-500 shadow-md' 
+                    : 'w-2 bg-gray-300'
                 }`}
               />
             ))}
           </div>
-          <span className="text-[10px] text-gray-500 ml-1">
-            {isPaused ? '⏸' : '▶'}
+          <span className="text-xs text-gray-600 ml-2">
+            {isPaused ? '⏸ Paused' : '▶ Auto-play'}
           </span>
         </div>
 
