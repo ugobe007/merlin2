@@ -1965,10 +1965,10 @@ export default function BessQuoteBuilder() {
             </section>
           </div>
         </div>
-          </>
-        )}
+        </>
+      )}
 
-        {/* Footer with Admin Access */}
+      {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
           <div className="text-center">
             <div className="flex items-center justify-center gap-4 mb-4">
