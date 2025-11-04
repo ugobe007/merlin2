@@ -483,9 +483,12 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
             <p className="text-gray-700 mb-3">
               Our energy consultants can help you choose the right options for your project and connect you with trusted partners.
             </p>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+            <a 
+              href="mailto:info@merlinenergy.com?subject=Free Consultation Request&body=Hi, I'd like to schedule a consultation to discuss my energy storage project."
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+            >
               Schedule Free Consultation
-            </button>
+            </a>
           </div>
         </div>
       </div>
