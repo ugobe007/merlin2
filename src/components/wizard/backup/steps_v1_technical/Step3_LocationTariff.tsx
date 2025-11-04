@@ -1,0 +1,274 @@
+import React, { useState } from 'react';
+
+interface Step3_LocationTariffProps {
+  projectLocation: string;
+  setProjectLocation: (value: string) => void;
+  tariffRegion: string;
+  setTariffRegion: (value: string) => void;
+  shippingDestination: string;
+  setShippingDestination: (value: string) => void;
+  bessPowerMW?: number;
+  duration?: number;
+  solarMW?: number;
+  windMW?: number;
+  generatorMW?: number;
+  onShowUtilityRates?: () => void;
+  onShowPricingPresets?: () => void;
+}
+
+const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
+  projectLocation,
+  setProjectLocation,
+  tariffRegion,
+  setTariffRegion,
+  shippingDestination,
+  setShippingDestination,
+  bessPowerMW = 1,
+  duration = 4,
+  solarMW = 0,
+  windMW = 0,
+  generatorMW = 0,
+  onShowUtilityRates,
+  onShowPricingPresets,
+}) => {
+  const [utilityRateApplied, setUtilityRateApplied] = useState(false);
+  const [pricingPresetApplied, setPricingPresetApplied] = useState(false);
+  
+  // Calculate equipment costs for tariff display
+  const getTariffRate = () => {
+    const tariffRates: { [key: string]: number } = {
+      'North America': 0.0125,
+      'Europe': 0.045,
+      'Asia Pacific': 0.075,
+      'Middle East': 0.10,
+      'Africa': 0.15,
+      'South America': 0.115,
+    };
+    return tariffRates[tariffRegion] || 0.05;
+  };
+
+  const getShippingRatePerKg = () => {
+    const shippingRates: { [key: string]: number } = {
+      'North America': 2.5,
+      'Europe': 3.5,
+      'Asia Pacific': 4.5,
+      'Middle East': 5.5,
+      'Africa': 6.5,
+      'South America': 5.0,
+    };
+    return shippingRates[tariffRegion] || 3.5;
+  };
+
+  // Calculate estimated costs
+  const batteryMWh = bessPowerMW * duration;
+  const pricePerKWh = bessPowerMW >= 5 ? 120 : 140;
+  const batterySystem = batteryMWh * 1000 * pricePerKWh;
+  const additionalEquipment = (solarMW * 800000) + (windMW * 1200000) + (generatorMW * 300000);
+  const equipmentSubtotal = batterySystem + additionalEquipment;
+
+  const tariffAmount = equipmentSubtotal * getTariffRate();
+  
+  const totalEquipmentWeight = batteryMWh * 1000 + solarMW * 500 + windMW * 800 + generatorMW * 1200;
+  const shippingAmount = totalEquipmentWeight * getShippingRatePerKg();
+  return (
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold text-gray-800">
+          Project Location & Costs
+        </h2>
+        <p className="text-gray-700 text-lg font-semibold">
+          Help us calculate accurate tariffs and shipping costs for your project.
+        </p>
+      </div>
+
+      {/* Project Location */}
+      <div className="bg-white p-6 rounded-2xl border-2 border-blue-400 shadow-xl">
+        <label className="block text-xl font-semibold text-gray-800 mb-4">
+          Where is your project located?
+        </label>
+        <select
+          value={projectLocation}
+          onChange={(e) => setProjectLocation(e.target.value)}
+          className="w-full px-4 py-3 bg-blue-50 border-2 border-gray-300 rounded-xl text-gray-900 font-medium text-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
+        >
+          <option value="United States">United States</option>
+          <option value="Canada">Canada</option>
+          <option value="Mexico">Mexico</option>
+          <option value="United Kingdom">United Kingdom</option>
+          <option value="Germany">Germany</option>
+          <option value="France">France</option>
+          <option value="Spain">Spain</option>
+          <option value="Italy">Italy</option>
+          <option value="Netherlands">Netherlands</option>
+          <option value="Australia">Australia</option>
+          <option value="Japan">Japan</option>
+          <option value="South Korea">South Korea</option>
+          <option value="China">China</option>
+          <option value="India">India</option>
+          <option value="Brazil">Brazil</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      {/* Tariff & Shipping Calculations */}
+      <div className="bg-white p-6 rounded-2xl border-2 border-green-400 shadow-xl">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          💰 Tariff & Shipping Calculations
+        </h3>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* World Region for Tariff */}
+          <div className="space-y-3">
+            <label className="block text-lg font-semibold text-gray-800">
+              World Region (for tariff calculations)
+            </label>
+            <select
+              value={tariffRegion}
+              onChange={(e) => setTariffRegion(e.target.value)}
+              className="w-full px-4 py-3 bg-green-50 border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-300 transition-all"
+            >
+              <option value="North America">North America</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia Pacific">Asia Pacific</option>
+              <option value="Middle East">Middle East</option>
+              <option value="Africa">Africa</option>
+              <option value="South America">South America</option>
+            </select>
+          </div>
+
+          {/* Shipping Destination */}
+          <div className="space-y-3">
+            <label className="block text-lg font-semibold text-gray-800">
+              Shipping Destination
+            </label>
+            <input
+              type="text"
+              value={shippingDestination}
+              onChange={(e) => setShippingDestination(e.target.value)}
+              placeholder="e.g., California, USA or London, UK"
+              className="w-full px-4 py-3 bg-blue-50 border-2 border-gray-300 rounded-xl text-gray-900 font-medium placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Explanatory Info */}
+        <div className="mt-6 space-y-3 text-sm">
+          <div className="flex items-start space-x-3 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-400">
+            <span className="text-2xl">💡</span>
+            <div>
+              <span className="font-bold text-yellow-700">Tariff Region: </span>
+              <span className="text-gray-700">Used for calculating import duties and energy pricing</span>
+            </div>
+          </div>
+          <div className="flex items-start space-x-3 bg-orange-50 p-3 rounded-lg border-2 border-orange-400">
+            <span className="text-2xl">📦</span>
+            <div>
+              <span className="font-bold text-orange-700">Shipping: </span>
+              <span className="text-gray-700">Helps estimate logistics and delivery costs</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Access Buttons */}
+        <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-300 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">⚡ Quick Access Tools</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={() => {
+                if (onShowUtilityRates) {
+                  onShowUtilityRates();
+                  setUtilityRateApplied(true);
+                }
+              }}
+              className="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-300 hover:to-blue-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-sky-300/30 flex items-center justify-center gap-2"
+            >
+              <span className="text-2xl">⚡</span>
+              <div className="text-left">
+                <div className="font-bold">Regional Utility Rates</div>
+                <div className="text-xs opacity-90">Auto-populate electricity costs</div>
+                {utilityRateApplied && <div className="text-xs mt-1">✓ Applied</div>}
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onShowPricingPresets) {
+                  onShowPricingPresets();
+                  setPricingPresetApplied(true);
+                }
+              }}
+              className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center justify-center gap-2"
+            >
+              <span className="text-2xl">💰</span>
+              <div className="text-left">
+                <div className="font-bold">My Pricing Presets</div>
+                <div className="text-xs opacity-90">Use saved pricing & EPC fees</div>
+                {pricingPresetApplied && <div className="text-xs mt-1">✓ Applied</div>}
+              </div>
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mt-4 text-center italic">
+            💡 Tip: Set up your pricing once, use it in every quote!
+          </p>
+        </div>
+
+        {/* Tariff Information Display */}
+        <div className="mt-6 space-y-4">
+          {/* Cost Breakdown */}
+          <div className="p-5 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border-2 border-orange-400 shadow-lg">
+            <h4 className="text-lg font-bold text-orange-700 mb-4">📊 Cost Estimates Based on Configuration</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-medium">Equipment Subtotal:</span>
+                <span className="text-gray-900 font-bold text-lg">${equipmentSubtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-medium">Tariff Rate ({tariffRegion}):</span>
+                <span className="text-orange-600 font-bold">{(getTariffRate() * 100).toFixed(2)}%</span>
+              </div>
+              <div className="flex justify-between items-center bg-orange-100 p-3 rounded-lg border border-orange-300">
+                <span className="text-orange-800 font-semibold">💰 Estimated Tariff Cost:</span>
+                <span className="text-orange-700 font-bold text-xl">${tariffAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Shipping Breakdown */}
+          <div className="p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-400 shadow-lg">
+            <h4 className="text-lg font-bold text-blue-700 mb-4">🚢 Shipping Estimates</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-medium">Total Equipment Weight:</span>
+                <span className="text-gray-900 font-bold">{totalEquipmentWeight.toLocaleString()} kg</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-medium">Shipping Rate:</span>
+                <span className="text-blue-600 font-bold">${getShippingRatePerKg().toFixed(2)}/kg</span>
+              </div>
+              <div className="flex justify-between items-center bg-blue-100 p-3 rounded-lg border border-blue-300">
+                <span className="text-blue-800 font-semibold">📦 Estimated Shipping Cost:</span>
+                <span className="text-blue-700 font-bold text-xl">${shippingAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Additional Costs */}
+          <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-400 shadow-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="text-xl font-bold text-purple-700 mb-1">Total Tariffs + Shipping</h4>
+                <p className="text-sm text-gray-600 font-medium">Additional costs beyond equipment</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-purple-700">${(tariffAmount + shippingAmount).toLocaleString()}</p>
+                <p className="text-sm text-purple-600 mt-1 font-semibold">{((tariffAmount + shippingAmount) / equipmentSubtotal * 100).toFixed(1)}% of equipment</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Step3_LocationTariff;
