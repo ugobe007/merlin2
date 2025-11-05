@@ -38,24 +38,90 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
     switch (selectedIndustry) {
       case 'ev-charging':
         return {
-          title: 'EV Charging Station Details',
+          title: 'EV Charging Station Configuration',
           icon: '🔌',
           questions: [
             {
-              id: 'numChargers',
-              label: 'How many charging stations?',
+              id: 'stationType',
+              label: 'What type of charging station?',
+              type: 'select',
+              options: [
+                { value: 'public-highway', label: '🛣️ Public Highway/Travel Center' },
+                { value: 'public-urban', label: '🏢 Public Urban/City Center' },
+                { value: 'workplace', label: '🏢 Workplace/Corporate' },
+                { value: 'retail', label: '🛒 Retail/Shopping Center' },
+                { value: 'multifamily', label: '🏠 Multi-family Residential' },
+                { value: 'fleet', label: '🚛 Fleet/Depot Charging' },
+                { value: 'destination', label: '🏨 Destination (Hotel/Restaurant)' },
+              ],
+            },
+            {
+              id: 'level2Chargers',
+              label: 'Level 2 Chargers (7-19 kW)',
               type: 'number',
-              placeholder: 'e.g., 10',
+              placeholder: 'e.g., 20',
               suffix: 'chargers',
             },
             {
-              id: 'chargerType',
-              label: 'What type of chargers?',
+              id: 'level2Power',
+              label: 'Level 2 Power per Charger',
               type: 'select',
               options: [
-                { value: 'level2', label: 'Level 2 (7-19 kW)' },
-                { value: 'dcfast', label: 'DC Fast Charging (50-350 kW)' },
-                { value: 'mixed', label: 'Mixed (Level 2 + DC Fast)' },
+                { value: '7', label: '7 kW (Basic Level 2)' },
+                { value: '11', label: '11 kW (Standard Level 2)' },
+                { value: '19', label: '19 kW (High-Power Level 2)' },
+              ],
+              conditional: { field: 'level2Chargers', operator: '>', value: 0 }
+            },
+            {
+              id: 'dcFastChargers',
+              label: 'DC Fast Chargers (50-350 kW)',
+              type: 'number',
+              placeholder: 'e.g., 8',
+              suffix: 'chargers',
+            },
+            {
+              id: 'dcFastPower',
+              label: 'DC Fast Charger Power',
+              type: 'select',
+              options: [
+                { value: '50', label: '50 kW (Standard DC Fast)' },
+                { value: '150', label: '150 kW (High-Power DC Fast)' },
+                { value: '250', label: '250 kW (Ultra-Fast)' },
+                { value: '350', label: '350 kW (Ultra-Fast+)' },
+              ],
+              conditional: { field: 'dcFastChargers', operator: '>', value: 0 }
+            },
+            {
+              id: 'utilizationProfile',
+              label: 'Expected utilization pattern?',
+              type: 'select',
+              options: [
+                { value: 'low', label: 'Low (10-25% avg utilization)' },
+                { value: 'medium', label: 'Medium (25-50% avg utilization)' },
+                { value: 'high', label: 'High (50-75% avg utilization)' },
+                { value: 'very-high', label: 'Very High (75%+ avg utilization)' },
+                { value: 'custom', label: 'Custom - I know my exact rates' },
+              ],
+            },
+            {
+              id: 'customUtilization',
+              label: 'Average utilization rate (%)',
+              type: 'number',
+              placeholder: 'e.g., 65',
+              suffix: '%',
+              conditional: { field: 'utilizationProfile', operator: '==', value: 'custom' }
+            },
+            {
+              id: 'peakConcurrency',
+              label: 'Peak simultaneous charging (%)',
+              type: 'select',
+              options: [
+                { value: '30', label: '30% (Rural/Low Traffic)' },
+                { value: '50', label: '50% (Suburban/Medium Traffic)' },
+                { value: '70', label: '70% (Urban/High Traffic)' },
+                { value: '85', label: '85% (Highway/Travel Centers)' },
+                { value: '100', label: '100% (Fleet/Depot - All at once)' },
               ],
             },
             {
@@ -63,23 +129,31 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               label: 'Grid connection status?',
               type: 'select',
               options: [
-                { value: 'on-grid', label: 'On-Grid (Connected to utility)' },
-                { value: 'off-grid', label: 'Off-Grid (Standalone)' },
-                { value: 'limited', label: 'Limited Grid Capacity' },
+                { value: 'on-grid', label: 'On-Grid (Full utility connection)' },
+                { value: 'limited', label: 'Limited Grid (Capacity constraints)' },
+                { value: 'off-grid', label: 'Off-Grid (Remote location)' },
+                { value: 'microgrid', label: 'Microgrid (Local generation)' },
               ],
             },
             {
-              id: 'peakHours',
-              label: 'Peak usage hours per day?',
-              type: 'number',
-              placeholder: 'e.g., 8',
-              suffix: 'hours',
+              id: 'operatingHours',
+              label: 'Operating schedule?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 (Always available)' },
+                { value: 'extended', label: 'Extended (6 AM - 11 PM)' },
+                { value: 'business', label: 'Business Hours (8 AM - 6 PM)' },
+                { value: 'custom', label: 'Custom hours' },
+              ],
             },
           ],
           insights: {
-            'level2-on-grid': 'Level 2 chargers work great with solar+storage for daytime charging',
-            'dcfast-limited': 'DC Fast charging with limited grid? Battery storage is essential to avoid demand charges',
-            'off-grid': 'Off-grid EV charging requires significant battery capacity + renewable generation',
+            'public-highway-high': 'Highway travel centers need robust power management - battery storage prevents grid overload during peak travel times',
+            'fleet-100': 'Fleet charging at 100% concurrency requires significant demand management - storage reduces utility demand charges by 60-80%',
+            'dcfast-limited': 'DC Fast charging with limited grid capacity? Battery storage is essential - can reduce grid demand by 2-3x',
+            'level2-workplace': 'Workplace Level 2 charging pairs perfectly with solar+storage - charge during peak solar hours',
+            'off-grid': 'Off-grid EV charging requires oversized battery + renewable generation (typically 2-3x normal capacity)',
+            'ultra-fast': '250kW+ ultra-fast chargers create massive demand spikes - storage smooths power delivery and cuts demand charges',
           },
         };
 
@@ -398,6 +472,320 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           },
         };
 
+      case 'tribal-casino':
+        return {
+          title: 'Tribal Casino & Resort Details',
+          icon: '🎰',
+          questions: [
+            {
+              id: 'facilitySize',
+              label: 'Facility size?',
+              type: 'select',
+              options: [
+                { value: 'small', label: 'Small (< 50,000 sq ft gaming floor)' },
+                { value: 'medium', label: 'Medium (50,000-150,000 sq ft)' },
+                { value: 'large', label: 'Large (> 150,000 sq ft)' },
+              ],
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'off-grid', label: 'Off-Grid (Remote location)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'amenities',
+              label: 'Resort amenities? (Select all that apply)',
+              type: 'multi-select',
+              options: [
+                { value: 'hotel', label: '🏨 Hotel/Rooms' },
+                { value: 'restaurants', label: '🍽️ Multiple Restaurants' },
+                { value: 'entertainment', label: '🎭 Entertainment Venue' },
+                { value: 'spa', label: '💆 Spa/Pool' },
+                { value: 'convention', label: '🎪 Convention Center' },
+              ],
+            },
+            {
+              id: 'operations',
+              label: 'Operations schedule?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 Operations' },
+                { value: 'extended', label: 'Extended Hours (16-20 hrs/day)' },
+              ],
+            },
+            {
+              id: 'backupCritical',
+              label: 'How critical is backup power?',
+              type: 'select',
+              options: [
+                { value: 'mission-critical', label: 'Mission Critical (Gaming/Hospitality)' },
+                { value: 'important', label: 'Important (Minimize downtime)' },
+              ],
+            },
+          ],
+          insights: {
+            '24-7': '24/7 casinos need reliable backup power - even brief outages impact revenue significantly',
+            'off-grid': 'Remote tribal casinos benefit from microgrid systems with solar+storage+generator',
+            'mission-critical': 'Gaming operations require instant switchover - BESS responds in <10ms vs generators (10-15 sec)',
+          },
+        };
+
+      case 'logistics-center':
+        return {
+          title: 'Logistics Center Details',
+          icon: '🚚',
+          questions: [
+            {
+              id: 'facilityType',
+              label: 'Facility type?',
+              type: 'select',
+              options: [
+                { value: 'fulfillment', label: 'Fulfillment Center (Amazon-style)' },
+                { value: 'distribution', label: 'Distribution Hub (FedEx/UPS)' },
+                { value: 'cold-storage', label: 'Cold Storage/Refrigerated' },
+                { value: 'warehouse', label: 'Standard Warehouse' },
+              ],
+            },
+            {
+              id: 'facilitySize',
+              label: 'Facility size?',
+              type: 'select',
+              options: [
+                { value: 'small', label: 'Small (< 250,000 sq ft)' },
+                { value: 'medium', label: 'Medium (250,000-500,000 sq ft)' },
+                { value: 'large', label: 'Large (> 500,000 sq ft)' },
+              ],
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'limited', label: 'Limited Grid Capacity' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'operations',
+              label: 'Operations schedule?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 Operations' },
+                { value: '2-shift', label: 'Two Shifts (16 hrs/day)' },
+                { value: '1-shift', label: 'Single Shift (8-10 hrs/day)' },
+              ],
+            },
+            {
+              id: 'criticalLoads',
+              label: 'Critical loads? (Select all that apply)',
+              type: 'multi-select',
+              options: [
+                { value: 'refrigeration', label: '❄️ Refrigeration/Cold Storage' },
+                { value: 'automation', label: '🤖 Warehouse Automation' },
+                { value: 'sorting', label: '📦 Sorting Systems' },
+                { value: 'ev-fleet', label: '🔌 EV Fleet Charging' },
+              ],
+            },
+          ],
+          insights: {
+            'cold-storage': 'Cold storage requires uninterrupted power - even brief outages can spoil inventory worth millions',
+            'ev-fleet': 'EV fleet charging creates significant demand - battery storage helps manage peak charges',
+            '24-7': '24/7 operations benefit from demand charge reduction through battery peak shaving',
+          },
+        };
+
+      case 'shopping-center':
+        return {
+          title: 'Shopping Center/Mall Details',
+          icon: '🏬',
+          questions: [
+            {
+              id: 'centerSize',
+              label: 'Center size?',
+              type: 'select',
+              options: [
+                { value: 'strip', label: 'Strip Center (< 100,000 sq ft)' },
+                { value: 'community', label: 'Community Center (100,000-400,000 sq ft)' },
+                { value: 'regional', label: 'Regional Mall (> 400,000 sq ft)' },
+              ],
+            },
+            {
+              id: 'numTenants',
+              label: 'Approximate number of tenants?',
+              type: 'number',
+              placeholder: 'e.g., 25',
+              suffix: 'tenants',
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'anchorTenants',
+              label: 'Anchor tenants? (Select all that apply)',
+              type: 'multi-select',
+              options: [
+                { value: 'grocery', label: '🛒 Grocery Store/Supermarket' },
+                { value: 'department', label: '🏬 Department Store' },
+                { value: 'cinema', label: '🎬 Movie Theater' },
+                { value: 'gym', label: '💪 Fitness Center' },
+                { value: 'restaurant', label: '🍽️ Food Court/Restaurants' },
+              ],
+            },
+            {
+              id: 'hvacLoad',
+              label: 'HVAC load?',
+              type: 'select',
+              options: [
+                { value: 'high', label: 'High (Central system for entire mall)' },
+                { value: 'medium', label: 'Medium (Shared systems)' },
+                { value: 'tenant-controlled', label: 'Tenant-Controlled' },
+              ],
+            },
+          ],
+          insights: {
+            'grocery': 'Grocery stores have high refrigeration loads - backup power prevents inventory loss',
+            'cinema': 'Movie theaters create peak demand during shows - battery storage can smooth these spikes',
+            'regional': 'Regional malls benefit significantly from demand charge management using battery storage',
+          },
+        };
+
+      case 'gas-station':
+        return {
+          title: 'Gas Station/C-Store Details',
+          icon: '⛽',
+          questions: [
+            {
+              id: 'stationType',
+              label: 'Station type?',
+              type: 'select',
+              options: [
+                { value: 'gas-only', label: 'Gas Pumps Only' },
+                { value: 'with-cstore', label: 'Gas + Convenience Store' },
+                { value: 'truck-stop', label: 'Truck Stop/Travel Center' },
+              ],
+            },
+            {
+              id: 'numPumps',
+              label: 'Number of fuel pumps?',
+              type: 'number',
+              placeholder: 'e.g., 8',
+              suffix: 'pumps',
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'off-grid', label: 'Off-Grid (Remote location)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'operations',
+              label: 'Operating hours?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 Operations' },
+                { value: 'extended', label: 'Extended Hours (16-20 hrs/day)' },
+                { value: 'standard', label: 'Standard Hours (12-14 hrs/day)' },
+              ],
+            },
+            {
+              id: 'additionalServices',
+              label: 'Additional services? (Select all that apply)',
+              type: 'multi-select',
+              options: [
+                { value: 'car-wash', label: '🚗 Car Wash' },
+                { value: 'ev-charging', label: '🔌 EV Charging Stations' },
+                { value: 'restaurant', label: '🍔 Quick Service Restaurant' },
+                { value: 'refrigeration', label: '❄️ Walk-in Refrigeration' },
+              ],
+            },
+          ],
+          insights: {
+            'ev-charging': 'Adding EV charging? We can size your system to handle both gas and electric vehicle energy needs',
+            'truck-stop': 'Truck stops with multiple services benefit from battery storage to manage complex load profiles',
+            '24-7': '24/7 stations need reliable backup - fuel pumps require power to operate',
+          },
+        };
+
+      case 'government':
+        return {
+          title: 'Government Building Details',
+          icon: '🏛️',
+          questions: [
+            {
+              id: 'buildingType',
+              label: 'Building type?',
+              type: 'select',
+              options: [
+                { value: 'city-hall', label: 'City Hall/Municipal Building' },
+                { value: 'library', label: 'Public Library' },
+                { value: 'police-fire', label: 'Police/Fire Station' },
+                { value: 'public-works', label: 'Public Works Facility' },
+                { value: 'community-center', label: 'Community Center' },
+              ],
+            },
+            {
+              id: 'buildingSize',
+              label: 'Building size?',
+              type: 'select',
+              options: [
+                { value: 'small', label: 'Small (< 25,000 sq ft)' },
+                { value: 'medium', label: 'Medium (25,000-75,000 sq ft)' },
+                { value: 'large', label: 'Large (> 75,000 sq ft)' },
+              ],
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup Required)' },
+              ],
+            },
+            {
+              id: 'resilienceLevel',
+              label: 'Resilience requirement?',
+              type: 'select',
+              options: [
+                { value: 'critical', label: 'Critical (Police/Fire/Emergency Services)' },
+                { value: 'important', label: 'Important (City Hall/Community Services)' },
+                { value: 'standard', label: 'Standard (Library/Parks)' },
+              ],
+            },
+            {
+              id: 'operations',
+              label: 'Operating hours?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 Operations (Police/Fire)' },
+                { value: 'extended', label: 'Extended Hours (6am-10pm)' },
+                { value: 'business', label: 'Business Hours (8am-5pm)' },
+              ],
+            },
+          ],
+          insights: {
+            'police-fire': 'Emergency services require instant backup power - battery systems provide <10ms switchover',
+            'critical': 'Critical infrastructure often qualifies for grants and incentives for resilience projects',
+            '24-7': '24/7 facilities benefit from demand charge reduction and backup power capabilities',
+          },
+        };
+
       default:
         return {
           title: 'Project Details',
@@ -532,7 +920,42 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
       {/* Questions */}
       <div className="space-y-4">
-        {industryConfig.questions.map((question) => renderQuestion(question))}
+        {industryConfig.questions
+          .filter((question: any) => {
+            // Handle conditional questions
+            if (!question.conditional) return true;
+            
+            const { field, operator, value, dependsOn } = question.conditional;
+            
+            if (dependsOn) {
+              // Legacy format: dependsOn field
+              return useCaseData[dependsOn] === value;
+            } else if (field && operator) {
+              // New format: field with operator
+              const fieldValue = useCaseData[field];
+              
+              switch (operator) {
+                case '>':
+                  return fieldValue > value;
+                case '<':
+                  return fieldValue < value;
+                case '==':
+                  return fieldValue === value;
+                case '!=':
+                  return fieldValue !== value;
+                case '>=':
+                  return fieldValue >= value;
+                case '<=':
+                  return fieldValue <= value;
+                default:
+                  return true;
+              }
+            }
+            
+            return true;
+          })
+          .map((question: any) => renderQuestion(question))
+        }
       </div>
 
       {/* AI Guidance (appears after answers) */}

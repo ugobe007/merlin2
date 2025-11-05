@@ -124,6 +124,51 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
       color: 'emerald'
     },
     {
+      id: 'tribal-casino',
+      icon: '🎰',
+      name: 'Tribal Casino',
+      description: '24/7 gaming, hospitality & entertainment',
+      typical: '2-8 MW / 4-8 hours',
+      savings: '$120K-400K/year',
+      color: 'yellow'
+    },
+    {
+      id: 'logistics-center',
+      icon: '🚚',
+      name: 'Logistics Center',
+      description: 'Amazon, FedEx, UPS distribution hubs',
+      typical: '1-5 MW / 3-6 hours',
+      savings: '$80K-250K/year',
+      color: 'orange'
+    },
+    {
+      id: 'shopping-center',
+      icon: '🏬',
+      name: 'Shopping Center/Mall',
+      description: 'Multi-tenant retail with HVAC & lighting',
+      typical: '1-4 MW / 4-6 hours',
+      savings: '$70K-200K/year',
+      color: 'pink'
+    },
+    {
+      id: 'gas-station',
+      icon: '⛽',
+      name: 'Gas Station/C-Store',
+      description: 'Convenience store with pumps & refrigeration',
+      typical: '150 kW - 400 kW / 2-3 hours',
+      savings: '$25K-60K/year',
+      color: 'blue'
+    },
+    {
+      id: 'government',
+      icon: '🏛️',
+      name: 'City/Government Building',
+      description: 'Municipal facilities requiring resilience',
+      typical: '1-3 MW / 4-8 hours',
+      savings: '$50K-150K/year',
+      color: 'indigo'
+    },
+    {
       id: 'custom',
       icon: '⚙️',
       name: 'Custom Configuration',
@@ -170,6 +215,16 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
         bg: isSelected ? 'bg-gradient-to-br from-emerald-100 to-teal-100' : 'bg-white',
         border: isSelected ? 'border-emerald-500' : 'border-gray-300 hover:border-emerald-400',
         shadow: isSelected ? 'shadow-lg shadow-emerald-300/50' : 'hover:shadow-md'
+      },
+      yellow: {
+        bg: isSelected ? 'bg-gradient-to-br from-yellow-100 to-amber-100' : 'bg-white',
+        border: isSelected ? 'border-yellow-500' : 'border-gray-300 hover:border-yellow-400',
+        shadow: isSelected ? 'shadow-lg shadow-yellow-300/50' : 'hover:shadow-md'
+      },
+      indigo: {
+        bg: isSelected ? 'bg-gradient-to-br from-indigo-100 to-blue-100' : 'bg-white',
+        border: isSelected ? 'border-indigo-500' : 'border-gray-300 hover:border-indigo-400',
+        shadow: isSelected ? 'shadow-lg shadow-indigo-300/50' : 'hover:shadow-md'
       },
       gray: {
         bg: isSelected ? 'bg-gradient-to-br from-gray-100 to-slate-100' : 'bg-white',

@@ -3,13 +3,13 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 
 // New customer-focused steps
+import StepIntro from './steps/Step_Intro';
 import Step0_Goals from './steps/Step0_Goals';
 import Step1_IndustryTemplate from './steps/Step1_IndustryTemplate';
 import Step2_UseCase from './steps/Step2_UseCase';
 import Step3_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
-import Step4_AddRenewables from './steps/Step3_AddRenewables';
-import Step5_LocationPricing from './steps/Step4_LocationPricing';
-import Step6_QuoteSummary from './steps/Step4_QuoteSummary'; // Renamed import to avoid confusion
+import Step4_LocationPricing from './steps/Step4_LocationPricing';
+import Step5_QuoteSummary from './steps/Step4_QuoteSummary';
 import QuoteCompletePage from './QuoteCompletePage';
 
 interface SmartWizardProps {
@@ -19,7 +19,8 @@ interface SmartWizardProps {
 }
 
 const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) => {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-1); // Start at -1 for intro screen
+  const [showIntro, setShowIntro] = useState(true);
   const [showCompletePage, setShowCompletePage] = useState(false);
   const [showAIWizard, setShowAIWizard] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Array<{
@@ -177,26 +178,75 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
       switch (selectedTemplate) {
         case 'ev-charging':
-          const numChargers = useCaseData.numChargers || 10;
-          const chargerType = useCaseData.chargerType || 'level2';
+          // New sophisticated EV charging calculations
+          const stationType = useCaseData.stationType || 'public-urban';
+          const level2Count = parseInt(useCaseData.level2Chargers) || 0;
+          const level2Power = parseFloat(useCaseData.level2Power) || 11;
+          const dcFastCount = parseInt(useCaseData.dcFastChargers) || 0;
+          const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150;
+          const utilizationProfile = useCaseData.utilizationProfile || 'medium';
+          const customUtilization = parseInt(useCaseData.customUtilization) || 40;
+          const peakConcurrency = parseInt(useCaseData.peakConcurrency) || 50;
           const gridConnection = useCaseData.gridConnection || 'on-grid';
           
-          if (chargerType === 'dcfast' && gridConnection === 'limited') {
-            message = `Most EV charging stations with ${numChargers} DC fast chargers and limited grid capacity save $60,000-$120,000 per year by using battery storage to avoid demand charges and manage peak loads.`;
-            savings = '$60-120K/year';
-            roi = '3-5 years';
-            configuration = `${numChargers * 0.15}MW / 2hr BESS + ${numChargers * 0.1}MW Solar`;
-          } else if (gridConnection === 'off-grid') {
-            message = `Off-grid EV charging requires robust energy storage. For ${numChargers} chargers, we recommend an oversized battery system with significant renewable generation to ensure 24/7 availability.`;
-            savings = '$80-150K/year';
-            roi = '4-6 years';
-            configuration = `${numChargers * 0.2}MW / 4hr BESS + ${numChargers * 0.25}MW Solar`;
+          // Calculate utilization rates based on location and profile
+          const utilizationRates: Record<string, Record<string, number>> = {
+            'low': { base: 15, highway: 25, urban: 20, workplace: 10, retail: 18, fleet: 30 },
+            'medium': { base: 35, highway: 45, urban: 40, workplace: 25, retail: 35, fleet: 60 },
+            'high': { base: 60, highway: 70, urban: 65, workplace: 45, retail: 58, fleet: 85 },
+            'very-high': { base: 80, highway: 85, urban: 82, workplace: 65, retail: 75, fleet: 95 },
+            'custom': { base: customUtilization, highway: customUtilization, urban: customUtilization, workplace: customUtilization, retail: customUtilization, fleet: customUtilization }
+          };
+          
+          // Location multipliers for utilization
+          const locationKey = stationType.includes('highway') ? 'highway' : 
+                            stationType.includes('urban') ? 'urban' :
+                            stationType.includes('workplace') ? 'workplace' :
+                            stationType.includes('retail') ? 'retail' :
+                            stationType.includes('fleet') ? 'fleet' : 'base';
+                            
+          const avgUtilization = utilizationRates[utilizationProfile]?.[locationKey] || utilizationRates[utilizationProfile]?.['base'] || 35;
+          
+          // Calculate total power requirements
+          const level2TotalPower = level2Count * level2Power; // kW
+          const dcFastTotalPower = dcFastCount * dcFastPower; // kW
+          const maxConcurrentPower = (level2TotalPower + dcFastTotalPower) * (peakConcurrency / 100); // kW
+          const avgContinuousPower = (level2TotalPower + dcFastTotalPower) * (avgUtilization / 100); // kW
+          
+          // Battery sizing based on grid connection and power profile
+          let batteryMW, batteryHours, solarMW, annualSavings, roiYears;
+          
+          if (gridConnection === 'off-grid') {
+            // Off-grid: Need to handle full load + reserve
+            batteryMW = maxConcurrentPower * 1.5 / 1000; // 150% of peak + reserve
+            batteryHours = 6; // Extended runtime for off-grid
+            solarMW = avgContinuousPower * 2.5 / 1000; // Oversized solar for charging + batteries
+            annualSavings = avgContinuousPower * 8760 * 0.15; // $0.15/kWh avoided grid cost
+            roiYears = 5;
+            message = `Off-grid charging station with ${level2Count + dcFastCount} total chargers (${level2Count}×${level2Power}kW + ${dcFastCount}×${dcFastPower}kW). ${avgUtilization}% utilization requires robust energy storage with significant solar generation.`;
+            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+          } else if (gridConnection === 'limited') {
+            // Limited grid: Focus on demand charge reduction
+            batteryMW = maxConcurrentPower * 0.8 / 1000; // 80% of peak to manage demand
+            batteryHours = 2; // Short duration for demand management
+            solarMW = avgContinuousPower * 1.2 / 1000; // Solar to offset energy usage
+            annualSavings = maxConcurrentPower * 12 * 25; // $25/kW-month demand charges
+            roiYears = 3;
+            message = `Limited grid capacity for ${level2Count + dcFastCount} chargers requires demand management. ${peakConcurrency}% peak concurrency (${maxConcurrentPower.toFixed(0)}kW) creates significant demand charges that storage can reduce by 70-80%.`;
+            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
           } else {
-            message = `For ${numChargers} Level 2 chargers, combining solar with battery storage allows you to charge vehicles during the day using clean energy while reducing grid dependency during peak hours.`;
-            savings = '$30-60K/year';
-            roi = '4-7 years';
-            configuration = `${numChargers * 0.01}MW / 3hr BESS + ${numChargers * 0.015}MW Solar`;
+            // On-grid: Optimize for demand charges and energy arbitrage
+            batteryMW = maxConcurrentPower * 0.6 / 1000; // 60% of peak for demand shaving
+            batteryHours = 2;
+            solarMW = avgContinuousPower * 1.0 / 1000; // Solar to match average consumption
+            annualSavings = (maxConcurrentPower * 12 * 20) + (avgContinuousPower * 8760 * 0.05); // Demand + energy savings
+            roiYears = 4;
+            message = `${stationType.replace('-', ' ')} station with ${level2Count + dcFastCount} total chargers. ${avgUtilization}% average utilization creates demand charges that storage can reduce while enabling solar integration.`;
+            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
           }
+          
+          savings = `$${Math.round(annualSavings/1000)}K/year`;
+          roi = `${roiYears} years`;
           break;
 
         case 'car-wash':
@@ -592,9 +642,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   };
 
   const handleNext = () => {
-    if (step < 6) {
+    if (step < 5) {
       setStep(step + 1);
-    } else if (step === 6) {
+    } else if (step === 5) {
       // After quote summary, show complete page
       setShowCompletePage(true);
     }
@@ -612,9 +662,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       case 1: return useTemplate ? selectedTemplate !== '' : true;
       case 2: return Object.keys(useCaseData).length > 0; // Use case questions answered
       case 3: return storageSizeMW > 0 && durationHours > 0;
-      case 4: return true; // Renewables - optional
-      case 5: return location !== '' && electricityRate > 0;
-      case 6: return true; // Quote summary, defaults are set
+      case 4: return location !== '' && electricityRate > 0;
+      case 5: return true; // Quote summary, defaults are set
       default: return false;
     }
   };
@@ -625,12 +674,22 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       'Choose Your Industry',
       'Tell Us About Your Operation',
       'Configure Your System',
-      'Add Renewables?',
       'Location & Pricing',
       'Review Your Quote'
     ];
     return titles[step] || '';
   };  const renderStep = () => {
+    if (step === -1) {
+      return (
+        <StepIntro
+          onStart={() => {
+            setShowIntro(false);
+            setStep(0);
+          }}
+        />
+      );
+    }
+
     switch (step) {
       case 0:
         return (
@@ -665,24 +724,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             durationHours={durationHours}
             setDurationHours={setDurationHours}
             industryTemplate={selectedTemplate}
+            aiRecommendation={aiUseCaseRecommendation || undefined}
           />
         );
       case 4:
         return (
-          <Step4_AddRenewables
-            includeRenewables={includeRenewables}
-            setIncludeRenewables={setIncludeRenewables}
-            solarMW={solarMW}
-            setSolarMW={setSolarMW}
-            windMW={windMW}
-            setWindMW={setWindMW}
-            generatorMW={generatorMW}
-            setGeneratorMW={setGeneratorMW}
-          />
-        );
-      case 5:
-        return (
-          <Step5_LocationPricing
+          <Step4_LocationPricing
             location={location}
             setLocation={setLocation}
             electricityRate={electricityRate}
@@ -691,9 +738,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setKnowsRate={setKnowsRate}
           />
         );
-      case 6:
+      case 5:
         return (
-          <Step6_QuoteSummary
+          <Step5_QuoteSummary
             storageSizeMW={storageSizeMW}
             durationHours={durationHours}
             solarMW={solarMW}
@@ -834,60 +881,75 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">🪄</span>
-              <div>
-                <h2 className="text-2xl font-bold">Smart Wizard</h2>
-                <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
+        {/* Header - Hide on intro screen */}
+        {step >= 0 && (
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl">🪄</span>
+                <div>
+                  <h2 className="text-2xl font-bold">Smart Wizard</h2>
+                  <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* AI Wizard Button moved to Step 6 - no longer in header */}
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 text-3xl font-bold"
+                >
+                  ×
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* AI Wizard Button moved to Step 5 - no longer in header */}
-              <button
-                onClick={onClose}
-                className="text-white hover:text-gray-200 text-3xl font-bold"
-              >
-                ×
-              </button>
+            
+            {/* Progress bar */}
+            <div className="mt-4 bg-white/20 rounded-full h-2">
+              <div
+                className="bg-white rounded-full h-2 transition-all duration-300"
+                style={{ width: `${((step + 1) / 6) * 100}%` }}
+              />
             </div>
           </div>
-          
-          {/* Progress bar */}
-          <div className="mt-4 bg-white/20 rounded-full h-2">
-            <div
-              className="bg-white rounded-full h-2 transition-all duration-300"
-              style={{ width: `${((step + 1) / 7) * 100}%` }}
-            />
+        )}
+
+        {/* Intro screen - full size with close button */}
+        {step === -1 && (
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={onClose}
+              className="bg-white hover:bg-gray-100 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg text-2xl font-bold transition-all"
+            >
+              ×
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Content */}
-        <div className="p-8 max-h-[70vh] overflow-y-auto">
+        <div className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}>
           {renderStep()}
         </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 p-6 rounded-b-2xl border-t-2 border-gray-200 flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            disabled={step === 0}
-            className={`px-6 py-3 rounded-xl font-bold transition-all ${
-              step === 0
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
-            }`}
-          >
-            ← Back
-          </button>
+        {/* Footer - Hide on intro screen */}
+        {step >= 0 && (
+          <div className="bg-gray-50 p-6 rounded-b-2xl border-t-2 border-gray-200 flex items-center justify-between">
+            <button
+              onClick={handleBack}
+              disabled={step === 0}
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                step === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
+              }`}
+            >
+              ← Back
+            </button>
 
-          <div className="text-sm text-gray-500">
-            Step {step + 1} of 6
-          </div>
+            <div className="text-sm text-gray-500">
+              Step {step + 1} of 6
+            </div>
 
-          <button
+            <button
             onClick={handleNext}
             disabled={!canProceed()}
             className={`px-8 py-3 rounded-xl font-bold transition-all ${
@@ -896,9 +958,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {step === 6 ? 'Get My Quote →' : 'Next →'}
+            {step === 5 ? 'Get My Quote →' : 'Next →'}
           </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* AI Wizard - Intelligent Suggestions Modal */}
