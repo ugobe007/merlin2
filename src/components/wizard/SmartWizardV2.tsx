@@ -69,6 +69,93 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [selectedShipping, setSelectedShipping] = useState('best-value');
   const [selectedFinancing, setSelectedFinancing] = useState('cash');
 
+  // AI Baseline - calculated in background
+  const [aiBaseline, setAiBaseline] = useState<{
+    optimalPowerMW: number;
+    optimalDurationHrs: number;
+    optimalSolarMW: number;
+    improvementText: string;
+  } | null>(null);
+
+  // Calculate AI baseline whenever goals or industry changes
+  useEffect(() => {
+    if (selectedGoal && selectedTemplate) {
+      const goals = Array.isArray(selectedGoal) ? selectedGoal : [selectedGoal];
+      const industry = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
+      
+      // Industry-specific optimal ratios
+      const industryProfiles: { [key: string]: { powerMW: number; durationHrs: number; solarRatio: number } } = {
+        'manufacturing': { powerMW: 3.5, durationHrs: 4, solarRatio: 1.2 },
+        'office': { powerMW: 1.0, durationHrs: 4, solarRatio: 1.0 },
+        'datacenter': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
+        'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
+        'hotel': { powerMW: 3.0, durationHrs: 5, solarRatio: 1.4 },
+        'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
+        'agriculture': { powerMW: 2.0, durationHrs: 6, solarRatio: 2.0 },
+        'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
+        'ev-charging': { powerMW: 5.0, durationHrs: 2, solarRatio: 1.0 },
+        'apartment': { powerMW: 2.0, durationHrs: 4, solarRatio: 1.2 },
+        'university': { powerMW: 4.0, durationHrs: 5, solarRatio: 1.3 },
+        'indoor-farm': { powerMW: 3.0, durationHrs: 12, solarRatio: 1.8 },
+        'hospital': { powerMW: 5.0, durationHrs: 8, solarRatio: 1.0 },
+        'cold-storage': { powerMW: 2.0, durationHrs: 8, solarRatio: 1.5 },
+      };
+      
+      const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
+      
+      // Goal-specific adjustments
+      let powerMultiplier = 1.0;
+      let durationMultiplier = 1.0;
+      
+      if (goals.includes('backup-power')) {
+        durationMultiplier *= 1.5;
+      }
+      if (goals.includes('reduce-costs') || goals.includes('grid-revenue')) {
+        powerMultiplier *= 1.2;
+      }
+      if (goals.includes('renewable-storage')) {
+        durationMultiplier *= 1.3;
+      }
+      
+      const optimalPowerMW = profile.powerMW * powerMultiplier;
+      const optimalDurationHrs = profile.durationHrs * durationMultiplier;
+      const optimalSolarMW = profile.powerMW * powerMultiplier * profile.solarRatio;
+      
+      setAiBaseline({
+        optimalPowerMW,
+        optimalDurationHrs,
+        optimalSolarMW,
+        improvementText: '', // Will calculate when user reaches step 5
+      });
+    }
+  }, [selectedGoal, selectedTemplate]);
+
+  // Calculate improvement text when user reaches step 5
+  useEffect(() => {
+    if (step === 5 && aiBaseline) {
+      const userEnergyMWh = storageSizeMW * durationHours;
+      const optimalEnergyMWh = aiBaseline.optimalPowerMW * aiBaseline.optimalDurationHrs;
+      const efficiencyDiff = ((optimalEnergyMWh / userEnergyMWh - 1) * 100);
+      
+      const userCost = (storageSizeMW * durationHours * 250000) + (storageSizeMW * 150000); // Battery + PCS
+      const optimalCost = (aiBaseline.optimalPowerMW * aiBaseline.optimalDurationHrs * 250000) + (aiBaseline.optimalPowerMW * 150000);
+      const costDiff = userCost - optimalCost;
+      
+      let improvementText = '';
+      if (Math.abs(efficiencyDiff) < 10 && Math.abs(costDiff) < 100000) {
+        improvementText = '✓ Optimal Configuration';
+      } else if (costDiff > 0) {
+        improvementText = `💰 Save $${(costDiff / 1000000).toFixed(1)}M`;
+      } else if (efficiencyDiff > 0) {
+        improvementText = `⚡ ${Math.abs(efficiencyDiff).toFixed(0)}% More Efficient`;
+      } else {
+        improvementText = `🔋 ${Math.abs(efficiencyDiff).toFixed(0)}% More Power`;
+      }
+      
+      setAiBaseline({ ...aiBaseline, improvementText });
+    }
+  }, [step, storageSizeMW, durationHours, aiBaseline]);
+
   // Apply industry template defaults
   useEffect(() => {
     const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
@@ -459,6 +546,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             paybackYears={costs.paybackYears}
             taxCredit30Percent={costs.taxCredit}
             netCostAfterTaxCredit={costs.netCost}
+            onOpenAIWizard={handleOpenAIWizard}
+            showAIWizard={showAIWizard}
+            aiBaseline={aiBaseline}
           />
         );
       default:
@@ -590,17 +680,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* AI Wizard Button - More Prominent */}
-              {step >= 1 && (
-                <button
-                  onClick={handleOpenAIWizard}
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-5 py-2.5 rounded-lg font-bold transition-all hover:scale-105 flex items-center gap-2 shadow-lg border-2 border-white/50 animate-pulse hover:animate-none"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span>AI Wizard</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
+              {/* AI Wizard Button moved to Step 5 - no longer in header */}
               <button
                 onClick={onClose}
                 className="text-white hover:text-gray-200 text-3xl font-bold"

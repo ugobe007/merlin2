@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
 
 interface Step4_QuoteSummaryProps {
@@ -22,6 +23,16 @@ interface Step4_QuoteSummaryProps {
   paybackYears: number;
   taxCredit30Percent: number;
   netCostAfterTaxCredit: number;
+  
+  // AI Wizard props
+  onOpenAIWizard?: () => void;
+  showAIWizard?: boolean;
+  aiBaseline?: {
+    optimalPowerMW: number;
+    optimalDurationHrs: number;
+    optimalSolarMW: number;
+    improvementText: string;
+  } | null;
 }
 
 const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
@@ -42,6 +53,9 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   paybackYears,
   taxCredit30Percent,
   netCostAfterTaxCredit,
+  onOpenAIWizard,
+  showAIWizard,
+  aiBaseline,
 }) => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
@@ -235,6 +249,46 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
           <div className="text-4xl font-bold">${(adjustedNetCost / 1000000).toFixed(2)}M</div>
         </div>
       </div>
+
+      {/* AI Wizard Button - Prominent placement below Net Cost */}
+      {onOpenAIWizard && (
+        <div className="mt-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <Sparkles className="w-6 h-6 text-orange-500" />
+                <h3 className="text-xl font-bold text-gray-800">AI Configuration Optimizer</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-3">
+                Let our AI analyze your configuration and suggest optimizations based on your goals and industry best practices.
+              </p>
+              {aiBaseline && aiBaseline.improvementText && (
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400 rounded-lg px-4 py-2 shadow-md">
+                  <span className="text-green-700 font-bold text-base">{aiBaseline.improvementText}</span>
+                  <span className="text-green-600 text-xs">← Click AI Wizard to see details</span>
+                </div>
+              )}
+              {(!aiBaseline || !aiBaseline.improvementText) && (
+                <div className="inline-flex items-center gap-2 bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5">
+                  <span className="text-blue-700 font-semibold text-sm">🤖 AI Analyzing...</span>
+                  <span className="text-blue-600 text-xs">Calculating optimal configuration</span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onOpenAIWizard}
+              className="ml-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center gap-3 shadow-xl border-2 border-white/50"
+            >
+              <Sparkles className="w-6 h-6" />
+              <div className="text-left">
+                <div className="text-lg">Open AI Wizard</div>
+                <div className="text-xs opacity-90">Get Smart Recommendations</div>
+              </div>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Expandable Options Sections */}
       <div className="space-y-4">
