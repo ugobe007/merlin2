@@ -11,7 +11,7 @@ interface QuoteCompletePageProps {
     generatorMW: number;
     location: string;
     selectedGoal: string;
-    industryTemplate: string;
+    industryTemplate: string | string[];
     
     // Financial
     totalProjectCost: number;
@@ -123,7 +123,8 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     setShowAIConfig(false);
   };
 
-  const getIndustryName = (template: string) => {
+  const getIndustryName = (template: string | string[]) => {
+    const templateKey = Array.isArray(template) ? template[0] : template;
     const industryMap: { [key: string]: string } = {
       'manufacturing': 'Manufacturing Facility',
       'data-center': 'Data Center',
@@ -138,7 +139,13 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       'apartment': 'Apartment Building',
       'indoor-farm': 'Indoor Farm'
     };
-    return industryMap[template] || template;
+    const result = industryMap[templateKey] || templateKey;
+    
+    // If multiple templates, show count
+    if (Array.isArray(template) && template.length > 1) {
+      return `${result} (+${template.length - 1} more)`;
+    }
+    return result;
   };
 
   const totalEnergyMWh = quoteData.storageSizeMW * quoteData.durationHours;
