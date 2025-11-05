@@ -232,13 +232,17 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                     key={template.id}
                     onClick={() => {
                       const currentSelection = Array.isArray(selectedTemplate) ? selectedTemplate : (selectedTemplate ? [selectedTemplate] : []);
+                      console.log('🔍 Before click:', { currentSelection, clickedId: template.id });
+                      
                       if (currentSelection.includes(template.id)) {
                         // Remove if already selected
                         const newSelection = currentSelection.filter(id => id !== template.id);
+                        console.log('❌ Removing:', { newSelection });
                         setSelectedTemplate(newSelection);
                       } else {
                         // Add to selection
                         const newSelection = [...currentSelection, template.id];
+                        console.log('✅ Adding:', { newSelection });
                         setSelectedTemplate(newSelection);
                       }
                     }}
