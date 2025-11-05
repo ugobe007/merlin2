@@ -7,6 +7,7 @@ function App() {
 
   // Admin authentication with email and password
   // Commented out for now - can be enabled when admin access button is added
+  // TODO: Implement proper admin authentication with backend validation
   // const handleAdminAccess = () => {
   //   const email = prompt('Enter admin email:');
   //   if (!email) return;
@@ -14,8 +15,9 @@ function App() {
   //   const password = prompt('Enter admin password:');
   //   if (!password) return;
   //   
-  //   // Check admin credentials (hardcoded for now, can be moved to backend)
-  //   if (email === 'admin@merlin.energy' && password === 'merlin2025') {
+  //   // Check admin credentials (credentials should be validated via secure backend API)
+  //   // Validate credentials via API call
+  //   if (/* API validation success */) {
   //     setShowAdmin(true);
   //   } else {
   //     alert('Incorrect email or password');
