@@ -7,7 +7,7 @@ interface QuoteData {
   windMW: number;
   generatorMW: number;
   location: string;
-  selectedGoal: string;
+  selectedGoal: string | string[];
   industryTemplate: string | string[];
   totalProjectCost: number;
   annualSavings: number;
@@ -18,6 +18,15 @@ interface QuoteData {
   shippingOption: string;
   financingOption: string;
 }
+
+const formatGoals = (goal: string | string[]): string => {
+  if (Array.isArray(goal)) {
+    if (goal.length === 0) return '';
+    if (goal.length === 1) return goal[0].replace(/-/g, ' ');
+    return goal.map(g => g.replace(/-/g, ' ')).join(', ');
+  }
+  return goal.replace(/-/g, ' ');
+};
 
 const getIndustryName = (template: string | string[]): string => {
   const templateKey = Array.isArray(template) ? template[0] : template;
@@ -524,7 +533,7 @@ export const generatePDF = (quoteData: QuoteData): void => {
           <div class="section">
             <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #f59e0b;">
               <div style="font-weight: bold; margin-bottom: 10px; color: #d97706;">🎯 Primary Goal</div>
-              <div style="font-size: 18px; text-transform: capitalize;">${quoteData.selectedGoal.replace('-', ' ')}</div>
+              <div style="font-size: 18px; text-transform: capitalize;">${formatGoals(quoteData.selectedGoal)}</div>
             </div>
           </div>
         </div>
@@ -576,7 +585,7 @@ PROJECT INFORMATION
 Use Case:,${industryName}
 Customer:,${industryName} Facility
 Location:,${quoteData.location || 'To Be Determined'}
-Primary Goal:,${quoteData.selectedGoal.replace('-', ' ').toUpperCase()}
+Primary Goal:,${formatGoals(quoteData.selectedGoal).toUpperCase()}
 System Type:,${systemDescription}
 
 ====================================
@@ -1002,7 +1011,7 @@ export const generateWord = (quoteData: QuoteData): void => {
     </tr>
     <tr>
       <td style="background-color: #f9fafb; border: 1px solid #d1d5db; padding: 8px 12px; font-weight: bold; font-size: 13px;">Project Name:</td>
-      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${industryName} - ${quoteData.selectedGoal.replace('-', ' ').toUpperCase()}</td>
+      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${industryName} - ${formatGoals(quoteData.selectedGoal).toUpperCase()}</td>
     </tr>
     <tr>
       <td style="background-color: #f9fafb; border: 1px solid #d1d5db; padding: 8px 12px; font-weight: bold; font-size: 13px;">Quote Date:</td>

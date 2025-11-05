@@ -9,7 +9,7 @@ interface Step6_FinalOutputProps {
     windMW: number;
     generatorMW: number;
     location: string;
-    selectedGoal: string;
+    selectedGoal: string | string[];
     industryTemplate: string | string[];
     
     // Financial
