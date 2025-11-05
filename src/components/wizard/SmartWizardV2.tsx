@@ -592,9 +592,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   };
 
   const handleNext = () => {
-    if (step < 5) {
+    if (step < 6) {
       setStep(step + 1);
-    } else if (step === 5) {
+    } else if (step === 6) {
       // After quote summary, show complete page
       setShowCompletePage(true);
     }
@@ -610,10 +610,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     switch (step) {
       case 0: return Array.isArray(selectedGoal) ? selectedGoal.length > 0 : selectedGoal !== '';
       case 1: return useTemplate ? selectedTemplate !== '' : true;
-      case 2: return storageSizeMW > 0 && durationHours > 0;
-      case 3: return true; // Optional step
-      case 4: return location !== '' && electricityRate > 0;
-      case 5: return true; // Options step, defaults are set
+      case 2: return Object.keys(useCaseData).length > 0; // Use case questions answered
+      case 3: return storageSizeMW > 0 && durationHours > 0;
+      case 4: return true; // Renewables - optional
+      case 5: return location !== '' && electricityRate > 0;
+      case 6: return true; // Quote summary, defaults are set
       default: return false;
     }
   };
