@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface Step1_IndustryTemplateProps {
-  selectedTemplate: string | string[];
-  setSelectedTemplate: (value: string | string[]) => void;
+  selectedTemplate: string;
+  setSelectedTemplate: (value: string) => void;
   useTemplate: boolean;
   setUseTemplate: (value: boolean) => void;
 }
@@ -13,7 +13,6 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
   useTemplate,
   setUseTemplate,
 }) => {
-  console.log('🔄 Step1 RENDER - selectedTemplate:', selectedTemplate);
   
   const templates = [
     {
@@ -220,37 +219,18 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
         {useTemplate ? (
           <>
             <p className="text-center text-gray-600 mb-6">
-              🚨 TESTING VERSION 2.0 🚨 Choose one or more industries to get started with pre-configured values (click to select/deselect)
+              Choose an industry to get started with pre-configured values
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2">
               {templates.map((template) => {
-                const selectedArray = Array.isArray(selectedTemplate) ? selectedTemplate : (selectedTemplate ? [selectedTemplate] : []);
-                const isSelected = selectedArray.includes(template.id);
-                console.log(`🎨 Rendering ${template.id}:`, { selectedTemplate, selectedArray, isSelected });
+                const isSelected = selectedTemplate === template.id;
                 const colorClasses = getColorClasses(template.color, isSelected);
                 
                 return (
                   <button
                     key={template.id}
-                    onClick={() => {
-                      const currentSelection = Array.isArray(selectedTemplate) ? selectedTemplate : (selectedTemplate ? [selectedTemplate] : []);
-                      console.log('🔍 Before click:', { currentSelection, clickedId: template.id });
-                      
-                      if (currentSelection.includes(template.id)) {
-                        // Remove if already selected
-                        const newSelection = currentSelection.filter(id => id !== template.id);
-                        console.log('❌ Removing:', { newSelection });
-                        setSelectedTemplate(newSelection);
-                        console.log('📤 Called setSelectedTemplate with:', newSelection);
-                      } else {
-                        // Add to selection
-                        const newSelection = [...currentSelection, template.id];
-                        console.log('✅ Adding:', { newSelection });
-                        setSelectedTemplate(newSelection);
-                        console.log('📤 Called setSelectedTemplate with:', newSelection);
-                      }
-                    }}
+                    onClick={() => setSelectedTemplate(template.id)}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${colorClasses.bg} ${colorClasses.border} ${colorClasses.shadow} hover:scale-105`}
                   >
                     <div className="space-y-3">

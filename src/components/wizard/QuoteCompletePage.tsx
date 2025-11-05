@@ -53,8 +53,65 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   const [aiSuggestion, setAiSuggestion] = useState<{
     storageSizeMW: number;
     durationHours: number;
+    solarMW?: number;
+    windMW?: number;
     reasoning: string;
+    costImpact: string;
+    roiChange: string;
+    warning?: string;
   } | null>(null);
+  
+  // AI Baseline Model - calculates optimal configuration based on inputs
+  const calculateOptimalBaseline = () => {
+    const goals = Array.isArray(quoteData.selectedGoal) ? quoteData.selectedGoal : [quoteData.selectedGoal];
+    const industry = Array.isArray(quoteData.industryTemplate) ? quoteData.industryTemplate[0] : quoteData.industryTemplate;
+    
+    // Industry-specific optimal ratios
+    const industryProfiles: { [key: string]: { powerMW: number; durationHrs: number; solarRatio: number } } = {
+      'manufacturing': { powerMW: 3.5, durationHrs: 4, solarRatio: 1.2 },
+      'data-center': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
+      'cold-storage': { powerMW: 2.0, durationHrs: 8, solarRatio: 1.5 },
+      'hospital': { powerMW: 5.0, durationHrs: 8, solarRatio: 1.0 },
+      'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
+      'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
+      'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
+    };
+    
+    const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
+    
+    // Goal-specific adjustments
+    let powerMultiplier = 1.0;
+    let durationMultiplier = 1.0;
+    
+    if (goals.includes('backup-power')) {
+      durationMultiplier *= 1.5; // More duration for backup
+    }
+    if (goals.includes('reduce-costs') || goals.includes('grid-revenue')) {
+      powerMultiplier *= 1.2; // More power for demand charges and grid services
+    }
+    if (goals.includes('renewable-storage')) {
+      durationMultiplier *= 1.3; // More storage for renewable energy
+    }
+    
+    return {
+      optimalPowerMW: profile.powerMW * powerMultiplier,
+      optimalDurationHrs: profile.durationHrs * durationMultiplier,
+      optimalSolarMW: profile.powerMW * powerMultiplier * profile.solarRatio,
+      costPerMWh: 350000, // Base cost per MWh
+      annualSavingsRate: 0.15, // 15% of system cost annually
+    };
+  };
+
+  const calculateROI = (powerMW: number, durationHrs: number, solarMW: number = 0) => {
+    const energyMWh = powerMW * durationHrs;
+    const batteryCost = energyMWh * 350000;
+    const solarCost = solarMW * 1200000;
+    const totalCost = batteryCost + solarCost;
+    const annualSavings = totalCost * 0.15; // 15% annual savings
+    const payback = totalCost / annualSavings;
+    
+    return { totalCost, annualSavings, payback, energyMWh };
+  };
 
   const handleEmailSubmit = () => {
     if (email && email.includes('@')) {
@@ -71,49 +128,101 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   };
 
   const handleAIGenerate = () => {
-    if (aiPrompt.trim()) {
-      setIsGenerating(true);
+    if (!aiPrompt.trim()) return;
+    
+    setIsGenerating(true);
+    
+    // Simulate AI processing
+    setTimeout(() => {
+      const prompt = aiPrompt.toLowerCase();
+      const baseline = calculateOptimalBaseline();
+      const currentROI = calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
+      const optimalROI = calculateROI(baseline.optimalPowerMW, baseline.optimalDurationHrs, baseline.optimalSolarMW);
       
-      // Simulate AI processing (in production, this calls your AI service)
-      setTimeout(() => {
-        const prompt = aiPrompt.toLowerCase();
-        let newSize = quoteData.storageSizeMW;
-        let newDuration = quoteData.durationHours;
-        let reasoning = '';
-        
-        // Parse user intent and generate smart recommendations
-        if (prompt.includes('reduce') || prompt.includes('smaller') || prompt.includes('cheaper')) {
-          newSize = Math.max(0.5, quoteData.storageSizeMW * 0.7);
-          newDuration = Math.max(2, quoteData.durationHours - 1);
-          reasoning = `I've optimized for cost savings by reducing the system to ${newSize.toFixed(1)}MW/${newDuration}hr. This smaller configuration still covers your peak demand periods and reduces upfront costs by ~30% while maintaining ${Math.round((newSize / quoteData.storageSizeMW) * 100)}% of the original capacity.`;
-        } else if (prompt.includes('increase') || prompt.includes('bigger') || prompt.includes('more capacity')) {
-          newSize = quoteData.storageSizeMW * 1.3;
-          newDuration = quoteData.durationHours + 1;
-          reasoning = `I've increased capacity to ${newSize.toFixed(1)}MW/${newDuration}hr to provide more resilience and energy arbitrage opportunities. This enhanced configuration offers ${Math.round(((newSize - quoteData.storageSizeMW) / quoteData.storageSizeMW) * 100)}% more capacity for peak shaving and can handle longer discharge periods.`;
-        } else if (prompt.includes('backup') || prompt.includes('outage') || prompt.includes('resilience')) {
-          newDuration = Math.max(4, quoteData.durationHours + 2);
-          reasoning = `For backup and resilience, I've extended the duration to ${newDuration} hours while keeping ${newSize.toFixed(1)}MW power output. This ensures you can ride through extended grid outages and maintain critical operations longer.`;
-        } else if (prompt.includes('demand') || prompt.includes('peak') || prompt.includes('charges')) {
-          newSize = quoteData.storageSizeMW * 1.2;
-          newDuration = Math.max(2, Math.min(4, quoteData.durationHours));
-          reasoning = `For optimal demand charge reduction, I've increased power to ${newSize.toFixed(1)}MW with ${newDuration}hr duration. This configuration can shave more peak demand and typically provides the best ROI for commercial/industrial demand charge management.`;
-        } else if (prompt.includes('arbitrage') || prompt.includes('energy') || prompt.includes('trading')) {
-          newDuration = Math.max(4, quoteData.durationHours + 1);
-          reasoning = `For energy arbitrage, longer duration (${newDuration}hrs) at ${newSize.toFixed(1)}MW is ideal. This allows you to store more low-cost off-peak energy and discharge during high-price periods, maximizing your savings from time-of-use rates.`;
-        } else {
-          // Generic optimization
-          newSize = quoteData.storageSizeMW * 1.1;
-          reasoning = `Based on your ${quoteData.industryTemplate} profile and ${quoteData.selectedGoal} goal, I recommend ${newSize.toFixed(1)}MW/${newDuration}hr. This balanced configuration optimizes both upfront cost and long-term savings for your use case.`;
+      let newSize = quoteData.storageSizeMW;
+      let newDuration = quoteData.durationHours;
+      let newSolar = quoteData.solarMW;
+      let reasoning = '';
+      let warning = '';
+      
+      // Analyze current configuration vs optimal
+      const isOversized = quoteData.storageSizeMW > baseline.optimalPowerMW * 1.3;
+      const isUndersized = quoteData.storageSizeMW < baseline.optimalPowerMW * 0.7;
+      const isOverduration = quoteData.durationHours > baseline.optimalDurationHrs * 1.4;
+      const isUnderduration = quoteData.durationHours < baseline.optimalDurationHrs * 0.6;
+      
+      // Smart response to user request
+      if (prompt.includes('optim') || prompt.includes('best') || prompt.includes('ideal')) {
+        // Return to optimal baseline
+        newSize = baseline.optimalPowerMW;
+        newDuration = baseline.optimalDurationHrs;
+        newSolar = baseline.optimalSolarMW;
+        reasoning = `Based on your ${getIndustryName(quoteData.industryTemplate)} industry and goals (${Array.isArray(quoteData.selectedGoal) ? quoteData.selectedGoal.join(', ') : quoteData.selectedGoal}), the optimal configuration is ${newSize.toFixed(1)}MW / ${newDuration}hr with ${newSolar.toFixed(1)}MW solar. This maximizes ROI while meeting your operational needs.`;
+      } else if (prompt.includes('reduce') || prompt.includes('cheaper') || prompt.includes('smaller') || prompt.includes('cut cost')) {
+        newSize = Math.max(0.5, baseline.optimalPowerMW * 0.75);
+        newDuration = Math.max(2, baseline.optimalDurationHrs * 0.85);
+        const newROI = calculateROI(newSize, newDuration, newSolar);
+        reasoning = `I've reduced the system to ${newSize.toFixed(1)}MW / ${newDuration}hr, cutting upfront costs by ~${Math.round((1 - newROI.totalCost / currentROI.totalCost) * 100)}%. This maintains ${Math.round((newSize / baseline.optimalPowerMW) * 100)}% of optimal capacity.`;
+        if (newSize < baseline.optimalPowerMW * 0.7) {
+          warning = '⚠️ Warning: This configuration may not fully meet your peak demand needs. Consider backup power sources or load shedding.';
         }
+      } else if (prompt.includes('increase') || prompt.includes('more') || prompt.includes('bigger') || prompt.includes('larger')) {
+        // User wants MORE power
+        newSize = quoteData.storageSizeMW * 1.3;
+        newDuration = quoteData.durationHours;
+        const newROI = calculateROI(newSize, newDuration, newSolar);
         
-        setAiSuggestion({
-          storageSizeMW: newSize,
-          durationHours: newDuration,
-          reasoning
-        });
-        setIsGenerating(false);
-      }, 2000);
-    }
+        if (newSize > baseline.optimalPowerMW * 1.4) {
+          warning = `⚠️ Caution: ${newSize.toFixed(1)}MW exceeds your optimal needs by ${Math.round(((newSize / baseline.optimalPowerMW) - 1) * 100)}%. This adds $${((newROI.totalCost - optimalROI.totalCost) / 1000000).toFixed(1)}M in costs with diminishing returns. Payback extends to ${newROI.payback.toFixed(1)} years.`;
+          reasoning = `I can increase to ${newSize.toFixed(1)}MW, but this is ${Math.round(((newSize / baseline.optimalPowerMW) - 1) * 100)}% above your optimal size. Unless you have specific high-power demands or future expansion plans, this may not be economically justified.`;
+        } else {
+          reasoning = `Increased to ${newSize.toFixed(1)}MW / ${newDuration}hr for enhanced capacity. This provides ${Math.round(((newSize - quoteData.storageSizeMW) / quoteData.storageSizeMW) * 100)}% more power for peak shaving and grid services.`;
+        }
+      } else if (prompt.includes('backup') || prompt.includes('outage') || prompt.includes('resilience') || prompt.includes('emergency')) {
+        newDuration = Math.max(baseline.optimalDurationHrs * 1.5, 6);
+        reasoning = `For backup power and resilience, I recommend ${newSize.toFixed(1)}MW / ${newDuration}hr. This provides ${newDuration} hours of backup power for critical loads during grid outages.`;
+      } else if (prompt.includes('solar') || prompt.includes('renewable')) {
+        newSolar = baseline.optimalSolarMW;
+        reasoning = `Adding ${newSolar.toFixed(1)}MW of solar pairs well with your ${newSize.toFixed(1)}MW / ${newDuration}hr battery. The battery can store excess solar during the day and discharge during peak evening hours when solar production drops.`;
+      } else {
+        // Generic analysis of current config
+        if (isOversized) {
+          newSize = baseline.optimalPowerMW;
+          newDuration = baseline.optimalDurationHrs;
+          warning = `⚠️ Your current ${quoteData.storageSizeMW}MW configuration is oversized for your needs. Recommended: ${newSize.toFixed(1)}MW to save $${((currentROI.totalCost - optimalROI.totalCost) / 1000000).toFixed(1)}M.`;
+          reasoning = `Analysis: Your system is ${Math.round((quoteData.storageSizeMW / baseline.optimalPowerMW - 1) * 100)}% larger than optimal. I recommend ${newSize.toFixed(1)}MW / ${newDuration}hr for better ROI.`;
+        } else if (isUndersized) {
+          newSize = baseline.optimalPowerMW;
+          warning = `⚠️ Your current ${quoteData.storageSizeMW}MW may be undersized. Recommended: ${newSize.toFixed(1)}MW to fully meet your needs.`;
+          reasoning = `Your system may struggle with peak demands. Consider ${newSize.toFixed(1)}MW for ${Math.round((newSize / quoteData.storageSizeMW - 1) * 100)}% more capacity.`;
+        } else {
+          reasoning = `Your current configuration (${quoteData.storageSizeMW}MW / ${quoteData.durationHours}hr) is well-sized for your needs. ROI: ${currentROI.payback.toFixed(1)} year payback. Try asking to "optimize", "reduce cost", or "add more backup power".`;
+        }
+      }
+      
+      const newROI = calculateROI(newSize, newDuration, newSolar);
+      const costChange = newROI.totalCost - currentROI.totalCost;
+      const roiChange = newROI.payback - currentROI.payback;
+      
+      setAiSuggestion({
+        storageSizeMW: newSize,
+        durationHours: newDuration,
+        solarMW: newSolar > quoteData.solarMW ? newSolar : undefined,
+        reasoning,
+        costImpact: costChange > 0 
+          ? `+$${(costChange / 1000000).toFixed(2)}M (${Math.round((costChange / currentROI.totalCost) * 100)}% increase)`
+          : costChange < 0
+          ? `-$${(Math.abs(costChange) / 1000000).toFixed(2)}M (${Math.round((Math.abs(costChange) / currentROI.totalCost) * 100)}% savings)`
+          : 'No cost change',
+        roiChange: roiChange > 0
+          ? `Payback increases by ${roiChange.toFixed(1)} years`
+          : roiChange < 0
+          ? `Payback improves by ${Math.abs(roiChange).toFixed(1)} years`
+          : 'ROI unchanged',
+        warning
+      });
+      setIsGenerating(false);
+    }, 1500);
   };
 
   const handleApplyAI = () => {
@@ -616,27 +725,68 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                     AI Recommendation
                   </h4>
                   
+                  {/* Warning Banner */}
+                  {aiSuggestion.warning && (
+                    <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-4">
+                      <p className="text-sm font-semibold text-yellow-800">{aiSuggestion.warning}</p>
+                    </div>
+                  )}
+                  
                   {/* Suggested Configuration */}
                   <div className="bg-white rounded-xl p-4 mb-4">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="text-center p-3 bg-purple-100 rounded-lg">
                         <div className="text-2xl font-bold text-purple-700">{aiSuggestion.storageSizeMW.toFixed(1)} MW</div>
                         <div className="text-xs text-gray-600">Power Output</div>
+                        <div className="text-xs text-purple-600 font-semibold mt-1">
+                          {((aiSuggestion.storageSizeMW - quoteData.storageSizeMW) / quoteData.storageSizeMW * 100).toFixed(0) !== '0' 
+                            ? `${((aiSuggestion.storageSizeMW - quoteData.storageSizeMW) / quoteData.storageSizeMW * 100 > 0 ? '+' : '')}${((aiSuggestion.storageSizeMW - quoteData.storageSizeMW) / quoteData.storageSizeMW * 100).toFixed(0)}%`
+                            : 'No change'}
+                        </div>
                       </div>
                       <div className="text-center p-3 bg-blue-100 rounded-lg">
                         <div className="text-2xl font-bold text-blue-700">{aiSuggestion.durationHours} hrs</div>
                         <div className="text-xs text-gray-600">Duration</div>
+                        <div className="text-xs text-blue-600 font-semibold mt-1">
+                          {aiSuggestion.durationHours - quoteData.durationHours !== 0
+                            ? `${aiSuggestion.durationHours - quoteData.durationHours > 0 ? '+' : ''}${aiSuggestion.durationHours - quoteData.durationHours} hrs`
+                            : 'No change'}
+                        </div>
                       </div>
                     </div>
                     <div className="text-center p-3 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg">
                       <div className="text-2xl font-bold text-gray-900">{(aiSuggestion.storageSizeMW * aiSuggestion.durationHours).toFixed(1)} MWh</div>
                       <div className="text-xs text-gray-600">Total Energy Capacity</div>
                     </div>
+                    {aiSuggestion.solarMW && (
+                      <div className="text-center p-3 bg-yellow-100 rounded-lg mt-4">
+                        <div className="text-2xl font-bold text-yellow-700">{aiSuggestion.solarMW.toFixed(1)} MW</div>
+                        <div className="text-xs text-gray-600">Recommended Solar</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Financial Impact */}
+                  <div className="bg-white rounded-xl p-4 mb-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Cost Impact</div>
+                        <div className={`text-sm font-bold ${aiSuggestion.costImpact.startsWith('+') ? 'text-red-600' : aiSuggestion.costImpact.startsWith('-') ? 'text-green-600' : 'text-gray-600'}`}>
+                          {aiSuggestion.costImpact}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">ROI Impact</div>
+                        <div className={`text-sm font-bold ${aiSuggestion.roiChange.includes('increases') ? 'text-red-600' : aiSuggestion.roiChange.includes('improves') ? 'text-green-600' : 'text-gray-600'}`}>
+                          {aiSuggestion.roiChange}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Reasoning */}
                   <div className="bg-white rounded-xl p-4 mb-4">
-                    <div className="text-sm font-semibold text-gray-700 mb-2">💡 Why this configuration:</div>
+                    <div className="text-sm font-semibold text-gray-700 mb-2">💡 AI Analysis:</div>
                     <p className="text-sm text-gray-600 leading-relaxed">{aiSuggestion.reasoning}</p>
                   </div>
 
