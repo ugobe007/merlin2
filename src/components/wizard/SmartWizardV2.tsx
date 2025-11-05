@@ -764,6 +764,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             onOpenAIWizard={handleOpenAIWizard}
             showAIWizard={showAIWizard}
             aiBaseline={aiBaseline}
+            industryData={{
+              selectedIndustry: selectedTemplate,
+              useCaseData: useCaseData
+            }}
           />
         );
       default:

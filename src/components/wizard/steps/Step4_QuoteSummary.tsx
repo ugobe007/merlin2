@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
+import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
 
 interface Step4_QuoteSummaryProps {
   // System configuration
@@ -33,6 +34,12 @@ interface Step4_QuoteSummaryProps {
     optimalSolarMW: number;
     improvementText: string;
   } | null;
+
+  // Industry data for detailed equipment breakdown
+  industryData?: {
+    selectedIndustry: string;
+    useCaseData: { [key: string]: any };
+  };
 }
 
 const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
@@ -56,6 +63,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   onOpenAIWizard,
   showAIWizard,
   aiBaseline,
+  industryData,
 }) => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
@@ -65,6 +73,16 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
 
   const totalEnergyMWh = storageSizeMW * durationHours;
   const hasRenewables = solarMW > 0 || windMW > 0 || generatorMW > 0;
+
+  // Calculate detailed equipment breakdown
+  const equipmentBreakdown: EquipmentBreakdown = calculateEquipmentBreakdown(
+    storageSizeMW,
+    durationHours,
+    solarMW,
+    windMW,
+    generatorMW,
+    industryData
+  );
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -289,6 +307,307 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
           </div>
         </div>
       )}
+
+      {/* Detailed Equipment Breakdown */}
+      <div className="bg-white rounded-2xl border-2 border-gray-300 shadow-xl overflow-hidden">
+        <button
+          onClick={() => toggleSection('equipment')}
+          className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Settings className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-xl font-bold text-gray-800">Detailed Equipment Breakdown</h3>
+              <p className="text-gray-600">Complete bill of materials with quantities and costs</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-blue-600">{formatCurrency(equipmentBreakdown.totals.equipmentCost)}</span>
+            <div className={`transform transition-transform ${expandedSection === 'equipment' ? 'rotate-180' : ''}`}>
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </button>
+
+        {expandedSection === 'equipment' && (
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            
+            {/* Battery Energy Storage System */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Zap className="w-5 h-5 text-green-600" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-800">Battery Energy Storage System</h4>
+              </div>
+              <div className="bg-white rounded-xl p-6 border-2 border-green-200">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Equipment</div>
+                    <div className="font-bold text-gray-900">{equipmentBreakdown.batteries.manufacturer} {equipmentBreakdown.batteries.model}</div>
+                    <div className="text-sm text-gray-600 mt-2">
+                      {equipmentBreakdown.batteries.unitPowerMW}MW / {equipmentBreakdown.batteries.unitEnergyMWh}MWh per unit
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Quantity & Cost</div>
+                    <div className="font-bold text-gray-900">{formatNumber(equipmentBreakdown.batteries.quantity)} units</div>
+                    <div className="text-sm text-gray-600">
+                      {formatCurrency(equipmentBreakdown.batteries.unitCost)} each
+                    </div>
+                    <div className="text-lg font-bold text-green-600 mt-1">
+                      Total: {formatCurrency(equipmentBreakdown.batteries.totalCost)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Power Conversion Equipment */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Zap className="w-5 h-5 text-blue-600" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-800">Power Conversion & Grid Integration</h4>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Inverters */}
+                <div className="bg-white rounded-xl p-4 border-2 border-blue-200">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Power Inverters</div>
+                      <div className="font-bold">{equipmentBreakdown.inverters.manufacturer} {equipmentBreakdown.inverters.model}</div>
+                      <div className="text-xs text-gray-500">{equipmentBreakdown.inverters.unitPowerMW}MW each</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Quantity</div>
+                      <div className="font-bold">{formatNumber(equipmentBreakdown.inverters.quantity)} units</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Cost</div>
+                      <div className="font-bold text-blue-600">{formatCurrency(equipmentBreakdown.inverters.totalCost)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transformers */}
+                <div className="bg-white rounded-xl p-4 border-2 border-blue-200">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Step-up Transformers</div>
+                      <div className="font-bold">{equipmentBreakdown.transformers.manufacturer}</div>
+                      <div className="text-xs text-gray-500">{equipmentBreakdown.transformers.unitPowerMVA}MVA, {equipmentBreakdown.transformers.voltage}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Quantity</div>
+                      <div className="font-bold">{formatNumber(equipmentBreakdown.transformers.quantity)} units</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Cost</div>
+                      <div className="font-bold text-blue-600">{formatCurrency(equipmentBreakdown.transformers.totalCost)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Switchgear */}
+                <div className="bg-white rounded-xl p-4 border-2 border-blue-200">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Switchgear & Protection</div>
+                      <div className="font-bold">{equipmentBreakdown.switchgear.type}</div>
+                      <div className="text-xs text-gray-500">{equipmentBreakdown.switchgear.voltage}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Quantity</div>
+                      <div className="font-bold">{formatNumber(equipmentBreakdown.switchgear.quantity)} units</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Cost</div>
+                      <div className="font-bold text-blue-600">{formatCurrency(equipmentBreakdown.switchgear.totalCost)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* EV Chargers (if applicable) */}
+            {equipmentBreakdown.evChargers && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800">EV Charging Infrastructure</h4>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Level 2 Chargers */}
+                  {equipmentBreakdown.evChargers.level2Chargers.quantity > 0 && (
+                    <div className="bg-white rounded-xl p-4 border-2 border-purple-200">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-sm text-gray-600">Level 2 Chargers</div>
+                          <div className="font-bold">{equipmentBreakdown.evChargers.level2Chargers.unitPowerKW}kW AC Charging</div>
+                          <div className="text-xs text-gray-500">7-19kW charging power</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Quantity</div>
+                          <div className="font-bold">{formatNumber(equipmentBreakdown.evChargers.level2Chargers.quantity)} chargers</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Cost</div>
+                          <div className="font-bold text-purple-600">{formatCurrency(equipmentBreakdown.evChargers.level2Chargers.totalCost)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DC Fast Chargers */}
+                  {equipmentBreakdown.evChargers.dcFastChargers.quantity > 0 && (
+                    <div className="bg-white rounded-xl p-4 border-2 border-purple-200">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-sm text-gray-600">DC Fast Chargers</div>
+                          <div className="font-bold">{equipmentBreakdown.evChargers.dcFastChargers.unitPowerKW}kW DC Charging</div>
+                          <div className="text-xs text-gray-500">50-350kW rapid charging</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Quantity</div>
+                          <div className="font-bold">{formatNumber(equipmentBreakdown.evChargers.dcFastChargers.quantity)} chargers</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Cost</div>
+                          <div className="font-bold text-purple-600">{formatCurrency(equipmentBreakdown.evChargers.dcFastChargers.totalCost)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                    <div className="text-center">
+                      <div className="text-sm text-purple-600 mb-1">Total EV Charging Infrastructure</div>
+                      <div className="text-xl font-bold text-purple-700">{formatCurrency(equipmentBreakdown.evChargers.totalChargingCost)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Generators (if applicable) */}
+            {equipmentBreakdown.generators && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-orange-100 p-2 rounded-lg">
+                    <Settings className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800">Backup Generators</h4>
+                </div>
+                <div className="bg-white rounded-xl p-4 border-2 border-orange-200">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Diesel Generators</div>
+                      <div className="font-bold">{equipmentBreakdown.generators.manufacturer}</div>
+                      <div className="text-xs text-gray-500">{equipmentBreakdown.generators.unitPowerMW}MW {equipmentBreakdown.generators.fuelType}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Quantity</div>
+                      <div className="font-bold">{formatNumber(equipmentBreakdown.generators.quantity)} units</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Cost</div>
+                      <div className="font-bold text-orange-600">{formatCurrency(equipmentBreakdown.generators.totalCost)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Solar (if applicable) */}
+            {equipmentBreakdown.solar && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-yellow-100 p-2 rounded-lg">
+                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800">Solar Power Generation</h4>
+                </div>
+                <div className="bg-white rounded-xl p-4 border-2 border-yellow-200">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Solar Array</div>
+                      <div className="font-bold">{equipmentBreakdown.solar.totalMW}MW Solar PV</div>
+                      <div className="text-xs text-gray-500">{formatNumber(equipmentBreakdown.solar.panelQuantity)} panels, {equipmentBreakdown.solar.inverterQuantity} inverters</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Cost per Watt</div>
+                      <div className="font-bold">${equipmentBreakdown.solar.costPerWatt.toFixed(2)}/W</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Total Cost</div>
+                      <div className="font-bold text-yellow-600">{formatCurrency(equipmentBreakdown.solar.totalCost)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Installation Breakdown */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-gray-100 p-2 rounded-lg">
+                  <Wrench className="w-5 h-5 text-gray-600" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-800">Installation & Services</h4>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Civil Works</div>
+                  <div className="font-bold text-gray-900">{formatCurrency(equipmentBreakdown.installation.civil)}</div>
+                  <div className="text-xs text-gray-500">Site prep, foundations</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Electrical Installation</div>
+                  <div className="font-bold text-gray-900">{formatCurrency(equipmentBreakdown.installation.electrical)}</div>
+                  <div className="text-xs text-gray-500">Wiring, connections</div>
+                </div>
+                <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Commissioning</div>
+                  <div className="font-bold text-gray-900">{formatCurrency(equipmentBreakdown.installation.commissioning)}</div>
+                  <div className="text-xs text-gray-500">Testing, startup</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Summary */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div>
+                  <div className="text-blue-100 text-sm mb-1">Equipment Total</div>
+                  <div className="text-2xl font-bold">{formatCurrency(equipmentBreakdown.totals.equipmentCost)}</div>
+                </div>
+                <div>
+                  <div className="text-blue-100 text-sm mb-1">Installation Total</div>
+                  <div className="text-2xl font-bold">{formatCurrency(equipmentBreakdown.totals.installationCost)}</div>
+                </div>
+                <div>
+                  <div className="text-blue-100 text-sm mb-1">Project Total</div>
+                  <div className="text-3xl font-bold">{formatCurrency(equipmentBreakdown.totals.totalProjectCost)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Expandable Options Sections */}
       <div className="space-y-4">
