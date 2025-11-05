@@ -6,11 +6,12 @@
 The `.env` file containing real Supabase credentials was previously tracked in git and has now been removed. However, **these credentials remain in the git history** and should be considered **compromised**.
 
 ### Affected Credentials
-The following Supabase project credentials were exposed in git history:
-- **VITE_SUPABASE_URL**: `https://fvmpmozybmtzjvikrctq.supabase.co`
-- **VITE_SUPABASE_ANON_KEY**: The anon key for project ID `fvmpmozybmtzjvikrctq`
+The Supabase project credentials that were previously committed to this repository have been exposed in git history and should be considered compromised:
+- **Project**: Battery Energy Storage System (BESS) Quote Builder
+- **Service**: Supabase
+- **Exposure**: Project URL and anon key were in `.env` file committed to git
 
-> **Note**: Specific credential values have been removed from this document to prevent further exposure. The credentials can be found in the repository's git history.
+> **Note**: Specific credential values are intentionally not listed here to prevent further exposure. Repository administrators can view the git history to identify which project credentials need to be rotated.
 
 ### Required Actions
 

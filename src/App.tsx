@@ -5,12 +5,13 @@ import AdminDashboard from './components/AdminDashboard';
 function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // TODO: Implement admin access
-  // Admin panel exists but is currently disabled. To enable:
-  // 1. Implement secure backend authentication
+  // TODO: Implement admin access functionality
+  // The AdminDashboard component exists but access is currently disabled.
+  // When implementing admin access:
+  // 1. Implement secure backend authentication API
   // 2. Add UI button/link to trigger admin access
   // 3. Call setShowAdmin(true) after successful authentication
-  // 4. Admin panel UI exists below and will display when showAdmin is true
+  // 4. Consider if showAdmin state is still needed or if routing should be used instead
 
   if (showAdmin) {
     return (
