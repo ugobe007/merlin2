@@ -6,8 +6,11 @@
 The `.env` file containing real Supabase credentials was previously tracked in git and has now been removed. However, **these credentials remain in the git history** and should be considered **compromised**.
 
 ### Affected Credentials
+The following Supabase project credentials were exposed in git history:
 - **VITE_SUPABASE_URL**: `https://fvmpmozybmtzjvikrctq.supabase.co`
-- **VITE_SUPABASE_ANON_KEY**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+- **VITE_SUPABASE_ANON_KEY**: The anon key for project ID `fvmpmozybmtzjvikrctq`
+
+> **Note**: Specific credential values have been removed from this document to prevent further exposure. The credentials can be found in the repository's git history.
 
 ### Required Actions
 
