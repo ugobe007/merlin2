@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ConsultationModal from '../../modals/ConsultationModal';
 
 interface Step4_QuoteSummaryProps {
   // System configuration
@@ -9,7 +10,7 @@ interface Step4_QuoteSummaryProps {
   generatorMW: number;
   location: string;
   selectedGoal: string;
-  industryTemplate: string;
+  industryTemplate: string | string[];
   
   // Quote calculations (will be passed from parent)
   equipmentCost: number;
@@ -46,6 +47,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
   const [selectedShipping, setSelectedShipping] = useState('best-value');
   const [selectedFinancing, setSelectedFinancing] = useState('cash');
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
 
   const totalEnergyMWh = storageSizeMW * durationHours;
   const hasRenewables = solarMW > 0 || windMW > 0 || generatorMW > 0;
@@ -483,15 +485,38 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
             <p className="text-gray-700 mb-3">
               Our energy consultants can help you choose the right options for your project and connect you with trusted partners.
             </p>
-            <a 
-              href="mailto:info@merlinenergy.com?subject=Free Consultation Request&body=Hi, I'd like to schedule a consultation to discuss my energy storage project."
+            <button 
+              onClick={() => setShowConsultationModal(true)}
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               Schedule Free Consultation
-            </a>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Consultation Modal */}
+      <ConsultationModal
+        isOpen={showConsultationModal}
+        onClose={() => setShowConsultationModal(false)}
+        quoteData={{
+          capacity: totalEnergyMWh,
+          power: storageSizeMW,
+          duration: durationHours,
+          solar: solarMW,
+          wind: windMW,
+          generator: generatorMW,
+          location,
+          goal: selectedGoal,
+          industry: industryTemplate,
+          totalCost: totalProjectCost,
+          installationOption: selectedInstallation,
+          shippingOption: selectedShipping,
+          financingOption: selectedFinancing,
+          annualSavings,
+          paybackYears
+        }}
+      />
     </div>
   );
 };

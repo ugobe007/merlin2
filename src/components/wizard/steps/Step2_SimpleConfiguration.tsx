@@ -5,7 +5,7 @@ interface Step2_SimpleConfigurationProps {
   setStorageSizeMW: (value: number) => void;
   durationHours: number;
   setDurationHours: (value: number) => void;
-  industryTemplate?: string;
+  industryTemplate?: string | string[];
 }
 
 const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({

@@ -10,7 +10,7 @@ interface Step6_FinalOutputProps {
     generatorMW: number;
     location: string;
     selectedGoal: string;
-    industryTemplate: string;
+    industryTemplate: string | string[];
     
     // Financial
     totalProjectCost: number;

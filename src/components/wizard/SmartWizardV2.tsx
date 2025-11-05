@@ -36,7 +36,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [selectedGoal, setSelectedGoal] = useState('');
 
   // Step 1: Industry Template
-  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string | string[]>('');
   const [useTemplate, setUseTemplate] = useState(true);
 
   // Step 2: Configuration
@@ -61,7 +61,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   // Apply industry template defaults
   useEffect(() => {
-    if (useTemplate && selectedTemplate && selectedTemplate !== 'custom') {
+    const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
+    if (useTemplate && templateKey && templateKey !== 'custom') {
       const templates: { [key: string]: { mw: number; hours: number } } = {
         'manufacturing': { mw: 3, hours: 4 },
         'office': { mw: 1, hours: 4 },
@@ -77,7 +78,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'indoor-farm': { mw: 0.4, hours: 4 }
       };
       
-      const template = templates[selectedTemplate];
+      const template = templates[templateKey];
       if (template) {
         setStorageSizeMW(template.mw);
         setDurationHours(template.hours);
@@ -221,12 +222,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }
 
     // Check for oversizing
-    if (totalEnergyMWh > 20 && selectedTemplate !== 'datacenter' && selectedTemplate !== 'university') {
+    const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
+    if (totalEnergyMWh > 20 && templateKey !== 'datacenter' && templateKey !== 'university') {
       const optimalSize = storageSizeMW * 0.75;
       suggestions.push({
         type: 'cost-saving',
         title: 'System May Be Oversized',
-        description: `Based on typical ${getIndustryName(selectedTemplate)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your ${selectedGoal.replace('-', ' ')} goals.`,
+        description: `Based on typical ${getIndustryName(templateKey)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your ${selectedGoal.replace('-', ' ')} goals.`,
         currentValue: `${totalEnergyMWh.toFixed(1)} MWh`,
         suggestedValue: `${(optimalSize * durationHours).toFixed(1)} MWh`,
         impact: 'Reduces upfront investment while maintaining performance',
@@ -308,7 +310,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     setAiSuggestions(suggestions);
   };
 
-  const getIndustryName = (template: string): string => {
+  const getIndustryName = (template: string | string[]): string => {
+    const templateKey = Array.isArray(template) ? template[0] : template;
     const industryMap: { [key: string]: string } = {
       'manufacturing': 'Manufacturing Facility',
       'data-center': 'Data Center',
@@ -321,7 +324,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       'apartment': 'Apartment Building',
       'indoor-farm': 'Indoor Farm'
     };
-    return industryMap[template] || template;
+    const result = industryMap[templateKey] || templateKey;
+    
+    // If multiple templates, show count
+    if (Array.isArray(template) && template.length > 1) {
+      return `${result} (+${template.length - 1} more)`;
+    }
+    return result;
   };
 
   const handleOpenAIWizard = () => {
@@ -347,7 +356,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const canProceed = () => {
     switch (step) {
       case 0: return selectedGoal !== '';
-      case 1: return useTemplate ? selectedTemplate !== '' : true;
+      case 1: return useTemplate ? (Array.isArray(selectedTemplate) ? selectedTemplate.length > 0 : selectedTemplate !== '') : true;
       case 2: return storageSizeMW > 0 && durationHours > 0;
       case 3: return true; // Optional step
       case 4: return location !== '' && electricityRate > 0;
