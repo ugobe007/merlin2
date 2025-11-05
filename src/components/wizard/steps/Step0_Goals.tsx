@@ -1,4 +1,5 @@
 import React from 'react';
+import merlinAvatar from '../../../assets/images/new_Merlin.png';
 
 interface Step0_GoalsProps {
   selectedGoal: string;
@@ -107,10 +108,9 @@ const Step0_Goals: React.FC<Step0_GoalsProps> = ({
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center mb-4">
           <img 
-            src="/merlin-avatar.png" 
+            src={merlinAvatar} 
             alt="Merlin" 
             className="w-20 h-20 object-contain"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         </div>
         <h2 className="text-4xl font-bold text-gray-800">
