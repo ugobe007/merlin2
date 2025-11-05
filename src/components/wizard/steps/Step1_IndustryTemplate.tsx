@@ -235,11 +235,11 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                       if (currentSelection.includes(template.id)) {
                         // Remove if already selected
                         const newSelection = currentSelection.filter(id => id !== template.id);
-                        setSelectedTemplate(newSelection.length === 1 ? newSelection[0] : newSelection);
+                        setSelectedTemplate(newSelection);
                       } else {
                         // Add to selection
                         const newSelection = [...currentSelection, template.id];
-                        setSelectedTemplate(newSelection.length === 1 ? newSelection[0] : newSelection);
+                        setSelectedTemplate(newSelection);
                       }
                     }}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${colorClasses.bg} ${colorClasses.border} ${colorClasses.shadow} hover:scale-105`}
