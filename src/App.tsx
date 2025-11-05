@@ -37,6 +37,9 @@ function App() {
 
   return (
     <div>
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-3 px-4 shadow-md">
+        <h1 className="text-2xl font-bold">Hello World! Welcome to Merlin Energy</h1>
+      </div>
       <BessQuoteBuilder />
     </div>
   );
