@@ -36,7 +36,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [selectedGoal, setSelectedGoal] = useState('');
 
   // Step 1: Industry Template
-  const [selectedTemplate, setSelectedTemplate] = useState<string | string[]>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string | string[]>([]);
   const [useTemplate, setUseTemplate] = useState(true);
 
   // Step 2: Configuration
