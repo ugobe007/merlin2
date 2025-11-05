@@ -106,6 +106,16 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               ],
             },
             {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'off-grid', label: 'Off-Grid (Standalone)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
               id: 'operatingHours',
               label: 'Operating hours per day?',
               type: 'number',
@@ -125,6 +135,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           insights: {
             'automatic-yes': 'Automatic washes with heating have 30-45 min peak demand cycles - perfect for battery smoothing',
             'self-serve': 'Self-serve washes benefit from solar+storage to offset daytime utility costs',
+            'off-grid': 'Off-grid car washes need reliable battery+solar systems for consistent operation',
           },
         };
 
@@ -135,10 +146,31 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           questions: [
             {
               id: 'numRooms',
-              label: 'Number of rooms?',
+              label: 'How many rooms?',
               type: 'number',
               placeholder: 'e.g., 120',
               suffix: 'rooms',
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'off-grid', label: 'Off-Grid (Standalone)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'occupancyRate',
+              label: 'Average occupancy rate?',
+              type: 'select',
+              options: [
+                { value: 'high', label: 'High (75-100%)' },
+                { value: 'medium', label: 'Medium (50-75%)' },
+                { value: 'seasonal', label: 'Seasonal/Variable' },
+                { value: 'low', label: 'Low (< 50%)' },
+              ],
             },
             {
               id: 'amenities',
@@ -153,14 +185,39 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               ],
             },
             {
-              id: 'occupancyRate',
-              label: 'Average occupancy rate?',
+              id: 'evChargers',
+              label: 'Want to add EV charging for guests?',
               type: 'select',
               options: [
-                { value: 'high', label: 'High (75-100%)' },
-                { value: 'medium', label: 'Medium (50-75%)' },
-                { value: 'seasonal', label: 'Seasonal/Variable' },
+                { value: 'yes', label: 'Yes - How many chargers?' },
+                { value: 'no', label: 'No' },
+                { value: 'future', label: 'Maybe in the future' },
               ],
+            },
+            {
+              id: 'numEVChargers',
+              label: 'How many EV chargers? (if yes above)',
+              type: 'number',
+              placeholder: 'e.g., 4',
+              suffix: 'chargers',
+              conditional: { dependsOn: 'evChargers', value: 'yes' },
+            },
+            {
+              id: 'utilityRate',
+              label: 'Do you know your utility rate?',
+              type: 'select',
+              options: [
+                { value: 'yes', label: 'Yes - I know my rate' },
+                { value: 'no', label: 'No - Help me calculate' },
+              ],
+            },
+            {
+              id: 'kwhRate',
+              label: 'Utility rate ($/kWh)',
+              type: 'number',
+              placeholder: 'e.g., 0.15',
+              suffix: '$/kWh',
+              conditional: { dependsOn: 'utilityRate', value: 'yes' },
             },
             {
               id: 'gridReliability',
@@ -176,6 +233,8 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           insights: {
             'pool-restaurant': 'Hotels with pools and restaurants typically use solar+storage for daytime load coverage',
             'unreliable': 'Unreliable grid? Backup power is critical for guest experience and refrigeration',
+            'off-grid': 'Off-grid hotels need robust battery+solar+generator systems for 24/7 operations',
+            'ev-charging': 'Adding EV charging? We can size your system to handle both hotel and charging loads',
           },
         };
 
@@ -192,17 +251,6 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               suffix: 'MW',
             },
             {
-              id: 'uptimeRequirement',
-              label: 'Uptime requirement?',
-              type: 'select',
-              options: [
-                { value: 'tier1', label: 'Tier I (99.671% - 28.8 hrs downtime/year)' },
-                { value: 'tier2', label: 'Tier II (99.741% - 22 hrs downtime/year)' },
-                { value: 'tier3', label: 'Tier III (99.982% - 1.6 hrs downtime/year)' },
-                { value: 'tier4', label: 'Tier IV (99.995% - 26 min downtime/year)' },
-              ],
-            },
-            {
               id: 'gridConnection',
               label: 'Grid connection status?',
               type: 'select',
@@ -211,6 +259,18 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
                 { value: 'single', label: 'Single Grid Connection' },
                 { value: 'limited', label: 'Limited Grid Capacity' },
                 { value: 'microgrid', label: 'Microgrid/Off-Grid Required' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Backup)' },
+              ],
+            },
+            {
+              id: 'uptimeRequirement',
+              label: 'Uptime requirement?',
+              type: 'select',
+              options: [
+                { value: 'tier1', label: 'Tier I (99.671% - 28.8 hrs downtime/year)' },
+                { value: 'tier2', label: 'Tier II (99.741% - 22 hrs downtime/year)' },
+                { value: 'tier3', label: 'Tier III (99.982% - 1.6 hrs downtime/year)' },
+                { value: 'tier4', label: 'Tier IV (99.995% - 26 min downtime/year)' },
               ],
             },
             {
@@ -242,6 +302,16 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               type: 'number',
               placeholder: 'e.g., 200',
               suffix: 'beds',
+            },
+            {
+              id: 'gridConnection',
+              label: 'Grid connection status?',
+              type: 'select',
+              options: [
+                { value: 'on-grid', label: 'On-Grid (Utility connected)' },
+                { value: 'off-grid', label: 'Off-Grid (Standalone)' },
+                { value: 'hybrid', label: 'Hybrid (Grid + Robust Backup)' },
+              ],
             },
             {
               id: 'criticalSystems',
@@ -279,6 +349,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           insights: {
             'icu-surgery': 'ICU and surgery require instant switchover - BESS is faster than generator startup (10-15 sec)',
             '24hr': '24+ hour backup? Combine BESS with generator for cost-effective extended runtime',
+            'off-grid': 'Off-grid hospitals need 2N redundancy with battery+solar+generator for life-safety systems',
           },
         };
 
