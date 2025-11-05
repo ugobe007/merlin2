@@ -5,24 +5,12 @@ import AdminDashboard from './components/AdminDashboard';
 function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Admin authentication with email and password
-  // Commented out for now - can be enabled when admin access button is added
-  // TODO: Implement proper admin authentication with backend validation
-  // const handleAdminAccess = () => {
-  //   const email = prompt('Enter admin email:');
-  //   if (!email) return;
-  //   
-  //   const password = prompt('Enter admin password:');
-  //   if (!password) return;
-  //   
-  //   // Check admin credentials (credentials should be validated via secure backend API)
-  //   // Validate credentials via API call
-  //   if (/* API validation success */) {
-  //     setShowAdmin(true);
-  //   } else {
-  //     alert('Incorrect email or password');
-  //   }
-  // };
+  // TODO: Implement admin access
+  // Admin panel exists but is currently disabled. To enable:
+  // 1. Implement secure backend authentication
+  // 2. Add UI button/link to trigger admin access
+  // 3. Call setShowAdmin(true) after successful authentication
+  // 4. Admin panel UI exists below and will display when showAdmin is true
 
   if (showAdmin) {
     return (
