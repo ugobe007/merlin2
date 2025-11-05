@@ -10,7 +10,7 @@ interface QuoteCompletePageProps {
     windMW: number;
     generatorMW: number;
     location: string;
-    selectedGoal: string;
+    selectedGoal: string | string[];
     industryTemplate: string | string[];
     
     // Financial
@@ -60,6 +60,43 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     roiChange: string;
     warning?: string;
   } | null>(null);
+  
+  // Helper function to get industry name
+  const getIndustryName = (template: string | string[]) => {
+    const templateKey = Array.isArray(template) ? template[0] : template;
+    const industryMap: { [key: string]: string } = {
+      'manufacturing': 'Manufacturing Facility',
+      'data-center': 'Data Center',
+      'cold-storage': 'Cold Storage Warehouse',
+      'hospital': 'Hospital',
+      'university': 'University/College Campus',
+      'retail': 'Retail Store',
+      'microgrid': 'Microgrid',
+      'agricultural': 'Agricultural Operation',
+      'car-wash': 'Car Wash',
+      'ev-charging': 'EV Charging Hub',
+      'apartment': 'Apartment Building',
+      'indoor-farm': 'Indoor Farm',
+      'warehouse': 'Warehouse/Distribution'
+    };
+    const result = industryMap[templateKey] || templateKey;
+    
+    // If multiple templates, show count
+    if (Array.isArray(template) && template.length > 1) {
+      return `${result} (+${template.length - 1} more)`;
+    }
+    return result;
+  };
+  
+  // Helper function to format goals for display
+  const formatGoals = (goal: string | string[]): string => {
+    if (Array.isArray(goal)) {
+      if (goal.length === 0) return '';
+      if (goal.length === 1) return goal[0].replace(/-/g, ' ');
+      return goal.map(g => g.replace(/-/g, ' ')).join(', ');
+    }
+    return goal.replace(/-/g, ' ');
+  };
   
   // AI Baseline Model - calculates optimal configuration based on inputs
   const calculateOptimalBaseline = () => {
@@ -232,31 +269,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     setShowAIConfig(false);
   };
 
-  const getIndustryName = (template: string | string[]) => {
-    const templateKey = Array.isArray(template) ? template[0] : template;
-    const industryMap: { [key: string]: string } = {
-      'manufacturing': 'Manufacturing Facility',
-      'data-center': 'Data Center',
-      'cold-storage': 'Cold Storage Warehouse',
-      'hospital': 'Hospital',
-      'university': 'University/College Campus',
-      'retail': 'Retail Store',
-      'microgrid': 'Microgrid',
-      'agricultural': 'Agricultural Operation',
-      'car-wash': 'Car Wash',
-      'ev-charging': 'EV Charging Hub',
-      'apartment': 'Apartment Building',
-      'indoor-farm': 'Indoor Farm'
-    };
-    const result = industryMap[templateKey] || templateKey;
-    
-    // If multiple templates, show count
-    if (Array.isArray(template) && template.length > 1) {
-      return `${result} (+${template.length - 1} more)`;
-    }
-    return result;
-  };
-
   const totalEnergyMWh = quoteData.storageSizeMW * quoteData.durationHours;
   const hasRenewables = quoteData.solarMW > 0 || quoteData.windMW > 0 || quoteData.generatorMW > 0;
 
@@ -302,7 +314,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <div className="text-3xl">→</div>
               <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">
                 <div className="text-sm opacity-90">Primary Goal</div>
-                <div className="text-xl font-bold capitalize">{quoteData.selectedGoal.replace('-', ' ')}</div>
+                <div className="text-xl font-bold capitalize">{formatGoals(quoteData.selectedGoal)}</div>
               </div>
               <div className="text-3xl">→</div>
               <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">

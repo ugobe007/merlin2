@@ -9,7 +9,7 @@ interface Step4_QuoteSummaryProps {
   windMW: number;
   generatorMW: number;
   location: string;
-  selectedGoal: string;
+  selectedGoal: string | string[];
   industryTemplate: string | string[];
   
   // Quote calculations (will be passed from parent)

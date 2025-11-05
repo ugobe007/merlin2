@@ -35,6 +35,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   // Step 0: Goals
   const [selectedGoal, setSelectedGoal] = useState<string | string[]>([]);
 
+  // Helper function to format goals for display
+  const formatGoals = (goal: string | string[]): string => {
+    if (Array.isArray(goal)) {
+      if (goal.length === 0) return '';
+      if (goal.length === 1) return goal[0].replace('-', ' ');
+      return goal.map(g => g.replace('-', ' ')).join(', ');
+    }
+    return goal.replace('-', ' ');
+  };
+
   // Step 1: Industry Template
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [useTemplate, setUseTemplate] = useState(true);
@@ -228,7 +238,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       suggestions.push({
         type: 'cost-saving',
         title: 'System May Be Oversized',
-        description: `Based on typical ${getIndustryName(templateKey)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your ${selectedGoal.replace('-', ' ')} goals.`,
+        description: `Based on typical ${getIndustryName(templateKey)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your ${formatGoals(selectedGoal)} goals.`,
         currentValue: `${totalEnergyMWh.toFixed(1)} MWh`,
         suggestedValue: `${(optimalSize * durationHours).toFixed(1)} MWh`,
         impact: 'Reduces upfront investment while maintaining performance',
@@ -684,7 +694,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                     <div className="text-3xl font-bold mb-2">{getIndustryName(selectedTemplate)}</div>
                     <div className="flex items-center gap-3 text-sm">
                       <span className="bg-white/20 px-3 py-1 rounded-full capitalize">
-                        🎯 {selectedGoal.replace('-', ' ')}
+                        🎯 {formatGoals(selectedGoal)}
                       </span>
                       {location && (
                         <span className="bg-white/20 px-3 py-1 rounded-full">
@@ -974,7 +984,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                       </div>
                       <div>
                         <div className="text-gray-600">Goal Alignment</div>
-                        <div className="font-bold text-gray-900 text-lg capitalize">{selectedGoal.replace('-', ' ')}</div>
+                        <div className="font-bold text-gray-900 text-lg capitalize">{formatGoals(selectedGoal)}</div>
                         <div className="text-green-600">✓ Matched</div>
                       </div>
                       <div>
