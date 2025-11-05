@@ -714,6 +714,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             useCaseData={useCaseData}
             setUseCaseData={setUseCaseData}
             aiRecommendation={aiUseCaseRecommendation}
+            setStorageSizeMW={setStorageSizeMW}
+            setDurationHours={setDurationHours}
+            onAdvanceToConfiguration={() => setStep(3)}
           />
         );
       case 3:

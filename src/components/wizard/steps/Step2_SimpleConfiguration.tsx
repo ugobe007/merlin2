@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Step2_SimpleConfigurationProps {
   storageSizeMW: number;
@@ -22,6 +22,7 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
   industryTemplate,
   aiRecommendation,
 }) => {
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   // Extract MW and hours from AI configuration string
   // Format: "2.5MW / 4hr BESS + 1.2MW Solar"
@@ -46,6 +47,7 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
     if (aiConfig) {
       setStorageSizeMW(aiConfig.mw);
       setDurationHours(aiConfig.hours);
+      setShowConfirmModal(false);
     }
   };
   
@@ -116,7 +118,7 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
               </div>
 
               <button
-                onClick={handleAcceptAIConfiguration}
+                onClick={() => setShowConfirmModal(true)}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,6 +336,67 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
           border: none;
         }
       `}</style>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && aiConfig && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Apply AI Configuration?</h3>
+              <p className="text-gray-600">This will automatically set your energy storage system to the AI-recommended values.</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border-2 border-blue-200">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Configuration Changes:
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-white rounded-lg p-3 border">
+                  <div className="text-gray-600 mb-1">Current</div>
+                  <div className="font-bold text-gray-900">{storageSizeMW}MW / {durationHours}hr</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 border-2 border-blue-300">
+                  <div className="text-blue-600 mb-1">AI Recommended</div>
+                  <div className="font-bold text-blue-900">{aiConfig.mw}MW / {aiConfig.hours}hr</div>
+                </div>
+              </div>
+              <div className="mt-3 text-xs text-gray-600">
+                • Based on your specific use case requirements
+                <br />
+                • Optimized for cost and performance
+                <br />
+                • You can still manually adjust after applying
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Keep Current
+              </button>
+              <button
+                onClick={handleAcceptAIConfiguration}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Apply AI Config
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
