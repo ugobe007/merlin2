@@ -50,6 +50,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [aiSuggestion, setAiSuggestion] = useState<{
     storageSizeMW: number;
     durationHours: number;
@@ -259,6 +260,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         warning
       });
       setIsGenerating(false);
+      setShowScrollIndicator(true); // Reset scroll indicator for new suggestions
     }, 1500);
   };
 
@@ -429,20 +431,34 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           </div>
         </div>
 
+        {/* AI Auto-Configure Section - Prominent placement */}
+        <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl shadow-2xl p-12 mb-12 text-white">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4">
+              <Sparkles className="w-10 h-10" />
+            </div>
+            <h3 className="text-4xl font-bold mb-4">AI-Powered Optimization</h3>
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              Let our AI analyze your configuration and suggest improvements for cost savings, performance, or specific goals
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowAIConfig(true)}
+              className="bg-white text-purple-600 hover:bg-gray-100 px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl transition-all hover:scale-105 flex items-center gap-3"
+            >
+              <Sparkles className="w-6 h-6" />
+              Open AI Auto-Configure
+            </button>
+          </div>
+        </div>
+
         {/* Download & Share Section */}
         <div className="bg-white rounded-2xl shadow-xl p-10 mb-12">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-3xl font-bold text-gray-900">
               Download & Share Your Quote
             </h3>
-            {/* AI Auto-Config Button */}
-            <button
-              onClick={() => setShowAIConfig(true)}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              AI Auto-Configure
-            </button>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -601,9 +617,9 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       {/* AI Auto-Configuration Modal */}
       {showAIConfig && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col relative">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-3xl">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-3xl flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="bg-white/20 p-3 rounded-2xl">
@@ -627,8 +643,22 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-8">
+            {/* Scrollable Modal Content */}
+            <div 
+              className="flex-1 overflow-y-auto p-8 relative"
+              onScroll={() => setShowScrollIndicator(false)}
+            >
+              {/* Scroll Indicator - shows when content is scrollable */}
+              {aiSuggestion && showScrollIndicator && (
+                <div className="sticky top-0 left-0 right-0 flex justify-center pointer-events-none z-10 -mt-4 mb-2">
+                  <div className="bg-gradient-to-b from-purple-500 to-transparent text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 animate-bounce shadow-lg">
+                    <span>↓</span>
+                    <span>Scroll for AI Recommendations</span>
+                    <span>↓</span>
+                  </div>
+                </div>
+              )}
+              
               {/* Current Configuration */}
               <div className="bg-gray-50 rounded-2xl p-6 mb-6">
                 <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
