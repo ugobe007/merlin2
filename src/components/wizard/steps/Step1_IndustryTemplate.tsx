@@ -13,6 +13,8 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
   useTemplate,
   setUseTemplate,
 }) => {
+  console.log('🔄 Step1 RENDER - selectedTemplate:', selectedTemplate);
+  
   const templates = [
     {
       id: 'manufacturing',
@@ -223,8 +225,9 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2">
               {templates.map((template) => {
-                const selectedArray = Array.isArray(selectedTemplate) ? selectedTemplate : [selectedTemplate];
+                const selectedArray = Array.isArray(selectedTemplate) ? selectedTemplate : (selectedTemplate ? [selectedTemplate] : []);
                 const isSelected = selectedArray.includes(template.id);
+                console.log(`🎨 Rendering ${template.id}:`, { selectedTemplate, selectedArray, isSelected });
                 const colorClasses = getColorClasses(template.color, isSelected);
                 
                 return (
@@ -239,11 +242,13 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                         const newSelection = currentSelection.filter(id => id !== template.id);
                         console.log('❌ Removing:', { newSelection });
                         setSelectedTemplate(newSelection);
+                        console.log('📤 Called setSelectedTemplate with:', newSelection);
                       } else {
                         // Add to selection
                         const newSelection = [...currentSelection, template.id];
                         console.log('✅ Adding:', { newSelection });
                         setSelectedTemplate(newSelection);
+                        console.log('📤 Called setSelectedTemplate with:', newSelection);
                       }
                     }}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${colorClasses.bg} ${colorClasses.border} ${colorClasses.shadow} hover:scale-105`}
