@@ -62,6 +62,14 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     warning?: string;
   } | null>(null);
   
+  // Auto-generate AI baseline when modal opens
+  useEffect(() => {
+    if (showAIConfig && !aiSuggestion) {
+      // Automatically analyze the configuration
+      handleAIGenerate();
+    }
+  }, [showAIConfig]);
+  
   // Helper function to get industry name
   const getIndustryName = (template: string | string[]) => {
     const templateKey = Array.isArray(template) ? template[0] : template;
@@ -431,16 +439,22 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           </div>
         </div>
 
-        {/* AI Auto-Configure Section - Prominent placement */}
+        {/* AI Configuration Validation - Middle of page */}
         <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl shadow-2xl p-12 mb-12 text-white">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4">
               <Sparkles className="w-10 h-10" />
             </div>
-            <h3 className="text-4xl font-bold mb-4">AI-Powered Optimization</h3>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Let our AI analyze your configuration and suggest improvements for cost savings, performance, or specific goals
+            <h3 className="text-4xl font-bold mb-4">✓ Validate Your Configuration</h3>
+            <p className="text-xl text-white/90 max-w-3xl mx-auto">
+              Our AI analyzed your goals (<strong className="text-yellow-300">{formatGoals(quoteData.selectedGoal)}</strong>) and industry (<strong className="text-yellow-300">{getIndustryName(quoteData.industryTemplate)}</strong>) to calculate the optimal system. Compare your configuration against AI recommendations to maximize ROI.
             </p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 max-w-2xl mx-auto">
+            <div className="flex items-center justify-between text-lg">
+              <span>Your Configuration:</span>
+              <span className="font-bold text-2xl">{quoteData.storageSizeMW.toFixed(1)}MW / {quoteData.durationHours}hr</span>
+            </div>
           </div>
           <div className="flex justify-center">
             <button
@@ -448,7 +462,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               className="bg-white text-purple-600 hover:bg-gray-100 px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl transition-all hover:scale-105 flex items-center gap-3"
             >
               <Sparkles className="w-6 h-6" />
-              Open AI Auto-Configure
+              Check AI Optimization
             </button>
           </div>
         </div>
@@ -626,8 +640,8 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                     <Sparkles className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-bold">AI Auto-Configure</h3>
-                    <p className="text-sm opacity-90 mt-1">Optimize your system based on your specific needs</p>
+                    <h3 className="text-3xl font-bold">AI Configuration Analysis</h3>
+                    <p className="text-sm opacity-90 mt-1">Comparing your configuration vs. optimal baseline</p>
                   </div>
                 </div>
                 <button
@@ -685,79 +699,27 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 </div>
               </div>
 
-              {/* AI Prompt Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-900 mb-3">
-                  Tell the AI what you need:
-                </label>
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleAIGenerate()}
-                  placeholder="E.g., 'I need more backup capacity for outages' or 'Reduce cost while maintaining peak shaving' or 'Optimize for energy arbitrage'"
-                  className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-base"
-                  rows={4}
-                  disabled={isGenerating}
-                />
-                
-                {/* Quick Prompts */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setAiPrompt('Reduce cost while maintaining performance')}
-                    className="text-xs bg-purple-100 text-purple-700 px-3 py-2 rounded-full hover:bg-purple-200 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    💰 Reduce Cost
-                  </button>
-                  <button
-                    onClick={() => setAiPrompt('Increase capacity for more resilience')}
-                    className="text-xs bg-blue-100 text-blue-700 px-3 py-2 rounded-full hover:bg-blue-200 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    🔋 More Capacity
-                  </button>
-                  <button
-                    onClick={() => setAiPrompt('Optimize for backup power during outages')}
-                    className="text-xs bg-green-100 text-green-700 px-3 py-2 rounded-full hover:bg-green-200 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    ⚡ Backup Focus
-                  </button>
-                  <button
-                    onClick={() => setAiPrompt('Maximize demand charge reduction')}
-                    className="text-xs bg-orange-100 text-orange-700 px-3 py-2 rounded-full hover:bg-orange-200 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    📊 Peak Shaving
-                  </button>
-                  <button
-                    onClick={() => setAiPrompt('Optimize for energy arbitrage and TOU savings')}
-                    className="text-xs bg-teal-100 text-teal-700 px-3 py-2 rounded-full hover:bg-teal-200 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    💹 Energy Trading
-                  </button>
+              {/* AI Analysis - Auto-generated */}
+              {!aiSuggestion && !isGenerating && (
+                <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-6">
+                  <p className="text-blue-900 text-center">
+                    <span className="text-2xl mr-2">🤖</span>
+                    <strong>Analyzing your configuration...</strong>
+                  </p>
+                  <p className="text-blue-700 text-sm text-center mt-2">
+                    AI is comparing your {quoteData.storageSizeMW.toFixed(1)}MW / {quoteData.durationHours}hr system against the optimal baseline for {getIndustryName(quoteData.industryTemplate)}
+                  </p>
                 </div>
-              </div>
+              )}
 
-              {/* Generate Button */}
-              <button
-                onClick={handleAIGenerate}
-                disabled={!aiPrompt.trim() || isGenerating}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>AI is thinking...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Generate AI Recommendation</span>
-                  </>
-                )}
-              </button>
+              {/* Loading State */}
+              {isGenerating && (
+                <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl p-6 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-purple-900 font-bold text-lg">AI is analyzing your configuration...</p>
+                  <p className="text-purple-700 text-sm mt-2">Comparing against optimal baseline for your industry and goals</p>
+                </div>
+              )}
 
               {/* AI Suggestion Result */}
               {aiSuggestion && !isGenerating && (
