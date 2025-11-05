@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wand2, Sparkles, Send, X } from 'lucide-react';
 
 interface QuoteCompletePageProps {

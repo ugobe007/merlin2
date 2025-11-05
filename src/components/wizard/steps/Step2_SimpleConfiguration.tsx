@@ -6,6 +6,12 @@ interface Step2_SimpleConfigurationProps {
   durationHours: number;
   setDurationHours: (value: number) => void;
   industryTemplate?: string | string[];
+  aiRecommendation?: {
+    message: string;
+    savings: string;
+    roi: string;
+    configuration: string;
+  };
 }
 
 const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
@@ -14,7 +20,34 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
   durationHours,
   setDurationHours,
   industryTemplate,
+  aiRecommendation,
 }) => {
+  
+  // Extract MW and hours from AI configuration string
+  // Format: "2.5MW / 4hr BESS + 1.2MW Solar"
+  const parseAIConfiguration = (configString: string) => {
+    if (!configString) return null;
+    
+    const mwMatch = configString.match(/(\d+\.?\d*)MW/);
+    const hrMatch = configString.match(/(\d+)hr/);
+    
+    if (mwMatch && hrMatch) {
+      return {
+        mw: parseFloat(mwMatch[1]),
+        hours: parseInt(hrMatch[1])
+      };
+    }
+    return null;
+  };
+
+  const aiConfig = aiRecommendation ? parseAIConfiguration(aiRecommendation.configuration) : null;
+
+  const handleAcceptAIConfiguration = () => {
+    if (aiConfig) {
+      setStorageSizeMW(aiConfig.mw);
+      setDurationHours(aiConfig.hours);
+    }
+  };
   
   const getSizeDescription = (mw: number) => {
     if (mw < 1) return { label: 'Small', description: `Powers ~${Math.round(mw * 200)} homes`, color: 'text-blue-600' };
@@ -46,6 +79,62 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
             : "Use the sliders to configure your system size and storage duration"}
         </p>
       </div>
+
+      {/* AI Recommendation Section */}
+      {aiRecommendation && aiConfig && (
+        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 rounded-2xl p-6 border-2 border-blue-300 shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-full flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                🤖 AI Recommended Configuration
+              </h3>
+              
+              <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <p className="text-gray-700 leading-relaxed">
+                  {aiRecommendation.message}
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-3 mb-4">
+                <div className="bg-green-100 rounded-lg p-3 border border-green-300">
+                  <div className="text-green-700 font-semibold text-sm">Potential Savings</div>
+                  <div className="text-lg font-bold text-green-900">{aiRecommendation.savings}</div>
+                </div>
+                <div className="bg-blue-100 rounded-lg p-3 border border-blue-300">
+                  <div className="text-blue-700 font-semibold text-sm">ROI Timeline</div>
+                  <div className="text-lg font-bold text-blue-900">{aiRecommendation.roi}</div>
+                </div>
+                <div className="bg-purple-100 rounded-lg p-3 border border-purple-300">
+                  <div className="text-purple-700 font-semibold text-sm">Recommended Size</div>
+                  <div className="text-lg font-bold text-purple-900">{aiConfig.mw}MW / {aiConfig.hours}hr</div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAcceptAIConfiguration}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Accept AI Configuration
+              </button>
+
+              <div className="mt-3 flex items-center gap-2 text-gray-600 text-sm">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Based on your specific use case and industry benchmarks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border-2 border-blue-400 p-8 shadow-lg space-y-8">
         
