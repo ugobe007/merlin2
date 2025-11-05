@@ -5,10 +5,11 @@ import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExpor
 // New customer-focused steps
 import Step0_Goals from './steps/Step0_Goals';
 import Step1_IndustryTemplate from './steps/Step1_IndustryTemplate';
-import Step2_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
-import Step3_AddRenewables from './steps/Step3_AddRenewables';
-import Step4_LocationPricing from './steps/Step4_LocationPricing';
-import Step5_QuoteSummary from './steps/Step4_QuoteSummary'; // Renamed import to avoid confusion
+import Step2_UseCase from './steps/Step2_UseCase';
+import Step3_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
+import Step4_AddRenewables from './steps/Step3_AddRenewables';
+import Step5_LocationPricing from './steps/Step4_LocationPricing';
+import Step6_QuoteSummary from './steps/Step4_QuoteSummary'; // Renamed import to avoid confusion
 import QuoteCompletePage from './QuoteCompletePage';
 
 interface SmartWizardProps {
@@ -49,11 +50,20 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [useTemplate, setUseTemplate] = useState(true);
 
-  // Step 2: Configuration
+  // Step 2: Use Case Data (NEW)
+  const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
+  const [aiUseCaseRecommendation, setAiUseCaseRecommendation] = useState<{
+    message: string;
+    savings: string;
+    roi: string;
+    configuration: string;
+  } | null>(null);
+
+  // Step 3: Configuration (was Step 2)
   const [storageSizeMW, setStorageSizeMW] = useState(2);
   const [durationHours, setDurationHours] = useState(4);
 
-  // Step 3: Renewables
+  // Step 4: Renewables (was Step 3)
   const [includeRenewables, setIncludeRenewables] = useState(false);
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
@@ -155,6 +165,152 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       setAiBaseline({ ...aiBaseline, improvementText });
     }
   }, [step, storageSizeMW, durationHours, aiBaseline]);
+
+  // Generate AI use case recommendation when user completes Step 2
+  useEffect(() => {
+    if (step === 2 && Object.keys(useCaseData).length > 0 && selectedTemplate) {
+      // Generate industry-specific recommendations
+      let message = '';
+      let savings = '';
+      let roi = '';
+      let configuration = '';
+
+      switch (selectedTemplate) {
+        case 'ev-charging':
+          const numChargers = useCaseData.numChargers || 10;
+          const chargerType = useCaseData.chargerType || 'level2';
+          const gridConnection = useCaseData.gridConnection || 'on-grid';
+          
+          if (chargerType === 'dcfast' && gridConnection === 'limited') {
+            message = `Most EV charging stations with ${numChargers} DC fast chargers and limited grid capacity save $60,000-$120,000 per year by using battery storage to avoid demand charges and manage peak loads.`;
+            savings = '$60-120K/year';
+            roi = '3-5 years';
+            configuration = `${numChargers * 0.15}MW / 2hr BESS + ${numChargers * 0.1}MW Solar`;
+          } else if (gridConnection === 'off-grid') {
+            message = `Off-grid EV charging requires robust energy storage. For ${numChargers} chargers, we recommend an oversized battery system with significant renewable generation to ensure 24/7 availability.`;
+            savings = '$80-150K/year';
+            roi = '4-6 years';
+            configuration = `${numChargers * 0.2}MW / 4hr BESS + ${numChargers * 0.25}MW Solar`;
+          } else {
+            message = `For ${numChargers} Level 2 chargers, combining solar with battery storage allows you to charge vehicles during the day using clean energy while reducing grid dependency during peak hours.`;
+            savings = '$30-60K/year';
+            roi = '4-7 years';
+            configuration = `${numChargers * 0.01}MW / 3hr BESS + ${numChargers * 0.015}MW Solar`;
+          }
+          break;
+
+        case 'car-wash':
+          const numBays = useCaseData.numBays || 3;
+          const heatedWater = useCaseData.heatedWater === 'yes';
+          
+          message = `Most car washes with ${numBays} bays save $${heatedWater ? '50-80' : '30-50'}K per year using a hybrid solar+storage system. Your short peak demand cycles (30-45 min) are perfect for battery smoothing, which reduces demand charges by 40-60%.`;
+          savings = `$${heatedWater ? '50-80' : '30-50'}K/year`;
+          roi = '3-5 years';
+          configuration = `${numBays * 0.25}MW / ${heatedWater ? 4 : 3}hr BESS + ${numBays * 0.3}MW Solar`;
+          break;
+
+        case 'hotel':
+          const numRooms = useCaseData.numRooms || 100;
+          const amenities = useCaseData.amenities || [];
+          const hasPool = amenities.includes('pool');
+          const hasRestaurant = amenities.includes('restaurant');
+          const gridReliability = useCaseData.gridReliability || 'reliable';
+          
+          if (gridReliability === 'unreliable') {
+            message = `Hotels with ${numRooms} rooms in areas with unreliable grid service benefit significantly from backup power systems. Guest satisfaction improves dramatically when you can maintain operations during outages.`;
+            savings = '$80-150K/year';
+            roi = '4-6 years';
+            configuration = `${numRooms * 0.02}MW / 8hr BESS + ${numRooms * 0.015}MW Solar`;
+          } else if (hasPool && hasRestaurant) {
+            message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with solar+storage. Your daytime loads (pool pumps, kitchen equipment) align perfectly with solar generation.`;
+            savings = '$70-120K/year';
+            roi = '4-6 years';
+            configuration = `${numRooms * 0.025}MW / 5hr BESS + ${numRooms * 0.03}MW Solar`;
+          } else {
+            message = `For a ${numRooms}-room hotel, solar+storage systems typically save $50-90K per year by reducing demand charges and shifting energy usage to off-peak hours.`;
+            savings = '$50-90K/year';
+            roi = '5-7 years';
+            configuration = `${numRooms * 0.015}MW / 4hr BESS + ${numRooms * 0.02}MW Solar`;
+          }
+          break;
+
+        case 'datacenter':
+          const capacity = useCaseData.capacity || 5;
+          const uptimeReq = useCaseData.uptimeRequirement || 'tier3';
+          const gridConn = useCaseData.gridConnection || 'single';
+          
+          if (gridConn === 'microgrid' || gridConn === 'limited') {
+            message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds).`;
+            savings = '$200-400K/year';
+            roi = '3-5 years';
+            configuration = `${capacity * 0.8}MW / 6hr BESS + ${capacity * 0.5}MW Solar + ${capacity * 0.3}MW Generator`;
+          } else if (uptimeReq === 'tier4') {
+            message = `Tier IV datacenters (${capacity}MW) require 2N or 2N+1 redundancy with 99.995% uptime. Battery storage provides faster response than generators and reduces diesel dependency by 60-80%.`;
+            savings = '$150-300K/year';
+            roi = '4-6 years';
+            configuration = `${capacity * 0.6}MW / 4hr BESS + ${capacity * 0.3}MW Generator`;
+          } else {
+            message = `${capacity}MW ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime for longer events.`;
+            savings = '$100-200K/year';
+            roi = '4-7 years';
+            configuration = `${capacity * 0.5}MW / 3hr BESS + ${capacity * 0.2}MW Generator`;
+          }
+          break;
+
+        case 'hospital':
+          const bedCount = useCaseData.bedCount || 200;
+          const criticalSystems = useCaseData.criticalSystems || [];
+          const hasICU = criticalSystems.includes('icu');
+          const hasSurgery = criticalSystems.includes('surgery');
+          const backupDuration = useCaseData.backupDuration || '8hr';
+          
+          if (hasICU || hasSurgery) {
+            message = `Healthcare facilities with ${bedCount} beds and critical care units (ICU/surgery) require instant switchover during power events. Battery storage provides seamless transition (< 10ms) vs. generators (10-15 sec), critical for life support systems.`;
+            savings = '$150-250K/year';
+            roi = '5-7 years';
+            configuration = `${bedCount * 0.03}MW / ${backupDuration === '24hr' ? 12 : 8}hr BESS + ${bedCount * 0.02}MW Solar + Generator`;
+          } else {
+            message = `${bedCount}-bed hospitals can significantly reduce energy costs with solar+storage while maintaining backup power capabilities for essential systems.`;
+            savings = '$100-180K/year';
+            roi = '5-8 years';
+            configuration = `${bedCount * 0.025}MW / 8hr BESS + ${bedCount * 0.02}MW Solar`;
+          }
+          break;
+
+        case 'airport':
+          const facilityType = useCaseData.facilityType || 'terminal';
+          const criticalLoads = useCaseData.criticalLoads || [];
+          const hasATC = criticalLoads.includes('atc');
+          const hasRunwayLighting = criticalLoads.includes('lighting');
+          
+          if (hasATC || hasRunwayLighting) {
+            message = `Airport critical systems (ATC, runway lighting) are FAA-mandated and require instant backup power. Battery storage provides immediate response for these life-safety systems while reducing generator runtime by 70-80%.`;
+            savings = '$200-400K/year';
+            roi = '4-6 years';
+            configuration = '5.0MW / 6hr BESS + 3.0MW Solar + 4.0MW Generator';
+          } else if (facilityType === 'full-airport') {
+            message = `Full airport operations benefit from microgrid architecture combining solar, battery storage, and backup generators. This approach can reduce energy costs by 30-40% while ensuring operational continuity.`;
+            savings = '$300-600K/year';
+            roi = '4-7 years';
+            configuration = '8.0MW / 8hr BESS + 6.0MW Solar + 5.0MW Generator';
+          } else {
+            message = `${facilityType === 'terminal' ? 'Terminal' : 'Hangar'} facilities can achieve significant cost savings with solar+storage systems while maintaining backup power for essential operations.`;
+            savings = '$100-200K/year';
+            roi = '5-8 years';
+            configuration = '2.0MW / 4hr BESS + 2.5MW Solar';
+          }
+          break;
+
+        default:
+          message = `Based on your industry and operational requirements, we recommend a balanced approach combining battery storage with renewable energy to maximize savings and reliability.`;
+          savings = '$50-100K/year';
+          roi = '5-7 years';
+          configuration = '2.0MW / 4hr BESS + 2.0MW Solar';
+      }
+
+      setAiUseCaseRecommendation({ message, savings, roi, configuration });
+    }
+  }, [step, useCaseData, selectedTemplate]);
 
   // Apply industry template defaults
   useEffect(() => {
@@ -464,17 +620,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   const getStepTitle = () => {
     const titles = [
-      'What\'s Your Goal?',
-      'Quick Configuration',
+      'What is your Main Goal?',
+      'Choose Your Industry',
+      'Tell Us About Your Operation',
       'Configure Your System',
       'Add Renewables?',
       'Location & Pricing',
       'Review Your Quote'
     ];
     return titles[step] || '';
-  };
-
-  const renderStep = () => {
+  };  const renderStep = () => {
     switch (step) {
       case 0:
         return (
@@ -494,7 +649,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         );
       case 2:
         return (
-          <Step2_SimpleConfiguration
+          <Step2_UseCase
+            selectedIndustry={selectedTemplate}
+            useCaseData={useCaseData}
+            setUseCaseData={setUseCaseData}
+            aiRecommendation={aiUseCaseRecommendation}
+          />
+        );
+      case 3:
+        return (
+          <Step3_SimpleConfiguration
             storageSizeMW={storageSizeMW}
             setStorageSizeMW={setStorageSizeMW}
             durationHours={durationHours}
@@ -502,9 +666,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             industryTemplate={selectedTemplate}
           />
         );
-      case 3:
+      case 4:
         return (
-          <Step3_AddRenewables
+          <Step4_AddRenewables
             includeRenewables={includeRenewables}
             setIncludeRenewables={setIncludeRenewables}
             solarMW={solarMW}
@@ -515,9 +679,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setGeneratorMW={setGeneratorMW}
           />
         );
-      case 4:
+      case 5:
         return (
-          <Step4_LocationPricing
+          <Step5_LocationPricing
             location={location}
             setLocation={setLocation}
             electricityRate={electricityRate}
@@ -526,9 +690,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setKnowsRate={setKnowsRate}
           />
         );
-      case 5:
+      case 6:
         return (
-          <Step5_QuoteSummary
+          <Step6_QuoteSummary
             storageSizeMW={storageSizeMW}
             durationHours={durationHours}
             solarMW={solarMW}
@@ -731,7 +895,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {step === 5 ? 'Get My Quote →' : 'Next →'}
+            {step === 6 ? 'Get My Quote →' : 'Next →'}
           </button>
         </div>
       </div>
