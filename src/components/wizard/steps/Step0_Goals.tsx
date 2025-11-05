@@ -2,8 +2,8 @@ import React from 'react';
 import merlinAvatar from '../../../assets/images/new_Merlin.png';
 
 interface Step0_GoalsProps {
-  selectedGoal: string;
-  setSelectedGoal: (value: string) => void;
+  selectedGoal: string | string[];
+  setSelectedGoal: (value: string | string[]) => void;
 }
 
 const Step0_Goals: React.FC<Step0_GoalsProps> = ({
@@ -117,19 +117,32 @@ const Step0_Goals: React.FC<Step0_GoalsProps> = ({
           What's Your Main Goal?
         </h2>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Let's start simple. What do you want your energy storage system to do for you?
+          Select one or more goals (click to select/deselect). We'll optimize your system to meet all your needs.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {goals.map((goal) => {
-          const isSelected = selectedGoal === goal.id;
+          const selectedArray = Array.isArray(selectedGoal) ? selectedGoal : (selectedGoal ? [selectedGoal] : []);
+          const isSelected = selectedArray.includes(goal.id);
           const colorClasses = getColorClasses(goal.color, isSelected);
           
           return (
             <button
               key={goal.id}
-              onClick={() => setSelectedGoal(goal.id)}
+              onClick={() => {
+                const currentSelection = Array.isArray(selectedGoal) ? selectedGoal : (selectedGoal ? [selectedGoal] : []);
+                
+                if (currentSelection.includes(goal.id)) {
+                  // Remove if already selected
+                  const newSelection = currentSelection.filter(id => id !== goal.id);
+                  setSelectedGoal(newSelection);
+                } else {
+                  // Add to selection
+                  const newSelection = [...currentSelection, goal.id];
+                  setSelectedGoal(newSelection);
+                }
+              }}
               className={`p-6 rounded-xl border-2 transition-all text-left ${colorClasses.bg} ${colorClasses.border} ${colorClasses.shadow} ${colorClasses.hover}`}
             >
               <div className="space-y-4">
@@ -158,19 +171,33 @@ const Step0_Goals: React.FC<Step0_GoalsProps> = ({
       </div>
 
       {/* Help tooltip */}
-      {selectedGoal && (
+      {((Array.isArray(selectedGoal) && selectedGoal.length > 0) || selectedGoal) && (
         <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 animate-fadeIn">
           <div className="flex items-start space-x-4">
             <span className="text-3xl">💡</span>
             <div>
-              <h4 className="font-bold text-blue-900 mb-2">Great choice!</h4>
+              <h4 className="font-bold text-blue-900 mb-2">
+                {Array.isArray(selectedGoal) && selectedGoal.length > 1 
+                  ? `Great! You've selected ${selectedGoal.length} goals` 
+                  : 'Great choice!'}
+              </h4>
               <p className="text-gray-700">
-                {selectedGoal === 'reduce-costs' && "We'll configure a system optimized for peak shaving and demand charge reduction. Most customers see payback in 4-7 years."}
-                {selectedGoal === 'backup-power' && "We'll size your system to provide backup power for your critical loads during outages."}
-                {selectedGoal === 'renewable-storage' && "We'll help you maximize your solar or wind investment by storing excess energy for later use."}
-                {selectedGoal === 'grid-revenue' && "We'll configure your system to participate in frequency regulation and demand response programs."}
-                {selectedGoal === 'sustainability' && "We'll show you how to achieve net-zero energy and maximize available tax incentives."}
-                {selectedGoal === 'all-above' && "We'll optimize your system for maximum value across all revenue streams and use cases."}
+                {(() => {
+                  const firstGoal = Array.isArray(selectedGoal) ? selectedGoal[0] : selectedGoal;
+                  const isMultiple = Array.isArray(selectedGoal) && selectedGoal.length > 1;
+                  
+                  if (isMultiple) {
+                    return "We'll configure a system that addresses all your selected goals. This comprehensive approach often provides the best ROI.";
+                  }
+                  
+                  if (firstGoal === 'reduce-costs') return "We'll configure a system optimized for peak shaving and demand charge reduction. Most customers see payback in 4-7 years.";
+                  if (firstGoal === 'backup-power') return "We'll size your system to provide backup power for your critical loads during outages.";
+                  if (firstGoal === 'renewable-storage') return "We'll help you maximize your solar or wind investment by storing excess energy for later use.";
+                  if (firstGoal === 'grid-revenue') return "We'll configure your system to participate in frequency regulation and demand response programs.";
+                  if (firstGoal === 'sustainability') return "We'll show you how to achieve net-zero energy and maximize available tax incentives.";
+                  if (firstGoal === 'all-above') return "We'll optimize your system for maximum value across all revenue streams and use cases.";
+                  return "";
+                })()}
               </p>
             </div>
           </div>

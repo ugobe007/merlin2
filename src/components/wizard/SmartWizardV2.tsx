@@ -33,10 +33,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   }>>([]);
 
   // Step 0: Goals
-  const [selectedGoal, setSelectedGoal] = useState('');
+  const [selectedGoal, setSelectedGoal] = useState<string | string[]>([]);
 
   // Step 1: Industry Template
-  const [selectedTemplate, setSelectedTemplate] = useState<string | string[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [useTemplate, setUseTemplate] = useState(true);
 
   // Step 2: Configuration
@@ -355,8 +355,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   const canProceed = () => {
     switch (step) {
-      case 0: return selectedGoal !== '';
-      case 1: return useTemplate ? (Array.isArray(selectedTemplate) ? selectedTemplate.length > 0 : selectedTemplate !== '') : true;
+      case 0: return Array.isArray(selectedGoal) ? selectedGoal.length > 0 : selectedGoal !== '';
+      case 1: return useTemplate ? selectedTemplate !== '' : true;
       case 2: return storageSizeMW > 0 && durationHours > 0;
       case 3: return true; // Optional step
       case 4: return location !== '' && electricityRate > 0;
