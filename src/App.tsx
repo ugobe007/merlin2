@@ -6,20 +6,21 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
   // Admin authentication with email and password
-  const handleAdminAccess = () => {
-    const email = prompt('Enter admin email:');
-    if (!email) return;
-    
-    const password = prompt('Enter admin password:');
-    if (!password) return;
-    
-    // Check admin credentials (hardcoded for now, can be moved to backend)
-    if (email === 'admin@merlin.energy' && password === 'merlin2025') {
-      setShowAdmin(true);
-    } else {
-      alert('Incorrect email or password');
-    }
-  };
+  // Commented out for now - can be enabled when admin access button is added
+  // const handleAdminAccess = () => {
+  //   const email = prompt('Enter admin email:');
+  //   if (!email) return;
+  //   
+  //   const password = prompt('Enter admin password:');
+  //   if (!password) return;
+  //   
+  //   // Check admin credentials (hardcoded for now, can be moved to backend)
+  //   if (email === 'admin@merlin.energy' && password === 'merlin2025') {
+  //     setShowAdmin(true);
+  //   } else {
+  //     alert('Incorrect email or password');
+  //   }
+  // };
 
   if (showAdmin) {
     return (
