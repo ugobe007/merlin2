@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
+import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 
 // New customer-focused steps
 import StepIntro from './steps/Step_Intro';
@@ -223,8 +224,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             solarMW = avgContinuousPower * 2.5 / 1000; // Oversized solar for charging + batteries
             annualSavings = avgContinuousPower * 8760 * 0.15; // $0.15/kWh avoided grid cost
             roiYears = 5;
-            message = `Off-grid charging station with ${level2Count + dcFastCount} total chargers (${level2Count}×${level2Power}kW + ${dcFastCount}×${dcFastPower}kW). ${avgUtilization}% utilization requires robust energy storage with significant solar generation.`;
-            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            
+            // Space constraint analysis for off-grid solar
+            const groundAreaAcres = (solarMW * 1000 * 200) / 43560; // 200 sq ft per kW for ground-mount
+            if (solarMW > 5 && stationType.includes('urban')) {
+              // Large urban EV charging with space constraints - recommend generators
+              message = `Off-grid charging station with ${level2Count + dcFastCount} total chargers requires ${solarMW.toFixed(1)}MW solar (${groundAreaAcres.toFixed(1)} acres). Urban locations typically lack this space - consider backup generators with smaller solar array.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${(solarMW * 0.3).toFixed(1)}MW Solar + ${(maxConcurrentPower * 0.7 / 1000).toFixed(1)}MW Generator`;
+            } else {
+              message = `Off-grid charging station with ${level2Count + dcFastCount} total chargers (${level2Count}×${level2Power}kW + ${dcFastCount}×${dcFastPower}kW). ${avgUtilization}% utilization requires robust energy storage with ${solarMW.toFixed(1)}MW solar.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            }
           } else if (gridConnection === 'limited') {
             // Limited grid: Focus on demand charge reduction
             batteryMW = maxConcurrentPower * 0.8 / 1000; // 80% of peak to manage demand
@@ -232,8 +242,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             solarMW = avgContinuousPower * 1.2 / 1000; // Solar to offset energy usage
             annualSavings = maxConcurrentPower * 12 * 25; // $25/kW-month demand charges
             roiYears = 3;
-            message = `Limited grid capacity for ${level2Count + dcFastCount} chargers requires demand management. ${peakConcurrency}% peak concurrency (${maxConcurrentPower.toFixed(0)}kW) creates significant demand charges that storage can reduce by 70-80%.`;
-            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            
+            // Space constraint analysis for limited grid
+            const groundAreaAcres = (solarMW * 1000 * 200) / 43560;
+            if (solarMW > 3 && (stationType.includes('urban') || stationType.includes('retail'))) {
+              message = `Limited grid capacity for ${level2Count + dcFastCount} chargers requires demand management. ${solarMW.toFixed(1)}MW solar needs ${groundAreaAcres.toFixed(1)} acres - consider parking canopy solar or smaller array with generators.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${(solarMW * 0.5).toFixed(1)}MW Solar + Generator Backup`;
+            } else {
+              message = `Limited grid capacity for ${level2Count + dcFastCount} chargers requires demand management. ${peakConcurrency}% peak concurrency (${maxConcurrentPower.toFixed(0)}kW) creates significant demand charges that storage can reduce by 70-80%.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            }
           } else {
             // On-grid: Optimize for demand charges and energy arbitrage
             batteryMW = maxConcurrentPower * 0.6 / 1000; // 60% of peak for demand shaving
@@ -241,8 +259,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             solarMW = avgContinuousPower * 1.0 / 1000; // Solar to match average consumption
             annualSavings = (maxConcurrentPower * 12 * 20) + (avgContinuousPower * 8760 * 0.05); // Demand + energy savings
             roiYears = 4;
-            message = `${stationType.replace('-', ' ')} station with ${level2Count + dcFastCount} total chargers. ${avgUtilization}% average utilization creates demand charges that storage can reduce while enabling solar integration.`;
-            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            
+            // Space constraint analysis for on-grid
+            const groundAreaAcres = (solarMW * 1000 * 200) / 43560;
+            if (solarMW > 2 && stationType.includes('urban')) {
+              message = `${stationType.replace('-', ' ')} station with ${level2Count + dcFastCount} total chargers. Urban locations may lack space for ${solarMW.toFixed(1)}MW solar (${groundAreaAcres.toFixed(1)} acres) - consider rooftop/canopy installation.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + Rooftop/Canopy Solar`;
+            } else {
+              message = `${stationType.replace('-', ' ')} station with ${level2Count + dcFastCount} total chargers. ${avgUtilization}% average utilization creates demand charges that storage can reduce while enabling solar integration.`;
+              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS + ${solarMW.toFixed(1)}MW Solar`;
+            }
           }
           
           savings = `$${Math.round(annualSavings/1000)}K/year`;
@@ -266,21 +292,40 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const hasRestaurant = amenities.includes('restaurant');
           const gridReliability = useCaseData.gridReliability || 'reliable';
           
+          // Calculate recommended solar size
+          let hotelSolarMW = numRooms * 0.02; // Base 20kW per room
+          if (hasPool) hotelSolarMW += 0.5; // Pool equipment
+          if (hasRestaurant) hotelSolarMW += 0.3; // Kitchen equipment
+          
+          // Space constraint analysis for hotels
+          const hotelRooftopAcres = (hotelSolarMW * 1000 * 100) / 43560; // 100 sq ft per kW for rooftop
+          const hotelGroundAcres = (hotelSolarMW * 1000 * 200) / 43560; // 200 sq ft per kW for ground-mount
+          
           if (gridReliability === 'unreliable') {
             message = `Hotels with ${numRooms} rooms in areas with unreliable grid service benefit significantly from backup power systems. Guest satisfaction improves dramatically when you can maintain operations during outages.`;
             savings = '$80-150K/year';
             roi = '4-6 years';
             configuration = `${numRooms * 0.02}MW / 8hr BESS + ${numRooms * 0.015}MW Solar`;
           } else if (hasPool && hasRestaurant) {
-            message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with solar+storage. Your daytime loads (pool pumps, kitchen equipment) align perfectly with solar generation.`;
+            if (hotelRooftopAcres > 3) {
+              message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with solar+storage. Your daytime loads align with solar generation, but ${hotelSolarMW.toFixed(1)}MW solar needs ${hotelRooftopAcres.toFixed(1)} acres of rooftop space - consider parking canopies or smaller array.`;
+              configuration = `${numRooms * 0.025}MW / 5hr BESS + Rooftop/Canopy Solar + Grid Backup`;
+            } else {
+              message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with solar+storage. Your daytime loads (pool pumps, kitchen equipment) align perfectly with solar generation.`;
+              configuration = `${numRooms * 0.025}MW / 5hr BESS + ${hotelSolarMW.toFixed(1)}MW Solar`;
+            }
             savings = '$70-120K/year';
             roi = '4-6 years';
-            configuration = `${numRooms * 0.025}MW / 5hr BESS + ${numRooms * 0.03}MW Solar`;
           } else {
-            message = `For a ${numRooms}-room hotel, solar+storage systems typically save $50-90K per year by reducing demand charges and shifting energy usage to off-peak hours.`;
+            if (hotelRooftopAcres > 2) {
+              message = `For a ${numRooms}-room hotel, solar+storage systems typically save $50-90K per year. ${hotelSolarMW.toFixed(1)}MW solar requires ${hotelRooftopAcres.toFixed(1)} acres of rooftop - verify roof capacity or consider phased installation.`;
+              configuration = `${numRooms * 0.015}MW / 4hr BESS + Rooftop Solar (Phased)`;
+            } else {
+              message = `For a ${numRooms}-room hotel, solar+storage systems typically save $50-90K per year by reducing demand charges and shifting energy usage to off-peak hours.`;
+              configuration = `${numRooms * 0.015}MW / 4hr BESS + ${hotelSolarMW.toFixed(1)}MW Solar`;
+            }
             savings = '$50-90K/year';
             roi = '5-7 years';
-            configuration = `${numRooms * 0.015}MW / 4hr BESS + ${numRooms * 0.02}MW Solar`;
           }
           break;
 
@@ -289,21 +334,41 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const uptimeReq = useCaseData.uptimeRequirement || 'tier3';
           const gridConn = useCaseData.gridConnection || 'single';
           
+          // Calculate recommended solar size and space constraints
+          let datacenterSolarMW = capacity * 0.3; // Conservative solar sizing for datacenters
+          const datacenterRooftopAcres = (datacenterSolarMW * 1000 * 100) / 43560; // Limited by cooling equipment
+          
           if (gridConn === 'microgrid' || gridConn === 'limited') {
-            message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds).`;
+            // Large datacenters typically have space constraints due to cooling equipment
+            if (datacenterSolarMW > 2) {
+              message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. ${datacenterSolarMW.toFixed(1)}MW solar competes with cooling equipment for rooftop space - consider off-site solar PPA or focus on storage+generators.`;
+              configuration = `${capacity * 0.8}MW / 6hr BESS + Off-site Solar PPA + ${capacity * 0.3}MW Generator`;
+            } else {
+              message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds).`;
+              configuration = `${capacity * 0.8}MW / 6hr BESS + ${datacenterSolarMW.toFixed(1)}MW Solar + ${capacity * 0.3}MW Generator`;
+            }
             savings = '$200-400K/year';
             roi = '3-5 years';
-            configuration = `${capacity * 0.8}MW / 6hr BESS + ${capacity * 0.5}MW Solar + ${capacity * 0.3}MW Generator`;
           } else if (uptimeReq === 'tier4') {
-            message = `Tier IV datacenters (${capacity}MW) require 2N or 2N+1 redundancy with 99.995% uptime. Battery storage provides faster response than generators and reduces diesel dependency by 60-80%.`;
+            if (datacenterSolarMW > 1.5) {
+              message = `Tier IV datacenters (${capacity}MW) require 2N or 2N+1 redundancy with 99.995% uptime. Rooftop space limited by cooling infrastructure - recommend off-site solar PPA with on-site battery storage for instant response.`;
+              configuration = `${capacity * 0.6}MW / 4hr BESS + Off-site Solar PPA + ${capacity * 0.3}MW Generator`;
+            } else {
+              message = `Tier IV datacenters (${capacity}MW) require 2N or 2N+1 redundancy with 99.995% uptime. Battery storage provides faster response than generators and reduces diesel dependency by 60-80%.`;
+              configuration = `${capacity * 0.6}MW / 4hr BESS + ${datacenterSolarMW.toFixed(1)}MW Solar + ${capacity * 0.3}MW Generator`;
+            }
             savings = '$150-300K/year';
             roi = '4-6 years';
-            configuration = `${capacity * 0.6}MW / 4hr BESS + ${capacity * 0.3}MW Generator`;
           } else {
-            message = `${capacity}MW ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime for longer events.`;
+            if (datacenterSolarMW > 1) {
+              message = `${capacity}MW ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Limited rooftop space due to cooling equipment - consider smaller solar array with off-site renewable credits.`;
+              configuration = `${capacity * 0.5}MW / 3hr BESS + Limited Rooftop Solar + ${capacity * 0.2}MW Generator`;
+            } else {
+              message = `${capacity}MW ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime for longer events.`;
+              configuration = `${capacity * 0.5}MW / 3hr BESS + ${datacenterSolarMW.toFixed(1)}MW Solar + ${capacity * 0.2}MW Generator`;
+            }
             savings = '$100-200K/year';
             roi = '4-7 years';
-            configuration = `${capacity * 0.5}MW / 3hr BESS + ${capacity * 0.2}MW Generator`;
           }
           break;
 
@@ -333,16 +398,31 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const hasATC = criticalLoads.includes('atc');
           const hasRunwayLighting = criticalLoads.includes('lighting');
           
+          // Airport space considerations - terminals have large rooftop potential
+          const airportSolarMW = facilityType === 'full-airport' ? 6 : facilityType === 'terminal' ? 2.5 : 1.5;
+          const airportRooftopAcres = (airportSolarMW * 1000 * 100) / 43560; // Terminal rooftops
+          const airportGroundAcres = (airportSolarMW * 1000 * 200) / 43560; // Ground-mount near runways
+          
           if (hasATC || hasRunwayLighting) {
-            message = `Airport critical systems (ATC, runway lighting) are FAA-mandated and require instant backup power. Battery storage provides immediate response for these life-safety systems while reducing generator runtime by 70-80%.`;
+            if (facilityType === 'full-airport' && airportSolarMW > 4) {
+              message = `Airport critical systems (ATC, runway lighting) are FAA-mandated and require instant backup power. ${airportSolarMW.toFixed(1)}MW solar needs ${airportGroundAcres.toFixed(1)} acres but must avoid flight paths - consider terminal rooftops and parking structures.`;
+              configuration = '5.0MW / 6hr BESS + Terminal Rooftop Solar + 4.0MW Generator';
+            } else {
+              message = `Airport critical systems (ATC, runway lighting) are FAA-mandated and require instant backup power. Battery storage provides immediate response for these life-safety systems while reducing generator runtime by 70-80%.`;
+              configuration = '5.0MW / 6hr BESS + 3.0MW Solar + 4.0MW Generator';
+            }
             savings = '$200-400K/year';
             roi = '4-6 years';
-            configuration = '5.0MW / 6hr BESS + 3.0MW Solar + 4.0MW Generator';
           } else if (facilityType === 'full-airport') {
-            message = `Full airport operations benefit from microgrid architecture combining solar, battery storage, and backup generators. This approach can reduce energy costs by 30-40% while ensuring operational continuity.`;
+            if (airportSolarMW > 5) {
+              message = `Full airport operations benefit from microgrid architecture combining solar, battery storage, and backup generators. Large solar arrays must consider FAA clearance zones - recommend terminal/hangar rooftops and parking canopies.`;
+              configuration = '8.0MW / 8hr BESS + Rooftop/Canopy Solar + 5.0MW Generator';
+            } else {
+              message = `Full airport operations benefit from microgrid architecture combining solar, battery storage, and backup generators. This approach can reduce energy costs by 30-40% while ensuring operational continuity.`;
+              configuration = '8.0MW / 8hr BESS + 6.0MW Solar + 5.0MW Generator';
+            }
             savings = '$300-600K/year';
             roi = '4-7 years';
-            configuration = '8.0MW / 8hr BESS + 6.0MW Solar + 5.0MW Generator';
           } else {
             message = `${facilityType === 'terminal' ? 'Terminal' : 'Hangar'} facilities can achieve significant cost savings with solar+storage systems while maintaining backup power for essential operations.`;
             savings = '$100-200K/year';
@@ -777,6 +857,21 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   // Show complete page instead of modal for final step
   if (showCompletePage) {
+    // Calculate equipment breakdown to get effective generator MW
+    const gridConnection = useCaseData.gridConnection || 'on-grid';
+    const equipmentBreakdown = calculateEquipmentBreakdown(
+      storageSizeMW,
+      durationHours,
+      solarMW,
+      windMW,
+      generatorMW,
+      { selectedIndustry: selectedTemplate, useCaseData },
+      gridConnection
+    );
+    const effectiveGeneratorMW = equipmentBreakdown.generators ? 
+      equipmentBreakdown.generators.quantity * equipmentBreakdown.generators.unitPowerMW : 
+      generatorMW;
+      
     return (
       <QuoteCompletePage
         quoteData={{
@@ -784,7 +879,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           durationHours,
           solarMW,
           windMW,
-          generatorMW,
+          generatorMW: effectiveGeneratorMW,
           location,
           selectedGoal,
           industryTemplate: selectedTemplate,
@@ -802,10 +897,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           durationHours,
           solarMW,
           windMW,
-          generatorMW,
+          generatorMW: effectiveGeneratorMW,
           location,
           selectedGoal,
           industryTemplate: selectedTemplate,
+          gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
           paybackYears: costs.paybackYears,
@@ -814,16 +910,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           installationOption: selectedInstallation,
           shippingOption: selectedShipping,
           financingOption: selectedFinancing
-        })}
+        }, equipmentBreakdown)}
         onDownloadExcel={() => generateExcel({
           storageSizeMW,
           durationHours,
           solarMW,
           windMW,
-          generatorMW,
+          generatorMW: effectiveGeneratorMW,
           location,
           selectedGoal,
           industryTemplate: selectedTemplate,
+          gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
           paybackYears: costs.paybackYears,
@@ -832,16 +929,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           installationOption: selectedInstallation,
           shippingOption: selectedShipping,
           financingOption: selectedFinancing
-        })}
+        }, equipmentBreakdown)}
         onDownloadWord={() => generateWord({
           storageSizeMW,
           durationHours,
           solarMW,
           windMW,
-          generatorMW,
+          generatorMW: effectiveGeneratorMW,
           location,
           selectedGoal,
           industryTemplate: selectedTemplate,
+          gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
           paybackYears: costs.paybackYears,
@@ -850,7 +948,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           installationOption: selectedInstallation,
           shippingOption: selectedShipping,
           financingOption: selectedFinancing
-        })}
+        }, equipmentBreakdown)}
         onEmailQuote={(email: string) => {
           // Send email with quote (would integrate with email service)
           alert(`Quote will be sent to ${email}\n(Email service integration pending)`);

@@ -47,6 +47,15 @@ export interface EquipmentBreakdown {
     inverterQuantity: number;
     totalCost: number;
     costPerWatt: number;
+    spaceRequirements: {
+      rooftopAreaSqFt: number;
+      groundAreaSqFt: number;
+      rooftopAreaAcres: number;
+      groundAreaAcres: number;
+      isFeasible: boolean;
+      constraints: string[];
+      alternatives?: string[];
+    };
   };
   wind?: {
     turbineQuantity: number;
@@ -88,7 +97,8 @@ export const calculateEquipmentBreakdown = (
   solarMW: number = 0,
   windMW: number = 0,
   generatorMW: number = 0,
-  industryData?: any
+  industryData?: any,
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid'
 ): EquipmentBreakdown => {
   
   const totalEnergyMWh = storageSizeMW * durationHours;
@@ -114,10 +124,26 @@ export const calculateEquipmentBreakdown = (
     model: "Megapack 2XL"
   };
 
-  // Inverter Calculations
-  // Power conversion inverters: ~$150k per MW
-  const inverterUnitPowerMW = 2.5; // 2.5MW inverters
-  const inverterUnitCost = 375000; // $375k per 2.5MW inverter
+  // Inverter Calculations - Select appropriate inverter type based on grid connection
+  let inverterUnitPowerMW: number;
+  let inverterUnitCost: number;
+  let inverterManufacturer: string;
+  let inverterModel: string;
+  
+  if (gridConnection === 'off-grid') {
+    // Off-grid systems need hybrid inverters with grid-forming capability (can create stable AC)
+    inverterUnitPowerMW = 2.5; // 2.5MW hybrid grid-forming inverters
+    inverterUnitCost = 450000; // $450k per 2.5MW hybrid inverter (more expensive due to grid-forming controls)
+    inverterManufacturer = "SMA Solar";
+    inverterModel = "Sunny Central Storage"; // Hybrid inverter with grid-forming capability
+  } else {
+    // On-grid systems can use standard bi-directional grid-tie inverters
+    inverterUnitPowerMW = 2.5; // 2.5MW bi-directional inverters
+    inverterUnitCost = 375000; // $375k per 2.5MW bi-directional inverter
+    inverterManufacturer = "SMA Solar";
+    inverterModel = "MVPS 2500"; // Bi-directional grid-tie inverter
+  }
+  
   const inverterQuantity = Math.ceil(storageSizeMW / inverterUnitPowerMW);
   
   const inverters = {
@@ -125,8 +151,8 @@ export const calculateEquipmentBreakdown = (
     unitPowerMW: inverterUnitPowerMW,
     unitCost: inverterUnitCost,
     totalCost: inverterQuantity * inverterUnitCost,
-    manufacturer: "SMA Solar",
-    model: "MVPS 2500"
+    manufacturer: inverterManufacturer,
+    model: inverterModel
   };
 
   // Transformer Calculations
@@ -156,12 +182,27 @@ export const calculateEquipmentBreakdown = (
     voltage: transformerUnitMVA >= 10 ? "35kV" : "13.8kV"
   };
 
-  // Generator Calculations (if specified)
+  // Generator Calculations
   let generators = undefined;
-  if (generatorMW > 0) {
+  let effectiveGeneratorMW = generatorMW;
+  
+  // For off-grid systems, automatically include generators as backup power if not specified
+  // Industry standard: off-grid microgrids require backup generators for extended outages
+  // and when renewable generation is insufficient (cloudy days, low wind)
+  if (gridConnection === 'off-grid' && generatorMW === 0) {
+    // Size generator to handle critical loads (minimum 50% of battery power capacity)
+    // This ensures system can maintain operations during battery depletion
+    effectiveGeneratorMW = Math.max(storageSizeMW * 0.5, 2); // At least 2MW for substantial off-grid systems
+  } else if (gridConnection === 'off-grid' && generatorMW > 0) {
+    effectiveGeneratorMW = generatorMW;
+  } else if (generatorMW > 0) {
+    effectiveGeneratorMW = generatorMW;
+  }
+  
+  if (effectiveGeneratorMW > 0) {
     const generatorUnitMW = 2; // 2MW diesel generators
     const generatorUnitCost = 800000; // $800k per 2MW generator
-    const generatorQuantity = Math.ceil(generatorMW / generatorUnitMW);
+    const generatorQuantity = Math.ceil(effectiveGeneratorMW / generatorUnitMW);
     
     generators = {
       quantity: generatorQuantity,
@@ -180,12 +221,94 @@ export const calculateEquipmentBreakdown = (
     const panelsPerMW = 3000; // ~333W panels
     const solarInvertersPerMW = 1; // 1MW string inverters
     
+    // Space requirement calculations
+    // Rooftop: 100 sq ft per kW (tighter spacing, no setbacks)
+    // Ground-mount: 200 sq ft per kW (includes spacing, access roads, setbacks)
+    const rooftopSqFtPerKW = 100;
+    const groundSqFtPerKW = 200;
+    const rooftopAreaSqFt = solarMW * 1000 * rooftopSqFtPerKW;
+    const groundAreaSqFt = solarMW * 1000 * groundSqFtPerKW;
+    const rooftopAreaAcres = rooftopAreaSqFt / 43560; // Convert to acres
+    const groundAreaAcres = groundAreaSqFt / 43560;
+    
+    // Feasibility analysis based on industry and location
+    const constraints: string[] = [];
+    const alternatives: string[] = [];
+    let isFeasible = true;
+    
+    // Industry-specific constraints
+    if (industryData?.selectedIndustry === 'ev-charging') {
+      if (solarMW > 5) {
+        constraints.push(`${solarMW}MW solar requires ${groundAreaAcres.toFixed(1)} acres - likely too large for most EV charging sites`);
+        isFeasible = false;
+      }
+      if (rooftopAreaAcres > 2) {
+        constraints.push(`Rooftop option needs ${rooftopAreaAcres.toFixed(1)} acres of roof space - most charging stations don't have this much roof area`);
+      }
+    } else if (industryData?.selectedIndustry === 'hotel') {
+      if (rooftopAreaAcres > 1) {
+        constraints.push(`Hotel rooftop typically 1-3 acres max - you need ${rooftopAreaAcres.toFixed(1)} acres`);
+      }
+      if (groundAreaAcres > 5) {
+        constraints.push(`${groundAreaAcres.toFixed(1)} acres of ground space rarely available at urban hotels`);
+        isFeasible = false;
+      }
+    } else if (industryData?.selectedIndustry === 'datacenter') {
+      if (rooftopAreaAcres > 3) {
+        constraints.push(`Datacenter rooftop limited by cooling equipment - ${rooftopAreaAcres.toFixed(1)} acres may not be available`);
+      }
+    } else if (['shopping-center', 'retail'].includes(industryData?.selectedIndustry || '')) {
+      if (rooftopAreaAcres > 10) {
+        constraints.push(`Large shopping centers can support ${rooftopAreaAcres.toFixed(1)} acres, but check roof load capacity`);
+      }
+    }
+    
+    // Size-based constraints
+    if (solarMW > 10) {
+      constraints.push(`${solarMW}MW is utility-scale solar - requires significant permitting and grid interconnection studies`);
+    }
+    
+    if (solarMW > 2 && groundAreaAcres > 10) {
+      constraints.push(`${groundAreaAcres.toFixed(1)} acres ground-mount may face zoning restrictions in urban areas`);
+    }
+    
+    // Alternative suggestions
+    if (!isFeasible || constraints.length > 0) {
+      alternatives.push('🔋 Increase battery storage duration to reduce solar requirements');
+      alternatives.push('⚡ Grid-tied system with utility green energy purchase');
+      alternatives.push('🏭 Off-site solar PPA (Power Purchase Agreement)');
+      
+      if (solarMW > 5) {
+        alternatives.push('🔥 Backup generators for critical loads instead of large solar');
+        alternatives.push('🌬️ Consider wind power if space allows and wind resource available');
+      }
+      
+      if (industryData?.selectedIndustry === 'ev-charging') {
+        alternatives.push('🚗 Reduce charging power during peak solar hours to optimize smaller array');
+        alternatives.push('🔌 Time-of-use charging pricing to shift demand to solar hours');
+      }
+      
+      if (['hotel', 'shopping-center'].includes(industryData?.selectedIndustry || '')) {
+        alternatives.push('🏢 Parking canopy solar (dual-purpose structure)');
+        alternatives.push('☂️ Solar canopies over outdoor spaces');
+      }
+    }
+    
     solar = {
       totalMW: solarMW,
       panelQuantity: solarMW * panelsPerMW,
       inverterQuantity: solarMW * solarInvertersPerMW,
       totalCost: solarMW * 1000000 * costPerWatt,
-      costPerWatt: costPerWatt
+      costPerWatt: costPerWatt,
+      spaceRequirements: {
+        rooftopAreaSqFt,
+        groundAreaSqFt,
+        rooftopAreaAcres,
+        groundAreaAcres,
+        isFeasible,
+        constraints,
+        alternatives: alternatives.length > 0 ? alternatives : undefined
+      }
     };
   }
 

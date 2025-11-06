@@ -72,7 +72,8 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   const [showConsultationModal, setShowConsultationModal] = useState(false);
 
   const totalEnergyMWh = storageSizeMW * durationHours;
-  const hasRenewables = solarMW > 0 || windMW > 0 || generatorMW > 0;
+  // Determine grid connection type from industry data
+  const gridConnection = industryData?.useCaseData?.gridConnection || 'on-grid';
 
   // Calculate detailed equipment breakdown
   const equipmentBreakdown: EquipmentBreakdown = calculateEquipmentBreakdown(
@@ -81,8 +82,12 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
     solarMW,
     windMW,
     generatorMW,
-    industryData
+    industryData,
+    gridConnection
   );
+
+  // Check for renewables including auto-generated generators for off-grid systems
+  const hasRenewables = solarMW > 0 || windMW > 0 || generatorMW > 0 || equipmentBreakdown.generators;
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -540,22 +545,127 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
                     </svg>
                   </div>
                   <h4 className="text-lg font-bold text-gray-800">Solar Power Generation</h4>
+                  {!equipmentBreakdown.solar.spaceRequirements.isFeasible && (
+                    <div className="bg-red-100 border border-red-300 rounded-lg px-3 py-1">
+                      <span className="text-red-700 font-semibold text-sm">⚠️ Space Constrained</span>
+                    </div>
+                  )}
                 </div>
-                <div className="bg-white rounded-xl p-4 border-2 border-yellow-200">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Solar Array</div>
-                      <div className="font-bold">{equipmentBreakdown.solar.totalMW}MW Solar PV</div>
-                      <div className="text-xs text-gray-500">{formatNumber(equipmentBreakdown.solar.panelQuantity)} panels, {equipmentBreakdown.solar.inverterQuantity} inverters</div>
+                
+                <div className="space-y-4">
+                  {/* Solar System Details */}
+                  <div className="bg-white rounded-xl p-4 border-2 border-yellow-200">
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-600">Solar Array</div>
+                        <div className="font-bold">{equipmentBreakdown.solar.totalMW}MW Solar PV</div>
+                        <div className="text-xs text-gray-500">{formatNumber(equipmentBreakdown.solar.panelQuantity)} panels, {equipmentBreakdown.solar.inverterQuantity} inverters</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Cost per Watt</div>
+                        <div className="font-bold">${equipmentBreakdown.solar.costPerWatt.toFixed(2)}/W</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Total Cost</div>
+                        <div className="font-bold text-yellow-600">{formatCurrency(equipmentBreakdown.solar.totalCost)}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Cost per Watt</div>
-                      <div className="font-bold">${equipmentBreakdown.solar.costPerWatt.toFixed(2)}/W</div>
+                  </div>
+
+                  {/* Space Requirements */}
+                  <div className="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
+                    <h5 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2zM7 3v18M17 3v18M3 7h18M3 17h18" />
+                      </svg>
+                      Space Requirements Analysis
+                    </h5>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Rooftop Option */}
+                      <div className="bg-white rounded-lg p-4 border border-yellow-300">
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                          </svg>
+                          <span className="font-semibold text-gray-800">Rooftop Installation</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Area needed:</span>
+                            <span className="font-bold">{formatNumber(equipmentBreakdown.solar.spaceRequirements.rooftopAreaSqFt)} sq ft</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Equivalent:</span>
+                            <span className="font-bold">{equipmentBreakdown.solar.spaceRequirements.rooftopAreaAcres.toFixed(1)} acres</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2">
+                            Tighter spacing, structural load considerations
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Ground-Mount Option */}
+                      <div className="bg-white rounded-lg p-4 border border-yellow-300">
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3h8v8h-8zM13 21h8v-8h-8z" />
+                          </svg>
+                          <span className="font-semibold text-gray-800">Ground-Mount Installation</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Area needed:</span>
+                            <span className="font-bold">{formatNumber(equipmentBreakdown.solar.spaceRequirements.groundAreaSqFt)} sq ft</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Equivalent:</span>
+                            <span className="font-bold">{equipmentBreakdown.solar.spaceRequirements.groundAreaAcres.toFixed(1)} acres</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2">
+                            Includes spacing, access roads, setbacks
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Total Cost</div>
-                      <div className="font-bold text-yellow-600">{formatCurrency(equipmentBreakdown.solar.totalCost)}</div>
-                    </div>
+
+                    {/* Constraints */}
+                    {equipmentBreakdown.solar.spaceRequirements.constraints.length > 0 && (
+                      <div className="mt-6">
+                        <h6 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          Space Constraints
+                        </h6>
+                        <div className="space-y-2">
+                          {equipmentBreakdown.solar.spaceRequirements.constraints.map((constraint, index) => (
+                            <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                              <div className="text-sm text-red-700">{constraint}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alternatives */}
+                    {equipmentBreakdown.solar.spaceRequirements.alternatives && (
+                      <div className="mt-6">
+                        <h6 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          Recommended Alternatives
+                        </h6>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {equipmentBreakdown.solar.spaceRequirements.alternatives.map((alternative, index) => (
+                            <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <div className="text-sm text-blue-700 font-medium">{alternative}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
