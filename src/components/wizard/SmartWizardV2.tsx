@@ -5,13 +5,14 @@ import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 
 // New customer-focused steps
 import StepIntro from './steps/Step_Intro';
-import Step0_Goals from './steps/Step0_Goals';
 import Step1_IndustryTemplate from './steps/Step1_IndustryTemplate';
 import Step2_UseCase from './steps/Step2_UseCase';
 import Step3_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
+import InteractiveConfigDashboard from './InteractiveConfigDashboard';
 import Step4_LocationPricing from './steps/Step4_LocationPricing';
 import Step5_QuoteSummary from './steps/Step4_QuoteSummary';
 import QuoteCompletePage from './QuoteCompletePage';
+import AIStatusIndicator from './AIStatusIndicator';
 
 interface SmartWizardProps {
   show: boolean;
@@ -35,24 +36,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     action: () => void;
   }>>([]);
 
-  // Step 0: Goals
-  const [selectedGoal, setSelectedGoal] = useState<string | string[]>([]);
-
-  // Helper function to format goals for display
-  const formatGoals = (goal: string | string[]): string => {
-    if (Array.isArray(goal)) {
-      if (goal.length === 0) return '';
-      if (goal.length === 1) return goal[0].replace('-', ' ');
-      return goal.map(g => g.replace('-', ' ')).join(', ');
-    }
-    return goal.replace('-', ' ');
-  };
-
-  // Step 1: Industry Template
+  // Step 1: Industry Template (was Step 1)
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [useTemplate, setUseTemplate] = useState(true);
 
-  // Step 2: Use Case Data (NEW)
+  // Step 2: Use Case Data (was Step 2)
   const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
   const [aiUseCaseRecommendation, setAiUseCaseRecommendation] = useState<{
     message: string;
@@ -61,11 +49,284 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     configuration: string;
   } | null>(null);
 
-  // Step 3: Configuration (was Step 2)
+  // Function to calculate industry-appropriate initial configuration
+  const calculateIndustryBaseline = (template: string | string[], scale: number = 1) => {
+    const templateKey = Array.isArray(template) ? template[0] : template;
+    
+    // Comprehensive industry-specific configurations based on real-world needs
+    const industryProfiles: { [key: string]: { 
+      basePowerMW: number; 
+      baseDurationHrs: number; 
+      solarRatio: number;
+      scaleFactor: number; // Multiplier for scale parameter
+      scaleUnit: string; // What the scale represents
+    } } = {
+      // TRANSPORTATION & LOGISTICS
+      'ev-charging': { 
+        basePowerMW: 0.35,  // 350kW per fast charger
+        baseDurationHrs: 3,  // Peak demand buffering
+        solarRatio: 0.8, 
+        scaleFactor: 1.0,  // Direct scaling with charger count
+        scaleUnit: 'chargers'
+      },
+      'airport': { 
+        basePowerMW: 8.0,   // Large facility base
+        baseDurationHrs: 6,  // Flight schedule buffering
+        solarRatio: 1.2, 
+        scaleFactor: 0.4,   // Scale with passenger volume (millions)
+        scaleUnit: 'million_passengers'
+      },
+      'logistics': { 
+        basePowerMW: 2.5,   // Warehouse operations
+        baseDurationHrs: 8,  // Shift coverage
+        solarRatio: 1.8, 
+        scaleFactor: 0.3,   // Scale with facility size
+        scaleUnit: 'sq_ft_thousands'
+      },
+      
+      // HOSPITALITY & COMMERCIAL
+      'hotel': { 
+        basePowerMW: 0.4,   // Per 100 rooms base
+        baseDurationHrs: 6,  // Guest comfort continuity
+        solarRatio: 1.0, 
+        scaleFactor: 0.8,   // Scale with room count
+        scaleUnit: 'rooms'
+      },
+      'casino': { 
+        basePowerMW: 3.0,   // High energy density
+        baseDurationHrs: 12, // 24/7 operations
+        solarRatio: 0.6, 
+        scaleFactor: 1.2,   // Scale with gaming floor area
+        scaleUnit: 'gaming_floor_sq_ft'
+      },
+      'retail': { 
+        basePowerMW: 0.15,  // Per 10k sq ft
+        baseDurationHrs: 8,  // Business hours + security
+        solarRatio: 1.5, 
+        scaleFactor: 0.5,   // Scale with store size
+        scaleUnit: 'sq_ft_thousands'
+      },
+      'car-wash': { 
+        basePowerMW: 0.25,  // Per wash bay
+        baseDurationHrs: 4,  // Peak hours coverage
+        solarRatio: 1.8, 
+        scaleFactor: 1.1,   // Scale with number of bays
+        scaleUnit: 'wash_bays'
+      },
+      
+      // HEALTHCARE & EDUCATION
+      'hospital': { 
+        basePowerMW: 2.0,   // Per 100 beds
+        baseDurationHrs: 12, // Life safety requirements
+        solarRatio: 0.8, 
+        scaleFactor: 1.0,   // Scale with bed count
+        scaleUnit: 'beds'
+      },
+      'university': { 
+        basePowerMW: 1.5,   // Per 1000 students
+        baseDurationHrs: 8,  // Academic schedule
+        solarRatio: 1.4, 
+        scaleFactor: 0.7,   // Scale with enrollment
+        scaleUnit: 'students_thousands'
+      },
+      
+      // INDUSTRIAL & TECHNOLOGY
+      'manufacturing': { 
+        basePowerMW: 1.5,   // Production line base
+        baseDurationHrs: 6,  // Shift operations
+        solarRatio: 1.2, 
+        scaleFactor: 0.8,   // Scale with production capacity
+        scaleUnit: 'production_lines'
+      },
+      'data-center': { 
+        basePowerMW: 4.0,   // Per MW IT load
+        baseDurationHrs: 8,  // Outage protection
+        solarRatio: 0.6, 
+        scaleFactor: 1.2,   // Scale with IT capacity
+        scaleUnit: 'IT_load_MW'
+      },
+      'cold-storage': { 
+        basePowerMW: 0.8,   // Temperature critical
+        baseDurationHrs: 12, // Extended outage protection
+        solarRatio: 1.5, 
+        scaleFactor: 0.9,   // Scale with storage volume
+        scaleUnit: 'storage_volume'
+      },
+      'warehouse': { 
+        basePowerMW: 0.3,   // Per 100k sq ft
+        baseDurationHrs: 6,  // Operations coverage
+        solarRatio: 1.8, 
+        scaleFactor: 0.7,   // Scale with facility size
+        scaleUnit: 'sq_ft_hundred_thousands'
+      },
+      
+      // RESIDENTIAL & MULTI-TENANT
+      'apartment': { 
+        basePowerMW: 0.25,  // Per 100 units
+        baseDurationHrs: 6,  // Resident comfort
+        solarRatio: 1.3, 
+        scaleFactor: 0.9,   // Scale with unit count
+        scaleUnit: 'units'
+      },
+      'microgrid': { 
+        basePowerMW: 1.0,   // Community base
+        baseDurationHrs: 8,  // Resilience focus
+        solarRatio: 2.0, 
+        scaleFactor: 1.0,   // Scale with homes/buildings
+        scaleUnit: 'buildings'
+      },
+      
+      // AGRICULTURE & SPECIALTY
+      'agricultural': { 
+        basePowerMW: 0.5,   // Farm operations
+        baseDurationHrs: 6,  // Irrigation/processing
+        solarRatio: 2.2, 
+        scaleFactor: 0.6,   // Scale with farm size
+        scaleUnit: 'acres_thousands'
+      },
+      'indoor-farm': { 
+        basePowerMW: 1.2,   // High energy for lighting
+        baseDurationHrs: 4,  // Growth cycle protection
+        solarRatio: 1.0, 
+        scaleFactor: 1.5,   // Scale with growing area
+        scaleUnit: 'growing_area_sq_ft'
+      }
+    };
+    
+    const profile = industryProfiles[templateKey] || { 
+      basePowerMW: 2, 
+      baseDurationHrs: 4, 
+      solarRatio: 1.0, 
+      scaleFactor: 1.0,
+      scaleUnit: 'generic'
+    };
+    
+    // Calculate scaled configuration
+    const scaledPower = profile.basePowerMW * scale * profile.scaleFactor;
+    const scaledDuration = profile.baseDurationHrs;
+    const scaledSolar = scaledPower * profile.solarRatio;
+    
+    return {
+      powerMW: Math.max(0.5, Math.round(scaledPower * 10) / 10),
+      durationHrs: Math.max(2, Math.round(scaledDuration * 2) / 2),
+      solarMW: Math.max(0, Math.round(scaledSolar * 10) / 10)
+    };
+  };
+
+  // Step 3: Configuration (calculated based on industry template)
   const [storageSizeMW, setStorageSizeMW] = useState(2);
   const [durationHours, setDurationHours] = useState(4);
 
-  // Step 4: Renewables (was Step 3)
+  // Auto-calculate realistic configuration based on use case data
+  useEffect(() => {
+    if (selectedTemplate && Object.keys(useCaseData).length > 0) {
+      let scale = 1; // Default scale
+      
+      if (selectedTemplate === 'ev-charging') {
+        // Calculate realistic storage based on charger configuration
+        const level2Count = parseInt(useCaseData.level2Chargers) || 0;
+        const level2Power = parseFloat(useCaseData.level2Power) || 11;
+        const dcFastCount = parseInt(useCaseData.dcFastChargers) || 0;
+        const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150;
+        const peakConcurrency = parseInt(useCaseData.peakConcurrency) || 50;
+        
+        // Calculate total charging capacity and required storage
+        const totalLevel2Power = (level2Count * level2Power) / 1000; // Convert to MW
+        const totalDCFastPower = (dcFastCount * dcFastPower) / 1000; // Convert to MW
+        const totalChargingPower = totalLevel2Power + totalDCFastPower;
+        
+        // Storage sizing: 60-80% of total charging power for demand management
+        // Plus concurrency factor (how many charge simultaneously)
+        const concurrencyFactor = Math.min(peakConcurrency / 100, 0.8); // Max 80% concurrency
+        const demandManagementSize = totalChargingPower * concurrencyFactor * 0.7; // 70% for demand shaving
+        
+        // Minimum 0.5MW, maximum practical size based on charger count
+        const calculatedPowerMW = Math.max(0.5, Math.min(demandManagementSize, totalChargingPower * 0.8));
+        
+        // Duration: 2-4 hours for peak demand management and grid arbitrage
+        const calculatedDurationHrs = Math.max(2, Math.min(4, 3));
+        
+        setStorageSizeMW(Math.round(calculatedPowerMW * 10) / 10);
+        setDurationHours(calculatedDurationHrs);
+        
+        // Set appropriate solar too
+        const solarRatio = 0.8; // Conservative solar-to-battery ratio for EV charging
+        setSolarMW(Math.round(calculatedPowerMW * solarRatio * 10) / 10);
+        
+      } else {
+        // Extract scale based on use case type
+        switch (selectedTemplate) {
+          case 'hotel':
+            scale = parseInt(useCaseData.numRooms) || 100; // Number of rooms
+            scale = scale / 100; // Convert to scale factor (per 100 rooms)
+            break;
+          case 'car-wash':
+            scale = parseInt(useCaseData.numBays) || 3; // Number of wash bays
+            break;
+          case 'hospital':
+            scale = parseInt(useCaseData.bedCount) || 200; // Number of beds
+            scale = scale / 100; // Convert to scale factor (per 100 beds)
+            break;
+          case 'university':
+            scale = parseInt(useCaseData.enrollment) || 5000; // Student enrollment
+            scale = scale / 1000; // Convert to thousands
+            break;
+          case 'apartment':
+            scale = parseInt(useCaseData.numUnits) || 100; // Number of units
+            scale = scale / 100; // Convert to scale factor (per 100 units)
+            break;
+          case 'data-center':
+            scale = parseInt(useCaseData.capacity) || 5; // MW capacity
+            break;
+          case 'airport':
+            scale = parseInt(useCaseData.annual_passengers) || 5; // Million passengers
+            break;
+          case 'manufacturing':
+            scale = parseInt(useCaseData.numLines) || parseInt(useCaseData.production_lines) || 2; // Production lines
+            break;
+          case 'warehouse':
+          case 'logistics':
+            scale = parseInt(useCaseData.facility_size) || 100; // Thousand sq ft
+            scale = scale / 100; // Convert to scale factor
+            break;
+          case 'retail':
+            scale = parseInt(useCaseData.store_size) || 50; // Thousand sq ft
+            scale = scale / 10; // Convert to scale factor
+            break;
+          case 'casino':
+            scale = parseInt(useCaseData.gaming_floor_size) || 50000; // Gaming floor sq ft
+            scale = scale / 50000; // Convert to scale factor
+            break;
+          case 'agricultural':
+            scale = parseInt(useCaseData.farm_size) || 1000; // Acres
+            scale = scale / 1000; // Convert to thousands
+            break;
+          case 'indoor-farm':
+            scale = parseInt(useCaseData.growing_area) || 10000; // Growing area sq ft
+            scale = scale / 10000; // Convert to scale factor
+            break;
+          case 'cold-storage':
+            scale = parseInt(useCaseData.storage_volume) || parseInt(useCaseData.capacity) || 50000; // Storage volume
+            scale = scale / 50000; // Convert to scale factor
+            break;
+          case 'microgrid':
+            scale = parseInt(useCaseData.numBuildings) || parseInt(useCaseData.homes) || 50; // Buildings/homes
+            scale = scale / 50; // Convert to scale factor
+            break;
+          default:
+            scale = 1; // Default scale
+        }
+        
+        // Use the industry baseline calculation with extracted scale
+        const baseline = calculateIndustryBaseline(selectedTemplate, scale);
+        setStorageSizeMW(baseline.powerMW);
+        setDurationHours(baseline.durationHrs);
+        setSolarMW(baseline.solarMW);
+      }
+    }
+  }, [selectedTemplate, useCaseData]);
+
+  // Step 4: Renewables (was Step 4)
   const [includeRenewables, setIncludeRenewables] = useState(false);
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
@@ -89,10 +350,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     improvementText: string;
   } | null>(null);
 
-  // Calculate AI baseline whenever goals or industry changes
+  // Calculate AI baseline whenever industry changes
   useEffect(() => {
-    if (selectedGoal && selectedTemplate) {
-      const goals = Array.isArray(selectedGoal) ? selectedGoal : [selectedGoal];
+    if (selectedTemplate) {
       const industry = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
       
       // Industry-specific optimal ratios
@@ -116,22 +376,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
       
       // Goal-specific adjustments
-      let powerMultiplier = 1.0;
-      let durationMultiplier = 1.0;
-      
-      if (goals.includes('backup-power')) {
-        durationMultiplier *= 1.5;
-      }
-      if (goals.includes('reduce-costs') || goals.includes('grid-revenue')) {
-        powerMultiplier *= 1.2;
-      }
-      if (goals.includes('renewable-storage')) {
-        durationMultiplier *= 1.3;
-      }
-      
-      const optimalPowerMW = profile.powerMW * powerMultiplier;
-      const optimalDurationHrs = profile.durationHrs * durationMultiplier;
-      const optimalSolarMW = profile.powerMW * powerMultiplier * profile.solarRatio;
+      // Set optimal configuration based on industry profile
+      const optimalPowerMW = profile.powerMW;
+      const optimalDurationHrs = profile.durationHrs;
+      const optimalSolarMW = profile.powerMW * profile.solarRatio;
       
       setAiBaseline({
         optimalPowerMW,
@@ -140,7 +388,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         improvementText: '', // Will calculate when user reaches step 5
       });
     }
-  }, [selectedGoal, selectedTemplate]);
+  }, [selectedTemplate]);
 
   // Calculate improvement text when user reaches step 5
   useEffect(() => {
@@ -164,9 +412,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         improvementText = `🔋 ${Math.abs(efficiencyDiff).toFixed(0)}% More Power`;
       }
       
-      setAiBaseline({ ...aiBaseline, improvementText });
+      setAiBaseline(prev => prev ? { ...prev, improvementText } : null);
     }
-  }, [step, storageSizeMW, durationHours, aiBaseline]);
+  }, [step, storageSizeMW, durationHours]);
 
   // Generate AI use case recommendation when user completes Step 2
   useEffect(() => {
@@ -564,44 +812,40 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     const totalEnergyMWh = storageSizeMW * durationHours;
     const costs = calculateCosts();
 
-    // Analyze based on selected goal
-    if (selectedGoal === 'cost-reduction' || selectedGoal === 'demand-charge-reduction') {
-      // Check if duration is optimal for peak shaving
-      if (durationHours > 4) {
-        const optimalDuration = 4;
-        const newSize = storageSizeMW * 1.1; // Slight increase in power
-        suggestions.push({
-          type: 'cost-saving',
-          title: 'Optimize for Peak Shaving',
-          description: 'For demand charge reduction, shorter duration with higher power is more cost-effective. You can reduce upfront costs while maintaining peak shaving capability.',
-          currentValue: `${storageSizeMW.toFixed(1)}MW / ${durationHours}hr`,
-          suggestedValue: `${newSize.toFixed(1)}MW / ${optimalDuration}hr`,
-          impact: 'Reduces equipment cost by ~20% while improving demand response',
-          savings: '$' + ((costs.totalProjectCost * 0.2) / 1000000).toFixed(2) + 'M',
-          action: () => {
-            setStorageSizeMW(newSize);
-            setDurationHours(optimalDuration);
-          }
-        });
-      }
+    // Industry-specific optimization suggestions
+    // Check for oversized systems that could be cost-optimized
+    if (durationHours > 6) {
+      const optimalDuration = 4;
+      const newSize = storageSizeMW * 1.1; // Slight increase in power
+      suggestions.push({
+        type: 'cost-saving',
+        title: 'Optimize Duration vs Power',
+        description: 'For most commercial applications, shorter duration with higher power is more cost-effective. You can reduce upfront costs while maintaining operational capability.',
+        currentValue: `${storageSizeMW.toFixed(1)}MW / ${durationHours}hr`,
+        suggestedValue: `${newSize.toFixed(1)}MW / ${optimalDuration}hr`,
+        impact: 'Reduces equipment cost by ~20% while improving demand response',
+        savings: '$' + ((costs.totalProjectCost * 0.2) / 1000000).toFixed(2) + 'M',
+        action: () => {
+          setStorageSizeMW(newSize);
+          setDurationHours(optimalDuration);
+        }
+      });
     }
 
-    if (selectedGoal === 'backup-power' || selectedGoal === 'grid-independence') {
-      // Check if duration is sufficient for backup
-      if (durationHours < 4) {
-        const recommendedDuration = 6;
-        suggestions.push({
-          type: 'warning',
-          title: 'Backup Duration May Be Insufficient',
-          description: 'For reliable backup power during outages, we recommend at least 6 hours of storage. This ensures you can maintain operations through typical utility restoration times.',
-          currentValue: `${durationHours} hours`,
-          suggestedValue: `${recommendedDuration} hours`,
-          impact: 'Provides 50% more backup time for critical operations',
-          action: () => {
-            setDurationHours(recommendedDuration);
-          }
-        });
-      }
+    // Check for backup power adequacy
+    if (durationHours < 4) {
+      const recommendedDuration = 6;
+      suggestions.push({
+        type: 'warning',
+        title: 'Consider Longer Duration for Reliability',
+        description: 'For critical operations and backup scenarios, longer duration storage provides better resilience. Consider at least 6 hours of storage for extended outage protection.',
+        currentValue: `${durationHours} hours`,
+        suggestedValue: `${recommendedDuration} hours`,
+        impact: 'Provides 50% more backup time for critical operations',
+        action: () => {
+          setDurationHours(recommendedDuration);
+        }
+      });
     }
 
     // Check for oversizing
@@ -611,7 +855,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       suggestions.push({
         type: 'cost-saving',
         title: 'System May Be Oversized',
-        description: `Based on typical ${getIndustryName(templateKey)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your ${formatGoals(selectedGoal)} goals.`,
+        description: `Based on typical ${getIndustryName(templateKey)} energy profiles, you may be able to reduce system size and save significantly on upfront costs while still meeting your operational requirements.`,
         currentValue: `${totalEnergyMWh.toFixed(1)} MWh`,
         suggestedValue: `${(optimalSize * durationHours).toFixed(1)} MWh`,
         impact: 'Reduces upfront investment while maintaining performance',
@@ -623,7 +867,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }
 
     // Check if renewables would improve ROI
-    if (!includeRenewables && (selectedGoal === 'energy-independence' || selectedGoal === 'renewable-integration')) {
+    if (!includeRenewables) {
       const suggestedSolar = storageSizeMW * 0.8;
       suggestions.push({
         type: 'optimization',
@@ -659,7 +903,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }
 
     // Energy arbitrage optimization
-    if (selectedGoal === 'energy-cost-savings' && durationHours < 4) {
+    if (durationHours < 4) {
       suggestions.push({
         type: 'optimization',
         title: 'Extend Duration for Energy Arbitrage',
@@ -738,10 +982,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   const canProceed = () => {
     switch (step) {
-      case 0: return Array.isArray(selectedGoal) ? selectedGoal.length > 0 : selectedGoal !== '';
-      case 1: return useTemplate ? selectedTemplate !== '' : true;
-      case 2: return Object.keys(useCaseData).length > 0; // Use case questions answered
-      case 3: return storageSizeMW > 0 && durationHours > 0;
+      case 0: return useTemplate ? selectedTemplate !== '' : true;
+      case 1: return Object.keys(useCaseData).length > 0; // Use case questions answered
+      case 2: return storageSizeMW > 0 && durationHours > 0;
+      case 3: return true; // Interactive dashboard allows any configuration
       case 4: return location !== '' && electricityRate > 0;
       case 5: return true; // Quote summary, defaults are set
       default: return false;
@@ -750,10 +994,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   const getStepTitle = () => {
     const titles = [
-      'What is your Main Goal?',
       'Choose Your Industry',
       'Tell Us About Your Operation',
       'Configure Your System',
+      'Interactive Dashboard',
       'Location & Pricing',
       'Review Your Quote'
     ];
@@ -773,13 +1017,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     switch (step) {
       case 0:
         return (
-          <Step0_Goals
-            selectedGoal={selectedGoal}
-            setSelectedGoal={setSelectedGoal}
-          />
-        );
-      case 1:
-        return (
           <Step1_IndustryTemplate
             selectedTemplate={selectedTemplate}
             setSelectedTemplate={setSelectedTemplate}
@@ -787,7 +1024,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setUseTemplate={setUseTemplate}
           />
         );
-      case 2:
+      case 1:
         return (
           <Step2_UseCase
             selectedIndustry={selectedTemplate}
@@ -796,10 +1033,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             aiRecommendation={aiUseCaseRecommendation}
             setStorageSizeMW={setStorageSizeMW}
             setDurationHours={setDurationHours}
-            onAdvanceToConfiguration={() => setStep(3)}
+            onAdvanceToConfiguration={() => setStep(2)}
           />
         );
-      case 3:
+      case 2:
         return (
           <Step3_SimpleConfiguration
             storageSizeMW={storageSizeMW}
@@ -830,7 +1067,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             windMW={windMW}
             generatorMW={generatorMW}
             location={location}
-            selectedGoal={selectedGoal}
             industryTemplate={selectedTemplate}
             equipmentCost={costs.equipmentCost}
             installationCost={costs.installationCost}
@@ -881,7 +1117,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           windMW,
           generatorMW: effectiveGeneratorMW,
           location,
-          selectedGoal,
           industryTemplate: selectedTemplate,
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
@@ -899,7 +1134,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           windMW,
           generatorMW: effectiveGeneratorMW,
           location,
-          selectedGoal,
           industryTemplate: selectedTemplate,
           gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
@@ -918,7 +1152,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           windMW,
           generatorMW: effectiveGeneratorMW,
           location,
-          selectedGoal,
           industryTemplate: selectedTemplate,
           gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
@@ -937,7 +1170,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           windMW,
           generatorMW: effectiveGeneratorMW,
           location,
-          selectedGoal,
           industryTemplate: selectedTemplate,
           gridConnection: gridConnection,
           totalProjectCost: costs.totalProjectCost,
@@ -962,7 +1194,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             windMW,
             generatorMW,
             location,
-            selectedGoal,
             industryTemplate: selectedTemplate,
             timestamp: new Date().toISOString()
           };
@@ -983,6 +1214,29 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   if (!show) return null;
 
+  // Special case: Interactive Dashboard renders as full-screen, not in wizard modal
+  if (step === 3) {
+    return (
+      <InteractiveConfigDashboard
+        initialStorageSizeMW={storageSizeMW}
+        initialDurationHours={durationHours}
+        initialSolarMW={solarMW}
+        industryTemplate={selectedTemplate}
+        location={location}
+        electricityRate={electricityRate}
+        onConfigurationChange={(config) => {
+          setStorageSizeMW(config.storageSizeMW);
+          setDurationHours(config.durationHours);
+          setSolarMW(config.solarMW);
+          setWindMW(config.windMW);
+          setGeneratorMW(config.generatorMW);
+        }}
+        onBack={() => setStep(2)}
+        onContinue={() => setStep(4)}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
@@ -994,11 +1248,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 <span className="text-4xl">🪄</span>
                 <div>
                   <h2 className="text-2xl font-bold">Smart Wizard</h2>
-                  <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
+                    <AIStatusIndicator compact={true} />
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* AI Wizard Button moved to Step 6 - no longer in header */}
+                {/* AI Wizard Button moved to Step 5 - no longer in header */}
                 <button
                   onClick={onClose}
                   className="text-white hover:text-gray-200 text-3xl font-bold"
@@ -1106,8 +1363,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                     <div className="text-sm opacity-90 mb-1">Optimizing for</div>
                     <div className="text-3xl font-bold mb-2">{getIndustryName(selectedTemplate)}</div>
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="bg-white/20 px-3 py-1 rounded-full capitalize">
-                        🎯 {formatGoals(selectedGoal)}
+                      <span className="bg-white/20 px-3 py-1 rounded-full">
+                        � {getIndustryName(selectedTemplate)} Operations
                       </span>
                       {location && (
                         <span className="bg-white/20 px-3 py-1 rounded-full">
@@ -1396,9 +1653,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                         <div className="text-green-600">✓ Optimal</div>
                       </div>
                       <div>
-                        <div className="text-gray-600">Goal Alignment</div>
-                        <div className="font-bold text-gray-900 text-lg capitalize">{formatGoals(selectedGoal)}</div>
-                        <div className="text-green-600">✓ Matched</div>
+                        <div className="text-gray-600">Industry Focus</div>
+                        <div className="font-bold text-gray-900 text-lg capitalize">{getIndustryName(selectedTemplate)}</div>
+                        <div className="text-green-600">✓ Optimized</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Payback Period</div>

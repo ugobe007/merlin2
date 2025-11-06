@@ -166,7 +166,7 @@ const Step6_FinalOutput: React.FC<Step6_FinalOutputProps> = ({
             <span className="text-3xl">📄</span>
             <div className="text-left">
               <div>Download PDF</div>
-              <div className="text-sm font-normal opacity-90">Executive summary</div>
+              <div className="text-sm font-normal opacity-90">Summary report</div>
             </div>
           </button>
 
@@ -177,7 +177,7 @@ const Step6_FinalOutput: React.FC<Step6_FinalOutputProps> = ({
             <span className="text-3xl">📊</span>
             <div className="text-left">
               <div>Download Excel</div>
-              <div className="text-sm font-normal opacity-90">Detailed analysis</div>
+              <div className="text-sm font-normal opacity-90">Full analysis</div>
             </div>
           </button>
         </div>
@@ -189,7 +189,7 @@ const Step6_FinalOutput: React.FC<Step6_FinalOutputProps> = ({
           📧 Email This Quote
         </h3>
         <p className="text-center text-gray-600 mb-6">
-          Send a copy to yourself or share with your team
+          Send to yourself or share with your team
         </p>
         
         <div className="flex gap-4 max-w-2xl mx-auto">

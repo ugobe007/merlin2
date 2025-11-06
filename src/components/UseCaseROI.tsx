@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Zap, DollarSign, Clock, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Import use case images with explicit extensions for Vite
+import carWashImage from '../assets/images/car_wash_1.jpg?url';
+import hospitalImage from '../assets/images/hospital_1.jpg?url';
+import evChargingStationImage from '../assets/images/ev_charging_station.png?url';
+import evChargingHotelImage from '../assets/images/ev_charging_hotel.webp?url';
+import hotelImage from '../assets/images/hotel_1.avif?url';
+import airportImage from '../assets/images/airports_1.jpg?url';
+
 interface UseCaseData {
   id: string;
   industry: string;
   icon: string;
+  image?: string; // Added image support
   description: string;
   facilitySize: string;
   
@@ -42,6 +51,7 @@ const useCases: UseCaseData[] = [
     id: 'car-wash',
     industry: 'Car Wash (Express Tunnel)',
     icon: '🚗',
+    image: carWashImage,
     description: '60-120 ft tunnel, 60-120 cars/hr, high dryer loads during peak hours',
     facilitySize: '3,000-5,000 sq ft',
     
@@ -102,6 +112,7 @@ const useCases: UseCaseData[] = [
     id: 'hotel',
     industry: 'Hotel (300 Rooms)',
     icon: '🏨',
+    image: evChargingHotelImage,
     description: 'Full-service hotel with restaurant, gym, conference center, laundry',
     facilitySize: '150,000 sq ft',
     
@@ -162,6 +173,7 @@ const useCases: UseCaseData[] = [
     id: 'ev-charging',
     industry: 'EV Charging Hub (100 Chargers)',
     icon: '⚡',
+    image: evChargingStationImage,
     description: 'Highway rest stop, 50 DC fast + 50 L2 chargers, high peak demand',
     facilitySize: '20 acres',
     
@@ -192,6 +204,7 @@ const useCases: UseCaseData[] = [
     id: 'university',
     industry: 'University Campus',
     icon: '🎓',
+    image: hospitalImage,
     description: '5,000-10,000 students, research labs, dorms, athletic facilities',
     facilitySize: '2 million sq ft',
     
@@ -312,6 +325,7 @@ const useCases: UseCaseData[] = [
     id: 'airport',
     industry: 'Airport Terminal',
     icon: '✈️',
+    image: airportImage,
     description: 'Regional airport, 5-10 gates, baggage handling, security, retail',
     facilitySize: '250,000 sq ft',
     
@@ -387,11 +401,24 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
 
   return (
     <div className="bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-indigo-50/40 rounded-2xl p-6 shadow-xl border-2 border-purple-200">
-      {/* Header - Refined */}
+      {/* Header - Enhanced with Image */}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{currentUseCase.icon}</span>
-          <span className="text-2xl font-bold text-gray-900">{currentUseCase.industry}</span>
+        <div className="flex items-center gap-4">
+          {/* Use Case Image (if available) */}
+          {currentUseCase.image && (
+            <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg border-2 border-white">
+              <img 
+                src={currentUseCase.image} 
+                alt={currentUseCase.industry}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          {/* Icon and Title */}
+          <div className="flex items-center gap-3">
+            <span className="text-4xl">{currentUseCase.icon}</span>
+            <span className="text-2xl font-bold text-gray-900">{currentUseCase.industry}</span>
+          </div>
         </div>
         {/* Navigation Controls */}
         <div className="flex items-center gap-2">

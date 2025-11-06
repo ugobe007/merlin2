@@ -773,7 +773,7 @@ export default function BessQuoteBuilder() {
         }),
 
         new Paragraph({
-          text: "The proposed BESS installation will integrate seamlessly with your existing infrastructure to provide reliable energy storage, peak shaving, and grid stabilization capabilities.",
+          text: "The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and grid stabilization.",
           spacing: { after: 300 },
         }),
 

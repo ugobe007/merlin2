@@ -401,104 +401,9 @@ export const generateCalculationBreakdown = (
   }
 
   // ============================================
-  // SECTION 7: ROI CALCULATIONS
+  // NOTE: ROI/Financial analysis section removed to simplify template
+  // Main financial metrics are included in the primary quote sections
   // ============================================
-
-  // Peak shaving savings
-  const peakRate = 0.18; // Example: $0.18/kWh
-  const offPeakRate = 0.08; // Example: $0.08/kWh
-  const demandCharge = 15; // Example: $15/kW/month
-  
-  const annualEnergyMWh = totalMWh * 365; // 1 cycle per day
-  const peakShavingSavings = annualEnergyMWh * 1000 * (peakRate - offPeakRate) * 0.7;
-  
-  calculations.push({
-    section: 'Financial Returns',
-    category: 'Peak Shaving Savings',
-    formula: 'Peak Savings = Energy × 365 × 1000 × (Peak - Off-Peak) × 0.7',
-    variables: [
-      { name: 'Daily Energy', value: totalMWh, unit: 'MWh' },
-      { name: 'Days per Year', value: 365, unit: 'days' },
-      { name: 'Peak Rate', value: peakRate, unit: '$/kWh' },
-      { name: 'Off-Peak Rate', value: offPeakRate, unit: '$/kWh' },
-      { name: 'Efficiency Factor', value: 0.7, unit: '' },
-    ],
-    result: peakShavingSavings,
-    resultUnit: '$/year',
-    explanation: 'Annual savings from arbitrage: charge during off-peak hours, discharge during peak hours.',
-    assumptions: [
-      '1 full cycle per day (365 cycles/year)',
-      '70% effective utilization accounting for losses',
-      'Round-trip efficiency: 85-90%',
-      'Utility rate differential drives arbitrage value',
-    ],
-  });
-
-  const demandChargeSavings = powerMW * 1000 * demandCharge * 12;
-  
-  calculations.push({
-    section: 'Financial Returns',
-    category: 'Demand Charge Reduction',
-    formula: 'Demand Savings = Power × 1000 × Demand Charge × 12',
-    variables: [
-      { name: 'System Power', value: powerMW, unit: 'MW' },
-      { name: 'Conversion Factor', value: 1000, unit: 'kW/MW' },
-      { name: 'Demand Charge', value: demandCharge, unit: '$/kW/month' },
-      { name: 'Months per Year', value: 12, unit: 'months' },
-    ],
-    result: demandChargeSavings,
-    resultUnit: '$/year',
-    explanation: 'Annual savings from reducing peak demand charges by shaving demand peaks.',
-    assumptions: [
-      'Demand charges based on monthly peak kW',
-      'BESS can reduce peak by rated capacity',
-      'Varies by utility rate structure (commercial/industrial)',
-    ],
-  });
-
-  const totalAnnualSavings = peakShavingSavings + demandChargeSavings;
-  const totalCapEx = bessCapEx + generatorSubtotal + solarSubtotal + windSubtotal + totalTariffs;
-  const simplePayback = totalCapEx / totalAnnualSavings;
-  const tenYearROI = ((totalAnnualSavings * 10 - totalCapEx) / totalCapEx) * 100;
-
-  calculations.push({
-    section: 'Financial Returns',
-    category: 'Simple Payback Period',
-    formula: 'Payback = Total CapEx ÷ Annual Savings',
-    variables: [
-      { name: 'Total CapEx', value: totalCapEx, unit: '$' },
-      { name: 'Annual Savings', value: totalAnnualSavings, unit: '$/year' },
-    ],
-    result: simplePayback,
-    resultUnit: 'years',
-    explanation: 'Number of years to recover initial investment from operational savings (undiscounted).',
-    assumptions: [
-      'Does not account for time value of money',
-      'Assumes constant savings over project life',
-      'Does not include maintenance costs (~2-3% annually)',
-      'Does not include replacement/augmentation costs',
-    ],
-  });
-
-  calculations.push({
-    section: 'Financial Returns',
-    category: '10-Year ROI',
-    formula: 'ROI % = ((Savings × 10 - CapEx) ÷ CapEx) × 100',
-    variables: [
-      { name: 'Annual Savings', value: totalAnnualSavings, unit: '$/year' },
-      { name: 'Project Duration', value: 10, unit: 'years' },
-      { name: 'Total CapEx', value: totalCapEx, unit: '$' },
-    ],
-    result: tenYearROI,
-    resultUnit: '%',
-    explanation: 'Return on Investment over 10-year period as a percentage of initial capital.',
-    assumptions: [
-      'Simple ROI calculation (not IRR or NPV)',
-      'Does not account for degradation (5-10% over 10 years)',
-      'Does not include incentives/tax credits',
-      'Conservative estimate for planning purposes',
-    ],
-  });
 
   return calculations;
 };
@@ -533,9 +438,8 @@ export const exportCalculationsToText = (calculations: CalculationBreakdown[]): 
   output += `║              Detailed Formula Transparency                    ║\n`;
   output += `╚═══════════════════════════════════════════════════════════════╝\n\n`;
   output += `Generated: ${new Date().toLocaleString()}\n\n`;
-  output += `This document provides complete transparency into how your BESS\n`;
-  output += `quote was calculated. All formulas, variables, assumptions, and\n`;
-  output += `data sources are documented for verification and trust.\n\n`;
+  output += `This document shows every formula, variable, and assumption used\n`;
+  output += `in your BESS quote for verification and transparency.\n\n`;
   
   calculations.forEach((calc) => {
     output += formatCalculationForDisplay(calc);

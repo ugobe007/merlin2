@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AIStatusIndicator from '../AIStatusIndicator';
 
 interface Step4_LocationPricingProps {
   location: string;
@@ -78,9 +79,12 @@ const Step4_LocationPricing: React.FC<Step4_LocationPricingProps> = ({
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold text-gray-800">
-          Location & Energy Rates
-        </h2>
+        <div className="flex justify-center items-center gap-3">
+          <h2 className="text-4xl font-bold text-gray-800">
+            Location & Energy Rates
+          </h2>
+          <AIStatusIndicator compact={true} />
+        </div>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Tell us where your project is located and what you pay for electricity
         </p>

@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Sparkles, TrendingUp } from 'lucide-react';
+import { aiStateService } from '../../../services/aiStateService';
+import AIStatusIndicator from '../AIStatusIndicator';
+
+// Import use case images with explicit extensions for Vite
+import evChargingStationImage from '../../../assets/images/ev_charging_station.png?url';
+import carWashImage from '../../../assets/images/car_wash_1.jpg?url';
+import hospitalImage from '../../../assets/images/hospital_1.jpg?url';
+import hotelImage from '../../../assets/images/hotel_1.avif?url';
+import airportImage from '../../../assets/images/airports_1.jpg?url';
 
 interface Step2_UseCaseProps {
   selectedIndustry: string;
@@ -26,7 +35,26 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
   setDurationHours,
   onAdvanceToConfiguration,
 }) => {
+  // Helper function to get industry image
+  const getIndustryImage = (industry: string): string | null => {
+    switch (industry) {
+      case 'ev-charging':
+        return evChargingStationImage;
+      case 'car-wash':
+        return carWashImage;
+      case 'hospital':
+        return hospitalImage;
+      case 'hotel':
+        return hotelImage;
+      case 'airport':
+        return airportImage;
+      default:
+        return null;
+    }
+  };
+
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isApplyingAI, setIsApplyingAI] = useState(false);
 
   // Extract MW and hours from AI configuration string
   const parseAIConfiguration = (configString: string) => {
@@ -48,12 +76,25 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
   const handleAcceptAIConfiguration = () => {
     if (aiConfig && setStorageSizeMW && setDurationHours) {
+      setIsApplyingAI(true);
+      
+      // Apply the configuration
       setStorageSizeMW(aiConfig.mw);
       setDurationHours(aiConfig.hours);
-      setShowConfirmModal(false);
-      if (onAdvanceToConfiguration) {
-        onAdvanceToConfiguration();
-      }
+      
+      // Update AI state to applied
+      aiStateService.setAIState('applied', {
+        appliedConfig: `${aiConfig.mw}MW / ${aiConfig.hours}hr`
+      });
+      
+      // Close modal and advance after brief delay
+      setTimeout(() => {
+        setShowConfirmModal(false);
+        setIsApplyingAI(false);
+        if (onAdvanceToConfiguration) {
+          onAdvanceToConfiguration();
+        }
+      }, 1500);
     }
   };
   const [showAIGuidance, setShowAIGuidance] = useState(false);
@@ -946,12 +987,28 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="text-6xl mb-4">{industryConfig.icon}</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          {industryConfig.title}
-        </h2>
+        <div className="flex justify-center items-center gap-4 mb-4">
+          {/* Industry Image (if available) */}
+          {getIndustryImage(selectedIndustry) && (
+            <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg border-2 border-white">
+              <img 
+                src={getIndustryImage(selectedIndustry)!} 
+                alt={industryConfig.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          {/* Industry Icon */}
+          <div className="text-6xl">{industryConfig.icon}</div>
+        </div>
+        <div className="flex justify-center items-center gap-3 mb-2">
+          <h2 className="text-3xl font-bold text-gray-900">
+            {industryConfig.title}
+          </h2>
+          <AIStatusIndicator compact={true} />
+        </div>
         <p className="text-gray-600 text-lg">
-          Tell us about your operation so we can recommend the optimal configuration
+          Tell us about your operation to recommend the optimal system
         </p>
       </div>
 
@@ -1106,12 +1163,26 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               </button>
               <button
                 onClick={handleAcceptAIConfiguration}
-                className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-green-700 hover:to-blue-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                disabled={isApplyingAI}
+                className={`flex-1 ${
+                  isApplyingAI 
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600' 
+                    : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                } text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center justify-center gap-2`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Accept & Configure
+                {isApplyingAI ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <span>Applying & Advancing...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Accept & Configure
+                  </>
+                )}
               </button>
             </div>
           </div>

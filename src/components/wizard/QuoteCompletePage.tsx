@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wand2, Sparkles, Send, X } from 'lucide-react';
+import { aiStateService, type AIState } from '../../services/aiStateService';
 
 interface QuoteCompletePageProps {
   quoteData: {
@@ -10,7 +11,6 @@ interface QuoteCompletePageProps {
     windMW: number;
     generatorMW: number;
     location: string;
-    selectedGoal: string | string[];
     industryTemplate: string | string[];
     
     // Financial
@@ -31,6 +31,7 @@ interface QuoteCompletePageProps {
   onEmailQuote: (email: string) => void;
   onSaveProject: () => void;
   onRequestConsultation: () => void;
+  onUpdateQuote?: (updatedQuoteData: any) => void;
   onClose: () => void;
 }
 
@@ -42,15 +43,25 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   onEmailQuote,
   onSaveProject,
   onRequestConsultation,
+  onUpdateQuote,
   onClose,
 }) => {
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [projectSaved, setProjectSaved] = useState(false);
   const [showAIConfig, setShowAIConfig] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  
+  // Persistent AI state management
+  const [aiState, setAiState] = useState<AIState>(aiStateService.getAIState().state);
+  const [appliedConfig, setAppliedConfig] = useState<string>(aiStateService.getAIState().appliedConfig || '');
+  const [isApplyingAI, setIsApplyingAI] = useState(false);
+  const [isButtonLoading, setIsButtonLoading] = useState(false); // Add immediate button feedback
+  
+  // Legacy compatibility - derived from persistent state
+  const aiConfigApplied = aiState === 'applied';
+  
   const [aiSuggestion, setAiSuggestion] = useState<{
     storageSizeMW: number;
     durationHours: number;
@@ -61,14 +72,35 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     roiChange: string;
     warning?: string;
   } | null>(null);
+
+  // Initialize AI state from persistent storage
+  useEffect(() => {
+    const persistentState = aiStateService.getAIState();
+    setAiState(persistentState.state);
+    if (persistentState.appliedConfig) {
+      setAppliedConfig(persistentState.appliedConfig);
+    }
+  }, []);
   
   // Auto-generate AI baseline when modal opens
   useEffect(() => {
-    if (showAIConfig && !aiSuggestion) {
-      // Automatically analyze the configuration
-      handleAIGenerate();
+    if (showAIConfig && !aiSuggestion && !isGenerating) {
+      // Update state to analyzing
+      updateAIState('analyzing');
+      setIsGenerating(true);
+      setTimeout(() => {
+        handleAIGenerate();
+      }, 500);
     }
   }, [showAIConfig]);
+
+  // Helper function to update AI state persistently
+  const updateAIState = (newState: AIState, additionalData?: any) => {
+    setAiState(newState);
+    aiStateService.setAIState(newState, additionalData);
+  };
+
+  // Remove the problematic continuous AI monitoring that causes infinite loops
   
   // Helper function to get industry name
   const getIndustryName = (template: string | string[]) => {
@@ -97,19 +129,8 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     return result;
   };
   
-  // Helper function to format goals for display
-  const formatGoals = (goal: string | string[]): string => {
-    if (Array.isArray(goal)) {
-      if (goal.length === 0) return '';
-      if (goal.length === 1) return goal[0].replace(/-/g, ' ');
-      return goal.map(g => g.replace(/-/g, ' ')).join(', ');
-    }
-    return goal.replace(/-/g, ' ');
-  };
-  
   // AI Baseline Model - calculates optimal configuration based on inputs
   const calculateOptimalBaseline = () => {
-    const goals = Array.isArray(quoteData.selectedGoal) ? quoteData.selectedGoal : [quoteData.selectedGoal];
     const industry = Array.isArray(quoteData.industryTemplate) ? quoteData.industryTemplate[0] : quoteData.industryTemplate;
     
     // Industry-specific optimal ratios
@@ -121,22 +142,29 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
       'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
       'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
+      'ev-charging': { powerMW: 15.0, durationHrs: 2, solarRatio: 0.6 },
+      'hotel': { powerMW: 2.2, durationHrs: 6, solarRatio: 1.1 },
+      'college': { powerMW: 4.5, durationHrs: 5, solarRatio: 1.4 },
+      'airport': { powerMW: 12.0, durationHrs: 8, solarRatio: 0.9 },
     };
     
     const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
     
-    // Goal-specific adjustments
+    // Infer goals from configuration characteristics
     let powerMultiplier = 1.0;
     let durationMultiplier = 1.0;
     
-    if (goals.includes('backup-power')) {
+    // If duration is high, assume backup power goal
+    if (quoteData.durationHours > 6) {
       durationMultiplier *= 1.5; // More duration for backup
     }
-    if (goals.includes('reduce-costs') || goals.includes('grid-revenue')) {
-      powerMultiplier *= 1.2; // More power for demand charges and grid services
-    }
-    if (goals.includes('renewable-storage')) {
+    // If solar is present, assume renewable storage goal
+    if (quoteData.solarMW > 0) {
       durationMultiplier *= 1.3; // More storage for renewable energy
+    }
+    // If high power relative to industry, assume grid revenue goal
+    if (quoteData.storageSizeMW > profile.powerMW * 1.5) {
+      powerMultiplier *= 1.2; // More power for demand charges and grid services
     }
     
     return {
@@ -174,13 +202,15 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   };
 
   const handleAIGenerate = () => {
-    if (!aiPrompt.trim()) return;
+    // Allow empty prompts for continuous monitoring with default analysis
+    const defaultPrompt = 'analyze current configuration';
+    const promptToUse = defaultPrompt; // Always use default for auto-analysis
     
     setIsGenerating(true);
     
     // Simulate AI processing
     setTimeout(() => {
-      const prompt = aiPrompt.toLowerCase();
+      const prompt = promptToUse.toLowerCase();
       const baseline = calculateOptimalBaseline();
       const currentROI = calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
       const optimalROI = calculateROI(baseline.optimalPowerMW, baseline.optimalDurationHrs, baseline.optimalSolarMW);
@@ -203,7 +233,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         newSize = baseline.optimalPowerMW;
         newDuration = baseline.optimalDurationHrs;
         newSolar = baseline.optimalSolarMW;
-        reasoning = `Based on your ${getIndustryName(quoteData.industryTemplate)} industry and goals (${Array.isArray(quoteData.selectedGoal) ? quoteData.selectedGoal.join(', ') : quoteData.selectedGoal}), the optimal configuration is ${newSize.toFixed(1)}MW / ${newDuration}hr with ${newSolar.toFixed(1)}MW solar. This maximizes ROI while meeting your operational needs.`;
+        reasoning = `Based on your ${getIndustryName(quoteData.industryTemplate)} industry profile, the optimal configuration is ${newSize.toFixed(1)}MW / ${newDuration}hr with ${newSolar.toFixed(1)}MW solar. This maximizes ROI while meeting your operational needs.`;
       } else if (prompt.includes('reduce') || prompt.includes('cheaper') || prompt.includes('smaller') || prompt.includes('cut cost')) {
         newSize = Math.max(0.5, baseline.optimalPowerMW * 0.75);
         newDuration = Math.max(2, baseline.optimalDurationHrs * 0.85);
@@ -268,15 +298,61 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         warning
       });
       setIsGenerating(false);
+      updateAIState('active'); // AI analysis is ready
       setShowScrollIndicator(true); // Reset scroll indicator for new suggestions
     }, 1500);
   };
 
   const handleApplyAI = () => {
-    // In production, this would update the wizard configuration
-    console.log('Applying AI suggestion:', aiSuggestion);
-    alert('AI configuration would be applied! (In production, this updates the wizard and recalculates.)');
-    setShowAIConfig(false);
+    if (!aiSuggestion) return;
+    
+    setIsApplyingAI(true);
+    
+    // Calculate ROI difference for user feedback
+    const currentROI = calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
+    const newROI = calculateROI(aiSuggestion.storageSizeMW, aiSuggestion.durationHours, aiSuggestion.solarMW || quoteData.solarMW);
+    
+    // Show success feedback with the recommendation details
+    const roiImprovement = newROI.payback < currentROI.payback ? 
+      `Payback improved by ${(currentROI.payback - newROI.payback).toFixed(1)} years!` :
+      `New payback: ${newROI.payback.toFixed(1)} years`;
+    
+    const costImpact = newROI.totalCost < currentROI.totalCost ?
+      `Cost reduced by $${((currentROI.totalCost - newROI.totalCost) / 1000000).toFixed(1)}M` :
+      `Investment: $${(newROI.totalCost / 1000000).toFixed(1)}M`;
+    
+    // Set applied state and configuration details
+    setTimeout(() => {
+      const appliedConfigString = `${aiSuggestion.storageSizeMW.toFixed(1)}MW / ${aiSuggestion.durationHours}hr`;
+      setAppliedConfig(appliedConfigString);
+      setIsApplyingAI(false);
+      
+      // Update persistent AI state
+      updateAIState('applied', { 
+        appliedConfig: appliedConfigString 
+      });
+      
+      // If onUpdateQuote is provided, use it to update the configuration
+      if (onUpdateQuote) {
+        const updatedQuoteData = {
+          ...quoteData,
+          storageSizeMW: aiSuggestion.storageSizeMW,
+          durationHours: aiSuggestion.durationHours,
+          solarMW: aiSuggestion.solarMW || quoteData.solarMW,
+          windMW: aiSuggestion.windMW || quoteData.windMW,
+          totalProjectCost: newROI.totalCost,
+          annualSavings: newROI.annualSavings,
+          paybackYears: newROI.payback
+        };
+        onUpdateQuote(updatedQuoteData);
+      }
+      
+      // Close the modal after a brief delay to show success
+      setTimeout(() => {
+        setShowAIConfig(false);
+        setAiSuggestion(null);
+      }, 1500);
+    }, 800); // Short delay to show processing
   };
 
   const totalEnergyMWh = quoteData.storageSizeMW * quoteData.durationHours;
@@ -293,12 +369,18 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 <Wand2 className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold text-gray-900">
-                  Congratulations! Your Quote is Ready
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Here's your customized {getIndustryName(quoteData.industryTemplate)} energy storage solution
-                </p>
+                <div className="text-center mb-4">
+                  <div className="text-6xl mb-3">🎉</div>
+                  <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 mb-2">
+                    Congratulations!
+                  </h1>
+                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                    Your Quote is Ready
+                  </div>
+                  <p className="text-lg text-gray-600">
+                    Here's your customized <span className="font-semibold text-blue-600">{getIndustryName(quoteData.industryTemplate)}</span> energy storage solution
+                  </p>
+                </div>
               </div>
             </div>
             <button
@@ -313,6 +395,33 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
+        
+        {/* Celebration Banner */}
+        <div className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white rounded-2xl p-6 mb-8 text-center shadow-2xl">
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <span className="text-4xl animate-bounce">🎊</span>
+            <h2 className="text-3xl font-bold">Excellent Choice!</h2>
+            <span className="text-4xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎊</span>
+          </div>
+          <p className="text-xl opacity-95">
+            You've designed an energy storage system that will transform your energy costs and sustainability goals.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-6 text-lg">
+            <div className="flex items-center gap-2">
+              <span>💰</span>
+              <span>Save Money</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>🌱</span>
+              <span>Go Green</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>⚡</span>
+              <span>Energy Independence</span>
+            </div>
+          </div>
+        </div>
+        
         {/* Use Case & Goal Banner */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl p-6 mb-8 shadow-lg">
           <div className="flex items-center justify-between">
@@ -320,11 +429,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">
                 <div className="text-sm opacity-90">Industry</div>
                 <div className="text-xl font-bold">{getIndustryName(quoteData.industryTemplate)}</div>
-              </div>
-              <div className="text-3xl">→</div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">
-                <div className="text-sm opacity-90">Primary Goal</div>
-                <div className="text-xl font-bold capitalize">{formatGoals(quoteData.selectedGoal)}</div>
               </div>
               <div className="text-3xl">→</div>
               <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">
@@ -447,7 +551,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
             </div>
             <h3 className="text-4xl font-bold mb-4">✓ Validate Your Configuration</h3>
             <p className="text-xl text-white/90 max-w-3xl mx-auto">
-              Our AI analyzed your goals (<strong className="text-yellow-300">{formatGoals(quoteData.selectedGoal)}</strong>) and industry (<strong className="text-yellow-300">{getIndustryName(quoteData.industryTemplate)}</strong>) to calculate the optimal system. Compare your configuration against AI recommendations to maximize ROI.
+              {aiStateService.getContextualMessage()} Analyze your configuration for <strong className="text-yellow-300">{getIndustryName(quoteData.industryTemplate)}</strong> optimization.
             </p>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 max-w-2xl mx-auto">
@@ -458,12 +562,53 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           </div>
           <div className="flex justify-center">
             <button
-              onClick={() => setShowAIConfig(true)}
-              className="bg-white text-purple-600 hover:bg-gray-100 px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl transition-all hover:scale-105 flex items-center gap-3"
+              onClick={() => {
+                // Immediate visual feedback
+                setIsButtonLoading(true);
+                
+                // Only update state to analyzing when opening modal
+                if (!showAIConfig) {
+                  updateAIState('analyzing');
+                }
+                setShowAIConfig(true);
+                
+                // Reset loading state after a brief moment
+                setTimeout(() => setIsButtonLoading(false), 1000);
+              }}
+              className={`${
+                isButtonLoading 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white ring-4 ring-blue-300' 
+                  : aiStateService.getButtonStyling(aiState).className
+              } px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl transition-all hover:scale-105 flex items-center gap-3`}
+              disabled={isGenerating || isButtonLoading}
             >
-              <Sparkles className="w-6 h-6" />
-              Check AI Optimization
+              <Sparkles className={`w-6 h-6 ${isGenerating || isButtonLoading ? 'animate-spin' : ''}`} />
+              <div className="text-left">
+                <div className="text-xl">
+                  {isButtonLoading ? 'Opening AI Analysis...' : 
+                   isGenerating ? 'AI Analyzing...' : 
+                   aiStateService.getButtonStyling(aiState).text}
+                </div>
+                <div className="text-xs opacity-90">
+                  {isButtonLoading ? 'Preparing recommendations' : aiStateService.getButtonStyling(aiState).description}
+                </div>
+              </div>
             </button>
+            
+            {/* AI Configuration Applied Feedback */}
+            {aiConfigApplied && (
+              <div className="mt-4 bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400 rounded-xl p-4 animate-fadeIn">
+                <div className="text-center">
+                  <div className="text-green-800 font-bold text-lg mb-2">✅ AI Optimization Applied!</div>
+                  <div className="text-green-700 text-sm">
+                    New configuration: <span className="font-bold">{appliedConfig}</span>
+                  </div>
+                  <div className="text-green-600 text-xs mt-1">
+                    {aiStateService.getContextualMessage()}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -648,7 +793,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                   onClick={() => {
                     setShowAIConfig(false);
                     setAiSuggestion(null);
-                    setAiPrompt('');
                   }}
                   className="text-white/80 hover:text-white transition-colors text-3xl"
                 >
@@ -798,15 +942,37 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                   <div className="flex gap-3">
                     <button
                       onClick={handleApplyAI}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                      disabled={isApplyingAI}
+                      className={`flex-1 ${
+                        isApplyingAI 
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600' 
+                          : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                      } text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2`}
                     >
-                      ✓ Apply This Configuration
+                      {isApplyingAI ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          <span>Applying Configuration...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>✓</span>
+                          <span>Apply This Configuration</span>
+                        </>
+                      )}
                     </button>
                     <button
-                      onClick={() => setAiSuggestion(null)}
-                      className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all"
+                      onClick={() => {
+                        setAiSuggestion(null);
+                        setIsGenerating(true);
+                        setTimeout(() => {
+                          handleAIGenerate();
+                        }, 500);
+                      }}
+                      className="px-6 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition-all flex items-center gap-2"
                     >
-                      Try Again
+                      <Sparkles className="w-4 h-4" />
+                      <span>New Analysis</span>
                     </button>
                   </div>
                 </div>

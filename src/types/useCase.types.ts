@@ -63,6 +63,7 @@ export interface UseCaseTemplate {
   slug: string;
   description: string;
   icon: string; // Emoji or icon name
+  image?: string; // Path to use case image
   category: 'commercial' | 'industrial' | 'institutional' | 'agricultural' | 'residential';
   
   // Access Control

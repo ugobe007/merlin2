@@ -7,7 +7,6 @@ interface QuoteData {
   windMW: number;
   generatorMW: number;
   location: string;
-  selectedGoal: string | string[];
   industryTemplate: string | string[];
   gridConnection?: string;
   totalProjectCost: number;
@@ -19,15 +18,6 @@ interface QuoteData {
   shippingOption: string;
   financingOption: string;
 }
-
-const formatGoals = (goal: string | string[]): string => {
-  if (Array.isArray(goal)) {
-    if (goal.length === 0) return '';
-    if (goal.length === 1) return goal[0].replace(/-/g, ' ');
-    return goal.map(g => g.replace(/-/g, ' ')).join(', ');
-  }
-  return goal.replace(/-/g, ' ');
-};
 
 const getIndustryName = (template: string | string[]): string => {
   const templateKey = Array.isArray(template) ? template[0] : template;
@@ -319,15 +309,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <h3 style="color: #6B46C1; font-size: 22px; margin-bottom: 15px; font-weight: bold;">🎯 Designed For Your ${industryName}</h3>
             <p style="font-size: 16px; line-height: 1.8; color: #374151; margin-bottom: 15px;">
               This battery energy storage system has been specifically configured to meet the unique operational requirements and energy patterns of ${industryName.toLowerCase()} facilities. 
-              ${quoteData.selectedGoal === 'cost-reduction' || quoteData.selectedGoal === 'demand-charge-reduction' 
-                ? `With your primary goal of <strong>reducing costs</strong>, this ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load.`
-                : quoteData.selectedGoal === 'backup-power' 
-                ? `With your primary goal of <strong>backup power</strong>, this ${quoteData.durationHours}-hour system provides reliable emergency power to maintain critical operations during grid outages, ensuring business continuity and protecting sensitive equipment.`
-                : quoteData.selectedGoal === 'renewable-integration'
-                ? `With your focus on <strong>renewable integration</strong>, this system is designed to maximize the value of your renewable assets by storing excess generation and dispatching power when it's most valuable or needed.`
-                : quoteData.selectedGoal === 'grid-independence'
-                ? `With your goal of <strong>grid independence</strong>, this system reduces reliance on utility power by storing energy during off-peak times and providing power during peak periods or outages.`
-                : `This system is designed to optimize your energy usage and reduce operational costs through intelligent charge/discharge cycles.`}
+              This ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
             </p>
             <p style="font-size: 16px; line-height: 1.8; color: #374151;">
               The <strong>${quoteData.storageSizeMW.toFixed(1)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
@@ -532,11 +514,11 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             </div>
           </div>
           
-          <!-- Primary Goal -->
+          <!-- Industry Application -->
           <div class="section">
             <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #f59e0b;">
-              <div style="font-weight: bold; margin-bottom: 10px; color: #d97706;">🎯 Primary Goal</div>
-              <div style="font-size: 18px; text-transform: capitalize;">${formatGoals(quoteData.selectedGoal)}</div>
+              <div style="font-weight: bold; margin-bottom: 10px; color: #d97706;">� Industry Application</div>
+              <div style="font-size: 18px; text-transform: capitalize;">${industryName} Energy Storage Solution</div>
             </div>
           </div>
         </div>
@@ -731,7 +713,7 @@ PROJECT INFORMATION
 Use Case:,${industryName}
 Customer:,${industryName} Facility
 Location:,${quoteData.location || 'To Be Determined'}
-Primary Goal:,${formatGoals(quoteData.selectedGoal).toUpperCase()}
+Industry Application:,${industryName.toUpperCase()} ENERGY STORAGE SOLUTION
 System Type:,${systemDescription}
 
 ====================================
@@ -1364,7 +1346,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td style="background-color: #f9fafb; border: 1px solid #d1d5db; padding: 8px 12px; font-weight: bold; font-size: 13px;">Project Name:</td>
-      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${industryName} - ${formatGoals(quoteData.selectedGoal).toUpperCase()}</td>
+      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${industryName} - ENERGY STORAGE SOLUTION</td>
     </tr>
     <tr>
       <td style="background-color: #f9fafb; border: 1px solid #d1d5db; padding: 8px 12px; font-weight: bold; font-size: 13px;">Quote Date:</td>
@@ -1380,15 +1362,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     <h3 style="color: #6B46C1; margin-top: 0;">🎯 Designed For Your ${industryName}</h3>
     <p style="line-height: 1.8;">
       This battery energy storage system has been specifically configured to meet the unique operational requirements and energy patterns of ${industryName.toLowerCase()} facilities.
-      ${quoteData.selectedGoal === 'cost-reduction' || quoteData.selectedGoal === 'demand-charge-reduction' 
-        ? `With your primary goal of <strong>reducing costs</strong>, this ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load.`
-        : quoteData.selectedGoal === 'backup-power' 
-        ? `With your primary goal of <strong>backup power</strong>, this ${quoteData.durationHours}-hour system provides reliable emergency power to maintain critical operations during grid outages, ensuring business continuity and protecting sensitive equipment.`
-        : quoteData.selectedGoal === 'renewable-integration'
-        ? `With your focus on <strong>renewable integration</strong>, this system is designed to maximize the value of your renewable assets by storing excess generation and dispatching power when it's most valuable or needed.`
-        : quoteData.selectedGoal === 'grid-independence'
-        ? `With your goal of <strong>grid independence</strong>, this system reduces reliance on utility power by storing energy during off-peak times and providing power during peak periods or outages.`
-        : `This system is designed to optimize your energy usage and reduce operational costs through intelligent charge/discharge cycles.`}
+      This ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
     </p>
     <p style="line-height: 1.8;">
       The <strong>${quoteData.storageSizeMW.toFixed(1)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
@@ -1609,40 +1583,6 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
   </table>
 
-  <h2>📈 ROI & Financial Scenarios</h2>
-  <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-    <tr style="background-color: #f3f4f6;">
-      <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Utilization Rate</th>
-      <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Annual Savings (USD)</th>
-      <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Simple Payback (yrs)</th>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ddd; padding: 6px;">5%</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$$${((quoteData.annualSavings * 0.05) / 1000).toFixed(0)}K</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.05)).toFixed(1)}</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ddd; padding: 6px;">10%</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$$${((quoteData.annualSavings * 0.10) / 1000).toFixed(0)}K</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.10)).toFixed(1)}</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ddd; padding: 6px;">15%</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$$${((quoteData.annualSavings * 0.15) / 1000).toFixed(0)}K</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.15)).toFixed(1)}</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ddd; padding: 6px;">25%</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$$${((quoteData.annualSavings * 0.25) / 1000).toFixed(0)}K</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.25)).toFixed(1)}</td>
-    </tr>
-    <tr style="background-color: #fef3c7;">
-      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold;">50%</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${((quoteData.annualSavings * 0.50) / 1000).toFixed(0)}K</td>
-      <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.50)).toFixed(1)}</td>
-    </tr>
-  </table>
-
   <div style="background-color: #f0fdf4; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
     <h3 style="margin-top: 0;">Financial Metrics Summary</h3>
     <p><strong>10-Year ROI:</strong> ≈ ${((quoteData.annualSavings * 10 / quoteData.netCost) * 100).toFixed(0)}% (net of O&M)</p>
@@ -1650,6 +1590,8 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     <p><strong>${quoteData.gridConnection === 'off-grid' ? 'Fuel Cost:' : 'Grid Offset Rate:'}</strong> ${quoteData.gridConnection === 'off-grid' ? '≈ $0.08 / kWh (Diesel)' : '≈ $0.12 / kWh (Grid Avoided)'}</p>
     <p><strong>CO₂ Reduction:</strong> ≈ ${quoteData.gridConnection === 'off-grid' ? '75% vs diesel-only' : '45% vs grid electricity'}</p>
   </div>
+
+  <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
     <tr style="background-color: #f3f4f6;">
       <td><strong>Total Project Cost</strong></td>
       <td><strong>$${(quoteData.totalProjectCost / 1000000).toFixed(2)}M</strong></td>
@@ -1669,35 +1611,6 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     ⏱️ Simple Payback Period: ${quoteData.paybackYears.toFixed(1)} years<br>
     📈 25-Year ROI: ${((quoteData.annualSavings * 25 / quoteData.netCost) * 100).toFixed(0)}%
   </div>
-  
-  <h3>Annual Savings Breakdown (Estimated)</h3>
-  <table>
-    <tr>
-      <th>Savings Category</th>
-      <th>Annual Value</th>
-      <th>% of Total</th>
-    </tr>
-    <tr>
-      <td>Demand Charge Reduction</td>
-      <td>$${(quoteData.annualSavings * 0.45 / 1000).toFixed(0)}K</td>
-      <td>45%</td>
-    </tr>
-    <tr>
-      <td>Energy Arbitrage (Time-of-Use)</td>
-      <td>$${(quoteData.annualSavings * 0.35 / 1000).toFixed(0)}K</td>
-      <td>35%</td>
-    </tr>
-    <tr>
-      <td>Utility Incentive Programs</td>
-      <td>$${(quoteData.annualSavings * 0.15 / 1000).toFixed(0)}K</td>
-      <td>15%</td>
-    </tr>
-    <tr>
-      <td>Backup Value & Other Benefits</td>
-      <td>$${(quoteData.annualSavings * 0.05 / 1000).toFixed(0)}K</td>
-      <td>5%</td>
-    </tr>
-  </table>
   
   <h2>📋 Your Selections</h2>
   <table>

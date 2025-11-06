@@ -5,6 +5,14 @@
 
 import type { UseCaseTemplate } from '../types/useCase.types';
 
+// Import the new images
+import carWashImage from '../assets/images/car_wash_1.jpg';
+import evChargingStationImage from '../assets/images/ev_charging_station.png';
+import evChargingHotelImage from '../assets/images/ev_charging_hotel.webp';
+import hospitalImage from '../assets/images/hospital_1.jpg';
+import hotelImage from '../assets/images/hotel_1.avif';
+import airportImage from '../assets/images/airports_1.jpg';
+
 export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
   
   // ==================== CAR WASH ====================
@@ -14,6 +22,7 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     slug: 'car-wash',
     description: 'Car washes have high peak demand from wash bays, water heaters, and vacuum systems. BESS can significantly reduce demand charges.',
     icon: '🚗',
+    image: carWashImage,
     category: 'commercial',
     requiredTier: 'free',
     isActive: true,
@@ -98,6 +107,207 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'additionalLoad',
         additionalLoadKw: 10,
         helpText: 'Detailing adds lighting, HVAC, and equipment loads',
+        required: false
+      }
+    ]
+  },
+  
+  // ==================== EV CHARGING STATION ====================
+  {
+    id: 'ev-charging-001',
+    name: 'EV Charging Station',
+    slug: 'ev-charging',
+    description: 'EV charging stations have high peak demand with fast charging requirements. BESS reduces demand charges and enables grid arbitrage.',
+    icon: '⚡',
+    image: evChargingStationImage,
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 2,
+    
+    powerProfile: {
+      typicalLoadKw: 350,
+      peakLoadKw: 500,
+      profileType: 'peaked',
+      dailyOperatingHours: 16,
+      peakHoursStart: '07:00',
+      peakHoursEnd: '19:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.1
+    },
+    
+    equipment: [
+      {
+        name: 'DC Fast Chargers (150kW)',
+        powerKw: 150,
+        dutyCycle: 0.6,
+        description: 'High-speed charging stations'
+      },
+      {
+        name: 'Level 2 Chargers (7kW)',
+        powerKw: 7,
+        dutyCycle: 0.4,
+        description: 'Standard AC charging'
+      },
+      {
+        name: 'Site Infrastructure',
+        powerKw: 25,
+        dutyCycle: 0.9,
+        description: 'Lighting, payment systems, cooling'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.8,
+      energyCostMultiplier: 1.2,
+      typicalSavingsPercent: 25,
+      roiAdjustmentFactor: 0.7,
+      peakDemandPenalty: 1.5,
+      incentives: {
+        'clean_energy': 0.15,
+        'transportation': 0.10
+      }
+    },
+    
+    recommendedApplications: [
+      'peak_shaving',
+      'demand_response', 
+      'load_shifting',
+      'grid_arbitrage'
+    ],
+    
+    customQuestions: [
+      {
+        id: 'numberOfChargers',
+        question: 'How many charging stations will be installed?',
+        type: 'number',
+        default: 8,
+        unit: 'chargers',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.125,
+        helpText: 'Number of charging stations at the facility',
+        required: true
+      },
+      {
+        id: 'chargingType',
+        question: 'Primary charging type',
+        type: 'select',
+        default: 'mixed',
+        options: ['dc_fast', 'level_2', 'mixed'],
+        impactType: 'factor',
+        helpText: 'Type of charging stations being installed',
+        required: true
+      }
+    ]
+  },
+  
+  // ==================== HOSPITAL ====================
+  {
+    id: 'hospital-001',
+    name: 'Hospital & Healthcare',
+    slug: 'hospital',
+    description: 'Hospitals require 24/7 reliable power with critical backup systems. BESS provides demand charge reduction and backup power.',
+    icon: '🏥',
+    image: hospitalImage,
+    category: 'institutional',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 3,
+    
+    powerProfile: {
+      typicalLoadKw: 2500,
+      peakLoadKw: 3500,
+      profileType: 'constant',
+      dailyOperatingHours: 24,
+      peakHoursStart: '08:00',
+      peakHoursEnd: '18:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.15
+    },
+    
+    equipment: [
+      {
+        name: 'HVAC Systems',
+        powerKw: 800,
+        dutyCycle: 0.85,
+        description: 'Climate control for patient comfort and equipment'
+      },
+      {
+        name: 'Medical Equipment',
+        powerKw: 600,
+        dutyCycle: 0.7,
+        description: 'MRI, CT scanners, surgical equipment'
+      },
+      {
+        name: 'Lighting & General',
+        powerKw: 400,
+        dutyCycle: 0.8,
+        description: 'Facility lighting and general power'
+      },
+      {
+        name: 'Kitchen & Laundry',
+        powerKw: 300,
+        dutyCycle: 0.6,
+        description: 'Food service and laundry operations'
+      },
+      {
+        name: 'Emergency Systems',
+        powerKw: 200,
+        dutyCycle: 0.3,
+        description: 'Emergency lighting and life safety systems'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.6,
+      energyCostMultiplier: 1.1,
+      typicalSavingsPercent: 20,
+      roiAdjustmentFactor: 0.8,
+      peakDemandPenalty: 1.4,
+      incentives: {
+        'healthcare': 0.12,
+        'critical_infrastructure': 0.08
+      }
+    },
+    
+    recommendedApplications: [
+      'peak_shaving',
+      'backup_power',
+      'demand_response',
+      'load_shifting'
+    ],
+    
+    customQuestions: [
+      {
+        id: 'bedCount',
+        question: 'Total number of patient beds',
+        type: 'number',
+        default: 250,
+        unit: 'beds',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.004, // 4kW per bed
+        helpText: 'Number of licensed patient beds',
+        required: true
+      },
+      {
+        id: 'facilityType',
+        question: 'Type of healthcare facility',
+        type: 'select',
+        default: 'general_hospital',
+        options: ['general_hospital', 'specialty_hospital', 'outpatient_clinic', 'emergency_only'],
+        impactType: 'factor',
+        helpText: 'Primary type of healthcare services provided',
+        required: true
+      },
+      {
+        id: 'backupPowerRequired',
+        question: 'Is backup power capability required?',
+        type: 'boolean',
+        default: true,
+        impactType: 'factor',
+        helpText: 'Whether the BESS should provide emergency backup power',
         required: false
       }
     ]
@@ -215,6 +425,7 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     slug: 'hotel',
     description: 'Hotels have variable loads with morning/evening peaks. BESS reduces demand charges and provides backup power for critical systems.',
     icon: '🏨',
+    image: evChargingHotelImage,
     category: 'commercial',
     requiredTier: 'free',
     isActive: true,
@@ -333,6 +544,7 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     slug: 'airport',
     description: 'Airports are critical infrastructure with 24/7 operations, making them ideal for BESS to manage peak demand and ensure power reliability.',
     icon: '✈️',
+    image: airportImage,
     category: 'institutional',
     requiredTier: 'premium',
     isActive: true,
