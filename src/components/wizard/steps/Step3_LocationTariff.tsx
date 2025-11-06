@@ -113,7 +113,7 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
       {/* Tariff & Shipping Calculations */}
       <div className="bg-white p-6 rounded-2xl border-2 border-green-400 shadow-xl">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">
-          💰 Tariff & Shipping Calculations
+          🎯 Tariff & Shipping Calculations
         </h3>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -199,7 +199,7 @@ const Step3_LocationTariff: React.FC<Step3_LocationTariffProps> = ({
               }}
               className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center justify-center gap-2"
             >
-              <span className="text-2xl">💰</span>
+              <span className="text-2xl">🎯</span>
               <div className="text-left">
                 <div className="font-bold">My Pricing Presets</div>
                 <div className="text-xs opacity-90">Use saved pricing & EPC fees</div>

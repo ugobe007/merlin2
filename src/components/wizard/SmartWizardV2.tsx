@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
+import { aiStateService } from '../../services/aiStateService';
 
 // New customer-focused steps
 import StepIntro from './steps/Step_Intro';
@@ -216,6 +217,18 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   // Step 3: Configuration (calculated based on industry template)
   const [storageSizeMW, setStorageSizeMW] = useState(2);
   const [durationHours, setDurationHours] = useState(4);
+
+  // Clear AI suggestions and persistent AI state when wizard starts fresh
+  useEffect(() => {
+    if (show) {
+      setAiSuggestions([]);
+      setShowAIWizard(false);
+      
+      // Reset AI state for new wizard session
+      // This prevents "already applied" messages and ensures fresh AI experience
+      aiStateService.resetForNewSession();
+    }
+  }, [show]);
 
   // Auto-calculate realistic configuration based on use case data
   useEffect(() => {

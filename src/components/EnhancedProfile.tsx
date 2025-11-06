@@ -117,7 +117,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({ onClose, isFirstTime 
   const learningGoalOptions = [
     { value: 'basics', label: 'Learn BESS Basics', icon: '📚' },
     { value: 'sizing', label: 'System Sizing', icon: '📏' },
-    { value: 'economics', label: 'Project Economics', icon: '💰' },
+    { value: 'economics', label: 'Project Economics', icon: '🎯' },
     { value: 'use_cases', label: 'Use Case Discovery', icon: '🔍' },
     { value: 'vendors', label: 'Vendor Comparison', icon: '⚖️' },
     { value: 'applications', label: 'My Business Applications', icon: '💡' },

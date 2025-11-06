@@ -329,7 +329,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     }}
                     className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-300 hover:to-gray-400 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 border border-gray-300/30 flex items-center gap-3"
                   >
-                    <span className="text-2xl">💰</span>
+                    <span className="text-2xl">🎯</span>
                     <div className="text-left">
                       <div className="font-bold">Pricing Presets</div>
                       <div className="text-xs opacity-90">Save your pricing & EPC fees</div>

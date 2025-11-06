@@ -318,7 +318,7 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
               {/* Benefits */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <div className="text-3xl mb-2">💰</div>
+                  <div className="text-3xl mb-2">🎯</div>
                   <h4 className="font-bold text-gray-900 mb-1">Earn Credits</h4>
                   <p className="text-sm text-gray-700">Get 10 credits per validated quote to use for premium features</p>
                 </div>
