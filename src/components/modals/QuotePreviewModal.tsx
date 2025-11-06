@@ -457,7 +457,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             shading: { fill: "F3F4F6" },
           }),
           new Paragraph({
-            text: `The proposed BESS installation will integrate seamlessly with your existing infrastructure to provide reliable energy storage, peak shaving, and grid stabilization capabilities.`,
+            text: `The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and grid stabilization.`,
             spacing: { after: 200 },
           }),
           new Paragraph({
@@ -654,7 +654,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             shading: { fill: "DBEAFE" },
           }),
           new Paragraph({
-            text: `This comprehensive financial analysis demonstrates the strong return on investment and long-term value of this BESS installation.`,
+            text: `Professional analysis of your BESS installation with strong ROI and proven technology.`,
             spacing: { after: 200 },
           }),
           new Table({
@@ -693,57 +693,18 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
               new TableRow({
                 children: [
                   new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "5-Year Net Savings", bold: true, size: 20 })] })],
-                    shading: { fill: "FEF3C7" },
-                  }),
-                  new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ 
-                      text: `$${((annualSavings * 5) - costs.grandTotal).toLocaleString()}`, 
-                      bold: true, 
-                      size: 20, 
-                      color: ((annualSavings * 5) - costs.grandTotal) > 0 ? "059669" : "DC2626" 
-                    })] })],
-                    shading: { fill: "FEF3C7" },
-                  }),
-                ],
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "10-Year Net Savings", bold: true, size: 20 })] })] }),
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ 
-                    text: `$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}`, 
-                    bold: true, 
-                    size: 20, 
-                    color: "059669" 
-                  })] })] }),
-                ],
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({ 
-                    children: [new Paragraph({ children: [new TextRun({ text: "10-Year ROI", bold: true, size: 20 })] })],
+                    children: [new Paragraph({ children: [new TextRun({ text: "10-Year Total Savings", bold: true, size: 20 })] })],
                     shading: { fill: "DBEAFE" },
                   }),
                   new TableCell({ 
                     children: [new Paragraph({ children: [new TextRun({ 
-                      text: `${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%`, 
+                      text: `$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}`, 
                       bold: true, 
                       size: 20, 
-                      color: "1E40AF" 
+                      color: "059669" 
                     })] })],
                     shading: { fill: "DBEAFE" },
                   }),
-                ],
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "20-Year Net Savings", bold: true, size: 20 })] })] }),
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ 
-                    text: `$${((annualSavings * 20) - costs.grandTotal).toLocaleString()}`, 
-                    bold: true, 
-                    size: 20, 
-                    color: "059669" 
-                  })] })] }),
                 ],
               }),
               new TableRow({
@@ -816,7 +777,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
             spacing: { before: 400, after: 200 },
           }),
           new Paragraph({
-            text: "This Battery Energy Storage System provides an optimal solution for your energy requirements with strong financial returns and proven technology. The proposed system will deliver reliable energy storage, grid stabilization, and significant cost savings over its operational lifetime.",
+            text: "This Battery Energy Storage System provides an optimal solution with strong financial returns and proven technology. The system delivers reliable storage, grid stabilization, and significant savings.",
             spacing: { after: 200 },
           }),
           new Paragraph({
@@ -1003,10 +964,7 @@ const QuotePreviewModal: React.FC<QuotePreviewModalProps> = ({ isOpen, onClose, 
     csv += "\"Financial Metric\",\"Value\"\n";
     csv += `\"Annual Energy Savings\",${annualSavings}\n`;
     csv += `\"Simple Payback Period\",\"${paybackPeriod.toFixed(2)} years\"\n`;
-    csv += `\"5-Year Net Savings\",${(annualSavings * 5) - costs.grandTotal}\n`;
-    csv += `\"10-Year Net Savings\",${(annualSavings * 10) - costs.grandTotal}\n`;
-    csv += `\"10-Year ROI\",\"${((annualSavings * 10 - costs.grandTotal) / costs.grandTotal * 100).toFixed(1)}%\"\n`;
-    csv += `\"20-Year Net Savings\",${(annualSavings * 20) - costs.grandTotal}\n`;
+    csv += `\"10-Year Total Savings\",\"$${((annualSavings * 10) - costs.grandTotal).toLocaleString()}\"\n`;
     csv += `\"Cost per kWh Storage\",\"$${(costs.grandTotal / (batteryMWh * 1000)).toFixed(0)}/kWh\"\n`;
     
     if (budget) {

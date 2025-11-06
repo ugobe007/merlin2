@@ -404,9 +404,8 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
               Need a Custom Configuration?
             </h3>
             <p className="text-gray-700">
-              These templates are starting points based on industry best practices. You can apply any template and then
-              customize the configuration to match your specific requirements. All parameters can be adjusted after
-              applying a template.
+              These templates are starting points based on industry best practices. Apply any template and customize 
+              to match your specific requirements.
             </p>
           </div>
         </div>

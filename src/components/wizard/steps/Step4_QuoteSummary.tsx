@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
 import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
+import AIStatusIndicator from '../AIStatusIndicator';
 
 interface Step4_QuoteSummaryProps {
   // System configuration
@@ -11,7 +12,6 @@ interface Step4_QuoteSummaryProps {
   windMW: number;
   generatorMW: number;
   location: string;
-  selectedGoal: string | string[];
   industryTemplate: string | string[];
   
   // Quote calculations (will be passed from parent)
@@ -206,9 +206,12 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold text-gray-800">
-          Your Custom Quote
-        </h2>
+        <div className="flex justify-center items-center gap-3">
+          <h2 className="text-4xl font-bold text-gray-800">
+            Your Custom Quote
+          </h2>
+          <AIStatusIndicator compact={true} />
+        </div>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Review your system configuration and choose your options
         </p>
@@ -283,7 +286,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
                 <h3 className="text-xl font-bold text-gray-800">AI Configuration Optimizer</h3>
               </div>
               <p className="text-gray-600 text-sm mb-3">
-                Let our AI analyze your configuration and suggest optimizations based on your goals and industry best practices.
+                Let AI analyze your configuration and suggest optimizations.
               </p>
               {aiBaseline && aiBaseline.improvementText && (
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400 rounded-lg px-4 py-2 shadow-md">
@@ -325,7 +328,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
             </div>
             <div className="text-left">
               <h3 className="text-xl font-bold text-gray-800">Detailed Equipment Breakdown</h3>
-              <p className="text-gray-600">Complete bill of materials with quantities and costs</p>
+              <p className="text-gray-600">Equipment breakdown with costs</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

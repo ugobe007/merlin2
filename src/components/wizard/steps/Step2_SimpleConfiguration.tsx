@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { aiStateService } from '../../../services/aiStateService';
+import AIStatusIndicator from '../AIStatusIndicator';
 
 interface Step2_SimpleConfigurationProps {
   storageSizeMW: number;
@@ -23,6 +25,7 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
   aiRecommendation,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isApplyingAI, setIsApplyingAI] = useState(false);
   
   // Extract MW and hours from AI configuration string
   // Format: "2.5MW / 4hr BESS + 1.2MW Solar"
@@ -45,9 +48,22 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
 
   const handleAcceptAIConfiguration = () => {
     if (aiConfig) {
+      setIsApplyingAI(true);
+      
+      // Apply the configuration
       setStorageSizeMW(aiConfig.mw);
       setDurationHours(aiConfig.hours);
-      setShowConfirmModal(false);
+      
+      // Update AI state to applied
+      aiStateService.setAIState('applied', {
+        appliedConfig: `${aiConfig.mw}MW / ${aiConfig.hours}hr`
+      });
+      
+      // Close modal after brief delay to show feedback
+      setTimeout(() => {
+        setShowConfirmModal(false);
+        setIsApplyingAI(false);
+      }, 1500);
     }
   };
   
@@ -72,9 +88,12 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold text-gray-800">
-          Configure Your Energy Storage System
-        </h2>
+        <div className="flex justify-center items-center gap-3">
+          <h2 className="text-4xl font-bold text-gray-800">
+            Configure Your Energy Storage System
+          </h2>
+          <AIStatusIndicator compact={true} />
+        </div>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           {industryTemplate && industryTemplate !== 'custom' 
             ? "These values are pre-filled based on your industry. Adjust them to match your needs."
@@ -386,12 +405,26 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
               </button>
               <button
                 onClick={handleAcceptAIConfiguration}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                disabled={isApplyingAI}
+                className={`flex-1 ${
+                  isApplyingAI 
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600' 
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                } text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center justify-center gap-2`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Apply AI Config
+                {isApplyingAI ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <span>Applying Configuration...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Apply AI Config
+                  </>
+                )}
               </button>
             </div>
           </div>
