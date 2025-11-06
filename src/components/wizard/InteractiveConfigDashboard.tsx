@@ -13,24 +13,6 @@ const scrollToSection = (sectionId: string) => {
   }
 };
 
-// Handle dashboard item clicks with visual feedback
-const handleDashboardClick = (itemKey: keyof typeof clickedItems, sectionId: string) => {
-  // Mark item as clicked
-  setClickedItems(prev => ({
-    ...prev,
-    [itemKey]: true
-  }));
-  
-  // Show arrow for 3 seconds
-  setActiveArrow(sectionId);
-  setTimeout(() => {
-    setActiveArrow(null);
-  }, 3000);
-  
-  // Scroll to section
-  scrollToSection(sectionId);
-};
-
 // Custom slider styles
 const sliderStyles = `
   .slider-purple::-webkit-slider-thumb {
@@ -148,6 +130,24 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
   // Track active arrows for guidance
   const [activeArrow, setActiveArrow] = useState<string | null>(null);
+
+  // Handle dashboard item clicks with visual feedback
+  const handleDashboardClick = (itemKey: keyof typeof clickedItems, sectionId: string) => {
+    // Mark item as clicked
+    setClickedItems(prev => ({
+      ...prev,
+      [itemKey]: true
+    }));
+    
+    // Show arrow for 3 seconds
+    setActiveArrow(sectionId);
+    setTimeout(() => {
+      setActiveArrow(null);
+    }, 3000);
+    
+    // Scroll to section
+    scrollToSection(sectionId);
+  };
 
   // Calculated values
   const [calculations, setCalculations] = useState({
