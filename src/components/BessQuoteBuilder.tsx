@@ -11,6 +11,7 @@ import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
 import AuthModal from './AuthModal';
 import JoinMerlinModal from './modals/JoinMerlinModal';
+import LayoutPreferenceModal from './modals/LayoutPreferenceModal';
 import CalculationModal from './modals/CalculationModal';
 import VendorManager from './VendorManager';
 import PricingPlans from './PricingPlans';
@@ -49,32 +50,23 @@ import EnergyNewsTicker from './EnergyNewsTicker';
 
 
 export default function BessQuoteBuilder() {
+  console.log('🏗️ BessQuoteBuilder component rendering');
+  
   // Check for public profile route
   const [viewMode, setViewMode] = useState<'app' | 'public-profile'>('app');
   const [publicProfileSlug, setPublicProfileSlug] = useState<string | null>(null);
+  
+  // Advanced layout preferences - declare early to avoid block-scoped issues
+  const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState(false);
+  const [userLayoutPreference, setUserLayoutPreference] = useState<'beginner' | 'advanced'>('beginner');
+  const [showLayoutPreferenceModal, setShowLayoutPreferenceModal] = useState(false);
+  
+  // Advanced form state
+  const [energyCapacity, setEnergyCapacity] = useState(100);
+  const [powerRating, setPowerRating] = useState(50);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  useEffect(() => {
-    // Simple routing check - look for /profile/ in URL
-    const path = window.location.pathname;
-    if (path.startsWith('/profile/')) {
-      const slug = path.split('/profile/')[1];
-      setPublicProfileSlug(slug);
-      setViewMode('public-profile');
-    }
-  }, []);
-
-  const handleNavigateToApp = () => {
-    window.history.pushState({}, '', '/');
-    setViewMode('app');
-    setShowAuthModal(true);
-  };
-
-  // If viewing a public profile, show that instead
-  if (viewMode === 'public-profile' && publicProfileSlug) {
-    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={handleNavigateToApp} />;
-  }
-
-  // Regular app state
+  // ALL OTHER STATE - moved to beginning to avoid hooks rule violations
   const [quoteName, setQuoteName] = useState('My BESS Project');
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSmartWizard, setShowSmartWizard] = useState(false);
@@ -93,8 +85,457 @@ export default function BessQuoteBuilder() {
   const [showAbout, setShowAbout] = useState(false);
   const [showVendorPortal, setShowVendorPortal] = useState(false);
 
+  // System Configuration State - ALL MOVED TO BEGINNING
+  const [powerMW, setPowerMW] = useState(1);
+  const [standbyHours, setStandbyHours] = useState(2);
+  const [gridMode, setGridMode] = useState('On-grid');
+  const [useCase, setUseCase] = useState('EV Charging Stations');
+  const [generatorMW, setGeneratorMW] = useState(1);
+  const [solarMWp, setSolarMWp] = useState(0);
+  const [windMW, setWindMW] = useState(0);
+  const [valueKwh, setValueKwh] = useState(0.25);
+  const [utilization, setUtilization] = useState(0.3);
+  const [warranty, setWarranty] = useState('10 years');
+  const [location, setLocation] = useState('UK (6%)');
+  const [selectedCountry, setSelectedCountry] = useState('United States');
+  const [currency, setCurrency] = useState('USD');
+  
+  // New flexible sizing state
+  const [energyUnit, setEnergyUnit] = useState('kWh');
+  const [powerUnit, setPowerUnit] = useState('kW');
+  const [applicationType, setApplicationType] = useState<'residential' | 'commercial' | 'utility'>('residential');
+  
+  // Assumptions State (default values) - ALL MOVED TO BEGINNING
+  const [batteryKwh, setBatteryKwh] = useState(250);
+  const [pcsKw, setPcsKw] = useState(200);
+  const [bosPercent, setBosPercent] = useState(0.12);
+  const [epcPercent, setEpcPercent] = useState(0.10);
+  const [offGridPcsFactor, setOffGridPcsFactor] = useState(1.25);
+  const [onGridPcsFactor, setOnGridPcsFactor] = useState(1);
+  const [genKw, setGenKw] = useState(500);
+  const [solarKwp, setSolarKwp] = useState(1500);
+  const [windKw, setWindKw] = useState(3000);
+  const [tariffPercent, setTariffPercent] = useState(0.10);
+
+  const [showPortfolio, setShowPortfolio] = useState(false);
+  const [showCalculationModal, setShowCalculationModal] = useState(false);
+  const [showSaveProjectModal, setShowSaveProjectModal] = useState(false);
+  const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
+  const [showPricingDataCapture, setShowPricingDataCapture] = useState(false);
+  const [showMarketIntelligence, setShowMarketIntelligence] = useState(false);
+  const [showVendorSponsorship, setShowVendorSponsorship] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  
+  // Benefit explanation modals - ALL MOVED TO BEGINNING
+  const [showCostSavingsModal, setShowCostSavingsModal] = useState(false);
+  const [showRevenueModal, setShowRevenueModal] = useState(false);
+  const [showSustainabilityModal, setShowSustainabilityModal] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showSecuritySettings, setShowSecuritySettings] = useState(false);
+  const [showSystemHealth, setShowSystemHealth] = useState(false);
+  const [showStatusPage, setShowStatusPage] = useState(false);
+  const [showUtilityRates, setShowUtilityRates] = useState(false);
+  const [showQuoteTemplates, setShowQuoteTemplates] = useState(false);
+  const [showPricingPresets, setShowPricingPresets] = useState(false);
+  const [showReviewWorkflow, setShowReviewWorkflow] = useState(false);
+  const [currentQuoteStatus, setCurrentQuoteStatus] = useState<'draft' | 'in-review' | 'approved' | 'rejected' | 'shared'>('draft');
+  const [currentQuote, setCurrentQuote] = useState<any>(null);
+  const [showQuotePreview, setShowQuotePreview] = useState(false);
+
+  // If viewing a public profile, show that instead - check early but after all hooks
+  if (viewMode === 'public-profile' && publicProfileSlug) {
+    const handleNavigateToApp = () => {
+      window.history.pushState({}, '', '/');
+      setViewMode('app');
+      setShowAuthModal(true);
+    };
+    return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={handleNavigateToApp} />;
+  }
+
+  console.log('🔍 Current state - showAdvancedQuoteBuilder:', showAdvancedQuoteBuilder);
+
+  useEffect(() => {
+    // Simple routing check - look for /profile/ in URL
+    const path = window.location.pathname;
+    if (path.startsWith('/profile/')) {
+      const slug = path.split('/profile/')[1];
+      setPublicProfileSlug(slug);
+      setViewMode('public-profile');
+    }
+  }, []);
+
+  const handleNavigateToApp = () => {
+    window.history.pushState({}, '', '/');
+    setViewMode('app');
+    setShowAuthModal(true);
+  };
+
+  // Render main quote form for advanced interface
+  const renderMainQuoteForm = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Configuration Panel */}
+      <div className="lg:col-span-2">
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+          {/* Header with Workflow Guide */}
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">⚡ Advanced System Configuration</h3>
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">🚀 Quick Start Workflow:</h4>
+              <ol className="text-sm text-blue-700 space-y-1">
+                <li><strong>1.</strong> Enter your project's power requirements (any size welcome)</li>
+                <li><strong>2.</strong> Choose your application type and use case</li>
+                <li><strong>3.</strong> Configure advanced settings as needed</li>
+                <li><strong>4.</strong> Review AI recommendations and generate quote</li>
+              </ol>
+            </div>
+          </div>
+          
+          {/* Project Sizing - Flexible Input */}
+          <div className="mb-8">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">📐 Project Sizing</h4>
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-600 mb-4">
+                <strong>Enter your specific power requirements.</strong> Our system supports projects from residential installations (10kWh) 
+                to utility-scale deployments (100+ MWh). No arbitrary size limits!
+              </p>
+              
+              {/* Power Requirements Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Energy Storage Capacity
+                    <span className="text-xs text-gray-500 ml-1">(Total energy stored)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      value={energyCapacity}
+                      onChange={(e) => setEnergyCapacity(Number(e.target.value))}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter capacity (e.g., 100, 1000, 50000)"
+                      min="1"
+                    />
+                    <select 
+                      value={energyUnit}
+                      onChange={(e) => setEnergyUnit(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="kWh">kWh</option>
+                      <option value="MWh">MWh</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500">Examples: 50kWh (home), 1MWh (commercial), 100MWh (utility)</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Power Output Rating
+                    <span className="text-xs text-gray-500 ml-1">(Maximum discharge rate)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      value={powerRating}
+                      onChange={(e) => setPowerRating(Number(e.target.value))}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter power rating (e.g., 25, 500, 10000)"
+                      min="1"
+                    />
+                    <select 
+                      value={powerUnit}
+                      onChange={(e) => setPowerUnit(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="kW">kW</option>
+                      <option value="MW">MW</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500">Examples: 25kW (home), 1MW (commercial), 50MW (utility)</p>
+                </div>
+              </div>
+              
+              {/* Duration Calculator */}
+              <div className="mt-4 p-3 bg-white rounded border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Discharge Duration:</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {powerRating > 0 ? (energyCapacity / powerRating).toFixed(1) : 0} hours
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  How long the system can provide power at maximum output
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Application Type Selection */}
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">🏢 Application Type</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <button 
+                onClick={() => setApplicationType('residential')}
+                className={`p-4 border-2 rounded-lg text-center transition-all hover:shadow-md ${
+                  applicationType === 'residential' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-300 hover:border-blue-500'
+                }`}
+              >
+                <div className="text-2xl mb-2">🏠</div>
+                <div className={`font-semibold ${applicationType === 'residential' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Residential
+                </div>
+                <div className={`text-xs ${applicationType === 'residential' ? 'text-blue-600' : 'text-gray-600'}`}>
+                  Home energy storage
+                </div>
+              </button>
+              <button 
+                onClick={() => setApplicationType('commercial')}
+                className={`p-4 border-2 rounded-lg text-center transition-all hover:shadow-md ${
+                  applicationType === 'commercial' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-300 hover:border-blue-500'
+                }`}
+              >
+                <div className="text-2xl mb-2">🏢</div>
+                <div className={`font-semibold ${applicationType === 'commercial' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Commercial
+                </div>
+                <div className={`text-xs ${applicationType === 'commercial' ? 'text-blue-600' : 'text-gray-600'}`}>
+                  Business & industrial
+                </div>
+              </button>
+              <button 
+                onClick={() => setApplicationType('utility')}
+                className={`p-4 border-2 rounded-lg text-center transition-all hover:shadow-md ${
+                  applicationType === 'utility' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-300 hover:border-blue-500'
+                }`}
+              >
+                <div className="text-2xl mb-2">⚡</div>
+                <div className={`font-semibold ${applicationType === 'utility' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Utility Scale
+                </div>
+                <div className={`text-xs ${applicationType === 'utility' ? 'text-blue-600' : 'text-gray-600'}`}>
+                  Grid-scale projects
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Advanced Settings Guide - Moved here for better visibility */}
+          <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-sm p-6 border border-amber-200">
+            <h4 className="font-bold text-amber-800 mb-4 flex items-center gap-2">
+              <span className="text-xl">📚</span>
+              Advanced Settings Guide
+            </h4>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                <div>
+                  <div className="font-semibold text-amber-800">Configure System Size</div>
+                  <div className="text-amber-700">Enter your exact power requirements - no limits! Use kW/kWh for smaller projects, MW/MWh for large ones.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                <div>
+                  <div className="font-semibold text-amber-800">Select Application Type</div>
+                  <div className="text-amber-700">Choose residential, commercial, or utility-scale for optimized recommendations.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                <div>
+                  <div className="font-semibold text-amber-800">Review AI Suggestions</div>
+                  <div className="text-amber-700">Our AI analyzes your configuration and provides real-time optimization tips.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>
+                <div>
+                  <div className="font-semibold text-amber-800">Generate Analysis</div>
+                  <div className="text-amber-700">Use Quick Actions to run detailed analytics, create quotes, or export your configuration.</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-white rounded-lg border border-amber-300">
+              <div className="text-xs text-amber-700">
+                <strong>💡 Pro Tip:</strong> Start with your actual power needs, then let our AI guide optimizations. 
+                Don't worry about predefined categories - every project is unique!
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Options Toggle */}
+          <div className="border-t pt-4">
+            <button 
+              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <span className="font-medium text-gray-700">Advanced Configuration</span>
+              <span className={`transform transition-transform ${showAdvancedOptions ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            
+            {showAdvancedOptions && (
+              <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Battery Chemistry</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                      <option>LiFePO4</option>
+                      <option>Li-ion NMC</option>
+                      <option>Li-ion LTO</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Depth of Discharge</label>
+                    <input 
+                      type="number" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="90"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* AI Assistant Sidebar */}
+      <div className="lg:col-span-1">
+        <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-lg p-6 border border-purple-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm">🤖</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-800">AI Assistant</h3>
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">LIVE</span>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Dynamic Recommendations based on configuration */}
+            <div className="p-3 bg-white rounded-lg border border-purple-200">
+              <div className="text-sm text-purple-600 mb-2 font-semibold">� Project Analysis</div>
+              <div className="text-sm text-gray-800">
+                <strong>{applicationType.charAt(0).toUpperCase() + applicationType.slice(1)}</strong> project: 
+                {energyCapacity}{energyUnit} capacity with {powerRating}{powerUnit} output
+                {powerRating > 0 && (
+                  <div className="mt-1 text-xs text-blue-600">
+                    Duration: {(energyCapacity / powerRating).toFixed(1)} hours at full power
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Smart Recommendations */}
+            <div className="p-3 bg-white rounded-lg border border-green-200">
+              <div className="text-sm text-green-600 mb-2 font-semibold">💡 Smart Recommendations</div>
+              <div className="text-sm text-gray-800">
+                {applicationType === 'residential' && (
+                  "For home installations, consider Tesla Powerwall or Enphase IQ series for reliability and warranty."
+                )}
+                {applicationType === 'commercial' && (
+                  "Commercial projects benefit from modular systems. Consider LFP chemistry for cost-effectiveness."
+                )}
+                {applicationType === 'utility' && (
+                  "Utility-scale projects should focus on LCOE optimization. Consider container-based solutions."
+                )}
+              </div>
+            </div>
+            
+            {/* Cost Optimization */}
+            <div className="p-3 bg-white rounded-lg border border-blue-200">
+              <div className="text-sm text-blue-600 mb-2 font-semibold">🎯 Cost Optimization</div>
+              <div className="text-sm text-gray-800">
+                {energyCapacity > 1000 ? (
+                  "Large systems qualify for bulk pricing. Estimated 15-25% savings possible."
+                ) : energyCapacity > 100 ? (
+                  "Medium-scale project. Consider financing options and tax incentives."
+                ) : (
+                  "Residential scale qualifies for federal tax credits up to 30%."
+                )}
+              </div>
+            </div>
+
+            {/* Market Intelligence */}
+            <div className="p-3 bg-white rounded-lg border border-amber-200">
+              <div className="text-sm text-amber-600 mb-2 font-semibold">📈 Market Intelligence</div>
+              <div className="text-sm text-gray-800">
+                Similar {applicationType} projects averaging $
+                {applicationType === 'residential' ? '800-1200' : 
+                 applicationType === 'commercial' ? '600-900' : '400-600'}
+                /{energyUnit === 'MWh' ? 'MWh' : 'kWh'} installed
+              </div>
+            </div>
+            
+            <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-blue-600 transition-colors">
+              🎯 Get Detailed AI Analysis
+            </button>
+            
+            <button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-colors text-sm">
+              💬 Chat with AI Assistant
+            </button>
+          </div>
+        </div>
+        
+        {/* Enhanced Quick Actions */}
+        <div className="mt-6 bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+          <h4 className="font-bold text-gray-800 mb-4">🚀 Next Steps</h4>
+          <div className="space-y-3">
+            <button 
+              onClick={() => setShowAnalytics(true)}
+              className="w-full text-left p-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg transition-colors border border-blue-200"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📊</span>
+                <div>
+                  <div className="font-semibold text-blue-800">Advanced Analytics</div>
+                  <div className="text-xs text-blue-600">ROI, payback, cashflow analysis</div>
+                </div>
+              </div>
+            </button>
+            <button 
+              onClick={() => setShowTemplates(true)}
+              className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg transition-colors border border-green-200"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📋</span>
+                <div>
+                  <div className="font-semibold text-green-800">Generate Quote</div>
+                  <div className="text-xs text-green-600">Professional proposal document</div>
+                </div>
+              </div>
+            </button>
+            <button className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg transition-colors border border-purple-200">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">💾</span>
+                <div>
+                  <div className="font-semibold text-purple-800">Save Configuration</div>
+                  <div className="text-xs text-purple-600">Store for future reference</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Effects and handlers go here
   useEffect(() => {
     setIsLoggedIn(authService.isAuthenticated());
+    
+    // Load user layout preference
+    const user = authService.getCurrentUser();
+    if (user && user.preferences?.layoutPreference) {
+      setUserLayoutPreference(user.preferences.layoutPreference);
+    }
   }, []);
 
   // Check if user needs to complete profile after login
@@ -134,6 +575,39 @@ export default function BessQuoteBuilder() {
     }
   };
 
+  const handleAdvancedQuoteBuilder = () => {
+    console.log('🔥 Advanced Tools button clicked!');
+    console.log('Current isLoggedIn:', isLoggedIn);
+    console.log('Current showAdvancedQuoteBuilder:', showAdvancedQuoteBuilder);
+    
+    setShowAdvancedQuoteBuilder(true);
+    console.log('🚀 Set showAdvancedQuoteBuilder to true');
+  };
+
+  const handleLayoutPreference = (preference: 'beginner' | 'advanced') => {
+    setUserLayoutPreference(preference);
+    setShowLayoutPreferenceModal(false);
+    
+    if (preference === 'advanced') {
+      setShowAdvancedQuoteBuilder(true);
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleSaveLayoutPreference = (preference: 'beginner' | 'advanced') => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      authService.updateUserProfile(user.id, {
+        preferences: {
+          ...user.preferences,
+          layoutPreference: preference
+        }
+      });
+      setUserLayoutPreference(preference);
+    }
+  };
+
   const handleProfileComplete = (profileData: ProfileData) => {
     const user = authService.getCurrentUser();
     if (user) {
@@ -157,21 +631,6 @@ export default function BessQuoteBuilder() {
     setIsFirstTimeProfile(false);
   };
   
-  // System Configuration State
-  const [powerMW, setPowerMW] = useState(1);
-  const [standbyHours, setStandbyHours] = useState(2);
-  const [gridMode, setGridMode] = useState('On-grid');
-  const [useCase, setUseCase] = useState('EV Charging Stations');
-  const [generatorMW, setGeneratorMW] = useState(1);
-  const [solarMWp, setSolarMWp] = useState(0);
-  const [windMW, setWindMW] = useState(0);
-  const [valueKwh, setValueKwh] = useState(0.25);
-  const [utilization, setUtilization] = useState(0.3);
-  const [warranty, setWarranty] = useState('10 years');
-  const [location, setLocation] = useState('UK (6%)');
-  const [selectedCountry, setSelectedCountry] = useState('United States');
-  const [currency, setCurrency] = useState('USD');
- 
   // Exchange rates (relative to USD)
   const exchangeRates: { [key: string]: number } = {
     'USD': 1.0,
@@ -191,48 +650,6 @@ export default function BessQuoteBuilder() {
   const convertCurrency = (amountUSD: number): number => {
     return amountUSD * exchangeRates[currency];
   };
-
-  // Assumptions State (default values)
-  const [batteryKwh, setBatteryKwh] = useState(250);
-  const [pcsKw, setPcsKw] = useState(200);
-  const [bosPercent, setBosPercent] = useState(0.15);
-  const [epcPercent, setEpcPercent] = useState(0.10);
-  const [offGridPcsFactor, setOffGridPcsFactor] = useState(1.25);
-  const [onGridPcsFactor, setOnGridPcsFactor] = useState(1);
-  const [genKw, setGenKw] = useState(500);
-  const [solarKwp, setSolarKwp] = useState(1500);
-  const [windKw, setWindKw] = useState(3000);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [tariffPercent, setTariffPercent] = useState(0.10);
-
-  const [showPortfolio, setShowPortfolio] = useState(false);
-  const [showCalculationModal, setShowCalculationModal] = useState(false);
-  const [showSaveProjectModal, setShowSaveProjectModal] = useState(false);
-  const [showLoadProjectModal, setShowLoadProjectModal] = useState(false);
-  const [showPricingDataCapture, setShowPricingDataCapture] = useState(false);
-  const [showMarketIntelligence, setShowMarketIntelligence] = useState(false);
-  const [showVendorSponsorship, setShowVendorSponsorship] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  
-  // Benefit explanation modals
-  const [showCostSavingsModal, setShowCostSavingsModal] = useState(false);
-  const [showRevenueModal, setShowRevenueModal] = useState(false);
-  const [showSustainabilityModal, setShowSustainabilityModal] = useState(false);
-  const [showTermsOfService, setShowTermsOfService] = useState(false);
-  const [showSecuritySettings, setShowSecuritySettings] = useState(false);
-  const [showSystemHealth, setShowSystemHealth] = useState(false);
-  const [showStatusPage, setShowStatusPage] = useState(false);
-  const [showUtilityRates, setShowUtilityRates] = useState(false);
-  const [showQuoteTemplates, setShowQuoteTemplates] = useState(false);
-  const [showPricingPresets, setShowPricingPresets] = useState(false);
-  const [showReviewWorkflow, setShowReviewWorkflow] = useState(false);
-  const [currentQuoteStatus, setCurrentQuoteStatus] = useState<'draft' | 'in-review' | 'approved' | 'rejected' | 'shared'>('draft');
-  
-  // New: Control visibility of technical quote building sections
-  const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState(false);
-
-  const [currentQuote, setCurrentQuote] = useState<any>(null);
-  const [showQuotePreview, setShowQuotePreview] = useState(false);
 
   const handleSaveProject = async () => {
     setShowSaveProjectModal(true);
@@ -394,7 +811,7 @@ export default function BessQuoteBuilder() {
     setCurrency(data.currency || 'USD');
     setBatteryKwh(data.batteryKwh || 250);
     setPcsKw(data.pcsKw || 200);
-    setBosPercent(data.bosPercent || 0.15);
+    setBosPercent(data.bosPercent || 0.12);
     setEpcPercent(data.epcPercent || 0.10);
     setOffGridPcsFactor(data.offGridPcsFactor || 1.25);
     setOnGridPcsFactor(data.onGridPcsFactor || 1);
@@ -468,7 +885,7 @@ export default function BessQuoteBuilder() {
     setSolarKwp(1500);
     setWindKw(3000);
     setGenKw(500);
-    setBosPercent(0.15);
+    setBosPercent(0.12);
     setEpcPercent(0.10);
     setOffGridPcsFactor(1.25);
     setOnGridPcsFactor(1.0);
@@ -1337,6 +1754,86 @@ export default function BessQuoteBuilder() {
     );
   }
 
+  // If showing advanced quote builder
+  if (showAdvancedQuoteBuilder) {
+    console.log('✅ Rendering advanced quote builder interface');
+    console.log('showAdvancedQuoteBuilder value:', showAdvancedQuoteBuilder);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+        {/* Advanced Header */}
+        <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold">⚡ Advanced Quote Builder</h1>
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">Power User Mode</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  setShowAdvancedQuoteBuilder(false);
+                  setShowSmartWizard(true);
+                }}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+              >
+                🎯 Smart Wizard Option
+              </button>
+              <button
+                onClick={() => setShowAdvancedQuoteBuilder(false)}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced Quote Builder Content - Scrollable to main form */}
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* Quick Actions Header */}
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-6 border-b">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-bold text-gray-800">Advanced Configuration</h2>
+                  <div className="flex gap-2">
+                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">AI Available</span>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Full Control</span>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowTemplates(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    📋 Templates
+                  </button>
+                  <button 
+                    onClick={() => setShowAnalytics(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    📊 Analytics
+                  </button>
+                  <button 
+                    onClick={() => setShowFinancing(true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    🎯 Financing
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Scroll to main quote builder form */}
+            <div className="h-screen overflow-y-auto">
+              {/* Main form content will be rendered here */}
+              {renderMainQuoteForm()}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       
@@ -1381,33 +1878,33 @@ export default function BessQuoteBuilder() {
                 {/* Smart Wizard Benefits */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border-2 border-white/20">
                   <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                    <span className="text-3xl">🪄</span>
+                    <span className="text-3xl">🎯</span>
                     Smart Wizard Benefits:
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl">💰</span>
+                      <span className="text-2xl">🎯</span>
                       <div>
                         <p className="font-bold text-lg">See Your Savings</p>
                         <p className="text-sm text-white/80">Instant ROI calculation with payback timeline</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl">⚡</span>
+                      <span className="text-2xl">🎯</span>
                       <div>
                         <p className="font-bold text-lg">Personalized Configuration</p>
                         <p className="text-sm text-white/80">Sized perfectly for your energy needs</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl">📊</span>
+                      <span className="text-2xl">🎯</span>
                       <div>
                         <p className="font-bold text-lg">Compare Options</p>
                         <p className="text-sm text-white/80">Installation, shipping & financing side-by-side</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl">📄</span>
+                      <span className="text-2xl">🎯</span>
                       <div>
                         <p className="font-bold text-lg">Download Your Quote</p>
                         <p className="text-sm text-white/80">PDF & Excel formats ready to share</p>
@@ -1416,23 +1913,50 @@ export default function BessQuoteBuilder() {
                   </div>
                 </div>
                 
-                {/* Primary CTA - Smart Wizard */}
-                <div className="relative inline-block">
-                  {/* Glow effect behind button */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-70 animate-pulse"></div>
-                  
-                  <button 
-                    onClick={() => setShowSmartWizard(true)}
-                    className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-12 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl border-4 border-cyan-300 hover:scale-105 transition-transform"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl animate-bounce">🪄</span>
-                      <div className="text-left">
-                        <div className="text-2xl">Start Smart Wizard</div>
-                        <div className="text-xs font-normal text-cyan-100 mt-1">7 simple steps • 3 minutes • No signup</div>
+                {/* Primary CTAs - Smart Wizard & Advanced Tools */}
+                <div className="flex flex-col lg:flex-row gap-6 items-center justify-center">
+                  {/* Smart Wizard Button */}
+                  <div className="relative inline-block">
+                    {/* Glow effect behind button */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl blur-xl opacity-70 animate-pulse"></div>
+                    
+                    <button 
+                      onClick={() => setShowSmartWizard(true)}
+                      className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-12 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl border-4 border-cyan-300 hover:scale-105 transition-transform"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-4xl animate-bounce">🎯</span>
+                        <div className="text-left">
+                          <div className="text-2xl">Smart Wizard</div>
+                          <div className="text-xs font-normal text-cyan-100 mt-1">7 simple steps • 3 minutes • No signup</div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
+
+                  {/* Advanced Quote Builder Button */}
+                  <div className="relative inline-block">
+                    {/* Glow effect behind button */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl blur-lg opacity-60 animate-pulse"></div>
+                    
+                    <button 
+                      onClick={() => {
+                        console.log('🎯 Button clicked!');
+                        console.log('About to set showAdvancedQuoteBuilder to true');
+                        setShowAdvancedQuoteBuilder(true);
+                      }}
+                      className="relative bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl border-2 border-amber-300 hover:scale-105 transition-transform z-10"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🎯</span>
+                        <div className="text-left">
+                          <div className="text-lg">Advanced Tools</div>
+                          <div className="text-xs font-normal text-amber-100 mt-1">Power users • Full control</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -1469,7 +1993,7 @@ export default function BessQuoteBuilder() {
               onClick={() => setShowCostSavingsModal(true)}
               className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
             >
-              <div className="text-5xl mb-4 text-center">💰</div>
+              <div className="text-5xl mb-4 text-center">🎯</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Reduce Energy Costs</h3>
               <p className="text-gray-600 mb-4 text-center">
                 Cut your electricity bills by 30-50% with smart energy storage and peak shaving
@@ -1496,8 +2020,11 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-green-600">$50K+</span>
                 <p className="text-sm text-gray-500">Average annual savings</p>
               </div>
-              <div className="mt-4 text-center text-sm text-green-600 font-semibold">
-                Click to learn more →
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-green-700 transition-colors">
+                  <span className="text-lg">🎯</span>
+                  Explore Cost Savings
+                </div>
               </div>
             </div>
 
@@ -1506,7 +2033,7 @@ export default function BessQuoteBuilder() {
               onClick={() => setShowRevenueModal(true)}
               className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
             >
-              <div className="text-5xl mb-4 text-center">📈</div>
+              <div className="text-5xl mb-4 text-center">🎯</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Generate Revenue</h3>
               <p className="text-gray-600 mb-4 text-center">
                 Turn your battery into a profit center with grid services and energy arbitrage
@@ -1533,8 +2060,11 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-blue-600">3-5 year</span>
                 <p className="text-sm text-gray-500">Typical ROI timeline</p>
               </div>
-              <div className="mt-4 text-center text-sm text-blue-600 font-semibold">
-                Click to learn more →
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors">
+                  <span className="text-lg">🎯</span>
+                  Explore Revenue
+                </div>
               </div>
             </div>
 
@@ -1543,7 +2073,7 @@ export default function BessQuoteBuilder() {
               onClick={() => setShowSustainabilityModal(true)}
               className="bg-white rounded-2xl p-6 shadow-xl border-2 border-emerald-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
             >
-              <div className="text-5xl mb-4 text-center">🌱</div>
+              <div className="text-5xl mb-4 text-center">�</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Achieve Sustainability</h3>
               <p className="text-gray-600 mb-4 text-center">
                 Meet your environmental goals and qualify for valuable tax incentives
@@ -1570,8 +2100,11 @@ export default function BessQuoteBuilder() {
                 <span className="text-3xl font-bold text-emerald-600">Net Zero</span>
                 <p className="text-sm text-gray-500">Energy independence ready</p>
               </div>
-              <div className="mt-4 text-center text-sm text-emerald-600 font-semibold">
-                Click to learn more →
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-emerald-700 transition-colors">
+                  <span className="text-lg">🎯</span>
+                  Explore Sustainability
+                </div>
               </div>
             </div>
           </div>
@@ -1582,7 +2115,7 @@ export default function BessQuoteBuilder() {
           {/* Section Header - Tightened */}
           <div className="text-center mb-6">
             <div className="inline-block mb-2">
-              <span className="text-4xl">🏢</span>
+              <span className="text-4xl">�</span>
             </div>
             <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 mb-2">
               Real-World Applications
@@ -1704,7 +2237,7 @@ export default function BessQuoteBuilder() {
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
               >
-                <span className="text-3xl">🔧</span>
+                <span className="text-3xl">🎯</span>
                 <div className="text-left">
                   <div>Advanced Quote Builder</div>
                   <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>
@@ -1790,6 +2323,9 @@ export default function BessQuoteBuilder() {
                 </button>
               </div>
             </section>
+
+            {/* Main Quote Form */}
+            {renderMainQuoteForm()}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT AND MIDDLE COLUMNS */}
@@ -2036,7 +2572,7 @@ export default function BessQuoteBuilder() {
                       onClick={() => setShowFinancing(true)}
                       title="Compare loan, lease, and PPA options"
                     >
-                      💰 Financing Calculator
+                      🎯 Financing Calculator
                     </button>
                     <button 
                       className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-violet-400/30"
@@ -2071,7 +2607,7 @@ export default function BessQuoteBuilder() {
                       onClick={() => setShowPricingPresets(true)}
                       title="Save your pricing presets & EPC contractor fees"
                     >
-                      💰 My Pricing Presets
+                      🎯 My Pricing Presets
                     </button>
                     <button 
                       className="w-full bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 relative"
@@ -2499,7 +3035,7 @@ export default function BessQuoteBuilder() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-2xl">
               <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold">💰 Reduce Energy Costs</h2>
+                <h2 className="text-3xl font-bold">🎯 Reduce Energy Costs</h2>
                 <button 
                   onClick={() => setShowCostSavingsModal(false)}
                   className="text-white hover:text-gray-200 text-3xl font-bold"
@@ -2556,9 +3092,10 @@ export default function BessQuoteBuilder() {
                   setShowCostSavingsModal(false);
                   setShowSmartWizard(true);
                 }}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-colors"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-colors flex items-center justify-center gap-3"
               >
-                Calculate Your Savings with Smart Wizard →
+                <span className="text-2xl">🎯</span>
+                Calculate Your Savings with Smart Wizard
               </button>
             </div>
           </div>
@@ -2571,7 +3108,7 @@ export default function BessQuoteBuilder() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-2xl">
               <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold">📈 Generate Revenue</h2>
+                <h2 className="text-3xl font-bold">🎯 Generate Revenue</h2>
                 <button 
                   onClick={() => setShowRevenueModal(false)}
                   className="text-white hover:text-gray-200 text-3xl font-bold"
@@ -2632,9 +3169,10 @@ export default function BessQuoteBuilder() {
                   setShowRevenueModal(false);
                   setShowSmartWizard(true);
                 }}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-colors"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-colors flex items-center justify-center gap-3"
               >
-                Model Your Revenue with Smart Wizard →
+                <span className="text-2xl">🎯</span>
+                Model Your Revenue with Smart Wizard
               </button>
             </div>
           </div>
@@ -2721,9 +3259,10 @@ export default function BessQuoteBuilder() {
                   setShowSustainabilityModal(false);
                   setShowSmartWizard(true);
                 }}
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-700 transition-colors"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-700 transition-colors flex items-center justify-center gap-3"
               >
-                Calculate Your Environmental Impact →
+                <span className="text-2xl">🎯</span>
+                Calculate Your Environmental Impact
               </button>
             </div>
           </div>

@@ -709,7 +709,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               <div id="system-config-section" className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative">
                 {activeArrow === 'system-config-section' && (
                   <div className="floating-arrow">
-                    👆
+                    🎯
                   </div>
                 )}
                 <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center gap-2">

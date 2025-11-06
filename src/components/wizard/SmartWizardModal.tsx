@@ -32,7 +32,7 @@ const SmartWizardModal: React.FC<SmartWizardModalProps> = ({
       <div className="bg-gradient-to-br from-gray-800/95 via-gray-900/95 to-gray-800/95 rounded-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto border-2 border-purple-500/40 shadow-2xl backdrop-blur-xl">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-300 to-purple-400 bg-clip-text text-transparent drop-shadow-lg">
-            🧙‍♂️ Smart Project Wizard
+            🪄 Smart Project Wizard
           </h2>
           <button 
             onClick={onClose} 
@@ -45,7 +45,7 @@ const SmartWizardModal: React.FC<SmartWizardModalProps> = ({
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 rounded-xl p-6 border border-cyan-500/30 backdrop-blur-sm shadow-lg">
             <h3 className="font-bold text-xl text-cyan-300 mb-4 flex items-center">
-              <span className="mr-2">📊</span> Project Overview
+              <span className="mr-2">🎯</span> Project Overview
             </h3>
             <div className="space-y-2 text-white">
               <p className="text-lg">
@@ -72,7 +72,7 @@ const SmartWizardModal: React.FC<SmartWizardModalProps> = ({
           
           <div className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 rounded-xl p-6 border border-emerald-500/30 backdrop-blur-sm shadow-lg">
             <h3 className="font-bold text-xl text-emerald-300 mb-4 flex items-center">
-              <span className="mr-2">💰</span> Financial Summary
+              <span className="mr-2">🎯</span> Financial Summary
             </h3>
             <div className="space-y-3 text-white">
               <div className="flex justify-between items-center">

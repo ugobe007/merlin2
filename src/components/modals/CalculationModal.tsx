@@ -42,7 +42,7 @@ export default function CalculationModal({ isOpen, onClose, calculations, projec
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-3xl font-bold text-white flex items-center space-x-3">
-                <span>🧮</span>
+                <span>🎯</span>
                 <span>Calculation Breakdown</span>
               </h2>
               <p className="text-purple-100 mt-1">Full transparency: All formulas, variables & assumptions</p>

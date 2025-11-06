@@ -88,6 +88,24 @@ class AIStateService {
     }
   }
 
+  // Reset AI state for new wizard session (preserve usage count for analytics)
+  resetForNewSession(): void {
+    try {
+      const currentData = this.getAIState();
+      const resetData: AISessionData = {
+        state: 'never-used',
+        usageCount: currentData.usageCount || 0, // Preserve usage count for user experience
+        lastUsed: undefined,
+        appliedConfig: undefined,
+        sessionId: undefined
+      };
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(resetData));
+      console.log('AI State: Reset for new session, preserved usage count:', resetData.usageCount);
+    } catch (error) {
+      console.warn('Failed to reset AI state for new session:', error);
+    }
+  }
+
   // Get state-based button styling
   getButtonStyling(currentState?: AIState): {
     className: string;

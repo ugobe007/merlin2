@@ -51,6 +51,7 @@ export interface User {
     channelPartners?: string[];
     learningGoals?: string[];
     interestedIndustry?: string[];
+    layoutPreference?: 'beginner' | 'advanced';
   };
 }
 

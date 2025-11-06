@@ -439,7 +439,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           
           <!-- Financial Summary -->
           <div class="section">
-            <div class="section-title">💰 Financial Summary</div>
+            <div class="section-title">🎯 Financial Summary</div>
             <div class="cost-breakdown">
               <div class="cost-row">
                 <span>Equipment Cost (Battery + Inverter)</span>
@@ -507,7 +507,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 <div class="subtitle">Shipping</div>
               </div>
               <div class="option-card">
-                <div class="icon">💰</div>
+                <div class="icon">🎯</div>
                 <div class="title">${quoteData.financingOption}</div>
                 <div class="subtitle">Financing</div>
               </div>
@@ -1170,7 +1170,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   
   <!-- QUOTE SUMMARY - Cost at a Glance -->
   <div style="background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%); color: white; padding: 30px; border-radius: 8px; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <h2 style="margin: 0 0 20px 0; text-align: center; font-size: 26px; border: none; padding: 0; letter-spacing: 1px;">💰 QUOTE SUMMARY</h2>
+    <h2 style="margin: 0 0 20px 0; text-align: center; font-size: 26px; border: none; padding: 0; letter-spacing: 1px;">🎯 QUOTE SUMMARY</h2>
     
     <!-- Professional System Breakdown Table -->
     <table style="width: 100%; background: white; color: #1F2937; border-radius: 6px; margin-bottom: 20px; border: none; font-size: 12px;">

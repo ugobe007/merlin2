@@ -594,7 +594,7 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
           {/* Savings Breakdown - Strategic green for savings */}
           <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
             <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span>💰</span>
+              <span>🎯</span>
               <span>Savings Breakdown</span>
             </h5>
             <div className="space-y-2">
