@@ -49,7 +49,6 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   windMW,
   generatorMW,
   location,
-  selectedGoal,
   industryTemplate,
   equipmentCost,
   installationCost,

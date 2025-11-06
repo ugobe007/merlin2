@@ -1,7 +1,7 @@
 // AI State Management Service
 // Provides persistent state tracking for AI optimization across sessions
 
-export type AIState = 'unselected' | 'active' | 'applied' | 'analyzing';
+export type AIState = 'never-used' | 'unselected' | 'active' | 'applied' | 'analyzing';
 
 export interface AISessionData {
   state: AIState;
@@ -25,9 +25,9 @@ class AIStateService {
         // Check if session is still valid (within 24 hours)
         const now = Date.now();
         if (data.lastUsed && (now - data.lastUsed) > this.SESSION_DURATION) {
-          // Session expired, reset to unselected but keep usage count
+          // Session expired, reset to never-used but keep usage count
           return {
-            state: 'unselected',
+            state: 'never-used',
             usageCount: data.usageCount || 0
           };
         }
@@ -40,7 +40,7 @@ class AIStateService {
     
     // Default state for new users
     return {
-      state: 'unselected',
+      state: 'never-used',
       usageCount: 0
     };
   }
@@ -99,6 +99,7 @@ class AIStateService {
     const usageCount = this.getUsageCount();
     
     switch (state) {
+      case 'never-used':
       case 'unselected':
         return {
           className: usageCount > 0 
