@@ -13,6 +13,24 @@ const scrollToSection = (sectionId: string) => {
   }
 };
 
+// Handle dashboard item clicks with visual feedback
+const handleDashboardClick = (itemKey: keyof typeof clickedItems, sectionId: string) => {
+  // Mark item as clicked
+  setClickedItems(prev => ({
+    ...prev,
+    [itemKey]: true
+  }));
+  
+  // Show arrow for 3 seconds
+  setActiveArrow(sectionId);
+  setTimeout(() => {
+    setActiveArrow(null);
+  }, 3000);
+  
+  // Scroll to section
+  scrollToSection(sectionId);
+};
+
 // Custom slider styles
 const sliderStyles = `
   .slider-purple::-webkit-slider-thumb {
@@ -110,6 +128,26 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
   // Track applied configurations for visual feedback
   const [appliedConfig, setAppliedConfig] = useState<string | null>(null);
+
+  // Track clicked dashboard items for visual feedback
+  const [clickedItems, setClickedItems] = useState<{
+    systemSize: boolean;
+    investment: boolean;
+    revenue: boolean;
+    roi: boolean;
+    payback: boolean;
+    quality: boolean;
+  }>({
+    systemSize: false,
+    investment: false,
+    revenue: false,
+    roi: false,
+    payback: false,
+    quality: false
+  });
+
+  // Track active arrows for guidance
+  const [activeArrow, setActiveArrow] = useState<string | null>(null);
 
   // Calculated values
   const [calculations, setCalculations] = useState({
@@ -430,6 +468,55 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
           border: none;
         }
+        
+        /* Floating Arrow Animation */
+        .floating-arrow {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+          color: white;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          animation: bounce 1s infinite, pulse 2s infinite;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+          z-index: 1000;
+        }
+        
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-8px);
+          }
+          60% {
+            transform: translateY(-4px);
+          }
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+          }
+          50% {
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.8);
+          }
+          100% {
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+          }
+        }
+        
+        /* Checked item styling */
+        .dashboard-item-checked {
+          border: 2px solid #10b981 !important;
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+        }
       `}</style>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
       <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-[98vh] overflow-hidden flex flex-col">
@@ -452,10 +539,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {/* System Size - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('system-config-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.systemSize ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('systemSize', 'system-config-section')}
               title="Click to adjust system size"
             >
+              {clickedItems.systemSize && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">System Size</div>
               <div className="text-lg font-bold text-purple-800">{storageSizeMW}MW</div>
               <div className="text-xs text-purple-600">{durationHours}hr duration</div>
@@ -463,10 +557,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
             {/* Total Investment - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('system-config-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.investment ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('investment', 'system-config-section')}
               title="Click to adjust budget and investment parameters"
             >
+              {clickedItems.investment && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">Investment</div>
               <div className="text-lg font-bold text-blue-800">
                 ${((storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000) / 1000000).toFixed(1)}M
@@ -482,10 +583,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
             {/* Annual Revenue - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('revenue-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.revenue ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('revenue', 'revenue-section')}
               title="Click to adjust revenue opportunities"
             >
+              {clickedItems.revenue && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">Annual Revenue</div>
               <div className="text-lg font-bold text-green-800">
                 ${(((storageSizeMW * durationHours * 50 * profitabilityTarget) + 
@@ -498,10 +606,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
             {/* ROI - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('revenue-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.roi ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('roi', 'revenue-section')}
               title="Click to optimize ROI parameters"
             >
+              {clickedItems.roi && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">ROI</div>
               <div className="text-lg font-bold text-emerald-800">
                 {(() => {
@@ -516,10 +631,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
             {/* Payback Period - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('system-config-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.payback ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('payback', 'system-config-section')}
               title="Click to adjust payback targets"
             >
+              {clickedItems.payback && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">Payback</div>
               <div className="text-lg font-bold text-orange-800">
                 {(() => {
@@ -548,10 +670,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
             {/* Configuration Quality - Clickable */}
             <div 
-              className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200"
-              onClick={() => scrollToSection('incentives-section')}
+              className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
+                clickedItems.quality ? 'dashboard-item-checked' : ''
+              }`}
+              onClick={() => handleDashboardClick('quality', 'incentives-section')}
               title="Click to optimize configuration quality"
             >
+              {clickedItems.quality && (
+                <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
               <div className="text-xs text-gray-600 mb-1">Quality Score</div>
               <div className="text-lg font-bold text-indigo-800">
                 {(() => {
@@ -577,7 +706,12 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
             
             {/* Left Panel - Configuration Controls */}
             <div className="space-y-3 overflow-y-auto">
-              <div id="system-config-section" className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50">
+              <div id="system-config-section" className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative">
+                {activeArrow === 'system-config-section' && (
+                  <div className="floating-arrow">
+                    👆
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center gap-2">
                   <Settings className="w-5 h-5 text-purple-600" />
                   System Configuration
@@ -773,7 +907,12 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               </div>
 
               {/* Revenue Opportunities */}
-              <div id="revenue-section" className="bg-gradient-to-br from-green-100/70 to-emerald-200/50 backdrop-blur-sm border border-green-200/30 p-4 rounded-xl shadow-lg">
+              <div id="revenue-section" className="bg-gradient-to-br from-green-100/70 to-emerald-200/50 backdrop-blur-sm border border-green-200/30 p-4 rounded-xl shadow-lg relative">
+                {activeArrow === 'revenue-section' && (
+                  <div className="floating-arrow">
+                    💰
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
                   Revenue Opportunities
@@ -860,7 +999,12 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               </div>
 
               {/* Incentives and Credits */}
-              <div id="incentives-section" className="bg-purple-50/80 backdrop-blur-sm border border-purple-200/50 p-4 rounded-xl shadow-lg">
+              <div id="incentives-section" className="bg-purple-50/80 backdrop-blur-sm border border-purple-200/50 p-4 rounded-xl shadow-lg relative">
+                {activeArrow === 'incentives-section' && (
+                  <div className="floating-arrow">
+                    🎯
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center gap-2">
                   <DollarSign className="w-5 h-5" />
                   Incentives & Credits
