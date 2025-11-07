@@ -5,7 +5,7 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
 import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createCalculationTables } from '../utils/wordHelpers';
 import { authService } from '../services/authService';
-import { calculateBESSPricing, PRICING_SOURCES, formatPricingForDisplay, calculateRealWorldPrice } from '../utils/bessPricing';
+import { calculateBESSPricing, PRICING_SOURCES, formatPricingForDisplay, calculateRealWorldPrice, calculateSystemCost } from '../utils/bessPricing';
 import EditableUserProfile from './EditableUserProfile';
 import Portfolio from './Portfolio';
 import PublicProfileViewer from './PublicProfileViewer';
@@ -61,9 +61,9 @@ export default function BessQuoteBuilder() {
   const [userLayoutPreference, setUserLayoutPreference] = useState<'beginner' | 'advanced'>('beginner');
   const [showLayoutPreferenceModal, setShowLayoutPreferenceModal] = useState(false);
   
-  // Advanced form state
-  const [energyCapacity, setEnergyCapacity] = useState(100);
-  const [powerRating, setPowerRating] = useState(50);
+  // Advanced form state - Updated with industry-standard defaults
+  const [energyCapacity, setEnergyCapacity] = useState(2); // 2 MWh for typical commercial peak shaving
+  const [powerRating, setPowerRating] = useState(1); // 1 MW for typical commercial system
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   // ALL OTHER STATE - moved to beginning to avoid hooks rule violations
@@ -100,9 +100,9 @@ export default function BessQuoteBuilder() {
   const [selectedCountry, setSelectedCountry] = useState('United States');
   const [currency, setCurrency] = useState('USD');
   
-  // New flexible sizing state
-  const [energyUnit, setEnergyUnit] = useState('kWh');
-  const [powerUnit, setPowerUnit] = useState('kW');
+  // New flexible sizing state - Updated to MW/MWh defaults for commercial scale
+  const [energyUnit, setEnergyUnit] = useState('MWh');
+  const [powerUnit, setPowerUnit] = useState('MW');
   const [applicationType, setApplicationType] = useState<'residential' | 'commercial' | 'utility' | 'ups'>('residential');
   
   // Assumptions State (default values) - VALIDATED AGAINST NREL ATB 2024
@@ -256,7 +256,7 @@ export default function BessQuoteBuilder() {
                 </div>
               </div>
               
-              {/* Duration Calculator */}
+              {/* Duration Calculator with Industry Guidance */}
               <div className="mt-4 p-3 bg-white rounded border border-gray-200">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Discharge Duration:</span>
@@ -265,7 +265,13 @@ export default function BessQuoteBuilder() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  How long the system can provide power at maximum output
+                  {(() => {
+                    const duration = powerRating > 0 ? (energyCapacity / powerRating) : 0;
+                    if (duration <= 2) return "Ideal for: Frequency regulation, grid stabilization";
+                    else if (duration <= 4) return "Ideal for: Peak shaving, demand charge reduction";
+                    else if (duration <= 6) return "Ideal for: Load shifting, renewable integration";
+                    else return "Ideal for: Backup power, long-duration storage";
+                  })()}
                 </p>
               </div>
             </div>
@@ -535,6 +541,27 @@ export default function BessQuoteBuilder() {
                     Duration: {(energyCapacity / powerRating).toFixed(1)} hours at full power
                   </div>
                 )}
+                
+                {/* Industry Standard Warnings */}
+                {(() => {
+                  const duration = powerRating > 0 ? (energyCapacity / powerRating) : 0;
+                  
+                  if (duration > 8) {
+                    return (
+                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                        ⚠️ <strong>Warning:</strong> {duration.toFixed(1)}-hour duration is unusually long for most commercial applications. 
+                        Consider reducing energy capacity or increasing power rating.
+                      </div>
+                    );
+                  } else if (duration > 6) {
+                    return (
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                        ℹ️ <strong>Note:</strong> {duration.toFixed(1)}-hour duration is suitable for backup power or renewable shifting applications.
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
 
@@ -1799,8 +1826,11 @@ export default function BessQuoteBuilder() {
     }
   };
 
-  // CALCULATIONS
-  const totalMWh = powerMW * standbyHours;
+  // CALCULATIONS - Using Industry-Standard Realistic Sizing
+  // Get realistic system sizing based on application requirements
+  const systemCost = calculateSystemCost(powerMW, standbyHours, selectedCountry, true, useCase.toLowerCase().replace(/\s+/g, '-'));
+  const totalMWh = systemCost.capacityMWh; // Use realistic energy capacity instead of power × time
+  const actualDuration = systemCost.actualDuration; // Real duration: Energy/Power
   const pcsKW = powerMW * 1000;
   const actualPcsFactor = gridMode === 'Off-grid' ? offGridPcsFactor : onGridPcsFactor;
   const adjustedPcsKw = pcsKW * actualPcsFactor;
@@ -2821,7 +2851,15 @@ export default function BessQuoteBuilder() {
               <h2 className="text-3xl font-bold text-cyan-800 mb-6">System Details</h2>
               <div className="space-y-4">
                 <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 flex justify-between items-center">
-                  <span className="text-gray-800 font-semibold text-lg">Total Energy:</span>
+                  <div>
+                    <div className="text-gray-800 font-semibold text-lg">Total Energy:</div>
+                    <div className="text-xs text-gray-600">
+                      Realistic Duration: {actualDuration.toFixed(1)}hr 
+                      {actualDuration !== standbyHours && (
+                        <span className="text-amber-600"> (adjusted from {standbyHours}hr)</span>
+                      )}
+                    </div>
+                  </div>
                   <span className="font-bold text-blue-700 text-2xl">{totalMWh.toFixed(2)} MWh</span>
                 </div>
                 <div className="bg-blue-100 p-4 rounded-xl border-2 border-blue-300 flex justify-between items-center">
