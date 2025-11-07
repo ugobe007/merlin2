@@ -35,7 +35,7 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 2,
       gridMode: 'Hybrid',
       generatorMW: 0.5,
-      solarMW: 1.5,
+      solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.65,
       warranty: '10 years',
@@ -63,7 +63,7 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 4,
       gridMode: 'On-grid',
       generatorMW: 2,
-      solarMW: 3,
+      solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.45,
       warranty: '15 years',
@@ -91,7 +91,7 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 3,
       gridMode: 'On-grid',
       generatorMW: 0,
-      solarMW: 5,
+      solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.55,
       warranty: '10 years',
@@ -119,7 +119,7 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 4,
       gridMode: 'Hybrid',
       generatorMW: 0.25,
-      solarMW: 2,
+      solarMW: 0, // Optional - add if roof space permits
       windMW: 0,
       utilization: 0.40,
       warranty: '10 years',
@@ -147,8 +147,8 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 4,
       gridMode: 'On-grid',
       generatorMW: 0,
-      solarMW: 100,
-      windMW: 50,
+      solarMW: 0, // Optional - utility-scale solar typically off-site
+      windMW: 0, // Optional - typically off-site wind farm
       utilization: 0.75,
       warranty: '20 years',
     },
@@ -175,8 +175,8 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 6,
       gridMode: 'Off-grid',
       generatorMW: 2,
-      solarMW: 4,
-      windMW: 2,
+      solarMW: 0, // Optional - recommended for off-grid if space permits
+      windMW: 0, // Optional - add if wind resource available
       utilization: 0.50,
       warranty: '15 years',
     },
@@ -203,8 +203,8 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 6,
       gridMode: 'Hybrid',
       generatorMW: 0.5,
-      solarMW: 3,
-      windMW: 1,
+      solarMW: 0, // Optional - farms often have good space for solar
+      windMW: 0, // Optional - add if wind resource available
       utilization: 0.35,
       warranty: '10 years',
     },
@@ -231,7 +231,7 @@ const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
       durationHours: 8,
       gridMode: 'On-grid',
       generatorMW: 3,
-      solarMW: 2,
+      solarMW: 0, // Optional - add if roof space available
       windMW: 0,
       utilization: 0.60,
       warranty: '15 years',

@@ -145,9 +145,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
             price: 0,
           },
           installation: {
-            labor_cost: 125000,
-            labor_hours: 500,
-            labor_rate_per_hour: 250,
+            labor_cost: 75000,
+            labor_hours: 600,
+            labor_rate_per_hour: 125,
           },
           engineering: 50000,
           permitting: 25000,
