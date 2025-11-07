@@ -103,7 +103,7 @@ export default function BessQuoteBuilder() {
   // New flexible sizing state
   const [energyUnit, setEnergyUnit] = useState('kWh');
   const [powerUnit, setPowerUnit] = useState('kW');
-  const [applicationType, setApplicationType] = useState<'residential' | 'commercial' | 'utility'>('residential');
+  const [applicationType, setApplicationType] = useState<'residential' | 'commercial' | 'utility' | 'ups'>('residential');
   
   // Assumptions State (default values) - VALIDATED AGAINST NREL ATB 2024
   // Source: https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage
@@ -506,8 +506,6 @@ export default function BessQuoteBuilder() {
                     Apply Advanced Settings
                   </button>
                 </div>
-              </div>
-            )}
               </div>
             )}
           </div>
