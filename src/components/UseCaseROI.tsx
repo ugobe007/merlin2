@@ -451,141 +451,124 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Chart - Professional with refined colors */}
+        {/* Left: Financial Metrics - Clean display with key numbers */}
         <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-          {/* Annual Savings Badge - Strategic green for financial positive */}
-          <div className="flex justify-center mb-4">
-            <span
-              className="inline-block bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xl font-bold px-8 py-2.5 rounded-full shadow-lg"
-            >
-              Annual Savings: ${ (currentUseCase.totalAnnualSavings / 1000).toLocaleString() }K
-            </span>
-          </div>
-          <h4 className="text-lg font-bold text-gray-900 mb-6 text-center">
-            Annual Savings — Before vs After BESS
-          </h4>
-          
-          {/* Chart - Refined color palette */}
-          <div className="relative" style={{ height: '300px' }}>
-            <div className="absolute inset-0 flex items-end justify-around px-4">
-              {(() => {
-                const maxValue = Math.max(
-                  currentUseCase.demandChargeBefore,
-                  currentUseCase.demandChargeAfter,
-                  currentUseCase.energyCostBefore,
-                  currentUseCase.energyCostAfter
-                );
-                const chartHeightPx = 260;
-                const minBarPx = 20;
-                const getBarHeight = (value: number) => {
-                  if (maxValue === 0) return minBarPx;
-                  const proportional = (value / maxValue) * chartHeightPx;
-                  return Math.max(proportional, minBarPx);
-                };
-                return (
-                  <>
-                    {/* Demand Charges Group */}
-                    <div className="flex flex-col items-center gap-3 w-40">
-                      <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar - Blue */}
-                        <div className="flex flex-col items-center w-20">
-                          <div className="text-base font-bold text-gray-900 mb-2">
-                            ${(currentUseCase.demandChargeBefore / 1000).toFixed(0)}K
-                          </div>
-                          <div 
-                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-lg border border-blue-700"
-                            style={{ height: getBarHeight(currentUseCase.demandChargeBefore) + 'px' }}
-                          ></div>
-                        </div>
-                        {/* After Bar - Teal (single accent color) */}
-                        <div className="flex flex-col items-center w-20">
-                          <div className="text-base font-bold text-gray-900 mb-2">
-                            ${(currentUseCase.demandChargeAfter / 1000).toFixed(0)}K
-                          </div>
-                          <div 
-                            className="w-full bg-gradient-to-t from-teal-500 via-teal-400 to-cyan-300 rounded-t-xl shadow-lg border border-teal-600"
-                            style={{ height: getBarHeight(currentUseCase.demandChargeAfter) + 'px' }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-bold text-gray-900 mt-2">Demand Charges</div>
-                    </div>
-                    {/* Energy (TOU) Group */}
-                    <div className="flex flex-col items-center gap-3 w-40">
-                      <div className="flex gap-4 items-end" style={{ height: chartHeightPx + 'px' }}>
-                        {/* Before Bar - Blue */}
-                        <div className="flex flex-col items-center w-20">
-                          <div className="text-base font-bold text-gray-900 mb-2">
-                            ${(currentUseCase.energyCostBefore / 1000).toFixed(0)}K
-                          </div>
-                          <div 
-                            className="w-full bg-gradient-to-t from-blue-600 via-blue-500 to-blue-400 rounded-t-xl shadow-lg border border-blue-700"
-                            style={{ height: getBarHeight(currentUseCase.energyCostBefore) + 'px' }}
-                          ></div>
-                        </div>
-                        {/* After Bar - Teal */}
-                        <div className="flex flex-col items-center w-20">
-                          <div className="text-base font-bold text-gray-900 mb-2">
-                            ${(currentUseCase.energyCostAfter / 1000).toFixed(0)}K
-                          </div>
-                          <div 
-                            className="w-full bg-gradient-to-t from-teal-500 via-teal-400 to-cyan-300 rounded-t-xl shadow-lg border border-teal-600"
-                            style={{ height: getBarHeight(currentUseCase.energyCostAfter) + 'px' }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-bold text-gray-900 mt-2">Energy (TOU)</div>
-                    </div>
-                  </>
-                );
-              })()}
+          {/* Main Annual Savings Display */}
+          <div className="text-center mb-8">
+            <div className="inline-block bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-lg mb-4">
+              <div className="text-4xl font-bold">
+                ${ (currentUseCase.totalAnnualSavings / 1000).toLocaleString() }K
+              </div>
+              <div className="text-lg font-medium opacity-90">Annual Savings</div>
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="flex justify-center gap-8 mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-blue-400 rounded border border-blue-700 shadow-sm"></div>
-              <span className="text-sm font-semibold text-gray-800">Before BESS</span>
+          {/* Cost Breakdown Cards */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-bold text-gray-900 text-center mb-4">
+              Annual Cost Breakdown
+            </h4>
+            
+            {/* Before BESS Total */}
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm font-semibold text-red-700 mb-1">Before BESS</div>
+                  <div className="text-xs text-red-600">Total Annual Energy Costs</div>
+                </div>
+                <div className="text-2xl font-bold text-red-700">
+                  ${((currentUseCase.demandChargeBefore + currentUseCase.energyCostBefore) / 1000).toFixed(0)}K
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                <div className="bg-red-100 rounded px-3 py-2">
+                  <div className="text-red-600">Demand Charges</div>
+                  <div className="font-bold text-red-800">${(currentUseCase.demandChargeBefore / 1000).toFixed(0)}K</div>
+                </div>
+                <div className="bg-red-100 rounded px-3 py-2">
+                  <div className="text-red-600">Energy (TOU)</div>
+                  <div className="font-bold text-red-800">${(currentUseCase.energyCostBefore / 1000).toFixed(0)}K</div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gradient-to-br from-teal-500 to-cyan-300 rounded border border-teal-600 shadow-sm"></div>
-              <span className="text-sm font-semibold text-gray-800">After BESS</span>
+
+            {/* After BESS Total */}
+            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm font-semibold text-green-700 mb-1">After BESS</div>
+                  <div className="text-xs text-green-600">Reduced Annual Energy Costs</div>
+                </div>
+                <div className="text-2xl font-bold text-green-700">
+                  ${((currentUseCase.demandChargeAfter + currentUseCase.energyCostAfter) / 1000).toFixed(0)}K
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                <div className="bg-green-100 rounded px-3 py-2">
+                  <div className="text-green-600">Demand Charges</div>
+                  <div className="font-bold text-green-800">${(currentUseCase.demandChargeAfter / 1000).toFixed(0)}K</div>
+                </div>
+                <div className="bg-green-100 rounded px-3 py-2">
+                  <div className="text-green-600">Energy (TOU)</div>
+                  <div className="font-bold text-green-800">${(currentUseCase.energyCostAfter / 1000).toFixed(0)}K</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Savings Summary */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+              <div className="text-center">
+                <div className="text-sm font-semibold text-blue-700 mb-2">Net Annual Savings</div>
+                <div className="text-3xl font-bold text-blue-800">
+                  ${(currentUseCase.totalAnnualSavings / 1000).toFixed(0)}K
+                </div>
+                <div className="text-xs text-blue-600 mt-1">
+                  {((currentUseCase.totalAnnualSavings / (currentUseCase.demandChargeBefore + currentUseCase.energyCostBefore)) * 100).toFixed(0)}% reduction in energy costs
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Metrics & Benefits - Refined palette */}
+        {/* Right: Enhanced ROI Metrics */}
         <div className="space-y-4">
-          {/* ROI Metrics - Refined colors */}
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-300 shadow-sm">
-                <div className="text-3xl font-bold text-green-700">
-                  ${(currentUseCase.totalAnnualSavings / 1000).toFixed(0)}K
+          {/* Primary ROI Metrics - Enhanced for prominence */}
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+            <h4 className="text-lg font-bold text-gray-900 mb-4 text-center">Key Financial Metrics</h4>
+            
+            {/* Primary Metrics - Larger display */}
+            <div className="grid grid-cols-1 gap-4 mb-6">
+              {/* ROI - Most prominent */}
+              <div className="text-center p-6 bg-gradient-to-br from-purple-600 to-violet-700 text-white rounded-2xl shadow-lg">
+                <div className="text-5xl font-bold mb-2">
+                  {currentUseCase.roi25Year}
                 </div>
-                <div className="text-xs text-gray-700 font-semibold mt-1">Annual Savings</div>
+                <div className="text-lg font-semibold">25-Year ROI</div>
               </div>
               
-              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-300 shadow-sm">
-                <div className="text-3xl font-bold text-blue-700">
+              {/* Payback Period - Secondary prominence */}
+              <div className="text-center p-5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg">
+                <div className="text-4xl font-bold mb-2">
                   {currentUseCase.paybackYears < 1 
                     ? `${(currentUseCase.paybackYears * 12).toFixed(0)} mo`
                     : `${currentUseCase.paybackYears.toFixed(1)} yr`
                   }
                 </div>
-                <div className="text-xs text-gray-700 font-semibold mt-1">Payback Period</div>
+                <div className="text-base font-semibold">Payback Period</div>
               </div>
-              
-              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-300 shadow-sm">
-                <div className="text-3xl font-bold text-purple-700">
-                  {currentUseCase.roi25Year}
+            </div>
+            
+            {/* Supporting Metrics - Grid layout */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-300 shadow-sm">
+                <div className="text-2xl font-bold text-green-700">
+                  ${(currentUseCase.totalAnnualSavings / 1000).toFixed(0)}K
                 </div>
-                <div className="text-xs text-gray-700 font-semibold mt-1">25-Year ROI</div>
+                <div className="text-xs text-gray-700 font-semibold mt-1">Annual Savings</div>
               </div>
               
               <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-300 shadow-sm">
-                <div className="text-3xl font-bold text-indigo-700">
+                <div className="text-2xl font-bold text-indigo-700">
                   {currentUseCase.systemSizeMW < 1 
                     ? `${(currentUseCase.systemSizeMW * 1000).toFixed(0)} kW`
                     : `${currentUseCase.systemSizeMW.toFixed(1)} MW`
