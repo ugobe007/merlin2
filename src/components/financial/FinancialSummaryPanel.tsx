@@ -125,14 +125,14 @@ export default function FinancialSummaryPanel({
               onClick={() => setShowFinancing(true)}
               title="Compare loan, lease, and PPA options"
             >
-              🎯 Financing Calculator
+              💰 Financing Calculator
             </button>
             <button 
               className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-violet-400/30"
               onClick={() => setShowTemplates(true)}
               title="Pre-configured BESS templates for common use cases"
             >
-              🎯 Use Case Templates
+              📋 Use Case Templates
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function FinancialSummaryPanel({
               onClick={() => setShowPricingPresets(true)}
               title="Save your pricing presets & EPC contractor fees"
             >
-              🎯 My Pricing Presets
+              ⚙️ My Pricing Presets
             </button>
             <button 
               className="w-full bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 relative"

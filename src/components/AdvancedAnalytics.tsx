@@ -301,7 +301,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
           {/* Sensitivity Analysis */}
           <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">🎯 Sensitivity Analysis</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">📊 Sensitivity Analysis</h3>
             <p className="text-sm text-gray-600 mb-4">Impact of ±30% changes in annual savings on key metrics:</p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -338,7 +338,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
           {/* Cash Flow Visualization (Simple Text-Based) */}
           <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">🎯 Cumulative Cash Flow</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">💹 Cumulative Cash Flow</h3>
             <div className="space-y-2">
               {Array.from({ length: Math.min(batteryLifeYears, 20) }, (_, year) => {
                 const degradationFactor = Math.pow(1 - degradationRate, year);
