@@ -95,7 +95,7 @@ export const UseCaseAdminDashboard: React.FC<UseCaseAdminProps> = ({ isAdmin }) 
             { key: 'equipment', label: 'Equipment' },
             { key: 'pricing', label: 'Pricing' },
             { key: 'analytics', label: 'Analytics' },
-            { key: 'debug', label: '🔍 Debug' },
+            { key: 'debug', label: '🔍 Debug & Monitoring' },
             { key: 'casestudies', label: '📊 Case Studies' }
           ].map((tab) => (
             <button

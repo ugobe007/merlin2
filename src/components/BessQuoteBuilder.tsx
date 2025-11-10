@@ -18,6 +18,7 @@ import EnergyNewsTicker from './EnergyNewsTicker';
 import PublicProfileViewer from './PublicProfileViewer';
 import UseCaseTemplates from './UseCaseTemplates';
 import AdvancedAnalytics from './AdvancedAnalytics';
+import { UseCaseAdminDashboard } from './admin/UseCaseAdminDashboard';
 import EnhancedBESSAnalytics from './EnhancedBESSAnalytics';
 import FinancingCalculator from './FinancingCalculator';
 import AIChatModal from './modals/AIChatModal';
@@ -735,6 +736,26 @@ export default function BessQuoteBuilder() {
     {console.log('🚀 About to render ModalManager with showBESSAnalytics:', showBESSAnalytics)}
     {console.log('🚀 modalManagerProps.showBESSAnalytics:', modalManagerProps.showBESSAnalytics)}
     <ModalManager key={`modal-${showBESSAnalytics}`} {...modalManagerProps} />
+
+    {/* Admin Dashboard */}
+    {showVendorManager && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 overflow-y-auto">
+        <div className="min-h-screen">
+          <div className="bg-white min-h-screen">
+            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+              <h1 className="text-2xl font-bold">🔧 Admin Dashboard</h1>
+              <button 
+                onClick={() => setShowVendorManager(false)}
+                className="text-white hover:text-gray-200 text-3xl font-bold p-2"
+              >
+                ×
+              </button>
+            </div>
+            <UseCaseAdminDashboard isAdmin={true} />
+          </div>
+        </div>
+      </div>
+    )}
   </>
   );
 }
