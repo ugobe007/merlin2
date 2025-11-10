@@ -680,11 +680,18 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
           {onLoadTemplate && (
             <button
               onClick={() => {
+                console.log('🎯🎯🎯 UseCaseROI Build This Quote clicked!');
+                console.log('🎯 setShowPowerAdjustmentModal available:', !!setShowPowerAdjustmentModal);
+                console.log('🎯 setSelectedUseCaseForAdjustment available:', !!setSelectedUseCaseForAdjustment);
+                console.log('🎯 onLoadTemplate available:', !!onLoadTemplate);
+                
                 // If power adjustment modal is available, use that flow
                 if (setShowPowerAdjustmentModal && setSelectedUseCaseForAdjustment) {
+                  console.log('🔄 Taking power adjustment modal path');
                   setSelectedUseCaseForAdjustment(currentUseCase);
                   setShowPowerAdjustmentModal(true);
                 } else {
+                  console.log('🚀 Taking onLoadTemplate path');
                   // Fallback to direct template loading
                   onLoadTemplate(currentUseCase);
                 }
