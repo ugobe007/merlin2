@@ -15,6 +15,12 @@ import {
   type BatteryModel,
   type ControlStrategy
 } from '../../services/advancedBessAnalytics';
+import { 
+  getIndustryProfile, 
+  getAIOptimalStandards, 
+  getTemplateDefaults,
+  INDUSTRY_STANDARDS
+} from '../../config/industryStandards';
 
 // New customer-focused steps
 import StepIntro from './steps/Step_Intro';
@@ -66,156 +72,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   } | null>(null);
 
   // Function to calculate industry-appropriate initial configuration
+  // Now uses centralized configuration from src/config/industryStandards.ts
   const calculateIndustryBaseline = (template: string | string[], scale: number = 1) => {
     const templateKey = Array.isArray(template) ? template[0] : template;
-    
-    // Comprehensive industry-specific configurations based on real-world needs
-    const industryProfiles: { [key: string]: { 
-      basePowerMW: number; 
-      baseDurationHrs: number; 
-      solarRatio: number;
-      scaleFactor: number; // Multiplier for scale parameter
-      scaleUnit: string; // What the scale represents
-    } } = {
-      // TRANSPORTATION & LOGISTICS
-      'ev-charging': { 
-        basePowerMW: 0.5,   // Per charger (mix of L2 and DC fast)
-        baseDurationHrs: 2,  // Peak demand buffering
-        solarRatio: 1.0, 
-        scaleFactor: 1.0,  // Direct scaling with charger count
-        scaleUnit: 'chargers'
-      },
-      'airport': { 
-        basePowerMW: 4.0,   // Large facility base (per million passengers)
-        baseDurationHrs: 6,  // Flight schedule buffering
-        solarRatio: 1.2, 
-        scaleFactor: 1.0,   // Direct scaling with passenger volume per million
-        scaleUnit: 'million_passengers'
-      },
-      'logistics': { 
-        basePowerMW: 1.5,   // Warehouse operations (per 100k sq ft)
-        baseDurationHrs: 4,  // Shift coverage
-        solarRatio: 1.5, 
-        scaleFactor: 1.0,   // Direct scaling with facility size per 100k
-        scaleUnit: 'sq_ft_thousands'
-      },
-      
-      // HOSPITALITY & COMMERCIAL
-      'hotel': { 
-        basePowerMW: 1.5,   // Per 100 rooms base (15kW per room typical)
-        baseDurationHrs: 5,  // Guest comfort continuity
-        solarRatio: 1.4, 
-        scaleFactor: 1.0,   // Direct scaling with room count per 100
-        scaleUnit: 'rooms'
-      },
-      'casino': { 
-        basePowerMW: 2.0,   // High energy density (per 50k sq ft gaming floor)
-        baseDurationHrs: 8,  // 24/7 operations
-        solarRatio: 0.6, 
-        scaleFactor: 1.0,   // Direct scaling with gaming floor area per 50k
-        scaleUnit: 'gaming_floor_sq_ft'
-      },
-      'retail': { 
-        basePowerMW: 0.25,  // Per 10k sq ft (25kW per 10k typical)
-        baseDurationHrs: 4,  // Business hours + HVAC
-        solarRatio: 1.3, 
-        scaleFactor: 1.0,   // Direct scaling with store size
-        scaleUnit: 'sq_ft_thousands'
-      },
-      'car-wash': { 
-        basePowerMW: 0.3,   // Per wash bay (peak demand for dryers + equipment)
-        baseDurationHrs: 3,  // Peak hours coverage
-        solarRatio: 1.8, 
-        scaleFactor: 1.0,   // Direct scaling with number of bays
-        scaleUnit: 'wash_bays'
-      },
-      
-      // HEALTHCARE & EDUCATION
-      'hospital': { 
-        basePowerMW: 2.5,   // Per 100 beds (25kW per bed typical for critical loads)
-        baseDurationHrs: 8,  // Life safety requirements
-        solarRatio: 1.0, 
-        scaleFactor: 1.0,   // Direct scaling with bed count per 100
-        scaleUnit: 'beds'
-      },
-      'university': { 
-        basePowerMW: 2.0,   // Per 1000 students (campus facilities)
-        baseDurationHrs: 5,  // Academic schedule
-        solarRatio: 1.3, 
-        scaleFactor: 1.0,   // Direct scaling with enrollment per 1000
-        scaleUnit: 'students_thousands'
-      },
-      
-      // INDUSTRIAL & TECHNOLOGY
-      'manufacturing': { 
-        basePowerMW: 2.0,   // Per production line (realistic for typical line)
-        baseDurationHrs: 4,  // Shift operations
-        solarRatio: 1.2, 
-        scaleFactor: 1.0,   // Direct scaling with production lines
-        scaleUnit: 'production_lines'
-      },
-      'data-center': { 
-        basePowerMW: 2.0,   // Per MW IT load (includes PUE overhead)
-        baseDurationHrs: 6,  // Outage protection
-        solarRatio: 0.8, 
-        scaleFactor: 1.0,   // Direct scaling with IT capacity
-        scaleUnit: 'IT_load_MW'
-      },
-      'cold-storage': { 
-        basePowerMW: 1.0,   // Temperature critical facilities
-        baseDurationHrs: 8,  // Extended outage protection
-        solarRatio: 1.5, 
-        scaleFactor: 1.0,   // Direct scaling with storage volume
-        scaleUnit: 'storage_volume'
-      },
-      'warehouse': { 
-        basePowerMW: 1.0,   // Per 100k sq ft (more realistic)
-        baseDurationHrs: 4,  // Operations coverage
-        solarRatio: 1.5, 
-        scaleFactor: 1.0,   // Direct scaling with facility size
-        scaleUnit: 'sq_ft_hundred_thousands'
-      },
-      
-      // RESIDENTIAL & MULTI-TENANT
-      'apartment': { 
-        basePowerMW: 1.0,   // Per 100 units (10kW per unit typical)
-        baseDurationHrs: 4,  // Resident comfort
-        solarRatio: 1.2, 
-        scaleFactor: 1.0,   // Direct scaling with unit count per 100
-        scaleUnit: 'units'
-      },
-      'microgrid': { 
-        basePowerMW: 0.5,   // Community base (per 50 buildings)
-        baseDurationHrs: 8,  // Resilience focus
-        solarRatio: 2.0, 
-        scaleFactor: 1.0,   // Direct scaling with homes/buildings per 50
-        scaleUnit: 'buildings'
-      },
-      
-      // AGRICULTURE & SPECIALTY
-      'agricultural': { 
-        basePowerMW: 1.0,   // Farm operations (per 1000 acres)
-        baseDurationHrs: 6,  // Irrigation/processing
-        solarRatio: 2.0, 
-        scaleFactor: 1.0,   // Direct scaling with farm size per 1000 acres
-        scaleUnit: 'acres_thousands'
-      },
-      'indoor-farm': { 
-        basePowerMW: 1.5,   // High energy for lighting (adjusted for typical facility)
-        baseDurationHrs: 4,  // Growth cycle protection
-        solarRatio: 1.0, 
-        scaleFactor: 1.0,   // Direct scaling with growing area
-        scaleUnit: 'growing_area_sq_ft'
-      }
-    };
-    
-    const profile = industryProfiles[templateKey] || { 
-      basePowerMW: 2, 
-      baseDurationHrs: 4, 
-      solarRatio: 1.0, 
-      scaleFactor: 1.0,
-      scaleUnit: 'generic'
-    };
+    const profile = getIndustryProfile(templateKey);
     
     // Calculate scaled configuration
     const scaledPower = profile.basePowerMW * scale * profile.scaleFactor;
@@ -473,34 +333,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   } | null>(null);
 
   // Calculate AI baseline whenever industry changes
+  // Now uses centralized configuration from src/config/industryStandards.ts
   useEffect(() => {
     if (selectedTemplate) {
       const industry = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
+      const profile = getAIOptimalStandards(industry);
       
-      // Industry-specific optimal ratios
-      const industryProfiles: { [key: string]: { powerMW: number; durationHrs: number; solarRatio: number } } = {
-        'manufacturing': { powerMW: 3.5, durationHrs: 4, solarRatio: 1.2 },
-        'office': { powerMW: 0.15, durationHrs: 3, solarRatio: 0.8 }, // CORRECTED: Small commercial office 50-300kW typical
-        'small-office': { powerMW: 0.08, durationHrs: 2, solarRatio: 0.5 }, // Very small office: <10 employees
-        'medical-office': { powerMW: 0.10, durationHrs: 2, solarRatio: 0.6 }, // Medical/professional office
-        'datacenter': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
-        'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
-        'hotel': { powerMW: 3.0, durationHrs: 5, solarRatio: 1.4 },
-        'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
-        'agriculture': { powerMW: 2.0, durationHrs: 6, solarRatio: 2.0 },
-        'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
-        'ev-charging': { powerMW: 5.0, durationHrs: 2, solarRatio: 1.0 },
-        'apartment': { powerMW: 2.0, durationHrs: 4, solarRatio: 1.2 },
-        'university': { powerMW: 4.0, durationHrs: 5, solarRatio: 1.3 },
-        'indoor-farm': { powerMW: 3.0, durationHrs: 12, solarRatio: 1.8 },
-        'dental-office': { powerMW: 0.12, durationHrs: 2, solarRatio: 0.6 }, // Small healthcare practice: 120kW peak, minimal solar
-        'hospital': { powerMW: 5.0, durationHrs: 8, solarRatio: 1.0 },
-        'cold-storage': { powerMW: 2.0, durationHrs: 8, solarRatio: 1.5 },
-      };
-      
-      const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
-      
-      // Goal-specific adjustments
       // Set optimal configuration based on industry profile
       const optimalPowerMW = profile.powerMW;
       const optimalDurationHrs = profile.durationHrs;
@@ -765,34 +603,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   useEffect(() => {
     const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
     if (useTemplate && templateKey && templateKey !== 'custom') {
-      // Industry-validated sizing based on NREL Commercial Reference Buildings
-      // and EPRI Energy Storage Database (real-world deployment data)
-      // CORRECTED: Sizing based on actual facility loads and economics
-      const templates: { [key: string]: { mw: number; hours: number } } = {
-        'manufacturing': { mw: 3.5, hours: 4 }, // NREL manufacturing baseline: 2-5MW typical
-        'office': { mw: 0.15, hours: 3 }, // CORRECTED: Small commercial office 50-300kW typical (was 1MW)
-        'small-office': { mw: 0.08, hours: 2 }, // Very small office: <10 employees
-        'medical-office': { mw: 0.10, hours: 2 }, // Medical/professional office practice
-        'datacenter': { mw: 8.0, hours: 6 }, // Uptime Institute: 5-20MW typical for enterprise
-        'warehouse': { mw: 2.5, hours: 4 }, // DOE logistics facilities: 1-3MW standard
-        'hotel': { mw: 3.0, hours: 5 }, // ASHRAE hospitality: 1.5-3MW per 100 rooms (aligned with AI)
-        'retail': { mw: 1.5, hours: 4 }, // CBECS retail: 0.2-1MW per location
-        'agriculture': { mw: 2.0, hours: 6 }, // USDA agricultural energy survey: 1-3MW
-        'car-wash': { mw: 0.8, hours: 3 }, // Aligned with AI recommendation (was 0.05)
-        'ev-charging': { mw: 5.0, hours: 2 }, // NREL EV infrastructure: 0.5-2MW per hub
-        'apartment': { mw: 2.0, hours: 4 }, // CBECS multifamily: 0.5-2MW per 100 units
-        'university': { mw: 4.0, hours: 5 }, // APPA higher education: 3-10MW per campus
-        'indoor-farm': { mw: 3.0, hours: 4 }, // CEA industry data: 0.2-1MW per facility
-        'hospital': { mw: 5.0, hours: 8 }, // Healthcare with critical loads (aligned with AI)
-        'dental-office': { mw: 0.12, hours: 2 } // Small healthcare practice: 120kW peak load
-      };
-
-      const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
-      const template = templates[templateKey];
-      if (template) {
-        setStorageSizeMW(template.mw);
-        setDurationHours(template.hours);
-      }
+      // Now uses centralized configuration from src/config/industryStandards.ts
+      // Data sources: NREL ATB 2024, ASHRAE 90.1, IEEE 2450, DOE/EIA CBECS
+      const template = getTemplateDefaults(templateKey);
+      setStorageSizeMW(template.mw);
+      setDurationHours(template.hours);
     }
   }, [selectedTemplate, useTemplate]);
 
