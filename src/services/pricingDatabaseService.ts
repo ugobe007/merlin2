@@ -200,8 +200,8 @@ export class PricingDatabaseService {
           commercialPerWatt: dbConfig.solar_commercial_per_watt,
           smallScalePerWatt: dbConfig.solar_small_scale_per_watt,
           trackingSystemUpcharge: dbConfig.solar_tracking_upcharge,
-          rooftopInstallationFactor: dbConfig.solar_rooftop_installation_factor || 1.35,
-          permittingCostPerWatt: dbConfig.solar_permitting_cost_per_watt || 0.12,
+          rooftopInstallationFactor: 1.35, // Default value - not in database yet
+          permittingCostPerWatt: 0.12, // Default value - not in database yet
           vendorNotes: dbConfig.solar_vendor_notes || ''
         },
         wind: {
