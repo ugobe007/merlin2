@@ -88,7 +88,7 @@ export const UseCaseAdminDashboard: React.FC<UseCaseAdminProps> = ({ isAdmin }) 
 
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        nav className="flex space-x-8 pt-6" aria-label="Tabs">
+        <nav className="flex space-x-8 pt-6" aria-label="Tabs">
           {[
             { key: 'overview', label: 'Overview' },
             { key: 'usecases', label: 'Use Cases' },
