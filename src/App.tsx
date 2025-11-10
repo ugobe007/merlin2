@@ -5,21 +5,13 @@ import AdminDashboard from './components/AdminDashboard';
 function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Admin authentication with email and password
-  const handleAdminAccess = () => {
-    const email = prompt('Enter admin email:');
-    if (!email) return;
-    
-    const password = prompt('Enter admin password:');
-    if (!password) return;
-    
-    // Check admin credentials (hardcoded for now, can be moved to backend)
-    if (email === 'admin@merlin.energy' && password === 'merlin2025') {
-      setShowAdmin(true);
-    } else {
-      alert('Incorrect email or password');
-    }
-  };
+  // TODO: Implement admin access functionality
+  // The AdminDashboard component exists but access is currently disabled.
+  // When implementing admin access:
+  // 1. Implement secure backend authentication API
+  // 2. Add UI button/link to trigger admin access
+  // 3. Call setShowAdmin(true) after successful authentication
+  // 4. Consider if showAdmin state is still needed or if routing should be used instead
 
   if (showAdmin) {
     return (
