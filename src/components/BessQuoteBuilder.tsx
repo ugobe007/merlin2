@@ -726,8 +726,7 @@ export default function BessQuoteBuilder() {
                   <span>🚪</span>
                   <span>Sign Out</span>
                 </button>
-              </div>
-            )}
+              )}
           </div>
         </footer>
       </main>
