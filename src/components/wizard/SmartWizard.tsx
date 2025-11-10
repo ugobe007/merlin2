@@ -229,7 +229,6 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, onSh
 
   const renderStep = () => {
     const actualStep = getActualStep(step);
-    console.log('Rendering wizard step:', step, 'actual:', actualStep, 'advanced:', advancedMode);
     switch (actualStep) {
       case 0:
         return (
@@ -472,13 +471,25 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, onSh
               </button>
             )}
             {step === getTotalSteps() && (
-              <button 
-                onClick={handleGenerateQuote}
-                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all flex items-center space-x-2 text-lg"
-              >
-                <span>🪄</span>
-                <span>Generate My BESS Configuration</span>
-              </button>
+              <>
+                <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
+                    <span>🔬</span>
+                    <span className="font-medium">Industry-validated calculations</span>
+                    <span>•</span>
+                    <span>NREL ATB 2024 standards</span>
+                    <span>•</span>
+                    <span>Q4 2025 market rates</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleGenerateQuote}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all flex items-center space-x-2 text-lg"
+                >
+                  <span>🪄</span>
+                  <span>Generate My BESS Configuration</span>
+                </button>
+              </>
             )}
           </div>
         </div>

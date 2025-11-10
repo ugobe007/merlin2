@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
 
 interface Step6_FinalOutputProps {
   quoteData: {
@@ -95,7 +96,7 @@ const Step6_FinalOutput: React.FC<Step6_FinalOutputProps> = ({
             {hasRenewables && (
               <div className="pt-2 border-t border-white/30">
                 <div className="text-sm font-semibold mb-1">+ Renewables:</div>
-                {quoteData.solarMW > 0 && <div className="text-sm">☀️ {quoteData.solarMW.toFixed(1)} MW Solar</div>}
+                {quoteData.solarMW > 0 && <div className="text-sm">☀️ {formatSolarCapacity(quoteData.solarMW)} Solar</div>}
                 {quoteData.windMW > 0 && <div className="text-sm">💨 {quoteData.windMW.toFixed(1)} MW Wind</div>}
                 {quoteData.generatorMW > 0 && <div className="text-sm">⚡ {quoteData.generatorMW.toFixed(1)} MW Generator</div>}
               </div>

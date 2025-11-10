@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../../utils/solarSizingUtils';
+import type { BuildingCharacteristics } from '../../../utils/solarSizingUtils';
 
 interface Step3_AddRenewablesProps {
   includeRenewables: boolean;
@@ -9,6 +11,13 @@ interface Step3_AddRenewablesProps {
   setWindMW: (value: number) => void;
   generatorMW: number;
   setGeneratorMW: (value: number) => void;
+  // Building characteristics for automated solar sizing
+  useCase?: string;
+  buildingSize?: string;
+  facilitySize?: string;
+  peakLoad?: number;
+  electricalLoad?: number;
+  useCaseAnswers?: Record<string, any>;
 }
 
 const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
@@ -20,9 +29,41 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
   setWindMW,
   generatorMW,
   setGeneratorMW,
+  useCase,
+  buildingSize,
+  facilitySize,
+  peakLoad,
+  electricalLoad,
+  useCaseAnswers,
 }) => {
   
+  const [solarSuggestion, setSolarSuggestion] = useState<any>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   const hasAnyRenewable = solarMW > 0 || windMW > 0 || generatorMW > 0;
+
+  // Calculate smart solar sizing suggestions
+  useEffect(() => {
+    if (useCase || buildingSize || facilitySize || peakLoad) {
+      const characteristics: BuildingCharacteristics = {
+        useCase,
+        buildingSize,
+        facilitySize,
+        peakLoad,
+        electricalLoad,
+        capacity: useCaseAnswers?.capacity || useCaseAnswers?.electricalLoad,
+        numRooms: useCaseAnswers?.numRooms,
+        storageVolume: useCaseAnswers?.storageVolume,
+        growingArea: useCaseAnswers?.growingArea,
+        storeSize: useCaseAnswers?.storeSize,
+        gamingFloorSize: useCaseAnswers?.gamingFloorSize,
+      };
+      
+      const suggestion = calculateAutomatedSolarSizing(characteristics);
+      setSolarSuggestion(suggestion);
+      setShowSuggestions(true);
+    }
+  }, [useCase, buildingSize, facilitySize, peakLoad, electricalLoad, useCaseAnswers]);
 
   const getSpaceRequirement = (solarMW: number) => {
     // Rough estimate: 1 MW solar = ~5 acres
@@ -30,6 +71,11 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
     const sqft = acres * 43560;
     if (sqft < 10000) return `${Math.round(sqft).toLocaleString()} sq ft`;
     return `${acres.toFixed(1)} acres`;
+  };
+
+  const applySuggestion = (suggestedMW: number) => {
+    setSolarMW(suggestedMW);
+    setIncludeRenewables(true);
   };
 
   return (
@@ -72,6 +118,58 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
         </button>
       </div>
 
+      {/* Smart Solar Sizing Suggestions */}
+      {showSuggestions && solarSuggestion && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-2xl">🤖</span>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Smart Solar Sizing</h3>
+              <p className="text-sm text-gray-600">AI-powered recommendations based on your building</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">{solarSuggestion.reasoning}</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => applySuggestion(solarSuggestion.minMW)}
+                className="bg-white border-2 border-yellow-300 rounded-lg p-4 hover:bg-yellow-50 transition-all"
+              >
+                <div className="text-lg font-bold text-yellow-700">Conservative</div>
+                <div className="text-2xl font-bold text-yellow-600">{formatSolarCapacity(solarSuggestion.minMW, solarSuggestion.unitDisplay)}</div>
+                <div className="text-xs text-gray-500">Minimal space usage</div>
+              </button>
+              
+              <button
+                onClick={() => applySuggestion(solarSuggestion.recommendedMW)}
+                className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-lg p-4 hover:shadow-lg transition-all transform hover:scale-105"
+              >
+                <div className="text-lg font-bold">Recommended ⭐</div>
+                <div className="text-2xl font-bold">{formatSolarCapacity(solarSuggestion.recommendedMW, solarSuggestion.unitDisplay)}</div>
+                <div className="text-xs opacity-90">Optimal balance</div>
+              </button>
+              
+              <button
+                onClick={() => applySuggestion(solarSuggestion.maxMW)}
+                className="bg-white border-2 border-yellow-300 rounded-lg p-4 hover:bg-yellow-50 transition-all"
+              >
+                <div className="text-lg font-bold text-yellow-700">Maximum</div>
+                <div className="text-2xl font-bold text-yellow-600">{formatSolarCapacity(solarSuggestion.maxMW, solarSuggestion.unitDisplay)}</div>
+                <div className="text-xs text-gray-500">Full potential</div>
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">Space needed:</span> {solarSuggestion.spaceRequirement}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {includeRenewables ? (
         <div className="space-y-6">
           {/* Solar Panel */}
@@ -85,7 +183,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold text-yellow-600">{solarMW.toFixed(1)} MW</div>
+                <div className="text-3xl font-bold text-yellow-600">{formatSolarCapacity(solarMW)}</div>
                 {solarMW > 0 && (
                   <div className="text-sm text-gray-500">
                     ~{getSpaceRequirement(solarMW)}
@@ -255,7 +353,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             {solarMW > 0 && (
               <div>
                 <div className="text-4xl mb-2">☀️</div>
-                <div className="text-2xl font-bold text-yellow-600">{solarMW.toFixed(1)} MW</div>
+                <div className="text-2xl font-bold text-yellow-600">{formatSolarCapacity(solarMW)}</div>
                 <div className="text-sm text-gray-600">Solar Power</div>
               </div>
             )}

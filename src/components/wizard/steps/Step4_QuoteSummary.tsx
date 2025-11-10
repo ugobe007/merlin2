@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
 import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
+import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
 import AIStatusIndicator from '../AIStatusIndicator';
 
 interface Step4_QuoteSummaryProps {
@@ -243,7 +244,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
             {hasRenewables && (
               <div className="bg-green-50 p-4 rounded-lg border border-green-300">
                 <div className="text-sm font-semibold text-green-900 mb-2">+ Renewables:</div>
-                {solarMW > 0 && <div className="text-sm">☀️ Solar: {solarMW.toFixed(1)} MW</div>}
+                {solarMW > 0 && <div className="text-sm">☀️ Solar: {formatSolarCapacity(solarMW)}</div>}
                 {windMW > 0 && <div className="text-sm">💨 Wind: {windMW.toFixed(1)} MW</div>}
                 {generatorMW > 0 && <div className="text-sm">⚡ Generator: {generatorMW.toFixed(1)} MW</div>}
               </div>

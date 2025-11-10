@@ -71,7 +71,6 @@ export const registerVendor = async (data: VendorRegistrationData) => {
       message: 'Registration successful! Your account is pending approval.'
     };
   } catch (error: any) {
-    console.error('Vendor registration error:', error);
     return {
       success: false,
       error: error.message || 'Registration failed'
@@ -129,7 +128,6 @@ export const loginVendor = async (data: VendorLoginData) => {
       session: authData.session
     };
   } catch (error: any) {
-    console.error('Vendor login error:', error);
     return {
       success: false,
       error: error.message || 'Login failed'

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
+import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../utils/solarSizingUtils';
+import { formatSolarSavings, formatTotalProjectSavings } from '../../utils/financialFormatting';
 import { aiStateService } from '../../services/aiStateService';
 import {
   LoadProfileAnalyzer,
@@ -19,6 +21,7 @@ import StepIntro from './steps/Step_Intro';
 import Step1_IndustryTemplate from './steps/Step1_IndustryTemplate';
 import Step2_UseCase from './steps/Step2_UseCase';
 import Step3_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
+import Step3_AddRenewables from './steps/Step3_AddRenewables';
 import InteractiveConfigDashboard from './InteractiveConfigDashboard';
 import Step4_LocationPricing from './steps/Step4_LocationPricing';
 import Step5_QuoteSummary from './steps/Step4_QuoteSummary';
@@ -399,7 +402,30 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         const baseline = calculateIndustryBaseline(selectedTemplate, scale);
         setStorageSizeMW(baseline.powerMW);
         setDurationHours(baseline.durationHrs);
-        setSolarMW(baseline.solarMW);
+        
+        // Enhanced solar sizing using automated calculation
+        const buildingCharacteristics = {
+          useCase: selectedTemplate,
+          buildingSize: useCaseData.buildingSize || useCaseData.facilitySize,
+          facilitySize: useCaseData.facilitySize,
+          peakLoad: baseline.powerMW,
+          electricalLoad: useCaseData.electricalLoad || useCaseData.peakLoad,
+          capacity: useCaseData.capacity,
+          numRooms: useCaseData.numRooms,
+          storageVolume: useCaseData.storageVolume || useCaseData.storage_volume,
+          growingArea: useCaseData.growingArea || useCaseData.growing_area,
+          storeSize: useCaseData.storeSize || useCaseData.store_size,
+          gamingFloorSize: useCaseData.gamingFloorSize || useCaseData.gaming_floor_size
+        };
+        
+        const solarSuggestion = calculateAutomatedSolarSizing(buildingCharacteristics);
+        setSolarMW(solarSuggestion.recommendedMW);
+        
+        console.log('🌞 Enhanced solar sizing applied:', {
+          template: selectedTemplate,
+          characteristics: buildingCharacteristics,
+          suggestion: solarSuggestion
+        });
       }
     }
   }, [selectedTemplate, useCaseData, isQuickstart]);
@@ -446,7 +472,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       // Industry-specific optimal ratios
       const industryProfiles: { [key: string]: { powerMW: number; durationHrs: number; solarRatio: number } } = {
         'manufacturing': { powerMW: 3.5, durationHrs: 4, solarRatio: 1.2 },
-        'office': { powerMW: 1.0, durationHrs: 4, solarRatio: 1.0 },
+        'office': { powerMW: 0.15, durationHrs: 3, solarRatio: 0.8 }, // CORRECTED: Small commercial office 50-300kW typical
+        'small-office': { powerMW: 0.08, durationHrs: 2, solarRatio: 0.5 }, // Very small office: <10 employees
+        'medical-office': { powerMW: 0.10, durationHrs: 2, solarRatio: 0.6 }, // Medical/professional office
         'datacenter': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
         'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
         'hotel': { powerMW: 3.0, durationHrs: 5, solarRatio: 1.4 },
@@ -457,6 +485,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'apartment': { powerMW: 2.0, durationHrs: 4, solarRatio: 1.2 },
         'university': { powerMW: 4.0, durationHrs: 5, solarRatio: 1.3 },
         'indoor-farm': { powerMW: 3.0, durationHrs: 12, solarRatio: 1.8 },
+        'dental-office': { powerMW: 0.12, durationHrs: 2, solarRatio: 0.6 }, // Small healthcare practice: 120kW peak, minimal solar
         'hospital': { powerMW: 5.0, durationHrs: 8, solarRatio: 1.0 },
         'cold-storage': { powerMW: 2.0, durationHrs: 8, solarRatio: 1.5 },
       };
@@ -617,8 +646,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             configuration = `${(numRooms * 0.02).toFixed(1)}MW / 8hr BESS`;
           } else if (hasPool && hasRestaurant) {
             if (hotelRooftopAcres <= 2) {
-              message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Your daytime loads (pool pumps, kitchen equipment) align well with solar - consider adding ${hotelSolarMW.toFixed(1)}MW rooftop solar if roof space permits.`;
-              configuration = `${(numRooms * 0.025).toFixed(1)}MW / 5hr BESS + Optional ${hotelSolarMW.toFixed(1)}MW Solar`;
+              message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Your daytime loads (pool pumps, kitchen equipment) align well with solar - consider adding ${formatSolarCapacity(hotelSolarMW)} rooftop solar if roof space permits.`;
+              configuration = `${(numRooms * 0.025).toFixed(1)}MW / 5hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
             } else {
               message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Solar would need ${hotelRooftopAcres.toFixed(1)} acres of roof space - verify capacity or consider parking canopies.`;
               configuration = `${(numRooms * 0.025).toFixed(1)}MW / 5hr BESS + Optional Solar (if space permits)`;
@@ -628,7 +657,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           } else {
             if (hotelRooftopAcres <= 1.5) {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar can boost savings if you have ${hotelRooftopAcres.toFixed(1)} acres of available roof space.`;
-              configuration = `${(numRooms * 0.015).toFixed(1)}MW / 4hr BESS + Optional ${hotelSolarMW.toFixed(1)}MW Solar`;
+              configuration = `${(numRooms * 0.015).toFixed(1)}MW / 4hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
             } else {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar would require ${hotelRooftopAcres.toFixed(1)} acres of roof - check availability.`;
               configuration = `${(numRooms * 0.015).toFixed(1)}MW / 4hr BESS + Optional Solar (check roof capacity)`;
@@ -649,7 +678,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           
           if (gridConn === 'microgrid' || gridConn === 'limited') {
             message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds). Solar limited by cooling equipment space.`;
-            configuration = `${(capacity * 0.8).toFixed(1)}MW / 6hr BESS + ${(capacity * 0.3).toFixed(1)}MW Generator + Optional ${datacenterSolarMW.toFixed(1)}MW Solar`;
+            configuration = `${(capacity * 0.8).toFixed(1)}MW / 6hr BESS + ${(capacity * 0.3).toFixed(1)}MW Generator + Optional ${formatSolarCapacity(datacenterSolarMW)} Solar`;
             savings = '$200-400K/year';
             roi = '3-5 years';
           } else if (uptimeReq === 'tier4') {
@@ -733,7 +762,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       // CORRECTED: Sizing based on actual facility loads and economics
       const templates: { [key: string]: { mw: number; hours: number } } = {
         'manufacturing': { mw: 3, hours: 4 }, // NREL manufacturing baseline: 2-5MW typical
-        'office': { mw: 1, hours: 4 }, // CBECS commercial office: 0.5-2MW per building
+        'office': { mw: 0.15, hours: 3 }, // CORRECTED: Small commercial office 50-300kW typical (was 1MW)
+        'small-office': { mw: 0.08, hours: 2 }, // Very small office: <10 employees
+        'medical-office': { mw: 0.10, hours: 2 }, // Medical/professional office practice
         'datacenter': { mw: 10, hours: 6 }, // Uptime Institute: 5-20MW typical for enterprise
         'warehouse': { mw: 2, hours: 3 }, // DOE logistics facilities: 1-3MW standard
         'hotel': { mw: 1, hours: 4 }, // ASHRAE hospitality: 0.5-2MW per 100 rooms
@@ -744,7 +775,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'apartment': { mw: 1, hours: 4 }, // CBECS multifamily: 0.5-2MW per 100 units
         'university': { mw: 5, hours: 5 }, // APPA higher education: 3-10MW per campus
         'indoor-farm': { mw: 0.4, hours: 4 }, // CEA industry data: 0.2-1MW per facility
-        'hospital': { mw: 3, hours: 4 } // CORRECTED: Added hospital sizing for 2.3MW load
+        'hospital': { mw: 3, hours: 4 }, // CORRECTED: Added hospital sizing for 2.3MW load
+        'dental-office': { mw: 0.12, hours: 2 } // Small healthcare practice: 120kW peak load
       };
 
       const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
@@ -822,9 +854,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     
     let annualSavings = peakShavingSavings + demandChargeSavings + gridServiceRevenue;
     
-    // Add renewable energy savings
+    // Add renewable energy savings with proper financial formatting
     if (solarMW > 0) {
-      annualSavings += solarMW * 1500 * electricityRate * 1000; // 1500 MWh/MW-year * rate
+      const solarSavingsData = formatSolarSavings(solarMW, electricityRate, 'calculation');
+      annualSavings += solarSavingsData.annualSavings;
     }
     if (windMW > 0) {
       annualSavings += windMW * 2500 * electricityRate * 1000; // 2500 MWh/MW-year * rate
@@ -1215,9 +1248,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   };
 
   const handleNext = () => {
-    if (step < 5) {
+    if (step < 6) {
       setStep(step + 1);
-    } else if (step === 5) {
+    } else if (step === 6) {
       // After quote summary, show complete page
       setShowCompletePage(true);
     }
@@ -1236,7 +1269,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       case 2: return storageSizeMW > 0 && durationHours > 0;
       case 3: return true; // Interactive dashboard allows any configuration
       case 4: return location !== '' && electricityRate > 0;
-      case 5: return true; // Quote summary, defaults are set
+      case 5: return true; // Renewables step, optional choices
+      case 6: return true; // Quote summary, defaults are set
       default: return false;
     }
   };
@@ -1244,9 +1278,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const getStepTitle = () => {
     const titles = [
       'Choose Your Industry',
-      'Tell Us About Your Operation',
+      'Tell Us About Your Operation', 
       'Configure Your System',
-      'Interactive Dashboard',
+      'Add Renewable Energy',
       'Location & Pricing',
       'Review Your Quote'
     ];
@@ -1296,7 +1330,26 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             aiRecommendation={aiUseCaseRecommendation || undefined}
           />
         );
-      case 4:
+      case 3:
+        return (
+          <Step3_AddRenewables
+            includeRenewables={includeRenewables}
+            setIncludeRenewables={setIncludeRenewables}
+            solarMW={solarMW}
+            setSolarMW={setSolarMW}
+            windMW={windMW}
+            setWindMW={setWindMW}
+            generatorMW={generatorMW}
+            setGeneratorMW={setGeneratorMW}
+            useCase={selectedTemplate}
+            buildingSize={useCaseData.buildingSize || useCaseData.facilitySize}
+            facilitySize={useCaseData.facilitySize}
+            peakLoad={storageSizeMW}
+            electricalLoad={useCaseData.electricalLoad || useCaseData.peakLoad}
+            useCaseAnswers={useCaseData}
+          />
+        );
+      case 5:
         return (
           <Step4_LocationPricing
             location={location}
@@ -1307,7 +1360,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setKnowsRate={setKnowsRate}
           />
         );
-      case 5:
+      case 6:
         return (
           <Step5_QuoteSummary
             storageSizeMW={storageSizeMW}
@@ -1480,7 +1533,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           setGeneratorMW(config.generatorMW);
         }}
         onBack={() => setStep(2)}
-        onContinue={() => setStep(4)}
+        onContinue={() => setStep(3)}
       />
     );
   }
@@ -1497,7 +1550,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 <div>
                   <h2 className="text-2xl font-bold">Smart Wizard</h2>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
+                    <p className="text-sm opacity-90">Step {step + 1} of 7: {getStepTitle()}</p>
                     <AIStatusIndicator compact={true} />
                   </div>
                 </div>
@@ -1556,7 +1609,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             </button>
 
             <div className="text-sm text-gray-500">
-              Step {step + 1} of 6
+              Step {step + 1} of 7
             </div>
 
             <button
@@ -1747,7 +1800,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                           const confirmed = confirm('✅ Your configuration is already optimized!\n\nYour current setup is well-suited for your goals. Would you like to continue to the next step?');
                           if (confirmed) {
                             setShowAIWizard(false);
-                            if (step < 5) setStep(step + 1);
+                            if (step < 6) setStep(step + 1);
                           }
                         }
                       }, 100);
@@ -1760,7 +1813,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                   <button
                     onClick={() => {
                       setShowAIWizard(false);
-                      if (step < 5) setStep(step + 1);
+                      if (step < 6) setStep(step + 1);
                     }}
                     className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                   >
@@ -1875,7 +1928,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                           onClick={() => {
                             suggestion.action();
                             setShowAIWizard(false);
-                            if (step < 5) setStep(step + 1);
+                            if (step < 6) setStep(step + 1);
                           }}
                           className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
@@ -1918,7 +1971,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                   <button
                     onClick={() => {
                       setShowAIWizard(false);
-                      if (step < 5) setStep(step + 1);
+                      if (step < 6) setStep(step + 1);
                     }}
                     className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-4 px-8 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2"
                   >
@@ -1940,7 +1993,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                   <button
                     onClick={() => {
                       setShowAIWizard(false);
-                      if (step < 5) setStep(step + 1);
+                      if (step < 6) setStep(step + 1);
                     }}
                     className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all flex items-center gap-2"
                   >

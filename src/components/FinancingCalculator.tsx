@@ -168,7 +168,7 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-gradient-to-br from-white via-green-50 to-blue-50 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border-4 border-green-400">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white p-6 rounded-t-xl z-10">

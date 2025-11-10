@@ -31,7 +31,6 @@ export default function Portfolio({ onClose, onLoadQuote }: PortfolioProps) {
     
     // Listen for portfolio refresh events
     const handlePortfolioRefresh = () => {
-      console.log('Portfolio refresh event received');
       fetchQuotes();
     };
     

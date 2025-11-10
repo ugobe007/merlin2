@@ -190,7 +190,6 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
     setSelectedFile(null);
     
     // In production, send to backend
-    console.log('Validated data:', updatedData);
     alert('Thank you! Your pricing data has been validated and added to our database. You earn 10 data credits!');
   };
 

@@ -64,7 +64,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, defaultMode
         }
       }
     } catch (error) {
-      console.error('Auth error:', error);
       alert('Authentication failed. Please try again.');
     } finally {
       setLoading(false);
