@@ -98,33 +98,33 @@ export default function HeroSection({
               {/* Smart Wizard Benefits */}
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border-2 border-white/20">
                 <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="text-3xl">🎯</span>
+                  <span className="text-3xl">⚡</span>
                   Smart Wizard Benefits:
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl">💰</span>
                     <div>
                       <p className="font-bold text-lg">See Your Savings</p>
                       <p className="text-sm text-white/80">Instant ROI calculation with payback timeline</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl">⚙️</span>
                     <div>
                       <p className="font-bold text-lg">Personalized Configuration</p>
                       <p className="text-sm text-white/80">Sized perfectly for your energy needs</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl">📊</span>
                     <div>
                       <p className="font-bold text-lg">Compare Options</p>
                       <p className="text-sm text-white/80">Installation, shipping & financing side-by-side</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl">📄</span>
                     <div>
                       <p className="font-bold text-lg">Download Your Quote</p>
                       <p className="text-sm text-white/80">PDF & Excel formats ready to share</p>
@@ -145,7 +145,7 @@ export default function HeroSection({
                     className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-12 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl border-4 border-cyan-300 hover:scale-105 transition-transform"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl animate-bounce">🎯</span>
+                      <span className="text-4xl animate-bounce">⚡</span>
                       <div className="text-left">
                         <div className="text-2xl">Smart Wizard</div>
                         <div className="text-xs font-normal text-cyan-100 mt-1">7 simple steps • 3 minutes • No signup</div>
@@ -169,7 +169,7 @@ export default function HeroSection({
                     style={{ pointerEvents: 'auto' }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">🎯</span>
+                      <span className="text-2xl">🔧</span>
                       <div className="text-left">
                         <div className="text-lg">Advanced Tools</div>
                         <div className="text-xs font-normal text-amber-100 mt-1">Power users • Full control</div>
@@ -213,7 +213,7 @@ export default function HeroSection({
             onClick={() => setShowCostSavingsModal(true)}
             className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
           >
-            <div className="text-5xl mb-4 text-center">🎯</div>
+            <div className="text-5xl mb-4 text-center">💰</div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Reduce Energy Costs</h3>
             <p className="text-gray-600 mb-4 text-center">
               Cut your electricity bills by 30-50% with smart energy storage and peak shaving
@@ -242,7 +242,7 @@ export default function HeroSection({
             </div>
             <div className="mt-4 text-center">
               <div className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-green-700 transition-colors">
-                <span className="text-lg">🎯</span>
+                <span className="text-lg">💰</span>
                 Explore Cost Savings
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function HeroSection({
             onClick={() => setShowRevenueModal(true)}
             className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
           >
-            <div className="text-5xl mb-4 text-center">🎯</div>
+            <div className="text-5xl mb-4 text-center">📈</div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Generate Revenue</h3>
             <p className="text-gray-600 mb-4 text-center">
               Turn your battery into a profit center with grid services and energy arbitrage
@@ -282,7 +282,7 @@ export default function HeroSection({
             </div>
             <div className="mt-4 text-center">
               <div className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors">
-                <span className="text-lg">🎯</span>
+                <span className="text-lg">📈</span>
                 Explore Revenue
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function HeroSection({
             </div>
             <div className="mt-4 text-center">
               <div className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-emerald-700 transition-colors">
-                <span className="text-lg">🎯</span>
+                <span className="text-lg">�</span>
                 Explore Sustainability
               </div>
             </div>
