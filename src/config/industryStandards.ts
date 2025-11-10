@@ -338,6 +338,130 @@ export const TEMPLATE_DEFAULTS: { [key: string]: { mw: number; hours: number } }
 };
 
 /**
+ * Validation errors for industry standards
+ */
+export class IndustryStandardsValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'IndustryStandardsValidationError';
+  }
+}
+
+/**
+ * Validates that an industry profile meets all required constraints
+ */
+export function validateIndustryProfile(profile: IndustryProfile, industryKey: string): boolean {
+  const errors: string[] = [];
+
+  // Validate power requirements
+  if (profile.basePowerMW <= 0) {
+    errors.push(`${industryKey}: basePowerMW must be positive (got ${profile.basePowerMW})`);
+  }
+  if (profile.basePowerMW > 100) {
+    errors.push(`${industryKey}: basePowerMW seems too high (${profile.basePowerMW} MW), verify data`);
+  }
+
+  // Validate duration
+  if (profile.baseDurationHrs <= 0) {
+    errors.push(`${industryKey}: baseDurationHrs must be positive (got ${profile.baseDurationHrs})`);
+  }
+  if (profile.baseDurationHrs > 24) {
+    errors.push(`${industryKey}: baseDurationHrs exceeds 24 hours (${profile.baseDurationHrs}), verify data`);
+  }
+
+  // Validate solar ratio
+  if (profile.solarRatio < 0) {
+    errors.push(`${industryKey}: solarRatio cannot be negative (got ${profile.solarRatio})`);
+  }
+  if (profile.solarRatio > 5) {
+    errors.push(`${industryKey}: solarRatio seems too high (${profile.solarRatio}), verify data`);
+  }
+
+  // Validate scale factor
+  if (profile.scaleFactor <= 0) {
+    errors.push(`${industryKey}: scaleFactor must be positive (got ${profile.scaleFactor})`);
+  }
+
+  // Validate required string fields
+  if (!profile.scaleUnit || profile.scaleUnit.trim() === '') {
+    errors.push(`${industryKey}: scaleUnit is required`);
+  }
+  if (!profile.powerSource || profile.powerSource.trim() === '') {
+    errors.push(`${industryKey}: powerSource is required`);
+  }
+  if (!profile.equipmentSource || profile.equipmentSource.trim() === '') {
+    errors.push(`${industryKey}: equipmentSource is required`);
+  }
+
+  // Validate last updated date format (YYYY-QN)
+  if (!profile.lastUpdated || !/^\d{4}-Q[1-4]$/.test(profile.lastUpdated)) {
+    errors.push(`${industryKey}: lastUpdated must be in format YYYY-QN (e.g., 2025-Q4), got "${profile.lastUpdated}"`);
+  }
+
+  if (errors.length > 0) {
+    throw new IndustryStandardsValidationError(`Validation errors:\n${errors.join('\n')}`);
+  }
+
+  return true;
+}
+
+/**
+ * Validates consistency between all three configuration systems
+ */
+export function validateConfigurationConsistency(): { valid: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+
+  // Check that all industries in INDUSTRY_STANDARDS also exist in AI_OPTIMAL_STANDARDS and TEMPLATE_DEFAULTS
+  for (const industryKey of Object.keys(INDUSTRY_STANDARDS)) {
+    if (!AI_OPTIMAL_STANDARDS[industryKey]) {
+      warnings.push(`Missing AI optimal standards for "${industryKey}"`);
+    }
+    if (!TEMPLATE_DEFAULTS[industryKey]) {
+      warnings.push(`Missing template defaults for "${industryKey}"`);
+    }
+  }
+
+  // Check for orphaned entries in AI_OPTIMAL_STANDARDS
+  for (const industryKey of Object.keys(AI_OPTIMAL_STANDARDS)) {
+    if (!INDUSTRY_STANDARDS[industryKey]) {
+      warnings.push(`AI optimal standards exist for "${industryKey}" but not in INDUSTRY_STANDARDS`);
+    }
+  }
+
+  // Check for orphaned entries in TEMPLATE_DEFAULTS
+  for (const industryKey of Object.keys(TEMPLATE_DEFAULTS)) {
+    if (!INDUSTRY_STANDARDS[industryKey]) {
+      warnings.push(`Template defaults exist for "${industryKey}" but not in INDUSTRY_STANDARDS`);
+    }
+  }
+
+  return { valid: warnings.length === 0, warnings };
+}
+
+/**
+ * Runs all validation checks on startup
+ */
+export function runStartupValidation(): void {
+  try {
+    // Validate each industry profile
+    for (const [industryKey, profile] of Object.entries(INDUSTRY_STANDARDS)) {
+      validateIndustryProfile(profile, industryKey);
+    }
+
+    // Check consistency
+    const consistency = validateConfigurationConsistency();
+    if (consistency.warnings.length > 0) {
+      console.warn('Industry Standards Configuration Warnings:', consistency.warnings);
+    } else {
+      console.log('✅ Industry Standards Configuration: All validation checks passed');
+    }
+  } catch (error) {
+    console.error('❌ Industry Standards Configuration: Validation failed', error);
+    throw error;
+  }
+}
+
+/**
  * Helper function to get industry profile with fallback
  */
 export function getIndustryProfile(industry: string): IndustryProfile {
