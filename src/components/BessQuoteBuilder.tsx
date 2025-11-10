@@ -534,7 +534,7 @@ export default function BessQuoteBuilder() {
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
               >
-                <span className="text-3xl">🎯</span>
+                <span className="text-3xl">🔧</span>
                 <div className="text-left">
                   <div>Advanced Quote Builder</div>
                   <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>

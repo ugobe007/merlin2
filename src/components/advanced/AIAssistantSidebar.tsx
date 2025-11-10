@@ -87,7 +87,7 @@ export default function AIAssistantSidebar({
           
           {/* Cost Optimization */}
           <div className="p-3 bg-white rounded-lg border border-blue-200">
-            <div className="text-sm text-blue-600 mb-2 font-semibold">🎯 Cost Optimization</div>
+            <div className="text-sm text-blue-600 mb-2 font-semibold">💰 Cost Optimization</div>
             <div className="text-sm text-gray-800">
               {energyCapacity > 1000 ? (
                 "Large systems qualify for bulk pricing. Estimated 15-25% savings possible."
@@ -111,7 +111,7 @@ export default function AIAssistantSidebar({
           </div>
           
           <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-blue-600 transition-colors">
-            🎯 Get Detailed AI Analysis
+            🧠 Get Detailed AI Analysis
           </button>
           
           <button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-colors text-sm">

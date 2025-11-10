@@ -1849,11 +1849,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                           <div className={`text-3xl ${
                             suggestion.type === 'cost-saving' ? '💰' :
                             suggestion.type === 'warning' ? '⚠️' :
-                            suggestion.type === 'optimization' ? '🎯' : '⭐'
+                            suggestion.type === 'optimization' ? '⚙️' : '⭐'
                           }`}>
                             {suggestion.type === 'cost-saving' ? '💰' :
                              suggestion.type === 'warning' ? '⚠️' :
-                             suggestion.type === 'optimization' ? '🎯' : '⭐'}
+                             suggestion.type === 'optimization' ? '⚙️' : '⭐'}
                           </div>
                           <div>
                             <h5 className="font-bold text-lg text-gray-900">{suggestion.title}</h5>

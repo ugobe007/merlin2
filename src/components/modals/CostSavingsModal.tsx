@@ -19,7 +19,7 @@ export default function CostSavingsModal({ isOpen, onClose, onShowSmartWizard }:
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-2xl">
           <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold">🎯 Reduce Energy Costs</h2>
+            <h2 className="text-3xl font-bold">💰 Reduce Energy Costs</h2>
             <button 
               onClick={onClose}
               className="text-white hover:text-gray-200 text-3xl font-bold"
@@ -75,7 +75,7 @@ export default function CostSavingsModal({ isOpen, onClose, onShowSmartWizard }:
             onClick={handleCalculateClick}
             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-colors flex items-center justify-center gap-3"
           >
-            <span className="text-2xl">🎯</span>
+            <span className="text-2xl">📊</span>
             Calculate Your Savings with Smart Wizard
           </button>
         </div>
