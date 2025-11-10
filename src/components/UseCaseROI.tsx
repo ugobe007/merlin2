@@ -358,12 +358,17 @@ interface UseCaseROIProps {
   onLoadTemplate?: (useCase: UseCaseData) => void;
   autoRotate?: boolean;
   rotationInterval?: number;
+  // Optional modal management props (for power adjustment flow)
+  setShowPowerAdjustmentModal?: (show: boolean) => void;
+  setSelectedUseCaseForAdjustment?: (useCase: UseCaseData) => void;
 }
 
 const UseCaseROI: React.FC<UseCaseROIProps> = ({ 
   onLoadTemplate, 
   autoRotate = true, 
-  rotationInterval = 10000 
+  rotationInterval = 10000,
+  setShowPowerAdjustmentModal,
+  setSelectedUseCaseForAdjustment
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -591,6 +596,42 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
             </div>
           </div>
 
+          {/* Equipment Details - Show specific equipment for applicable industries */}
+          {currentUseCase.industry === 'EV Charging' && (
+            <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
+              <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span>⚡</span>
+                <span>EV Charging Infrastructure</span>
+              </h5>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex justify-between items-center p-2 bg-blue-50/50 rounded-lg border border-blue-200/60">
+                  <span className="text-sm text-gray-700 font-medium">DC Fast Chargers</span>
+                  <span className="text-sm font-bold text-blue-600">
+                    4× 150kW (600kW total)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-blue-50/50 rounded-lg border border-blue-200/60">
+                  <span className="text-sm text-gray-700 font-medium">Level 2 Chargers</span>
+                  <span className="text-sm font-bold text-blue-600">
+                    8× 7kW (56kW total)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-blue-50/50 rounded-lg border border-blue-200/60">
+                  <span className="text-sm text-gray-700 font-medium">Site Infrastructure</span>
+                  <span className="text-sm font-bold text-blue-600">
+                    25kW (Lighting, Payment Systems)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-purple-50/50 rounded-lg border border-purple-200/60">
+                  <span className="text-sm text-gray-700 font-medium">Total Peak Load</span>
+                  <span className="text-sm font-bold text-purple-600">
+                    681kW
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Savings Breakdown - Strategic green for savings */}
           <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
             <h5 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -638,13 +679,24 @@ const UseCaseROI: React.FC<UseCaseROIProps> = ({
           {/* CTA Button - Refined purple/blue gradient */}
           {onLoadTemplate && (
             <button
-              onClick={() => onLoadTemplate(currentUseCase)}
+              onClick={() => {
+                // If power adjustment modal is available, use that flow
+                if (setShowPowerAdjustmentModal && setSelectedUseCaseForAdjustment) {
+                  setSelectedUseCaseForAdjustment(currentUseCase);
+                  setShowPowerAdjustmentModal(true);
+                } else {
+                  // Fallback to direct template loading
+                  onLoadTemplate(currentUseCase);
+                }
+              }}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-3 transform hover:scale-105"
             >
               <span className="text-2xl">🚀</span>
               <div className="text-left">
                 <div className="text-base">Build This Quote</div>
-                <div className="text-xs opacity-90">Pre-filled data</div>
+                <div className="text-xs opacity-90">
+                  {setShowPowerAdjustmentModal ? 'Customize & build' : 'Pre-filled data'}
+                </div>
               </div>
               <ArrowRight size={20} />
             </button>

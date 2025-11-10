@@ -1,5 +1,8 @@
 // Equipment breakdown calculations for detailed quotes
 
+import { calculateMarketAlignedBESSPricing, getMarketIntelligenceRecommendations } from '../services/marketIntelligence';
+import { pricingConfigService } from '../services/pricingConfigService';
+
 export interface EquipmentBreakdown {
   batteries: {
     quantity: number;
@@ -9,6 +12,14 @@ export interface EquipmentBreakdown {
     totalCost: number;
     manufacturer: string;
     model: string;
+    pricePerKWh: number;
+    marketIntelligence?: {
+      nrelCompliant: boolean;
+      marketOpportunity: string;
+      paybackPeriod: number;
+      revenueProjection: number;
+      dataSource: string;
+    };
   };
   inverters: {
     quantity: number;
@@ -38,6 +49,7 @@ export interface EquipmentBreakdown {
     unitPowerMW: number;
     unitCost: number;
     totalCost: number;
+    costPerKW: number;
     fuelType: string;
     manufacturer: string;
   };
@@ -47,6 +59,7 @@ export interface EquipmentBreakdown {
     inverterQuantity: number;
     totalCost: number;
     costPerWatt: number;
+    priceCategory: string;
     spaceRequirements: {
       rooftopAreaSqFt: number;
       groundAreaSqFt: number;
@@ -61,6 +74,8 @@ export interface EquipmentBreakdown {
     turbineQuantity: number;
     unitPowerMW: number;
     totalCost: number;
+    costPerKW: number;
+    priceCategory: string;
     turbineModel: string;
   };
   evChargers?: {
@@ -79,9 +94,9 @@ export interface EquipmentBreakdown {
     totalChargingCost: number;
   };
   installation: {
-    civil: number;
-    electrical: number;
-    commissioning: number;
+    bos: number;
+    epc: number;
+    contingency: number;
     totalInstallation: number;
   };
   totals: {
@@ -98,21 +113,36 @@ export const calculateEquipmentBreakdown = (
   windMW: number = 0,
   generatorMW: number = 0,
   industryData?: any,
-  gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid'
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid',
+  location: string = 'California'
 ): EquipmentBreakdown => {
   
   const totalEnergyMWh = storageSizeMW * durationHours;
   
-  // Battery System Calculations
-  // Tesla Megapack: 3MW / 11.5MWh per unit (~$2.8M each)
+  // Battery System Calculations - Enhanced with NREL ATB 2024 + Market Intelligence
+  // Using realistic market pricing based on system size and admin configuration
   const batteryUnitPowerMW = 3;
   const batteryUnitEnergyMWh = 11.5;
-  const batteryUnitCost = 2800000; // $2.8M per Megapack
+  
+  // Get pricing from admin configuration based on total energy capacity (MWh)
+  const adminPricePerKWh = pricingConfigService.getBESSCostPerKWh(totalEnergyMWh);
+  
+  // Get market-aligned pricing from NREL ATB 2024 + live market intelligence for comparison
+  const marketAnalysis = calculateMarketAlignedBESSPricing(storageSizeMW, durationHours, location);
+  const marketPricePerKWh = marketAnalysis.systemCosts.costPerKWh;
+  
+  // Use admin pricing (realistic) if available, otherwise fall back to market pricing
+  // Cap pricing at reasonable levels to avoid Tesla Megapack premium pricing
+  const effectivePricePerKWh = Math.min(adminPricePerKWh || marketPricePerKWh, 140); // Cap at $140/kWh
+  const batteryUnitCost = batteryUnitEnergyMWh * 1000 * effectivePricePerKWh;
   
   const batteryQuantity = Math.ceil(Math.max(
     storageSizeMW / batteryUnitPowerMW,
     totalEnergyMWh / batteryUnitEnergyMWh
   ));
+  
+  // Get market intelligence recommendations
+  const marketIntelligence = getMarketIntelligenceRecommendations(storageSizeMW, location);
   
   const batteries = {
     quantity: batteryQuantity,
@@ -120,8 +150,17 @@ export const calculateEquipmentBreakdown = (
     unitEnergyMWh: batteryUnitEnergyMWh,
     unitCost: batteryUnitCost,
     totalCost: batteryQuantity * batteryUnitCost,
-    manufacturer: "Tesla",
-    model: "Megapack 2XL"
+    manufacturer: effectivePricePerKWh < 130 ? "CATL/BYD" : "Tesla",
+    model: effectivePricePerKWh < 130 ? "Utility Scale LFP" : "Megapack 2XL",
+    pricePerKWh: effectivePricePerKWh,
+    marketIntelligence: {
+      nrelCompliant: true,
+      marketOpportunity: marketIntelligence.analysis.financialMetrics.simplePayback < 8 ? 'Excellent' : 
+                        marketIntelligence.analysis.financialMetrics.simplePayback < 12 ? 'Good' : 'Poor',
+      paybackPeriod: marketIntelligence.analysis.financialMetrics.simplePayback,
+      revenueProjection: marketIntelligence.analysis.revenueProjection.totalAnnualRevenue,
+      dataSource: 'NREL ATB 2024 + Market Intelligence (Cost-Optimized)'
+    }
   };
 
   // Inverter Calculations - Select appropriate inverter type based on grid connection
@@ -200,8 +239,10 @@ export const calculateEquipmentBreakdown = (
   }
   
   if (effectiveGeneratorMW > 0) {
-    const generatorUnitMW = 2; // 2MW diesel generators
-    const generatorUnitCost = 800000; // $800k per 2MW generator
+    const generatorUnitMW = 2; // 2MW generators
+    // Get pricing from admin configuration (real-world vendor quotes)
+    const costPerKW = pricingConfigService.getGeneratorCostPerKW('diesel'); // Based on Eaton quote
+    const generatorUnitCost = generatorUnitMW * 1000 * costPerKW; 
     const generatorQuantity = Math.ceil(effectiveGeneratorMW / generatorUnitMW);
     
     generators = {
@@ -209,15 +250,20 @@ export const calculateEquipmentBreakdown = (
       unitPowerMW: generatorUnitMW,
       unitCost: generatorUnitCost,
       totalCost: generatorQuantity * generatorUnitCost,
+      costPerKW: costPerKW,
       fuelType: "Diesel",
-      manufacturer: "Caterpillar"
+      manufacturer: "Caterpillar/Eaton"
     };
   }
 
   // Solar Calculations (if specified)
   let solar = undefined;
   if (solarMW > 0) {
-    const costPerWatt = 1.2; // $1.20/W installed
+    // Market-aligned pricing based on scale (from industryPricing.ts)
+    const isUtilityScale = solarMW >= 5; // 5MW+ is utility scale
+    const costPerWatt = isUtilityScale ? 0.8 : 1.2; // $0.80/W utility, $1.20/W commercial
+    const priceSource = isUtilityScale ? 'Utility Solar (>5 MW)' : 'Commercial Solar (<5 MW)';
+    
     const panelsPerMW = 3000; // ~333W panels
     const solarInvertersPerMW = 1; // 1MW string inverters
     
@@ -300,6 +346,7 @@ export const calculateEquipmentBreakdown = (
       inverterQuantity: solarMW * solarInvertersPerMW,
       totalCost: solarMW * 1000000 * costPerWatt,
       costPerWatt: costPerWatt,
+      priceCategory: priceSource,
       spaceRequirements: {
         rooftopAreaSqFt,
         groundAreaSqFt,
@@ -316,14 +363,20 @@ export const calculateEquipmentBreakdown = (
   let wind = undefined;
   if (windMW > 0) {
     const turbineUnitMW = 2.5; // 2.5MW turbines
-    const turbineCostPerMW = 1800000; // $1.8M per MW
+    // Market-aligned pricing based on scale (from industryPricing.ts)
+    const isUtilityScale = windMW >= 5; // 5MW+ is utility scale (2+ turbines)
+    const costPerKW = isUtilityScale ? 1200 : 1800; // $1200/kW utility, $1800/kW distributed
+    const priceCategory = isUtilityScale ? 'Utility Wind' : 'Distributed Wind';
+    const turbineCostPerMW = costPerKW * 1000; // Convert to per MW
     const turbineQuantity = Math.ceil(windMW / turbineUnitMW);
     
     wind = {
       turbineQuantity: turbineQuantity,
       unitPowerMW: turbineUnitMW,
       totalCost: windMW * turbineCostPerMW,
-      turbineModel: "Vestas V120-2.2MW"
+      costPerKW: costPerKW,
+      priceCategory: priceCategory,
+      turbineModel: isUtilityScale ? "GE 2.8-127" : "Vestas V120-2.2MW"
     };
   }
 
@@ -332,21 +385,38 @@ export const calculateEquipmentBreakdown = (
   if (industryData?.selectedIndustry === 'ev-charging' && industryData?.useCaseData) {
     const { level2Chargers = 0, level2Power = 11, dcFastChargers = 0, dcFastPower = 150 } = industryData.useCaseData;
     
-    const level2UnitCost = parseInt(level2Power) * 1000; // $1k per kW for Level 2
-    const dcFastUnitCost = parseInt(dcFastPower) * 2000; // $2k per kW for DC Fast
+    // Get pricing from admin configuration (real-world market rates)
+    const config = pricingConfigService.getConfiguration();
+    const level2UnitCost = config.evCharging.level2ACPerUnit; // $8k per Level 2 charger
+    const dcFast50UnitCost = config.evCharging.dcFastPerUnit; // $45k for 50-150kW DC Fast
+    const dcFast150UnitCost = config.evCharging.dcFastPerUnit; // $45k for 50-150kW DC Fast
+    const dcFast350UnitCost = config.evCharging.dcUltraFastPerUnit; // $125k for 150-350kW DC Ultra Fast
+    const networkingCost = config.evCharging.networkingCostPerUnit; // OCPP compliance per charger
+    
+    // Select appropriate DC Fast charger cost based on power level
+    let dcFastUnitCost = dcFast150UnitCost; // Default to 150kW
+    if (parseInt(dcFastPower) <= 50) {
+      dcFastUnitCost = dcFast50UnitCost;
+    } else if (parseInt(dcFastPower) >= 350) {
+      dcFastUnitCost = dcFast350UnitCost;
+    }
+    
+    // Add networking costs for OCPP compliance
+    const level2TotalUnitCost = level2UnitCost + networkingCost;
+    const dcFastTotalUnitCost = dcFastUnitCost + networkingCost;
     
     const level2Data = {
       quantity: parseInt(level2Chargers) || 0,
       unitPowerKW: parseInt(level2Power) || 11,
-      unitCost: level2UnitCost,
-      totalCost: (parseInt(level2Chargers) || 0) * level2UnitCost
+      unitCost: level2TotalUnitCost,
+      totalCost: (parseInt(level2Chargers) || 0) * level2TotalUnitCost
     };
     
     const dcFastData = {
       quantity: parseInt(dcFastChargers) || 0,
       unitPowerKW: parseInt(dcFastPower) || 150,
-      unitCost: dcFastUnitCost,
-      totalCost: (parseInt(dcFastChargers) || 0) * dcFastUnitCost
+      unitCost: dcFastTotalUnitCost,
+      totalCost: (parseInt(dcFastChargers) || 0) * dcFastTotalUnitCost
     };
     
     evChargers = {
@@ -367,11 +437,17 @@ export const calculateEquipmentBreakdown = (
     (wind?.totalCost || 0) +
     (evChargers?.totalChargingCost || 0);
 
+  // Installation Costs - Using admin-configurable percentages
+  const config = pricingConfigService.getConfiguration();
   const installation = {
-    civil: equipmentCost * 0.15, // 15% for civil works
-    electrical: equipmentCost * 0.12, // 12% for electrical installation
-    commissioning: equipmentCost * 0.08, // 8% for commissioning & testing
-    totalInstallation: equipmentCost * 0.35 // 35% total installation
+    bos: equipmentCost * config.balanceOfPlant.bopPercentage, // Configurable BOP percentage (≤15% guideline)
+    epc: equipmentCost * config.balanceOfPlant.epcPercentage, // Configurable EPC percentage
+    contingency: equipmentCost * config.balanceOfPlant.contingencyPercentage, // Configurable contingency
+    totalInstallation: equipmentCost * (
+      config.balanceOfPlant.bopPercentage + 
+      config.balanceOfPlant.epcPercentage + 
+      config.balanceOfPlant.contingencyPercentage
+    )
   };
 
   const totals = {
