@@ -32,7 +32,8 @@ const Step2_Budget: React.FC<Step2Props> = ({
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { value: 250000, label: 'Under $500K', subtitle: 'Small commercial', isFlexible: false },
+              { value: 100000, label: 'Under $200K', subtitle: 'Micro commercial', isFlexible: false },
+              { value: 250000, label: '$200K - $500K', subtitle: 'Small commercial', isFlexible: false },
               { value: 1000000, label: '$500K - $2M', subtitle: 'Medium commercial', isFlexible: false },
               { value: 5000000, label: '$2M - $10M', subtitle: 'Large commercial', isFlexible: false },
               { value: 15000000, label: '$10M+', subtitle: 'Utility scale', isFlexible: false },

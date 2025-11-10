@@ -71,7 +71,6 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
       }, 2000);
 
     } catch (error: any) {
-      console.error('Error submitting consultation request:', error);
       setErrorMessage(error.message || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);

@@ -560,9 +560,10 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               label: 'Facility size?',
               type: 'select',
               options: [
-                { value: 'small', label: 'Small (< 50,000 sq ft gaming floor)' },
-                { value: 'medium', label: 'Medium (50,000-150,000 sq ft)' },
-                { value: 'large', label: 'Large (> 150,000 sq ft)' },
+                { value: 'micro', label: 'Micro (< 15,000 sq ft gaming floor)' },
+                { value: 'small', label: 'Small (15,000-40,000 sq ft gaming floor)' },
+                { value: 'medium', label: 'Medium (40,000-100,000 sq ft)' },
+                { value: 'large', label: 'Large (> 100,000 sq ft)' },
               ],
             },
             {
@@ -634,9 +635,10 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               label: 'Facility size?',
               type: 'select',
               options: [
-                { value: 'small', label: 'Small (< 250,000 sq ft)' },
-                { value: 'medium', label: 'Medium (250,000-500,000 sq ft)' },
-                { value: 'large', label: 'Large (> 500,000 sq ft)' },
+                { value: 'micro', label: 'Micro (< 50,000 sq ft)' },
+                { value: 'small', label: 'Small (50,000-150,000 sq ft)' },
+                { value: 'medium', label: 'Medium (150,000-350,000 sq ft)' },
+                { value: 'large', label: 'Large (> 350,000 sq ft)' },
               ],
             },
             {
@@ -822,8 +824,10 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               label: 'Building size?',
               type: 'select',
               options: [
-                { value: 'small', label: 'Small (< 25,000 sq ft)' },
-                { value: 'medium', label: 'Medium (25,000-75,000 sq ft)' },
+                { value: 'micro', label: 'Micro (< 5,000 sq ft)' },
+                { value: 'small', label: 'Small (5,000-15,000 sq ft)' },
+                { value: 'medium-small', label: 'Medium-Small (15,000-35,000 sq ft)' },
+                { value: 'medium', label: 'Medium (35,000-75,000 sq ft)' },
                 { value: 'large', label: 'Large (> 75,000 sq ft)' },
               ],
             },
@@ -874,9 +878,10 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               label: 'Facility size?',
               type: 'select',
               options: [
-                { value: 'small', label: 'Small (< 50,000 sq ft)' },
-                { value: 'medium', label: 'Medium (50,000 - 200,000 sq ft)' },
-                { value: 'large', label: 'Large (> 200,000 sq ft)' },
+                { value: 'micro', label: 'Micro (< 10,000 sq ft)' },
+                { value: 'small', label: 'Small (10,000-30,000 sq ft)' },
+                { value: 'medium', label: 'Medium (30,000-100,000 sq ft)' },
+                { value: 'large', label: 'Large (> 100,000 sq ft)' },
               ],
             },
             {

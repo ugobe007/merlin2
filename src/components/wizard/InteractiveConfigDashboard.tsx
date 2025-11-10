@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Zap, DollarSign, TrendingUp, Settings } from 'lucide-react';
+import { formatTotalProjectSavings, formatSolarSavings } from '../../utils/financialFormatting';
 
 // Scroll utility function
 const scrollToSection = (sectionId: string) => {
@@ -199,7 +200,11 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     // Annual savings calculation
     const energyArbitrage = totalEnergyMWh * 300 * 200; // 300 cycles/year, $200/MWh spread
     const demandChargeReduction = storageSizeMW * 1000 * 180 * 12; // $180/kW-month
-    const solarSavings = solarMW * 1000 * 8760 * 0.3 * electricityRate; // 30% capacity factor
+    
+    // Enhanced solar savings calculation with proper formatting
+    const solarSavingsData = formatSolarSavings(solarMW, electricityRate, 'calculation');
+    const solarSavings = solarSavingsData.annualSavings;
+    
     const annualSavings = energyArbitrage + demandChargeReduction + solarSavings;
     
     const paybackYears = totalProjectCost / annualSavings;

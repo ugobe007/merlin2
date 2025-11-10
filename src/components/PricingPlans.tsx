@@ -40,8 +40,20 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
       return;
     }
 
-    // TODO: Integrate with Stripe for payment processing
-    alert(`🚀 Coming Soon!\n\nUpgrading to ${tier} tier.\n\nStripe integration will be added in the next phase.`);
+    // Prepare for Stripe integration - placeholder for payment processing
+    const planDetails = {
+      tier,
+      billing: billingCycle,
+      price: tier === 'semi_premium' ? getPrice(29) : getPrice(79),
+      features: tier === 'semi_premium' ? 
+        ['Advanced Analytics', 'Portfolio Management', 'Export to Word/PDF'] :
+        ['Everything in Semi-Premium', 'Unlimited Projects', 'Priority Support', 'Custom Branding']
+    };
+    
+    // Store upgrade intention for Stripe integration
+    localStorage.setItem('pending_upgrade', JSON.stringify(planDetails));
+    
+    alert(`🚀 Upgrade to ${tier} Plan\n\nPrice: $${planDetails.price}/${billingCycle}\n\nStripe payment integration coming soon!\nWe'll notify you when checkout is ready.`);
   };
 
   const getPrice = (monthly: number) => {

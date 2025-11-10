@@ -84,7 +84,6 @@ class AIStateService {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.warn('Failed to clear AI state:', error);
     }
   }
 
@@ -100,9 +99,7 @@ class AIStateService {
         sessionId: undefined
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(resetData));
-      console.log('AI State: Reset for new session, preserved usage count:', resetData.usageCount);
     } catch (error) {
-      console.warn('Failed to reset AI state for new session:', error);
     }
   }
 

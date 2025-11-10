@@ -70,14 +70,42 @@ export default function CalculationModal({ isOpen, onClose, calculations, projec
                   in your quote is derived from the formulas shown below. All assumptions, data sources, and 
                   industry standards are documented for your verification and confidence.
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-blue-900/30 rounded-lg p-3">
-                    <div className="font-bold text-blue-300">Data Sources</div>
-                    <div className="text-gray-400 mt-1">BNEF, Wood Mackenzie, SEIA, AWEA, EIA</div>
+                <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
+                  <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-500/50">
+                    <div className="font-bold text-blue-300 mb-2 flex items-center gap-1">
+                      <span>🏛️</span> Authoritative Sources
+                    </div>
+                    <div className="text-gray-300 space-y-1 text-xs">
+                      <div>• NREL ATB 2024 - Official battery costs</div>
+                      <div>• GSL Energy 2025 - Commercial pricing</div>
+                      <div>• EIA Database - Generator costs</div>
+                    </div>
                   </div>
-                  <div className="bg-purple-900/30 rounded-lg p-3">
-                    <div className="font-bold text-purple-300">Last Updated</div>
-                    <div className="text-gray-400 mt-1">Q4 2025 Market Data</div>
+                  <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/50">
+                    <div className="font-bold text-green-300 mb-2 flex items-center gap-1">
+                      <span>📊</span> Market Data
+                    </div>
+                    <div className="text-gray-300 space-y-1 text-xs">
+                      <div>• SEIA/AWEA - Solar & wind rates</div>
+                      <div>• IEEE Standards - Degradation</div>
+                      <div>• Q4 2025 - Current pricing</div>
+                    </div>
+                  </div>
+                  <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-500/50">
+                    <div className="font-bold text-purple-300 mb-2 flex items-center gap-1">
+                      <span>🎯</span> Professional Grade
+                    </div>
+                    <div className="text-gray-300 space-y-1 text-xs">
+                      <div>• NPV/IRR financial modeling</div>
+                      <div>• Conservative assumptions</div>
+                      <div>• Stakeholder-ready analysis</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="font-bold text-yellow-300 text-sm mb-1">🔗 Full Source Documentation</div>
+                    <div className="text-gray-300 text-xs">Complete calculation references and links included in Word export appendix</div>
                   </div>
                 </div>
               </div>

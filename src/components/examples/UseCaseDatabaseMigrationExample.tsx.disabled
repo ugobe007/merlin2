@@ -1,0 +1,440 @@
+/**
+ * MIGRATION GUIDE: Converting Components to Use Database Service
+ * Example showing how to convert existing components from static templates to database
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useCaseService, type UseCaseWithConfiguration } from '../services/useCaseService';
+
+// =================== BEFORE: Static Template Approach ===================
+/*
+import { USE_CASE_TEMPLATES } from '../data/useCaseTemplates';
+
+const UseCaseSelector = () => {
+  const [useCases] = useState(USE_CASE_TEMPLATES);
+  const [filteredCases, setFilteredCases] = useState(USE_CASE_TEMPLATES);
+
+  const filterByCategory = (category: string) => {
+    setFilteredCases(useCases.filter(uc => uc.category === category));
+  };
+
+  return (
+    <div>
+      {filteredCases.map(useCase => (
+        <div key={useCase.id}>
+          <h3>{useCase.name}</h3>
+          <p>{useCase.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+*/
+
+// =================== AFTER: Database Service Approach ===================
+
+interface UseCaseSelectorProps {
+  onUseCaseSelect?: (useCase: UseCaseWithConfiguration) => void;
+  category?: string;
+  tier?: string;
+}
+
+export const UseCaseSelector: React.FC<UseCaseSelectorProps> = ({
+  onUseCaseSelect,
+  category,
+  tier
+}) => {
+  const [useCases, setUseCases] = useState<UseCaseWithConfiguration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filteredCases, setFilteredCases] = useState<UseCaseWithConfiguration[]>([]);
+
+  // Load use cases from database on component mount
+  useEffect(() => {
+    const loadUseCases = async () => {
+      try {
+        setLoading(true);
+        let result: UseCaseWithConfiguration[];
+        
+        if (category) {
+          result = await useCaseService.getUseCasesByCategory(category);
+        } else if (tier) {
+          result = await useCaseService.getUseCasesByTier(tier);
+        } else {
+          result = await useCaseService.getAllUseCases();
+        }
+        
+        setUseCases(result);
+        setFilteredCases(result);
+      } catch (err) {
+        console.error('Failed to load use cases:', err);
+        setError('Failed to load use cases. Please try again.');
+        
+        // Fallback to static templates if database fails
+        try {
+          const { USE_CASE_TEMPLATES } = await import('../data/useCaseTemplates');
+          const fallbackCases = USE_CASE_TEMPLATES.map(template => ({
+            ...template,
+            id: template.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            industry_standards: {},
+            validation_sources: [],
+            usage_count: 0,
+            average_roi: null,
+            average_payback_years: null,
+            last_used: null,
+            created_by: null,
+            updated_by: null,
+            image_url: template.image || null
+          })) as UseCaseWithConfiguration[];
+          
+          setUseCases(fallbackCases);
+          setFilteredCases(fallbackCases);
+          setError('Using offline data. Some features may be limited.');
+        } catch (fallbackErr) {
+          setError('Failed to load use cases completely.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUseCases();
+  }, [category, tier]);
+
+  // Filter function for search/category changes
+  const filterUseCases = (searchTerm: string, filterCategory?: string) => {
+    let filtered = useCases;
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(uc => 
+        uc.name.toLowerCase().includes(term) || 
+        uc.description?.toLowerCase().includes(term)
+      );
+    }
+    
+    if (filterCategory) {
+      filtered = filtered.filter(uc => uc.category === filterCategory);
+    }
+    
+    setFilteredCases(filtered);
+  };
+
+  // Handle use case selection with analytics
+  const handleUseCaseSelect = async (useCase: UseCaseWithConfiguration) => {
+    // Log analytics event
+    await useCaseService.logAnalyticsEvent({
+      use_case_id: useCase.id,
+      event_type: 'selected',
+      event_data: { component: 'UseCaseSelector' }
+    });
+    
+    onUseCaseSelect?.(useCase);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading use cases...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-yellow-800">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Search use cases..."
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => filterUseCases(e.target.value)}
+        />
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => filterUseCases('', e.target.value || undefined)}
+        >
+          <option value="">All Categories</option>
+          <option value="commercial">Commercial</option>
+          <option value="industrial">Industrial</option>
+          <option value="institutional">Institutional</option>
+          <option value="residential">Residential</option>
+          <option value="agricultural">Agricultural</option>
+        </select>
+      </div>
+
+      {/* Use Case Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCases.map(useCase => (
+          <div
+            key={useCase.id}
+            className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => handleUseCaseSelect(useCase)}
+          >
+            <div className="flex items-center mb-3">
+              <span className="text-2xl mr-3">{useCase.icon}</span>
+              <h3 className="text-lg font-semibold text-gray-900">{useCase.name}</h3>
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-4">{useCase.description}</p>
+            
+            <div className="flex justify-between items-center text-xs text-gray-500">
+              <span className="bg-gray-100 px-2 py-1 rounded">
+                {useCase.category}
+              </span>
+              <span>
+                {useCase.usage_count || 0} times used
+              </span>
+            </div>
+            
+            {useCase.default_configuration && (
+              <div className="mt-3 text-xs text-gray-600">
+                <div>Load: {useCase.default_configuration.typical_load_kw}kW</div>
+                <div>Savings: {useCase.default_configuration.typical_savings_percent}%</div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {filteredCases.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No use cases found. Try adjusting your search or filters.
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =================== SMART WIZARD INTEGRATION EXAMPLE ===================
+
+interface SmartWizardProps {
+  selectedUseCaseId?: string;
+}
+
+export const SmartWizardExample: React.FC<SmartWizardProps> = ({ selectedUseCaseId }) => {
+  const [useCaseDetails, setUseCaseDetails] = useState<any>(null);
+  const [configurations, setConfigurations] = useState<any[]>([]);
+  const [customQuestions, setCustomQuestions] = useState<any[]>([]);
+  const [userResponses, setUserResponses] = useState<Record<string, any>>({});
+  const [calculation, setCalculation] = useState<any>(null);
+
+  // Load detailed use case information
+  useEffect(() => {
+    const loadUseCaseDetails = async () => {
+      if (!selectedUseCaseId) return;
+
+      try {
+        // Get use case by ID (you'd need to add this method to the service)
+        const useCase = await useCaseService.getUseCaseBySlug(selectedUseCaseId);
+        if (useCase) {
+          setUseCaseDetails(useCase);
+          setConfigurations(useCase.configurations);
+          setCustomQuestions(useCase.custom_questions);
+        }
+      } catch (error) {
+        console.error('Error loading use case details:', error);
+      }
+    };
+
+    loadUseCaseDetails();
+  }, [selectedUseCaseId]);
+
+  // Calculate configuration based on user responses
+  const handleCalculate = async () => {
+    if (!useCaseDetails || configurations.length === 0) return;
+
+    try {
+      const defaultConfig = configurations.find(c => c.is_default) || configurations[0];
+      const result = await useCaseService.calculateConfiguration(
+        useCaseDetails.id,
+        defaultConfig.id,
+        userResponses
+      );
+      setCalculation(result);
+    } catch (error) {
+      console.error('Error calculating configuration:', error);
+    }
+  };
+
+  // Render custom questions dynamically
+  const renderCustomQuestions = () => {
+    return customQuestions.map(question => {
+      switch (question.question_type) {
+        case 'number':
+          return (
+            <div key={question.id} className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {question.question_text}
+                {question.is_required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <input
+                type="number"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                defaultValue={question.default_value as number}
+                min={question.min_value || undefined}
+                max={question.max_value || undefined}
+                step={question.step_value || 1}
+                onChange={(e) => setUserResponses(prev => ({
+                  ...prev,
+                  [question.question_key]: parseFloat(e.target.value)
+                }))}
+              />
+              {question.unit && (
+                <span className="text-sm text-gray-500 ml-2">{question.unit}</span>
+              )}
+              {question.help_text && (
+                <p className="text-xs text-gray-500 mt-1">{question.help_text}</p>
+              )}
+            </div>
+          );
+
+        case 'select':
+          const options = question.select_options as any[] || [];
+          return (
+            <div key={question.id} className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {question.question_text}
+                {question.is_required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                defaultValue={question.default_value as string}
+                onChange={(e) => setUserResponses(prev => ({
+                  ...prev,
+                  [question.question_key]: e.target.value
+                }))}
+              >
+                {options.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {question.help_text && (
+                <p className="text-xs text-gray-500 mt-1">{question.help_text}</p>
+              )}
+            </div>
+          );
+
+        case 'boolean':
+          return (
+            <div key={question.id} className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  defaultChecked={question.default_value as boolean}
+                  onChange={(e) => setUserResponses(prev => ({
+                    ...prev,
+                    [question.question_key]: e.target.checked
+                  }))}
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  {question.question_text}
+                  {question.is_required && <span className="text-red-500 ml-1">*</span>}
+                </span>
+              </label>
+              {question.help_text && (
+                <p className="text-xs text-gray-500 mt-1 ml-6">{question.help_text}</p>
+              )}
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    });
+  };
+
+  if (!useCaseDetails) {
+    return <div>Select a use case to begin configuration...</div>;
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6">{useCaseDetails.name} Configuration</h2>
+      
+      {/* Custom Questions Form */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">Configuration Questions</h3>
+        {renderCustomQuestions()}
+        
+        <button
+          onClick={handleCalculate}
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          disabled={!configurations.length}
+        >
+          Calculate System Requirements
+        </button>
+      </div>
+
+      {/* Calculation Results */}
+      {calculation && (
+        <div className="bg-green-50 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4 text-green-800">System Recommendation</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Calculated Load</p>
+              <p className="text-xl font-bold text-green-700">
+                {calculation.calculated_load_kw.toFixed(1)} kW
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Recommended Size</p>
+              <p className="text-xl font-bold text-green-700">
+                {calculation.recommended_size_mw.toFixed(2)} MW
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Estimated Cost</p>
+              <p className="text-xl font-bold text-green-700">
+                ${calculation.estimated_cost.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Annual Savings</p>
+              <p className="text-xl font-bold text-green-700">
+                ${calculation.projected_savings.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Payback Period</p>
+              <p className="text-xl font-bold text-green-700">
+                {calculation.payback_years.toFixed(1)} years
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">25-Year ROI</p>
+              <p className="text-xl font-bold text-green-700">
+                {calculation.roi_percentage.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UseCaseSelector;

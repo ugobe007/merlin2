@@ -219,7 +219,6 @@ class LocalStorageAuthService {
 
       return true;
     } catch (error) {
-      console.error('Delete account error:', error);
       return false;
     }
   }
@@ -240,7 +239,6 @@ class LocalStorageAuthService {
 
       return { success: true, user, error: 'Password reset successfully' };
     } catch (error) {
-      console.error('Password reset error:', error);
       return { success: false, error: 'Password reset failed' };
     }
   }
@@ -481,21 +479,18 @@ if (typeof window !== 'undefined') {
     // List all accounts
     listAccounts: () => {
       const accounts = authService.getAllAccounts();
-      console.table(accounts);
       return accounts;
     },
     
     // Delete an account by email
     deleteAccount: async (email: string) => {
       const result = await authService.deleteAccount(email);
-      console.log(result ? `✅ Deleted account: ${email}` : `❌ Failed to delete: ${email}`);
       return result;
     },
     
     // Reset password
     resetPassword: async (email: string, newPassword: string) => {
       const result = await authService.resetPassword(email, newPassword);
-      console.log(result.success ? `✅ Password reset for: ${email}` : `❌ ${result.error}`);
       return result;
     },
     
@@ -505,7 +500,6 @@ if (typeof window !== 'undefined') {
       localStorage.removeItem('merlin_passwords');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('current_user');
-      console.log('✅ All auth data cleared. Refresh the page.');
     },
     
     help: () => {

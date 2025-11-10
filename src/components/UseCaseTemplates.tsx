@@ -260,7 +260,7 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-gradient-to-br from-white via-purple-50 to-blue-50 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border-4 border-purple-400">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-6 rounded-t-xl z-10">

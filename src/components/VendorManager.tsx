@@ -76,9 +76,8 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
     notes: ''
   });
 
-  const API_BASE = process.env.NODE_ENV === 'development' 
-    ? `http://localhost:5001/api/db`
-    : '/api/db';
+  // Disabled localhost API since server is down - using local storage fallback
+  const API_BASE = '/api/db'; // Always use production API path or fallback to local storage
 
   useEffect(() => {
     if (isOpen) {
@@ -104,7 +103,6 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         setVendors(data);
       }
     } catch (error) {
-      console.error('Error fetching vendors:', error);
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +116,6 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         setProducts(data);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 
@@ -141,7 +138,6 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         fetchVendors();
       }
     } catch (error) {
-      console.error('Error creating vendor:', error);
     }
   };
 

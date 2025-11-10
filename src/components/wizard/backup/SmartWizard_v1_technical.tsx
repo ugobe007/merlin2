@@ -229,7 +229,6 @@ const SmartWizard: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, onSh
 
   const renderStep = () => {
     const actualStep = getActualStep(step);
-    console.log('Rendering wizard step:', step, 'actual:', actualStep, 'advanced:', advancedMode);
     switch (actualStep) {
       case 0:
         return (
