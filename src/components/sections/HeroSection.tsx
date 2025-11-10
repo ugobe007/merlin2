@@ -42,7 +42,8 @@ export default function HeroSection({
   setSelectedUseCaseForAdjustment
 }: HeroSectionProps) {
   const handleLoadTemplate = (useCase: UseCaseData) => {
-    console.log('🎯 sections/HeroSection handleLoadTemplate called with:', useCase.industry);
+    console.log('🎯🎯🎯 NEW SECTIONS/HeroSection handleLoadTemplate called with:', useCase.industry);
+    console.log('🎯🎯🎯 About to set Smart Wizard quickstart data');
     
     // Store use case data in localStorage for wizard to pick up
     const wizardData = {
@@ -54,9 +55,9 @@ export default function HeroSection({
       useCase: useCase
     };
     
-    console.log('🚀 Storing wizard quickstart data:', wizardData);
+    console.log('🚀🚀🚀 Storing wizard quickstart data:', wizardData);
     localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
-    console.log('🚀 Starting Smart Wizard for use case:', useCase.industry);
+    console.log('🚀🚀🚀 Starting Smart Wizard for use case:', useCase.industry);
     setShowSmartWizard(true);
   };
 
