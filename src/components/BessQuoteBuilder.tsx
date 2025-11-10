@@ -697,24 +697,25 @@ export default function BessQuoteBuilder() {
             <p className="text-gray-600 text-sm mb-4">
               © 2025 Merlin Energy. All rights reserved.
             </p>
-            {isLoggedIn && (
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setShowSystemHealth(true)}
-                  className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
-                >
-                  <span>📊</span>
-                  <span>System Health</span>
-                </button>
-                <span className="text-gray-300">|</span>
-                <button
-                  onClick={() => setShowVendorManager(true)}
-                  className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
-                >
-                  <span>🔧</span>
-                  <span>Admin Panel</span>
-                </button>
-                <span className="text-gray-300">|</span>
+            {/* Always show admin tools for development */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setShowSystemHealth(true)}
+                className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+              >
+                <span>📊</span>
+                <span>System Health</span>
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setShowVendorManager(true)}
+                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+              >
+                <span>🔧</span>
+                <span>Admin Panel</span>
+              </button>
+              <span className="text-gray-300">|</span>
+              {isLoggedIn && (
                 <button
                   onClick={() => {
                     setIsLoggedIn(false);

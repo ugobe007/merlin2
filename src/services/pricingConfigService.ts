@@ -209,13 +209,13 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     vendorNotes: "2025 wind market with improved turbine efficiency and installation processes"
   },
   generators: {
-    // Updated generator pricing with cleaner fuel options focus
-    naturalGasPerKW: 750,          // Down from 800 - mature technology, competition
-    dieselPerKW: 580,              // Down from 600 - standardization benefits
-    propanePerKW: 850,             // Down from 900 - cleaner fuel adoption
-    bioGasPerKW: 1150,             // Down from 1200 - renewable fuel infrastructure growth
-    baseInstallationCost: 48000,   // Down from 50000 - streamlined installation
-    vendorNotes: "Industrial generator pricing Q4 2025 with focus on cleaner fuel options and grid integration"
+    // Updated generator pricing based on latest market intelligence (Q4 2025)
+    naturalGasPerKW: 300,          // Updated from 750 - aligned with market range $250-$350
+    dieselPerKW: 420,              // Proportionally adjusted from diesel premium
+    propanePerKW: 480,             // Cleaner fuel premium maintained
+    bioGasPerKW: 650,              // Renewable fuel premium maintained
+    baseInstallationCost: 48000,   // Installation costs unchanged
+    vendorNotes: "Generator pricing updated per Eaton/Cummins market intelligence Q4 2025"
   },
   powerElectronics: {
     // Updated power electronics with advanced grid-forming capabilities
