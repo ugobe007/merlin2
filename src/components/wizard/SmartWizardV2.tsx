@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
@@ -40,6 +40,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [showCompletePage, setShowCompletePage] = useState(false);
   const [showAIWizard, setShowAIWizard] = useState(false);
   const [isQuickstart, setIsQuickstart] = useState(false); // Track if this is a quickstart session
+  const contentRef = useRef<HTMLDivElement>(null);
   const [aiSuggestions, setAiSuggestions] = useState<Array<{
     type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
     title: string;
@@ -298,6 +299,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       }
     }
   }, [show]);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (contentRef.current && step >= 0) {
+      contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [step]);
 
   // Auto-calculate realistic configuration based on use case data
   useEffect(() => {
@@ -1589,7 +1597,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         )}
 
         {/* Content */}
-        <div className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}>
+        <div ref={contentRef} className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}>
           {renderStep()}
         </div>
 
