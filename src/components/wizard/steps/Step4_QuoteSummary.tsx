@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench, Edit } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
 import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
 import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
@@ -36,6 +36,9 @@ interface Step4_QuoteSummaryProps {
     improvementText: string;
   } | null;
 
+  // Navigation
+  onEditConfiguration?: () => void;
+
   // Industry data for detailed equipment breakdown
   industryData?: {
     selectedIndustry: string;
@@ -63,6 +66,7 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   onOpenAIWizard,
   showAIWizard,
   aiBaseline,
+  onEditConfiguration,
   industryData,
 }) => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -75,16 +79,30 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   // Determine grid connection type from industry data
   const gridConnection = industryData?.useCaseData?.gridConnection || 'on-grid';
 
-  // Calculate detailed equipment breakdown
-  const equipmentBreakdown: EquipmentBreakdown = calculateEquipmentBreakdown(
-    storageSizeMW,
-    durationHours,
-    solarMW,
-    windMW,
-    generatorMW,
-    industryData,
-    gridConnection
-  );
+  // Calculate detailed equipment breakdown (async)
+  const [equipmentBreakdown, setEquipmentBreakdown] = useState<EquipmentBreakdown | null>(null);
+  
+  useEffect(() => {
+    const fetchEquipmentBreakdown = async () => {
+      const breakdown = await calculateEquipmentBreakdown(
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW,
+        generatorMW,
+        industryData,
+        gridConnection
+      );
+      setEquipmentBreakdown(breakdown);
+    };
+    
+    fetchEquipmentBreakdown();
+  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, industryData, gridConnection]);
+  
+  // Don't render until equipment breakdown is calculated
+  if (!equipmentBreakdown) {
+    return <div className="flex items-center justify-center p-8">Loading...</div>;
+  }
 
   // Check for renewables including auto-generated generators for off-grid systems
   const hasRenewables = solarMW > 0 || windMW > 0 || generatorMW > 0 || equipmentBreakdown.generators;
@@ -218,6 +236,19 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Review your system configuration and choose your options
         </p>
+        
+        {/* Edit Configuration Button */}
+        {onEditConfiguration && (
+          <div className="flex justify-center">
+            <button
+              onClick={onEditConfiguration}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            >
+              <Edit className="w-5 h-5" />
+              Edit Power & Energy Configuration
+            </button>
+          </div>
+        )}
       </div>
 
       {/* System Summary Card */}
@@ -225,6 +256,21 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
         <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           Your Energy Storage System
         </h3>
+        
+        {/* Industry Calculations Link */}
+        <div className="mb-4 text-center">
+          <a 
+            href="#industry-calculations" 
+            className="text-sm text-blue-600 hover:text-blue-800 underline flex items-center justify-center gap-1"
+            onClick={(e) => {
+              e.preventDefault();
+              // TODO: Add link to industry calculations documentation
+              window.alert('Industry calculation methodology:\n\n• Power sizing based on peak load analysis\n• Duration based on backup requirements\n• Solar sizing considers roof area and energy offset\n• Cost calculations use vendor quotes and NREL data');
+            }}
+          >
+            <span>📊</span> View Industry Calculation Methodology
+          </a>
+        </div>
         
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* Left: System Details */}

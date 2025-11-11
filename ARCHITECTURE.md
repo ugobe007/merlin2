@@ -484,6 +484,74 @@ Use Case Template (JSON in Database)
 
 ---
 
+## 🔧 Core Services Architecture
+
+### Baseline Calculation Service (Phase 24 Migration)
+
+**Problem Solved**: Previously had dual baseline systems (hardcoded vs database) that could diverge.
+
+**Solution**: Unified baseline service that ensures 100% consistency.
+
+```
+┌─────────────────┐           ┌──────────────────┐
+│ SmartWizardV2   │           │ AI Optimization  │
+│                 │           │ Service          │
+└────────┬────────┘           └────────┬─────────┘
+         │                              │
+         │ Import shared service        │ Import shared service
+         └──────────┬───────────────────┘
+                    ▼
+          ┌───────────────────┐
+          │ baselineService   │
+          │ (Single Source)   │
+          └─────────┬─────────┘
+                    │
+                    │ Query
+                    ▼
+              ┌────────────┐
+              │  Supabase  │
+              │  Database  │
+              └────────────┘
+         ✅ Always consistent!
+```
+
+**Key Functions**:
+
+1. **`calculateDatabaseBaseline(template, scale, useCaseData)`**
+   - Queries Supabase `use_cases` and `use_case_configurations` tables
+   - Applies scale factors (e.g., 100 rooms = 2x baseline for 50-room hotel)
+   - Returns: `{ powerMW, durationHrs, solarMW, description, dataSource }`
+   - Special handling for EV charging with charger specifications
+
+2. **`calculateEVChargingBaseline(useCaseData)`**
+   - Calculates from Level 2 and DC Fast charger counts
+   - Applies concurrency factors (70% peak usage)
+   - Example: 100 L2 (11kW) + 20 DC Fast (150kW) = ~1.9 MW recommended
+
+3. **`getFallbackBaseline(template)`**
+   - Safety mechanism when database unavailable
+   - Hardcoded values for 5 major use cases
+   - Ensures system never crashes
+
+**Benefits**:
+- ✅ Wizard and AI always use identical baselines
+- ✅ Database becomes single source of truth
+- ✅ Easy to add new use cases (just update database)
+- ✅ No code deployment needed for baseline changes
+- ✅ Comprehensive logging for debugging
+
+**Files**:
+- `/src/services/baselineService.ts` - Shared calculation service
+- `/src/utils/industryBaselines.ts` - ⚠️ DEPRECATED (kept for reference)
+- `/src/services/aiOptimizationService.ts` - Uses shared service
+- `/src/components/wizard/SmartWizardV2.tsx` - Uses shared service
+
+**Documentation**:
+- See `BASELINE_SERVICE_MIGRATION.md` for detailed migration notes
+- See `TESTING_BASELINE_MIGRATION.md` for testing guide
+
+---
+
 ## 🎯 Implementation Status
 
 ```
@@ -494,7 +562,10 @@ Use Case Template (JSON in Database)
 ├─ Database schema design
 ├─ SQL migration scripts
 ├─ Security policies
-└─ Setup documentation
+├─ Setup documentation
+├─ Baseline service migration (Phase 24)
+├─ AI optimization integration
+└─ Centralized financial calculations
 
 ⏳ NEXT (After Supabase):
 ├─ Database connection
@@ -520,5 +591,6 @@ This architecture supports:
 - 🎨 Easy customization (admin-controlled use cases)
 - 🔒 Enterprise security (RLS, JWT, audit logs)
 - 📊 Data insights (analytics, usage tracking)
+- 🤖 AI-powered recommendations (consistent with wizard)
 
 **Ready to build it!** 🎉

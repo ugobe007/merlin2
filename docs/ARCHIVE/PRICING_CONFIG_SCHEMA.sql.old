@@ -1,0 +1,220 @@
+-- Pricing Configuration Schema
+-- Stores all pricing formulas and configurations in database for single source of truth
+-- Version: 1.0.0
+-- Date: November 10, 2025
+
+-- Pricing Configurations Table - stores all equipment pricing data
+CREATE TABLE IF NOT EXISTS pricing_configurations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    config_key VARCHAR(100) UNIQUE NOT NULL,
+    config_category VARCHAR(50) NOT NULL, -- 'bess', 'solar', 'wind', 'generator', 'ev_charging', 'power_electronics', 'balance_of_plant'
+    config_data JSONB NOT NULL,
+    description TEXT,
+    version VARCHAR(20) DEFAULT '1.0.0',
+    is_active BOOLEAN DEFAULT true,
+    effective_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by UUID REFERENCES user_profiles(id),
+    vendor_notes TEXT,
+    data_source VARCHAR(255), -- 'NREL ATB 2024', 'BloombergNEF', 'Vendor Quote', etc.
+    confidence_level VARCHAR(20) CHECK (confidence_level IN ('high', 'medium', 'low'))
+);
+
+-- Calculation Formulas Table - stores all calculation formulas
+CREATE TABLE IF NOT EXISTS calculation_formulas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    formula_key VARCHAR(100) UNIQUE NOT NULL,
+    formula_name VARCHAR(255) NOT NULL,
+    formula_category VARCHAR(50) NOT NULL, -- 'sizing', 'financial', 'performance', 'roi'
+    formula_expression TEXT NOT NULL, -- The actual formula/calculation logic
+    formula_variables JSONB NOT NULL, -- Input variables with types and descriptions
+    output_variables JSONB NOT NULL, -- Output variables with types and descriptions
+    description TEXT,
+    example_calculation TEXT,
+    references TEXT, -- Industry standards, papers, etc.
+    version VARCHAR(20) DEFAULT '1.0.0',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by UUID REFERENCES user_profiles(id),
+    validation_status VARCHAR(20) DEFAULT 'pending' CHECK (validation_status IN ('pending', 'validated', 'deprecated')),
+    validated_by UUID REFERENCES user_profiles(id),
+    validated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Market Data Table - stores real-time market pricing data
+CREATE TABLE IF NOT EXISTS market_pricing_data (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    equipment_type VARCHAR(50) NOT NULL, -- 'battery', 'inverter', 'solar_panel', etc.
+    region VARCHAR(100) NOT NULL, -- 'United States', 'Europe', 'Asia', etc.
+    price_per_unit DECIMAL(15,4) NOT NULL,
+    unit_type VARCHAR(20) NOT NULL, -- 'kwh', 'kw', 'watt', 'unit'
+    currency VARCHAR(3) DEFAULT 'USD',
+    data_source VARCHAR(255) NOT NULL, -- 'BloombergNEF', 'NREL', 'Vendor Quote'
+    data_date DATE NOT NULL,
+    trend_direction VARCHAR(10) CHECK (trend_direction IN ('up', 'down', 'stable')),
+    confidence_level VARCHAR(20) CHECK (confidence_level IN ('high', 'medium', 'low')),
+    notes TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for Performance
+CREATE INDEX IF NOT EXISTS idx_pricing_config_key ON pricing_configurations(config_key);
+CREATE INDEX IF NOT EXISTS idx_pricing_config_category ON pricing_configurations(config_category);
+CREATE INDEX IF NOT EXISTS idx_pricing_config_active ON pricing_configurations(is_active);
+CREATE INDEX IF NOT EXISTS idx_formula_key ON calculation_formulas(formula_key);
+CREATE INDEX IF NOT EXISTS idx_formula_category ON calculation_formulas(formula_category);
+CREATE INDEX IF NOT EXISTS idx_formula_active ON calculation_formulas(is_active);
+CREATE INDEX IF NOT EXISTS idx_market_data_type ON market_pricing_data(equipment_type);
+CREATE INDEX IF NOT EXISTS idx_market_data_region ON market_pricing_data(region);
+CREATE INDEX IF NOT EXISTS idx_market_data_date ON market_pricing_data(data_date);
+
+-- Trigger for auto-updating timestamps
+CREATE TRIGGER update_pricing_config_updated_at BEFORE UPDATE ON pricing_configurations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_formula_updated_at BEFORE UPDATE ON calculation_formulas FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_market_data_updated_at BEFORE UPDATE ON market_pricing_data FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert default BESS pricing configuration (4-tier system)
+INSERT INTO pricing_configurations (config_key, config_category, config_data, description, data_source, confidence_level, vendor_notes)
+VALUES (
+    'bess_pricing_2025',
+    'bess',
+    '{
+        "smallSystemPerKWh": 580,
+        "mediumSystemPerKWh": 450,
+        "mediumLargeSystemPerKWh": 350,
+        "largeSystemPerKWh": 280,
+        "smallSystemSizeMWh": 1,
+        "mediumSystemSizeMWh": 5,
+        "largeSystemSizeMWh": 15,
+        "degradationRate": 0.02,
+        "warrantyYears": 10,
+        "roundTripEfficiency": 0.85
+    }',
+    '4-tier BESS pricing structure based on system size (Q4 2025)',
+    'GSL Energy, NREL ATB 2024, BloombergNEF',
+    'high',
+    'Validated against real vendor quotes. Small systems <1MWh at $580/kWh, Medium 1-5MWh at $450/kWh, Medium-Large 5-15MWh at $350/kWh, Large 15+MWh at $280/kWh'
+)
+ON CONFLICT (config_key) DO UPDATE SET
+    config_data = EXCLUDED.config_data,
+    updated_at = NOW();
+
+-- Insert power electronics pricing
+INSERT INTO pricing_configurations (config_key, config_category, config_data, description, data_source, confidence_level)
+VALUES (
+    'power_electronics_2025',
+    'power_electronics',
+    '{
+        "inverterPerKW": 120,
+        "transformerPerKVA": 80,
+        "switchgearPerKW": 50,
+        "protectionRelaysPerUnit": 5000
+    }',
+    'Power conversion system pricing (inverters, transformers, switchgear)',
+    'Industry average from multiple vendors',
+    'medium'
+)
+ON CONFLICT (config_key) DO UPDATE SET
+    config_data = EXCLUDED.config_data,
+    updated_at = NOW();
+
+-- Insert balance of plant pricing
+INSERT INTO pricing_configurations (config_key, config_category, config_data, description, data_source, confidence_level)
+VALUES (
+    'balance_of_plant_2025',
+    'balance_of_plant',
+    '{
+        "bopPercentage": 0.12,
+        "epcPercentage": 0.08,
+        "laborCostPerHour": 85,
+        "shippingCostPercentage": 0.03,
+        "contingencyPercentage": 0.05,
+        "urbanLaborPremium": 0.15,
+        "skillLaborPremiumPercentage": 0.10
+    }',
+    'Balance of plant and EPC costs',
+    'Industry standard percentages',
+    'high'
+)
+ON CONFLICT (config_key) DO UPDATE SET
+    config_data = EXCLUDED.config_data,
+    updated_at = NOW();
+
+-- Insert ROI calculation formula
+INSERT INTO calculation_formulas (formula_key, formula_name, formula_category, formula_expression, formula_variables, output_variables, description, references)
+VALUES (
+    'simple_payback_period',
+    'Simple Payback Period',
+    'financial',
+    'paybackPeriod = totalInvestment / annualSavings',
+    '{
+        "totalInvestment": {"type": "number", "unit": "USD", "description": "Total capital investment"},
+        "annualSavings": {"type": "number", "unit": "USD/year", "description": "Annual cost savings"}
+    }',
+    '{
+        "paybackPeriod": {"type": "number", "unit": "years", "description": "Years to recover investment"}
+    }',
+    'Calculates simple payback period without considering time value of money',
+    'Standard financial formula'
+)
+ON CONFLICT (formula_key) DO UPDATE SET
+    formula_expression = EXCLUDED.formula_expression,
+    updated_at = NOW();
+
+-- Insert ROI calculation formula
+INSERT INTO calculation_formulas (formula_key, formula_name, formula_category, formula_expression, formula_variables, output_variables, description, references)
+VALUES (
+    'roi_percentage',
+    'Return on Investment (ROI)',
+    'financial',
+    'roi = ((totalSavings - totalInvestment) / totalInvestment) * 100',
+    '{
+        "totalInvestment": {"type": "number", "unit": "USD", "description": "Total capital investment"},
+        "totalSavings": {"type": "number", "unit": "USD", "description": "Total lifetime savings"}
+    }',
+    '{
+        "roi": {"type": "number", "unit": "percent", "description": "Return on investment percentage"}
+    }',
+    'Calculates ROI as percentage return over investment lifetime',
+    'Standard financial formula'
+)
+ON CONFLICT (formula_key) DO UPDATE SET
+    formula_expression = EXCLUDED.formula_expression,
+    updated_at = NOW();
+
+-- Insert battery sizing formula
+INSERT INTO calculation_formulas (formula_key, formula_name, formula_category, formula_expression, formula_variables, output_variables, description, references)
+VALUES (
+    'battery_capacity_sizing',
+    'Battery Energy Capacity Sizing',
+    'sizing',
+    'capacityMWh = powerMW * durationHours / roundTripEfficiency',
+    '{
+        "powerMW": {"type": "number", "unit": "MW", "description": "Required power output"},
+        "durationHours": {"type": "number", "unit": "hours", "description": "Discharge duration"},
+        "roundTripEfficiency": {"type": "number", "unit": "decimal", "description": "Round-trip efficiency (0.85 typical)"}
+    }',
+    '{
+        "capacityMWh": {"type": "number", "unit": "MWh", "description": "Required battery capacity"}
+    }',
+    'Calculates required battery capacity accounting for round-trip efficiency losses',
+    'IEEE 2450, NREL BESS sizing guidelines'
+)
+ON CONFLICT (formula_key) DO UPDATE SET
+    formula_expression = EXCLUDED.formula_expression,
+    updated_at = NOW();
+
+-- Grant permissions
+GRANT ALL ON pricing_configurations TO authenticated;
+GRANT ALL ON calculation_formulas TO authenticated;
+GRANT ALL ON market_pricing_data TO authenticated;
+GRANT SELECT ON pricing_configurations TO anon;
+GRANT SELECT ON calculation_formulas TO anon;
+GRANT SELECT ON market_pricing_data TO anon;
+
+-- End of Pricing Configuration Schema

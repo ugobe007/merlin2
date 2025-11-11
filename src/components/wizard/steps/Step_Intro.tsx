@@ -70,38 +70,49 @@ const StepIntro: React.FC<StepIntroProps> = ({ onStart }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full mb-6">
-          <Sparkles className="w-10 h-10 text-white" />
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Header - More compact */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full mb-4">
+          <Sparkles className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
           Welcome to the Smart Wizard
         </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-6">
           Get your personalized energy storage quote in just <strong>5-10 minutes</strong>. 
-          Our AI-powered wizard will guide you through 6 simple steps to create the perfect solution for your business.
+          Our AI-powered wizard will guide you through 6 simple steps.
         </p>
+
+        {/* CTA Button - Moved to top */}
+        <button
+          onClick={onStart}
+          className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-10 py-4 rounded-xl text-lg md:text-xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105 mb-2"
+        >
+          <Sparkles className="w-6 h-6" />
+          <span>Start Smart Wizard</span>
+          <ArrowRight className="w-6 h-6" />
+        </button>
+        <p className="text-sm text-gray-500">Takes 5-10 minutes • No credit card required • Instant quote</p>
       </div>
 
-      {/* Steps Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {/* Steps Grid - More compact */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {steps.map((step) => (
           <div
             key={step.number}
-            className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-200 hover:border-purple-300 hover:shadow-xl transition-all"
+            className="bg-white rounded-xl p-4 shadow-md border-2 border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all"
           >
-            <div className="flex items-start gap-4 mb-4">
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br ${getColorClasses(step.color)} flex items-center justify-center`}>
-                <step.icon className="w-6 h-6 text-white" />
+            <div className="flex items-start gap-3 mb-3">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br ${getColorClasses(step.color)} flex items-center justify-center`}>
+                <step.icon className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-gray-400">STEP {step.number}</span>
+                  <span className="text-xs font-bold text-gray-400">STEP {step.number}</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{step.title}</h3>
-                <p className="text-sm text-gray-600 mb-2">{step.description}</p>
+                <h3 className="text-base font-bold text-gray-900 mb-1">{step.title}</h3>
+                <p className="text-sm text-gray-600 mb-1">{step.description}</p>
                 <p className="text-xs text-gray-500 italic">{step.examples}</p>
               </div>
             </div>
@@ -109,44 +120,31 @@ const StepIntro: React.FC<StepIntroProps> = ({ onStart }) => {
         ))}
       </div>
 
-      {/* Benefits */}
-      <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-8 mb-8 border-2 border-purple-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">What You'll Get:</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+      {/* Benefits - More compact */}
+      <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 mb-6 border-2 border-purple-200">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">What You'll Get:</h2>
+        <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-4xl mb-3">💰</div>
-            <h3 className="font-bold text-gray-900 mb-2">Detailed Cost Breakdown</h3>
-            <p className="text-sm text-gray-600">Equipment, installation, shipping, and financing options</p>
+            <div className="text-3xl mb-2">💰</div>
+            <h3 className="font-bold text-gray-900 mb-1 text-sm">Detailed Cost Breakdown</h3>
+            <p className="text-xs text-gray-600">Equipment, installation, shipping, and financing options</p>
           </div>
           <div className="text-center">
-            <div className="text-4xl mb-3">📊</div>
-            <h3 className="font-bold text-gray-900 mb-2">ROI Analysis</h3>
-            <p className="text-sm text-gray-600">Annual savings, payback period, and 20-year projections</p>
+            <div className="text-3xl mb-2">📊</div>
+            <h3 className="font-bold text-gray-900 mb-1 text-sm">ROI Analysis</h3>
+            <p className="text-xs text-gray-600">Annual savings, payback period, and 20-year projections</p>
           </div>
           <div className="text-center">
-            <div className="text-4xl mb-3">✨</div>
-            <h3 className="font-bold text-gray-900 mb-2">AI-Optimized System</h3>
-            <p className="text-sm text-gray-600">Personalized recommendations based on your specific needs</p>
+            <div className="text-3xl mb-2">✨</div>
+            <h3 className="font-bold text-gray-900 mb-1 text-sm">AI-Optimized System</h3>
+            <p className="text-xs text-gray-600">Personalized recommendations based on your specific needs</p>
           </div>
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="text-center">
-        <button
-          onClick={onStart}
-          className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-12 py-5 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all hover:scale-105"
-        >
-          <Sparkles className="w-6 h-6" />
-          <span>Start Smart Wizard</span>
-          <ArrowRight className="w-6 h-6" />
-        </button>
-        <p className="text-sm text-gray-500 mt-4">Takes 5-10 minutes • No credit card required • Instant quote</p>
-      </div>
-
-      {/* Trust Indicators */}
-      <div className="mt-12 pt-8 border-t-2 border-gray-200">
-        <div className="flex flex-wrap items-center justify-center gap-8 text-center">
+      {/* Trust Indicators - Compact */}
+      <div className="mt-6 pt-6 border-t-2 border-gray-200">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-center text-sm">
           <div>
             <div className="text-2xl font-bold text-gray-900">25+</div>
             <div className="text-sm text-gray-600">Industry Types</div>

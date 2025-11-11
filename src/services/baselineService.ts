@@ -1,0 +1,254 @@
+/**
+ * BASELINE CALCULATION SERVICE
+ * 
+ * Single source of truth for industry baseline calculations.
+ * Used by both SmartWizardV2 and AI optimization.
+ * 
+ * This service queries the Supabase database for use case configurations
+ * and calculates recommended BESS sizing based on actual data.
+ * 
+ * Performance: Uses in-memory caching to reduce database queries.
+ */
+
+import { useCaseService } from './useCaseService';
+import { baselineCache } from './cacheService';
+
+export interface BaselineCalculationResult {
+  powerMW: number;
+  durationHrs: number;
+  solarMW: number;
+  description?: string;
+  dataSource?: string;
+}
+
+/**
+ * Calculate industry baseline from database
+ * 
+ * This replaces the hardcoded utility function with database-driven calculations.
+ * Ensures consistency between wizard and AI recommendations.
+ * 
+ * Performance: Results are cached for 10 minutes to reduce database load.
+ * 
+ * @param template - Use case slug (e.g., 'ev-charging', 'hotel')
+ * @param scale - Scale factor for sizing (number of rooms, sq ft, etc.)
+ * @param useCaseData - Additional data for complex calculations (EV chargers, etc.)
+ * @returns Recommended BESS configuration
+ */
+export async function calculateDatabaseBaseline(
+  template: string | string[],
+  scale: number = 1,
+  useCaseData?: Record<string, any>
+): Promise<BaselineCalculationResult> {
+  const templateKey = Array.isArray(template) ? template[0] : template;
+  
+  // Generate cache key including template, scale, and EV-specific data
+  const cacheKeyData = useCaseData ? JSON.stringify(useCaseData) : '';
+  const cacheKey = `baseline:${templateKey}:${scale}:${cacheKeyData}`;
+  
+  // Check cache first
+  const cached = baselineCache.get<BaselineCalculationResult>(cacheKey);
+  if (cached) {
+    console.log(`✅ [Cache HIT] ${templateKey} (scale: ${scale})`);
+    return cached;
+  }
+  
+  console.log(`❌ [Cache MISS] ${templateKey} (scale: ${scale}) - Calculating...`);
+  
+  try {
+    console.log(`🔍 [BaselineService] Fetching configuration for: ${templateKey}`, { scale, useCaseData });
+    
+    // Special case: EV Charging uses charger-specific calculation
+    if (templateKey === 'ev-charging' && useCaseData) {
+      const evResult = calculateEVChargingBaseline(useCaseData);
+      console.log(`🔌 [BaselineService] EV Charging calculated:`, evResult);
+      
+      // Cache the result
+      baselineCache.set(cacheKey, evResult);
+      return evResult;
+    }
+    
+    // Query database for use case configuration
+    const useCase = await useCaseService.getUseCaseBySlug(templateKey);
+    
+    if (!useCase || !useCase.configurations || useCase.configurations.length === 0) {
+      console.warn(`⚠️ [BaselineService] No database configuration found for ${templateKey}, using fallback`);
+      const fallback = getFallbackBaseline(templateKey);
+      
+      // Cache fallback result (shorter TTL)
+      baselineCache.set(cacheKey, fallback, 5 * 60 * 1000); // 5 minutes
+      return fallback;
+    }
+
+    // Use the default configuration or first available
+    const defaultConfig = useCase.configurations.find(c => c.is_default) || useCase.configurations[0];
+    
+    console.log(`✅ [BaselineService] Using database configuration for ${templateKey}:`, {
+      config_name: defaultConfig.config_name,
+      typical_load_kw: defaultConfig.typical_load_kw,
+      preferred_duration_hours: defaultConfig.preferred_duration_hours
+    });
+    
+    // Calculate power based on typical load (kW) converted to MW
+    // Apply scale factor for larger/smaller installations
+    const basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
+    const powerMW = Math.max(0.5, Math.round(basePowerMW * 10) / 10);
+    
+    // Use preferred duration from configuration
+    const durationHrs = Math.max(2, Math.round((defaultConfig.preferred_duration_hours || 4) * 2) / 2);
+    
+    // Calculate solar based on power size
+    // Use 1:1 ratio as default (can be customized per use case later)
+    const solarRatio = 1.0;
+    const solarMW = Math.max(0, Math.round(powerMW * solarRatio * 10) / 10);
+    
+    const result = {
+      powerMW,
+      durationHrs,
+      solarMW,
+      description: `Database configuration: ${defaultConfig.config_name}`,
+      dataSource: 'Supabase use_case_configurations'
+    };
+    
+    // Cache the successful result
+    baselineCache.set(cacheKey, result);
+    
+    return result;
+    
+  } catch (error) {
+    console.error(`❌ [BaselineService] Error fetching configuration for ${templateKey}:`, error);
+    const fallback = getFallbackBaseline(templateKey);
+    
+    // Cache fallback result (shorter TTL)
+    baselineCache.set(cacheKey, fallback, 5 * 60 * 1000); // 5 minutes
+    
+    return fallback;
+  }
+}
+
+/**
+ * Calculate EV charging baseline based on charger specifications
+ * 
+ * This handles the complex calculation for EV charging stations based on:
+ * - Number and power of Level 2 chargers
+ * - Number and power of DC Fast chargers
+ * - Peak concurrency factor
+ */
+function calculateEVChargingBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  const level2Count = parseInt(useCaseData.level2Chargers) || 0;
+  const level2Power = parseFloat(useCaseData.level2Power) || 11; // kW
+  const dcFastCount = parseInt(useCaseData.dcFastChargers) || 0;
+  const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150; // kW
+  const concurrency = Math.min(parseInt(useCaseData.peakConcurrency) || 50, 80) / 100;
+  
+  const totalLevel2 = (level2Count * level2Power) / 1000; // MW
+  const totalDCFast = (dcFastCount * dcFastPower) / 1000; // MW
+  const totalCharging = totalLevel2 + totalDCFast;
+  
+  console.log('🔌 [BaselineService] EV Charging Calculation:', {
+    level2Count,
+    level2Power,
+    dcFastCount,
+    dcFastPower,
+    concurrency,
+    totalLevel2,
+    totalDCFast,
+    totalCharging
+  });
+  
+  // Battery sized for demand management (60-70% of peak with concurrency)
+  const powerMW = Math.max(0.5, Math.min(totalCharging * concurrency * 0.7, totalCharging * 0.8));
+  const roundedPowerMW = Math.round(powerMW * 10) / 10;
+  
+  console.log('🔋 [BaselineService] Recommended Battery Size:', roundedPowerMW, 'MW');
+  
+  return {
+    powerMW: roundedPowerMW,
+    durationHrs: 2, // Short duration for demand management
+    solarMW: Math.round(roundedPowerMW * 1.0 * 10) / 10,
+    description: `EV Charging: ${level2Count} L2 + ${dcFastCount} DC Fast chargers`,
+    dataSource: 'Calculated from charger specifications'
+  };
+}
+
+/**
+ * Fallback baseline calculations when database is unavailable
+ * 
+ * These are based on industry standards (CBECS, NREL, ASHRAE)
+ * but should only be used as a last resort.
+ */
+function getFallbackBaseline(template: string): BaselineCalculationResult {
+  const fallbacks: Record<string, BaselineCalculationResult> = {
+    'hotel': {
+      powerMW: 2.0,
+      durationHrs: 4,
+      solarMW: 2.0,
+      description: 'Fallback: Standard hotel configuration',
+      dataSource: 'Fallback (CBECS 2018)'
+    },
+    'ev-charging': {
+      powerMW: 2.0,
+      durationHrs: 2,
+      solarMW: 2.0,
+      description: 'Fallback: Standard EV charging station',
+      dataSource: 'Fallback (DOE Alt Fuels Data)'
+    },
+    'data-center': {
+      powerMW: 5.0,
+      durationHrs: 8,
+      solarMW: 3.0,
+      description: 'Fallback: Standard data center',
+      dataSource: 'Fallback (Uptime Institute)'
+    },
+    'manufacturing': {
+      powerMW: 3.0,
+      durationHrs: 6,
+      solarMW: 3.5,
+      description: 'Fallback: Standard manufacturing facility',
+      dataSource: 'Fallback (DOE Industrial)'
+    },
+    'hospital': {
+      powerMW: 4.0,
+      durationHrs: 8,
+      solarMW: 4.0,
+      description: 'Fallback: Standard hospital',
+      dataSource: 'Fallback (CBECS Healthcare)'
+    }
+  };
+  
+  const fallback = fallbacks[template] || {
+    powerMW: 2.0,
+    durationHrs: 4,
+    solarMW: 2.0,
+    description: 'Fallback: Generic configuration',
+    dataSource: 'Fallback (Generic)'
+  };
+  
+  console.log(`⚠️ [BaselineService] Using fallback for ${template}:`, fallback);
+  return fallback;
+}
+
+/**
+ * Get human-readable scale unit description
+ */
+export function getScaleUnitDescription(template: string): string {
+  const unitMap: Record<string, string> = {
+    'hotel': 'rooms',
+    'apartment': 'units',
+    'car-wash': 'bays',
+    'hospital': 'beds',
+    'university': 'students (thousands)',
+    'data-center': 'MW IT load',
+    'airport': 'million passengers',
+    'manufacturing': 'production lines',
+    'warehouse': 'thousand sq ft',
+    'retail': 'thousand sq ft',
+    'office': 'thousand sq ft',
+    'ev-charging': 'chargers',
+    'casino': 'gaming floor sq ft',
+    'agricultural': 'acres',
+    'indoor-farm': 'growing area sq ft',
+    'cold-storage': 'storage volume'
+  };
+  
+  return unitMap[template] || 'units';
+}

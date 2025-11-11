@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../utils/solarSizingUtils';
 import { formatSolarSavings, formatTotalProjectSavings } from '../../utils/financialFormatting';
+import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import { calculateDatabaseBaseline } from '../../services/baselineService';
 import { aiStateService } from '../../services/aiStateService';
+import { useCaseService } from '../../services/useCaseService';
 import {
   LoadProfileAnalyzer,
   BatteryElectrochemicalModel,
@@ -40,6 +43,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [showCompletePage, setShowCompletePage] = useState(false);
   const [showAIWizard, setShowAIWizard] = useState(false);
   const [isQuickstart, setIsQuickstart] = useState(false); // Track if this is a quickstart session
+  const [wizardInitialized, setWizardInitialized] = useState(false); // Track if wizard has been initialized
+  const modalContentRef = useRef<HTMLDivElement>(null); // Ref for scrollable content
   const [aiSuggestions, setAiSuggestions] = useState<Array<{
     type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
     title: string;
@@ -64,183 +69,34 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     configuration: string;
   } | null>(null);
 
-  // Function to calculate industry-appropriate initial configuration
-  const calculateIndustryBaseline = (template: string | string[], scale: number = 1) => {
-    const templateKey = Array.isArray(template) ? template[0] : template;
-    
-    // Comprehensive industry-specific configurations based on real-world needs
-    const industryProfiles: { [key: string]: { 
-      basePowerMW: number; 
-      baseDurationHrs: number; 
-      solarRatio: number;
-      scaleFactor: number; // Multiplier for scale parameter
-      scaleUnit: string; // What the scale represents
-    } } = {
-      // TRANSPORTATION & LOGISTICS
-      'ev-charging': { 
-        basePowerMW: 0.35,  // 350kW per fast charger
-        baseDurationHrs: 3,  // Peak demand buffering
-        solarRatio: 0.8, 
-        scaleFactor: 1.0,  // Direct scaling with charger count
-        scaleUnit: 'chargers'
-      },
-      'airport': { 
-        basePowerMW: 8.0,   // Large facility base
-        baseDurationHrs: 6,  // Flight schedule buffering
-        solarRatio: 1.2, 
-        scaleFactor: 0.4,   // Scale with passenger volume (millions)
-        scaleUnit: 'million_passengers'
-      },
-      'logistics': { 
-        basePowerMW: 2.5,   // Warehouse operations
-        baseDurationHrs: 8,  // Shift coverage
-        solarRatio: 1.8, 
-        scaleFactor: 0.3,   // Scale with facility size
-        scaleUnit: 'sq_ft_thousands'
-      },
-      
-      // HOSPITALITY & COMMERCIAL
-      'hotel': { 
-        basePowerMW: 0.4,   // Per 100 rooms base
-        baseDurationHrs: 6,  // Guest comfort continuity
-        solarRatio: 1.0, 
-        scaleFactor: 0.8,   // Scale with room count
-        scaleUnit: 'rooms'
-      },
-      'casino': { 
-        basePowerMW: 3.0,   // High energy density
-        baseDurationHrs: 12, // 24/7 operations
-        solarRatio: 0.6, 
-        scaleFactor: 1.2,   // Scale with gaming floor area
-        scaleUnit: 'gaming_floor_sq_ft'
-      },
-      'retail': { 
-        basePowerMW: 0.15,  // Per 10k sq ft
-        baseDurationHrs: 8,  // Business hours + security
-        solarRatio: 1.5, 
-        scaleFactor: 0.5,   // Scale with store size
-        scaleUnit: 'sq_ft_thousands'
-      },
-      'car-wash': { 
-        basePowerMW: 0.25,  // Per wash bay
-        baseDurationHrs: 4,  // Peak hours coverage
-        solarRatio: 1.8, 
-        scaleFactor: 1.1,   // Scale with number of bays
-        scaleUnit: 'wash_bays'
-      },
-      
-      // HEALTHCARE & EDUCATION
-      'hospital': { 
-        basePowerMW: 2.0,   // Per 100 beds
-        baseDurationHrs: 12, // Life safety requirements
-        solarRatio: 0.8, 
-        scaleFactor: 1.0,   // Scale with bed count
-        scaleUnit: 'beds'
-      },
-      'university': { 
-        basePowerMW: 1.5,   // Per 1000 students
-        baseDurationHrs: 8,  // Academic schedule
-        solarRatio: 1.4, 
-        scaleFactor: 0.7,   // Scale with enrollment
-        scaleUnit: 'students_thousands'
-      },
-      
-      // INDUSTRIAL & TECHNOLOGY
-      'manufacturing': { 
-        basePowerMW: 1.5,   // Production line base
-        baseDurationHrs: 6,  // Shift operations
-        solarRatio: 1.2, 
-        scaleFactor: 0.8,   // Scale with production capacity
-        scaleUnit: 'production_lines'
-      },
-      'data-center': { 
-        basePowerMW: 4.0,   // Per MW IT load
-        baseDurationHrs: 8,  // Outage protection
-        solarRatio: 0.6, 
-        scaleFactor: 1.2,   // Scale with IT capacity
-        scaleUnit: 'IT_load_MW'
-      },
-      'cold-storage': { 
-        basePowerMW: 0.8,   // Temperature critical
-        baseDurationHrs: 12, // Extended outage protection
-        solarRatio: 1.5, 
-        scaleFactor: 0.9,   // Scale with storage volume
-        scaleUnit: 'storage_volume'
-      },
-      'warehouse': { 
-        basePowerMW: 0.3,   // Per 100k sq ft
-        baseDurationHrs: 6,  // Operations coverage
-        solarRatio: 1.8, 
-        scaleFactor: 0.7,   // Scale with facility size
-        scaleUnit: 'sq_ft_hundred_thousands'
-      },
-      
-      // RESIDENTIAL & MULTI-TENANT
-      'apartment': { 
-        basePowerMW: 0.25,  // Per 100 units
-        baseDurationHrs: 6,  // Resident comfort
-        solarRatio: 1.3, 
-        scaleFactor: 0.9,   // Scale with unit count
-        scaleUnit: 'units'
-      },
-      'microgrid': { 
-        basePowerMW: 1.0,   // Community base
-        baseDurationHrs: 8,  // Resilience focus
-        solarRatio: 2.0, 
-        scaleFactor: 1.0,   // Scale with homes/buildings
-        scaleUnit: 'buildings'
-      },
-      
-      // AGRICULTURE & SPECIALTY
-      'agricultural': { 
-        basePowerMW: 0.5,   // Farm operations
-        baseDurationHrs: 6,  // Irrigation/processing
-        solarRatio: 2.2, 
-        scaleFactor: 0.6,   // Scale with farm size
-        scaleUnit: 'acres_thousands'
-      },
-      'indoor-farm': { 
-        basePowerMW: 1.2,   // High energy for lighting
-        baseDurationHrs: 4,  // Growth cycle protection
-        solarRatio: 1.0, 
-        scaleFactor: 1.5,   // Scale with growing area
-        scaleUnit: 'growing_area_sq_ft'
-      }
-    };
-    
-    const profile = industryProfiles[templateKey] || { 
-      basePowerMW: 2, 
-      baseDurationHrs: 4, 
-      solarRatio: 1.0, 
-      scaleFactor: 1.0,
-      scaleUnit: 'generic'
-    };
-    
-    // Calculate scaled configuration
-    const scaledPower = profile.basePowerMW * scale * profile.scaleFactor;
-    const scaledDuration = profile.baseDurationHrs;
-    const scaledSolar = scaledPower * profile.solarRatio;
-    
-    return {
-      powerMW: Math.max(0.5, Math.round(scaledPower * 10) / 10),
-      durationHrs: Math.max(2, Math.round(scaledDuration * 2) / 2),
-      solarMW: Math.max(0, Math.round(scaledSolar * 10) / 10)
-    };
-  };
-
   // Step 3: Configuration (calculated based on industry template)
   const [storageSizeMW, setStorageSizeMW] = useState(2);
   const [durationHours, setDurationHours] = useState(4);
 
-  // Clear AI suggestions and persistent AI state when wizard starts fresh
+  // 🔥 SCROLL TO TOP - Use ref for reliable scrolling
   useEffect(() => {
-    console.log('📊 Wizard useEffect triggered, show:', show);
-    if (show) {
+    if (step >= 0 && modalContentRef.current) {
+      // Scroll the modal content to top immediately
+      modalContentRef.current.scrollTo({ top: 0, behavior: 'instant' });
+      console.log('🔝 Scrolled modal content to top for step:', step);
+    }
+  }, [step]);
+
+  // 🔥 INITIALIZE WIZARD - Only run ONCE when opening
+  useEffect(() => {
+    console.log('📊 Wizard mount effect, show:', show, 'initialized:', wizardInitialized);
+    
+    if (show && !wizardInitialized) {
+      // Initialize wizard state ONCE
+      console.log('🎬 Initializing wizard for first time');
+      setStep(-1);
+      setShowIntro(true);
+      setShowCompletePage(false);
       setAiSuggestions([]);
       setShowAIWizard(false);
+      setWizardInitialized(true);
       
       // Reset AI state for new wizard session
-      // This prevents "already applied" messages and ensures fresh AI experience
       aiStateService.resetForNewSession();
       
       // Check for quickstart data from use case templates
@@ -297,14 +153,21 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         setIsQuickstart(false);
       }
     }
-  }, [show]);
+    
+    // Cleanup when wizard closes
+    if (!show && wizardInitialized) {
+      console.log('🔄 Wizard closed, resetting initialization flag');
+      setWizardInitialized(false);
+    }
+  }, [show, wizardInitialized]);
 
   // Auto-calculate realistic configuration based on use case data
   useEffect(() => {
-    if (selectedTemplate && Object.keys(useCaseData).length > 0 && !isQuickstart) {
-      let scale = 1; // Default scale
-      
-      if (selectedTemplate === 'ev-charging') {
+    const calculateConfig = async () => {
+      if (selectedTemplate && Object.keys(useCaseData).length > 0 && !isQuickstart) {
+        let scale = 1; // Default scale
+        
+        if (selectedTemplate === 'ev-charging') {
         // Calculate realistic storage based on charger configuration
         const level2Count = parseInt(useCaseData.level2Chargers) || 0;
         const level2Power = parseFloat(useCaseData.level2Power) || 11;
@@ -398,8 +261,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             scale = 1; // Default scale
         }
         
-        // Use the industry baseline calculation with extracted scale
-        const baseline = calculateIndustryBaseline(selectedTemplate, scale);
+        // Use the shared database-driven baseline calculation
+        // This ensures wizard and AI use IDENTICAL baseline values
+        const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
+        console.log('🎯 [SmartWizard] Baseline from shared service:', baseline);
+        
         setStorageSizeMW(baseline.powerMW);
         setDurationHours(baseline.durationHrs);
         
@@ -428,6 +294,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         });
       }
     }
+    };
+    
+    calculateConfig();
   }, [selectedTemplate, useCaseData, isQuickstart]);
 
   // Step 4: Renewables (was Step 4)
@@ -445,6 +314,22 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
   const [selectedShipping, setSelectedShipping] = useState('best-value');
   const [selectedFinancing, setSelectedFinancing] = useState('cash');
+
+  // Costs state (calculated asynchronously from database)
+  const [costs, setCosts] = useState({
+    equipmentCost: 0,
+    installationCost: 0,
+    shippingCost: 0,
+    tariffCost: 0,
+    totalProjectCost: 0,
+    taxCredit: 0,
+    netCost: 0,
+    annualSavings: 0,
+    paybackYears: 0
+  });
+
+  // Equipment breakdown state (calculated asynchronously)
+  const [equipmentBreakdown, setEquipmentBreakdown] = useState<any>(null);
 
   // Advanced Analytics State - Integration of Mathematical Models and ML
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
@@ -477,7 +362,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'medical-office': { powerMW: 0.10, durationHrs: 2, solarRatio: 0.6 }, // Medical/professional office
         'datacenter': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
         'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
-        'hotel': { powerMW: 3.0, durationHrs: 5, solarRatio: 1.4 },
+        'hotel': { powerMW: 1.2, durationHrs: 4, solarRatio: 1.0 }, // ✅ CORRECTED: ~400 rooms baseline (400 × 0.00293)
         'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
         'agriculture': { powerMW: 2.0, durationHrs: 6, solarRatio: 2.0 },
         'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
@@ -533,6 +418,11 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }
   }, [step, storageSizeMW, durationHours]);
 
+  // 🚫 AI USE CASE RECOMMENDATION TEMPORARILY DISABLED
+  // TODO: Integrate with centralized calculation service to ensure consistency
+  // Currently uses hardcoded formulas that don't match database-driven calculations
+  // causing confusion (e.g., AI suggests 11.5MW vs SmartWizard's 5.4MW for same use case)
+  /*
   // Generate AI use case recommendation when user completes Step 2
   useEffect(() => {
     if (step === 2 && Object.keys(useCaseData).length > 0 && selectedTemplate) {
@@ -633,8 +523,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const hasRestaurant = amenities.includes('restaurant');
           const gridReliability = useCaseData.gridReliability || 'reliable';
           
-          // Calculate solar feasibility (but don't auto-include)
-          let hotelSolarMW = numRooms * 0.015; // Conservative 15kW per room
+          // ✅ CORRECTED: Use authoritative calculation (2.93 kW per room from CBECS/ASHRAE data)
+          // Source: src/data/useCaseTemplates.ts line 560 (440kW / 150 rooms = 2.93 kW/room)
+          const hotelPowerMW = numRooms * 0.00293;
+          
+          // Calculate solar feasibility (optional, conservative estimate)
+          let hotelSolarMW = numRooms * 0.010; // Conservative 10kW per room for available roof space
           if (hasPool) hotelSolarMW += 0.3; // Pool equipment
           if (hasRestaurant) hotelSolarMW += 0.2; // Kitchen equipment
           const hotelRooftopAcres = (hotelSolarMW * 1000 * 100) / 43560; // 100 sq ft per kW for rooftop
@@ -643,24 +537,24 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             message = `Hotels with ${numRooms} rooms in areas with unreliable grid service benefit significantly from backup power systems. Guest satisfaction improves dramatically when you can maintain operations during outages.`;
             savings = '$80-150K/year';
             roi = '4-6 years';
-            configuration = `${(numRooms * 0.02).toFixed(1)}MW / 8hr BESS`;
+            configuration = `${hotelPowerMW.toFixed(1)}MW / 8hr BESS`; // ✅ CORRECTED
           } else if (hasPool && hasRestaurant) {
             if (hotelRooftopAcres <= 2) {
               message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Your daytime loads (pool pumps, kitchen equipment) align well with solar - consider adding ${formatSolarCapacity(hotelSolarMW)} rooftop solar if roof space permits.`;
-              configuration = `${(numRooms * 0.025).toFixed(1)}MW / 5hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
+              configuration = `${hotelPowerMW.toFixed(1)}MW / 5hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`; // ✅ CORRECTED
             } else {
               message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Solar would need ${hotelRooftopAcres.toFixed(1)} acres of roof space - verify capacity or consider parking canopies.`;
-              configuration = `${(numRooms * 0.025).toFixed(1)}MW / 5hr BESS + Optional Solar (if space permits)`;
+              configuration = `${hotelPowerMW.toFixed(1)}MW / 5hr BESS + Optional Solar (if space permits)`; // ✅ CORRECTED
             }
             savings = '$70-120K/year';
             roi = '4-6 years';
           } else {
             if (hotelRooftopAcres <= 1.5) {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar can boost savings if you have ${hotelRooftopAcres.toFixed(1)} acres of available roof space.`;
-              configuration = `${(numRooms * 0.015).toFixed(1)}MW / 4hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
+              configuration = `${hotelPowerMW.toFixed(1)}MW / 4hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`; // ✅ CORRECTED
             } else {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar would require ${hotelRooftopAcres.toFixed(1)} acres of roof - check availability.`;
-              configuration = `${(numRooms * 0.015).toFixed(1)}MW / 4hr BESS + Optional Solar (check roof capacity)`;
+              configuration = `${hotelPowerMW.toFixed(1)}MW / 4hr BESS + Optional Solar (check roof capacity)`; // ✅ CORRECTED
             }
             savings = '$50-90K/year';
             roi = '5-7 years';
@@ -752,6 +646,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       setAiUseCaseRecommendation({ message, savings, roi, configuration });
     }
   }, [step, useCaseData, selectedTemplate]);
+  */
+  // End of disabled AI recommendation code
+
 
   // Apply industry template defaults
   useEffect(() => {
@@ -767,7 +664,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         'medical-office': { mw: 0.10, hours: 2 }, // Medical/professional office practice
         'datacenter': { mw: 10, hours: 6 }, // Uptime Institute: 5-20MW typical for enterprise
         'warehouse': { mw: 2, hours: 3 }, // DOE logistics facilities: 1-3MW standard
-        'hotel': { mw: 1, hours: 4 }, // ASHRAE hospitality: 0.5-2MW per 100 rooms
+        'hotel': { mw: 1.2, hours: 4 }, // ✅ CORRECTED: CBECS 2018: ~1.2MW for 400-room hotel (2.93kW/room)
         'retail': { mw: 0.5, hours: 3 }, // CBECS retail: 0.2-1MW per location
         'agriculture': { mw: 1.5, hours: 6 }, // USDA agricultural energy survey: 1-3MW
         'car-wash': { mw: 0.05, hours: 2 }, // CORRECTED: 50kW for 38kW facility (peak shaving)
@@ -788,8 +685,32 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }
   }, [selectedTemplate, useTemplate]);
 
+  // Calculate costs whenever configuration changes
+  useEffect(() => {
+    const updateCosts = async () => {
+      const calculatedCosts = await calculateCosts();
+      setCosts(calculatedCosts);
+      
+      // Also calculate equipment breakdown for use in render
+      const gridConnection = useCaseData.gridConnection || 'on-grid';
+      const breakdown = await calculateEquipmentBreakdown(
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW,
+        generatorMW,
+        { selectedIndustry: selectedTemplate, useCaseData },
+        gridConnection,
+        location || 'California'
+      );
+      setEquipmentBreakdown(breakdown);
+    };
+    
+    updateCosts();
+  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, selectedInstallation, selectedShipping, selectedTemplate, location, useCaseData]);
+
   // Cost calculations
-  const calculateCosts = () => {
+  const calculateCosts = async () => {
     const totalEnergyMWh = storageSizeMW * durationHours;
     
     // Equipment costs
@@ -829,7 +750,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     const tariffCost = batteryCost * 0.21;
     
     // Calculate equipment breakdown for accurate totals
-    const equipmentBreakdown = calculateEquipmentBreakdown(
+    const equipmentBreakdown = await calculateEquipmentBreakdown(
       storageSizeMW, 
       durationHours, 
       solarMW, 
@@ -843,45 +764,41 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     // Use equipment breakdown totals for accuracy
     const totalProjectCost = equipmentBreakdown.totals.totalProjectCost;
     
-    // Tax credit (30% ITC if paired with renewables, or standalone)
-    const taxCredit = totalProjectCost * 0.30;
-    const netCost = totalProjectCost - taxCredit;
+    // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
+    const result = await calculateFinancialMetrics({
+      storageSizeMW,
+      durationHours,
+      solarMW,
+      windMW,
+      location: location || 'California',
+      electricityRate,
+      equipmentCost: equipmentBreakdown.totals.equipmentCost,
+      installationCost: equipmentBreakdown.totals.installationCost,
+      shippingCost: equipmentBreakdown.totals.shippingCost,
+      tariffCost: equipmentBreakdown.totals.tariffCost
+    });
     
-    // Annual savings calculation
-    const peakShavingSavings = totalEnergyMWh * 365 * (electricityRate - 0.05) * 1000; // Arbitrage
-    const demandChargeSavings = storageSizeMW * 12 * 15000; // $15K/MW-month demand charge reduction
-    const gridServiceRevenue = storageSizeMW * 30000; // $30K/MW-year
+    console.log('💰 Financial calculations from centralized service (data source:', result.dataSource + ')');
     
-    let annualSavings = peakShavingSavings + demandChargeSavings + gridServiceRevenue;
-    
-    // Add renewable energy savings with proper financial formatting
-    if (solarMW > 0) {
-      const solarSavingsData = formatSolarSavings(solarMW, electricityRate, 'calculation');
-      annualSavings += solarSavingsData.annualSavings;
-    }
-    if (windMW > 0) {
-      annualSavings += windMW * 2500 * electricityRate * 1000; // 2500 MWh/MW-year * rate
-    }
-    
-    // Payback period
-    const paybackYears = netCost / annualSavings;
-    
-    return {
+    const calculatedCosts = {
       equipmentCost,
       installationCost,
       shippingCost,
       tariffCost,
-      totalProjectCost,
-      taxCredit,
-      netCost,
-      annualSavings,
-      paybackYears
+      totalProjectCost: result.totalProjectCost,
+      taxCredit: result.taxCredit,
+      netCost: result.netCost,
+      annualSavings: result.annualSavings,
+      paybackYears: result.paybackYears
     };
+    
+    // Update state so dashboard can use these values
+    setCosts(calculatedCosts);
+    
+    return calculatedCosts;
   };
 
-  const costs = calculateCosts();
-
-  const analyzeConfiguration = () => {
+  const analyzeConfiguration = async () => {
     const suggestions: Array<{
       type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
       title: string;
@@ -894,7 +811,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     }> = [];
 
     const totalEnergyMWh = storageSizeMW * durationHours;
-    const costs = calculateCosts();
+    const costs = await calculateCosts();
 
     // Advanced Analytics Integration Function
     // Incorporates: Historical Analysis, K-means Clustering, Control Algorithms,
@@ -1247,16 +1164,24 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     setShowAIWizard(true);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Scroll to top on step change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     if (step < 6) {
       setStep(step + 1);
     } else if (step === 6) {
-      // After quote summary, show complete page
+      // Show complete page immediately (costs will calculate in background)
       setShowCompletePage(true);
+      // Calculate costs in background without blocking
+      calculateCosts().catch(err => console.error('Cost calculation error:', err));
     }
   };
 
   const handleBack = () => {
+    // Scroll to top on step change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     if (step > 0) {
       setStep(step - 1);
     }
@@ -1381,6 +1306,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             onOpenAIWizard={handleOpenAIWizard}
             showAIWizard={showAIWizard}
             aiBaseline={aiBaseline}
+            onEditConfiguration={() => setStep(3)}
             industryData={{
               selectedIndustry: selectedTemplate,
               useCaseData: useCaseData
@@ -1394,18 +1320,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
 
   // Show complete page instead of modal for final step
   if (showCompletePage) {
-    // Calculate equipment breakdown to get effective generator MW
+    // Use pre-calculated equipment breakdown from state
     const gridConnection = useCaseData.gridConnection || 'on-grid';
-    const equipmentBreakdown = calculateEquipmentBreakdown(
-      storageSizeMW,
-      durationHours,
-      solarMW,
-      windMW,
-      generatorMW,
-      { selectedIndustry: selectedTemplate, useCaseData },
-      gridConnection
-    );
-    const effectiveGeneratorMW = equipmentBreakdown.generators ? 
+    const effectiveGeneratorMW = equipmentBreakdown?.generators ? 
       equipmentBreakdown.generators.quantity * equipmentBreakdown.generators.unitPowerMW : 
       generatorMW;
       
@@ -1419,6 +1336,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           generatorMW: effectiveGeneratorMW,
           location,
           industryTemplate: selectedTemplate,
+          electricityRate,
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
           paybackYears: costs.paybackYears,
@@ -1525,6 +1443,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         industryTemplate={selectedTemplate}
         location={location}
         electricityRate={electricityRate}
+        useCaseData={useCaseData}
         onConfigurationChange={(config) => {
           setStorageSizeMW(config.storageSizeMW);
           setDurationHours(config.durationHours);
@@ -1533,7 +1452,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           setGeneratorMW(config.generatorMW);
         }}
         onBack={() => setStep(2)}
-        onContinue={() => setStep(3)}
+        onContinue={() => setStep(5)}
       />
     );
   }
@@ -1589,7 +1508,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         )}
 
         {/* Content */}
-        <div className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}>
+        <div 
+          ref={modalContentRef}
+          className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}
+        >
           {renderStep()}
         </div>
 

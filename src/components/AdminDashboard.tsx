@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { PricingAdminDashboard } from './PricingAdminDashboard';
+import CalculationsAdmin from './admin/CalculationsAdmin';
+import UseCaseConfigManager from './admin/UseCaseConfigManager';
+import CacheStatistics from './admin/CacheStatistics';
 
 /**
  * System Administrator Dashboard
@@ -26,7 +29,7 @@ interface AdminStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache'>('dashboard');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
   
@@ -76,7 +79,9 @@ const AdminDashboard: React.FC = () => {
               { key: 'health', label: '🏥 System Health' },
               { key: 'users', label: '👥 Users' },
               { key: 'analytics', label: '📈 Analytics' },
+              { key: 'calculations', label: '🧮 Calculations' },
               { key: 'pricing', label: '💰 Pricing Config' },
+              { key: 'cache', label: '⚡ Cache Performance' },
               { key: 'settings', label: '⚙️ Settings' }
             ].map((tab) => (
               <button
@@ -591,6 +596,21 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Calculations & Formulas Tab */}
+        {activeTab === 'calculations' && (
+          <CalculationsAdmin />
+        )}
+
+        {/* Use Case Configurations Tab */}
+        {activeTab === 'useCases' && (
+          <UseCaseConfigManager />
+        )}
+
+        {/* Cache Performance Tab */}
+        {activeTab === 'cache' && (
+          <CacheStatistics />
         )}
 
         {/* Settings Tab */}

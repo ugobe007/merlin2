@@ -1,15 +1,15 @@
-// Daily Sync Service
-// Automatically synchronizes pricing data with Supabase daily at 6 AM UTC
+// Daily Sync Service - STUB VERSION
+// ⚠️ THIS SERVICE IS DEPRECATED AND NON-FUNCTIONAL
+// Original archived at: src/services/ARCHIVE/dailySyncService.ts.old
+// TODO: Complete rewrite to use useCaseService and MASTER_SCHEMA.sql structure
 
-import { pricingDatabaseService } from './pricingDatabaseService';
-import type { DatabaseSyncResult } from './pricingDatabaseService';
-import { dailyPricingValidator } from './dailyPricingValidator';
-import { pricingClient } from './supabaseClient';
+// Type definitions for compatibility
+type DatabaseSyncResult = { success: boolean; message: string; error?: string };
 
 export interface SyncJob {
   id: string;
   name: string;
-  schedule: string; // Cron-like schedule
+  schedule: string;
   lastRun?: string;
   nextRun?: string;
   status: 'idle' | 'running' | 'success' | 'error';
@@ -21,427 +21,74 @@ export interface SyncReport {
   totalJobs: number;
   successfulJobs: number;
   failedJobs: number;
-  duration: number; // milliseconds
+  duration: number;
   jobs: SyncJob[];
   errors: string[];
   warnings: string[];
   summary: string;
 }
 
+// Stub implementation for compatibility
 export class DailySyncService {
   private isInitialized = false;
   private syncJobs: SyncJob[] = [];
-  private syncTimer: NodeJS.Timeout | null = null;
-  
-  constructor() {
-    this.initializeJobs();
-  }
 
-  // Initialize sync jobs
-  private initializeJobs(): void {
-    this.syncJobs = [
-      {
-        id: 'daily_price_validation',
-        name: 'Daily Price Validation',
-        schedule: '0 6 * * *', // 6 AM UTC daily
-        status: 'idle'
-      },
-      {
-        id: 'market_intelligence_sync',
-        name: 'Market Intelligence Data Sync',
-        schedule: '15 6 * * *', // 6:15 AM UTC daily
-        status: 'idle'
-      },
-      {
-        id: 'vendor_price_updates',
-        name: 'Vendor Price Updates',
-        schedule: '30 6 * * *', // 6:30 AM UTC daily
-        status: 'idle'
-      },
-      {
-        id: 'configuration_backup',
-        name: 'Configuration Backup',
-        schedule: '45 6 * * *', // 6:45 AM UTC daily
-        status: 'idle'
-      },
-      {
-        id: 'alert_processing',
-        name: 'Alert Processing and Cleanup',
-        schedule: '0 7 * * *', // 7 AM UTC daily
-        status: 'idle'
-      }
-    ];
-    
+  constructor() {
+    console.warn('⚠️ DailySyncService instantiated but is non-functional (deprecated)');
     this.isInitialized = true;
   }
 
-  // Start the daily sync service
   async startService(): Promise<void> {
-    if (!this.isInitialized) {
-      throw new Error('DailySyncService not initialized');
-    }
-
-    // Check if daily sync is enabled
-    const isEnabled = await pricingClient.getSystemConfig('daily_sync_enabled');
-    if (!isEnabled) {
-      console.log('📅 Daily sync service is disabled');
-      return;
-    }
-
-    console.log('🚀 Starting Daily Sync Service...');
-    
-    // Calculate next sync time (6 AM UTC)
-    const now = new Date();
-    const nextSync = new Date();
-    nextSync.setUTCHours(6, 0, 0, 0);
-    
-    // If it's already past 6 AM today, schedule for tomorrow
-    if (nextSync <= now) {
-      nextSync.setUTCDate(nextSync.getUTCDate() + 1);
-    }
-    
-    const msUntilSync = nextSync.getTime() - now.getTime();
-    
-    console.log(`⏰ Next sync scheduled for: ${nextSync.toISOString()}`);
-    console.log(`⏳ Time until next sync: ${Math.round(msUntilSync / 1000 / 60)} minutes`);
-    
-    // Set timer for daily sync
-    this.syncTimer = setTimeout(() => {
-      this.runDailySync();
-      
-      // Set up recurring daily sync
-      this.syncTimer = setInterval(() => {
-        this.runDailySync();
-      }, 24 * 60 * 60 * 1000); // 24 hours
-      
-    }, msUntilSync);
+    console.warn('⚠️ DailySyncService.startService() called but is non-functional');
+    return;
   }
 
-  // Stop the daily sync service
   stopService(): void {
-    if (this.syncTimer) {
-      clearInterval(this.syncTimer);
-      this.syncTimer = null;
-    }
-    console.log('⏹️ Daily sync service stopped');
+    console.warn('⚠️ DailySyncService.stopService() called but is non-functional');
   }
 
-  // Run the complete daily sync process
   async runDailySync(): Promise<SyncReport> {
-    console.log('🔄 Starting daily pricing sync...');
-    
-    const startTime = Date.now();
-    const report: SyncReport = {
+    console.warn('⚠️ DailySyncService.runDailySync() called but is non-functional');
+    return {
       timestamp: new Date().toISOString(),
-      totalJobs: this.syncJobs.length,
+      totalJobs: 0,
       successfulJobs: 0,
       failedJobs: 0,
       duration: 0,
       jobs: [],
-      errors: [],
-      warnings: [],
-      summary: ''
-    };
-
-    try {
-      // Check database availability
-      if (!pricingDatabaseService.isDatabaseAvailable()) {
-        report.errors.push('Supabase database not available - running in local-only mode');
-        report.warnings.push('Pricing data will not be persisted to database');
-      }
-
-      // Run each sync job
-      for (const job of this.syncJobs) {
-        const jobResult = await this.runSyncJob(job);
-        report.jobs.push(jobResult);
-        
-        if (jobResult.status === 'success') {
-          report.successfulJobs++;
-        } else if (jobResult.status === 'error') {
-          report.failedJobs++;
-          if (jobResult.errorMessage) {
-            report.errors.push(`${job.name}: ${jobResult.errorMessage}`);
-          }
-        }
-      }
-
-      report.duration = Date.now() - startTime;
-      report.summary = `Sync completed: ${report.successfulJobs}/${report.totalJobs} jobs successful in ${Math.round(report.duration / 1000)}s`;
-      
-      // Store sync report in database
-      if (pricingDatabaseService.isDatabaseAvailable()) {
-        await pricingDatabaseService.updateSyncStatus({
-          lastSyncAt: report.timestamp,
-          syncStatus: report.failedJobs > 0 ? 'error' : 'success',
-          recordsProcessed: report.successfulJobs,
-          errorMessage: report.errors.join('; ') || undefined
-        });
-      }
-
-      console.log(`✅ ${report.summary}`);
-      
-      // Create alerts for failed jobs
-      if (report.failedJobs > 0) {
-        await this.createSyncAlert('high', 'Daily Sync Failures', 
-          `${report.failedJobs} sync jobs failed`, { report });
-      }
-
-    } catch (error) {
-      report.errors.push(error instanceof Error ? error.message : 'Unknown error');
-      report.failedJobs = this.syncJobs.length;
-      report.duration = Date.now() - startTime;
-      report.summary = 'Daily sync failed with critical error';
-      
-      console.error('❌ Daily sync failed:', error);
-    }
-
-    return report;
-  }
-
-  // Run individual sync job
-  private async runSyncJob(job: SyncJob): Promise<SyncJob> {
-    const updatedJob: SyncJob = { ...job };
-    updatedJob.status = 'running';
-    updatedJob.lastRun = new Date().toISOString();
-    
-    console.log(`🔄 Running job: ${job.name}`);
-
-    try {
-      switch (job.id) {
-        case 'daily_price_validation':
-          await this.syncDailyPriceValidation();
-          break;
-          
-        case 'market_intelligence_sync':
-          await this.syncMarketIntelligence();
-          break;
-          
-        case 'vendor_price_updates':
-          await this.syncVendorPriceUpdates();
-          break;
-          
-        case 'configuration_backup':
-          await this.backupConfiguration();
-          break;
-          
-        case 'alert_processing':
-          await this.processAlerts();
-          break;
-          
-        default:
-          throw new Error(`Unknown job ID: ${job.id}`);
-      }
-      
-      updatedJob.status = 'success';
-      console.log(`✅ Job completed: ${job.name}`);
-      
-    } catch (error) {
-      updatedJob.status = 'error';
-      updatedJob.errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Job failed: ${job.name}`, error);
-    }
-
-    return updatedJob;
-  }
-
-  // ====================================================================
-  // SYNC JOB IMPLEMENTATIONS
-  // ====================================================================
-
-  private async syncDailyPriceValidation(): Promise<void> {
-    console.log('📊 Running daily price validation...');
-    
-    const today = new Date().toISOString().split('T')[0];
-    const validationResults = await dailyPricingValidator.forceValidation();
-    
-    if (pricingDatabaseService.isDatabaseAvailable()) {
-      // Store validation results in database
-      await pricingDatabaseService.storeDailyPriceData(
-        today,
-        'daily_validator',
-        {
-          validation_status: validationResults.length === 0 ? 'validated' : 'flagged',
-          alert_threshold_exceeded: validationResults.length > 0,
-          alert_message: validationResults.length > 0 ? validationResults.map(r => r.message).join('; ') : undefined,
-          raw_data: { validationResults }
-        }
-      );
-    }
-    
-    // Create alert if validation failed
-    if (validationResults.length > 0) {
-      await this.createSyncAlert('medium', 'Price Validation Failed', 
-        'Daily price validation detected issues', { validationResults });
-    }
-  }
-
-  private async syncMarketIntelligence(): Promise<void> {
-    console.log('🔍 Syncing market intelligence data...');
-    
-    // Run market intelligence updates
-    const sources = ['nrel_atb', 'bloomberg_nef', 'wood_mackenzie'];
-    const today = new Date().toISOString().split('T')[0];
-    
-    for (const source of sources) {
-      try {
-        // Simulate market intelligence data fetch
-        const marketData = await this.fetchMarketData(source);
-        
-        if (pricingDatabaseService.isDatabaseAvailable() && marketData) {
-          await pricingDatabaseService.storeDailyPriceData(today, source, marketData);
-        }
-      } catch (error) {
-        console.warn(`Failed to fetch market data from ${source}:`, error);
-      }
-    }
-  }
-
-  private async syncVendorPriceUpdates(): Promise<void> {
-    console.log('🏪 Syncing vendor price updates...');
-    
-    // Update vendor-specific pricing data
-    const vendorSources = ['dynapower', 'sinexcel', 'great_power', 'mainspring'];
-    const today = new Date().toISOString().split('T')[0];
-    
-    for (const vendor of vendorSources) {
-      try {
-        const vendorData = await this.fetchVendorPricing(vendor);
-        
-        if (pricingDatabaseService.isDatabaseAvailable() && vendorData) {
-          await pricingDatabaseService.storeDailyPriceData(today, `vendor_${vendor}`, vendorData);
-        }
-      } catch (error) {
-        console.warn(`Failed to fetch vendor data from ${vendor}:`, error);
-      }
-    }
-  }
-
-  private async backupConfiguration(): Promise<void> {
-    console.log('💾 Backing up pricing configuration...');
-    
-    if (pricingDatabaseService.isDatabaseAvailable()) {
-      const result = await pricingDatabaseService.syncLocalConfigToDatabase();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Configuration backup failed');
-      }
-    } else {
-      console.warn('⚠️ Database not available - skipping configuration backup');
-    }
-  }
-
-  private async processAlerts(): Promise<void> {
-    console.log('🚨 Processing and cleaning up alerts...');
-    
-    if (pricingDatabaseService.isDatabaseAvailable()) {
-      // Get active alerts and process them
-      const alerts = await pricingDatabaseService.getActiveAlerts();
-      
-      // Auto-resolve old alerts (>7 days)
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      
-      for (const alert of alerts) {
-        const triggeredAt = new Date(alert.triggered_at);
-        if (triggeredAt < sevenDaysAgo && alert.severity === 'low') {
-          // Auto-resolve low-priority old alerts
-          console.log(`Auto-resolving old alert: ${alert.title}`);
-        }
-      }
-      
-      console.log(`Processed ${alerts.length} active alerts`);
-    }
-  }
-
-  // ====================================================================
-  // HELPER METHODS
-  // ====================================================================
-
-  private async fetchMarketData(source: string): Promise<any> {
-    // Placeholder for market intelligence API calls
-    // In production, this would make actual API calls to NREL, Bloomberg, etc.
-    
-    switch (source) {
-      case 'nrel_atb':
-        return {
-          bess_utility_scale_per_kwh: 105 + Math.random() * 10, // $105-115/kWh
-          solar_utility_scale_per_watt: 0.6 + Math.random() * 0.1,
-          source_url: 'https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage',
-          data_quality_score: 0.95
-        };
-        
-      case 'bloomberg_nef':
-        return {
-          bess_utility_scale_per_kwh: 108 + Math.random() * 8,
-          market_volatility_index: Math.random() * 20 + 10,
-          supply_chain_status: 'normal',
-          data_quality_score: 0.90
-        };
-        
-      default:
-        return null;
-    }
-  }
-
-  private async fetchVendorPricing(vendor: string): Promise<any> {
-    // Placeholder for vendor-specific pricing updates
-    // In production, this would integrate with vendor APIs or pricing databases
-    
-    const basePrice = vendor === 'mainspring' ? 165 : 105;
-    return {
-      bess_small_scale_per_kwh: basePrice + Math.random() * 10,
-      vendor_data: { vendor, lastUpdated: new Date().toISOString() },
-      data_quality_score: 0.85
+      errors: ['Service deprecated - see MASTER_SCHEMA.sql for new structure'],
+      warnings: ['DailySyncService requires rewrite to use useCaseService'],
+      summary: 'Service non-functional (deprecated)'
     };
   }
 
-  private async createSyncAlert(
-    severity: 'low' | 'medium' | 'high' | 'critical',
-    title: string,
-    message: string,
-    data?: any
-  ): Promise<void> {
-    if (pricingDatabaseService.isDatabaseAvailable()) {
-      await pricingDatabaseService.createAlert('sync_service', severity, title, message, data);
-    } else {
-      // Log locally if database not available
-      console.warn(`🚨 SYNC ALERT [${severity.toUpperCase()}]: ${title} - ${message}`);
-    }
-  }
-
-  // ====================================================================
-  // PUBLIC METHODS
-  // ====================================================================
-
-  // Get sync job status
   getSyncJobs(): SyncJob[] {
-    return this.syncJobs.map(job => ({ ...job }));
+    return [];
   }
 
-  // Run specific sync job manually
   async runJob(jobId: string): Promise<SyncJob> {
-    const job = this.syncJobs.find(j => j.id === jobId);
-    if (!job) {
-      throw new Error(`Job not found: ${jobId}`);
-    }
-    
-    return await this.runSyncJob(job);
-  }
-
-  // Get service status
-  getServiceStatus(): { isRunning: boolean; nextSync?: string; lastSync?: string } {
+    console.warn(`⚠️ DailySyncService.runJob(${jobId}) called but is non-functional`);
     return {
-      isRunning: this.syncTimer !== null,
-      nextSync: this.syncTimer ? 'Scheduled' : 'Not scheduled',
-      lastSync: pricingDatabaseService.getLastSync()?.lastSyncAt || 'Never'
+      id: jobId,
+      name: 'Deprecated Job',
+      schedule: 'N/A',
+      status: 'error',
+      errorMessage: 'DailySyncService deprecated'
     };
   }
 
-  // Run manual sync (for testing)
+  getServiceStatus() {
+    return {
+      isRunning: false,
+      nextSync: 'N/A - Service deprecated',
+      lastSync: 'N/A - Service deprecated'
+    };
+  }
+
   async runManualSync(): Promise<SyncReport> {
-    console.log('🔄 Running manual sync...');
-    return await this.runDailySync();
+    return this.runDailySync();
   }
 }
 
-// Export singleton instance
+// Export singleton instance for compatibility
 export const dailySyncService = new DailySyncService();

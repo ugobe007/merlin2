@@ -1,0 +1,32 @@
+-- =============================================================================
+-- DEPLOYMENT PHASE 1: Create all tables, indexes, triggers, and initial data
+-- =============================================================================
+-- This is MASTER_SCHEMA.sql with RLS policies section REMOVED (lines 729-748)
+-- Run this AFTER running DROP_EXISTING_POLICIES.sql
+-- =============================================================================
+
+-- Copy and paste the entire MASTER_SCHEMA.sql file here, but SKIP lines 729-748
+-- 
+-- OR: Simply run MASTER_SCHEMA.sql lines 1-726, then lines 749-938
+--
+-- INSTRUCTIONS:
+-- 1. Open /docs/MASTER_SCHEMA.sql in Supabase SQL Editor
+-- 2. Select lines 1-726 (stop at the comment "-- ROW LEVEL SECURITY")
+-- 3. Copy and Run
+-- 4. Then select lines 749-938 (skip the RLS policies section)
+-- 5. Copy and Run
+--
+-- This creates:
+-- ✅ All 28 tables (user_profiles, pricing_configurations, calculation_formulas, etc.)
+-- ✅ All indexes for performance
+-- ✅ All triggers for auto-updating timestamps
+-- ✅ System config data
+-- ✅ Initial pricing configurations (3 configs)
+-- ✅ Initial calculation formulas (3 formulas)
+-- ✅ Views (active_vendors, project_summary, active_use_cases_with_configs)
+-- ✅ Permissions grants
+-- =============================================================================
+
+-- Run MASTER_SCHEMA.sql lines 1-726 now
+-- Then run lines 749-938
+-- Skip lines 729-748 (RLS policies)

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Wand2, Sparkles, Send, X } from 'lucide-react';
 import { aiStateService, type AIState } from '../../services/aiStateService';
+import ConsultationModal from '../modals/ConsultationModal';
+import FinancingOptionsModal from './FinancingOptionsModal';
+import InstallerDirectoryModal from './InstallerDirectoryModal';
+import IncentivesGuideModal from './IncentivesGuideModal';
+import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import merlinImage from '../../assets/images/new_Merlin.png';
+import wizardIcon from '../../assets/images/wizard_icon1.png';
 
 interface QuoteCompletePageProps {
   quoteData: {
@@ -12,6 +19,7 @@ interface QuoteCompletePageProps {
     generatorMW: number;
     location: string;
     industryTemplate: string | string[];
+    electricityRate?: number;
     
     // Financial
     totalProjectCost: number;
@@ -46,12 +54,72 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   onUpdateQuote,
   onClose,
 }) => {
+  console.log('🎯 QuoteCompletePage rendered with data:', {
+    storageSizeMW: quoteData.storageSizeMW,
+    durationHours: quoteData.durationHours,
+    totalProjectCost: quoteData.totalProjectCost,
+    annualSavings: quoteData.annualSavings,
+    paybackYears: quoteData.paybackYears
+  });
+  
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [projectSaved, setProjectSaved] = useState(false);
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [showFinancingModal, setShowFinancingModal] = useState(false);
+  const [showInstallerModal, setShowInstallerModal] = useState(false);
+  const [showIncentivesModal, setShowIncentivesModal] = useState(false);
+  
+  // 🔥 RECALCULATED VALUES FROM DATABASE - Single source of truth
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    totalCost: quoteData.totalProjectCost,
+    annualSavings: quoteData.annualSavings,
+    paybackYears: quoteData.paybackYears,
+    roi: 0,
+    loading: true
+  });
+  
+  // Recalculate metrics using centralized service on mount
+  useEffect(() => {
+    const recalculateMetrics = async () => {
+      try {
+        console.log('🔄 Recalculating dashboard metrics from database...');
+        const result = await calculateFinancialMetrics({
+          storageSizeMW: quoteData.storageSizeMW,
+          durationHours: quoteData.durationHours,
+          solarMW: quoteData.solarMW,
+          windMW: quoteData.windMW,
+          location: quoteData.location,
+          electricityRate: quoteData.electricityRate || 0.12
+        });
+        
+        console.log('💰 Dashboard recalculated from database (data source:', result.dataSource + ')');
+        console.log('📊 Results:', {
+          netCost: result.netCost,
+          annualSavings: result.annualSavings,
+          paybackYears: result.paybackYears,
+          roi10Year: result.roi10Year
+        });
+        
+        setDashboardMetrics({
+          totalCost: result.netCost,
+          annualSavings: result.annualSavings,
+          paybackYears: result.paybackYears,
+          roi: result.roi10Year,
+          loading: false
+        });
+      } catch (error) {
+        console.error('❌ Error recalculating dashboard metrics:', error);
+        // Keep initial values on error
+        setDashboardMetrics(prev => ({ ...prev, loading: false }));
+      }
+    };
+    
+    recalculateMetrics();
+  }, [quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW, quoteData.windMW, quoteData.location, quoteData.electricityRate]);
   
   // Persistent AI state management
   const [aiState, setAiState] = useState<AIState>(aiStateService.getAIState().state);
@@ -176,15 +244,25 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     };
   };
 
-  const calculateROI = (powerMW: number, durationHrs: number, solarMW: number = 0) => {
-    const energyMWh = powerMW * durationHrs;
-    const batteryCost = energyMWh * 350000;
-    const solarCost = solarMW * 1200000;
-    const totalCost = batteryCost + solarCost;
-    const annualSavings = totalCost * 0.15; // 15% annual savings
-    const payback = totalCost / annualSavings;
+  // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
+  const calculateROI = async (powerMW: number, durationHrs: number, solarMW: number = 0) => {
+    const result = await calculateFinancialMetrics({
+      storageSizeMW: powerMW,
+      durationHours: durationHrs,
+      solarMW: solarMW,
+      windMW: 0,
+      location: quoteData.location || 'California',
+      electricityRate: quoteData.electricityRate || 0.12
+    });
     
-    return { totalCost, annualSavings, payback, energyMWh };
+    console.log('💰 Dashboard ROI calculation from centralized service (data source:', result.dataSource + ')');
+    
+    return { 
+      totalCost: result.netCost, 
+      annualSavings: result.annualSavings, 
+      payback: result.paybackYears, 
+      energyMWh: powerMW * durationHrs 
+    };
   };
 
   const handleEmailSubmit = () => {
@@ -201,7 +279,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     setTimeout(() => setProjectSaved(false), 3000);
   };
 
-  const handleAIGenerate = () => {
+  const handleAIGenerate = async () => {
     // Allow empty prompts for continuous monitoring with default analysis
     const defaultPrompt = 'analyze current configuration';
     const promptToUse = defaultPrompt; // Always use default for auto-analysis
@@ -209,11 +287,11 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     setIsGenerating(true);
     
     // Simulate AI processing
-    setTimeout(() => {
+    setTimeout(async () => {
       const prompt = promptToUse.toLowerCase();
       const baseline = calculateOptimalBaseline();
-      const currentROI = calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
-      const optimalROI = calculateROI(baseline.optimalPowerMW, baseline.optimalDurationHrs, baseline.optimalSolarMW);
+      const currentROI = await calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
+      const optimalROI = await calculateROI(baseline.optimalPowerMW, baseline.optimalDurationHrs, baseline.optimalSolarMW);
       
       let newSize = quoteData.storageSizeMW;
       let newDuration = quoteData.durationHours;
@@ -222,10 +300,10 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       let warning = '';
       
       // Analyze current configuration vs optimal
-      const isOversized = quoteData.storageSizeMW > baseline.optimalPowerMW * 1.3;
-      const isUndersized = quoteData.storageSizeMW < baseline.optimalPowerMW * 0.7;
-      const isOverduration = quoteData.durationHours > baseline.optimalDurationHrs * 1.4;
-      const isUnderduration = quoteData.durationHours < baseline.optimalDurationHrs * 0.6;
+      const isOversized = quoteData.storageSizeMW > baseline.optimalPowerMW * 1.4; // More tolerant threshold
+      const isUndersized = quoteData.storageSizeMW < baseline.optimalPowerMW * 0.6; // More tolerant threshold
+      const isOverduration = quoteData.durationHours > baseline.optimalDurationHrs * 1.5;
+      const isUnderduration = quoteData.durationHours < baseline.optimalDurationHrs * 0.5;
       
       // Smart response to user request
       if (prompt.includes('optim') || prompt.includes('best') || prompt.includes('ideal')) {
@@ -237,7 +315,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       } else if (prompt.includes('reduce') || prompt.includes('cheaper') || prompt.includes('smaller') || prompt.includes('cut cost')) {
         newSize = Math.max(0.5, baseline.optimalPowerMW * 0.75);
         newDuration = Math.max(2, baseline.optimalDurationHrs * 0.85);
-        const newROI = calculateROI(newSize, newDuration, newSolar);
+        const newROI = await calculateROI(newSize, newDuration, newSolar);
         reasoning = `I've reduced the system to ${newSize.toFixed(1)}MW / ${newDuration}hr, cutting upfront costs by ~${Math.round((1 - newROI.totalCost / currentROI.totalCost) * 100)}%. This maintains ${Math.round((newSize / baseline.optimalPowerMW) * 100)}% of optimal capacity.`;
         if (newSize < baseline.optimalPowerMW * 0.7) {
           warning = '⚠️ Warning: This configuration may not fully meet your peak demand needs. Consider backup power sources or load shedding.';
@@ -246,7 +324,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         // User wants MORE power
         newSize = quoteData.storageSizeMW * 1.3;
         newDuration = quoteData.durationHours;
-        const newROI = calculateROI(newSize, newDuration, newSolar);
+        const newROI = await calculateROI(newSize, newDuration, newSolar);
         
         if (newSize > baseline.optimalPowerMW * 1.4) {
           warning = `⚠️ Caution: ${newSize.toFixed(1)}MW exceeds your optimal needs by ${Math.round(((newSize / baseline.optimalPowerMW) - 1) * 100)}%. This adds $${((newROI.totalCost - optimalROI.totalCost) / 1000000).toFixed(1)}M in costs with diminishing returns. Payback extends to ${newROI.payback.toFixed(1)} years.`;
@@ -265,18 +343,21 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         if (isOversized) {
           newSize = baseline.optimalPowerMW;
           newDuration = baseline.optimalDurationHrs;
-          warning = `⚠️ Your current ${quoteData.storageSizeMW}MW configuration is oversized for your needs. Recommended: ${newSize.toFixed(1)}MW to save $${((currentROI.totalCost - optimalROI.totalCost) / 1000000).toFixed(1)}M.`;
-          reasoning = `Analysis: Your system is ${Math.round((quoteData.storageSizeMW / baseline.optimalPowerMW - 1) * 100)}% larger than optimal. I recommend ${newSize.toFixed(1)}MW / ${newDuration}hr for better ROI.`;
+          const percentOversize = Math.round((quoteData.storageSizeMW / baseline.optimalPowerMW - 1) * 100);
+          const costSavings = ((currentROI.totalCost - optimalROI.totalCost) / 1000000).toFixed(1);
+          warning = `⚠️ Your current ${quoteData.storageSizeMW.toFixed(1)}MW configuration is ${percentOversize}% larger than the industry baseline. Recommended: ${newSize.toFixed(1)}MW to save $${costSavings}M.`;
+          reasoning = `Based on industry benchmarks for ${getIndustryName(quoteData.industryTemplate)}, a ${newSize.toFixed(1)}MW / ${newDuration}hr system would provide optimal economics while meeting your operational needs. The current oversizing adds upfront cost without proportional revenue gains.`;
         } else if (isUndersized) {
           newSize = baseline.optimalPowerMW;
-          warning = `⚠️ Your current ${quoteData.storageSizeMW}MW may be undersized. Recommended: ${newSize.toFixed(1)}MW to fully meet your needs.`;
-          reasoning = `Your system may struggle with peak demands. Consider ${newSize.toFixed(1)}MW for ${Math.round((newSize / quoteData.storageSizeMW - 1) * 100)}% more capacity.`;
+          const percentUndersize = Math.round((1 - quoteData.storageSizeMW / baseline.optimalPowerMW) * 100);
+          warning = `⚠️ Your current ${quoteData.storageSizeMW.toFixed(1)}MW system is ${percentUndersize}% below the industry baseline. Recommended: ${newSize.toFixed(1)}MW to fully capture available opportunities.`;
+          reasoning = `Consider increasing to ${newSize.toFixed(1)}MW for ${Math.round((newSize / quoteData.storageSizeMW - 1) * 100)}% more capacity. This better matches typical ${getIndustryName(quoteData.industryTemplate)} demand profiles and can improve overall returns.`;
         } else {
-          reasoning = `Your current configuration (${quoteData.storageSizeMW}MW / ${quoteData.durationHours}hr) is well-sized for your needs. ROI: ${currentROI.payback.toFixed(1)} year payback. Try asking to "optimize", "reduce cost", or "add more backup power".`;
+          reasoning = `Your current configuration (${quoteData.storageSizeMW.toFixed(1)}MW / ${quoteData.durationHours}hr) is well-sized for your needs and aligns with industry standards. ROI: ${currentROI.payback.toFixed(1)} year payback. Try asking to "optimize", "reduce cost", or "add more backup power".`;
         }
       }
       
-      const newROI = calculateROI(newSize, newDuration, newSolar);
+      const newROI = await calculateROI(newSize, newDuration, newSolar);
       const costChange = newROI.totalCost - currentROI.totalCost;
       const roiChange = newROI.payback - currentROI.payback;
       
@@ -303,14 +384,14 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     }, 1500);
   };
 
-  const handleApplyAI = () => {
+  const handleApplyAI = async () => {
     if (!aiSuggestion) return;
     
     setIsApplyingAI(true);
     
     // Calculate ROI difference for user feedback
-    const currentROI = calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
-    const newROI = calculateROI(aiSuggestion.storageSizeMW, aiSuggestion.durationHours, aiSuggestion.solarMW || quoteData.solarMW);
+    const currentROI = await calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
+    const newROI = await calculateROI(aiSuggestion.storageSizeMW, aiSuggestion.durationHours, aiSuggestion.solarMW || quoteData.solarMW);
     
     // Show success feedback with the recommendation details
     const roiImprovement = newROI.payback < currentROI.payback ? 
@@ -364,28 +445,30 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       <div className="bg-white shadow-lg border-b-4 border-gradient-to-r from-blue-500 to-purple-500">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl">
-                <Wand2 className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <div className="text-center mb-4">
-                  <div className="text-6xl mb-3">🎉</div>
-                  <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 mb-2">
-                    Congratulations!
-                  </h1>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
-                    Your Quote is Ready
-                  </div>
-                  <p className="text-lg text-gray-600">
-                    Here's your customized <span className="font-semibold text-blue-600">{getIndustryName(quoteData.industryTemplate)}</span> energy storage solution
-                  </p>
+            <div className="flex-1 flex justify-center">
+              <div className="text-center">
+                {/* Merlin Image centered */}
+                <div className="flex justify-center mb-4">
+                  <img 
+                    src={merlinImage}
+                    alt="Merlin the Wizard"
+                    className="w-32 h-32 object-contain rounded-lg"
+                  />
                 </div>
+                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 mb-2">
+                  Congratulations!
+                </h1>
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  Your Quote is Ready
+                </div>
+                <p className="text-lg text-gray-600">
+                  Here's your customized <span className="font-semibold text-blue-600">{getIndustryName(quoteData.industryTemplate)}</span> energy storage solution
+                </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-4xl font-bold transition-colors"
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-4xl font-bold transition-colors"
             >
               ×
             </button>
@@ -399,9 +482,18 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         {/* Celebration Banner */}
         <div className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white rounded-2xl p-6 mb-8 text-center shadow-2xl">
           <div className="flex items-center justify-center gap-4 mb-3">
-            <span className="text-4xl animate-bounce">🎊</span>
+            <img 
+              src={wizardIcon} 
+              alt="Wizard" 
+              className="w-12 h-12 rounded-full object-cover animate-bounce"
+            />
             <h2 className="text-3xl font-bold">Excellent Choice!</h2>
-            <span className="text-4xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎊</span>
+            <img 
+              src={wizardIcon} 
+              alt="Wizard" 
+              className="w-12 h-12 rounded-full object-cover animate-bounce" 
+              style={{ animationDelay: '0.2s' }}
+            />
           </div>
           <p className="text-xl opacity-95">
             You've designed an energy storage system that will transform your energy costs and sustainability goals.
@@ -497,7 +589,10 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
 
             {/* Financial Summary */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 space-y-4">
-              <h3 className="font-bold text-2xl mb-4 border-b border-white/30 pb-3">Financial Summary</h3>
+              <h3 className="font-bold text-2xl mb-4 border-b border-white/30 pb-3">
+                Financial Summary
+                {dashboardMetrics.loading && <span className="text-sm ml-2 animate-pulse">Calculating...</span>}
+              </h3>
               <div className="space-y-3 text-lg">
                 <div className="flex justify-between items-center">
                   <span>Total Project Cost:</span>
@@ -509,15 +604,19 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-white/30">
                   <span className="font-bold">Net Cost:</span>
-                  <span className="font-bold text-3xl">${(quoteData.netCost / 1000000).toFixed(2)}M</span>
+                  <span className="font-bold text-3xl">${(dashboardMetrics.totalCost / 1000000).toFixed(2)}M</span>
                 </div>
                 <div className="flex justify-between items-center text-green-300 mt-4">
                   <span>Annual Savings:</span>
-                  <span className="font-bold text-2xl">${(quoteData.annualSavings / 1000).toFixed(0)}K</span>
+                  <span className="font-bold text-2xl">${(dashboardMetrics.annualSavings / 1000).toFixed(0)}K</span>
                 </div>
                 <div className="flex justify-between items-center bg-yellow-400/20 rounded-xl p-3 mt-4">
                   <span className="font-bold text-yellow-200">Payback Period:</span>
-                  <span className="font-bold text-3xl text-yellow-100">{quoteData.paybackYears.toFixed(1)} years</span>
+                  <span className="font-bold text-3xl text-yellow-100">{dashboardMetrics.paybackYears.toFixed(1)} years</span>
+                </div>
+                <div className="flex justify-between items-center bg-green-500/20 rounded-xl p-3 mt-2">
+                  <span className="font-bold text-green-200">10-Year ROI:</span>
+                  <span className="font-bold text-3xl text-green-100">{dashboardMetrics.roi.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -703,7 +802,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 Speak with an energy expert to refine your solution
               </p>
               <button
-                onClick={onRequestConsultation}
+                onClick={() => setShowConsultationModal(true)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-all"
               >
                 Schedule Call
@@ -717,7 +816,10 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <p className="text-sm text-gray-600 mb-4 text-center">
                 Connect with certified installers in your area
               </p>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-all">
+              <button
+                onClick={() => setShowInstallerModal(true)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-all"
+              >
                 Find Installers
               </button>
             </div>
@@ -729,7 +831,10 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <p className="text-sm text-gray-600 mb-4 text-center">
                 Compare loan, lease, and PPA options
               </p>
-              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-all">
+              <button
+                onClick={() => setShowFinancingModal(true)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
+              >
                 View Options
               </button>
             </div>
@@ -741,8 +846,11 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <p className="text-sm text-gray-600 mb-4 text-center">
                 Discover federal, state & local rebates
               </p>
-              <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition-all">
-                View Incentives
+              <button
+                onClick={() => setShowIncentivesModal(true)}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition-all"
+              >
+                Find Incentives
               </button>
             </div>
           </div>
@@ -838,7 +946,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                   </div>
                   <div>
                     <span className="text-gray-600">Payback:</span>
-                    <span className="font-bold text-gray-900 ml-2">{quoteData.paybackYears.toFixed(1)} years</span>
+                    <span className="font-bold text-gray-900 ml-2">{dashboardMetrics.paybackYears.toFixed(1)} years</span>
                   </div>
                 </div>
               </div>
@@ -884,7 +992,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                   <div className="bg-white rounded-xl p-4 mb-4">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="text-center p-3 bg-purple-100 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-700">{aiSuggestion.storageSizeMW.toFixed(1)} MW</div>
+                        <div className="text-2xl font-bold text-purple-700">{Number(aiSuggestion.storageSizeMW).toFixed(1)} MW</div>
                         <div className="text-xs text-gray-600">Power Output</div>
                         <div className="text-xs text-purple-600 font-semibold mt-1">
                           {((aiSuggestion.storageSizeMW - quoteData.storageSizeMW) / quoteData.storageSizeMW * 100).toFixed(0) !== '0' 
@@ -893,22 +1001,22 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                         </div>
                       </div>
                       <div className="text-center p-3 bg-blue-100 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-700">{aiSuggestion.durationHours} hrs</div>
+                        <div className="text-2xl font-bold text-blue-700">{Number(aiSuggestion.durationHours).toFixed(1)} hrs</div>
                         <div className="text-xs text-gray-600">Duration</div>
                         <div className="text-xs text-blue-600 font-semibold mt-1">
-                          {aiSuggestion.durationHours - quoteData.durationHours !== 0
-                            ? `${aiSuggestion.durationHours - quoteData.durationHours > 0 ? '+' : ''}${aiSuggestion.durationHours - quoteData.durationHours} hrs`
+                          {(Number(aiSuggestion.durationHours) - quoteData.durationHours).toFixed(1) !== '0.0'
+                            ? `${Number(aiSuggestion.durationHours) - quoteData.durationHours > 0 ? '+' : ''}${(Number(aiSuggestion.durationHours) - quoteData.durationHours).toFixed(1)} hrs`
                             : 'No change'}
                         </div>
                       </div>
                     </div>
                     <div className="text-center p-3 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{(aiSuggestion.storageSizeMW * aiSuggestion.durationHours).toFixed(1)} MWh</div>
+                      <div className="text-2xl font-bold text-gray-900">{(Number(aiSuggestion.storageSizeMW) * Number(aiSuggestion.durationHours)).toFixed(1)} MWh</div>
                       <div className="text-xs text-gray-600">Total Energy Capacity</div>
                     </div>
                     {aiSuggestion.solarMW && (
                       <div className="text-center p-3 bg-yellow-100 rounded-lg mt-4">
-                        <div className="text-2xl font-bold text-yellow-700">{aiSuggestion.solarMW.toFixed(1)} MW</div>
+                        <div className="text-2xl font-bold text-yellow-700">{Number(aiSuggestion.solarMW).toFixed(1)} MW</div>
                         <div className="text-xs text-gray-600">Recommended Solar</div>
                       </div>
                     )}
@@ -981,6 +1089,40 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           </div>
         </div>
       )}
+      
+      {/* Consultation Modal */}
+      <ConsultationModal
+        isOpen={showConsultationModal}
+        onClose={() => setShowConsultationModal(false)}
+      />
+
+      {/* Financing Options Modal */}
+      <FinancingOptionsModal
+        isOpen={showFinancingModal}
+        onClose={() => setShowFinancingModal(false)}
+        projectData={{
+          quoteName: `${getIndustryName(quoteData.industryTemplate)} BESS Project`,
+          totalCapEx: dashboardMetrics.totalCost,
+          annualSavings: dashboardMetrics.annualSavings,
+          powerMW: quoteData.storageSizeMW,
+          durationHours: quoteData.durationHours
+        }}
+      />
+
+      {/* Installer Directory Modal */}
+      <InstallerDirectoryModal
+        isOpen={showInstallerModal}
+        onClose={() => setShowInstallerModal(false)}
+        location={quoteData.location}
+      />
+
+      {/* Incentives Guide Modal */}
+      <IncentivesGuideModal
+        isOpen={showIncentivesModal}
+        onClose={() => setShowIncentivesModal(false)}
+        location={quoteData.location}
+        projectSize={quoteData.storageSizeMW}
+      />
     </div>
   );
 };

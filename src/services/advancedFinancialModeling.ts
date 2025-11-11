@@ -11,10 +11,16 @@
  * - Investor cash flow projections
  * - Equivalent Full Cycles (EFC) calculation
  * - Advanced operational strategies
+ * 
+ * UPDATED: November 10, 2025 - Now uses database as single source of truth
+ * Database tables: pricing_configurations, calculation_formulas, market_pricing_data
+ * ⚠️ MIGRATION IN PROGRESS: Still has some pricingConfigService calls - needs full migration to useCaseService
  */
 
 import type { JSX } from 'react';
-import { pricingConfigService } from './pricingConfigService';
+// import { pricingConfigService } from './pricingConfigService'; // ⚠️ TODO: Remove after migration complete
+import { calculateBESSPricing as calculateBESSPricingDB, calculateSystemCost as calculateSystemCostDB } from './databaseCalculations';
+import { pricingConfigService } from './pricingConfigService'; // ⚠️ TEMPORARY: Still used in some calculations
 
 // Enhanced interfaces for professional BESS modeling
 interface BatterySystem {
@@ -122,6 +128,7 @@ interface SystemCostResult {
     labor: number;
     overhead: number;
   };
+  dataSource?: string; // Added to track whether data came from database or fallback
 }
 
 interface BESSPricingResult {
@@ -135,6 +142,7 @@ interface BESSPricingResult {
     technologyFactor: number;
     durationFactor?: number; // Added for 2025 duration premium calculations
   };
+  dataSource?: string; // Added to track whether data came from database or fallback
 }
 
 interface FinancialMetrics {
@@ -341,14 +349,25 @@ interface ProfitAndLossProjection {
 /**
  * Calculate comprehensive system cost including all components and regional factors
  * Updated with Q4 2025 pricing and enhanced market intelligence
+ * NOW USES DATABASE AS SINGLE SOURCE OF TRUTH - Falls back to legacy calculation if database unavailable
  */
-export function calculateSystemCost(
+export async function calculateSystemCost(
   powerMW: number,
   durationHours: number,
   country: string,
   includeInstallation: boolean = true,
   useCase: string = 'commercial'
-): SystemCostResult {
+): Promise<SystemCostResult> {
+  // Try database-backed calculation first
+  try {
+    const dbResult = await calculateSystemCostDB(powerMW, durationHours, country, includeInstallation, useCase);
+    console.log('✅ Using database-driven system cost:', dbResult.dataSource);
+    return dbResult;
+  } catch (error) {
+    console.warn('⚠️ Database cost calculation unavailable, using legacy calculation:', error);
+  }
+
+  // Legacy fallback calculation
   const energyMWh = powerMW * durationHours;
   
   // Get 2025 base costs from pricing service
@@ -462,20 +481,32 @@ export function calculateSystemCost(
       },
       labor: epcCost * 0.65,
       overhead: epcCost * 0.35
-    }
+    },
+    dataSource: 'Legacy fallback (database unavailable)'
   };
 }
 
 /**
  * Calculate dynamic BESS pricing based on market conditions and project parameters
  * Updated with Q4 2025 market data and enhanced pricing models
+ * NOW USES DATABASE AS SINGLE SOURCE OF TRUTH - Falls back to legacy calculation if database unavailable
  */
-export function calculateBESSPricing(
+export async function calculateBESSPricing(
   powerMW: number,
   durationHours: number,
   country: string,
   includeMarketVolatility: boolean = false
-): BESSPricingResult {
+): Promise<BESSPricingResult> {
+  // Try database-backed calculation first
+  try {
+    const dbResult = await calculateBESSPricingDB(powerMW, durationHours, country, includeMarketVolatility);
+    console.log('✅ Using database-driven BESS pricing:', dbResult.dataSource);
+    return dbResult;
+  } catch (error) {
+    console.warn('⚠️ Database pricing unavailable, using legacy calculation:', error);
+  }
+
+  // Legacy fallback calculation
   const energyMWh = powerMW * durationHours;
   
   // Get 2025 market prices from pricing service
@@ -548,7 +579,8 @@ export function calculateBESSPricing(
       volumeFactor,
       technologyFactor,
       durationFactor // Added 2025 duration premium
-    }
+    },
+    dataSource: 'Legacy fallback (database unavailable)'
   };
 }
 
@@ -1373,16 +1405,16 @@ function calculatePaybackPeriod(cumulativeCashFlows: number[]): number {
 /**
  * Risk Analysis Framework
  */
-export function performRiskAnalysis(
+export async function performRiskAnalysis(
   inputs: AdvancedProjectInputs,
   baseMetrics: FinancialMetrics
-): RiskAnalysis {
+): Promise<RiskAnalysis> {
   // Monte Carlo simulation for risk assessment
   const scenarios = generateScenarios(inputs);
   
-  // Calculate metrics for each scenario
-  const scenarioResults = scenarios.map(scenario => {
-    const systemCost = calculateSystemCost(
+  // Calculate metrics for each scenario (now async)
+  const scenarioResults = await Promise.all(scenarios.map(async scenario => {
+    const systemCost = await calculateSystemCost(
       scenario.powerMW,
       scenario.durationHours,
       scenario.country,
@@ -1390,7 +1422,7 @@ export function performRiskAnalysis(
       scenario.useCase
     );
     return calculateAdvancedFinancialMetrics(scenario, systemCost);
-  });
+  }));
   
   // Volatility metrics
   const npvValues = scenarioResults.map(r => r.metrics.npv);

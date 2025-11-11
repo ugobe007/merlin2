@@ -1,7 +1,8 @@
 // Equipment breakdown calculations for detailed quotes
+// ✅ MIGRATED: Now using database-backed calculations from databaseCalculations service
 
 import { calculateMarketAlignedBESSPricing, getMarketIntelligenceRecommendations } from '../services/marketIntelligence';
-import { pricingConfigService } from '../services/pricingConfigService';
+import { calculateBESSPricingDB, calculateSystemCostDB } from '../services/databaseCalculations';
 
 export interface EquipmentBreakdown {
   batteries: {
@@ -106,7 +107,7 @@ export interface EquipmentBreakdown {
   };
 }
 
-export const calculateEquipmentBreakdown = (
+export const calculateEquipmentBreakdown = async (
   storageSizeMW: number,
   durationHours: number,
   solarMW: number = 0,
@@ -115,25 +116,24 @@ export const calculateEquipmentBreakdown = (
   industryData?: any,
   gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid',
   location: string = 'California'
-): EquipmentBreakdown => {
+): Promise<EquipmentBreakdown> => {
   
   const totalEnergyMWh = storageSizeMW * durationHours;
   
-  // Battery System Calculations - Enhanced with NREL ATB 2024 + Market Intelligence
-  // Using realistic market pricing based on system size and admin configuration
+  // Battery System Calculations - Database-backed pricing
   const batteryUnitPowerMW = 3;
   const batteryUnitEnergyMWh = 11.5;
   
-  // Get pricing from admin configuration based on total energy capacity (MWh)
-  const adminPricePerKWh = pricingConfigService.getBESSCostPerKWh(totalEnergyMWh);
+  // ✅ Get pricing from database (pricing_configurations table)
+  const bessPricingResult = await calculateBESSPricingDB(storageSizeMW, durationHours, location);
+  const adminPricePerKWh = bessPricingResult.adjustedBatteryPrice;
   
   // Get market-aligned pricing from NREL ATB 2024 + live market intelligence for comparison
   const marketAnalysis = calculateMarketAlignedBESSPricing(storageSizeMW, durationHours, location);
   const marketPricePerKWh = marketAnalysis.systemCosts.costPerKWh;
   
-  // Use admin pricing (realistic) if available, otherwise fall back to market pricing
-  // Cap pricing at reasonable levels to avoid Tesla Megapack premium pricing
-  const effectivePricePerKWh = Math.min(adminPricePerKWh || marketPricePerKWh, 140); // Cap at $140/kWh
+  // Use database pricing as primary source, fall back to market pricing if unavailable
+  const effectivePricePerKWh = Math.min(adminPricePerKWh || marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems
   const batteryUnitCost = batteryUnitEnergyMWh * 1000 * effectivePricePerKWh;
   
   const batteryQuantity = Math.ceil(Math.max(
@@ -240,8 +240,24 @@ export const calculateEquipmentBreakdown = (
   
   if (effectiveGeneratorMW > 0) {
     const generatorUnitMW = 2; // 2MW generators
-    // Get pricing from admin configuration (real-world vendor quotes)
-    const costPerKW = pricingConfigService.getGeneratorCostPerKW('diesel'); // Based on Eaton quote
+    
+    // Fetch generator pricing from database
+    let costPerKW = 800; // Fallback: $800/kW for diesel generators
+    let fuelType = "Diesel";
+    let manufacturer = "Caterpillar/Eaton";
+    
+    try {
+      const { useCaseService } = await import('../services/useCaseService');
+      const generatorConfig = await useCaseService.getPricingConfig('generator_default');
+      if (generatorConfig) {
+        costPerKW = generatorConfig.diesel_per_kw || 800;
+        fuelType = "Diesel";
+        manufacturer = "Caterpillar/Cummins/Eaton";
+      }
+    } catch (error) {
+      console.warn('Using fallback generator pricing:', error);
+    }
+    
     const generatorUnitCost = generatorUnitMW * 1000 * costPerKW; 
     const generatorQuantity = Math.ceil(effectiveGeneratorMW / generatorUnitMW);
     
@@ -251,18 +267,32 @@ export const calculateEquipmentBreakdown = (
       unitCost: generatorUnitCost,
       totalCost: generatorQuantity * generatorUnitCost,
       costPerKW: costPerKW,
-      fuelType: "Diesel",
-      manufacturer: "Caterpillar/Eaton"
+      fuelType: fuelType,
+      manufacturer: manufacturer
     };
   }
 
   // Solar Calculations (if specified)
   let solar = undefined;
   if (solarMW > 0) {
-    // Market-aligned pricing based on scale (from industryPricing.ts)
-    const isUtilityScale = solarMW >= 5; // 5MW+ is utility scale
-    const costPerWatt = isUtilityScale ? 0.8 : 1.2; // $0.80/W utility, $1.20/W commercial
-    const priceSource = isUtilityScale ? 'Utility Solar (>5 MW)' : 'Commercial Solar (<5 MW)';
+    // Fetch solar pricing from database
+    let costPerWatt = 0.85; // Fallback: commercial scale
+    let priceSource = 'Commercial Solar';
+    
+    try {
+      const { useCaseService } = await import('../services/useCaseService');
+      const solarConfig = await useCaseService.getPricingConfig('solar_default');
+      if (solarConfig) {
+        const isUtilityScale = solarMW >= 5; // 5MW+ is utility scale
+        costPerWatt = isUtilityScale ? solarConfig.utility_scale_per_watt : solarConfig.commercial_per_watt;
+        priceSource = isUtilityScale ? 'Utility Solar (>5 MW) - Database' : 'Commercial Solar (<5 MW) - Database';
+      }
+    } catch (error) {
+      console.warn('Using fallback solar pricing:', error);
+      const isUtilityScale = solarMW >= 5;
+      costPerWatt = isUtilityScale ? 0.65 : 0.85;
+      priceSource = isUtilityScale ? 'Utility Solar (>5 MW) - Fallback' : 'Commercial Solar (<5 MW) - Fallback';
+    }
     
     const panelsPerMW = 3000; // ~333W panels
     const solarInvertersPerMW = 1; // 1MW string inverters
@@ -363,10 +393,28 @@ export const calculateEquipmentBreakdown = (
   let wind = undefined;
   if (windMW > 0) {
     const turbineUnitMW = 2.5; // 2.5MW turbines
-    // Market-aligned pricing based on scale (from industryPricing.ts)
-    const isUtilityScale = windMW >= 5; // 5MW+ is utility scale (2+ turbines)
-    const costPerKW = isUtilityScale ? 1200 : 1800; // $1200/kW utility, $1800/kW distributed
-    const priceCategory = isUtilityScale ? 'Utility Wind' : 'Distributed Wind';
+    
+    // Fetch wind pricing from database
+    let costPerKW = 1350; // Fallback: onshore utility scale
+    let priceCategory = 'Onshore Utility Wind';
+    let turbineModel = 'GE 2.8-127';
+    
+    try {
+      const { useCaseService } = await import('../services/useCaseService');
+      const windConfig = await useCaseService.getPricingConfig('wind_default');
+      if (windConfig) {
+        const isUtilityScale = windMW >= 5; // 5MW+ is utility scale (2+ turbines)
+        costPerKW = isUtilityScale ? windConfig.onshore_utility_per_kw : windConfig.distributed_per_kw;
+        priceCategory = isUtilityScale ? 'Utility Wind - Database' : 'Distributed Wind - Database';
+        turbineModel = isUtilityScale ? "GE 2.8-127" : "Vestas V120-2.2MW";
+      }
+    } catch (error) {
+      console.warn('Using fallback wind pricing:', error);
+      const isUtilityScale = windMW >= 5;
+      costPerKW = isUtilityScale ? 1350 : 2500;
+      priceCategory = isUtilityScale ? 'Utility Wind - Fallback' : 'Distributed Wind - Fallback';
+    }
+    
     const turbineCostPerMW = costPerKW * 1000; // Convert to per MW
     const turbineQuantity = Math.ceil(windMW / turbineUnitMW);
     
@@ -376,7 +424,7 @@ export const calculateEquipmentBreakdown = (
       totalCost: windMW * turbineCostPerMW,
       costPerKW: costPerKW,
       priceCategory: priceCategory,
-      turbineModel: isUtilityScale ? "GE 2.8-127" : "Vestas V120-2.2MW"
+      turbineModel: turbineModel
     };
   }
 
@@ -385,13 +433,26 @@ export const calculateEquipmentBreakdown = (
   if (industryData?.selectedIndustry === 'ev-charging' && industryData?.useCaseData) {
     const { level2Chargers = 0, level2Power = 11, dcFastChargers = 0, dcFastPower = 150 } = industryData.useCaseData;
     
-    // Get pricing from admin configuration (real-world market rates)
-    const config = pricingConfigService.getConfiguration();
-    const level2UnitCost = config.evCharging.level2ACPerUnit; // $8k per Level 2 charger
-    const dcFast50UnitCost = config.evCharging.dcFastPerUnit; // $45k for 50-150kW DC Fast
-    const dcFast150UnitCost = config.evCharging.dcFastPerUnit; // $45k for 50-150kW DC Fast
-    const dcFast350UnitCost = config.evCharging.dcUltraFastPerUnit; // $125k for 150-350kW DC Ultra Fast
-    const networkingCost = config.evCharging.networkingCostPerUnit; // OCPP compliance per charger
+    // Fetch EV charger pricing from database
+    let level2UnitCost = 8000; // Fallback: $8k per Level 2 charger
+    let dcFast50UnitCost = 40000; // Fallback: $40k for 50kW
+    let dcFast150UnitCost = 80000; // Fallback: $80k for 150kW
+    let dcFast350UnitCost = 150000; // Fallback: $150k for 350kW+
+    let networkingCost = 500; // Fallback: OCPP compliance per charger
+    
+    try {
+      const { useCaseService } = await import('../services/useCaseService');
+      const evConfig = await useCaseService.getPricingConfig('ev_charging_default');
+      if (evConfig) {
+        level2UnitCost = evConfig.level2_ac_11kw_cost || 8000;
+        dcFast50UnitCost = evConfig.dc_fast_50kw_cost || 40000;
+        dcFast150UnitCost = evConfig.dc_fast_150kw_cost || 80000;
+        dcFast350UnitCost = evConfig.dc_ultra_fast_350kw_cost || 150000;
+        networkingCost = evConfig.networking_cost_per_unit || 500;
+      }
+    } catch (error) {
+      console.warn('Using fallback EV charger pricing:', error);
+    }
     
     // Select appropriate DC Fast charger cost based on power level
     let dcFastUnitCost = dcFast150UnitCost; // Default to 150kW
@@ -437,17 +498,30 @@ export const calculateEquipmentBreakdown = (
     (wind?.totalCost || 0) +
     (evChargers?.totalChargingCost || 0);
 
-  // Installation Costs - Using admin-configurable percentages
-  const config = pricingConfigService.getConfiguration();
+  // Installation Costs - Using database config (balance_of_plant_2025)
+  // Get BOP config from database
+  let bopPercentage = 0.12; // Default 12% BOP
+  let epcPercentage = 0.08; // Default 8% EPC  
+  let contingencyPercentage = 0.05; // Default 5% contingency
+  
+  try {
+    const bopConfig = await import('../services/useCaseService').then(m => 
+      m.useCaseService.getPricingConfig('balance_of_plant_2025')
+    );
+    if (bopConfig) {
+      bopPercentage = bopConfig.bopPercentage || 0.12;
+      epcPercentage = bopConfig.epcPercentage || 0.08;
+      contingencyPercentage = bopConfig.contingencyPercentage || 0.05;
+    }
+  } catch (error) {
+    console.log('Using fallback BOP values');
+  }
+  
   const installation = {
-    bos: equipmentCost * config.balanceOfPlant.bopPercentage, // Configurable BOP percentage (≤15% guideline)
-    epc: equipmentCost * config.balanceOfPlant.epcPercentage, // Configurable EPC percentage
-    contingency: equipmentCost * config.balanceOfPlant.contingencyPercentage, // Configurable contingency
-    totalInstallation: equipmentCost * (
-      config.balanceOfPlant.bopPercentage + 
-      config.balanceOfPlant.epcPercentage + 
-      config.balanceOfPlant.contingencyPercentage
-    )
+    bos: equipmentCost * bopPercentage,
+    epc: equipmentCost * epcPercentage,
+    contingency: equipmentCost * contingencyPercentage,
+    totalInstallation: equipmentCost * (bopPercentage + epcPercentage + contingencyPercentage)
   };
 
   const totals = {

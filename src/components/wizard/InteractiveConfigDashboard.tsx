@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Zap, DollarSign, TrendingUp, Settings } from 'lucide-react';
 import { formatTotalProjectSavings, formatSolarSavings } from '../../utils/financialFormatting';
+import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import { getAIOptimization, type AIOptimizationResult } from '../../services/aiOptimizationService';
+import { AIInsightBadge, AIOptimizationButton } from './AIInsightBadge';
 
 // Scroll utility function
 const scrollToSection = (sectionId: string) => {
@@ -66,6 +69,7 @@ interface InteractiveConfigDashboardProps {
   industryTemplate: string;
   location: string;
   electricityRate: number;
+  useCaseData?: Record<string, any>; // EV charger counts, hotel rooms, etc.
   onConfigurationChange: (config: {
     storageSizeMW: number;
     durationHours: number;
@@ -84,6 +88,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   industryTemplate,
   location,
   electricityRate,
+  useCaseData,
   onConfigurationChange,
   onBack,
   onContinue
@@ -160,6 +165,11 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     carbonOffset: 0
   });
 
+  // AI Optimization state
+  const [aiOptimization, setAiOptimization] = useState<AIOptimizationResult | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [showAIInsight, setShowAIInsight] = useState(false);
+
   // Sample configurations based on user preferences
   const [sampleConfigs, setSampleConfigs] = useState<Array<{
     name: string;
@@ -181,57 +191,117 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
   // Calculate real-time metrics when configuration changes
   useEffect(() => {
-    const totalEnergyMWh = storageSizeMW * durationHours;
-    
-    // Simplified cost calculations for real-time feedback
-    const batteryCostPerMWh = 300000; // $300k per MWh
-    const solarCostPerMW = 1200000; // $1.2M per MW
-    const windCostPerMW = 1800000; // $1.8M per MW
-    const generatorCostPerMW = 800000; // $800k per MW
-    
-    const batteryCost = totalEnergyMWh * batteryCostPerMWh;
-    const solarCost = solarMW * solarCostPerMW;
-    const windCost = windMW * windCostPerMW;
-    const generatorCost = generatorMW * generatorCostPerMW;
-    const installationMultiplier = 1.3; // 30% installation costs
-    
-    const totalProjectCost = (batteryCost + solarCost + windCost + generatorCost) * installationMultiplier;
-    
-    // Annual savings calculation
-    const energyArbitrage = totalEnergyMWh * 300 * 200; // 300 cycles/year, $200/MWh spread
-    const demandChargeReduction = storageSizeMW * 1000 * 180 * 12; // $180/kW-month
-    
-    // Enhanced solar savings calculation with proper formatting
-    const solarSavingsData = formatSolarSavings(solarMW, electricityRate, 'calculation');
-    const solarSavings = solarSavingsData.annualSavings;
-    
-    const annualSavings = energyArbitrage + demandChargeReduction + solarSavings;
-    
-    const paybackYears = totalProjectCost / annualSavings;
-    const roiPercent = (annualSavings / totalProjectCost) * 100;
-    const carbonOffset = (totalEnergyMWh * 0.4 + solarMW * 1000 * 8760 * 0.3 * 0.0004) * 365; // tons CO2/year
-    
-    setCalculations({
-      totalEnergyMWh,
-      totalProjectCost,
-      annualSavings,
-      paybackYears,
-      roiPercent,
-      carbonOffset
-    });
+    const calculateMetrics = async () => {
+      // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
+      console.log('📊 InteractiveConfigDashboard calculating from database...');
+      
+      const result = await calculateFinancialMetrics({
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW,
+        location: 'California', // Default location
+        electricityRate
+      });
+      
+      console.log('💰 InteractiveConfigDashboard results from centralized service:', {
+        netCost: result.netCost,
+        annualSavings: result.annualSavings,
+        paybackYears: result.paybackYears,
+        roi10Year: result.roi10Year,
+        dataSource: result.dataSource
+      });
+      
+      // Calculate totalEnergyMWh locally since centralized service doesn't return it
+      const totalEnergyMWh = storageSizeMW * durationHours;
+      
+      const carbonOffset = (totalEnergyMWh * 0.4 + solarMW * 1000 * 8760 * 0.3 * 0.0004) * 365; // tons CO2/year
+      
+      console.log('📊 Setting dashboard calculations:', {
+        totalEnergyMWh,
+        totalProjectCost: result.netCost,
+        annualSavings: result.annualSavings,
+        paybackYears: result.paybackYears,
+        roiPercent: result.roi10Year,
+        carbonOffset
+      });
+      
+      setCalculations({
+        totalEnergyMWh: totalEnergyMWh,
+        totalProjectCost: result.netCost,
+        annualSavings: result.annualSavings,
+        paybackYears: result.paybackYears,
+        roiPercent: result.roi10Year,
+        carbonOffset
+      });
 
-    // Update parent component
-    onConfigurationChange({
-      storageSizeMW,
-      durationHours,
-      solarMW,
-      windMW,
-      generatorMW
-    });
+      // Update parent component
+      onConfigurationChange({
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW,
+        generatorMW
+      });
 
-    // Generate sample configurations that meet user preferences
-    generateSampleConfigs();
-  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, targetROI, maxBudget, minSavings, profitabilityTarget]);
+      // Generate sample configurations that meet user preferences
+      generateSampleConfigs();
+    };
+    
+    calculateMetrics();
+  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, targetROI, maxBudget, minSavings, profitabilityTarget, electricityRate]);
+
+  // AI Optimization - Analyze configuration when it changes
+  useEffect(() => {
+    const analyzeConfiguration = async () => {
+      if (!industryTemplate) return;
+
+      try {
+        const result = await getAIOptimization({
+          storageSizeMW,
+          durationHours,
+          useCase: industryTemplate,
+          electricityRate,
+          solarMW,
+          windMW,
+          useCaseData // Pass EV charger counts, hotel rooms, etc.
+        });
+
+        setAiOptimization(result);
+        
+        // Show insight if there's a suggestion
+        if (!result.isOptimal && result.suggestion) {
+          setShowAIInsight(true);
+        }
+      } catch (error) {
+        console.error('AI optimization analysis failed:', error);
+      }
+    };
+
+    // Debounce analysis to avoid too many calls
+    const timer = setTimeout(analyzeConfiguration, 1000);
+    return () => clearTimeout(timer);
+  }, [storageSizeMW, durationHours, industryTemplate, electricityRate, solarMW, windMW, useCaseData]);
+
+  // Handle AI optimization button click
+  const handleAIOptimization = async () => {
+    if (!aiOptimization?.suggestion) return;
+
+    setIsOptimizing(true);
+    
+    // Animate to suggested values
+    const suggestion = aiOptimization.suggestion;
+    
+    // Update configuration with AI suggestion
+    setStorageSizeMW(suggestion.storageSizeMW);
+    setDurationHours(suggestion.durationHours);
+    
+    // Wait for animation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setIsOptimizing(false);
+    setShowAIInsight(false);
+  };
 
   const generateSampleConfigs = () => {
     const configs = [
@@ -438,6 +508,19 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   return (
     <>
       <style>{`
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
         .slider-blue::-webkit-slider-thumb {
           background: #3B82F6;
         }
@@ -575,13 +658,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               )}
               <div className="text-xs text-gray-600 mb-1">Investment</div>
               <div className="text-lg font-bold text-blue-800">
-                ${((storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000) / 1000000).toFixed(1)}M
+                ${(calculations.totalProjectCost / 1000000).toFixed(1)}M
               </div>
               <div className={`text-xs ${
-                (storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000) <= maxBudget * 1000000 
+                calculations.totalProjectCost <= maxBudget * 1000000 
                   ? 'text-green-600' : 'text-red-600'
               }`}>
-                {(storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000) <= maxBudget * 1000000 
+                {calculations.totalProjectCost <= maxBudget * 1000000 
                   ? 'Within budget' : 'Over budget'}
               </div>
             </div>
@@ -601,8 +684,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               )}
               <div className="text-xs text-gray-600 mb-1">Annual Revenue</div>
               <div className="text-lg font-bold text-green-800">
-                ${(((storageSizeMW * durationHours * 50 * profitabilityTarget) + 
-                    (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0)) / 1000).toFixed(0)}k
+                ${(calculations.annualSavings / 1000).toFixed(0)}k
               </div>
               <div className="text-xs text-green-600">
                 {profitabilityTarget >= 4 ? 'Multi-market' : profitabilityTarget >= 3 ? 'Diversified' : 'Basic'}
@@ -624,12 +706,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               )}
               <div className="text-xs text-gray-600 mb-1">ROI</div>
               <div className="text-lg font-bold text-emerald-800">
-                {(() => {
-                  const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                  const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) + 
-                    (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0);
-                  return ((revenue / totalCost) * 100).toFixed(0);
-                })()}%
+                {calculations.roiPercent.toFixed(0)}%
               </div>
               <div className="text-xs text-emerald-600">Annual return</div>
             </div>
@@ -649,27 +726,10 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               )}
               <div className="text-xs text-gray-600 mb-1">Payback</div>
               <div className="text-lg font-bold text-orange-800">
-                {(() => {
-                  const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                  const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) + 
-                    (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0);
-                  return (totalCost / revenue).toFixed(1);
-                })()}yr
+                {calculations.paybackYears.toFixed(1)}yr
               </div>
-              <div className={`text-xs ${(() => {
-                const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) + 
-                  (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0);
-                const payback = totalCost / revenue;
-                return payback <= targetROI ? 'text-green-600' : 'text-red-600';
-              })()}`}>
-                {(() => {
-                  const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                  const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) + 
-                    (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0);
-                  const payback = totalCost / revenue;
-                  return payback <= targetROI ? 'On target' : 'Exceeds target';
-                })()}
+              <div className={`text-xs ${calculations.paybackYears <= targetROI ? 'text-green-600' : 'text-red-600'}`}>
+                {calculations.paybackYears <= targetROI ? 'On target' : 'Exceeds target'}
               </div>
             </div>
 
@@ -706,6 +766,44 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           </div>
         </div>
 
+        {/* 🤖 AI Optimization Section */}
+        {showAIInsight && aiOptimization && !aiOptimization.isOptimal && aiOptimization.suggestion && (
+          <div className="px-6 pb-4">
+            <AIInsightBadge
+              type="suggestion"
+              title="AI Optimization Available"
+              message={aiOptimization.suggestion.reasoning}
+              confidence={aiOptimization.suggestion.confidence}
+              suggestion={{
+                label: isOptimizing ? "Optimizing..." : "Apply Suggestion",
+                onAccept: handleAIOptimization
+              }}
+              className="animate-fade-in"
+            />
+            <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+              <div className="bg-blue-50 rounded p-2">
+                <span className="text-gray-600">Cost Impact:</span>
+                <div className="font-semibold text-blue-900">{aiOptimization.suggestion.costImpact}</div>
+              </div>
+              <div className="bg-green-50 rounded p-2">
+                <span className="text-gray-600">ROI Impact:</span>
+                <div className="font-semibold text-green-900">{aiOptimization.suggestion.roiImpact}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Optimal Configuration Badge */}
+        {aiOptimization?.isOptimal && (
+          <div className="px-6 pb-4">
+            <AIInsightBadge
+              type="optimal"
+              title="✓ Optimal Configuration"
+              message={`Your ${storageSizeMW}MW / ${durationHours}hr configuration is well-optimized for ${industryTemplate}. ${aiOptimization.benchmarkComparison ? aiOptimization.benchmarkComparison.comparison : ''}`}
+            />
+          </div>
+        )}
+
         <div className="flex-1 overflow-hidden p-3">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 h-full">
             
@@ -721,6 +819,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                   <Settings className="w-5 h-5 text-purple-600" />
                   System Configuration
                 </h3>
+
+                {/* AI Optimization Button */}
+                {aiOptimization && !aiOptimization.isOptimal && aiOptimization.suggestion && (
+                  <div className="mb-3">
+                    <AIOptimizationButton
+                      onOptimize={handleAIOptimization}
+                      isLoading={isOptimizing}
+                      className="w-full"
+                    />
+                  </div>
+                )}
                 
                 <div className="space-y-3">
                   {/* Storage Size */}
@@ -1480,7 +1589,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+      </div>
     </>
   );
 };

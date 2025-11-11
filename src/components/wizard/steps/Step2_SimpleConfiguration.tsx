@@ -101,8 +101,9 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
         </p>
       </div>
 
+      {/* 🚫 AI RECOMMENDATION TEMPORARILY DISABLED - Will re-enable after integration with centralized calculations */}
       {/* AI Recommendation Section */}
-      {aiRecommendation && aiConfig && (
+      {false && aiRecommendation && aiConfig && (
         <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 rounded-2xl p-6 border-2 border-blue-300 shadow-lg">
           <div className="flex items-start gap-4">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-full flex-shrink-0">

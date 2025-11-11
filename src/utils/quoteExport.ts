@@ -551,11 +551,11 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #059669;">
             <h4 style="margin: 0 0 10px 0; color: #065F46;">Cost Analysis</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
-              <li>Total Project Cost: <strong>$$${(quoteData.totalProjectCost / 1000000).toFixed(2)}M</strong></li>
-              <li>Federal ITC Credit (30%): <strong>-$$${(quoteData.taxCredit / 1000000).toFixed(2)}M</strong></li>
-              <li>Net Investment: <strong>$$${(quoteData.netCost / 1000000).toFixed(2)}M</strong></li>
-              <li>Cost per MWh: <strong>$$${(quoteData.netCost / totalEnergyMWh / 1000).toFixed(0)}K</strong></li>
-              <li>Cost per MW: <strong>$$${(quoteData.netCost / quoteData.storageSizeMW / 1000000).toFixed(1)}M</strong></li>
+              <li>Total Project Cost: <strong>$${(quoteData.totalProjectCost / 1000000).toFixed(2)}M</strong></li>
+              <li>Federal ITC Credit (30%): <strong>-$${(quoteData.taxCredit / 1000000).toFixed(2)}M</strong></li>
+              <li>Net Investment: <strong>$${(quoteData.netCost / 1000000).toFixed(2)}M</strong></li>
+              <li>Cost per MWh: <strong>$${(quoteData.netCost / totalEnergyMWh / 1000).toFixed(0)}K</strong></li>
+              <li>Cost per MW: <strong>$${(quoteData.netCost / quoteData.storageSizeMW / 1000000).toFixed(1)}M</strong></li>
             </ul>
           </div>
         </div>
@@ -567,15 +567,15 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               <li>Demand Charge Reduction: <strong>Peak shaving analysis</strong></li>
               <li>Time-of-Use Arbitrage: <strong>Peak/off-peak differential</strong></li>
               <li>Capacity Factor: <strong>${((totalEnergyMWh / quoteData.storageSizeMW) * 100 / 4).toFixed(0)}% daily utilization</strong></li>
-              <li>Annual Savings: <strong>$$${(quoteData.annualSavings / 1000).toFixed(0)}K/year</strong></li>
-              <li>Monthly Savings: <strong>$$${(quoteData.annualSavings / 12 / 1000).toFixed(0)}K/month</strong></li>
+              <li>Annual Savings: <strong>$${(quoteData.annualSavings / 1000).toFixed(0)}K/year</strong></li>
+              <li>Monthly Savings: <strong>$${(quoteData.annualSavings / 12 / 1000).toFixed(0)}K/month</strong></li>
             </ul>
           </div>
           
           <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #DC2626;">
             <h4 style="margin: 0 0 10px 0; color: #B91C1C;">ROI Calculations</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
-              <li>Simple Payback: <strong>$$${(quoteData.netCost / 1000000).toFixed(2)}M ÷ $$${(quoteData.annualSavings / 1000).toFixed(0)}K = ${quoteData.paybackYears.toFixed(1)} years</strong></li>
+              <li>Simple Payback: <strong>$${(quoteData.netCost / 1000000).toFixed(2)}M ÷ $${(quoteData.annualSavings / 1000).toFixed(0)}K = ${quoteData.paybackYears.toFixed(1)} years</strong></li>
               <li>10-Year ROI: <strong>${((quoteData.annualSavings * 10 / quoteData.netCost) * 100).toFixed(0)}%</strong></li>
               <li>25-Year ROI: <strong>${((quoteData.annualSavings * 25 / quoteData.netCost) * 100).toFixed(0)}%</strong></li>
               <li>O&M Allowance: <strong>$$${((quoteData.totalProjectCost * 0.02) / 1000).toFixed(0)}K/year (2%)</strong></li>
