@@ -83,9 +83,9 @@ export async function calculateBessQuote(inputs: CalculationInputs): Promise<Cal
   // 🔥 LOAD CONSTANTS FROM DATABASE - Single source of truth
   const constants = await getCalculationConstants();
   console.log('📊 calculateBessQuote using database constants:', {
-    peakShavingMultiplier: constants.peak_shaving_multiplier,
-    demandChargeMonthly: constants.demand_charge_monthly_per_mw,
-    gridServiceRevenue: constants.grid_service_revenue_per_mw
+    peakShavingMultiplier: constants.PEAK_SHAVING_MULTIPLIER,
+    demandChargeMonthly: constants.DEMAND_CHARGE_MONTHLY_PER_MW,
+    gridServiceRevenue: constants.GRID_SERVICE_REVENUE_PER_MW
   });
 
   // Get realistic system sizing based on application requirements (NOW ASYNC - database-backed)
@@ -120,23 +120,23 @@ export async function calculateBessQuote(inputs: CalculationInputs): Promise<Cal
   const grandCapEx = bessCapEx + generatorSubtotal + solarSubtotal + windSubtotal + totalTariffs;
   
   // 🔥 USE DATABASE CONSTANTS FOR REVENUE CALCULATIONS - Single source of truth
-  const annualCycles = constants.annual_cycles || 365;
+  const annualCycles = constants.ANNUAL_CYCLES || 365;
   const annualEnergyMWh = totalMWh * annualCycles;
   
   // Peak shaving savings: Use database formula ($/MW-year converted to annual)
-  const peakShavingMultiplier = constants.peak_shaving_multiplier || 365;
+  const peakShavingMultiplier = constants.PEAK_SHAVING_MULTIPLIER || 365;
   const peakShavingSavings = powerMW * peakShavingMultiplier * 1000; // Convert MW to kW
   
   // Demand charge reduction: Use database formula ($/MW-month * 12 months)
-  const demandChargeMonthly = constants.demand_charge_monthly_per_mw || 15000;
+  const demandChargeMonthly = constants.DEMAND_CHARGE_MONTHLY_PER_MW || 15000;
   const demandChargeSavings = powerMW * demandChargeMonthly * 12 / 1000; // Already in $/MW-month
   
   // Grid services revenue: Use database formula
-  const gridServiceRevenue = powerMW * (constants.grid_service_revenue_per_mw || 30000);
+  const gridServiceRevenue = powerMW * (constants.GRID_SERVICE_REVENUE_PER_MW || 30000);
   
   // Solar/wind savings
-  const solarSavings = solarMWp * (constants.solar_capacity_factor || 1500) * 0.12; // $0.12/kWh default
-  const windSavings = windMW * (constants.wind_capacity_factor || 2500) * 0.12;
+  const solarSavings = solarMWp * (constants.SOLAR_CAPACITY_FACTOR || 1500) * 0.12; // $0.12/kWh default
+  const windSavings = windMW * (constants.WIND_CAPACITY_FACTOR || 2500) * 0.12;
   
   const annualSavings = peakShavingSavings + demandChargeSavings + gridServiceRevenue + solarSavings + windSavings;
   const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : 999;

@@ -29,6 +29,10 @@
     "node_modules",
     "dist",
     "src/components/wizard/backup",
-    "backup_archive"
+    "backup_archive",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/scripts/**"
   ]
 }

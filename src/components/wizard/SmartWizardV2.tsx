@@ -774,8 +774,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       electricityRate,
       equipmentCost: equipmentBreakdown.totals.equipmentCost,
       installationCost: equipmentBreakdown.totals.installationCost,
-      shippingCost: equipmentBreakdown.totals.shippingCost,
-      tariffCost: equipmentBreakdown.totals.tariffCost
+      shippingCost: shippingCost,
+      tariffCost: tariffCost
     });
     
     console.log('💰 Financial calculations from centralized service (data source:', result.dataSource + ')');
