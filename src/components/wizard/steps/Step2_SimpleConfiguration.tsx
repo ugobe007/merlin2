@@ -118,22 +118,22 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
               
               <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
                 <p className="text-gray-700 leading-relaxed">
-                  {aiRecommendation.message}
+                  {aiRecommendation?.message || 'AI recommendation unavailable'}
                 </p>
               </div>
 
               <div className="grid md:grid-cols-3 gap-3 mb-4">
                 <div className="bg-green-100 rounded-lg p-3 border border-green-300">
                   <div className="text-green-700 font-semibold text-sm">Potential Savings</div>
-                  <div className="text-lg font-bold text-green-900">{aiRecommendation.savings}</div>
+                  <div className="text-lg font-bold text-green-900">{aiRecommendation?.savings || 'N/A'}</div>
                 </div>
                 <div className="bg-blue-100 rounded-lg p-3 border border-blue-300">
                   <div className="text-blue-700 font-semibold text-sm">ROI Timeline</div>
-                  <div className="text-lg font-bold text-blue-900">{aiRecommendation.roi}</div>
+                  <div className="text-lg font-bold text-blue-900">{aiRecommendation?.roi || 'N/A'}</div>
                 </div>
                 <div className="bg-purple-100 rounded-lg p-3 border border-purple-300">
                   <div className="text-purple-700 font-semibold text-sm">Recommended Size</div>
-                  <div className="text-lg font-bold text-purple-900">{aiConfig.mw}MW / {aiConfig.hours}hr</div>
+                  <div className="text-lg font-bold text-purple-900">{aiConfig?.mw || 0}MW / {aiConfig?.hours || 0}hr</div>
                 </div>
               </div>
 
