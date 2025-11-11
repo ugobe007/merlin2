@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import BessQuoteBuilder from './components/BessQuoteBuilder';
 import AdminDashboard from './components/AdminDashboard';
+import { testCalculations } from './utils/testCalculations';
+
+// Make test function available in console
+if (typeof window !== 'undefined') {
+  (window as any).testCalculations = testCalculations;
+}
 
 function App() {
   // Check for admin access via URL parameter

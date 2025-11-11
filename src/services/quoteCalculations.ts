@@ -1,4 +1,5 @@
 import { calculateSystemCost, calculateBESSPricing } from './advancedFinancialModeling';
+import { getCalculationConstants } from './centralizedCalculations';
 
 interface CalculationInputs {
   powerMW: number;
@@ -58,16 +59,7 @@ interface CalculationResults {
   effectiveBatteryKwh: number;
 }
 
-// Mock UTILITY_RATES for calculation service
-const UTILITY_RATES: { [key: string]: any } = {
-  'United States': {
-    peakRateKWh: 0.25,
-    offPeakRateKWh: 0.12,
-    demandChargeKW: 15.0
-  }
-};
-
-export function calculateBessQuote(inputs: CalculationInputs): CalculationResults {
+export async function calculateBessQuote(inputs: CalculationInputs): Promise<CalculationResults> {
   const {
     powerMW,
     standbyHours,
@@ -88,16 +80,24 @@ export function calculateBessQuote(inputs: CalculationInputs): CalculationResult
     windKw
   } = inputs;
 
-  // Get realistic system sizing based on application requirements
-  const systemCost = calculateSystemCost(powerMW, standbyHours, selectedCountry, true, useCase.toLowerCase().replace(/\s+/g, '-'));
+  // 🔥 LOAD CONSTANTS FROM DATABASE - Single source of truth
+  const constants = await getCalculationConstants();
+  console.log('📊 calculateBessQuote using database constants:', {
+    peakShavingMultiplier: constants.peak_shaving_multiplier,
+    demandChargeMonthly: constants.demand_charge_monthly_per_mw,
+    gridServiceRevenue: constants.grid_service_revenue_per_mw
+  });
+
+  // Get realistic system sizing based on application requirements (NOW ASYNC - database-backed)
+  const systemCost = await calculateSystemCost(powerMW, standbyHours, selectedCountry, true, useCase.toLowerCase().replace(/\s+/g, '-'));
   const totalMWh = powerMW * standbyHours; // Use calculated energy capacity
   const actualDuration = standbyHours; // Use specified duration
   const pcsKW = powerMW * 1000;
   const actualPcsFactor = gridMode === 'Off-grid' ? offGridPcsFactor : onGridPcsFactor;
   const adjustedPcsKw = pcsKW * actualPcsFactor;
   
-  // Use dynamic pricing system based on market data
-  const dynamicPricing = calculateBESSPricing(powerMW, standbyHours, selectedCountry, false);
+  // Use dynamic pricing system based on market data (NOW ASYNC - database-backed)
+  const dynamicPricing = await calculateBESSPricing(powerMW, standbyHours, selectedCountry, false);
   const dynamicBatteryKwh = dynamicPricing.adjustedBatteryPrice;
   
   // Use dynamic pricing unless manually overridden to a much higher value
@@ -119,20 +119,36 @@ export function calculateBessQuote(inputs: CalculationInputs): CalculationResult
   
   const grandCapEx = bessCapEx + generatorSubtotal + solarSubtotal + windSubtotal + totalTariffs;
   
-  // Use realistic utility rates for ROI calculation
-  const utilityData = UTILITY_RATES['United States']; // Default to US rates
-  const dailyCycles = 1; // 1 full charge/discharge cycle per day
-  const annualEnergyMWh = totalMWh * dailyCycles * 365;
+  // 🔥 USE DATABASE CONSTANTS FOR REVENUE CALCULATIONS - Single source of truth
+  const annualCycles = constants.annual_cycles || 365;
+  const annualEnergyMWh = totalMWh * annualCycles;
   
-  // Peak shaving savings: arbitrage between peak and off-peak
-  const peakShavingValue = (utilityData.peakRateKWh - utilityData.offPeakRateKWh);
-  const peakShavingSavings = annualEnergyMWh * 1000 * peakShavingValue * 0.7; // 70% peak offset
+  // Peak shaving savings: Use database formula ($/MW-year converted to annual)
+  const peakShavingMultiplier = constants.peak_shaving_multiplier || 365;
+  const peakShavingSavings = powerMW * peakShavingMultiplier * 1000; // Convert MW to kW
   
-  // Demand charge reduction: avoid peak demand charges
-  const demandChargeSavings = (powerMW * 1000) * utilityData.demandChargeKW * 12;
+  // Demand charge reduction: Use database formula ($/MW-month * 12 months)
+  const demandChargeMonthly = constants.demand_charge_monthly_per_mw || 15000;
+  const demandChargeSavings = powerMW * demandChargeMonthly * 12 / 1000; // Already in $/MW-month
   
-  const annualSavings = peakShavingSavings + demandChargeSavings;
-  const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : Infinity;
+  // Grid services revenue: Use database formula
+  const gridServiceRevenue = powerMW * (constants.grid_service_revenue_per_mw || 30000);
+  
+  // Solar/wind savings
+  const solarSavings = solarMWp * (constants.solar_capacity_factor || 1500) * 0.12; // $0.12/kWh default
+  const windSavings = windMW * (constants.wind_capacity_factor || 2500) * 0.12;
+  
+  const annualSavings = peakShavingSavings + demandChargeSavings + gridServiceRevenue + solarSavings + windSavings;
+  const roiYears = annualSavings > 0 ? grandCapEx / annualSavings : 999;
+  
+  console.log('💰 calculateBessQuote results:', {
+    peakShavingSavings,
+    demandChargeSavings,
+    gridServiceRevenue,
+    annualSavings,
+    roiYears,
+    dataSource: 'database'
+  });
 
   return {
     // System specifications
@@ -161,7 +177,7 @@ export function calculateBessQuote(inputs: CalculationInputs): CalculationResult
     
     // ROI calculations
     annualEnergyMWh,
-    peakShavingValue,
+    peakShavingValue: peakShavingMultiplier, // Return the multiplier used
     peakShavingSavings,
     demandChargeSavings,
     annualSavings,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedConstants, calculateFinancialMetrics } from '../services/centralizedCalculations';
 
 interface DatabaseTestProps {
   isOpen: boolean;
@@ -10,8 +11,47 @@ const DatabaseTest: React.FC<DatabaseTestProps> = ({ isOpen, onClose }) => {
   const [vendors, setVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calcTest, setCalcTest] = useState<any>(null);
 
   const API_BASE = '/api/db';
+
+  const testCalculationService = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('🧪 Testing Centralized Calculation Service...');
+      
+      // 1. Test fetching constants
+      const constants = await getCachedConstants();
+      console.log('📊 Constants loaded:', constants);
+      
+      // 2. Test calculation
+      const result = await calculateFinancialMetrics({
+        storageSizeMW: 2,
+        durationHours: 4,
+        solarMW: 0,
+        location: 'California',
+        electricityRate: 0.15
+      });
+      
+      console.log('💰 Calculation result:', result);
+      
+      setCalcTest({
+        constants,
+        result,
+        dataSource: result.dataSource,
+        success: true
+      });
+      
+    } catch (err) {
+      console.error('❌ Error testing calculations:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      setCalcTest({ success: false, error: err });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const testAPI = async () => {
     setLoading(true);
@@ -102,6 +142,13 @@ const DatabaseTest: React.FC<DatabaseTestProps> = ({ isOpen, onClose }) => {
                 {loading ? 'Testing...' : 'Test Database API'}
               </button>
               <button
+                onClick={testCalculationService}
+                disabled={loading}
+                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300"
+              >
+                Test Calculation Service
+              </button>
+              <button
                 onClick={addTestVendor}
                 disabled={loading}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-300"
@@ -119,6 +166,46 @@ const DatabaseTest: React.FC<DatabaseTestProps> = ({ isOpen, onClose }) => {
 
             {/* API Connection Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Calculation Service Test */}
+              {calcTest && (
+                <div className="bg-purple-50 p-4 rounded-lg md:col-span-2">
+                  <h3 className="text-lg font-semibold mb-3">Calculation Service Test</h3>
+                  {calcTest.success ? (
+                    <div className="space-y-3">
+                      <div className="bg-white p-3 rounded border">
+                        <div className="font-semibold text-green-600">✅ Data Source: {calcTest.dataSource}</div>
+                        {calcTest.dataSource === 'database' ? (
+                          <div className="text-sm text-gray-600 mt-1">Successfully reading from Supabase!</div>
+                        ) : (
+                          <div className="text-sm text-orange-600 mt-1">⚠️ Using fallback constants</div>
+                        )}
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <div className="font-semibold mb-2">Test Results (2MW/4hr BESS):</div>
+                        <div className="text-sm space-y-1">
+                          <div>Total Cost: <span className="font-bold">${calcTest.result.totalCost.toLocaleString()}</span></div>
+                          <div>Annual Savings: <span className="font-bold">${calcTest.result.annualSavings.toLocaleString()}</span></div>
+                          <div>ROI: <span className="font-bold">{calcTest.result.roi.toFixed(1)}%</span></div>
+                          <div>Payback: <span className="font-bold">{calcTest.result.paybackYears.toFixed(1)} years</span></div>
+                        </div>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <div className="font-semibold mb-2">Constants Used:</div>
+                        <div className="text-xs space-y-1 text-gray-700">
+                          <div>Peak Shaving: {calcTest.constants.peakShavingMultiplier} cycles/year</div>
+                          <div>Demand Charge: ${calcTest.constants.demandChargeMonthlyPerMW.toLocaleString()}/MW-month</div>
+                          <div>Grid Services: ${calcTest.constants.gridServiceRevenuePerMW.toLocaleString()}/MW-year</div>
+                          <div>Efficiency: {(calcTest.constants.roundTripEfficiency * 100).toFixed(0)}%</div>
+                          <div>Tax Credit: {(calcTest.constants.federalTaxCreditRate * 100).toFixed(0)}%</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-red-600">Test failed - check console for details</div>
+                  )}
+                </div>
+              )}
+              
               {/* Database Stats */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-3">Database Stats</h3>

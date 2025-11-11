@@ -1,14 +1,32 @@
+// ⚠️ LEGACY COMPONENT - NEEDS MIGRATION
+// This component uses OLD pricingConfigService (hardcoded values)
+// TODO: Migrate to use useCaseService.getPricingConfig() for database-driven pricing
+// See: /docs/CODE_LINK_AUDIT.md for migration instructions
+// 
+// Current: pricingConfigService (hardcoded TypeScript objects)
+// New: useCaseService (Supabase database, JSONB config_data)
+// ====================================================================
+
 import React, { useState, useEffect } from 'react';
 import { Settings, DollarSign, Database, Download, Upload, RotateCcw, Save, AlertTriangle, CheckCircle, RefreshCw, Bell, Cloud, CloudOff } from 'lucide-react';
 import { pricingConfigService, type PricingConfiguration } from '../services/pricingConfigService';
 import { dailyPricingValidator, type ValidationAlert } from '../services/dailyPricingValidator';
-import { pricingDatabaseService, type DatabaseSyncResult } from '../services/pricingDatabaseService';
+// REMOVED: pricingDatabaseService - archived, conflicts with new schema
+// import { pricingDatabaseService, type DatabaseSyncResult } from '../services/pricingDatabaseService';
 import { dailySyncService } from '../services/dailySyncService';
 import generatorPricingService from '../services/generatorPricingService';
 import solarPricingService from '../services/solarPricingService';
 import windPricingService from '../services/windPricingService';
 import powerElectronicsPricingService from '../services/powerElectronicsPricingService';
 import systemControlsPricingService from '../services/systemControlsPricingService';
+
+// Temporary type until migration complete
+type DatabaseSyncResult = {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+};
 
 interface PricingAdminProps {
   isOpen: boolean;
@@ -55,16 +73,19 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   }, [isOpen]);
 
   // Check Supabase database connectivity
+  // ⚠️ DISABLED: pricingDatabaseService archived - use useCaseService instead
   const checkDatabaseStatus = async () => {
     setDatabaseStatus('checking');
     try {
-      const isConnected = await pricingDatabaseService.testConnection();
-      setDatabaseStatus(isConnected ? 'connected' : 'disconnected');
+      // TODO: Replace with useCaseService connectivity check
+      // const isConnected = await pricingDatabaseService.testConnection();
+      console.warn('⚠️ Database status check disabled - pricingDatabaseService archived');
+      setDatabaseStatus('disconnected'); // Temporarily show as disconnected
       
-      if (isConnected) {
-        const lastSyncInfo = pricingDatabaseService.getLastSync();
-        setLastSync(lastSyncInfo?.lastSyncAt || null);
-      }
+      // if (isConnected) {
+      //   const lastSyncInfo = pricingDatabaseService.getLastSync();
+      //   setLastSync(lastSyncInfo?.lastSyncAt || null);
+      // }
     } catch (error) {
       setDatabaseStatus('error');
       console.error('Database status check failed:', error);
@@ -72,16 +93,20 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   // Load database statistics
+  // ⚠️ DISABLED: pricingDatabaseService archived - use useCaseService instead
   const loadDatabaseStats = async () => {
     try {
-      const stats = await pricingDatabaseService.getDatabaseStats();
-      setDatabaseStats(stats);
+      // TODO: Replace with useCaseService statistics methods
+      // const stats = await pricingDatabaseService.getDatabaseStats();
+      console.warn('⚠️ Database stats disabled - pricingDatabaseService archived');
+      setDatabaseStats({});
     } catch (error) {
       console.error('Failed to load database stats:', error);
     }
   };
 
   // Sync configuration to Supabase
+  // ⚠️ DISABLED: pricingDatabaseService archived - use useCaseService instead
   const syncToDatabase = async () => {
     setSyncStatus('syncing');
     setSyncResult(null);
@@ -92,17 +117,23 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
         await saveChanges();
       }
       
-      // Then sync to database
-      const result = await pricingDatabaseService.syncLocalConfigToDatabase();
-      setSyncResult(result);
+      // TODO: Replace with useCaseService.updatePricingConfig()
+      // const result = await pricingDatabaseService.syncLocalConfigToDatabase();
+      console.warn('⚠️ Sync to database disabled - pricingDatabaseService archived');
+      setSyncResult({
+        success: false,
+        message: 'Sync temporarily disabled - service being migrated to useCaseService',
+        error: 'pricingDatabaseService archived'
+      });
+      setSyncStatus('error');
       
-      if (result.success) {
-        setSyncStatus('success');
-        setLastSync(new Date().toISOString());
-        await loadDatabaseStats(); // Refresh stats
-      } else {
-        setSyncStatus('error');
-      }
+      // if (result.success) {
+      //   setSyncStatus('success');
+      //   setLastSync(new Date().toISOString());
+      //   await loadDatabaseStats(); // Refresh stats
+      // } else {
+      //   setSyncStatus('error');
+      // }
     } catch (error) {
       setSyncStatus('error');
       setSyncResult({
@@ -114,23 +145,31 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   // Load configuration from Supabase
+  // ⚠️ DISABLED: pricingDatabaseService archived - use useCaseService instead
   const loadFromDatabase = async () => {
     setSyncStatus('syncing');
     setSyncResult(null);
     
     try {
-      const result = await pricingDatabaseService.loadConfigurationFromDatabase();
-      setSyncResult(result);
+      // TODO: Replace with useCaseService.getPricingConfig()
+      // const result = await pricingDatabaseService.loadConfigurationFromDatabase();
+      console.warn('⚠️ Load from database disabled - pricingDatabaseService archived');
+      setSyncResult({
+        success: false,
+        message: 'Load temporarily disabled - service being migrated to useCaseService',
+        error: 'pricingDatabaseService archived'
+      });
+      setSyncStatus('error');
       
-      if (result.success) {
-        // Reload local configuration
-        const updatedConfig = pricingConfigService.getConfiguration();
-        setConfig(updatedConfig);
-        setHasChanges(false);
-        setSyncStatus('success');
-      } else {
-        setSyncStatus('error');
-      }
+      // if (result.success) {
+      //   // Reload local configuration
+      //   const updatedConfig = pricingConfigService.getConfiguration();
+      //   setConfig(updatedConfig);
+      //   setHasChanges(false);
+      //   setSyncStatus('success');
+      // } else {
+      //   setSyncStatus('error');
+      // }
     } catch (error) {
       setSyncStatus('error');
       setSyncResult({

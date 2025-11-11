@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { baselineCache, useCaseCache } from './cacheService';
 import type { Database } from '../types/database.types';
 
 // Database types
@@ -184,6 +185,44 @@ export class UseCaseService {
 
     } catch (error) {
       console.error('Error fetching detailed use case:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all use cases with full configurations (for admin UI)
+   */
+  async getAllUseCasesWithConfigurations(includeInactive = false): Promise<DetailedUseCase[]> {
+    try {
+      const query = supabase
+        .from('use_cases')
+        .select('*')
+        .order('name');
+
+      if (!includeInactive) {
+        query.eq('is_active', true);
+      }
+
+      const { data: useCases, error } = await query;
+      if (error) throw error;
+      if (!useCases) return [];
+
+      // Fetch configurations for all use cases in parallel
+      const detailed = await Promise.all(
+        useCases.map(async (useCase) => {
+          const configurations = await this.getConfigurationsByUseCaseId(useCase.id);
+          return {
+            ...useCase,
+            configurations,
+            custom_questions: [],
+            recommended_applications: []
+          } as DetailedUseCase;
+        })
+      );
+
+      return detailed;
+    } catch (error) {
+      console.error('Error fetching all use cases with configurations:', error);
       throw error;
     }
   }
@@ -767,6 +806,249 @@ export class UseCaseService {
 
     } catch (error) {
       console.error('Error fetching statistics:', error);
+      throw error;
+    }
+  }
+
+  // =============================================================================
+  // PRICING CONFIGURATION METHODS (NEW)
+  // =============================================================================
+
+  /**
+   * Get pricing configuration by key
+   */
+  async getPricingConfig(configKey: string): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('pricing_configurations')
+        .select('*')
+        .eq('config_key', configKey)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.warn(`Pricing config '${configKey}' not found in database, using defaults`);
+        return null;
+      }
+
+      return data?.config_data;
+    } catch (error) {
+      console.error('Error fetching pricing config:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all active pricing configurations by category
+   */
+  async getPricingConfigsByCategory(category: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('pricing_configurations')
+        .select('*')
+        .eq('config_category', category)
+        .eq('is_active', true)
+        .order('effective_date', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching pricing configs by category:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get calculation formula by key
+   */
+  async getCalculationFormula(formulaKey: string): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('calculation_formulas')
+        .select('*')
+        .eq('formula_key', formulaKey)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.warn(`Formula '${formulaKey}' not found in database`);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching calculation formula:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all active calculation formulas by category
+   */
+  async getCalculationFormulas(category?: string): Promise<any[]> {
+    try {
+      let query = supabase
+        .from('calculation_formulas')
+        .select('*')
+        .eq('is_active', true);
+
+      if (category) {
+        query = query.eq('formula_category', category);
+      }
+
+      const { data, error } = await query.order('formula_name', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching calculation formulas:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get market pricing data for equipment type and region
+   */
+  async getMarketPricingData(equipmentType: string, region: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('market_pricing_data')
+        .select('*')
+        .eq('equipment_type', equipmentType)
+        .eq('region', region)
+        .order('data_date', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching market pricing data:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Update pricing configuration (admin only)
+   */
+  async updatePricingConfig(
+    configKey: string, 
+    configData: any, 
+    userId: string,
+    vendorNotes?: string
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('pricing_configurations')
+        .update({
+          config_data: configData,
+          vendor_notes: vendorNotes,
+          updated_by: userId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('config_key', configKey);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating pricing config:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update calculation formula (admin only)
+   */
+  async updateCalculationFormula(
+    formulaKey: string,
+    formulaData: Partial<{
+      formula_expression: string;
+      formula_variables: any;
+      output_variables: any;
+      description: string;
+      references: string;
+    }>,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('calculation_formulas')
+        .update({
+          ...formulaData,
+          updated_by: userId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('formula_key', formulaKey);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating calculation formula:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update use case configuration (admin only)
+   * Used by the admin UI to modify baseline calculations
+   * Automatically invalidates related caches
+   */
+  async updateUseCaseConfiguration(
+    configId: string,
+    updates: Partial<{
+      typical_load_kw: number;
+      peak_load_kw: number;
+      preferred_duration_hours: number;
+      is_default: boolean;
+      name: string;
+    }>
+  ): Promise<boolean> {
+    try {
+      // First, get the configuration to find the related use case slug
+      const { data: config, error: fetchError } = await supabase
+        .from('use_case_configurations')
+        .select('use_case_id')
+        .eq('id', configId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Get use case slug for cache invalidation
+      const { data: useCase, error: useCaseError } = await supabase
+        .from('use_cases')
+        .select('slug')
+        .eq('id', config.use_case_id)
+        .single();
+      
+      if (useCaseError) throw useCaseError;
+      
+      // Update the configuration
+      const { error } = await supabase
+        .from('use_case_configurations')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', configId);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      // Invalidate related caches
+      const slug = useCase.slug;
+      console.log(`🔄 Invalidating caches for use case: ${slug}`);
+      
+      // Clear all baseline calculations for this use case (all scales and variations)
+      baselineCache.clearPattern(`baseline:${slug}:`);
+      
+      // Clear use case data cache
+      useCaseCache.delete(`useCase:${slug}`);
+      
+      console.log(`✅ Updated configuration ${configId} and invalidated caches`);
+      return true;
+    } catch (error) {
+      console.error('Error updating use case configuration:', error);
       throw error;
     }
   }

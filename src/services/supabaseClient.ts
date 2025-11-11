@@ -182,11 +182,25 @@ export interface SystemConfiguration {
 // ====================================================================
 // PRICING CLIENT FUNCTIONS
 // ====================================================================
+// ⚠️ DEPRECATED: This PricingClient uses the OLD flat-column pricing_configurations schema
+// The new system uses JSONB config_data column (see MASTER_SCHEMA.sql)
+// 
+// MIGRATION PATH:
+// - Use useCaseService.getPricingConfig(key) instead
+// - Use useCaseService.updatePricingConfig(key, data, userId) instead
+// - Old schema had: bess_small_system_per_kwh, solar_utility_scale_per_watt, etc.
+// - New schema has: config_data (JSONB) with flexible structure
+// 
+// This class is kept for backward compatibility only.
+// Will be removed in version 3.0.0
+// ====================================================================
 
 export class PricingClient {
   
   // Get the active (default) pricing configuration
+  // ⚠️ DEPRECATED: Use useCaseService.getPricingConfig('bess_pricing_2025') instead
   async getActivePricingConfig(): Promise<PricingConfiguration | null> {
+    console.warn('⚠️ DEPRECATED: PricingClient.getActivePricingConfig() uses OLD schema. Use useCaseService.getPricingConfig() instead.');
     const { data, error } = await supabase
       .from('pricing_configurations')
       .select('*')
@@ -203,7 +217,9 @@ export class PricingClient {
   }
   
   // Get all pricing configurations
+  // ⚠️ DEPRECATED: Use useCaseService.getPricingConfigsByCategory(category) instead
   async getAllPricingConfigs(): Promise<PricingConfiguration[]> {
+    console.warn('⚠️ DEPRECATED: PricingClient.getAllPricingConfigs() uses OLD schema. Use useCaseService methods instead.');
     const { data, error } = await supabase
       .from('pricing_configurations')
       .select('*')
@@ -218,7 +234,9 @@ export class PricingClient {
   }
   
   // Update pricing configuration
+  // ⚠️ DEPRECATED: Use useCaseService.updatePricingConfig(key, data, userId) instead
   async updatePricingConfig(id: string, updates: Partial<PricingConfiguration>): Promise<PricingConfiguration | null> {
+    console.warn('⚠️ DEPRECATED: PricingClient.updatePricingConfig() uses OLD schema. Use useCaseService.updatePricingConfig() instead.');
     const { data, error } = await supabase
       .from('pricing_configurations')
       .update({
@@ -238,7 +256,9 @@ export class PricingClient {
   }
   
   // Create new pricing configuration
+  // ⚠️ DEPRECATED: Use useCaseService methods with JSONB structure instead
   async createPricingConfig(config: Omit<PricingConfiguration, 'id' | 'created_at' | 'updated_at'>): Promise<PricingConfiguration | null> {
+    console.warn('⚠️ DEPRECATED: PricingClient.createPricingConfig() uses OLD schema. Use useCaseService methods instead.');
     const { data, error } = await supabase
       .from('pricing_configurations')
       .insert(config)

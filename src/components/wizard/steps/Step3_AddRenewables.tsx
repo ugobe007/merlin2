@@ -87,6 +87,16 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Combine energy storage with solar, wind, or backup generators for maximum value
         </p>
+        <a 
+          href="https://www.nrel.gov/docs/fy21osti/77324.pdf" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+        >
+          <span>📊</span>
+          <span>View NREL Calculation Methodology</span>
+          <span>↗</span>
+        </a>
       </div>
 
       {/* Toggle: Renewables or Storage Only */}

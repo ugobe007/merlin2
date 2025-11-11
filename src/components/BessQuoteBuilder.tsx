@@ -3,8 +3,8 @@ import { buildModalManagerProps } from '../utils/modalProps';
 import { useBessQuoteBuilder } from '../hooks/useBessQuoteBuilder';
 import { saveAs } from 'file-saver';
 import { UTILITY_RATES } from '../utils/energyCalculations';
-import { generateCalculationBreakdown, exportCalculationsToText } from '../utils/calculationFormulas';
-import { calculateBESSPricing, calculateSystemCost } from '../utils/bessPricing';
+// REMOVED: generateCalculationBreakdown, exportCalculationsToText - not used (now in quoteCalculations)
+// REMOVED: calculateBESSPricing, calculateSystemCost - not used (now using databaseCalculations via quoteCalculations)
 import { authService } from '../services/authService';
 import WordExportService from '../services/export/WordExportService';
 import HeroSection from './sections/HeroSection';
@@ -177,26 +177,43 @@ export default function BessQuoteBuilder() {
     }
   }, [isLoggedIn]);
 
-  // CALCULATIONS - Using Calculation Service
-  const calculationResults = calculateBessQuote({
-    powerMW,
-    standbyHours,
-    selectedCountry,
-    useCase,
-    gridMode,
-    batteryKwh,
-    pcsKw,
-    bosPercent,
-    epcPercent,
-    offGridPcsFactor,
-    onGridPcsFactor,
-    generatorMW,
-    genKw,
-    solarMWp,
-    solarKwp,
-    windMW,
-    windKw
+  // CALCULATIONS - Using Async Database-Backed Calculation Service
+  const [calculationResults, setCalculationResults] = useState<any>({
+    totalMWh: 0, actualDuration: 0, pcsKW: 0, adjustedPcsKw: 0,
+    batterySubtotal: 0, pcsSubtotal: 0, bosAmount: 0, epcAmount: 0, bessCapEx: 0,
+    generatorSubtotal: 0, solarSubtotal: 0, windSubtotal: 0,
+    batteryTariff: 0, otherTariff: 0, totalTariffs: 0, grandCapEx: 0,
+    annualEnergyMWh: 0, peakShavingValue: 0, peakShavingSavings: 0,
+    demandChargeSavings: 0, annualSavings: 0, roiYears: 0,
+    dynamicBatteryKwh: 0, effectiveBatteryKwh: 0
   });
+
+  // Calculate quote whenever inputs change
+  useEffect(() => {
+    const calculate = async () => {
+      const results = await calculateBessQuote({
+        powerMW,
+        standbyHours,
+        selectedCountry,
+        useCase,
+        gridMode,
+        batteryKwh,
+        pcsKw,
+        bosPercent,
+        epcPercent,
+        offGridPcsFactor,
+        onGridPcsFactor,
+        generatorMW,
+        genKw,
+        solarMWp,
+        solarKwp,
+        windMW,
+        windKw
+      });
+      setCalculationResults(results);
+    };
+    calculate();
+  }, [powerMW, standbyHours, selectedCountry, useCase, gridMode, batteryKwh, pcsKw, bosPercent, epcPercent, offGridPcsFactor, onGridPcsFactor, generatorMW, genKw, solarMWp, solarKwp, windMW, windKw]);
 
   // Destructure calculation results for easier access
   const {
@@ -660,7 +677,7 @@ export default function BessQuoteBuilder() {
           labelStyle={labelStyle}
         />
 
-      {/* Footer with Admin Access */}
+        {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
           <div className="text-center">
             <div className="flex items-center justify-center gap-4 mb-4">
@@ -727,6 +744,7 @@ export default function BessQuoteBuilder() {
                   <span>Sign Out</span>
                 </button>
               )}
+            </div>
           </div>
         </footer>
       </main>
