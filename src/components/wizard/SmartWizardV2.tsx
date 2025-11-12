@@ -1337,6 +1337,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           location,
           industryTemplate: selectedTemplate,
           electricityRate,
+          useCaseData, // Pass EV charger details, hotel rooms, etc. for accurate AI baseline
           totalProjectCost: costs.totalProjectCost,
           annualSavings: costs.annualSavings,
           paybackYears: costs.paybackYears,
