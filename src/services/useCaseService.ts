@@ -169,8 +169,8 @@ export class UseCaseService {
       if (useCaseError) throw useCaseError;
       if (!useCase) return null;
 
-      // Fetch related data in parallel
-      const [configurationsResult, questionsResult, applicationsResult] = await Promise.all([
+      // Fetch related data in parallel - use Promise.allSettled to handle missing tables gracefully
+      const [configurationsResult, questionsResult, applicationsResult] = await Promise.allSettled([
         this.getConfigurationsByUseCaseId(useCase.id),
         this.getCustomQuestionsByUseCaseId(useCase.id),
         this.getRecommendedApplicationsByUseCaseId(useCase.id)
@@ -178,9 +178,9 @@ export class UseCaseService {
 
       return {
         ...useCase,
-        configurations: configurationsResult,
-        custom_questions: questionsResult,
-        recommended_applications: applicationsResult
+        configurations: configurationsResult.status === 'fulfilled' ? configurationsResult.value : [],
+        custom_questions: questionsResult.status === 'fulfilled' ? questionsResult.value : [],
+        recommended_applications: applicationsResult.status === 'fulfilled' ? applicationsResult.value : []
       };
 
     } catch (error) {

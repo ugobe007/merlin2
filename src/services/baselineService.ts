@@ -68,10 +68,17 @@ export async function calculateDatabaseBaseline(
     }
     
     // Query database for use case configuration
+    console.log(`📡 [BaselineService] Querying database for slug: "${templateKey}"...`);
     const useCase = await useCaseService.getUseCaseBySlug(templateKey);
+    console.log(`📡 [BaselineService] Database response:`, { 
+      found: !!useCase, 
+      hasConfigs: !!useCase?.configurations,
+      configCount: useCase?.configurations?.length || 0 
+    });
     
     if (!useCase || !useCase.configurations || useCase.configurations.length === 0) {
       console.warn(`⚠️ [BaselineService] No database configuration found for ${templateKey}, using fallback`);
+      console.warn(`⚠️ [BaselineService] useCase object:`, useCase);
       const fallback = getFallbackBaseline(templateKey);
       
       // Cache fallback result (shorter TTL)
@@ -89,9 +96,39 @@ export async function calculateDatabaseBaseline(
     });
     
     // Calculate power based on typical load (kW) converted to MW
-    // Apply scale factor for larger/smaller installations
-    const basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
-    const powerMW = Math.max(0.5, Math.round(basePowerMW * 10) / 10);
+    // Scale represents the actual facility size relative to the reference
+    // For hotel: scale = actual_rooms / 100 (e.g., 100 rooms → scale 1.0)
+    // Database baseline: 440 kW for 150 rooms (from config_name "Standard Hotel (150 rooms)")
+    // 
+    // CORRECTED CALCULATION:
+    // Extract reference size from config_name (e.g., "150" from "Standard Hotel (150 rooms)")
+    // Then calculate: (baseline_kW / reference_size) * actual_size
+    let basePowerMW: number;
+    
+    // Parse reference size from config_name (format: "X rooms", "X beds", etc.)
+    const referenceMatch = defaultConfig.config_name?.match(/\((\d+)\s+(rooms|beds|sqft|chargers|bays)\)/i);
+    
+    if (referenceMatch && templateKey === 'hotel') {
+      // Hotel-specific: Extract reference room count
+      const referenceRooms = parseInt(referenceMatch[1]); // e.g., 150
+      const actualRooms = scale * 100; // Convert scale back to actual rooms
+      
+      // Calculate per-room kW, then multiply by actual rooms
+      const kWPerRoom = defaultConfig.typical_load_kw / referenceRooms;
+      basePowerMW = (kWPerRoom * actualRooms) / 1000;
+      
+      console.log(`🏨 [Hotel Calculation] Reference: ${referenceRooms} rooms @ ${defaultConfig.typical_load_kw} kW = ${kWPerRoom.toFixed(2)} kW/room`);
+      console.log(`🏨 [Hotel Calculation] Actual: ${actualRooms} rooms × ${kWPerRoom.toFixed(2)} kW/room = ${basePowerMW.toFixed(3)} MW`);
+      
+    } else {
+      // Fallback to simple scale multiplication for other use cases
+      basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
+      console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${scale} scale = ${basePowerMW.toFixed(3)} MW`);
+    }
+    
+    // Round to nearest 0.1 MW, with a reasonable minimum of 0.2 MW (200 kW)
+    // Small facilities like boutique hotels can be smaller than 0.5 MW
+    const powerMW = Math.max(0.2, Math.round(basePowerMW * 10) / 10);
     
     // Use preferred duration from configuration
     const durationHrs = Math.max(2, Math.round((defaultConfig.preferred_duration_hours || 4) * 2) / 2);
