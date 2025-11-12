@@ -199,7 +199,7 @@ const Step6_FinalOutput: React.FC<Step6_FinalOutputProps> = ({
             placeholder="your.email@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 p-4 border-2 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+            className="flex-1 p-4 border-2 border-gray-300 rounded-xl text-lg text-gray-900 focus:border-purple-500 focus:outline-none"
           />
           <button
             onClick={handleEmailSubmit}
