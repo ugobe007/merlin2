@@ -765,17 +765,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     const totalProjectCost = equipmentBreakdown.totals.totalProjectCost;
     
     // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
+    // ⚠️ DO NOT pass equipment costs - let service calculate them for consistency
     const result = await calculateFinancialMetrics({
       storageSizeMW,
       durationHours,
       solarMW,
       windMW,
       location: location || 'California',
-      electricityRate,
-      equipmentCost: equipmentBreakdown.totals.equipmentCost,
-      installationCost: equipmentBreakdown.totals.installationCost,
-      shippingCost: shippingCost,
-      tariffCost: tariffCost
+      electricityRate
+      // Removed: equipmentCost, installationCost, shippingCost, tariffCost
+      // Let centralized service calculate these for consistency
     });
     
     console.log('💰 Financial calculations from centralized service (data source:', result.dataSource + ')');
