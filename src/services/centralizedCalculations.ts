@@ -289,6 +289,13 @@ export async function calculateFinancialMetrics(
   const roi10Year = annualSavings > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
   const roi25Year = annualSavings > 0 ? ((annualSavings * 25 - netCost) / netCost) * 100 : 0;
   
+  console.log('💰 Payback calculation:', {
+    netCost,
+    annualSavings,
+    paybackYears,
+    calculation: `${netCost} / ${annualSavings} = ${paybackYears.toFixed(2)}`
+  });
+  
   // ===================================
   // 4. RETURN COMPLETE RESULTS
   // ===================================
