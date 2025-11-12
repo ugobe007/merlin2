@@ -105,7 +105,7 @@ const Step4_LocationPricing: React.FC<Step4_LocationPricingProps> = ({
               setLocation(e.target.value);
             }
           }}
-          className="w-full p-4 border-2 border-gray-300 rounded-xl text-lg font-semibold focus:border-blue-500 focus:outline-none"
+          className="w-full p-4 border-2 border-gray-300 rounded-xl text-lg text-gray-900 font-semibold focus:border-blue-500 focus:outline-none"
         >
           {countries.map((country) => (
             <option key={country} value={country}>{country}</option>
@@ -199,7 +199,7 @@ const Step4_LocationPricing: React.FC<Step4_LocationPricingProps> = ({
                 max="0.50"
                 value={electricityRate}
                 onChange={(e) => setElectricityRate(parseFloat(e.target.value) || 0.15)}
-                className="flex-1 p-4 border-2 border-gray-300 rounded-xl text-2xl font-bold text-center focus:border-green-500 focus:outline-none"
+                className="flex-1 p-4 border-2 border-gray-300 rounded-xl text-2xl font-bold text-gray-900 text-center focus:border-green-500 focus:outline-none"
               />
               <span className="text-gray-600 font-semibold">per kWh</span>
             </div>

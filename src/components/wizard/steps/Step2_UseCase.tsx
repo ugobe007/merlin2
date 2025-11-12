@@ -922,7 +922,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
                 value={value}
                 onChange={(e) => handleInputChange(question.id, parseFloat(e.target.value) || 0)}
                 placeholder={question.placeholder}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-blue-500"
+                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-lg text-gray-900 focus:outline-none focus:border-blue-500"
               />
               {question.suffix && (
                 <span className="text-gray-600 font-medium">{question.suffix}</span>
@@ -940,7 +940,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
             <select
               value={value}
               onChange={(e) => handleInputChange(question.id, e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg text-gray-900 focus:outline-none focus:border-blue-500"
             >
               <option value="">Select an option...</option>
               {question.options.map((opt: any) => (
