@@ -10,4 +10,34 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk - external dependencies
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-ui': ['lucide-react'],
+          
+          // App chunks - split by functionality
+          'wizard': [
+            './src/components/wizard/SmartWizardV2.tsx',
+            './src/components/wizard/InteractiveConfigDashboard.tsx',
+          ],
+          'modals': [
+            './src/components/wizard/FinancingOptionsModal.tsx',
+            './src/components/wizard/InstallerDirectoryModal.tsx',
+            './src/components/wizard/IncentivesGuideModal.tsx',
+          ],
+          'services': [
+            './src/services/centralizedCalculations.ts',
+            './src/services/baselineService.ts',
+            './src/services/useCaseService.ts',
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600, // Increase limit slightly (from 500KB default)
+    sourcemap: false, // Disable sourcemaps in production for smaller bundle
+  },
 })
