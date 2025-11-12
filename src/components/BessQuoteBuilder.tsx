@@ -3,8 +3,6 @@ import { buildModalManagerProps } from '../utils/modalProps';
 import { useBessQuoteBuilder } from '../hooks/useBessQuoteBuilder';
 import { saveAs } from 'file-saver';
 import { UTILITY_RATES } from '../utils/energyCalculations';
-// REMOVED: generateCalculationBreakdown, exportCalculationsToText - not used (now in quoteCalculations)
-// REMOVED: calculateBESSPricing, calculateSystemCost - not used (now using databaseCalculations via quoteCalculations)
 import { authService } from '../services/authService';
 import WordExportService from '../services/export/WordExportService';
 import HeroSection from './sections/HeroSection';
@@ -23,7 +21,6 @@ import EnhancedBESSAnalytics from './EnhancedBESSAnalytics';
 import FinancingCalculator from './FinancingCalculator';
 import AIChatModal from './modals/AIChatModal';
 import type { ProfileData } from './modals/AccountSetup';
-import { calculateBessQuote, getCurrencySymbol } from '../services/quoteCalculations';
 import AboutView from './views/AboutView';
 import VendorPortalView from './views/VendorPortalView';
 import AdvancedQuoteBuilderView from './views/AdvancedQuoteBuilderView';
@@ -177,54 +174,32 @@ export default function BessQuoteBuilder() {
     }
   }, [isLoggedIn]);
 
-  // CALCULATIONS - Using Async Database-Backed Calculation Service
-  const [calculationResults, setCalculationResults] = useState<any>({
-    totalMWh: 0, actualDuration: 0, pcsKW: 0, adjustedPcsKw: 0,
-    batterySubtotal: 0, pcsSubtotal: 0, bosAmount: 0, epcAmount: 0, bessCapEx: 0,
-    generatorSubtotal: 0, solarSubtotal: 0, windSubtotal: 0,
-    batteryTariff: 0, otherTariff: 0, totalTariffs: 0, grandCapEx: 0,
-    annualEnergyMWh: 0, peakShavingValue: 0, peakShavingSavings: 0,
-    demandChargeSavings: 0, annualSavings: 0, roiYears: 0,
-    dynamicBatteryKwh: 0, effectiveBatteryKwh: 0
-  });
-
-  // Calculate quote whenever inputs change
-  useEffect(() => {
-    const calculate = async () => {
-      const results = await calculateBessQuote({
-        powerMW,
-        standbyHours,
-        selectedCountry,
-        useCase,
-        gridMode,
-        batteryKwh,
-        pcsKw,
-        bosPercent,
-        epcPercent,
-        offGridPcsFactor,
-        onGridPcsFactor,
-        generatorMW,
-        genKw,
-        solarMWp,
-        solarKwp,
-        windMW,
-        windKw
-      });
-      setCalculationResults(results);
+  // NOTE: Legacy calculation logic removed - now using centralizedCalculations.ts via SmartWizardV2
+  // Previously used quoteCalculations.ts → advancedFinancialModeling.ts → databaseCalculations.ts
+  // All financial calculations now handled by SmartWizardV2 using centralizedCalculations.ts
+  
+  // Placeholder values for legacy components (analytics, financing modals)
+  // These are deprecated and will be removed in future versions
+  // TODO: Remove these placeholders and update dependent components to use SmartWizardV2 data
+  const grandCapEx = 0;
+  const annualSavings = 0;
+  const bessCapEx = 0;
+  const roiYears = 0;
+  const actualDuration = standbyHours;
+  const totalMWh = powerMW * standbyHours;
+  const annualEnergyMWh = totalMWh * 365;
+  const effectiveBatteryKwh = totalMWh * 1000;
+  const pcsKW = powerMW * 1000;
+  
+  // Helper function for currency symbols (moved from deleted quoteCalculations.ts)
+  const getCurrencySymbol = (currencyCode: string): string => {
+    const symbols: Record<string, string> = {
+      USD: '$', EUR: '€', GBP: '£', JPY: '¥', CNY: '¥', INR: '₹',
+      AUD: 'A$', CAD: 'C$', CHF: 'CHF', SEK: 'kr', NOK: 'kr', DKK: 'kr',
+      RUB: '₽', BRL: 'R$', ZAR: 'R', AED: 'د.إ', SAR: '﷼', KRW: '₩'
     };
-    calculate();
-  }, [powerMW, standbyHours, selectedCountry, useCase, gridMode, batteryKwh, pcsKw, bosPercent, epcPercent, offGridPcsFactor, onGridPcsFactor, generatorMW, genKw, solarMWp, solarKwp, windMW, windKw]);
-
-  // Destructure calculation results for easier access
-  const {
-    totalMWh, actualDuration, pcsKW, adjustedPcsKw,
-    batterySubtotal, pcsSubtotal, bosAmount, epcAmount, bessCapEx,
-    generatorSubtotal, solarSubtotal, windSubtotal,
-    batteryTariff, otherTariff, totalTariffs, grandCapEx,
-    annualEnergyMWh, peakShavingValue, peakShavingSavings,
-    demandChargeSavings, annualSavings, roiYears,
-    dynamicBatteryKwh, effectiveBatteryKwh
-  } = calculationResults;
+    return symbols[currencyCode] || currencyCode;
+  };
 
   const inputStyle = "w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-blue-50";
   const labelStyle = "block text-base font-semibold text-gray-800 mb-2 tracking-wide";

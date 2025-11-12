@@ -1,8 +1,7 @@
 // Equipment breakdown calculations for detailed quotes
-// ✅ MIGRATED: Now using database-backed calculations from databaseCalculations service
+// ✅ Using market intelligence for pricing (database pricing deprecated)
 
 import { calculateMarketAlignedBESSPricing, getMarketIntelligenceRecommendations } from '../services/marketIntelligence';
-import { calculateBESSPricingDB, calculateSystemCostDB } from '../services/databaseCalculations';
 
 export interface EquipmentBreakdown {
   batteries: {
@@ -120,20 +119,16 @@ export const calculateEquipmentBreakdown = async (
   
   const totalEnergyMWh = storageSizeMW * durationHours;
   
-  // Battery System Calculations - Database-backed pricing
+  // Battery System Calculations - Market-based pricing
   const batteryUnitPowerMW = 3;
   const batteryUnitEnergyMWh = 11.5;
   
-  // ✅ Get pricing from database (pricing_configurations table)
-  const bessPricingResult = await calculateBESSPricingDB(storageSizeMW, durationHours, location);
-  const adminPricePerKWh = bessPricingResult.adjustedBatteryPrice;
-  
-  // Get market-aligned pricing from NREL ATB 2024 + live market intelligence for comparison
+  // Get market-aligned pricing from NREL ATB 2024 + live market intelligence
   const marketAnalysis = calculateMarketAlignedBESSPricing(storageSizeMW, durationHours, location);
   const marketPricePerKWh = marketAnalysis.systemCosts.costPerKWh;
   
-  // Use database pricing as primary source, fall back to market pricing if unavailable
-  const effectivePricePerKWh = Math.min(adminPricePerKWh || marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems
+  // Use market pricing with realistic cap
+  const effectivePricePerKWh = Math.min(marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems
   const batteryUnitCost = batteryUnitEnergyMWh * 1000 * effectivePricePerKWh;
   
   const batteryQuantity = Math.ceil(Math.max(
