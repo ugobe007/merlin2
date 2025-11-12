@@ -6,6 +6,7 @@ import FinancingOptionsModal from './FinancingOptionsModal';
 import InstallerDirectoryModal from './InstallerDirectoryModal';
 import IncentivesGuideModal from './IncentivesGuideModal';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import { calculateDatabaseBaseline } from '../../services/baselineService';
 import merlinImage from '../../assets/images/new_Merlin.png';
 import wizardIcon from '../../assets/images/wizard_icon1.png';
 
@@ -20,6 +21,7 @@ interface QuoteCompletePageProps {
     location: string;
     industryTemplate: string | string[];
     electricityRate?: number;
+    useCaseData?: Record<string, any>; // EV charger details, hotel rooms, etc.
     
     // Financial
     totalProjectCost: number;
@@ -197,51 +199,39 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     return result;
   };
   
-  // AI Baseline Model - calculates optimal configuration based on inputs
-  const calculateOptimalBaseline = () => {
+  // AI Baseline Model - calculates optimal configuration based on database
+  const calculateOptimalBaseline = async () => {
     const industry = Array.isArray(quoteData.industryTemplate) ? quoteData.industryTemplate[0] : quoteData.industryTemplate;
     
-    // Industry-specific optimal ratios
-    const industryProfiles: { [key: string]: { powerMW: number; durationHrs: number; solarRatio: number } } = {
-      'manufacturing': { powerMW: 3.5, durationHrs: 4, solarRatio: 1.2 },
-      'data-center': { powerMW: 8.0, durationHrs: 6, solarRatio: 0.8 },
-      'cold-storage': { powerMW: 2.0, durationHrs: 8, solarRatio: 1.5 },
-      'hospital': { powerMW: 5.0, durationHrs: 8, solarRatio: 1.0 },
-      'car-wash': { powerMW: 0.8, durationHrs: 3, solarRatio: 1.8 },
-      'retail': { powerMW: 1.5, durationHrs: 4, solarRatio: 1.3 },
-      'warehouse': { powerMW: 2.5, durationHrs: 4, solarRatio: 1.5 },
-      'ev-charging': { powerMW: 15.0, durationHrs: 2, solarRatio: 0.6 },
-      'hotel': { powerMW: 2.2, durationHrs: 6, solarRatio: 1.1 },
-      'college': { powerMW: 4.5, durationHrs: 5, solarRatio: 1.4 },
-      'airport': { powerMW: 12.0, durationHrs: 8, solarRatio: 0.9 },
-    };
-    
-    const profile = industryProfiles[industry] || { powerMW: 2.0, durationHrs: 4, solarRatio: 1.0 };
-    
-    // Infer goals from configuration characteristics
-    let powerMultiplier = 1.0;
-    let durationMultiplier = 1.0;
-    
-    // If duration is high, assume backup power goal
-    if (quoteData.durationHours > 6) {
-      durationMultiplier *= 1.5; // More duration for backup
+    try {
+      // Use centralized baseline service (database-driven)
+      const baseline = await calculateDatabaseBaseline(
+        industry,
+        1.0, // scale factor
+        quoteData.useCaseData || {}
+      );
+      
+      console.log('🤖 [AI Analysis] Using database baseline:', baseline);
+      
+      return {
+        optimalPowerMW: baseline.powerMW,
+        optimalDurationHrs: baseline.durationHrs,
+        optimalSolarMW: baseline.solarMW,
+        costPerMWh: 350000, // Base cost per MWh
+        annualSavingsRate: 0.15, // 15% of system cost annually
+      };
+    } catch (error) {
+      console.error('⚠️ [AI Analysis] Failed to get database baseline, using fallback:', error);
+      
+      // Fallback to reasonable defaults if database unavailable
+      return {
+        optimalPowerMW: quoteData.storageSizeMW,
+        optimalDurationHrs: quoteData.durationHours,
+        optimalSolarMW: quoteData.solarMW || 0,
+        costPerMWh: 350000,
+        annualSavingsRate: 0.15,
+      };
     }
-    // If solar is present, assume renewable storage goal
-    if (quoteData.solarMW > 0) {
-      durationMultiplier *= 1.3; // More storage for renewable energy
-    }
-    // If high power relative to industry, assume grid revenue goal
-    if (quoteData.storageSizeMW > profile.powerMW * 1.5) {
-      powerMultiplier *= 1.2; // More power for demand charges and grid services
-    }
-    
-    return {
-      optimalPowerMW: profile.powerMW * powerMultiplier,
-      optimalDurationHrs: profile.durationHrs * durationMultiplier,
-      optimalSolarMW: profile.powerMW * powerMultiplier * profile.solarRatio,
-      costPerMWh: 350000, // Base cost per MWh
-      annualSavingsRate: 0.15, // 15% of system cost annually
-    };
   };
 
   // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
@@ -289,7 +279,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     // Simulate AI processing
     setTimeout(async () => {
       const prompt = promptToUse.toLowerCase();
-      const baseline = calculateOptimalBaseline();
+      const baseline = await calculateOptimalBaseline();
       const currentROI = await calculateROI(quoteData.storageSizeMW, quoteData.durationHours, quoteData.solarMW);
       const optimalROI = await calculateROI(baseline.optimalPowerMW, baseline.optimalDurationHrs, baseline.optimalSolarMW);
       
@@ -348,10 +338,12 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           warning = `⚠️ Your current ${quoteData.storageSizeMW.toFixed(1)}MW configuration is ${percentOversize}% larger than the industry baseline. Recommended: ${newSize.toFixed(1)}MW to save $${costSavings}M.`;
           reasoning = `Based on industry benchmarks for ${getIndustryName(quoteData.industryTemplate)}, a ${newSize.toFixed(1)}MW / ${newDuration}hr system would provide optimal economics while meeting your operational needs. The current oversizing adds upfront cost without proportional revenue gains.`;
         } else if (isUndersized) {
-          newSize = baseline.optimalPowerMW;
+          // Instead of jumping to full baseline, recommend a 30-50% increase
+          newSize = Math.min(baseline.optimalPowerMW, quoteData.storageSizeMW * 1.4);
           const percentUndersize = Math.round((1 - quoteData.storageSizeMW / baseline.optimalPowerMW) * 100);
-          warning = `⚠️ Your current ${quoteData.storageSizeMW.toFixed(1)}MW system is ${percentUndersize}% below the industry baseline. Recommended: ${newSize.toFixed(1)}MW to fully capture available opportunities.`;
-          reasoning = `Consider increasing to ${newSize.toFixed(1)}MW for ${Math.round((newSize / quoteData.storageSizeMW - 1) * 100)}% more capacity. This better matches typical ${getIndustryName(quoteData.industryTemplate)} demand profiles and can improve overall returns.`;
+          const percentIncrease = Math.round((newSize / quoteData.storageSizeMW - 1) * 100);
+          warning = `⚠️ Your current ${quoteData.storageSizeMW.toFixed(1)}MW system is ${percentUndersize}% below the industry baseline. Recommended: ${newSize.toFixed(1)}MW (+${percentIncrease}%) to better capture available opportunities.`;
+          reasoning = `Consider increasing to ${newSize.toFixed(1)}MW for ${percentIncrease}% more capacity. This better matches typical ${getIndustryName(quoteData.industryTemplate)} demand profiles and can improve overall returns. The industry baseline is ${baseline.optimalPowerMW.toFixed(1)}MW, but this incremental increase balances cost and benefit.`;
         } else {
           reasoning = `Your current configuration (${quoteData.storageSizeMW.toFixed(1)}MW / ${quoteData.durationHours}hr) is well-sized for your needs and aligns with industry standards. ROI: ${currentROI.payback.toFixed(1)} year payback. Try asking to "optimize", "reduce cost", or "add more backup power".`;
         }
