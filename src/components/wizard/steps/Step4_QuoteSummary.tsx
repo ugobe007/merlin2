@@ -69,6 +69,11 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   onEditConfiguration,
   industryData,
 }) => {
+  // 🐛 DEBUG: Log payback value received by Step4_QuoteSummary
+  console.log('🔍 [Step4_QuoteSummary] Received paybackYears:', paybackYears);
+  console.log('🔍 [Step4_QuoteSummary] Received annualSavings:', annualSavings);
+  console.log('🔍 [Step4_QuoteSummary] Received netCostAfterTaxCredit:', netCostAfterTaxCredit);
+  
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
   const [selectedShipping, setSelectedShipping] = useState('best-value');
