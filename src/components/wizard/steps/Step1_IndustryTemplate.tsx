@@ -236,8 +236,8 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
   };
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-4">
+    <div className="space-y-4">
+      <div className="text-center space-y-3">
         <h2 className="text-4xl font-bold text-gray-800">
           Quick Configuration
         </h2>
@@ -246,8 +246,8 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
         </p>
         
         {/* Industry Standards Badge */}
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-300 rounded-xl p-4 max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-300 rounded-xl p-3 max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-1">
             <span className="text-xl">🔬</span>
             <span className="font-bold text-blue-800">Industry Standards Validated Templates</span>
           </div>
@@ -273,8 +273,8 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
       </div>
 
       {/* Path Selection */}
-      <div className="bg-white rounded-xl border-2 border-blue-400 p-6 shadow-lg">
-        <div className="flex items-center justify-center gap-4 mb-6">
+      <div className="bg-white rounded-xl border-2 border-blue-400 p-5 shadow-lg">
+        <div className="flex items-center justify-center gap-4 mb-4">
           <button
             onClick={() => setUseTemplate(true)}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
@@ -299,7 +299,7 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
 
         {useTemplate ? (
           <>
-            <p className="text-center text-gray-600 mb-6">
+            <p className="text-center text-gray-600 mb-4">
               Choose an industry to get started with pre-configured values
             </p>
             

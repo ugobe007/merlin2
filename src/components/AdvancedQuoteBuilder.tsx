@@ -127,7 +127,7 @@ export default function AdvancedQuoteBuilder({
       id: 'custom-config',
       icon: <Wrench className="w-8 h-8" />,
       title: 'Custom Configuration',
-      description: 'Manually configure your BESS system with full control over all parameters',
+      description: 'Complete BESS design with electrical specs, renewables, and detailed system parameters',
       color: 'from-blue-500 to-cyan-500',
       action: () => setViewMode('custom-config'),
     },
@@ -200,11 +200,18 @@ export default function AdvancedQuoteBuilder({
         {viewMode === 'landing' && (
           <>
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-sm border-b border-white/10">
+            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-md border-b border-white/10 shadow-xl">
               <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold">Advanced Quote Builder</h1>
-                  <p className="text-gray-300 mt-1">Professional tools for complex BESS projects</p>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
+                    <Wrench className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                      Advanced Quote Builder
+                    </h1>
+                    <p className="text-gray-300 mt-1">Professional-grade BESS configuration & electrical design</p>
+                  </div>
                 </div>
                 <button
                   onClick={onClose}
@@ -213,6 +220,49 @@ export default function AdvancedQuoteBuilder({
                 >
                   <X className="w-6 h-6" />
                 </button>
+              </div>
+            </div>
+
+            {/* Hero Section */}
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-2xl p-8 mb-8">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
+                      <Sparkles className="w-10 h-10" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-3">Complete Energy System Design Suite</h2>
+                    <p className="text-gray-300 text-lg mb-4">
+                      Design comprehensive battery energy storage systems with integrated renewables, 
+                      detailed electrical specifications, and professional financial analysis.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                        <Zap className="w-5 h-5 text-blue-400" />
+                        <div>
+                          <p className="text-sm font-semibold">Electrical Design</p>
+                          <p className="text-xs text-gray-400">Watts, Amps, Inverters</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                        <Sparkles className="w-5 h-5 text-green-400" />
+                        <div>
+                          <p className="text-sm font-semibold">Hybrid Systems</p>
+                          <p className="text-xs text-gray-400">Solar, Wind, Fuel Cells</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                        <Calculator className="w-5 h-5 text-purple-400" />
+                        <div>
+                          <p className="text-sm font-semibold">Financial Analysis</p>
+                          <p className="text-xs text-gray-400">ROI, Payback, NPV</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -608,6 +658,148 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
+                {/* Electrical Specifications Section */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-8">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Zap className="w-6 h-6 text-purple-400" />
+                    Electrical Specifications
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    {/* Power & Watts */}
+                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-4">
+                      <p className="text-xs text-gray-300 mb-2 font-semibold">System Power</p>
+                      <p className="text-3xl font-bold text-blue-400">{totalKW.toLocaleString()} kW</p>
+                      <p className="text-sm text-gray-300 mt-1">{totalWatts.toLocaleString()} Watts</p>
+                      <p className="text-xs text-gray-400 mt-2">{storageSizeMW.toFixed(2)} MW</p>
+                    </div>
+
+                    {/* AC Amps */}
+                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-xl p-4">
+                      <p className="text-xs text-gray-300 mb-2 font-semibold">AC Current (3-Phase)</p>
+                      <p className="text-3xl font-bold text-yellow-400">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                      <p className="text-sm text-gray-300 mt-1">@ {systemVoltage}V AC</p>
+                      <p className="text-xs text-gray-400 mt-2">Per Phase</p>
+                    </div>
+
+                    {/* DC Amps */}
+                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4">
+                      <p className="text-xs text-gray-300 mb-2 font-semibold">DC Current</p>
+                      <p className="text-3xl font-bold text-green-400">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                      <p className="text-sm text-gray-300 mt-1">@ {dcVoltage}V DC</p>
+                      <p className="text-xs text-gray-400 mt-2">Battery Side</p>
+                    </div>
+
+                    {/* Inverters */}
+                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
+                      <p className="text-xs text-gray-300 mb-2 font-semibold">Inverter Count</p>
+                      <p className="text-3xl font-bold text-purple-400">{numberOfInverters}</p>
+                      <p className="text-sm text-gray-300 mt-1">{inverterRating} kW each</p>
+                      <p className="text-xs text-gray-400 mt-2">{inverterType} type</p>
+                    </div>
+                  </div>
+
+                  {/* Detailed Specifications */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
+                        <Cpu className="w-4 h-4" />
+                        Power Conversion
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Inverter Rating:</span>
+                          <span className="text-white font-semibold">{inverterRating} kW each</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Total Inverters:</span>
+                          <span className="text-white font-semibold">{numberOfInverters} units</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Inverter Type:</span>
+                          <span className="text-white font-semibold capitalize">{inverterType}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Efficiency:</span>
+                          <span className="text-white font-semibold">{inverterEfficiency}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
+                        <GitBranch className="w-4 h-4" />
+                        Electrical Distribution
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Switchgear Type:</span>
+                          <span className="text-white font-semibold capitalize">{switchgearType.replace('-', ' ')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Switchgear Rating:</span>
+                          <span className="text-white font-semibold">{switchgearRating.toLocaleString()} A</span>
+                        </div>
+                        {transformerRequired && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Transformer:</span>
+                              <span className="text-white font-semibold">{transformerRating.toLocaleString()} kVA</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Voltage Ratio:</span>
+                              <span className="text-white font-semibold">{transformerVoltage}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-purple-300 mb-3">Voltage Specifications</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">AC System Voltage:</span>
+                          <span className="text-white font-semibold">{systemVoltage}V</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">DC Battery Voltage:</span>
+                          <span className="text-white font-semibold">{dcVoltage}V</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Grid Connection:</span>
+                          <span className="text-white font-semibold capitalize">{gridConnection.replace('-', ' ')}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-purple-300 mb-3">Battery Management</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">BMS Type:</span>
+                          <span className="text-white font-semibold capitalize">{bmsType}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Chemistry:</span>
+                          <span className="text-white font-semibold">{batteryChemistry}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Installation:</span>
+                          <span className="text-white font-semibold capitalize">{installationType}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-purple-900/30 border border-purple-500/40 rounded-lg p-4">
+                    <p className="text-xs text-purple-200">
+                      ⚡ <strong>Electrical Note:</strong> All specifications are calculated based on {storageSizeMW} MW system rating. 
+                      Actual equipment selection may vary based on site conditions, grid requirements, and local codes.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Renewables & Alternative Power Section */}
                 <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-8">
                   <div className="flex items-center justify-between mb-6">
@@ -714,7 +906,10 @@ export default function AdvancedQuoteBuilder({
                                 ☀️ Estimated Annual Production: <strong>{(solarCapacityKW * 1400).toLocaleString()} kWh/year</strong> (1,400 hrs/year avg)
                               </p>
                               <p className="text-xs text-yellow-300 mt-1">
-                                Array Size: ~{(solarCapacityKW * 5.5).toLocaleString()} sq ft | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
+                                Array Size: ~{(solarCapacityKW * 1000 * 6).toLocaleString()} sq ft (~{((solarCapacityKW * 1000 * 6) / 43560).toFixed(2)} acres) | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
+                              </p>
+                              <p className="text-xs text-yellow-200 mt-1">
+                                💡 Note: Assumes 6 sq ft per watt installed capacity (including spacing)
                               </p>
                             </div>
                           </div>

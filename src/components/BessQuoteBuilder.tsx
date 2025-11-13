@@ -6,7 +6,6 @@ import { UTILITY_RATES } from '../utils/energyCalculations';
 import { authService } from '../services/authService';
 import WordExportService from '../services/export/WordExportService';
 import HeroSection from './sections/HeroSection';
-import AdvancedQuoteBuilderSection from './sections/AdvancedQuoteBuilderSection';
 import MainQuoteForm from './forms/MainQuoteForm';
 import ModalManager from './modals/ModalManager';
 import QuotePreviewModal from './modals/QuotePreviewModal';
@@ -15,7 +14,6 @@ import VendorPortal from './VendorPortal';
 import EnergyNewsTicker from './EnergyNewsTicker';
 import PublicProfileViewer from './PublicProfileViewer';
 import UseCaseTemplates from './UseCaseTemplates';
-import AdvancedAnalytics from './AdvancedAnalytics';
 import { UseCaseAdminDashboard } from './admin/UseCaseAdminDashboard';
 import EnhancedBESSAnalytics from './EnhancedBESSAnalytics';
 import FinancingCalculator from './FinancingCalculator';
@@ -23,11 +21,18 @@ import AIChatModal from './modals/AIChatModal';
 import type { ProfileData } from './modals/AccountSetup';
 import AboutView from './views/AboutView';
 import VendorPortalView from './views/VendorPortalView';
-import AdvancedQuoteBuilderView from './views/AdvancedQuoteBuilderView';
+
+// NEW: Clean unified Advanced Quote Builder component
+import AdvancedQuoteBuilder from './AdvancedQuoteBuilder';
 
 
 export default function BessQuoteBuilder() {
   console.log('🏗️ BessQuoteBuilder component rendering');
+  
+  // Local state to track if wizard should start in advanced mode
+  const [startWizardInAdvancedMode, setStartWizardInAdvancedMode] = useState(false);
+  // Local state to track if wizard should skip intro
+  const [skipWizardIntro, setSkipWizardIntro] = useState(false);
   
   // Use custom hook for all state management
   const { state, actions, exchangeRates } = useBessQuoteBuilder();
@@ -35,7 +40,7 @@ export default function BessQuoteBuilder() {
   // Destructure commonly used state values for easier access
   const {
     viewMode, publicProfileSlug, showAdvancedQuoteBuilder, userLayoutPreference, showLayoutPreferenceModal,
-    energyCapacity, powerRating, showAdvancedOptions, quoteName, showUserProfile, showSmartWizard,
+    energyCapacity, powerRating, showAdvancedOptions, quoteName, showUserProfile, showSmartWizard, showAdvancedQuoteBuilderModal,
     showVendorManager, showJoinModal, showAuthModal, showPricingPlans, showWelcomeModal, showAccountSetup,
     showEnhancedProfile, isFirstTimeProfile, isLoggedIn, showAnalytics, showBESSAnalytics, showFinancing, showTemplates,
     showChatModal, showAbout, showVendorPortal, showPortfolio, showCalculationModal, showSaveProjectModal,
@@ -53,7 +58,7 @@ export default function BessQuoteBuilder() {
   const {
     setViewMode, setPublicProfileSlug, setShowAdvancedQuoteBuilder, setUserLayoutPreference,
     setShowLayoutPreferenceModal, setEnergyCapacity, setPowerRating, setShowAdvancedOptions, setQuoteName,
-    setShowUserProfile, setShowSmartWizard, setShowVendorManager, setShowJoinModal, setShowAuthModal,
+    setShowUserProfile, setShowSmartWizard, setShowAdvancedQuoteBuilderModal, setShowVendorManager, setShowJoinModal, setShowAuthModal,
     setShowPricingPlans, setShowWelcomeModal, setShowAccountSetup, setShowEnhancedProfile,
     setIsFirstTimeProfile, setIsLoggedIn, setShowAnalytics, setShowBESSAnalytics, setShowFinancing, setShowTemplates,
     setShowChatModal, setShowAbout, setShowVendorPortal, setShowPortfolio, setShowCalculationModal, setShowSaveProjectModal,
@@ -229,214 +234,6 @@ export default function BessQuoteBuilder() {
     );
   }
 
-  // If showing advanced quote builder
-  if (showAdvancedQuoteBuilder) {
-    console.log('✅ Rendering advanced quote builder interface');
-    console.log('showAdvancedQuoteBuilder value:', showAdvancedQuoteBuilder);
-    return (
-      <>
-        {/* Clean interface without opacity changes */}
-        <div>
-          <AdvancedQuoteBuilderView 
-            onBackToHome={() => {
-              console.log('🏠 onBackToHome called - closing Advanced Quote Builder');
-              setShowAdvancedQuoteBuilder(false);
-            }}
-            onShowSmartWizard={() => {
-              console.log('🧙 onShowSmartWizard called');
-            setShowAdvancedQuoteBuilder(false);
-            setShowSmartWizard(true);
-          }}
-          onShowTemplates={() => {
-            console.log('🎯 Templates handler called - setting showTemplates to true');
-            setShowTemplates(true);
-          }}
-          onShowAnalytics={() => {
-            console.log('🎯 Analytics handler called - setting showAnalytics to true');
-            setShowAnalytics(true);
-          }}
-          onShowFinancing={() => {
-            console.log('🎯 Financing handler called - setting showFinancing to true');
-            setShowFinancing(true);
-          }}
-          renderMainQuoteForm={renderMainQuoteForm}
-        />
-        </div> {/* End of Advanced Configuration Panel wrapper */}
-        
-        {/* Render modals directly here when in Advanced Mode */}
-        {showTemplates && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <UseCaseTemplates
-              isOpen={showTemplates}
-              onClose={() => setShowTemplates(false)}
-              onApplyTemplate={handleApplyTemplate}
-            />
-          </div>
-        )}
-        
-        {showAnalytics && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <AdvancedAnalytics
-              isOpen={showAnalytics}
-              onClose={() => setShowAnalytics(false)}
-              projectData={{
-                quoteName,
-                powerMW,
-                durationHours: standbyHours,
-                totalCapEx: grandCapEx,
-                annualSavings,
-              }}
-            />
-          </div>
-        )}
-        
-        {showFinancing && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FinancingCalculator
-              isOpen={showFinancing}
-              onClose={() => setShowFinancing(false)}
-              projectData={{
-                quoteName,
-                totalCapEx: grandCapEx,
-                annualSavings,
-                powerMW,
-                durationHours: standbyHours,
-              }}
-            />
-          </div>
-        )}
-        
-        {showChatModal && (
-          <AIChatModal
-            isOpen={showChatModal}
-            onClose={() => setShowChatModal(false)}
-          />
-        )}
-
-        {/* MODAL MANAGER - Include within Advanced Quote Builder */}
-        {console.log('🚀 About to render ModalManager (INSIDE Advanced QB) with showBESSAnalytics:', showBESSAnalytics)}
-        <ModalManager 
-          key={`modal-advanced-${showBESSAnalytics}`}
-          showUserProfile={showUserProfile} 
-          showPortfolio={showPortfolio} 
-          showAuthModal={showAuthModal} 
-          showVendorManager={showVendorManager} 
-          showPricingPlans={showPricingPlans}
-          showWelcomeModal={showWelcomeModal} 
-          showAccountSetup={showAccountSetup} 
-          showEnhancedProfile={showEnhancedProfile} 
-          showJoinModal={showJoinModal} 
-          showSmartWizard={showSmartWizard}
-          showCalculationModal={showCalculationModal} 
-          showSaveProjectModal={showSaveProjectModal} 
-          showLoadProjectModal={showLoadProjectModal} 
-          showAnalytics={showAnalytics} 
-          showBESSAnalytics={showBESSAnalytics} 
-          showFinancing={showFinancing}
-          showTemplates={showTemplates} 
-          showChatModal={showChatModal} 
-          showPricingDataCapture={showPricingDataCapture} 
-          showMarketIntelligence={showMarketIntelligence} 
-          showVendorSponsorship={showVendorSponsorship}
-          showPrivacyPolicy={showPrivacyPolicy} 
-          showTermsOfService={showTermsOfService} 
-          showSecuritySettings={showSecuritySettings} 
-          showSystemHealth={showSystemHealth} 
-          showStatusPage={showStatusPage}
-          showUtilityRates={showUtilityRates} 
-          showQuoteTemplates={showQuoteTemplates} 
-          showPricingPresets={showPricingPresets} 
-          showReviewWorkflow={showReviewWorkflow}
-          showCostSavingsModal={showCostSavingsModal} 
-          showRevenueModal={showRevenueModal} 
-          showSustainabilityModal={showSustainabilityModal}
-          showPowerAdjustmentModal={showPowerAdjustmentModal}
-          selectedUseCaseForAdjustment={selectedUseCaseForAdjustment}
-          setShowUserProfile={setShowUserProfile} 
-          setShowPortfolio={setShowPortfolio} 
-          setShowAuthModal={setShowAuthModal} 
-          setShowVendorManager={setShowVendorManager} 
-          setShowPricingPlans={setShowPricingPlans}
-          setShowWelcomeModal={setShowWelcomeModal} 
-          setShowAccountSetup={setShowAccountSetup} 
-          setShowEnhancedProfile={setShowEnhancedProfile} 
-          setShowJoinModal={setShowJoinModal} 
-          setShowSmartWizard={setShowSmartWizard}
-          setShowCalculationModal={setShowCalculationModal} 
-          setShowSaveProjectModal={setShowSaveProjectModal} 
-          setShowLoadProjectModal={setShowLoadProjectModal} 
-          setShowAnalytics={setShowAnalytics} 
-          setShowBESSAnalytics={setShowBESSAnalytics} 
-          setShowFinancing={setShowFinancing}
-          setShowTemplates={setShowTemplates} 
-          setShowChatModal={setShowChatModal} 
-          setShowPricingDataCapture={setShowPricingDataCapture} 
-          setShowMarketIntelligence={setShowMarketIntelligence} 
-          setShowVendorSponsorship={setShowVendorSponsorship}
-          setShowPrivacyPolicy={setShowPrivacyPolicy} 
-          setShowTermsOfService={setShowTermsOfService} 
-          setShowSecuritySettings={setShowSecuritySettings} 
-          setShowSystemHealth={setShowSystemHealth} 
-          setShowStatusPage={setShowStatusPage}
-          setShowUtilityRates={setShowUtilityRates} 
-          setShowQuoteTemplates={setShowQuoteTemplates} 
-          setShowPricingPresets={setShowPricingPresets} 
-          setShowReviewWorkflow={setShowReviewWorkflow}
-          setShowCostSavingsModal={setShowCostSavingsModal} 
-          setShowRevenueModal={setShowRevenueModal} 
-          setShowSustainabilityModal={setShowSustainabilityModal}
-          setShowPowerAdjustmentModal={setShowPowerAdjustmentModal}
-          setSelectedUseCaseForAdjustment={setSelectedUseCaseForAdjustment}
-          isLoggedIn={isLoggedIn} 
-          setIsLoggedIn={setIsLoggedIn} 
-          handleLoginSuccess={handleLoginSuccess} 
-          handleGoHome={handleGoHome} 
-          handleProfileSetup={handleProfileSetup} 
-          handleStartWizard={handleStartWizard}
-          handleProfileComplete={handleProfileComplete} 
-          handleContinueToEnhancedProfile={handleContinueToEnhancedProfile} 
-          handleEnhancedProfileClose={handleEnhancedProfileClose} 
-          loadProjectFromStorage={loadProjectFromStorage} 
-          handleUploadProject={handleUploadProject}
-          handleCreateWithWizard={handleCreateWithWizard} 
-          handleUploadFromComputer={handleUploadFromComputer} 
-          handleUploadFromPortfolio={handleUploadFromPortfolio} 
-          handleApplyTemplate={handleApplyTemplate} 
-          handleApplyUseCaseTemplate={handleApplyUseCaseTemplate}
-          isFirstTimeProfile={isFirstTimeProfile}
-          quoteName={quoteName} 
-          powerMW={powerMW} 
-          standbyHours={standbyHours} 
-          solarMWp={solarMWp} 
-          windMW={windMW} 
-          generatorMW={generatorMW}
-          batteryKwh={batteryKwh} 
-          pcsKw={pcsKw} 
-          bosPercent={bosPercent} 
-          epcPercent={epcPercent} 
-          genKw={genKw} 
-          solarKwp={solarKwp} 
-          windKw={windKw} 
-          location={location} 
-          grandCapEx={grandCapEx}
-          annualSavings={annualSavings} 
-          valueKwh={valueKwh} 
-          warranty={warranty} 
-          currentQuoteStatus={currentQuoteStatus}
-          setPowerMW={setPowerMW} 
-          setStandbyHours={setStandbyHours} 
-          setUseCase={setUseCase} 
-          setWarranty={setWarranty} 
-          setSolarMWp={setSolarMWp} 
-          setWindMW={setWindMW} 
-          setGeneratorMW={setGeneratorMW}
-          setValueKwh={setValueKwh} 
-          setCurrentQuoteStatus={setCurrentQuoteStatus}
-        />
-      </>
-    );
-  }
-
   // Build modal manager props using utility function
   const modalManagerProps = buildModalManagerProps(
     // Modal states
@@ -493,7 +290,7 @@ export default function BessQuoteBuilder() {
           setShowAbout={setShowAbout}
           setShowJoinModal={setShowJoinModal}
           setShowSmartWizard={setShowSmartWizard}
-          setShowAdvancedQuoteBuilder={setShowAdvancedQuoteBuilder}
+          setShowAdvancedQuoteBuilder={setShowAdvancedQuoteBuilderModal}
           setShowCostSavingsModal={setShowCostSavingsModal}
           setShowRevenueModal={setShowRevenueModal}
           setShowSustainabilityModal={setShowSustainabilityModal}
@@ -517,140 +314,6 @@ export default function BessQuoteBuilder() {
             />
           </div>
         )}
-
-        {/* Advanced Quote Builder Toggle - Show only when not already shown */}
-        {!showAdvancedQuoteBuilder && (
-          <section className="my-6">
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
-              {/* Advanced Quote Builder Button */}
-              <button
-                onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all inline-flex items-center gap-4"
-              >
-                <span className="text-3xl">🔧</span>
-                <div className="text-left">
-                  <div>Advanced Quote Builder</div>
-                  <div className="text-sm font-normal opacity-90">Customize every detail of your system</div>
-                </div>
-              </button>
-
-              {/* Vendor & Contact Buttons */}
-              <div className="flex gap-3">
-                <button 
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all inline-flex items-center gap-2"
-                  onClick={() => setShowVendorPortal(true)}
-                >
-                  <span className="text-xl">🏢</span>
-                  <div className="text-left">
-                    <div className="text-sm">Vendor Portal</div>
-                    <div className="text-xs opacity-90">For suppliers & partners</div>
-                  </div>
-                </button>
-                <a 
-                  href="mailto:info@merlinenergy.com"
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg transition-all inline-flex items-center gap-2"
-                >
-                  <span className="text-xl">📧</span>
-                  <div className="text-left">
-                    <div className="text-sm">Contact Us</div>
-                    <div className="text-xs opacity-90">Get in touch</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500 mt-3 text-center">For technical users who want full control over pricing and configuration</p>
-          </section>
-        )}
-
-        {/* Technical Quote Building Sections - Only shown in Advanced Mode */}
-        <AdvancedQuoteBuilderSection
-          // Display state
-          showAdvancedQuoteBuilder={showAdvancedQuoteBuilder}
-          setShowAdvancedQuoteBuilder={setShowAdvancedQuoteBuilder}
-          
-          // Project data
-          quoteName={quoteName}
-          setQuoteName={setQuoteName}
-          powerMW={powerMW}
-          setPowerMW={setPowerMW}
-          standbyHours={standbyHours}
-          setStandbyHours={setStandbyHours}
-          gridMode={gridMode}
-          setGridMode={setGridMode}
-          useCase={useCase}
-          setUseCase={setUseCase}
-          generatorMW={generatorMW}
-          setGeneratorMW={setGeneratorMW}
-          solarMWp={solarMWp}
-          setSolarMWp={setSolarMWp}
-          windMW={windMW}
-          setWindMW={setWindMW}
-          utilization={utilization}
-          setUtilization={setUtilization}
-          warranty={warranty}
-          setWarranty={setWarranty}
-          
-          // Pricing configuration
-          batteryKwh={batteryKwh}
-          setBatteryKwh={setBatteryKwh}
-          pcsKw={pcsKw}
-          setPcsKw={setPcsKw}
-          bosPercent={bosPercent}
-          setBosPercent={setBosPercent}
-          epcPercent={epcPercent}
-          setEpcPercent={setEpcPercent}
-          tariffPercent={tariffPercent}
-          setTariffPercent={setTariffPercent}
-          solarKwp={solarKwp}
-          setSolarKwp={setSolarKwp}
-          windKw={windKw}
-          setWindKw={setWindKw}
-          genKw={genKw}
-          setGenKw={setGenKw}
-          onGridPcsFactor={onGridPcsFactor}
-          setOnGridPcsFactor={setOnGridPcsFactor}
-          offGridPcsFactor={offGridPcsFactor}
-          setOffGridPcsFactor={setOffGridPcsFactor}
-          
-          // Financial data
-          currency={currency}
-          setCurrency={setCurrency}
-          bessCapEx={bessCapEx}
-          grandCapEx={grandCapEx}
-          annualSavings={annualSavings}
-          roiYears={roiYears}
-          currentQuoteStatus={currentQuoteStatus}
-          
-          // Calculated values
-          actualDuration={actualDuration}
-          totalMWh={totalMWh}
-          annualEnergyMWh={annualEnergyMWh}
-          effectiveBatteryKwh={effectiveBatteryKwh}
-          pcsKW={pcsKW}
-          
-          // Handlers
-          handleSaveProject={handleSaveProject}
-          handleLoadProject={handleLoadProject}
-          handlePortfolio={handlePortfolio}
-          handleResetToDefaults={handleResetToDefaults}
-          getCurrencySymbol={() => getCurrencySymbol(currency)}
-          convertCurrency={convertCurrency}
-          handleExportWord={handleExportWord}
-          setShowCalculationModal={setShowCalculationModal}
-          handleExportCalculations={handleExportCalculations}
-          setShowAnalytics={setShowAnalytics}
-          setShowFinancing={setShowFinancing}
-          setShowTemplates={setShowTemplates}
-          setShowUtilityRates={setShowUtilityRates}
-          setShowQuoteTemplates={setShowQuoteTemplates}
-          setShowPricingPresets={setShowPricingPresets}
-          setShowReviewWorkflow={setShowReviewWorkflow}
-          renderMainQuoteForm={renderMainQuoteForm}
-          
-          // Styles
-          inputStyle={inputStyle}
-          labelStyle={labelStyle}
-        />
 
         {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
@@ -728,7 +391,53 @@ export default function BessQuoteBuilder() {
     {/* MODAL MANAGER - Always rendered regardless of showAdvancedQuoteBuilder state */}
     {console.log('🚀 About to render ModalManager with showBESSAnalytics:', showBESSAnalytics)}
     {console.log('🚀 modalManagerProps.showBESSAnalytics:', modalManagerProps.showBESSAnalytics)}
-    <ModalManager key={`modal-${showBESSAnalytics}`} {...modalManagerProps} />
+    <ModalManager 
+      key={`modal-${showBESSAnalytics}`} 
+      {...modalManagerProps}
+      startWizardInAdvancedMode={startWizardInAdvancedMode}
+      setStartWizardInAdvancedMode={setStartWizardInAdvancedMode}
+      setShowAdvancedQuoteBuilderModal={setShowAdvancedQuoteBuilderModal}
+      skipWizardIntro={skipWizardIntro}
+      setSkipWizardIntro={setSkipWizardIntro}
+    />
+
+    {/* ADVANCED QUOTE BUILDER - New clean unified component */}
+    <AdvancedQuoteBuilder
+      show={showAdvancedQuoteBuilderModal}
+      onClose={() => setShowAdvancedQuoteBuilderModal(false)}
+      onOpenSmartWizard={() => {
+        setShowAdvancedQuoteBuilderModal(false);
+        setShowSmartWizard(true);
+      }}
+      onOpenFinancing={() => {
+        setShowAdvancedQuoteBuilderModal(false);
+        setShowFinancing(true);
+      }}
+      onOpenMarketIntel={() => {
+        setShowAdvancedQuoteBuilderModal(false);
+        setShowMarketIntelligence(true);
+      }}
+      onOpenQuoteTemplates={() => {
+        setShowAdvancedQuoteBuilderModal(false);
+        setShowQuoteTemplates(true);
+      }}
+      setSkipWizardIntro={setSkipWizardIntro}
+      storageSizeMW={powerMW}
+      durationHours={standbyHours}
+      systemCost={grandCapEx}
+      onStorageSizeChange={setPowerMW}
+      onDurationChange={setStandbyHours}
+      onSystemCostChange={(cost) => {
+        // System cost changes might affect grandCapEx calculation
+        // For now, just log - full integration would need more complex state management
+        console.log('System cost changed to:', cost);
+      }}
+      onGenerateQuote={() => {
+        // Generate quote with current configuration
+        console.log('Generate quote with:', { powerMW, standbyHours, grandCapEx });
+        alert(`Quote generated!\n\nSystem: ${powerMW} MW / ${(powerMW * standbyHours).toFixed(1)} MWh\nEstimated Cost: $${grandCapEx.toLocaleString()}`);
+      }}
+    />
 
     {/* Admin Dashboard */}
     {showVendorManager && (

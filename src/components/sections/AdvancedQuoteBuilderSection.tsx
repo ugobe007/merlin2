@@ -190,7 +190,12 @@ export default function AdvancedQuoteBuilderSection({
       {/* Back to Simple View Button */}
       <section className="my-6 text-center">
         <button
-          onClick={() => setShowAdvancedQuoteBuilder(false)}
+          onClick={() => {
+            console.log('🔙 Back to Simple View clicked');
+            setShowAdvancedQuoteBuilder(false);
+            // Reset scroll position
+            window.scrollTo(0, 0);
+          }}
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-xl font-semibold shadow-md transition-all inline-flex items-center gap-2"
         >
           <span>←</span>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Wand2, Sparkles, Send, X } from 'lucide-react';
+import { Wand2, Sparkles, Send, X, Save, AlertCircle } from 'lucide-react';
 import { aiStateService, type AIState } from '../../services/aiStateService';
 import ConsultationModal from '../modals/ConsultationModal';
 import FinancingOptionsModal from './FinancingOptionsModal';
 import InstallerDirectoryModal from './InstallerDirectoryModal';
 import IncentivesGuideModal from './IncentivesGuideModal';
+import LeadCaptureModal from './LeadCaptureModal';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
 import { calculateDatabaseBaseline } from '../../services/baselineService';
+import { supabase } from '../../services/supabaseClient';
 import merlinImage from '../../assets/images/new_Merlin.png';
 import wizardIcon from '../../assets/images/wizard_icon1.png';
 
@@ -74,6 +76,28 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   const [showFinancingModal, setShowFinancingModal] = useState(false);
   const [showInstallerModal, setShowInstallerModal] = useState(false);
   const [showIncentivesModal, setShowIncentivesModal] = useState(false);
+  const [showLeadCaptureModal, setShowLeadCaptureModal] = useState(false);
+  const [pendingDownloadFormat, setPendingDownloadFormat] = useState<'PDF' | 'Excel' | 'Word' | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [showSaveReminder, setShowSaveReminder] = useState(true);
+  
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentUser(session?.user || null);
+      setIsLoadingAuth(false);
+    };
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   // 🔥 RECALCULATED VALUES FROM DATABASE - Single source of truth
   const [dashboardMetrics, setDashboardMetrics] = useState({
@@ -199,39 +223,28 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     return result;
   };
   
-  // AI Baseline Model - calculates optimal configuration based on database
+  // AI Baseline Model - use the ACTUAL configured values, don't recalculate
+  // The storageSizeMW was already correctly calculated based on user inputs
   const calculateOptimalBaseline = async () => {
     const industry = Array.isArray(quoteData.industryTemplate) ? quoteData.industryTemplate[0] : quoteData.industryTemplate;
     
-    try {
-      // Use centralized baseline service (database-driven)
-      const baseline = await calculateDatabaseBaseline(
-        industry,
-        1.0, // scale factor
-        quoteData.useCaseData || {}
-      );
-      
-      console.log('🤖 [AI Analysis] Using database baseline:', baseline);
-      
-      return {
-        optimalPowerMW: baseline.powerMW,
-        optimalDurationHrs: baseline.durationHrs,
-        optimalSolarMW: baseline.solarMW,
-        costPerMWh: 350000, // Base cost per MWh
-        annualSavingsRate: 0.15, // 15% of system cost annually
-      };
-    } catch (error) {
-      console.error('⚠️ [AI Analysis] Failed to get database baseline, using fallback:', error);
-      
-      // Fallback to reasonable defaults if database unavailable
-      return {
-        optimalPowerMW: quoteData.storageSizeMW,
-        optimalDurationHrs: quoteData.durationHours,
-        optimalSolarMW: quoteData.solarMW || 0,
-        costPerMWh: 350000,
-        annualSavingsRate: 0.15,
-      };
-    }
+    // DON'T recalculate baseline - use what user configured
+    // Their configuration was calculated correctly from their inputs (e.g., 150 rooms)
+    // Recalculating with scale=1.0 uses wrong assumptions (e.g., 100 rooms default)
+    
+    console.log('🤖 [AI Analysis] Using user\'s configured values (already calculated correctly):', {
+      storageSizeMW: quoteData.storageSizeMW,
+      durationHours: quoteData.durationHours,
+      solarMW: quoteData.solarMW
+    });
+    
+    return {
+      optimalPowerMW: quoteData.storageSizeMW, // Use their correctly calculated battery size
+      optimalDurationHrs: quoteData.durationHours,
+      optimalSolarMW: quoteData.solarMW || 0,
+      costPerMWh: 350000, // Base cost per MWh
+      annualSavingsRate: 0.15, // 15% of system cost annually
+    };
   };
 
   // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
@@ -264,9 +277,65 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   };
 
   const handleSave = () => {
+    if (!currentUser) {
+      // Show lead capture modal if not logged in
+      setShowLeadCaptureModal(true);
+      setPendingDownloadFormat(null); // Clear download format to indicate this is for save
+      return;
+    }
     onSaveProject();
     setProjectSaved(true);
+    setShowSaveReminder(false);
     setTimeout(() => setProjectSaved(false), 3000);
+  };
+
+  // Download handlers with lead capture
+  const handleDownloadClick = (format: 'PDF' | 'Excel' | 'Word') => {
+    setPendingDownloadFormat(format);
+    
+    // If user is already logged in, skip lead capture
+    if (currentUser) {
+      proceedWithDownload(format);
+      return;
+    }
+    
+    // Otherwise show lead capture modal
+    setShowLeadCaptureModal(true);
+  };
+
+  const handleLeadCaptureComplete = (userData: { name: string; email: string }) => {
+    // User provided info, proceed with download or save
+    setShowLeadCaptureModal(false);
+    if (pendingDownloadFormat) {
+      proceedWithDownload(pendingDownloadFormat);
+    } else {
+      // This was for save, now save the project
+      onSaveProject();
+      setProjectSaved(true);
+      setShowSaveReminder(false);
+      setTimeout(() => setProjectSaved(false), 3000);
+    }
+  };
+
+  const handleLeadCaptureSkip = () => {
+    // User skipped, still allow download but not save
+    setShowLeadCaptureModal(false);
+    if (pendingDownloadFormat) {
+      proceedWithDownload(pendingDownloadFormat);
+    }
+    setPendingDownloadFormat(null);
+  };
+
+  const proceedWithDownload = (format?: 'PDF' | 'Excel' | 'Word') => {
+    const downloadFormat = format || pendingDownloadFormat;
+    if (downloadFormat === 'PDF') {
+      onDownloadPDF();
+    } else if (downloadFormat === 'Excel') {
+      onDownloadExcel();
+    } else if (downloadFormat === 'Word') {
+      onDownloadWord();
+    }
+    setPendingDownloadFormat(null);
   };
 
   const handleAIGenerate = async () => {
@@ -433,6 +502,44 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 z-50 overflow-y-auto">
+      {/* Save Reminder Banner */}
+      {showSaveReminder && !projectSaved && (
+        <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-xl border-b-4 border-yellow-600">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-1">⚠️ Don't Lose Your Quote!</h3>
+                  <p className="text-white/90 text-sm">
+                    {currentUser 
+                      ? "Save your quote now to access it anytime and track your energy projects."
+                      : "Create a free account to save your quote and access it anytime. Takes only 30 seconds!"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSave}
+                  className="bg-white text-orange-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+                >
+                  <Save className="w-5 h-5" />
+                  {currentUser ? 'Save Quote' : 'Sign Up & Save'}
+                </button>
+                <button
+                  onClick={() => setShowSaveReminder(false)}
+                  className="text-white/80 hover:text-white transition-colors p-2"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white shadow-lg border-b-4 border-gradient-to-r from-blue-500 to-purple-500">
         <div className="max-w-7xl mx-auto px-6 py-6">
@@ -474,18 +581,9 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         {/* Celebration Banner */}
         <div className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white rounded-2xl p-6 mb-8 text-center shadow-2xl">
           <div className="flex items-center justify-center gap-4 mb-3">
-            <img 
-              src={wizardIcon} 
-              alt="Wizard" 
-              className="w-12 h-12 rounded-full object-cover animate-bounce"
-            />
+            <span className="text-5xl">💰</span>
             <h2 className="text-3xl font-bold">Excellent Choice!</h2>
-            <img 
-              src={wizardIcon} 
-              alt="Wizard" 
-              className="w-12 h-12 rounded-full object-cover animate-bounce" 
-              style={{ animationDelay: '0.2s' }}
-            />
+            <span className="text-5xl">💰</span>
           </div>
           <p className="text-xl opacity-95">
             You've designed an energy storage system that will transform your energy costs and sustainability goals.
@@ -537,7 +635,17 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                     <span>⚡</span>
                     <span>Power Output:</span>
                   </span>
-                  <span className="font-bold text-2xl">{quoteData.storageSizeMW.toFixed(1)} MW</span>
+                  <span className="font-bold text-2xl">
+                    {(quoteData.storageSizeMW + (quoteData.solarMW || 0) + (quoteData.windMW || 0) + (quoteData.generatorMW || 0)).toFixed(1)} MW
+                    {((quoteData.solarMW || 0) + (quoteData.windMW || 0) + (quoteData.generatorMW || 0) > 0) && (
+                      <span className="text-sm text-white ml-2">
+                        ({quoteData.storageSizeMW.toFixed(1)}MW battery
+                        {(quoteData.solarMW || 0) > 0 && ` + ${quoteData.solarMW.toFixed(1)}MW solar`}
+                        {(quoteData.windMW || 0) > 0 && ` + ${quoteData.windMW.toFixed(1)}MW wind`}
+                        {(quoteData.generatorMW || 0) > 0 && ` + ${quoteData.generatorMW.toFixed(1)}MW generator`})
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-2">
@@ -717,21 +825,21 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <h4 className="font-semibold text-gray-700 mb-4 text-lg">Download Format:</h4>
               <div className="space-y-3">
                 <button
-                  onClick={onDownloadPDF}
+                  onClick={() => handleDownloadClick('PDF')}
                   className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <span className="text-2xl">📄</span>
                   <span>Download PDF</span>
                 </button>
                 <button
-                  onClick={onDownloadExcel}
+                  onClick={() => handleDownloadClick('Excel')}
                   className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <span className="text-2xl">📊</span>
                   <span>Download Excel</span>
                 </button>
                 <button
-                  onClick={onDownloadWord}
+                  onClick={() => handleDownloadClick('Word')}
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <span className="text-2xl">📝</span>
@@ -909,7 +1017,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               {/* Scroll Indicator - shows when content is scrollable */}
               {aiSuggestion && showScrollIndicator && (
                 <div className="sticky top-0 left-0 right-0 flex justify-center pointer-events-none z-10 -mt-4 mb-2">
-                  <div className="bg-gradient-to-b from-purple-500 to-transparent text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 animate-bounce shadow-lg">
+                  <div className="bg-gradient-to-b from-purple-500 to-transparent text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
                     <span>↓</span>
                     <span>Scroll for AI Recommendations</span>
                     <span>↓</span>
@@ -926,7 +1034,9 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Power Output:</span>
-                    <span className="font-bold text-gray-900 ml-2">{quoteData.storageSizeMW.toFixed(1)} MW</span>
+                    <span className="font-bold text-gray-900 ml-2">
+                      {(quoteData.storageSizeMW + (quoteData.solarMW || 0) + (quoteData.windMW || 0) + (quoteData.generatorMW || 0)).toFixed(1)} MW
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Duration:</span>
@@ -1115,6 +1225,16 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
         location={quoteData.location}
         projectSize={quoteData.storageSizeMW}
       />
+
+      {/* Lead Capture Modal */}
+      {showLeadCaptureModal && (
+        <LeadCaptureModal
+          format={pendingDownloadFormat}
+          purpose={pendingDownloadFormat ? 'download' : 'save'}
+          onComplete={handleLeadCaptureComplete}
+          onSkip={handleLeadCaptureSkip}
+        />
+      )}
     </div>
   );
 };

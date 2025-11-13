@@ -66,6 +66,32 @@ interface InteractiveConfigDashboardProps {
   initialStorageSizeMW: number;
   initialDurationHours: number;
   initialSolarMW: number;
+  initialWindMW?: number;
+  initialGeneratorMW?: number;
+  solarSpaceConfig?: {
+    spaceType: 'rooftop' | 'ground' | 'canopy' | 'mixed';
+    rooftopSqFt?: number;
+    groundAcres?: number;
+    useAI: boolean;
+  };
+  evChargerConfig?: {
+    level2_11kw: number;
+    level2_19kw: number;
+    dcfast_50kw: number;
+    dcfast_150kw: number;
+    dcfast_350kw: number;
+  };
+  windConfig?: {
+    turbineSize: '2.5' | '3.0' | '5.0';
+    numberOfTurbines: number;
+    useAI: boolean;
+  };
+  generatorConfig?: {
+    generatorType: 'diesel' | 'natural-gas' | 'dual-fuel';
+    numberOfUnits: number;
+    sizePerUnit: number;
+    useAI: boolean;
+  };
   industryTemplate: string;
   location: string;
   electricityRate: number;
@@ -85,6 +111,12 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   initialStorageSizeMW,
   initialDurationHours,
   initialSolarMW,
+  initialWindMW = 0,
+  initialGeneratorMW = 0,
+  solarSpaceConfig,
+  evChargerConfig,
+  windConfig,
+  generatorConfig,
   industryTemplate,
   location,
   electricityRate,
@@ -97,8 +129,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   const [storageSizeMW, setStorageSizeMW] = useState(initialStorageSizeMW);
   const [durationHours, setDurationHours] = useState(initialDurationHours);
   const [solarMW, setSolarMW] = useState(initialSolarMW);
-  const [windMW, setWindMW] = useState(0);
-  const [generatorMW, setGeneratorMW] = useState(0);
+  const [windMW, setWindMW] = useState(initialWindMW);
+  const [generatorMW, setGeneratorMW] = useState(initialGeneratorMW);
   
   // Financial targets
   const [targetROI, setTargetROI] = useState(4); // years
@@ -116,6 +148,19 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
   // Track applied configurations for visual feedback
   const [appliedConfig, setAppliedConfig] = useState<string | null>(null);
+
+  // Log received configuration data
+  useEffect(() => {
+    console.log('📊 [InteractiveConfigDashboard] Received configuration:', {
+      solarMW,
+      windMW,
+      generatorMW,
+      solarSpaceConfig,
+      evChargerConfig,
+      windConfig,
+      generatorConfig
+    });
+  }, [solarMW, windMW, generatorMW, solarSpaceConfig, evChargerConfig, windConfig, generatorConfig]);
 
   // Track clicked dashboard items for visual feedback
   const [clickedItems, setClickedItems] = useState<{
@@ -607,9 +652,11 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
         }
       `}</style>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
-      <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-[98vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
+      {/* Main Modal Container - Fixed viewport */}
+      <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-[98vh] flex flex-col overflow-hidden">
+        
+        {/* Fixed Header - Always visible at top */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex-shrink-0">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-xl font-bold">Interactive Configuration Dashboard</h2>
@@ -622,8 +669,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           </div>
         </div>
 
-        {/* Configuration Summary Dashboard */}
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-purple-200 p-4">
+        {/* Fixed Metrics Dashboard - Always visible below header */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-purple-200 p-4 flex-shrink-0">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {/* System Size - Clickable */}
             <div 
@@ -638,9 +685,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                   <span className="text-white text-xs">✓</span>
                 </div>
               )}
-              <div className="text-xs text-gray-600 mb-1">System Size</div>
-              <div className="text-lg font-bold text-purple-800">{storageSizeMW}MW</div>
-              <div className="text-xs text-purple-600">{durationHours}hr duration</div>
+              <div className="text-xs text-gray-600 mb-1">Total Power</div>
+              <div className="text-lg font-bold text-purple-800">
+                {(storageSizeMW + solarMW + windMW + generatorMW).toFixed(2)}MW
+              </div>
+              <div className="text-xs text-purple-600">
+                Battery: {storageSizeMW}MW • {durationHours}hr
+              </div>
             </div>
 
             {/* Total Investment - Clickable */}
@@ -766,55 +817,311 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           </div>
         </div>
 
-        {/* 🤖 AI Optimization Section */}
-        {showAIInsight && aiOptimization && !aiOptimization.isOptimal && aiOptimization.suggestion && (
-          <div className="px-6 pb-4">
-            <AIInsightBadge
-              type="suggestion"
-              title="AI Optimization Available"
-              message={aiOptimization.suggestion.reasoning}
-              confidence={aiOptimization.suggestion.confidence}
-              suggestion={{
-                label: isOptimizing ? "Optimizing..." : "Apply Suggestion",
-                onAccept: handleAIOptimization
-              }}
-              className="animate-fade-in"
-            />
-            <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-              <div className="bg-blue-50 rounded p-2">
-                <span className="text-gray-600">Cost Impact:</span>
-                <div className="font-semibold text-blue-900">{aiOptimization.suggestion.costImpact}</div>
+        {/* SCROLLABLE CONTENT AREA - Everything below metrics can scroll */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-4">
+
+            {/* 🎯 Live System Performance Indicator */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    System Performance Score
+                    <span className="text-xs bg-white/20 px-2 py-1 rounded">Adjust bars below</span>
+                  </h3>
+                  <p className="text-sm text-blue-100">Real-time optimization analysis</p>
+                </div>
+                <div className="text-4xl font-bold">
+                  {(() => {
+                    const sizeScore = Math.min((storageSizeMW / 10) * 25, 25);
+                    const profitScore = Math.min((profitabilityTarget / 4) * 25, 25);
+                    const renewableScore = Math.min(((solarMW + windMW) / 5) * 25, 25);
+                    const durationScore = Math.min((durationHours / 4) * 25, 25);
+                    const totalScore = Math.round(sizeScore + profitScore + renewableScore + durationScore);
+                    return `${totalScore}%`;
+                  })()}
+                </div>
               </div>
-              <div className="bg-green-50 rounded p-2">
-                <span className="text-gray-600">ROI Impact:</span>
-                <div className="font-semibold text-green-900">{aiOptimization.suggestion.roiImpact}</div>
+              
+              {/* Animated Progress Bar */}
+              <div className="bg-white/20 rounded-full h-4 overflow-hidden mb-2">
+                <div 
+                  className="bg-gradient-to-r from-green-400 to-emerald-500 h-full rounded-full transition-all duration-500 ease-out shadow-lg"
+                  style={{ 
+                    width: `${(() => {
+                      const sizeScore = Math.min((storageSizeMW / 10) * 25, 25);
+                      const profitScore = Math.min((profitabilityTarget / 4) * 25, 25);
+                      const renewableScore = Math.min(((solarMW + windMW) / 5) * 25, 25);
+                      const durationScore = Math.min((durationHours / 4) * 25, 25);
+                      return Math.round(sizeScore + profitScore + renewableScore + durationScore);
+                    })()}%` 
+                  }}
+                >
+                  <div className="h-full bg-white/20 animate-pulse"></div>
+                </div>
+              </div>
+              
+              {/* Interactive Score Breakdown with Sliders */}
+              <div className="space-y-2 text-xs">
+                {/* Size Score */}
+                <div className="bg-white/10 rounded px-3 py-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white/80 font-medium">⚡ Size</span>
+                    <span className="font-semibold">{Math.round(Math.min((storageSizeMW / 10) * 25, 25))}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    value={storageSizeMW}
+                    onChange={(e) => setStorageSizeMW(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #10b981 0%, #10b981 ${(storageSizeMW / 10) * 100}%, rgba(255,255,255,0.2) ${(storageSizeMW / 10) * 100}%, rgba(255,255,255,0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between mt-1 text-white/60 text-[10px]">
+                    <span>0 MW</span>
+                    <span>{storageSizeMW.toFixed(1)} MW</span>
+                    <span>10 MW</span>
+                  </div>
+                </div>
+
+                {/* ROI Score */}
+                <div className="bg-white/10 rounded px-3 py-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white/80 font-medium">💰 ROI Target</span>
+                    <span className="font-semibold">{Math.round(Math.min((profitabilityTarget / 4) * 25, 25))}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="0.5"
+                    value={profitabilityTarget}
+                    onChange={(e) => setProfitabilityTarget(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #10b981 0%, #10b981 ${(profitabilityTarget / 4) * 100}%, rgba(255,255,255,0.2) ${(profitabilityTarget / 4) * 100}%, rgba(255,255,255,0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between mt-1 text-white/60 text-[10px]">
+                    <span>Low</span>
+                    <span>Level {profitabilityTarget}</span>
+                    <span>High</span>
+                  </div>
+                </div>
+
+                {/* Renewable Score */}
+                <div className="bg-white/10 rounded px-3 py-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white/80 font-medium">☀️ Renewables</span>
+                    <span className="font-semibold">{Math.round(Math.min(((solarMW + windMW) / 5) * 25, 25))}%</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/60 text-[10px] w-10">Solar:</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value={solarMW}
+                        onChange={(e) => setSolarMW(parseFloat(e.target.value))}
+                        className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${(solarMW / 5) * 100}%, rgba(255,255,255,0.2) ${(solarMW / 5) * 100}%, rgba(255,255,255,0.2) 100%)`
+                        }}
+                      />
+                      <span className="text-white/80 text-[10px] w-12">{solarMW.toFixed(1)}MW</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/60 text-[10px] w-10">Wind:</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value={windMW}
+                        onChange={(e) => setWindMW(parseFloat(e.target.value))}
+                        className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #60a5fa 0%, #60a5fa ${(windMW / 5) * 100}%, rgba(255,255,255,0.2) ${(windMW / 5) * 100}%, rgba(255,255,255,0.2) 100%)`
+                        }}
+                      />
+                      <span className="text-white/80 text-[10px] w-12">{windMW.toFixed(1)}MW</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Duration Score */}
+                <div className="bg-white/10 rounded px-3 py-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white/80 font-medium">⏱️ Duration</span>
+                    <span className="font-semibold">{Math.round(Math.min((durationHours / 4) * 25, 25))}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="0.5"
+                    value={durationHours}
+                    onChange={(e) => setDurationHours(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #10b981 0%, #10b981 ${(durationHours / 4) * 100}%, rgba(255,255,255,0.2) ${(durationHours / 4) * 100}%, rgba(255,255,255,0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between mt-1 text-white/60 text-[10px]">
+                    <span>0 hrs</span>
+                    <span>{durationHours.toFixed(1)} hrs</span>
+                    <span>4 hrs</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status Message */}
+              <div className="mt-3 text-sm text-center">
+                {(() => {
+                  const sizeScore = Math.min((storageSizeMW / 10) * 25, 25);
+                  const profitScore = Math.min((profitabilityTarget / 4) * 25, 25);
+                  const renewableScore = Math.min(((solarMW + windMW) / 5) * 25, 25);
+                  const durationScore = Math.min((durationHours / 4) * 25, 25);
+                  const totalScore = Math.round(sizeScore + profitScore + renewableScore + durationScore);
+                  
+                  if (totalScore >= 90) return '🎉 Excellent! Your system is highly optimized';
+                  if (totalScore >= 75) return '✅ Great configuration with strong fundamentals';
+                  if (totalScore >= 60) return '👍 Good setup - consider optimizing further';
+                  if (totalScore >= 40) return '⚠️ Basic config - use sliders to improve';
+                  return '💡 Start by adjusting system parameters below';
+                })()}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* AI Optimal Configuration Badge */}
-        {aiOptimization?.isOptimal && (
-          <div className="px-6 pb-4">
-            <AIInsightBadge
-              type="optimal"
-              title="✓ Optimal Configuration"
-              message={`Your ${storageSizeMW}MW / ${durationHours}hr configuration is well-optimized for ${industryTemplate}. ${aiOptimization.benchmarkComparison ? aiOptimization.benchmarkComparison.comparison : ''}`}
-            />
-          </div>
-        )}
-
-        <div className="flex-1 overflow-hidden p-3">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 h-full">
-            
-            {/* Left Panel - Configuration Controls */}
-            <div className="space-y-3 overflow-y-auto">
-              <div id="system-config-section" className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative">
-                {activeArrow === 'system-config-section' && (
-                  <div className="floating-arrow">
-                    🎯
+            {/* 🤖 AI Optimization Section */}
+            {showAIInsight && aiOptimization && !aiOptimization.isOptimal && aiOptimization.suggestion && (
+              <div>
+                <AIInsightBadge
+                  type="suggestion"
+                  title="AI Optimization Available"
+                  message={aiOptimization.suggestion.reasoning}
+                  confidence={aiOptimization.suggestion.confidence}
+                  suggestion={{
+                    label: isOptimizing ? "Optimizing..." : "Apply Suggestion",
+                    onAccept: handleAIOptimization
+                  }}
+                  className="animate-fade-in"
+                />
+                <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                  <div className="bg-blue-50 rounded p-2">
+                    <span className="text-gray-600">Cost Impact:</span>
+                    <div className="font-semibold text-blue-900">{aiOptimization.suggestion.costImpact}</div>
                   </div>
-                )}
+                  <div className="bg-green-50 rounded p-2">
+                    <span className="text-gray-600">ROI Impact:</span>
+                    <div className="font-semibold text-green-900">{aiOptimization.suggestion.roiImpact}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI Optimal Configuration Badge */}
+            {aiOptimization?.isOptimal && (
+              <div>
+                <AIInsightBadge
+                  type="optimal"
+                  title="✓ Optimal Configuration"
+                  message={`Your ${storageSizeMW}MW / ${durationHours}hr configuration is well-optimized for ${industryTemplate}. ${aiOptimization.benchmarkComparison ? aiOptimization.benchmarkComparison.comparison : ''}`}
+                />
+              </div>
+            )}
+
+            {/* Equipment Configuration Summary */}
+            {(solarSpaceConfig || evChargerConfig || windConfig || generatorConfig) && (
+              <div>
+                <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-4 border border-blue-200">
+                  <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    ⚡ Power Generation Equipment
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    {/* Solar Configuration */}
+                    {solarMW > 0 && solarSpaceConfig && (
+                      <div className="bg-white/70 rounded-lg p-2 border border-yellow-200">
+                        <div className="font-semibold text-yellow-700">☀️ Solar</div>
+                        <div className="text-gray-700">{solarMW.toFixed(1)} MW</div>
+                        <div className="text-gray-600">
+                          {solarSpaceConfig.spaceType === 'rooftop' ? '🏢 Rooftop' :
+                           solarSpaceConfig.spaceType === 'ground' ? '🌱 Ground' :
+                           solarSpaceConfig.spaceType === 'canopy' ? '🚗 Canopy' : '🔄 Mixed'}
+                        </div>
+                        {solarSpaceConfig.rooftopSqFt && (
+                          <div className="text-gray-500">{solarSpaceConfig.rooftopSqFt.toLocaleString()} sq ft</div>
+                        )}
+                        {solarSpaceConfig.groundAcres && (
+                          <div className="text-gray-500">{solarSpaceConfig.groundAcres} acres</div>
+                        )}
+                      </div>
+                    )}
+                
+                    {/* Wind Configuration */}
+                    {windMW > 0 && windConfig && (
+                      <div className="bg-white/70 rounded-lg p-2 border border-cyan-200">
+                        <div className="font-semibold text-cyan-700">💨 Wind</div>
+                        <div className="text-gray-700">{windMW.toFixed(1)} MW</div>
+                        <div className="text-gray-600">
+                          {Math.ceil(windMW / parseFloat(windConfig.turbineSize))} × {windConfig.turbineSize} MW
+                        </div>
+                        <div className="text-gray-500">turbines</div>
+                      </div>
+                    )}
+                    
+                    {/* Generator Configuration */}
+                    {generatorMW > 0 && generatorConfig && (
+                      <div className="bg-white/70 rounded-lg p-2 border border-orange-200">
+                        <div className="font-semibold text-orange-700">⚡ Generator</div>
+                        <div className="text-gray-700">{generatorMW.toFixed(1)} MW</div>
+                        <div className="text-gray-600">
+                          {Math.ceil(generatorMW / generatorConfig.sizePerUnit)} × {generatorConfig.sizePerUnit} MW
+                        </div>
+                        <div className="text-gray-500 capitalize">
+                          {generatorConfig.generatorType.replace('-', ' ')}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* EV Charger Configuration */}
+                    {evChargerConfig && Object.values(evChargerConfig).some(v => v > 0) && (
+                      <div className="bg-white/70 rounded-lg p-2 border border-blue-200">
+                        <div className="font-semibold text-blue-700">🔌 EV Chargers</div>
+                        <div className="text-gray-700">
+                          {Object.values(evChargerConfig).reduce((a, b) => a + b, 0)} units
+                        </div>
+                        <div className="text-gray-600 space-y-0.5">
+                          {evChargerConfig.level2_11kw > 0 && <div>L2-11kW: {evChargerConfig.level2_11kw}</div>}
+                          {evChargerConfig.level2_19kw > 0 && <div>L2-19kW: {evChargerConfig.level2_19kw}</div>}
+                          {evChargerConfig.dcfast_50kw > 0 && <div>DC-50kW: {evChargerConfig.dcfast_50kw}</div>}
+                          {evChargerConfig.dcfast_150kw > 0 && <div>DC-150kW: {evChargerConfig.dcfast_150kw}</div>}
+                          {evChargerConfig.dcfast_350kw > 0 && <div>DC-350kW: {evChargerConfig.dcfast_350kw}</div>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Main Dashboard Panels Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              
+              {/* Left Panel - Configuration Controls */}
+              <div className="space-y-3">
+                <div id="system-config-section" className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative">
+                  {activeArrow === 'system-config-section' && (
+                    <div className="floating-arrow">
+                      🎯
+                    </div>
+                  )}
                 <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center gap-2">
                   <Settings className="w-5 h-5 text-purple-600" />
                   System Configuration
@@ -1559,11 +1866,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+            
+          </div> {/* End of 3-column grid */}
+          </div> {/* End of scrollable content padding */}
+        </div> {/* End of scrollable content area */}
 
-        {/* Footer */}
-        <div className="bg-gray-50 p-3 border-t">
+        {/* Footer - Fixed at bottom */}
+        <div className="bg-gray-50 p-3 border-t flex-shrink-0">
           <div className="flex justify-between items-center">
             <button
               onClick={onBack}
