@@ -41,8 +41,18 @@ export async function calculateDatabaseBaseline(
 ): Promise<BaselineCalculationResult> {
   const templateKey = Array.isArray(template) ? template[0] : template;
   
-  // Generate cache key including template, scale, and EV-specific data
-  const cacheKeyData = useCaseData ? JSON.stringify(useCaseData) : '';
+  // Generate stable cache key by sorting object keys
+  // This prevents cache misses from object key ordering differences
+  let cacheKeyData = '';
+  if (useCaseData) {
+    const sortedKeys = Object.keys(useCaseData).sort();
+    const sortedData: Record<string, any> = {};
+    sortedKeys.forEach(key => {
+      sortedData[key] = useCaseData[key];
+    });
+    cacheKeyData = JSON.stringify(sortedData);
+  }
+  
   const cacheKey = `baseline:${templateKey}:${scale}:${cacheKeyData}`;
   
   // Check cache first
@@ -126,9 +136,12 @@ export async function calculateDatabaseBaseline(
       console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${scale} scale = ${basePowerMW.toFixed(3)} MW`);
     }
     
-    // Round to nearest 0.1 MW, with a reasonable minimum of 0.2 MW (200 kW)
-    // Small facilities like boutique hotels can be smaller than 0.5 MW
-    const powerMW = Math.max(0.2, Math.round(basePowerMW * 10) / 10);
+    // Round to nearest 0.01 MW (10 kW precision) for better accuracy
+    // This prevents 440 kW from rounding down to 400 kW (was rounding to 0.1 MW)
+    // Minimum of 0.2 MW (200 kW) for small facilities
+    const powerMW = Math.max(0.2, Math.round(basePowerMW * 100) / 100);
+    
+    console.log(`📊 [Power Calculation] Raw: ${basePowerMW.toFixed(3)} MW → Rounded: ${powerMW} MW`);
     
     // Use preferred duration from configuration
     const durationHrs = Math.max(2, Math.round((defaultConfig.preferred_duration_hours || 4) * 2) / 2);

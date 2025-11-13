@@ -57,11 +57,12 @@ export async function getAIOptimization(
   try {
     console.log('🤖 AI Optimization analyzing configuration...', input);
 
-    // Get industry baseline using SHARED DATABASE-DRIVEN calculation
-    // This ensures AI and wizard use IDENTICAL baseline values
-    // Pass useCaseData so EV charger counts, hotel rooms, etc. are considered
-    const baseline = await calculateDatabaseBaseline(input.useCase, 1.0, input.useCaseData);
-    console.log('📊 Industry baseline (from database):', baseline);
+    // DON'T recalculate baseline - the user's storageSizeMW was already correctly 
+    // calculated based on their inputs (e.g., 150 rooms for hotels)
+    // If we recalculate here with scale=1.0, we'd use wrong assumptions
+    
+    // Instead, treat the CURRENT config as the baseline to optimize FROM
+    // We're looking for improvements to THEIR chosen size, not comparing to a generic baseline
 
     // Calculate metrics for current configuration
     const currentMetrics = await calculateFinancialMetrics({
@@ -75,27 +76,50 @@ export async function getAIOptimization(
 
     console.log('💰 Current config metrics:', currentMetrics);
 
-    // Calculate metrics for baseline (optimal) configuration
-    const baselineMetrics = await calculateFinancialMetrics({
-      storageSizeMW: baseline.powerMW,
-      durationHours: baseline.durationHrs,
+    // Test alternative configurations for optimization opportunities
+    // 1. Try increasing duration for better ROI
+    const longerDurationMetrics = await calculateFinancialMetrics({
+      storageSizeMW: input.storageSizeMW,
+      durationHours: input.durationHours + 2,
       solarMW: input.solarMW || 0,
       windMW: input.windMW || 0,
       location: input.location || 'California',
       electricityRate: input.electricityRate || 0.15
     });
 
-    console.log('📈 Baseline config metrics:', baselineMetrics);
+    // 2. Try increasing power for better coverage
+    const largerSizeMetrics = await calculateFinancialMetrics({
+      storageSizeMW: input.storageSizeMW * 1.2,
+      durationHours: input.durationHours,
+      solarMW: input.solarMW || 0,
+      windMW: input.windMW || 0,
+      location: input.location || 'California',
+      electricityRate: input.electricityRate || 0.15
+    });
 
-    // Compare configurations
-    const sizeDiff = Math.abs(input.storageSizeMW - baseline.powerMW);
-    const sizeDiffPercent = (sizeDiff / baseline.powerMW) * 100;
-    const durationDiff = Math.abs(input.durationHours - baseline.durationHrs);
-    const roiDiff = currentMetrics.paybackYears - baselineMetrics.paybackYears;
-    const costDiff = currentMetrics.netCost - baselineMetrics.netCost;
+    console.log('📈 Alternative config metrics:', { longerDurationMetrics, largerSizeMetrics });
 
-    // Determine if current config is optimal (within tolerance)
-    const isOptimal = sizeDiffPercent < 15 && Math.abs(roiDiff) < 0.5 && durationDiff <= 1;
+    // Find best alternative (shortest payback or highest ROI)
+    let bestAlternative = currentMetrics;
+    let bestConfig = { storageSizeMW: input.storageSizeMW, durationHours: input.durationHours };
+    let improvement = '';
+
+    if (longerDurationMetrics.paybackYears < currentMetrics.paybackYears - 0.3) {
+      bestAlternative = longerDurationMetrics;
+      bestConfig = { storageSizeMW: input.storageSizeMW, durationHours: input.durationHours + 2 };
+      improvement = 'longer duration';
+    }
+
+    if (largerSizeMetrics.roi10Year > currentMetrics.roi10Year * 1.15) {
+      if (!improvement || largerSizeMetrics.paybackYears < bestAlternative.paybackYears) {
+        bestAlternative = largerSizeMetrics;
+        bestConfig = { storageSizeMW: input.storageSizeMW * 1.2, durationHours: input.durationHours };
+        improvement = 'larger capacity';
+      }
+    }
+
+    // Determine if current config is optimal (no better alternative found)
+    const isOptimal = !improvement;
 
     if (isOptimal) {
       console.log('✅ Configuration is already optimal!');
@@ -111,14 +135,17 @@ export async function getAIOptimization(
       };
     }
 
-    // Generate optimization suggestion
+    // Generate optimization suggestion based on best alternative found
+    const roiDiff = currentMetrics.paybackYears - bestAlternative.paybackYears;
+    const costDiff = bestAlternative.netCost - currentMetrics.netCost;
+    
     const suggestion: AIOptimizationSuggestion = {
-      storageSizeMW: baseline.powerMW,
-      durationHours: baseline.durationHrs,
-      reasoning: generateReasoning(input, baseline, currentMetrics, baselineMetrics, roiDiff),
+      storageSizeMW: bestConfig.storageSizeMW,
+      durationHours: bestConfig.durationHours,
+      reasoning: `By ${improvement}, you could improve your ROI by ${Math.abs(roiDiff).toFixed(1)} years payback time`,
       costImpact: formatCostImpact(costDiff),
       roiImpact: formatROIImpact(roiDiff),
-      confidence: determineConfidence(sizeDiffPercent, roiDiff)
+      confidence: 'medium' as const
     };
 
     console.log('💡 AI Suggestion:', suggestion);

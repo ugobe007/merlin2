@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import UseCaseROI from '../UseCaseROI';
 import type { UseCaseData } from '../UseCaseROI';
+import QuoteBuilderLanding from '../wizard/QuoteBuilderLanding';
 import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
@@ -41,7 +42,65 @@ export default function HeroSection({
   setShowPowerAdjustmentModal,
   setSelectedUseCaseForAdjustment
 }: HeroSectionProps) {
+  const [showQuoteBuilderLanding, setShowQuoteBuilderLanding] = useState(false);
+  const [selectedUseCaseForQuote, setSelectedUseCaseForQuote] = useState<UseCaseData | null>(null);
+
   const handleLoadTemplate = (useCase: UseCaseData) => {
+    console.log('🎯🎯🎯 HeroSection handleLoadTemplate called with:', useCase.industry);
+    console.log('🚀 Opening Quote Builder Landing Page');
+    
+    // Show the quote builder landing page instead of jumping to wizard
+    setSelectedUseCaseForQuote(useCase);
+    setShowQuoteBuilderLanding(true);
+  };
+
+  const handleGenerateQuote = () => {
+    if (!selectedUseCaseForQuote) return;
+    
+    console.log('📄 Generating quote for:', selectedUseCaseForQuote.industry);
+    
+    // Store use case data and jump to quote generation (step 5)
+    const wizardData = {
+      selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, '-'),
+      storageSizeMW: selectedUseCaseForQuote.systemSizeMW,
+      durationHours: selectedUseCaseForQuote.duration,
+      location: selectedCountry,
+      jumpToStep: 5, // Go directly to quote summary
+      useCase: selectedUseCaseForQuote
+    };
+    
+    localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
+    setShowQuoteBuilderLanding(false);
+    setShowSmartWizard(true);
+  };
+
+  const handleCustomizeSystem = () => {
+    if (!selectedUseCaseForQuote) return;
+    
+    console.log('⚙️ Customizing system for:', selectedUseCaseForQuote.industry);
+    
+    // Store use case data and start from step 1
+    const wizardData = {
+      selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, '-'),
+      storageSizeMW: selectedUseCaseForQuote.systemSizeMW,
+      durationHours: selectedUseCaseForQuote.duration,
+      location: selectedCountry,
+      jumpToStep: 1, // Start from beginning for customization
+      useCase: selectedUseCaseForQuote
+    };
+    
+    localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
+    setShowQuoteBuilderLanding(false);
+    setShowSmartWizard(true);
+  };
+
+  const handleCancelQuoteBuilder = () => {
+    console.log('❌ Quote builder cancelled');
+    setShowQuoteBuilderLanding(false);
+    setSelectedUseCaseForQuote(null);
+  };
+
+  const handleLoadTemplate_OLD = (useCase: UseCaseData) => {
     console.log('🎯🎯🎯 NEW SECTIONS/HeroSection handleLoadTemplate called with:', useCase.industry);
     console.log('🎯🎯🎯 About to set Smart Wizard quickstart data');
     
@@ -161,9 +220,10 @@ export default function HeroSection({
                   
                   <button 
                     onClick={() => {
-                      console.log('🎯 Button clicked!');
-                      console.log('About to set showAdvancedQuoteBuilder to true');
+                      console.log('🎯🎯🎯 HERO ADVANCED TOOLS BUTTON CLICKED!');
+                      console.log('About to call setShowAdvancedQuoteBuilder(true)');
                       setShowAdvancedQuoteBuilder(true);
+                      console.log('✅ setShowAdvancedQuoteBuilder(true) called successfully');
                     }}
                     className="relative bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl border-2 border-amber-300 hover:scale-105 transition-transform z-10"
                     style={{ pointerEvents: 'auto' }}
@@ -363,6 +423,16 @@ export default function HeroSection({
           </div>
         </div>
       </section>
+
+      {/* Quote Builder Landing Modal */}
+      {showQuoteBuilderLanding && selectedUseCaseForQuote && (
+        <QuoteBuilderLanding
+          useCase={selectedUseCaseForQuote}
+          onGenerateQuote={handleGenerateQuote}
+          onCustomize={handleCustomizeSystem}
+          onCancel={handleCancelQuoteBuilder}
+        />
+      )}
     </>
   );
 }

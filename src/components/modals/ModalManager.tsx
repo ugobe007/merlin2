@@ -163,6 +163,13 @@ interface ModalManagerProps {
   setGeneratorMW: (generator: number) => void;
   setValueKwh: (value: number) => void;
   setCurrentQuoteStatus: (status: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared') => void;
+  
+  // Advanced mode props
+  startWizardInAdvancedMode?: boolean;
+  setStartWizardInAdvancedMode?: (value: boolean) => void;
+  setShowAdvancedQuoteBuilderModal?: (show: boolean) => void;
+  skipWizardIntro?: boolean;
+  setSkipWizardIntro?: (value: boolean) => void;
 }
 
 export default function ModalManager(props: ModalManagerProps) {
@@ -178,6 +185,10 @@ export default function ModalManager(props: ModalManagerProps) {
     showPrivacyPolicy, showTermsOfService, showSecuritySettings, showSystemHealth, showStatusPage,
     showUtilityRates, showQuoteTemplates, showPricingPresets, showReviewWorkflow,
     showCostSavingsModal, showRevenueModal, showSustainabilityModal, showPowerAdjustmentModal, selectedUseCaseForAdjustment,
+    
+    // Advanced mode
+    startWizardInAdvancedMode, setStartWizardInAdvancedMode, setShowAdvancedQuoteBuilderModal,
+    skipWizardIntro, setSkipWizardIntro,
 
     // Modal setters
     setShowUserProfile, setShowPortfolio, setShowAuthModal, setShowVendorManager, setShowPricingPlans,
@@ -271,7 +282,26 @@ export default function ModalManager(props: ModalManagerProps) {
       
       <SmartWizard
         show={showSmartWizard}
-        onClose={() => setShowSmartWizard(false)}
+        onClose={() => {
+          setShowSmartWizard(false);
+          // Reset advanced mode flag when closing
+          if (setStartWizardInAdvancedMode) {
+            setStartWizardInAdvancedMode(false);
+          }
+          // Reset skip intro flag when closing
+          if (setSkipWizardIntro) {
+            setSkipWizardIntro(false);
+          }
+        }}
+        startInAdvancedMode={startWizardInAdvancedMode}
+        skipIntro={skipWizardIntro}
+        onOpenAdvancedQuoteBuilder={() => {
+          // Close wizard and open Advanced Quote Builder
+          setShowSmartWizard(false);
+          if (setShowAdvancedQuoteBuilderModal) {
+            setShowAdvancedQuoteBuilderModal(true);
+          }
+        }}
         onFinish={(wizardData) => {
           // Map wizard data to the main form
           setPowerMW(wizardData.storageSizeMW || 1);

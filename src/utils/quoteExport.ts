@@ -312,7 +312,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               This ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
             </p>
             <p style="font-size: 16px; line-height: 1.8; color: #374151;">
-              The <strong>${quoteData.storageSizeMW.toFixed(1)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
+              The <strong>${quoteData.storageSizeMW.toFixed(2)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
             </p>
           </div>
 
@@ -322,7 +322,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <div class="info-grid">
               <div class="info-card">
                 <div class="label">Power Output</div>
-                <div class="value">${quoteData.storageSizeMW.toFixed(1)} <span class="unit">MW</span></div>
+                <div class="value">${quoteData.storageSizeMW.toFixed(2)} <span class="unit">MW</span></div>
               </div>
               <div class="info-card">
                 <div class="label">Duration</div>
@@ -330,7 +330,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               </div>
               <div class="info-card">
                 <div class="label">Total Energy Storage</div>
-                <div class="value">${totalEnergyMWh.toFixed(1)} <span class="unit">MWh</span></div>
+                <div class="value">${totalEnergyMWh.toFixed(2)} <span class="unit">MWh</span></div>
               </div>
               <div class="info-card">
                 <div class="label">Location</div>
@@ -364,7 +364,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 <div style="margin-bottom: 15px;">
                   <div style="font-weight: bold; color: #6B46C1; margin-bottom: 8px;">🎯 Primary Objectives Addressed:</div>
                   <ul style="margin-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
-                    <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(1)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
+                    <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
                     <li><strong>Power Quality & Reliability:</strong> ${quoteData.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}</li>
                     <li><strong>Operational Cost Reduction:</strong> System delivers ${quoteData.paybackYears.toFixed(1)}-year payback with ${((quoteData.annualSavings * 25 / quoteData.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
                     <li><strong>Business Continuity:</strong> Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances</li>
@@ -540,8 +540,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3B82F6;">
             <h4 style="margin: 0 0 10px 0; color: #1E40AF;">System Specifications</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
-              <li>Battery Capacity: <strong>${totalEnergyMWh.toFixed(1)} MWh</strong></li>
-              <li>Power Rating: <strong>${quoteData.storageSizeMW.toFixed(1)} MW</strong></li>
+              <li>Battery Capacity: <strong>${totalEnergyMWh.toFixed(2)} MWh</strong></li>
+              <li>Power Rating: <strong>${quoteData.storageSizeMW.toFixed(2)} MW</strong></li>
               <li>Duration: <strong>${quoteData.durationHours.toFixed(1)} hours</strong></li>
               <li>Round-trip Efficiency: <strong>85-90%</strong></li>
               <li>Backup Duration: <strong>${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours</strong></li>
@@ -721,11 +721,11 @@ PROFESSIONAL SYSTEM BREAKDOWN
 ====================================
 Subsystem,Description,Capacity/Scope,Estimated Cost (USD ex-VAT),Notes${equipmentBreakdown.generators && equipmentBreakdown.generators.totalCost > 0 ? `
 ${quoteData.gridConnection === 'off-grid' ? 'Backup Generators' : 'Natural Gas Generators'},${quoteData.gridConnection === 'off-grid' ? 'Caterpillar diesel gensets with auto-start/stop' : 'Caterpillar/Cummins NG gensets with paralleling'} (${equipmentBreakdown.generators.quantity} units),${(equipmentBreakdown.generators.quantity * equipmentBreakdown.generators.unitPowerMW).toFixed(1)} MW total,$$${(equipmentBreakdown.generators.totalCost / 1000000).toFixed(2)}M,${quoteData.gridConnection === 'off-grid' ? 'Tier 4 Final compliant with sound attenuation' : 'MCPD compliant with sound-attenuated enclosures'}` : ''}
-BESS System,LFP battery storage with PCS and fire-rated enclosure,${totalEnergyMWh.toFixed(1)} MWh / ${quoteData.storageSizeMW.toFixed(1)} MW,$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M,"Includes HVAC thermal management, transformer tie-in, SCADA controls"
-Power Conversion,${quoteData.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'},${quoteData.storageSizeMW.toFixed(1)} MW total capacity,$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M,${quoteData.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}${equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0 ? `
+BESS System,LFP battery storage with PCS and fire-rated enclosure,${totalEnergyMWh.toFixed(2)} MWh / ${quoteData.storageSizeMW.toFixed(2)} MW,$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M,"Includes HVAC thermal management, transformer tie-in, SCADA controls"
+Power Conversion,${quoteData.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'},${quoteData.storageSizeMW.toFixed(2)} MW total capacity,$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M,${quoteData.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}${equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0 ? `
 Photovoltaic Array,${quoteData.gridConnection === 'off-grid' ? 'Ground-mounted PV with MPPT charge controllers' : 'Roof or ground-mounted PV with string inverters'},${quoteData.solarMW.toFixed(1)} MWp DC capacity,$$${(equipmentBreakdown.solar.totalCost / 1000000).toFixed(2)}M,IEC 61215/61730 certified modules with 25-year warranty` : ''}${equipmentBreakdown.wind && equipmentBreakdown.wind.totalCost > 0 ? `
 Wind Generation,Utility-scale wind turbines with grid synchronization,${quoteData.windMW.toFixed(1)} MW rated capacity,$$${(equipmentBreakdown.wind.totalCost / 1000000).toFixed(2)}M,IEC 61400 certified with advanced blade control` : ''}
-Medium Voltage Equipment,ABB transformers with protective switchgear and MV distribution,${quoteData.storageSizeMW.toFixed(1)} MW system integration,$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M,"Oil-filled transformers with digital protection relays, arc-resistant switchgear"${equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0 ? `
+Medium Voltage Equipment,ABB transformers with protective switchgear and MV distribution,${quoteData.storageSizeMW.toFixed(2)} MW system integration,$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M,"Oil-filled transformers with digital protection relays, arc-resistant switchgear"${equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0 ? `
 EV Charging Infrastructure,Level 2 and DC fast charging stations with network connectivity,${equipmentBreakdown.evChargers.level2Chargers.quantity} Level 2 + ${equipmentBreakdown.evChargers.dcFastChargers.quantity} DC Fast units,$$${(equipmentBreakdown.evChargers.totalChargingCost / 1000000).toFixed(2)}M,OCPP 2.0 compliant with payment processing and load management` : ''}
 Control & Monitoring,Energy management system with SCADA integration and remote monitoring,—,$$${((equipmentBreakdown.totals.equipmentCost * 0.05) / 1000000).toFixed(2)}M,"HMI touchscreen interface, cybersecurity compliance, cloud connectivity"
 Balance of Plant,Cabling and civil works with foundations and commissioning,—,$$${(equipmentBreakdown.totals.installationCost / 1000000).toFixed(2)}M,"Includes delivery, import duties, and professional commissioning"
@@ -764,9 +764,9 @@ Total 25-Year Savings,$${((quoteData.annualSavings * 25) / 1000000).toFixed(2)}M
 SYSTEM CONFIGURATION
 ====================================
 Component,Specification
-Power Output (MW),${quoteData.storageSizeMW.toFixed(1)} MW
+Power Output (MW),${quoteData.storageSizeMW.toFixed(2)} MW
 Duration (hours),${quoteData.durationHours} hours
-Total Energy Storage (MWh),${totalEnergyMWh.toFixed(1)} MWh
+Total Energy Storage (MWh),${totalEnergyMWh.toFixed(2)} MWh
 ${quoteData.solarMW > 0 ? `Solar Generation (MW),${quoteData.solarMW.toFixed(1)} MW` : ''}
 ${quoteData.windMW > 0 ? `Wind Generation (MW),${quoteData.windMW.toFixed(1)} MW` : ''}
 ${quoteData.generatorMW > 0 ? `Generator Backup (MW),${quoteData.generatorMW.toFixed(1)} MW` : ''}
@@ -782,7 +782,7 @@ SYSTEM CONFIGURATION SUMMARY
 HOW THIS CONFIGURATION MEETS YOUR NEEDS:
 
 🎯 PRIMARY OBJECTIVES ADDRESSED:
-- Energy Storage & Management: ${totalEnergyMWh.toFixed(1)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours backup power and intelligent demand charge management
+- Energy Storage & Management: ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours backup power and intelligent demand charge management
 - Power Quality & Reliability: ${quoteData.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}
 - Operational Cost Reduction: System delivers ${quoteData.paybackYears.toFixed(1)}-year payback with ${((quoteData.annualSavings * 25 / quoteData.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage
 - Business Continuity: Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances${quoteData.solarMW > 0 || quoteData.windMW > 0 ? '\n- Sustainability Goals: Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs' : ''}
@@ -1112,7 +1112,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       </tr>
       <tr>
         <td style="padding: 10px 15px; border-bottom: 1px solid #E5E7EB;"><strong>System Capacity:</strong></td>
-        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #059669; font-weight: bold;">${totalEnergyMWh.toFixed(1)} MWh / ${quoteData.storageSizeMW.toFixed(1)} MW</td>
+        <td style="padding: 10px 15px; text-align: right; border-bottom: 1px solid #E5E7EB; color: #059669; font-weight: bold;">${totalEnergyMWh.toFixed(2)} MWh / ${quoteData.storageSizeMW.toFixed(2)} MW</td>
       </tr>
       <tr>
         <td style="padding: 10px 15px; border-bottom: 1px solid #E5E7EB;"><strong>Total Investment:</strong></td>
@@ -1140,11 +1140,11 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">🎯 Designed for ${getIndustryName(quoteData.industryTemplate)} Operations:</div>
       <div style="font-size: 14px; line-height: 1.6;">
         ${quoteData.industryTemplate.includes('ev-charging') ? 
-          `This BESS configuration is specifically optimized for EV charging facilities, providing demand charge reduction of up to 70%, grid stability during high-power charging events, and 24/7 charging capability. The ${totalEnergyMWh.toFixed(1)} MWh capacity ensures consistent fast-charging service while minimizing utility costs and maximizing revenue potential.` :
+          `This BESS configuration is specifically optimized for EV charging facilities, providing demand charge reduction of up to 70%, grid stability during high-power charging events, and 24/7 charging capability. The ${totalEnergyMWh.toFixed(2)} MWh capacity ensures consistent fast-charging service while minimizing utility costs and maximizing revenue potential.` :
         quoteData.industryTemplate.includes('manufacturing') ?
           `Engineered for manufacturing operations requiring uninterrupted power and cost optimization. This system provides seamless backup power during outages, reduces demand charges by 15-25%, and ensures critical equipment protection. The ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)}-hour backup capacity protects against costly production shutdowns.` :
         quoteData.industryTemplate.includes('data-center') ?
-          `Mission-critical configuration for data center operations demanding 99.99%+ uptime. Features <50ms transfer time for seamless backup power, 20-30% demand charge reduction, and grid-independent operation capability. The ${totalEnergyMWh.toFixed(1)} MWh system ensures uninterrupted IT infrastructure operation.` :
+          `Mission-critical configuration for data center operations demanding 99.99%+ uptime. Features <50ms transfer time for seamless backup power, 20-30% demand charge reduction, and grid-independent operation capability. The ${totalEnergyMWh.toFixed(2)} MWh system ensures uninterrupted IT infrastructure operation.` :
         quoteData.industryTemplate.includes('hospital') ?
           `Life-safety compliant system designed for healthcare facilities. Provides seamless backup power transition, reduces 24/7 operational energy costs, and meets NFPA 99 healthcare facility requirements. The ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)}-hour capacity ensures patient safety and critical system protection.` :
         quoteData.industryTemplate.includes('cold-storage') ?
@@ -1191,14 +1191,14 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #8b5cf6;">BESS System</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">LFP battery storage with PCS and fire-rated enclosure</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${totalEnergyMWh.toFixed(1)} MWh / ${quoteData.storageSizeMW.toFixed(1)} MW</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${totalEnergyMWh.toFixed(2)} MWh / ${quoteData.storageSizeMW.toFixed(2)} MW</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">Includes HVAC thermal management, transformer tie-in, SCADA controls</td>
       </tr>
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #f59e0b;">Power Conversion</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${quoteData.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'}</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${quoteData.storageSizeMW.toFixed(1)} MW total capacity</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${quoteData.storageSizeMW.toFixed(2)} MW total capacity</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">${quoteData.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}</td>
       </tr>
@@ -1219,7 +1219,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #ef4444;">MV Equipment</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">ABB transformers with protective switchgear and MV distribution</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${quoteData.storageSizeMW.toFixed(1)} MW system integration</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${quoteData.storageSizeMW.toFixed(2)} MW system integration</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">Oil-filled transformers with digital protection relays, arc-resistant switchgear</td>
       </tr>
@@ -1365,7 +1365,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       This ${quoteData.durationHours}-hour system is optimized for peak demand reduction and time-of-use energy arbitrage, targeting the highest-cost periods when your facility experiences peak load. The system provides reliable energy storage to maintain critical operations during grid outages while ensuring business continuity and protecting sensitive equipment.
     </p>
     <p style="line-height: 1.8;">
-      The <strong>${quoteData.storageSizeMW.toFixed(1)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
+      The <strong>${quoteData.storageSizeMW.toFixed(2)} MW power rating</strong> aligns with your facility's typical peak demand, while the <strong>${quoteData.durationHours}-hour duration</strong> ensures sufficient energy capacity to meet your ${industryName.toLowerCase()}'s operational profile. This configuration maximizes financial returns while maintaining operational reliability.
     </p>
   </div>
   
@@ -1377,7 +1377,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td>Power Output</td>
-      <td><strong>${quoteData.storageSizeMW.toFixed(1)} MW</strong></td>
+      <td><strong>${quoteData.storageSizeMW.toFixed(2)} MW</strong></td>
     </tr>
     <tr>
       <td>Duration</td>
@@ -1385,7 +1385,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td>Total Energy Storage</td>
-      <td><strong>${totalEnergyMWh.toFixed(1)} MWh</strong></td>
+      <td><strong>${totalEnergyMWh.toFixed(2)} MWh</strong></td>
     </tr>
     <tr>
       <td>Battery Chemistry</td>
@@ -1419,7 +1419,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   
   <h4>🎯 Primary Objectives Addressed:</h4>
   <ul>
-    <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(1)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
+    <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (quoteData.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
     <li><strong>Power Quality & Reliability:</strong> ${quoteData.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}</li>
     <li><strong>Operational Cost Reduction:</strong> System delivers ${quoteData.paybackYears.toFixed(1)}-year payback with ${((quoteData.annualSavings * 25 / quoteData.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
     <li><strong>Business Continuity:</strong> Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances</li>
@@ -1518,14 +1518,14 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #8b5cf6;">BESS System</td>
       <td style="border: 1px solid #ddd; padding: 6px;">LFP battery storage with PCS and fire-rated enclosure</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${totalEnergyMWh.toFixed(1)} MWh / ${quoteData.storageSizeMW.toFixed(1)} MW</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${totalEnergyMWh.toFixed(2)} MWh / ${quoteData.storageSizeMW.toFixed(2)} MW</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.batteries.totalCost / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">Includes HVAC thermal management, transformer tie-in, SCADA controls</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #f59e0b;">Power Conversion</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${quoteData.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'}</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${quoteData.storageSizeMW.toFixed(1)} MW total capacity</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${quoteData.storageSizeMW.toFixed(2)} MW total capacity</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">${quoteData.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}</td>
     </tr>
@@ -1546,7 +1546,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #ef4444;">MV Equipment</td>
       <td style="border: 1px solid #ddd; padding: 6px;">ABB transformers with protective switchgear and MV distribution</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${quoteData.storageSizeMW.toFixed(1)} MW system integration</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${quoteData.storageSizeMW.toFixed(2)} MW system integration</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">Oil-filled transformers with digital protection relays, arc-resistant switchgear</td>
     </tr>

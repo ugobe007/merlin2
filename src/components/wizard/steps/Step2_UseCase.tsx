@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lightbulb, Sparkles, TrendingUp } from 'lucide-react';
 import { aiStateService } from '../../../services/aiStateService';
 import AIStatusIndicator from '../AIStatusIndicator';
+import AISquareFootageCalculator from '../AISquareFootageCalculator';
 
 // Import use case images with explicit extensions for Vite
 import evChargingStationImage from '../../../assets/images/ev_charging_station.png?url';
@@ -304,6 +305,13 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               suffix: 'rooms',
             },
             {
+              id: 'squareFootage',
+              label: 'Facility square footage (optional)',
+              type: 'number',
+              placeholder: 'e.g., 50000',
+              suffix: 'sq ft',
+            },
+            {
               id: 'gridConnection',
               label: 'Grid connection status?',
               type: 'select',
@@ -395,6 +403,13 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           title: 'Data Center Specifications',
           icon: '🖥️',
           questions: [
+            {
+              id: 'squareFootage',
+              label: 'Facility square footage (optional)',
+              type: 'number',
+              placeholder: 'e.g., 100000',
+              suffix: 'sq ft',
+            },
             {
               id: 'capacity',
               label: 'Total IT capacity?',
@@ -556,6 +571,13 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           icon: '🎰',
           questions: [
             {
+              id: 'squareFootage',
+              label: 'Total facility square footage (optional)',
+              type: 'number',
+              placeholder: 'e.g., 75000',
+              suffix: 'sq ft',
+            },
+            {
               id: 'facilitySize',
               label: 'Facility size?',
               type: 'select',
@@ -619,6 +641,13 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           title: 'Logistics Center Details',
           icon: '🚚',
           questions: [
+            {
+              id: 'squareFootage',
+              label: 'Facility square footage (optional)',
+              type: 'number',
+              placeholder: 'e.g., 200000',
+              suffix: 'sq ft',
+            },
             {
               id: 'facilityType',
               label: 'Facility type?',
@@ -685,6 +714,13 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           title: 'Shopping Center/Mall Details',
           icon: '🏬',
           questions: [
+            {
+              id: 'squareFootage',
+              label: 'Total leasable square footage (optional)',
+              type: 'number',
+              placeholder: 'e.g., 250000',
+              suffix: 'sq ft',
+            },
             {
               id: 'centerSize',
               label: 'Center size?',
@@ -911,6 +947,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
     switch (question.type) {
       case 'number':
+        const isSquareFootage = question.id === 'squareFootage';
         return (
           <div key={question.id} className="bg-white rounded-xl p-6 shadow-md border-2 border-gray-200 hover:border-blue-400 transition-colors">
             <label className="block text-lg font-semibold text-gray-800 mb-3">
@@ -927,7 +964,18 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               {question.suffix && (
                 <span className="text-gray-600 font-medium">{question.suffix}</span>
               )}
+              {isSquareFootage && (
+                <AISquareFootageCalculator
+                  onCalculate={(sqft) => handleInputChange(question.id, sqft)}
+                  industryType={selectedIndustry}
+                />
+              )}
             </div>
+            {isSquareFootage && !value && (
+              <p className="text-sm text-gray-500 mt-2">
+                💡 Don't know your square footage? Use the AI calculator to estimate it!
+              </p>
+            )}
           </div>
         );
 

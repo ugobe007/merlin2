@@ -4,6 +4,7 @@ import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExpor
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../utils/solarSizingUtils';
 import { formatSolarSavings, formatTotalProjectSavings } from '../../utils/financialFormatting';
+import { formatPowerCompact } from '../../utils/powerFormatting';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
 import { calculateDatabaseBaseline } from '../../services/baselineService';
 import { aiStateService } from '../../services/aiStateService';
@@ -35,9 +36,12 @@ interface SmartWizardProps {
   show: boolean;
   onClose: () => void;
   onFinish: (data: any) => void;
+  startInAdvancedMode?: boolean; // New prop to skip directly to advanced landing
+  onOpenAdvancedQuoteBuilder?: () => void; // Callback to open Advanced Quote Builder
+  skipIntro?: boolean; // Skip intro and start at step 0 (Industry Template)
 }
 
-const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) => {
+const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, startInAdvancedMode = false, onOpenAdvancedQuoteBuilder, skipIntro = false }) => {
   const [step, setStep] = useState(-1); // Start at -1 for intro screen
   const [showIntro, setShowIntro] = useState(true);
   const [showCompletePage, setShowCompletePage] = useState(false);
@@ -73,6 +77,24 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [storageSizeMW, setStorageSizeMW] = useState(2);
   const [durationHours, setDurationHours] = useState(4);
 
+  // Power density calculations by building type (W/sq ft) - Based on CBECS & industry standards
+  const getPowerDensity = (buildingType: string, subType?: string): number => {
+    switch (buildingType) {
+      case 'hotel': return 9; // 8-10 W/sq ft (24/7, HVAC, kitchen, laundry)
+      case 'datacenter': return 150; // 100-200 W/sq ft (high-density IT loads)
+      case 'tribal-casino': return 15; // 12-18 W/sq ft (gaming, lighting, 24/7 HVAC)
+      case 'logistics-center':
+        if (subType === 'cold-storage') return 25; // 20-30 W/sq ft (refrigeration)
+        if (subType === 'fulfillment') return 8; // 6-10 W/sq ft (automation, conveyors)
+        return 5; // 3-7 W/sq ft (standard warehouse)
+      case 'shopping-center': return 10; // 8-12 W/sq ft (retail, HVAC, lighting)
+      case 'office': return 6; // 5-7 W/sq ft (lighting, computers, HVAC)
+      case 'retail': return 8; // 6-10 W/sq ft (lighting, HVAC, some equipment)
+      case 'indoor-farm': return 35; // 30-40 W/sq ft (grow lights, climate control)
+      default: return 7; // Generic commercial baseline
+    }
+  };
+
   // 🔥 SCROLL TO TOP - Use ref for reliable scrolling
   useEffect(() => {
     if (step >= 0 && modalContentRef.current) {
@@ -89,8 +111,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     if (show && !wizardInitialized) {
       // Initialize wizard state ONCE
       console.log('🎬 Initializing wizard for first time');
-      setStep(-1);
-      setShowIntro(true);
+      
+      // Start with intro or skip to step 0 based on prop
+      if (skipIntro) {
+        setStep(0);
+        setShowIntro(false);
+        console.log('⚡ Skipping intro, starting at step 0');
+      } else {
+        setStep(-1);
+        setShowIntro(true);
+      }
+      
       setShowCompletePage(false);
       setAiSuggestions([]);
       setShowAIWizard(false);
@@ -159,7 +190,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
       console.log('🔄 Wizard closed, resetting initialization flag');
       setWizardInitialized(false);
     }
-  }, [show, wizardInitialized]);
+  }, [show, wizardInitialized, startInAdvancedMode, skipIntro]);
 
   // Auto-calculate realistic configuration based on use case data
   useEffect(() => {
@@ -265,6 +296,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         // This ensures wizard and AI use IDENTICAL baseline values
         const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
         console.log('🎯 [SmartWizard] Baseline from shared service:', baseline);
+        console.log('🎯 [SmartWizard] Setting storageSizeMW to:', baseline.powerMW);
         
         setStorageSizeMW(baseline.powerMW);
         setDurationHours(baseline.durationHrs);
@@ -306,6 +338,50 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
   const [generatorMW, setGeneratorMW] = useState(0);
+  
+  // Solar space configuration
+  const [solarSpaceConfig, setSolarSpaceConfig] = useState<{
+    spaceType: 'rooftop' | 'ground' | 'canopy' | 'mixed';
+    rooftopSqFt?: number;
+    groundAcres?: number;
+    useAI: boolean;
+  }>({
+    spaceType: 'rooftop',
+    useAI: true
+  });
+  
+  // EV Charger configuration
+  const [evChargerConfig, setEVChargerConfig] = useState({
+    level2_11kw: 0,
+    level2_19kw: 0,
+    dcfast_50kw: 0,
+    dcfast_150kw: 0,
+    dcfast_350kw: 0
+  });
+  
+  // Wind turbine configuration
+  const [windConfig, setWindConfig] = useState<{
+    turbineSize: '2.5' | '3.0' | '5.0';  // MW per turbine
+    numberOfTurbines: number;
+    useAI: boolean;
+  }>({
+    turbineSize: '2.5',
+    numberOfTurbines: 0,
+    useAI: true
+  });
+  
+  // Generator configuration
+  const [generatorConfig, setGeneratorConfig] = useState<{
+    generatorType: 'diesel' | 'natural-gas' | 'dual-fuel';
+    numberOfUnits: number;
+    sizePerUnit: number;  // MW
+    useAI: boolean;
+  }>({
+    generatorType: 'diesel',
+    numberOfUnits: 0,
+    sizePerUnit: 0.25,  // 250 kW per unit
+    useAI: true
+  });
 
   // Step 4: Location & Pricing
   const [location, setLocation] = useState('');
@@ -483,7 +559,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             roiYears = 5;
             
             message = `Off-grid charging station with ${level2Count + dcFastCount} total chargers requires robust backup power. Battery-only solution shown - solar can be added if you have adequate land space.`;
-            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS (Solar optional - requires significant land area)`;
+            configuration = `${formatPowerCompact(batteryMW)} / ${batteryHours}hr BESS (Solar optional - requires significant land area)`;
           } else if (gridConnection === 'limited') {
             // Limited grid: Focus on demand charge reduction
             batteryMW = maxConcurrentPower * 0.8 / 1000; // 80% of peak to manage demand
@@ -492,7 +568,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             roiYears = 3;
             
             message = `Limited grid capacity for ${level2Count + dcFastCount} chargers requires demand management. Battery storage reduces peak demand charges by 70-80%. Solar is optional if space permits.`;
-            configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS (Solar optional)`;
+            configuration = `${formatPowerCompact(batteryMW)} / ${batteryHours}hr BESS (Solar optional)`;
           } else {
             // On-grid: Optimize for demand charges and energy arbitrage
             batteryMW = maxConcurrentPower * 0.6 / 1000; // 60% of peak for demand shaving
@@ -501,7 +577,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             roiYears = 4;
             
             message = `${stationType.replace('-', ' ')} station with ${level2Count + dcFastCount} total chargers. ${avgUtilization}% average utilization creates demand charges that storage can reduce. Solar can be added if roof/parking canopy space available.`;
-              configuration = `${batteryMW.toFixed(1)}MW / ${batteryHours}hr BESS (Solar optional)`;
+              configuration = `${formatPowerCompact(batteryMW)} / ${batteryHours}hr BESS (Solar optional)`;
           }
           
           savings = `$${Math.round(annualSavings/1000)}K/year`;
@@ -524,39 +600,52 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const hasPool = amenities.includes('pool');
           const hasRestaurant = amenities.includes('restaurant');
           const gridReliability = useCaseData.gridReliability || 'reliable';
+          const squareFootage = parseFloat(useCaseData.squareFootage) || 0;
           
-          // ✅ CORRECTED: Use authoritative calculation (2.93 kW per room from CBECS/ASHRAE data)
-          // Source: src/data/useCaseTemplates.ts line 560 (440kW / 150 rooms = 2.93 kW/room)
-          const hotelPowerMW = numRooms * 0.00293;
+          // Calculate power requirement
+          let hotelPowerMW: number;
           
-          // Calculate solar feasibility (optional, conservative estimate)
-          let hotelSolarMW = numRooms * 0.010; // Conservative 10kW per room for available roof space
-          if (hasPool) hotelSolarMW += 0.3; // Pool equipment
-          if (hasRestaurant) hotelSolarMW += 0.2; // Kitchen equipment
+          if (squareFootage > 0) {
+            // Use square footage if provided (8-10 W/sq ft for hotels)
+            // Using 9 W/sq ft as middle ground - includes HVAC, lighting, kitchen, laundry
+            hotelPowerMW = (squareFootage * 9) / 1000000; // Convert W to MW
+          } else {
+            // Fall back to room count calculation
+            // ✅ CORRECTED: Use authoritative calculation (2.93 kW per room from CBECS/ASHRAE data)
+            // Source: src/data/useCaseTemplates.ts line 560 (440kW / 150 rooms = 2.93 kW/room)
+            hotelPowerMW = numRooms * 0.00293;
+          }
+          
+          // Calculate solar feasibility (optional, realistic estimate)
+          // CORRECTED: Typical hotel roof can support 2-5 kW per room (not 10 kW - that was too aggressive)
+          // Most hotels have 50-70% usable roof space after HVAC, elevators, etc.
+          let hotelSolarMW = numRooms * 0.003; // Realistic 3kW per room for actual usable roof space
+          if (hasPool) hotelSolarMW += 0.15; // Pool equipment (reduced from 0.3)
+          if (hasRestaurant) hotelSolarMW += 0.10; // Kitchen equipment (reduced from 0.2)
           const hotelRooftopAcres = (hotelSolarMW * 1000 * 100) / 43560; // 100 sq ft per kW for rooftop
           
           if (gridReliability === 'unreliable') {
             message = `Hotels with ${numRooms} rooms in areas with unreliable grid service benefit significantly from backup power systems. Guest satisfaction improves dramatically when you can maintain operations during outages.`;
             savings = '$80-150K/year';
             roi = '4-6 years';
-            configuration = `${hotelPowerMW.toFixed(1)}MW / 8hr BESS`; // ✅ CORRECTED
+            configuration = `${formatPowerCompact(hotelPowerMW)} / 8hr BESS`;
           } else if (hasPool && hasRestaurant) {
             if (hotelRooftopAcres <= 2) {
               message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Your daytime loads (pool pumps, kitchen equipment) align well with solar - consider adding ${formatSolarCapacity(hotelSolarMW)} rooftop solar if roof space permits.`;
-              configuration = `${hotelPowerMW.toFixed(1)}MW / 5hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`; // ✅ CORRECTED
+              configuration = `${formatPowerCompact(hotelPowerMW)} / 5hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
             } else {
               message = `Hotels with ${numRooms} rooms, pool/spa, and restaurant typically see $70-120K annual savings with battery storage. Solar would need ${hotelRooftopAcres.toFixed(1)} acres of roof space - verify capacity or consider parking canopies.`;
-              configuration = `${hotelPowerMW.toFixed(1)}MW / 5hr BESS + Optional Solar (if space permits)`; // ✅ CORRECTED
+              configuration = `${formatPowerCompact(hotelPowerMW)} / 5hr BESS + Optional Solar (if space permits)`;
             }
             savings = '$70-120K/year';
             roi = '4-6 years';
           } else {
             if (hotelRooftopAcres <= 1.5) {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar can boost savings if you have ${hotelRooftopAcres.toFixed(1)} acres of available roof space.`;
-              configuration = `${hotelPowerMW.toFixed(1)}MW / 4hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`; // ✅ CORRECTED
+              configuration = `${formatPowerCompact(hotelPowerMW)} / 4hr BESS + Optional ${formatSolarCapacity(hotelSolarMW)} Solar`;
             } else {
               message = `For a ${numRooms}-room hotel, battery storage systems typically save $50-90K per year by reducing demand charges. Solar would require ${hotelRooftopAcres.toFixed(1)} acres of roof - check availability.`;
-              configuration = `${hotelPowerMW.toFixed(1)}MW / 4hr BESS + Optional Solar (check roof capacity)`; // ✅ CORRECTED
+              configuration = `${formatPowerCompact(hotelPowerMW)} / 4hr BESS + Optional Solar (check roof capacity)`;
             }
             savings = '$50-90K/year';
             roi = '5-7 years';
@@ -564,7 +653,15 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           break;
 
         case 'datacenter':
-          const capacity = useCaseData.capacity || 5;
+          const squareFootageDC = parseFloat(useCaseData.squareFootage) || 0;
+          let capacity = parseFloat(useCaseData.capacity) || 5;
+          
+          // If square footage provided, calculate capacity from power density
+          if (squareFootageDC > 0) {
+            const powerDensity = getPowerDensity('datacenter');
+            capacity = (squareFootageDC * powerDensity) / 1000000; // Convert W to MW
+          }
+          
           const uptimeReq = useCaseData.uptimeRequirement || 'tier3';
           const gridConn = useCaseData.gridConnection || 'single';
           
@@ -573,18 +670,18 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           const datacenterRooftopAcres = (datacenterSolarMW * 1000 * 100) / 43560;
           
           if (gridConn === 'microgrid' || gridConn === 'limited') {
-            message = `Datacenters with ${capacity}MW capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds). Solar limited by cooling equipment space.`;
-            configuration = `${(capacity * 0.8).toFixed(1)}MW / 6hr BESS + ${(capacity * 0.3).toFixed(1)}MW Generator + Optional ${formatSolarCapacity(datacenterSolarMW)} Solar`;
+            message = `Datacenters with ${formatPowerCompact(capacity)} capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds). Solar limited by cooling equipment space.`;
+            configuration = `${formatPowerCompact(capacity * 0.8)} / 6hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional ${formatSolarCapacity(datacenterSolarMW)} Solar`;
             savings = '$200-400K/year';
             roi = '3-5 years';
           } else if (uptimeReq === 'tier4') {
-            message = `Tier IV datacenters (${capacity}MW) require 2N or 2N+1 redundancy with 99.995% uptime. Rooftop space limited by cooling infrastructure - consider off-site solar PPA if renewable energy goals exist.`;
-            configuration = `${(capacity * 0.6).toFixed(1)}MW / 4hr BESS + ${(capacity * 0.3).toFixed(1)}MW Generator + Optional Off-site Solar PPA`;
+            message = `Tier IV datacenters (${formatPowerCompact(capacity)}) require 2N or 2N+1 redundancy with 99.995% uptime. Rooftop space limited by cooling infrastructure - consider off-site solar PPA if renewable energy goals exist.`;
+            configuration = `${formatPowerCompact(capacity * 0.6)} / 4hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional Off-site Solar PPA`;
             savings = '$150-300K/year';
             roi = '4-6 years';
           } else {
-            message = `${capacity}MW ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime. Limited rooftop solar possible if cooling permits.`;
-            configuration = `${(capacity * 0.5).toFixed(1)}MW / 3hr BESS + ${(capacity * 0.2).toFixed(1)}MW Generator + Optional ${datacenterSolarMW.toFixed(1)}MW Solar`;
+            message = `${formatPowerCompact(capacity)} ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime. Limited rooftop solar possible if cooling permits.`;
+            configuration = `${formatPowerCompact(capacity * 0.5)} / 3hr BESS + ${formatPowerCompact(capacity * 0.2)} Generator + Optional ${datacenterSolarMW.toFixed(1)}MW Solar`;
             savings = '$100-200K/year';
             roi = '4-7 years';
           }
@@ -601,12 +698,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             message = `Healthcare facilities with ${bedCount} beds and critical care units (ICU/surgery) require instant switchover during power events. Battery storage provides seamless transition (< 10ms) vs. generators (10-15 sec), critical for life support systems.`;
             savings = '$150-250K/year';
             roi = '5-7 years';
-            configuration = `${bedCount * 0.03}MW / ${backupDuration === '24hr' ? 12 : 8}hr BESS + ${bedCount * 0.02}MW Solar + Generator`;
+            configuration = `${formatPowerCompact(bedCount * 0.03)} / ${backupDuration === '24hr' ? 12 : 8}hr BESS + ${formatPowerCompact(bedCount * 0.02)} Solar + Generator`;
           } else {
             message = `${bedCount}-bed hospitals can significantly reduce energy costs with solar+storage while maintaining backup power capabilities for essential systems.`;
             savings = '$100-180K/year';
             roi = '5-8 years';
-            configuration = `${bedCount * 0.025}MW / 8hr BESS + ${bedCount * 0.02}MW Solar`;
+            configuration = `${formatPowerCompact(bedCount * 0.025)} / 8hr BESS + ${formatPowerCompact(bedCount * 0.02)} Solar`;
           }
           break;
 
@@ -634,15 +731,88 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             message = `${facilityType === 'terminal' ? 'Terminal' : 'Hangar'} facilities can achieve significant cost savings with battery storage while maintaining backup power for essential operations. Good rooftop potential for solar if desired.`;
             savings = '$100-200K/year';
             roi = '5-8 years';
-            configuration = `2.0MW / 4hr BESS + Optional ${airportSolarMW.toFixed(1)}MW Rooftop Solar`;
+            configuration = `${formatPowerCompact(2.0)} / 4hr BESS + Optional ${airportSolarMW.toFixed(1)}MW Rooftop Solar`;
           }
+          break;
+
+        case 'tribal-casino':
+          const squareFootageCasino = parseFloat(useCaseData.squareFootage) || 0;
+          const facilitySize = useCaseData.facilitySize || 'medium';
+          const casinoOperations = useCaseData.operations || '24-7';
+          
+          // Calculate power from square footage if provided
+          let casinoPowerMW: number;
+          if (squareFootageCasino > 0) {
+            const powerDensity = getPowerDensity('tribal-casino');
+            casinoPowerMW = (squareFootageCasino * powerDensity) / 1000000;
+          } else {
+            // Fall back to facility size estimate
+            const sizeMap: Record<string, number> = { micro: 0.15, small: 0.5, medium: 1.5, large: 4.0 };
+            casinoPowerMW = sizeMap[facilitySize] || 1.5;
+          }
+          
+          message = `${casinoOperations === '24-7' ? '24/7' : 'Extended hours'} casino operations require reliable backup power. Even brief outages impact gaming revenue significantly. Battery storage provides instant switchover (<10ms) vs generators (10-15 sec).`;
+          configuration = `${formatPowerCompact(casinoPowerMW)} / 6hr BESS + ${formatPowerCompact(casinoPowerMW * 0.5)} Generator + Optional Solar`;
+          savings = '$100-250K/year';
+          roi = '4-6 years';
+          break;
+
+        case 'logistics-center':
+          const squareFootageLog = parseFloat(useCaseData.squareFootage) || 0;
+          const logFacilityType = useCaseData.facilityType || 'warehouse';
+          const logFacilitySize = useCaseData.facilitySize || 'medium';
+          const hasColdStorage = useCaseData.criticalLoads?.includes('refrigeration');
+          
+          // Calculate power from square footage if provided
+          let logisticsPowerMW: number;
+          if (squareFootageLog > 0) {
+            const powerDensity = getPowerDensity('logistics-center', logFacilityType);
+            logisticsPowerMW = (squareFootageLog * powerDensity) / 1000000;
+          } else {
+            // Fall back to facility size estimate
+            const sizeMap: Record<string, number> = { micro: 0.15, small: 0.5, medium: 1.5, large: 4.0 };
+            logisticsPowerMW = sizeMap[logFacilitySize] || 1.5;
+          }
+          
+          if (hasColdStorage) {
+            message = `Cold storage requires uninterrupted power - even brief outages can spoil inventory worth millions. Battery storage ensures refrigeration systems stay operational during grid events.`;
+            configuration = `${formatPowerCompact(logisticsPowerMW)} / 8hr BESS + ${formatPowerCompact(logisticsPowerMW * 0.4)} Generator + Optional Solar`;
+            savings = '$150-300K/year';
+            roi = '3-5 years';
+          } else {
+            message = `${logFacilityType === 'fulfillment' ? 'Fulfillment centers' : 'Distribution hubs'} benefit from demand charge reduction through battery peak shaving. Solar can offset daytime operational loads.`;
+            configuration = `${formatPowerCompact(logisticsPowerMW)} / 4hr BESS + Optional Solar`;
+            savings = '$80-180K/year';
+            roi = '4-7 years';
+          }
+          break;
+
+        case 'shopping-center':
+          const squareFootageMall = parseFloat(useCaseData.squareFootage) || 0;
+          const centerSize = useCaseData.centerSize || 'community';
+          
+          // Calculate power from square footage if provided
+          let mallPowerMW: number;
+          if (squareFootageMall > 0) {
+            const powerDensity = getPowerDensity('shopping-center');
+            mallPowerMW = (squareFootageMall * powerDensity) / 1000000;
+          } else {
+            // Fall back to center size estimate
+            const sizeMap: Record<string, number> = { strip: 0.5, community: 2.0, regional: 5.0 };
+            mallPowerMW = sizeMap[centerSize] || 2.0;
+          }
+          
+          message = `Shopping centers benefit from demand charge reduction and backup power for tenant operations. Large roof areas are ideal for solar installations to offset daytime loads.`;
+          configuration = `${formatPowerCompact(mallPowerMW)} / 4hr BESS + ${formatPowerCompact(mallPowerMW * 0.6)} Solar (rooftop)`;
+          savings = '$120-250K/year';
+          roi = '4-6 years';
           break;
 
         default:
           message = `Based on your industry and operational requirements, we recommend a balanced approach combining battery storage with renewable energy to maximize savings and reliability.`;
           savings = '$50-100K/year';
           roi = '5-7 years';
-          configuration = '2.0MW / 4hr BESS + 2.0MW Solar';
+          configuration = `${formatPowerCompact(2.0)} / 4hr BESS + ${formatPowerCompact(2.0)} Solar`;
       }
 
       setAiUseCaseRecommendation({ message, savings, roi, configuration });
@@ -1017,8 +1187,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           description: `Based on machine learning analysis of your load patterns and control optimization, the optimal duration for your ${getIndustryName(templateKey)} application is ${optimalDuration.toFixed(1)} hours. This maximizes both cost savings and operational performance.`,
           currentValue: `${durationHours.toFixed(1)} hours (${totalEnergyMWh.toFixed(1)} MWh)`,
           suggestedValue: `${optimalDuration.toFixed(1)} hours (${newEnergyMWh.toFixed(1)} MWh)`,
-          impact: `Increases annual savings to $${optimizationResults.total_savings_annual.toLocaleString()}`,
-          savings: `$${(optimizationResults.total_savings_annual - costs.annualSavings).toLocaleString()}/year additional`,
+          impact: `Increases annual savings to $${Math.round(optimizationResults.total_savings_annual).toLocaleString()}`,
+          savings: `$${Math.round(optimizationResults.total_savings_annual - costs.annualSavings).toLocaleString()}/year additional`,
           action: () => {
             setDurationHours(optimalDuration);
           }
@@ -1067,10 +1237,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           type: 'optimization',
           title: 'Enhanced Energy Arbitrage Strategy',
           description: 'ML forecasting models predict significant arbitrage opportunities during price volatility periods. Optimizing your charge/discharge schedule could increase revenue substantially.',
-          currentValue: `$${costs.annualSavings.toLocaleString()}/year`,
-          suggestedValue: `$${(costs.annualSavings + optimizationResults.energy_arbitrage_revenue).toLocaleString()}/year`,
+          currentValue: `$${Math.round(costs.annualSavings).toLocaleString()}/year`,
+          suggestedValue: `$${Math.round(costs.annualSavings + optimizationResults.energy_arbitrage_revenue).toLocaleString()}/year`,
           impact: `${optimizationResults.roi_10_year_percent.toFixed(1)}% 10-year ROI`,
-          savings: `$${optimizationResults.energy_arbitrage_revenue.toLocaleString()}/year additional`,
+          savings: `$${Math.round(optimizationResults.energy_arbitrage_revenue).toLocaleString()}/year additional`,
           action: () => {
             alert('Advanced arbitrage control strategy would be implemented');
           }
@@ -1104,8 +1274,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         type: 'cost-saving',
         title: 'Optimize Duration vs Power',
         description: 'For most commercial applications, shorter duration with higher power is more cost-effective. You can reduce upfront costs while maintaining operational capability.',
-        currentValue: `${storageSizeMW.toFixed(1)}MW / ${durationHours}hr`,
-        suggestedValue: `${newSize.toFixed(1)}MW / ${optimalDuration}hr`,
+        currentValue: `${formatPowerCompact(storageSizeMW)} / ${durationHours}hr`,
+        suggestedValue: `${formatPowerCompact(newSize)} / ${optimalDuration}hr`,
         impact: 'Reduces equipment cost by ~20% while improving demand response',
         savings: '$' + ((costs.totalProjectCost * 0.2) / 1000000).toFixed(2) + 'M',
         action: () => {
@@ -1192,23 +1362,24 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
     switch (step) {
       case 0: return useTemplate ? selectedTemplate !== '' : true;
       case 1: return Object.keys(useCaseData).length > 0; // Use case questions answered
-      case 2: return storageSizeMW > 0 && durationHours > 0;
-      case 3: return true; // Interactive dashboard allows any configuration
-      case 4: return location !== '' && electricityRate > 0;
-      case 5: return true; // Renewables step, optional choices
-      case 6: return true; // Quote summary, defaults are set
+      case 2: return storageSizeMW > 0 && durationHours > 0; // Simple configuration
+      case 3: return true; // Power generation options (renewable energy) - all optional
+      case 4: return true; // Interactive dashboard - fine-tuning sliders
+      case 5: return location !== '' && electricityRate > 0; // Location & pricing
+      case 6: return true; // Quote summary
       default: return false;
     }
   };
 
   const getStepTitle = () => {
     const titles = [
-      'Choose Your Industry',
-      'Tell Us About Your Operation', 
-      'Configure Your System',
-      'Add Renewable Energy',
-      'Location & Pricing',
-      'Review Your Quote'
+      'Choose Your Industry',           // Step 0
+      'Tell Us About Your Operation',   // Step 1
+      'Configure Your System',          // Step 2
+      'Power Generation Options',       // Step 3 - NEW! Renewable energy selection
+      'Fine-Tune Your Configuration',   // Step 4 - Interactive dashboard
+      'Location & Pricing',             // Step 5
+      'Review Your Quote'               // Step 6
     ];
     return titles[step] || '';
   };  const renderStep = () => {
@@ -1218,6 +1389,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           onStart={() => {
             setShowIntro(false);
             setStep(0);
+          }}
+          onSkipToAdvanced={() => {
+            // Close wizard and open Advanced Quote Builder
+            onClose();
+            if (onOpenAdvancedQuoteBuilder) {
+              onOpenAdvancedQuoteBuilder();
+            }
           }}
         />
       );
@@ -1267,6 +1445,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             setWindMW={setWindMW}
             generatorMW={generatorMW}
             setGeneratorMW={setGeneratorMW}
+            solarSpaceConfig={solarSpaceConfig}
+            setSolarSpaceConfig={setSolarSpaceConfig}
+            evChargerConfig={evChargerConfig}
+            setEVChargerConfig={setEVChargerConfig}
+            windConfig={windConfig}
+            setWindConfig={setWindConfig}
+            generatorConfig={generatorConfig}
+            setGeneratorConfig={setGeneratorConfig}
             useCase={selectedTemplate}
             buildingSize={useCaseData.buildingSize || useCaseData.facilitySize}
             facilitySize={useCaseData.facilitySize}
@@ -1274,6 +1460,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             electricalLoad={useCaseData.electricalLoad || useCaseData.peakLoad}
             useCaseAnswers={useCaseData}
           />
+        );
+      case 4:
+        // Note: This case is handled by the full-screen InteractiveConfigDashboard
+        // check above, so this code won't execute. Kept for clarity.
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading Interactive Dashboard...</p>
+          </div>
         );
       case 5:
         return (
@@ -1287,6 +1481,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
           />
         );
       case 6:
+        // 🔍 DEBUG: Log values BEFORE passing to quote summary
+        console.log('🚀 [SmartWizardV2] BEFORE Step5_QuoteSummary render:', {
+          storageSizeMW,
+          durationHours,
+          solarMW,
+          windMW,
+          generatorMW,
+          totalPowerMW: (storageSizeMW + solarMW + windMW + generatorMW)
+        });
+        
         return (
           <Step5_QuoteSummary
             storageSizeMW={storageSizeMW}
@@ -1294,6 +1498,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
             solarMW={solarMW}
             windMW={windMW}
             generatorMW={generatorMW}
+            solarSpaceConfig={solarSpaceConfig}
+            evChargerConfig={evChargerConfig}
+            windConfig={windConfig}
+            generatorConfig={generatorConfig}
             location={location}
             industryTemplate={selectedTemplate}
             equipmentCost={costs.equipmentCost}
@@ -1436,24 +1644,38 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
   if (!show) return null;
 
   // Special case: Interactive Dashboard renders as full-screen, not in wizard modal
-  if (step === 3) {
+  // MOVED FROM STEP 3 TO STEP 4 - Step 3 is now renewable energy selection
+  if (step === 4) {
     return (
       <InteractiveConfigDashboard
         initialStorageSizeMW={storageSizeMW}
         initialDurationHours={durationHours}
         initialSolarMW={solarMW}
+        initialWindMW={windMW}
+        initialGeneratorMW={generatorMW}
+        solarSpaceConfig={solarSpaceConfig}
+        evChargerConfig={evChargerConfig}
+        windConfig={windConfig}
+        generatorConfig={generatorConfig}
         industryTemplate={selectedTemplate}
         location={location}
         electricityRate={electricityRate}
         useCaseData={useCaseData}
         onConfigurationChange={(config) => {
+          console.log('🔧 [SmartWizardV2] onConfigurationChange received:', config);
           setStorageSizeMW(config.storageSizeMW);
           setDurationHours(config.durationHours);
           setSolarMW(config.solarMW);
           setWindMW(config.windMW);
           setGeneratorMW(config.generatorMW);
+          console.log('🔧 [SmartWizardV2] State updated to:', {
+            storageSizeMW: config.storageSizeMW,
+            solarMW: config.solarMW,
+            windMW: config.windMW,
+            generatorMW: config.generatorMW
+          });
         }}
-        onBack={() => setStep(2)}
+        onBack={() => setStep(3)}
         onContinue={() => setStep(5)}
       />
     );
@@ -1600,8 +1822,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                   </div>
                   <div className="text-right">
                     <div className="text-sm opacity-90 mb-1">Current System</div>
-                    <div className="text-2xl font-bold">{storageSizeMW.toFixed(1)}MW / {durationHours}hr</div>
-                    <div className="text-sm">{(storageSizeMW * durationHours).toFixed(1)} MWh Total</div>
+                    <div className="text-2xl font-bold">{formatPowerCompact(storageSizeMW)} / {durationHours}hr</div>
+                    <div className="text-sm">{(storageSizeMW * durationHours).toFixed(2)} MWh Total</div>
                   </div>
                 </div>
               </div>
@@ -1706,7 +1928,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 <div className="bg-white rounded-xl p-4 text-center shadow-sm border-2 border-orange-300">
                   <div className="text-sm text-gray-600 mb-1">Total Energy Capacity</div>
                   <div className="text-3xl font-bold text-orange-600">
-                    {(storageSizeMW * durationHours).toFixed(1)} MWh
+                    {(storageSizeMW * durationHours).toFixed(2)} MWh
                   </div>
                 </div>
 
@@ -1841,8 +2063,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => {
+                            console.log('🔄 Apply & Re-analyze clicked');
                             suggestion.action();
-                            handleOpenAIWizard(); // Refresh AI analysis
+                            // Small delay to ensure state updates, then refresh AI analysis
+                            setTimeout(() => {
+                              handleOpenAIWizard();
+                            }, 100);
                           }}
                           className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
@@ -1850,9 +2076,18 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                         </button>
                         <button
                           onClick={() => {
+                            console.log('✅ Apply & Continue clicked - updating configuration');
                             suggestion.action();
                             setShowAIWizard(false);
-                            if (step < 6) setStep(step + 1);
+                            // Force re-render by briefly going to different step and back
+                            // This ensures Step5_QuoteSummary receives updated props
+                            const currentStep = step;
+                            setStep(-999); // Temporary invalid step
+                            setTimeout(() => {
+                              setStep(currentStep);
+                              // Show confirmation
+                              alert('✅ Configuration updated! Your quote has been adjusted with the AI recommendation.');
+                            }, 50);
                           }}
                           className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
@@ -1865,7 +2100,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                 </div>
               ) : (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-12 text-center border-2 border-green-200">
-                  <div className="text-6xl mb-4 animate-bounce">✨</div>
+                  <div className="text-6xl mb-4">💰</div>
                   <h4 className="text-2xl font-bold text-gray-900 mb-3">Configuration Looks Great!</h4>
                   <p className="text-gray-700 text-lg mb-4">
                     Your current setup is well-optimized for <strong className="text-green-700">{getIndustryName(selectedTemplate)}</strong>
@@ -1874,7 +2109,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <div className="text-gray-600">System Size</div>
-                        <div className="font-bold text-gray-900 text-lg">{storageSizeMW.toFixed(1)}MW / {durationHours}hr</div>
+                        <div className="font-bold text-gray-900 text-lg">{formatPowerCompact(storageSizeMW)} / {durationHours}hr</div>
                         <div className="text-green-600">✓ Optimal</div>
                       </div>
                       <div>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench, Edit } from 'lucide-react';
+import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench, Edit, FileText } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
 import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
 import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
 import AIStatusIndicator from '../AIStatusIndicator';
+import SimpleVirtualQuoteViewer from '../SimpleVirtualQuoteViewer';
 
 interface Step4_QuoteSummaryProps {
   // System configuration
@@ -12,6 +13,30 @@ interface Step4_QuoteSummaryProps {
   solarMW: number;
   windMW: number;
   generatorMW: number;
+  solarSpaceConfig?: {
+    spaceType: 'rooftop' | 'ground' | 'canopy' | 'mixed';
+    rooftopSqFt?: number;
+    groundAcres?: number;
+    useAI: boolean;
+  };
+  evChargerConfig?: {
+    level2_11kw: number;
+    level2_19kw: number;
+    dcfast_50kw: number;
+    dcfast_150kw: number;
+    dcfast_350kw: number;
+  };
+  windConfig?: {
+    turbineSize: '2.5' | '3.0' | '5.0';
+    numberOfTurbines: number;
+    useAI: boolean;
+  };
+  generatorConfig?: {
+    generatorType: 'diesel' | 'natural-gas' | 'dual-fuel';
+    numberOfUnits: number;
+    sizePerUnit: number;
+    useAI: boolean;
+  };
   location: string;
   industryTemplate: string | string[];
   
@@ -52,6 +77,10 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   solarMW,
   windMW,
   generatorMW,
+  solarSpaceConfig,
+  evChargerConfig,
+  windConfig,
+  generatorConfig,
   location,
   industryTemplate,
   equipmentCost,
@@ -73,12 +102,29 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   console.log('🔍 [Step4_QuoteSummary] Received paybackYears:', paybackYears);
   console.log('🔍 [Step4_QuoteSummary] Received annualSavings:', annualSavings);
   console.log('🔍 [Step4_QuoteSummary] Received netCostAfterTaxCredit:', netCostAfterTaxCredit);
+  console.log('🔍 [Step4_QuoteSummary] Received configuration:', {
+    solarSpaceConfig,
+    evChargerConfig,
+    windConfig,
+    generatorConfig
+  });
+  
+  // 🔍 DEBUG: Log POWER VALUES to diagnose 0.3MW issue
+  console.log('⚡ [QuoteSummary] POWER VALUES:', {
+    storageSizeMW: storageSizeMW,
+    solarMW: solarMW,
+    windMW: windMW,
+    generatorMW: generatorMW,
+    calculatedTotal: (storageSizeMW + solarMW + windMW + generatorMW),
+    displayTotal: (storageSizeMW + solarMW + windMW + generatorMW).toFixed(1) + ' MW'
+  });
   
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
   const [selectedShipping, setSelectedShipping] = useState('best-value');
   const [selectedFinancing, setSelectedFinancing] = useState('cash');
   const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [showVirtualQuoteViewer, setShowVirtualQuoteViewer] = useState(false);
 
   const totalEnergyMWh = storageSizeMW * durationHours;
   // Determine grid connection type from industry data
@@ -242,18 +288,28 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
           Review your system configuration and choose your options
         </p>
         
-        {/* Edit Configuration Button */}
-        {onEditConfiguration && (
-          <div className="flex justify-center">
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4">
+          {/* Edit Configuration Button */}
+          {onEditConfiguration && (
             <button
               onClick={onEditConfiguration}
               className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
             >
               <Edit className="w-5 h-5" />
-              Edit Power & Energy Configuration
+              Edit Configuration
             </button>
-          </div>
-        )}
+          )}
+          
+          {/* Preview Virtual Quote Button */}
+          <button
+            onClick={() => setShowVirtualQuoteViewer(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+          >
+            <FileText className="w-5 h-5" />
+            Preview Virtual Quote
+          </button>
+        </div>
       </div>
 
       {/* System Summary Card */}
@@ -282,7 +338,9 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
               <span className="text-gray-600">Power Output:</span>
-              <span className="text-2xl font-bold text-blue-600">{storageSizeMW.toFixed(1)} MW</span>
+              <span className="text-2xl font-bold text-blue-600">
+                {(storageSizeMW + solarMW + windMW + generatorMW).toFixed(1)} MW
+              </span>
             </div>
             <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
               <span className="text-gray-600">Total Storage:</span>
@@ -295,9 +353,50 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
             {hasRenewables && (
               <div className="bg-green-50 p-4 rounded-lg border border-green-300">
                 <div className="text-sm font-semibold text-green-900 mb-2">+ Renewables:</div>
-                {solarMW > 0 && <div className="text-sm">☀️ Solar: {formatSolarCapacity(solarMW)}</div>}
-                {windMW > 0 && <div className="text-sm">💨 Wind: {windMW.toFixed(1)} MW</div>}
-                {generatorMW > 0 && <div className="text-sm">⚡ Generator: {generatorMW.toFixed(1)} MW</div>}
+                {solarMW > 0 && (
+                  <div className="text-sm mb-1">
+                    ☀️ Solar: {formatSolarCapacity(solarMW)}
+                    {solarSpaceConfig && (
+                      <span className="text-gray-600 text-xs ml-2">
+                        ({solarSpaceConfig.spaceType === 'rooftop' ? '🏢 rooftop' : 
+                          solarSpaceConfig.spaceType === 'ground' ? '🌱 ground' :
+                          solarSpaceConfig.spaceType === 'canopy' ? '🚗 canopy' : '🔄 mixed'})
+                      </span>
+                    )}
+                  </div>
+                )}
+                {windMW > 0 && (
+                  <div className="text-sm mb-1">
+                    💨 Wind: {windMW.toFixed(1)} MW
+                    {windConfig && (
+                      <span className="text-gray-600 text-xs ml-2">
+                        ({Math.ceil(windMW / parseFloat(windConfig.turbineSize))} × {windConfig.turbineSize}MW turbines)
+                      </span>
+                    )}
+                  </div>
+                )}
+                {generatorMW > 0 && (
+                  <div className="text-sm mb-1">
+                    ⚡ Generator: {generatorMW.toFixed(1)} MW
+                    {generatorConfig && (
+                      <span className="text-gray-600 text-xs ml-2">
+                        ({Math.ceil(generatorMW / generatorConfig.sizePerUnit)} × {generatorConfig.sizePerUnit}MW {generatorConfig.generatorType})
+                      </span>
+                    )}
+                  </div>
+                )}
+                {evChargerConfig && Object.values(evChargerConfig).some(v => v > 0) && (
+                  <div className="text-sm">
+                    🔌 EV Chargers: {Object.values(evChargerConfig).reduce((a, b) => a + b, 0)} units
+                    <span className="text-gray-600 text-xs ml-2">
+                      ({evChargerConfig.level2_11kw > 0 && `${evChargerConfig.level2_11kw}×L2-11kW `}
+                      {evChargerConfig.level2_19kw > 0 && `${evChargerConfig.level2_19kw}×L2-19kW `}
+                      {evChargerConfig.dcfast_50kw > 0 && `${evChargerConfig.dcfast_50kw}×DC-50kW `}
+                      {evChargerConfig.dcfast_150kw > 0 && `${evChargerConfig.dcfast_150kw}×DC-150kW `}
+                      {evChargerConfig.dcfast_350kw > 0 && `${evChargerConfig.dcfast_350kw}×DC-350kW`})
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1083,6 +1182,34 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
           installationOption: selectedInstallation,
           shippingOption: selectedShipping,
           financingOption: selectedFinancing,
+          annualSavings,
+          paybackYears
+        }}
+      />
+
+      {/* Virtual Quote Viewer Modal */}
+      <SimpleVirtualQuoteViewer
+        isOpen={showVirtualQuoteViewer}
+        onClose={() => setShowVirtualQuoteViewer(false)}
+        quoteData={{
+          storageSizeMW,
+          durationHours,
+          solarMW,
+          windMW,
+          generatorMW,
+          solarSpaceConfig,
+          evChargerConfig,
+          windConfig,
+          generatorConfig,
+          location,
+          industryTemplate,
+          equipmentCost,
+          installationCost,
+          shippingCost,
+          tariffCost,
+          totalProjectCost,
+          taxCredit30Percent,
+          netCostAfterTaxCredit,
           annualSavings,
           paybackYears
         }}

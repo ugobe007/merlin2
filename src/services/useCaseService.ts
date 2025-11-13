@@ -468,12 +468,16 @@ export class UseCaseService {
         .order('priority', { ascending: false })
         .order('effectiveness_rating', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Gracefully handle table not existing or RLS issues
+        console.warn('⚠️ Recommended applications table not available:', error.message);
+        return [];
+      }
       return data || [];
 
     } catch (error) {
-      console.error('Error fetching recommended applications:', error);
-      throw error;
+      console.warn('⚠️ Error fetching recommended applications (non-critical):', error);
+      return []; // Return empty array instead of throwing
     }
   }
 

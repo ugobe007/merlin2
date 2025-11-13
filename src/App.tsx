@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BessQuoteBuilder from './components/BessQuoteBuilder';
 import AdminDashboard from './components/AdminDashboard';
+import { QuoteProvider } from './contexts/QuoteContext';
 
 // Test calculations temporarily disabled for production build
 // import { testCalculations } from './utils/testCalculations';
@@ -61,18 +62,20 @@ function App() {
   }
 
   return (
-    <div>
-      <BessQuoteBuilder />
-      
-      {/* Floating Admin Access Button - Enhanced Visibility */}
-      <button
-        onClick={handleAdminAccess}
-        className="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-400 animate-pulse hover:animate-none"
-        title="Admin Access (Ctrl+Shift+A)"
-      >
-        <span className="text-xl">⚙️</span>
-      </button>
-    </div>
+    <QuoteProvider>
+      <div>
+        <BessQuoteBuilder />
+        
+        {/* Floating Admin Access Button - Enhanced Visibility */}
+        <button
+          onClick={handleAdminAccess}
+          className="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-400 animate-pulse hover:animate-none"
+          title="Admin Access (Ctrl+Shift+A)"
+        >
+          <span className="text-xl">⚙️</span>
+        </button>
+      </div>
+    </QuoteProvider>
   );
 }
 

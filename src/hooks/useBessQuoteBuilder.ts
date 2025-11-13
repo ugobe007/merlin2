@@ -21,6 +21,7 @@ export interface BessQuoteBuilderState {
   // Modal state
   showUserProfile: boolean;
   showSmartWizard: boolean;
+  showAdvancedQuoteBuilderModal: boolean;
   showVendorManager: boolean;
   showJoinModal: boolean;
   showAuthModal: boolean;
@@ -114,6 +115,7 @@ export interface BessQuoteBuilderActions {
   // Modal actions
   setShowUserProfile: (show: boolean) => void;
   setShowSmartWizard: (show: boolean) => void;
+  setShowAdvancedQuoteBuilderModal: (show: boolean) => void;
   setShowVendorManager: (show: boolean) => void;
   setShowJoinModal: (show: boolean) => void;
   setShowAuthModal: (show: boolean) => void;
@@ -272,6 +274,7 @@ export function useBessQuoteBuilder() {
   // Modal state
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSmartWizard, setShowSmartWizard] = useState(false);
+  const [showAdvancedQuoteBuilderModal, setShowAdvancedQuoteBuilderModal] = useState(false);
   const [showVendorManager, setShowVendorManager] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -779,7 +782,7 @@ export function useBessQuoteBuilder() {
   const state: BessQuoteBuilderState = {
     viewMode, publicProfileSlug, showAdvancedQuoteBuilder, userLayoutPreference, showLayoutPreferenceModal,
     energyCapacity, powerRating, showAdvancedOptions, quoteName,
-    showUserProfile, showSmartWizard, showVendorManager, showJoinModal, showAuthModal, showPricingPlans,
+    showUserProfile, showSmartWizard, showAdvancedQuoteBuilderModal, showVendorManager, showJoinModal, showAuthModal, showPricingPlans,
     showWelcomeModal, showAccountSetup, showEnhancedProfile, isFirstTimeProfile, isLoggedIn,
     showAnalytics, showBESSAnalytics, showFinancing, showTemplates, showChatModal, showAbout, showVendorPortal, showPortfolio,
     showCalculationModal, showSaveProjectModal, showLoadProjectModal, showPricingDataCapture,
@@ -797,7 +800,7 @@ export function useBessQuoteBuilder() {
   const actions: BessQuoteBuilderActions = {
     setViewMode, setPublicProfileSlug, setShowAdvancedQuoteBuilder, setUserLayoutPreference, setShowLayoutPreferenceModal,
     setEnergyCapacity, setPowerRating, setShowAdvancedOptions, setQuoteName,
-    setShowUserProfile, setShowSmartWizard, setShowVendorManager, setShowJoinModal, setShowAuthModal, setShowPricingPlans,
+    setShowUserProfile, setShowSmartWizard, setShowAdvancedQuoteBuilderModal, setShowVendorManager, setShowJoinModal, setShowAuthModal, setShowPricingPlans,
     setShowWelcomeModal, setShowAccountSetup, setShowEnhancedProfile, setIsFirstTimeProfile, setIsLoggedIn,
     setShowAnalytics, setShowBESSAnalytics, setShowFinancing, setShowTemplates, setShowChatModal, setShowAbout, setShowVendorPortal, setShowPortfolio,
     setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowPricingDataCapture,
