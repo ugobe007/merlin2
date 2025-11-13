@@ -3,6 +3,7 @@ import { PricingAdminDashboard } from './PricingAdminDashboard';
 import CalculationsAdmin from './admin/CalculationsAdmin';
 import UseCaseConfigManager from './admin/UseCaseConfigManager';
 import CacheStatistics from './admin/CacheStatistics';
+// import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 
 /**
  * System Administrator Dashboard
@@ -29,7 +30,7 @@ interface AdminStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache' | 'migration'>('dashboard');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
   
@@ -82,6 +83,7 @@ const AdminDashboard: React.FC = () => {
               { key: 'calculations', label: '🧮 Calculations' },
               { key: 'pricing', label: '💰 Pricing Config' },
               { key: 'cache', label: '⚡ Cache Performance' },
+              { key: 'migration', label: '🔄 Data Migration' },
               { key: 'settings', label: '⚙️ Settings' }
             ].map((tab) => (
               <button
@@ -607,12 +609,27 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'useCases' && (
           <UseCaseConfigManager />
         )}
-
         {/* Cache Performance Tab */}
         {activeTab === 'cache' && (
           <CacheStatistics />
         )}
 
+        {/* Migration Tab */}
+        {activeTab === 'migration' && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <div className="text-center py-12">
+              <h3 className="text-2xl font-bold mb-4">Migration Manager</h3>
+              <p className="text-gray-400 mb-4">
+                MigrationManager component is temporarily disabled.
+              </p>
+              <p className="text-sm text-gray-500">
+                To enable: Create /src/components/admin/MigrationManager.tsx
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6">

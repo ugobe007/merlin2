@@ -285,12 +285,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish }) 
         };
         
         const solarSuggestion = calculateAutomatedSolarSizing(buildingCharacteristics);
-        setSolarMW(solarSuggestion.recommendedMW);
+        // ⚠️ BUG FIX: Don't auto-set solar - store as suggestion only
+        // setSolarMW(solarSuggestion.recommendedMW); // REMOVED - user must choose
         
-        console.log('🌞 Enhanced solar sizing applied:', {
+        console.log('🌞 Solar suggestion calculated (not auto-applied):', {
           template: selectedTemplate,
           characteristics: buildingCharacteristics,
-          suggestion: solarSuggestion
+          suggestion: solarSuggestion,
+          note: 'User must explicitly choose solar in Step 3'
         });
       }
     }
