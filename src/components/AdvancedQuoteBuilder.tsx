@@ -782,7 +782,7 @@ export default function AdvancedQuoteBuilder({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-300">Chemistry:</span>
-                          <span className="text-white font-semibold">{batteryChemistry}</span>
+                          <span className="text-white font-semibold">{chemistry.toUpperCase()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-300">Installation:</span>
