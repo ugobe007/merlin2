@@ -365,7 +365,7 @@ export default function AdvancedQuoteBuilder({
                         Location
                       </label>
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-gray-400" />
+                        <MapPin className="w-5 h-5 text-gray-700" />
                         <input
                           type="text"
                           value={location}
@@ -412,7 +412,7 @@ export default function AdvancedQuoteBuilder({
                         />
                         <span className="text-gray-700 w-12 text-lg">MW</span>
                       </div>
-                      <p className="text-sm text-gray-400 mt-2">
+                      <p className="text-sm text-gray-700 mt-2">
                         Maximum discharge power output
                       </p>
                     </div>
@@ -443,7 +443,7 @@ export default function AdvancedQuoteBuilder({
                         />
                         <span className="text-gray-700 w-12 text-lg">hrs</span>
                       </div>
-                      <p className="text-sm text-gray-400 mt-2">
+                      <p className="text-sm text-gray-700 mt-2">
                         How long the system can discharge at full power
                       </p>
                     </div>
@@ -570,7 +570,7 @@ export default function AdvancedQuoteBuilder({
                         max="1000"
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       />
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-700 mt-1">
                         1 cycle = full charge + discharge
                       </p>
                     </div>
@@ -616,7 +616,7 @@ export default function AdvancedQuoteBuilder({
                           placeholder="Enter system cost"
                         />
                       </div>
-                      <p className="text-sm text-gray-400 mt-2">
+                      <p className="text-sm text-gray-700 mt-2">
                         Total installed cost including equipment, installation, soft costs, and contingency
                       </p>
                     </div>
@@ -677,12 +677,12 @@ export default function AdvancedQuoteBuilder({
                   
                   {/* Power Conversion System (PCS) Configuration */}
                   <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/40 rounded-xl p-6 mb-6 shadow-lg">
-                    <h4 className="text-lg font-bold mb-4 text-purple-300">Power Conversion System (PCS)</h4>
+                    <h4 className="text-lg font-bold mb-4 text-purple-800">Power Conversion System (PCS)</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* PCS Quoting Option */}
                       <div className="col-span-full">
-                        <label className="block text-sm font-semibold mb-3 text-gray-200">
+                        <label className="block text-sm font-semibold mb-3 text-gray-800">
                           PCS Quoting Method
                         </label>
                         <div className="flex gap-4">
@@ -706,7 +706,7 @@ export default function AdvancedQuoteBuilder({
                           </label>
                         </div>
                         {pcsQuoteSeparately && (
-                          <p className="text-xs text-yellow-300 mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
+                          <p className="text-xs text-yellow-800 mt-2 bg-yellow-100 border border-yellow-400 rounded-lg p-2">
                             💡 PCS will be itemized separately in the quote with detailed specifications
                           </p>
                         )}
@@ -714,7 +714,7 @@ export default function AdvancedQuoteBuilder({
 
                       {/* Inverter Type */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        <label className="block text-sm font-semibold mb-2 text-gray-800">
                           Inverter Type
                         </label>
                         <select
@@ -725,14 +725,14 @@ export default function AdvancedQuoteBuilder({
                           <option value="bidirectional" className="bg-gray-800">Bidirectional Inverter</option>
                           <option value="unidirectional" className="bg-gray-800">Unidirectional (Charge Only)</option>
                         </select>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-700 mt-1">
                           {inverterType === 'bidirectional' ? '⚡ Supports charge & discharge' : '⚡ Charge only (typical for solar)'}
                         </p>
                       </div>
 
                       {/* Number of Inverters */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        <label className="block text-sm font-semibold mb-2 text-gray-800">
                           Number of Inverters
                         </label>
                         <div className="flex gap-2">
@@ -752,14 +752,14 @@ export default function AdvancedQuoteBuilder({
                             Auto
                           </button>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-700 mt-1">
                           Suggested: {Math.ceil(totalKW / inverterRating)} units @ {inverterRating} kW each
                         </p>
                       </div>
 
                       {/* Inverter Rating */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        <label className="block text-sm font-semibold mb-2 text-gray-800">
                           Inverter Rating (kW per unit)
                         </label>
                         <input
@@ -774,7 +774,7 @@ export default function AdvancedQuoteBuilder({
 
                       {/* Manufacturer */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        <label className="block text-sm font-semibold mb-2 text-gray-800">
                           Inverter Manufacturer (Optional)
                         </label>
                         <input
@@ -800,10 +800,10 @@ export default function AdvancedQuoteBuilder({
                         placeholder={calculatedWatts.toLocaleString()}
                         className="w-full px-3 py-2 bg-white/10 border border-blue-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-blue-300 mt-2">
+                      <p className="text-xs text-blue-800 mt-2">
                         {totalKW.toLocaleString()} kW / {(totalKW/1000).toFixed(2)} MW
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedWatts.toLocaleString()} W</p>
+                      <p className="text-xs text-gray-700 mt-1">Calculated: {calculatedWatts.toLocaleString()} W</p>
                     </div>
 
                     {/* AC Amps */}
@@ -816,10 +816,10 @@ export default function AdvancedQuoteBuilder({
                         placeholder={calculatedAmpsAC.toFixed(0)}
                         className="w-full px-3 py-2 bg-white/10 border border-yellow-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-yellow-300 mt-2">
+                      <p className="text-xs text-yellow-800 mt-2">
                         @ {systemVoltage}V AC Per Phase
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
+                      <p className="text-xs text-gray-700 mt-1">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
                     </div>
 
                     {/* DC Amps */}
@@ -832,17 +832,17 @@ export default function AdvancedQuoteBuilder({
                         placeholder={calculatedAmpsDC.toFixed(0)}
                         className="w-full px-3 py-2 bg-white/10 border border-green-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-green-300 mt-2">
+                      <p className="text-xs text-green-800 mt-2">
                         @ {dcVoltage}V DC
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
+                      <p className="text-xs text-gray-700 mt-1">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
                     </div>
                   </div>
 
                   {/* Voltage Configuration */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
-                      <label className="block text-sm font-semibold mb-2 text-gray-200">
+                      <label className="block text-sm font-semibold mb-2 text-gray-800">
                         AC System Voltage (V)
                       </label>
                       <select
@@ -859,7 +859,7 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
-                      <label className="block text-sm font-semibold mb-2 text-gray-200">
+                      <label className="block text-sm font-semibold mb-2 text-gray-800">
                         DC Battery Voltage (V)
                       </label>
                       <input
@@ -870,7 +870,7 @@ export default function AdvancedQuoteBuilder({
                         min="100"
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
                       />
-                      <p className="text-xs text-gray-400 mt-1">Typical: 800V - 1500V DC</p>
+                      <p className="text-xs text-gray-700 mt-1">Typical: 800V - 1500V DC</p>
                     </div>
                   </div>
 
@@ -891,11 +891,11 @@ export default function AdvancedQuoteBuilder({
                       </div>
                       <div>
                         <p className="text-gray-700 mb-1">AC Current:</p>
-                        <p className="text-xl font-bold text-yellow-300">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-xl font-bold text-yellow-800">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                       <div>
                         <p className="text-gray-700 mb-1">DC Current:</p>
-                        <p className="text-xl font-bold text-green-300">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-xl font-bold text-green-800">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-purple-400/30">
@@ -943,7 +943,7 @@ export default function AdvancedQuoteBuilder({
                     <div className="space-y-6">
                       
                       {/* Solar PV */}
-                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6">
+                      <div className="bg-yellow-100 border border-yellow-400 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-xl font-bold flex items-center gap-2">
                             ☀️ Solar PV System
@@ -1023,7 +1023,7 @@ export default function AdvancedQuoteBuilder({
                               <p className="text-sm text-yellow-200">
                                 ☀️ Estimated Annual Production: <strong>{(solarCapacityKW * 1400).toLocaleString()} kWh/year</strong> (1,400 hrs/year avg)
                               </p>
-                              <p className="text-xs text-yellow-300 mt-1">
+                              <p className="text-xs text-yellow-800 mt-1">
                                 Array Size: ~{(solarCapacityKW * 1000 * 6).toLocaleString()} sq ft (~{((solarCapacityKW * 1000 * 6) / 43560).toFixed(2)} acres) | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
                               </p>
                               <p className="text-xs text-yellow-200 mt-1">
@@ -1092,7 +1092,7 @@ export default function AdvancedQuoteBuilder({
                       </div>
 
                       {/* Fuel Cell */}
-                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+                      <div className="bg-blue-100 border border-blue-400 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-xl font-bold flex items-center gap-2">
                             <Cpu className="w-5 h-5" />
@@ -1158,7 +1158,7 @@ export default function AdvancedQuoteBuilder({
                               <p className="text-sm text-blue-200">
                                 ⚡ Efficiency: <strong>45-60%</strong>
                               </p>
-                              <p className="text-xs text-blue-300 mt-1">
+                              <p className="text-xs text-blue-800 mt-1">
                                 Clean, quiet, continuous power
                               </p>
                             </div>
@@ -1318,7 +1318,7 @@ export default function AdvancedQuoteBuilder({
                   )}
 
                   {!includeRenewables && (
-                    <div className="text-center py-8 text-gray-400">
+                    <div className="text-center py-8 text-gray-700">
                       <p className="text-lg">Enable renewables to configure solar, wind, fuel cells, and backup generators</p>
                       <p className="text-sm mt-2">Hybrid systems can reduce costs and improve resiliency</p>
                     </div>
