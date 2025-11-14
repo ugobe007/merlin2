@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, Sparkles, TrendingUp } from 'lucide-react';
+import { Lightbulb, Sparkles, TrendingUp, Bot } from 'lucide-react';
 import { aiStateService } from '../../../services/aiStateService';
 import AIStatusIndicator from '../AIStatusIndicator';
 import AISquareFootageCalculator from '../AISquareFootageCalculator';
@@ -56,6 +56,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isApplyingAI, setIsApplyingAI] = useState(false);
+  const [showAIHelper, setShowAIHelper] = useState(false);
 
   // Extract MW and hours from AI configuration string
   const parseAIConfiguration = (configString: string) => {
@@ -1038,6 +1039,57 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* AI Helper Button - Floating Top Right - Dark to light green gradient with enhanced 3D */}
+      <button
+        onClick={() => setShowAIHelper(!showAIHelper)}
+        className="absolute top-4 right-4 px-4 py-2 bg-gradient-to-br from-green-700 to-green-400 hover:from-green-800 hover:to-green-500 text-white rounded-lg font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 z-10 transform hover:scale-105"
+        style={{
+          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          boxShadow: '0 6px 12px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1), inset 0 -3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
+        }}
+      >
+        <Bot className="w-5 h-5" />
+        AI Assistant
+      </button>
+
+      {/* AI Helper Panel - Green theme */}
+      {showAIHelper && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-6 shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">🤖</div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-green-900 mb-2 flex items-center gap-2">
+                <span className="text-green-500">●</span> AI Assistant Available
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Need help answering these questions? I can help you:
+              </p>
+              <ul className="space-y-2 text-gray-700 mb-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">•</span>
+                  <span>Calculate square footage from building dimensions</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">•</span>
+                  <span>Estimate peak electrical load from your utility bills</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">•</span>
+                  <span>Suggest typical values for your industry</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">•</span>
+                  <span>Answer questions about BESS sizing and configuration</span>
+                </li>
+              </ul>
+              <p className="text-sm text-gray-600 italic">
+                💡 Tip: Look for the "AI Calculate" buttons next to specific fields, or ask me any question about your project!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex justify-center items-center gap-4 mb-4">

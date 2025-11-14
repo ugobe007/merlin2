@@ -186,14 +186,37 @@ export default function BessQuoteBuilder() {
   // Placeholder values for legacy components (analytics, financing modals)
   // These are deprecated and will be removed in future versions
   // TODO: Remove these placeholders and update dependent components to use SmartWizardV2 data
-  const grandCapEx = 0;
+  
+  // Basic CapEx calculation for Advanced Quote Builder
+  const totalMWh = powerMW * standbyHours;
+  const effectiveBatteryKwh = totalMWh * 1000;
+  
+  // BESS pricing per kWh based on system size (from comprehensive_pricing_demo.js)
+  let pricePerKwh = 168; // Default: Small systems (<1 MWh)
+  if (effectiveBatteryKwh >= 10000) {
+    pricePerKwh = 118; // Utility scale (>10 MWh): $118/kWh
+  } else if (effectiveBatteryKwh >= 1000) {
+    pricePerKwh = 138; // Medium systems (1-10 MWh): $138/kWh
+  }
+  
+  // Calculate base BESS cost
+  const bessCapEx = effectiveBatteryKwh * pricePerKwh;
+  
+  // Add BOS and EPC costs (balance of system and engineering/procurement/construction)
+  const bosMultiplier = 1 + (bosPercent / 100);
+  const epcMultiplier = 1 + (epcPercent / 100);
+  
+  // Grand CapEx includes BESS + BOS + EPC + renewables
+  const solarCost = solarKwp * 1000; // ~$1000/kWp for solar
+  const windCost = windKw * 1500; // ~$1500/kW for wind
+  const genCost = genKw * 800; // ~$800/kW for generators
+  
+  const grandCapEx = (bessCapEx * bosMultiplier * epcMultiplier) + solarCost + windCost + genCost;
+  
   const annualSavings = 0;
-  const bessCapEx = 0;
   const roiYears = 0;
   const actualDuration = standbyHours;
-  const totalMWh = powerMW * standbyHours;
   const annualEnergyMWh = totalMWh * 365;
-  const effectiveBatteryKwh = totalMWh * 1000;
   const pcsKW = powerMW * 1000;
   
   // Helper function for currency symbols (moved from deleted quoteCalculations.ts)
