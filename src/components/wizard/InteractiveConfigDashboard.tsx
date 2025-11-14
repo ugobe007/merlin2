@@ -207,7 +207,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     annualSavings: 0,
     paybackYears: 0,
     roiPercent: 0,
-    carbonOffset: 0
+    carbonOffset: 0,
+    // Revenue breakdown from centralized calculation
+    peakShavingSavings: 0,
+    demandChargeSavings: 0,
+    gridServiceRevenue: 0,
+    solarSavings: 0,
+    windSavings: 0
   });
 
   // AI Optimization state
@@ -268,7 +274,14 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
         annualSavings: result.annualSavings,
         paybackYears: result.paybackYears,
         roiPercent: result.roi10Year,
-        carbonOffset
+        carbonOffset,
+        breakdown: {
+          peakShavingSavings: result.peakShavingSavings,
+          demandChargeSavings: result.demandChargeSavings,
+          gridServiceRevenue: result.gridServiceRevenue,
+          solarSavings: result.solarSavings,
+          windSavings: result.windSavings
+        }
       });
       
       setCalculations({
@@ -277,7 +290,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
         annualSavings: result.annualSavings,
         paybackYears: result.paybackYears,
         roiPercent: result.roi10Year,
-        carbonOffset
+        carbonOffset,
+        // Store breakdown values from centralized calculation
+        peakShavingSavings: result.peakShavingSavings,
+        demandChargeSavings: result.demandChargeSavings,
+        gridServiceRevenue: result.gridServiceRevenue,
+        solarSavings: result.solarSavings,
+        windSavings: result.windSavings
       });
 
       // Update parent component
@@ -720,7 +739,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
               </div>
             </div>
 
-            {/* Annual Revenue - Clickable */}
+            {/* Annual Revenue/Savings - Clickable */}
             <div 
               className={`bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30 cursor-pointer hover:bg-white/90 hover:shadow-lg transition-all duration-200 relative ${
                 clickedItems.revenue ? 'dashboard-item-checked' : ''
@@ -733,7 +752,9 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                   <span className="text-white text-xs">✓</span>
                 </div>
               )}
-              <div className="text-xs text-gray-600 mb-1">Annual Revenue</div>
+              <div className="text-xs text-gray-600 mb-1">
+                {solarMW > 0 ? 'Annual Revenue' : 'Annual Savings'}
+              </div>
               <div className="text-lg font-bold text-green-800">
                 ${(calculations.annualSavings / 1000).toFixed(0)}k
               </div>
@@ -1371,46 +1392,38 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                   <div className="bg-white/30 p-3 rounded-lg">
                     <div className="text-sm text-green-700 space-y-1">
                       <div className="flex justify-between">
-                        <span>Energy Arbitrage:</span>
+                        <span>Peak Shaving / Arbitrage:</span>
                         <span className="font-bold">
-                          ${((storageSizeMW * durationHours * 50 * profitabilityTarget) / 1000).toFixed(0)}k/yr
+                          ${((calculations.peakShavingSavings) / 1000).toFixed(0)}k/yr
                         </span>
                       </div>
-                      {profitabilityTarget >= 3 && (
+                      <div className="flex justify-between">
+                        <span>Demand Charge Reduction:</span>
+                        <span>${((calculations.demandChargeSavings) / 1000).toFixed(0)}k/yr</span>
+                      </div>
+                      {calculations.gridServiceRevenue > 0 && (
                         <div className="flex justify-between">
-                          <span>Grid Sales Income:</span>
-                          <span>${((solarMW * 1000 * 8760 * 0.08 * profitabilityTarget) / 1000).toFixed(0)}k/yr</span>
+                          <span>Grid Services Revenue:</span>
+                          <span>${((calculations.gridServiceRevenue) / 1000).toFixed(0)}k/yr</span>
                         </div>
                       )}
-                      {profitabilityTarget >= 4 && (
+                      {calculations.solarSavings > 0 && (
                         <div className="flex justify-between">
-                          <span>Ancillary Services:</span>
-                          <span>${((storageSizeMW * 120 * profitabilityTarget) / 1000).toFixed(0)}k/yr</span>
+                          <span>Solar Energy Sales:</span>
+                          <span>${((calculations.solarSavings) / 1000).toFixed(0)}k/yr</span>
                         </div>
                       )}
-                      {profitabilityTarget >= 4 && (
+                      {calculations.windSavings > 0 && (
                         <div className="flex justify-between">
-                          <span>Frequency Regulation:</span>
-                          <span>${((storageSizeMW * 80 * profitabilityTarget) / 1000).toFixed(0)}k/yr</span>
-                        </div>
-                      )}
-                      {profitabilityTarget >= 5 && (
-                        <div className="flex justify-between">
-                          <span>Capacity Markets:</span>
-                          <span>${((storageSizeMW * 60 * profitabilityTarget) / 1000).toFixed(0)}k/yr</span>
+                          <span>Wind Energy Sales:</span>
+                          <span>${((calculations.windSavings) / 1000).toFixed(0)}k/yr</span>
                         </div>
                       )}
                       <div className="border-t border-green-200 pt-1 mt-2">
                         <div className="flex justify-between font-bold">
-                          <span>Total Annual Revenue:</span>
+                          <span>Total Annual {solarMW > 0 || windMW > 0 ? 'Revenue' : 'Savings'}:</span>
                           <span className="text-green-800">
-                            ${((
-                              (storageSizeMW * durationHours * 50 * profitabilityTarget) + // Arbitrage
-                              (profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0) + // Grid sales
-                              (profitabilityTarget >= 4 ? storageSizeMW * 120 * profitabilityTarget : 0) + // Ancillary
-                              (profitabilityTarget >= 4 ? storageSizeMW * 80 * profitabilityTarget : 0) + // Frequency reg
-                              (profitabilityTarget >= 5 ? storageSizeMW * 60 * profitabilityTarget : 0) // Capacity
-                            ) / 1000).toFixed(0)}k/yr
+                            ${((calculations.annualSavings) / 1000).toFixed(0)}k/yr
                           </span>
                         </div>
                       </div>
