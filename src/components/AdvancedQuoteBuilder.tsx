@@ -203,29 +203,29 @@ export default function AdvancedQuoteBuilder({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-gray-900 via-purple-900/40 to-blue-900/40">
-      <div className="min-h-screen text-white">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-blue-100 via-blue-50 to-cyan-100">
+      <div className="min-h-screen text-gray-900">
         
         {/* LANDING PAGE VIEW */}
         {viewMode === 'landing' && (
           <>
             {/* Enhanced header with depth */}
-            <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-xl border-b-2 border-purple-500/30 shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 border-b-2 border-blue-700 shadow-2xl">
               <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-xl shadow-purple-500/30">
-                    <Wrench className="w-8 h-8 drop-shadow-glow" />
+                  <div className="p-3 bg-white rounded-xl shadow-xl">
+                    <Wrench className="w-8 h-8 text-blue-600" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-glow">
+                    <h1 className="text-3xl font-bold text-white drop-shadow-lg">
                       Advanced Quote Builder
                     </h1>
-                    <p className="text-gray-300 mt-1 drop-shadow-sm">Professional-grade BESS configuration & electrical design</p>
+                    <p className="text-blue-100 mt-1 drop-shadow-sm">Professional-grade BESS configuration & electrical design</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-all hover:shadow-lg hover:shadow-red-500/20"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:shadow-lg"
                   aria-label="Close"
                 >
                   <X className="w-6 h-6" />
@@ -235,39 +235,39 @@ export default function AdvancedQuoteBuilder({
 
             {/* Enhanced hero section with more depth */}
             <div className="max-w-7xl mx-auto px-6 py-8">
-              <div className="bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border-2 border-blue-500/40 rounded-2xl p-8 mb-8 shadow-2xl shadow-purple-500/20 backdrop-blur-sm">
+              <div className="bg-white border-2 border-blue-300 rounded-2xl p-8 mb-8 shadow-2xl">
                 <div className="flex items-start gap-6">
                   <div className="flex-shrink-0">
-                    <div className="p-4 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-xl shadow-purple-500/50">
-                      <Sparkles className="w-10 h-10 drop-shadow-glow" />
+                    <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl shadow-xl">
+                      <Sparkles className="w-10 h-10 text-white" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-3 text-white drop-shadow-glow">Complete Energy System Design Suite</h2>
-                    <p className="text-gray-300 text-lg mb-4 drop-shadow-sm">
+                    <h2 className="text-2xl font-bold mb-3 text-gray-900">Complete Energy System Design Suite</h2>
+                    <p className="text-gray-700 text-lg mb-4">
                       Design comprehensive battery energy storage systems with integrated renewables, 
                       detailed electrical specifications, and professional financial analysis.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                      <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3 border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all">
-                        <Zap className="w-5 h-5 text-blue-400 drop-shadow-glow" />
+                      <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-3 border border-blue-200 shadow-lg hover:shadow-xl hover:bg-blue-100 transition-all">
+                        <Zap className="w-5 h-5 text-blue-600" />
                         <div>
-                          <p className="text-sm font-semibold text-white">Electrical Design</p>
-                          <p className="text-xs text-gray-300">Watts, Amps, Inverters</p>
+                          <p className="text-sm font-semibold text-gray-900">Electrical Design</p>
+                          <p className="text-xs text-gray-600">Watts, Amps, Inverters</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3 border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all">
-                        <Sparkles className="w-5 h-5 text-green-400 drop-shadow-glow" />
+                      <div className="flex items-center gap-3 bg-green-50 rounded-lg p-3 border border-green-200 shadow-lg hover:shadow-xl hover:bg-green-100 transition-all">
+                        <Sparkles className="w-5 h-5 text-green-600" />
                         <div>
-                          <p className="text-sm font-semibold">Hybrid Systems</p>
-                          <p className="text-xs text-gray-400">Solar, Wind, Fuel Cells</p>
+                          <p className="text-sm font-semibold text-gray-900">Hybrid Systems</p>
+                          <p className="text-xs text-gray-600">Solar, Wind, Fuel Cells</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
-                        <Calculator className="w-5 h-5 text-purple-400" />
+                      <div className="flex items-center gap-3 bg-purple-50 rounded-lg p-3 border border-purple-200 shadow-lg hover:shadow-xl hover:bg-purple-100 transition-all">
+                        <Calculator className="w-5 h-5 text-purple-600" />
                         <div>
-                          <p className="text-sm font-semibold">Financial Analysis</p>
-                          <p className="text-xs text-gray-400">ROI, Payback, NPV</p>
+                          <p className="text-sm font-semibold text-gray-900">Financial Analysis</p>
+                          <p className="text-xs text-gray-600">ROI, Payback, NPV</p>
                         </div>
                       </div>
                     </div>
@@ -283,10 +283,10 @@ export default function AdvancedQuoteBuilder({
                   <button
                     key={tool.id}
                     onClick={tool.action}
-                    className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border-2 border-white/20 rounded-2xl p-8 text-left hover:from-white/15 hover:to-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-white/40 hover:-translate-y-1"
+                    className="group relative bg-white border-2 border-gray-300 rounded-2xl p-8 text-left hover:border-blue-400 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-1"
                   >
                     {/* Enhanced gradient accent */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity shadow-inner`} />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity`} />
                     
                     {/* Icon with enhanced shadow */}
                     <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${tool.color} mb-4 shadow-xl group-hover:shadow-2xl transition-shadow`}>
@@ -294,11 +294,11 @@ export default function AdvancedQuoteBuilder({
                     </div>
                     
                     {/* Content */}
-                    <h3 className="text-xl font-bold mb-2 text-white drop-shadow-md">{tool.title}</h3>
-                    <p className="text-gray-300 text-sm drop-shadow-sm">{tool.description}</p>
+                    <h3 className="text-xl font-bold mb-2 text-gray-900">{tool.title}</h3>
+                    <p className="text-gray-700 text-sm">{tool.description}</p>
                     
                     {/* Enhanced arrow indicator */}
-                    <div className="mt-4 text-blue-400 font-semibold opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-2">
+                    <div className="mt-4 text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-2">
                       Launch →
                     </div>
                   </button>
@@ -312,24 +312,24 @@ export default function AdvancedQuoteBuilder({
         {viewMode === 'custom-config' && (
           <>
             {/* Enhanced header for config view */}
-            <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-xl border-b-2 border-purple-500/30 shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 border-b-2 border-blue-700 shadow-2xl">
               <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setViewMode('landing')}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-all hover:shadow-lg hover:shadow-blue-500/20"
+                    className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:shadow-lg"
                     aria-label="Back"
                   >
                     <ArrowLeft className="w-6 h-6" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold">Custom Configuration</h1>
-                    <p className="text-gray-300 text-sm">Manually configure your BESS system</p>
+                    <h1 className="text-2xl font-bold text-white">Custom Configuration</h1>
+                    <p className="text-blue-100 text-sm">Manually configure your BESS system</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
                   aria-label="Close"
                 >
                   <X className="w-6 h-6" />
@@ -342,9 +342,9 @@ export default function AdvancedQuoteBuilder({
               <div className="space-y-8">
                 
                 {/* Project Information Section */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <FileText className="w-6 h-6 text-blue-400" />
+                <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 shadow-xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                    <FileText className="w-6 h-6 text-blue-600" />
                     Project Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -356,7 +356,7 @@ export default function AdvancedQuoteBuilder({
                         type="text"
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                         placeholder="e.g., Downtown Office Building BESS"
                       />
                     </div>
@@ -370,7 +370,7 @@ export default function AdvancedQuoteBuilder({
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                           placeholder="City, State/Country"
                         />
                       </div>
@@ -379,9 +379,9 @@ export default function AdvancedQuoteBuilder({
                 </div>
 
                 {/* Enhanced System Configuration Section */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 backdrop-blur-sm border-2 border-purple-500/30 rounded-2xl p-8 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
-                    <Battery className="w-7 h-7 text-purple-400 drop-shadow-glow" />
+                <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 shadow-xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                    <Battery className="w-7 h-7 text-purple-600" />
                     System Configuration
                   </h3>
                   
@@ -408,9 +408,9 @@ export default function AdvancedQuoteBuilder({
                           step="0.1"
                           min="0.1"
                           max="10"
-                          className="w-32 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-center text-lg font-semibold"
+                          className="w-32 px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-center text-lg font-semibold"
                         />
-                        <span className="text-gray-300 w-12 text-lg">MW</span>
+                        <span className="text-gray-700 w-12 text-lg">MW</span>
                       </div>
                       <p className="text-sm text-gray-400 mt-2">
                         Maximum discharge power output
@@ -439,9 +439,9 @@ export default function AdvancedQuoteBuilder({
                           step="0.5"
                           min="0.5"
                           max="12"
-                          className="w-32 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-center text-lg font-semibold"
+                          className="w-32 px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-center text-lg font-semibold"
                         />
-                        <span className="text-gray-300 w-12 text-lg">hrs</span>
+                        <span className="text-gray-700 w-12 text-lg">hrs</span>
                       </div>
                       <p className="text-sm text-gray-400 mt-2">
                         How long the system can discharge at full power
@@ -456,7 +456,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={chemistry}
                         onChange={(e) => setChemistry(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       >
                         <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
                         <option value="nmc">NMC - High energy density</option>
@@ -473,7 +473,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={installationType}
                         onChange={(e) => setInstallationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       >
                         <option value="outdoor">Outdoor (Containerized)</option>
                         <option value="indoor">Indoor (Room/Vault)</option>
@@ -489,7 +489,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={gridConnection}
                         onChange={(e) => setGridConnection(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       >
                         <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
                         <option value="dc-coupled">DC-Coupled (with Solar)</option>
@@ -510,16 +510,16 @@ export default function AdvancedQuoteBuilder({
                         min="85"
                         max="99"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Enhanced Application & Use Case Section */}
-                <div className="bg-gradient-to-br from-green-500/10 to-teal-500/10 backdrop-blur-sm border-2 border-green-500/30 rounded-2xl p-8 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
-                    <Building2 className="w-7 h-7 text-green-400 drop-shadow-glow" />
+                <div className="bg-white border-2 border-green-200 rounded-2xl p-8 shadow-xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                    <Building2 className="w-7 h-7 text-green-600" />
                     Application & Use Case
                   </h3>
                   
@@ -531,7 +531,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={applicationType}
                         onChange={(e) => setApplicationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       >
                         <option value="residential">Residential</option>
                         <option value="commercial">Commercial & Industrial</option>
@@ -547,7 +547,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={useCase}
                         onChange={(e) => setUseCase(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       >
                         <option value="peak-shaving">Peak Shaving / Demand Charge Reduction</option>
                         <option value="arbitrage">Energy Arbitrage / Time-of-Use</option>
@@ -568,7 +568,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
                         min="1"
                         max="1000"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       />
                       <p className="text-xs text-gray-400 mt-1">
                         1 cycle = full charge + discharge
@@ -586,16 +586,16 @@ export default function AdvancedQuoteBuilder({
                         min="75"
                         max="98"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Enhanced Financial Parameters Section */}
-                <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border-2 border-yellow-500/30 rounded-2xl p-8 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
-                    <DollarSign className="w-7 h-7 text-yellow-400 drop-shadow-glow" />
+                <div className="bg-white border-2 border-yellow-200 rounded-2xl p-8 shadow-xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                    <DollarSign className="w-7 h-7 text-yellow-600" />
                     Financial Parameters
                   </h3>
                   
@@ -605,14 +605,14 @@ export default function AdvancedQuoteBuilder({
                         Estimated System Cost (USD)
                       </label>
                       <div className="flex items-center gap-4">
-                        <span className="text-gray-300 text-lg">$</span>
+                        <span className="text-gray-700 text-lg">$</span>
                         <input
                           type="number"
                           value={systemCost}
                           onChange={(e) => onSystemCostChange(parseFloat(e.target.value) || 0)}
                           step="10000"
                           min="0"
-                          className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-lg"
+                          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-lg"
                           placeholder="Enter system cost"
                         />
                       </div>
@@ -631,7 +631,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
                         step="0.01"
                         min="0"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                         placeholder="e.g., 0.12"
                       />
                     </div>
@@ -646,7 +646,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
                         step="1"
                         min="0"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                         placeholder="e.g., 15"
                       />
                     </div>
@@ -662,7 +662,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 1)}
                         min="1"
                         max="25"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                       />
                     </div>
                   </div>
@@ -686,7 +686,7 @@ export default function AdvancedQuoteBuilder({
                           PCS Quoting Method
                         </label>
                         <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer bg-white/10 border border-white/20 rounded-lg px-4 py-3 hover:bg-white/15 transition-all flex-1">
+                          <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-4 py-3 hover:bg-gray-100 transition-all flex-1">
                             <input
                               type="radio"
                               checked={!pcsQuoteSeparately}
@@ -695,7 +695,7 @@ export default function AdvancedQuoteBuilder({
                             />
                             <span className="text-sm font-medium">Included with BESS System</span>
                           </label>
-                          <label className="flex items-center gap-2 cursor-pointer bg-white/10 border border-white/20 rounded-lg px-4 py-3 hover:bg-white/15 transition-all flex-1">
+                          <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-4 py-3 hover:bg-gray-100 transition-all flex-1">
                             <input
                               type="radio"
                               checked={pcsQuoteSeparately}
@@ -720,7 +720,7 @@ export default function AdvancedQuoteBuilder({
                         <select
                           value={inverterType}
                           onChange={(e) => setInverterType(e.target.value)}
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner hover:bg-white/15 transition-colors"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner hover:bg-gray-100 transition-colors"
                         >
                           <option value="bidirectional" className="bg-gray-800">Bidirectional Inverter</option>
                           <option value="unidirectional" className="bg-gray-800">Unidirectional (Charge Only)</option>
@@ -741,7 +741,7 @@ export default function AdvancedQuoteBuilder({
                             value={numberOfInvertersInput}
                             onChange={(e) => setNumberOfInvertersInput(parseInt(e.target.value) || 1)}
                             min="1"
-                            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
                             placeholder="Auto-calculated"
                           />
                           <button
@@ -768,7 +768,7 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
                           step="100"
                           min="100"
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
                         />
                       </div>
 
@@ -782,7 +782,7 @@ export default function AdvancedQuoteBuilder({
                           value={inverterManufacturer}
                           onChange={(e) => setInverterManufacturer(e.target.value)}
                           placeholder="e.g., SMA, Sungrow, Power Electronics"
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 shadow-inner"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white placeholder-gray-400 shadow-inner"
                         />
                       </div>
                     </div>
@@ -792,7 +792,7 @@ export default function AdvancedQuoteBuilder({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* System Watts */}
                     <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-gray-300 mb-2 font-semibold">System Power (Watts)</label>
+                      <label className="block text-xs text-gray-700 mb-2 font-semibold">System Power (Watts)</label>
                       <input
                         type="number"
                         value={systemWattsInput}
@@ -808,7 +808,7 @@ export default function AdvancedQuoteBuilder({
 
                     {/* AC Amps */}
                     <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-gray-300 mb-2 font-semibold">AC Current (3-Phase)</label>
+                      <label className="block text-xs text-gray-700 mb-2 font-semibold">AC Current (3-Phase)</label>
                       <input
                         type="number"
                         value={systemAmpsACInput}
@@ -824,7 +824,7 @@ export default function AdvancedQuoteBuilder({
 
                     {/* DC Amps */}
                     <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-gray-300 mb-2 font-semibold">DC Current (Battery Side)</label>
+                      <label className="block text-xs text-gray-700 mb-2 font-semibold">DC Current (Battery Side)</label>
                       <input
                         type="number"
                         value={systemAmpsDCInput}
@@ -848,7 +848,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={systemVoltage}
                         onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
                       >
                         <option value={208} className="bg-gray-800">208V (Small Commercial)</option>
                         <option value={480} className="bg-gray-800">480V (Standard Industrial)</option>
@@ -868,7 +868,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
                         step="100"
                         min="100"
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
                       />
                       <p className="text-xs text-gray-400 mt-1">Typical: 800V - 1500V DC</p>
                     </div>
@@ -882,25 +882,25 @@ export default function AdvancedQuoteBuilder({
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-300 mb-1">Total Power:</p>
+                        <p className="text-gray-700 mb-1">Total Power:</p>
                         <p className="text-xl font-bold text-white">{(totalKW/1000).toFixed(2)} MW</p>
                       </div>
                       <div>
-                        <p className="text-gray-300 mb-1">Inverters:</p>
+                        <p className="text-gray-700 mb-1">Inverters:</p>
                         <p className="text-xl font-bold text-white">{numberOfInverters} units</p>
                       </div>
                       <div>
-                        <p className="text-gray-300 mb-1">AC Current:</p>
+                        <p className="text-gray-700 mb-1">AC Current:</p>
                         <p className="text-xl font-bold text-yellow-300">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                       <div>
-                        <p className="text-gray-300 mb-1">DC Current:</p>
+                        <p className="text-gray-700 mb-1">DC Current:</p>
                         <p className="text-xl font-bold text-green-300">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-purple-400/30">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-300">PCS Configuration:</span>
+                        <span className="text-sm text-gray-700">PCS Configuration:</span>
                         <span className="text-sm font-bold text-purple-200">
                           {inverterType === 'bidirectional' ? '⚡ Bidirectional' : '→ Unidirectional'} | 
                           {pcsQuoteSeparately ? ' Quoted Separately' : ' Included in System'}
@@ -971,7 +971,7 @@ export default function AdvancedQuoteBuilder({
                                 onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
                                 step="50"
                                 min="0"
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               />
                             </div>
                             <div>
@@ -981,7 +981,7 @@ export default function AdvancedQuoteBuilder({
                               <select
                                 value={solarPanelType}
                                 onChange={(e) => setSolarPanelType(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               >
                                 <option value="monocrystalline">Monocrystalline (20-22% eff.)</option>
                                 <option value="polycrystalline">Polycrystalline (15-17% eff.)</option>
@@ -1001,7 +1001,7 @@ export default function AdvancedQuoteBuilder({
                                 min="10"
                                 max="25"
                                 step="0.5"
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               />
                             </div>
                             <div>
@@ -1011,7 +1011,7 @@ export default function AdvancedQuoteBuilder({
                               <select
                                 value={solarInverterType}
                                 onChange={(e) => setSolarInverterType(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               >
                                 <option value="string">String Inverter</option>
                                 <option value="micro">Micro-Inverters</option>
@@ -1063,7 +1063,7 @@ export default function AdvancedQuoteBuilder({
                                 onChange={(e) => setWindCapacityKW(parseFloat(e.target.value) || 0)}
                                 step="50"
                                 min="0"
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               />
                             </div>
                             <div>
@@ -1073,7 +1073,7 @@ export default function AdvancedQuoteBuilder({
                               <select
                                 value={windTurbineType}
                                 onChange={(e) => setWindTurbineType(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               >
                                 <option value="horizontal">Horizontal Axis (HAWT)</option>
                                 <option value="vertical">Vertical Axis (VAWT)</option>
@@ -1121,7 +1121,7 @@ export default function AdvancedQuoteBuilder({
                                 onChange={(e) => setFuelCellCapacityKW(parseFloat(e.target.value) || 0)}
                                 step="25"
                                 min="0"
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               />
                             </div>
                             <div>
@@ -1131,7 +1131,7 @@ export default function AdvancedQuoteBuilder({
                               <select
                                 value={fuelCellType}
                                 onChange={(e) => setFuelCellType(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               >
                                 <option value="pem">PEM (Proton Exchange Membrane)</option>
                                 <option value="sofc">SOFC (Solid Oxide)</option>
@@ -1146,7 +1146,7 @@ export default function AdvancedQuoteBuilder({
                               <select
                                 value={fuelType}
                                 onChange={(e) => setFuelType(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg"
                               >
                                 <option value="hydrogen">Hydrogen (H₂)</option>
                                 <option value="natural-gas">Natural Gas</option>
@@ -1202,7 +1202,7 @@ export default function AdvancedQuoteBuilder({
                                     onChange={(e) => setDieselGenCapacityKW(parseFloat(e.target.value) || 0)}
                                     step="50"
                                     min="0"
-                                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm"
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-sm"
                                   />
                                 </div>
                                 <div className="flex items-end">
@@ -1242,7 +1242,7 @@ export default function AdvancedQuoteBuilder({
                                     onChange={(e) => setNaturalGasCapacityKW(parseFloat(e.target.value) || 0)}
                                     step="50"
                                     min="0"
-                                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm"
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-sm"
                                   />
                                 </div>
                                 <div className="flex items-end">
@@ -1270,7 +1270,7 @@ export default function AdvancedQuoteBuilder({
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-gray-300 mb-1">Total Renewable</p>
+                            <p className="text-xs text-gray-700 mb-1">Total Renewable</p>
                             <p className="text-2xl font-bold text-green-400">
                               {(
                                 (solarPVIncluded ? solarCapacityKW : 0) +
@@ -1280,7 +1280,7 @@ export default function AdvancedQuoteBuilder({
                             </p>
                           </div>
                           <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-gray-300 mb-1">Backup Gen</p>
+                            <p className="text-xs text-gray-700 mb-1">Backup Gen</p>
                             <p className="text-2xl font-bold text-orange-400">
                               {(
                                 (dieselGenIncluded ? dieselGenCapacityKW : 0) +
@@ -1289,7 +1289,7 @@ export default function AdvancedQuoteBuilder({
                             </p>
                           </div>
                           <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-gray-300 mb-1">BESS + Renewable</p>
+                            <p className="text-xs text-gray-700 mb-1">BESS + Renewable</p>
                             <p className="text-2xl font-bold text-blue-400">
                               {(
                                 totalKW +
@@ -1299,7 +1299,7 @@ export default function AdvancedQuoteBuilder({
                             </p>
                           </div>
                           <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-gray-300 mb-1">Total Capacity</p>
+                            <p className="text-xs text-gray-700 mb-1">Total Capacity</p>
                             <p className="text-2xl font-bold text-purple-400">
                               {(
                                 totalKW +
@@ -1330,29 +1330,29 @@ export default function AdvancedQuoteBuilder({
                   <h3 className="text-2xl font-bold mb-6">📊 System Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-gray-300 mb-1">System Rating</p>
+                      <p className="text-sm text-gray-700 mb-1">System Rating</p>
                       <p className="text-3xl font-bold text-blue-400">
                         {storageSizeMW.toFixed(1)} MW
                       </p>
-                      <p className="text-lg text-gray-300">
+                      <p className="text-lg text-gray-700">
                         {storageSizeMWh.toFixed(1)} MWh
                       </p>
                     </div>
                     <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-gray-300 mb-1">Total Cost</p>
+                      <p className="text-sm text-gray-700 mb-1">Total Cost</p>
                       <p className="text-3xl font-bold text-green-400">
                         ${(systemCost / 1000000).toFixed(2)}M
                       </p>
-                      <p className="text-sm text-gray-300">
+                      <p className="text-sm text-gray-700">
                         ${(systemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
                       </p>
                     </div>
                     <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-gray-300 mb-1">Application</p>
+                      <p className="text-sm text-gray-700 mb-1">Application</p>
                       <p className="text-xl font-bold text-purple-400 capitalize">
                         {applicationType}
                       </p>
-                      <p className="text-sm text-gray-300 capitalize">
+                      <p className="text-sm text-gray-700 capitalize">
                         {useCase.replace('-', ' ')}
                       </p>
                     </div>
@@ -1400,13 +1400,13 @@ export default function AdvancedQuoteBuilder({
               </div>
 
               {/* Help Section */}
-              <div className="mt-8 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6">
-                <h3 className="font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+              <div className="mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 shadow-lg">
+                <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
                   💡 Configuration Guidelines
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
                   <div>
-                    <p className="font-semibold text-white mb-1">Power & Duration:</p>
+                    <p className="font-semibold text-gray-900 mb-1">Power & Duration:</p>
                     <ul className="space-y-1 ml-4">
                       <li>• Peak shaving: 0.5-2 MW, 2-4 hrs</li>
                       <li>• Backup power: 0.5-5 MW, 4-8 hrs</li>
@@ -1414,7 +1414,7 @@ export default function AdvancedQuoteBuilder({
                     </ul>
                   </div>
                   <div>
-                    <p className="font-semibold text-white mb-1">Battery Chemistry:</p>
+                    <p className="font-semibold text-gray-900 mb-1">Battery Chemistry:</p>
                     <ul className="space-y-1 ml-4">
                       <li>• LFP: Best for daily cycling, safest</li>
                       <li>• NMC: Higher energy density, premium cost</li>
