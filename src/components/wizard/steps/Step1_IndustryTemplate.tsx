@@ -244,66 +244,18 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Start with an industry template or build your own custom configuration
         </p>
-        
-        {/* Industry Standards Badge */}
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-300 rounded-xl p-3 max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-xl">🔬</span>
-            <span className="font-bold text-blue-800">Industry Standards Validated Templates</span>
-          </div>
-          <div className="text-sm text-gray-700 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="font-semibold text-blue-600">NREL ATB 2024</div>
-              <div className="text-xs">Power sizing standards</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-green-600">ASHRAE 90.1</div>
-              <div className="text-xs">Equipment standards</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-purple-600">IEEE 2450</div>
-              <div className="text-xs">BESS performance</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-orange-600">DOE/EIA CBECS</div>
-              <div className="text-xs">Usage patterns</div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Path Selection */}
+      {/* Path Selection - Moved to top for better UX */}
       <div className="bg-white rounded-xl border-2 border-blue-400 p-5 shadow-lg">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <button
-            onClick={() => setUseTemplate(true)}
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
-              useTemplate
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg'
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-            }`}
-          >
-            ⚡ Start from Template (Recommended)
-          </button>
-          <button
-            onClick={() => setUseTemplate(false)}
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
-              !useTemplate
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg'
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-            }`}
-          >
-            ⚙️ Custom Build
-          </button>
-        </div>
-
         {useTemplate ? (
           <>
-            <p className="text-center text-gray-600 mb-4">
+            <p className="text-center text-gray-600 mb-4 text-lg">
               Choose an industry to get started with pre-configured values
             </p>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2">
+            {/* SCROLLABLE AREA - Increased height */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[500px] overflow-y-auto pr-2 mb-4">
               {templates.map((template) => {
                 const isSelected = selectedTemplate === template.id;
                 const colorClasses = getColorClasses(template.color, isSelected);
@@ -340,16 +292,76 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                 );
               })}
             </div>
+            
+            {/* Action Buttons - Moved below template grid */}
+            <div className="flex items-center justify-center gap-4 pt-4 border-t-2 border-gray-200">
+              <button
+                onClick={() => setUseTemplate(true)}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+              >
+                ⚡ Start from Template (Recommended)
+              </button>
+              <button
+                onClick={() => setUseTemplate(false)}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gray-200 text-gray-600 hover:bg-gray-300"
+              >
+                ⚙️ Custom Build
+              </button>
+            </div>
           </>
         ) : (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-4">⚙️</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Custom Configuration</h3>
-            <p className="text-gray-600">
-              You'll be able to enter your exact requirements in the next steps
-            </p>
-          </div>
+          <>
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">⚙️</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Custom Configuration</h3>
+              <p className="text-gray-600">
+                You'll be able to enter your exact requirements in the next steps
+              </p>
+            </div>
+            
+            {/* Action Buttons for Custom Build */}
+            <div className="flex items-center justify-center gap-4 pt-4 border-t-2 border-gray-200">
+              <button
+                onClick={() => setUseTemplate(true)}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gray-200 text-gray-600 hover:bg-gray-300"
+              >
+                ⚡ Start from Template (Recommended)
+              </button>
+              <button
+                onClick={() => setUseTemplate(false)}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+              >
+                ⚙️ Custom Build
+              </button>
+            </div>
+          </>
         )}
+      </div>
+
+      {/* Industry Standards Badge - Moved to bottom */}
+      <div className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-300 rounded-xl p-3">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <span className="text-xl">🔬</span>
+          <span className="font-bold text-blue-800">Industry Standards Validated Templates</span>
+        </div>
+        <div className="text-sm text-gray-700 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="font-semibold text-blue-600">NREL ATB 2024</div>
+            <div className="text-xs">Power sizing standards</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-green-600">ASHRAE 90.1</div>
+            <div className="text-xs">Equipment standards</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-purple-600">IEEE 2450</div>
+            <div className="text-xs">BESS performance</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-orange-600">DOE/EIA CBECS</div>
+            <div className="text-xs">Usage patterns</div>
+          </div>
+        </div>
       </div>
 
       {/* Template info */}
