@@ -74,9 +74,11 @@ export default function AdvancedQuoteBuilder({
   // NEW: Electrical Specifications
   const [systemVoltage, setSystemVoltage] = useState(480); // Volts AC
   const [dcVoltage, setDcVoltage] = useState(1000); // Volts DC
-  const [inverterType, setInverterType] = useState('string');
+  const [inverterType, setInverterType] = useState('bidirectional'); // bidirectional or unidirectional
   const [inverterManufacturer, setInverterManufacturer] = useState('');
   const [inverterRating, setInverterRating] = useState(2500); // kW per inverter
+  const [pcsQuoteSeparately, setPcsQuoteSeparately] = useState(false); // Quote PCS separately vs included
+  const [numberOfInvertersInput, setNumberOfInvertersInput] = useState(1); // Manual override
   const [switchgearType, setSwitchgearType] = useState('medium-voltage');
   const [switchgearRating, setSwitchgearRating] = useState(5000); // Amps
   const [bmsType, setBmsType] = useState('distributed');
@@ -84,6 +86,11 @@ export default function AdvancedQuoteBuilder({
   const [transformerRequired, setTransformerRequired] = useState(true);
   const [transformerRating, setTransformerRating] = useState(3000); // kVA
   const [transformerVoltage, setTransformerVoltage] = useState('480V/12470V');
+  
+  // NEW: User-specified electrical inputs (optional overrides)
+  const [systemWattsInput, setSystemWattsInput] = useState<number | ''>(''); // User input for watts
+  const [systemAmpsACInput, setSystemAmpsACInput] = useState<number | ''>(''); // User input for AC amps
+  const [systemAmpsDCInput, setSystemAmpsDCInput] = useState<number | ''>(''); // User input for DC amps
   
   // NEW: Renewables & Alternative Power
   const [includeRenewables, setIncludeRenewables] = useState(false);
@@ -104,13 +111,16 @@ export default function AdvancedQuoteBuilder({
   const [naturalGasGenIncluded, setNaturalGasGenIncluded] = useState(false);
   const [naturalGasCapacityKW, setNaturalGasCapacityKW] = useState(750);
 
-  // Calculated values
+  // Calculated values (with user input overrides)
   const storageSizeMWh = storageSizeMW * durationHours;
-  const totalWatts = storageSizeMW * 1000000; // Convert MW to W
-  const totalKW = storageSizeMW * 1000; // Convert MW to kW
-  const maxAmpsAC = (totalWatts / systemVoltage) / Math.sqrt(3); // 3-phase AC
-  const maxAmpsDC = (totalWatts / dcVoltage);
-  const numberOfInverters = Math.ceil(totalKW / inverterRating);
+  const calculatedWatts = storageSizeMW * 1000000; // Convert MW to W
+  const totalWatts = systemWattsInput !== '' ? systemWattsInput : calculatedWatts;
+  const totalKW = totalWatts / 1000; // Convert W to kW
+  const calculatedAmpsAC = (totalWatts / systemVoltage) / Math.sqrt(3); // 3-phase AC
+  const maxAmpsAC = systemAmpsACInput !== '' ? systemAmpsACInput : calculatedAmpsAC;
+  const calculatedAmpsDC = (totalWatts / dcVoltage);
+  const maxAmpsDC = systemAmpsDCInput !== '' ? systemAmpsDCInput : calculatedAmpsDC;
+  const numberOfInverters = numberOfInvertersInput || Math.ceil(totalKW / inverterRating);
   const requiredTransformerKVA = totalKW * 1.25; // 25% safety factor
   useEffect(() => {
     if (show) {
@@ -193,29 +203,29 @@ export default function AdvancedQuoteBuilder({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-gray-900 via-purple-900/40 to-blue-900/40">
       <div className="min-h-screen text-white">
         
         {/* LANDING PAGE VIEW */}
         {viewMode === 'landing' && (
           <>
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-md border-b border-white/10 shadow-xl">
+            {/* Enhanced header with depth */}
+            <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-xl border-b-2 border-purple-500/30 shadow-2xl">
               <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
-                    <Wrench className="w-8 h-8" />
+                  <div className="p-3 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-xl shadow-purple-500/30">
+                    <Wrench className="w-8 h-8 drop-shadow-glow" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-glow">
                       Advanced Quote Builder
                     </h1>
-                    <p className="text-gray-300 mt-1">Professional-grade BESS configuration & electrical design</p>
+                    <p className="text-gray-300 mt-1 drop-shadow-sm">Professional-grade BESS configuration & electrical design</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-lg transition-all hover:shadow-lg hover:shadow-red-500/20"
                   aria-label="Close"
                 >
                   <X className="w-6 h-6" />
@@ -223,31 +233,31 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* Hero Section */}
+            {/* Enhanced hero section with more depth */}
             <div className="max-w-7xl mx-auto px-6 py-8">
-              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-2xl p-8 mb-8">
+              <div className="bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border-2 border-blue-500/40 rounded-2xl p-8 mb-8 shadow-2xl shadow-purple-500/20 backdrop-blur-sm">
                 <div className="flex items-start gap-6">
                   <div className="flex-shrink-0">
-                    <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
-                      <Sparkles className="w-10 h-10" />
+                    <div className="p-4 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-xl shadow-purple-500/50">
+                      <Sparkles className="w-10 h-10 drop-shadow-glow" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-3">Complete Energy System Design Suite</h2>
-                    <p className="text-gray-300 text-lg mb-4">
+                    <h2 className="text-2xl font-bold mb-3 text-white drop-shadow-glow">Complete Energy System Design Suite</h2>
+                    <p className="text-gray-300 text-lg mb-4 drop-shadow-sm">
                       Design comprehensive battery energy storage systems with integrated renewables, 
                       detailed electrical specifications, and professional financial analysis.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
-                        <Zap className="w-5 h-5 text-blue-400" />
+                      <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3 border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all">
+                        <Zap className="w-5 h-5 text-blue-400 drop-shadow-glow" />
                         <div>
-                          <p className="text-sm font-semibold">Electrical Design</p>
-                          <p className="text-xs text-gray-400">Watts, Amps, Inverters</p>
+                          <p className="text-sm font-semibold text-white">Electrical Design</p>
+                          <p className="text-xs text-gray-300">Watts, Amps, Inverters</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
-                        <Sparkles className="w-5 h-5 text-green-400" />
+                      <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3 border border-white/20 shadow-lg hover:shadow-xl hover:bg-white/15 transition-all">
+                        <Sparkles className="w-5 h-5 text-green-400 drop-shadow-glow" />
                         <div>
                           <p className="text-sm font-semibold">Hybrid Systems</p>
                           <p className="text-xs text-gray-400">Solar, Wind, Fuel Cells</p>
@@ -266,29 +276,29 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* Tool Cards Grid */}
+            {/* Enhanced tool cards grid with depth */}
             <div className="max-w-7xl mx-auto px-6 py-12">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tools.map((tool) => (
                   <button
                     key={tool.id}
                     onClick={tool.action}
-                    className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-left hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-white/20"
+                    className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border-2 border-white/20 rounded-2xl p-8 text-left hover:from-white/15 hover:to-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-white/40 hover:-translate-y-1"
                   >
-                    {/* Gradient accent */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity`} />
+                    {/* Enhanced gradient accent */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity shadow-inner`} />
                     
-                    {/* Icon */}
-                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${tool.color} mb-4`}>
+                    {/* Icon with enhanced shadow */}
+                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${tool.color} mb-4 shadow-xl group-hover:shadow-2xl transition-shadow`}>
                       {tool.icon}
                     </div>
                     
                     {/* Content */}
-                    <h3 className="text-xl font-bold mb-2">{tool.title}</h3>
-                    <p className="text-gray-300 text-sm">{tool.description}</p>
+                    <h3 className="text-xl font-bold mb-2 text-white drop-shadow-md">{tool.title}</h3>
+                    <p className="text-gray-300 text-sm drop-shadow-sm">{tool.description}</p>
                     
-                    {/* Arrow indicator */}
-                    <div className="mt-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Enhanced arrow indicator */}
+                    <div className="mt-4 text-blue-400 font-semibold opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-2">
                       Launch →
                     </div>
                   </button>
@@ -301,13 +311,13 @@ export default function AdvancedQuoteBuilder({
         {/* CUSTOM CONFIGURATION VIEW */}
         {viewMode === 'custom-config' && (
           <>
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-sm border-b border-white/10">
+            {/* Enhanced header for config view */}
+            <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-xl border-b-2 border-purple-500/30 shadow-2xl">
               <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setViewMode('landing')}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-all hover:shadow-lg hover:shadow-blue-500/20"
                     aria-label="Back"
                   >
                     <ArrowLeft className="w-6 h-6" />
@@ -368,10 +378,10 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
-                {/* System Configuration Section */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Battery className="w-6 h-6 text-purple-400" />
+                {/* Enhanced System Configuration Section */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 backdrop-blur-sm border-2 border-purple-500/30 rounded-2xl p-8 shadow-2xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
+                    <Battery className="w-7 h-7 text-purple-400 drop-shadow-glow" />
                     System Configuration
                   </h3>
                   
@@ -506,10 +516,10 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
-                {/* Application & Use Case Section */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Building2 className="w-6 h-6 text-green-400" />
+                {/* Enhanced Application & Use Case Section */}
+                <div className="bg-gradient-to-br from-green-500/10 to-teal-500/10 backdrop-blur-sm border-2 border-green-500/30 rounded-2xl p-8 shadow-2xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
+                    <Building2 className="w-7 h-7 text-green-400 drop-shadow-glow" />
                     Application & Use Case
                   </h3>
                   
@@ -582,10 +592,10 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
-                {/* Financial Parameters Section */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <DollarSign className="w-6 h-6 text-yellow-400" />
+                {/* Enhanced Financial Parameters Section */}
+                <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border-2 border-yellow-500/30 rounded-2xl p-8 shadow-2xl">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white drop-shadow-glow">
+                    <DollarSign className="w-7 h-7 text-yellow-400 drop-shadow-glow" />
                     Financial Parameters
                   </h3>
                   
@@ -658,144 +668,252 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
-                {/* Electrical Specifications Section */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-8">
+                {/* Electrical Specifications Section - INTERACTIVE WITH INPUTS */}
+                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/40 rounded-2xl p-8 shadow-2xl">
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Zap className="w-6 h-6 text-purple-400" />
-                    Electrical Specifications
+                    <Zap className="w-7 h-7 text-purple-400 drop-shadow-glow" />
+                    Electrical Specifications & PCS Configuration
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    {/* Power & Watts */}
-                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-4">
-                      <p className="text-xs text-gray-300 mb-2 font-semibold">System Power</p>
-                      <p className="text-3xl font-bold text-blue-400">{totalKW.toLocaleString()} kW</p>
-                      <p className="text-sm text-gray-300 mt-1">{totalWatts.toLocaleString()} Watts</p>
-                      <p className="text-xs text-gray-400 mt-2">{storageSizeMW.toFixed(2)} MW</p>
-                    </div>
+                  {/* Power Conversion System (PCS) Configuration */}
+                  <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/40 rounded-xl p-6 mb-6 shadow-lg">
+                    <h4 className="text-lg font-bold mb-4 text-purple-300">Power Conversion System (PCS)</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* PCS Quoting Option */}
+                      <div className="col-span-full">
+                        <label className="block text-sm font-semibold mb-3 text-gray-200">
+                          PCS Quoting Method
+                        </label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer bg-white/10 border border-white/20 rounded-lg px-4 py-3 hover:bg-white/15 transition-all flex-1">
+                            <input
+                              type="radio"
+                              checked={!pcsQuoteSeparately}
+                              onChange={() => setPcsQuoteSeparately(false)}
+                              className="w-4 h-4 text-purple-500"
+                            />
+                            <span className="text-sm font-medium">Included with BESS System</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer bg-white/10 border border-white/20 rounded-lg px-4 py-3 hover:bg-white/15 transition-all flex-1">
+                            <input
+                              type="radio"
+                              checked={pcsQuoteSeparately}
+                              onChange={() => setPcsQuoteSeparately(true)}
+                              className="w-4 h-4 text-purple-500"
+                            />
+                            <span className="text-sm font-medium">Quote PCS Separately</span>
+                          </label>
+                        </div>
+                        {pcsQuoteSeparately && (
+                          <p className="text-xs text-yellow-300 mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
+                            💡 PCS will be itemized separately in the quote with detailed specifications
+                          </p>
+                        )}
+                      </div>
 
-                    {/* AC Amps */}
-                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-xl p-4">
-                      <p className="text-xs text-gray-300 mb-2 font-semibold">AC Current (3-Phase)</p>
-                      <p className="text-3xl font-bold text-yellow-400">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
-                      <p className="text-sm text-gray-300 mt-1">@ {systemVoltage}V AC</p>
-                      <p className="text-xs text-gray-400 mt-2">Per Phase</p>
-                    </div>
+                      {/* Inverter Type */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                          Inverter Type
+                        </label>
+                        <select
+                          value={inverterType}
+                          onChange={(e) => setInverterType(e.target.value)}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner hover:bg-white/15 transition-colors"
+                        >
+                          <option value="bidirectional" className="bg-gray-800">Bidirectional Inverter</option>
+                          <option value="unidirectional" className="bg-gray-800">Unidirectional (Charge Only)</option>
+                        </select>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {inverterType === 'bidirectional' ? '⚡ Supports charge & discharge' : '⚡ Charge only (typical for solar)'}
+                        </p>
+                      </div>
 
-                    {/* DC Amps */}
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4">
-                      <p className="text-xs text-gray-300 mb-2 font-semibold">DC Current</p>
-                      <p className="text-3xl font-bold text-green-400">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
-                      <p className="text-sm text-gray-300 mt-1">@ {dcVoltage}V DC</p>
-                      <p className="text-xs text-gray-400 mt-2">Battery Side</p>
-                    </div>
+                      {/* Number of Inverters */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                          Number of Inverters
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={numberOfInvertersInput}
+                            onChange={(e) => setNumberOfInvertersInput(parseInt(e.target.value) || 1)}
+                            min="1"
+                            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                            placeholder="Auto-calculated"
+                          />
+                          <button
+                            onClick={() => setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))}
+                            className="px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/50 rounded-lg text-sm font-semibold transition-all"
+                            title="Auto-calculate based on system size"
+                          >
+                            Auto
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Suggested: {Math.ceil(totalKW / inverterRating)} units @ {inverterRating} kW each
+                        </p>
+                      </div>
 
-                    {/* Inverters */}
-                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
-                      <p className="text-xs text-gray-300 mb-2 font-semibold">Inverter Count</p>
-                      <p className="text-3xl font-bold text-purple-400">{numberOfInverters}</p>
-                      <p className="text-sm text-gray-300 mt-1">{inverterRating} kW each</p>
-                      <p className="text-xs text-gray-400 mt-2">{inverterType} type</p>
+                      {/* Inverter Rating */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                          Inverter Rating (kW per unit)
+                        </label>
+                        <input
+                          type="number"
+                          value={inverterRating}
+                          onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
+                          step="100"
+                          min="100"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                        />
+                      </div>
+
+                      {/* Manufacturer */}
+                      <div>
+                        <label className="block text-sm font-semibold mb-2 text-gray-200">
+                          Inverter Manufacturer (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={inverterManufacturer}
+                          onChange={(e) => setInverterManufacturer(e.target.value)}
+                          placeholder="e.g., SMA, Sungrow, Power Electronics"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 shadow-inner"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Detailed Specifications */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
-                        <Cpu className="w-4 h-4" />
-                        Power Conversion
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Inverter Rating:</span>
-                          <span className="text-white font-semibold">{inverterRating} kW each</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Total Inverters:</span>
-                          <span className="text-white font-semibold">{numberOfInverters} units</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Inverter Type:</span>
-                          <span className="text-white font-semibold capitalize">{inverterType}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Efficiency:</span>
-                          <span className="text-white font-semibold">{inverterEfficiency}%</span>
-                        </div>
-                      </div>
+                  {/* Electrical Parameters - INPUT FIELDS */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* System Watts */}
+                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/40 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-gray-300 mb-2 font-semibold">System Power (Watts)</label>
+                      <input
+                        type="number"
+                        value={systemWattsInput}
+                        onChange={(e) => setSystemWattsInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        placeholder={calculatedWatts.toLocaleString()}
+                        className="w-full px-3 py-2 bg-white/10 border border-blue-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                      />
+                      <p className="text-xs text-blue-300 mt-2">
+                        {totalKW.toLocaleString()} kW / {(totalKW/1000).toFixed(2)} MW
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedWatts.toLocaleString()} W</p>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
-                        <GitBranch className="w-4 h-4" />
-                        Electrical Distribution
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Switchgear Type:</span>
-                          <span className="text-white font-semibold capitalize">{switchgearType.replace('-', ' ')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Switchgear Rating:</span>
-                          <span className="text-white font-semibold">{switchgearRating.toLocaleString()} A</span>
-                        </div>
-                        {transformerRequired && (
-                          <>
-                            <div className="flex justify-between">
-                              <span className="text-gray-300">Transformer:</span>
-                              <span className="text-white font-semibold">{transformerRating.toLocaleString()} kVA</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-300">Voltage Ratio:</span>
-                              <span className="text-white font-semibold">{transformerVoltage}</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                    {/* AC Amps */}
+                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-gray-300 mb-2 font-semibold">AC Current (3-Phase)</label>
+                      <input
+                        type="number"
+                        value={systemAmpsACInput}
+                        onChange={(e) => setSystemAmpsACInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        placeholder={calculatedAmpsAC.toFixed(0)}
+                        className="w-full px-3 py-2 bg-white/10 border border-yellow-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                      />
+                      <p className="text-xs text-yellow-300 mt-2">
+                        @ {systemVoltage}V AC Per Phase
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-purple-300 mb-3">Voltage Specifications</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">AC System Voltage:</span>
-                          <span className="text-white font-semibold">{systemVoltage}V</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">DC Battery Voltage:</span>
-                          <span className="text-white font-semibold">{dcVoltage}V</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Grid Connection:</span>
-                          <span className="text-white font-semibold capitalize">{gridConnection.replace('-', ' ')}</span>
-                        </div>
-                      </div>
+                    {/* DC Amps */}
+                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-gray-300 mb-2 font-semibold">DC Current (Battery Side)</label>
+                      <input
+                        type="number"
+                        value={systemAmpsDCInput}
+                        onChange={(e) => setSystemAmpsDCInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        placeholder={calculatedAmpsDC.toFixed(0)}
+                        className="w-full px-3 py-2 bg-white/10 border border-green-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                      />
+                      <p className="text-xs text-green-300 mt-2">
+                        @ {dcVoltage}V DC
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
+                    </div>
+                  </div>
+
+                  {/* Voltage Configuration */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
+                      <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        AC System Voltage (V)
+                      </label>
+                      <select
+                        value={systemVoltage}
+                        onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                      >
+                        <option value={208} className="bg-gray-800">208V (Small Commercial)</option>
+                        <option value={480} className="bg-gray-800">480V (Standard Industrial)</option>
+                        <option value={600} className="bg-gray-800">600V (Large Industrial)</option>
+                        <option value={4160} className="bg-gray-800">4.16 kV (Medium Voltage)</option>
+                        <option value={13800} className="bg-gray-800">13.8 kV (Utility Scale)</option>
+                      </select>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-purple-300 mb-3">Battery Management</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">BMS Type:</span>
-                          <span className="text-white font-semibold capitalize">{bmsType}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Chemistry:</span>
-                          <span className="text-white font-semibold">{chemistry.toUpperCase()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Installation:</span>
-                          <span className="text-white font-semibold capitalize">{installationType}</span>
-                        </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
+                      <label className="block text-sm font-semibold mb-2 text-gray-200">
+                        DC Battery Voltage (V)
+                      </label>
+                      <input
+                        type="number"
+                        value={dcVoltage}
+                        onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
+                        step="100"
+                        min="100"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white font-medium shadow-inner"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Typical: 800V - 1500V DC</p>
+                    </div>
+                  </div>
+
+                  {/* Summary Card */}
+                  <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/50 rounded-xl p-6 shadow-xl">
+                    <h4 className="text-sm font-bold text-purple-200 mb-4 flex items-center gap-2">
+                      <Cpu className="w-5 h-5" />
+                      System Summary
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-300 mb-1">Total Power:</p>
+                        <p className="text-xl font-bold text-white">{(totalKW/1000).toFixed(2)} MW</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300 mb-1">Inverters:</p>
+                        <p className="text-xl font-bold text-white">{numberOfInverters} units</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300 mb-1">AC Current:</p>
+                        <p className="text-xl font-bold text-yellow-300">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300 mb-1">DC Current:</p>
+                        <p className="text-xl font-bold text-green-300">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-purple-400/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-300">PCS Configuration:</span>
+                        <span className="text-sm font-bold text-purple-200">
+                          {inverterType === 'bidirectional' ? '⚡ Bidirectional' : '→ Unidirectional'} | 
+                          {pcsQuoteSeparately ? ' Quoted Separately' : ' Included in System'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-4 bg-purple-900/30 border border-purple-500/40 rounded-lg p-4">
                     <p className="text-xs text-purple-200">
-                      ⚡ <strong>Electrical Note:</strong> All specifications are calculated based on {storageSizeMW} MW system rating. 
-                      Actual equipment selection may vary based on site conditions, grid requirements, and local codes.
+                      ⚡ <strong>Note:</strong> Input custom values to override calculated specifications. 
+                      Leave blank to use auto-calculated values based on {storageSizeMW} MW system rating.
+                      {pcsQuoteSeparately && ' PCS will be itemized with detailed manufacturer specifications.'}
                     </p>
                   </div>
                 </div>

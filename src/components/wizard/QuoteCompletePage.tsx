@@ -502,18 +502,18 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 z-50 overflow-y-auto">
-      {/* Save Reminder Banner */}
+      {/* Save Reminder Banner - IMPROVED VISIBILITY */}
       {showSaveReminder && !projectSaved && (
-        <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-xl border-b-4 border-yellow-600">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white shadow-2xl border-b-4 border-yellow-700">
+          <div className="max-w-7xl mx-auto px-6 py-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1">
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
-                  <AlertCircle className="w-8 h-8" />
+                <div className="bg-white/30 p-3 rounded-xl backdrop-blur-sm animate-pulse shadow-lg">
+                  <AlertCircle className="w-8 h-8 drop-shadow-md" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1">⚠️ Don't Lose Your Quote!</h3>
-                  <p className="text-white/90 text-sm">
+                  <h3 className="text-2xl font-extrabold mb-1.5 drop-shadow-md">⚠️ Don't Lose Your Quote!</h3>
+                  <p className="text-white font-semibold text-base drop-shadow-sm">
                     {currentUser 
                       ? "Save your quote now to access it anytime and track your energy projects."
                       : "Create a free account to save your quote and access it anytime. Takes only 30 seconds!"}
@@ -523,16 +523,16 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSave}
-                  className="bg-white text-orange-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+                  className="bg-white text-orange-600 px-8 py-4 rounded-xl font-extrabold text-lg shadow-2xl hover:shadow-3xl transition-all flex items-center gap-2 hover:scale-105 hover:bg-gray-50 border-2 border-orange-200"
                 >
-                  <Save className="w-5 h-5" />
+                  <Save className="w-6 h-6" />
                   {currentUser ? 'Save Quote' : 'Sign Up & Save'}
                 </button>
                 <button
                   onClick={() => setShowSaveReminder(false)}
-                  className="text-white/80 hover:text-white transition-colors p-2"
+                  className="text-white hover:text-white transition-colors p-2 hover:bg-white/20 rounded-lg"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>

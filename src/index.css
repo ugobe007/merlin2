@@ -68,4 +68,14 @@ input[type="range"].slider::-moz-range-thumb:hover {
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-in-out;
 }
-/* Cache bust Mon Nov 10 08:45:32 PST 2025 */
+
+/* Enhanced glow effects for Merlin theme */
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.3));
+}
+
+.shadow-purple-glow {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.2);
+}
+
+/* Cache bust Mon Nov 13 2025 */
