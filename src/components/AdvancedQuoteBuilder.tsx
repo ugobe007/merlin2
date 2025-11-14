@@ -720,10 +720,10 @@ export default function AdvancedQuoteBuilder({
                         <select
                           value={inverterType}
                           onChange={(e) => setInverterType(e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner hover:bg-gray-100 transition-colors"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg font-medium shadow-inner hover:bg-gray-100 transition-colors"
                         >
-                          <option value="bidirectional" className="bg-gray-800">Bidirectional Inverter</option>
-                          <option value="unidirectional" className="bg-gray-800">Unidirectional (Charge Only)</option>
+                          <option value="bidirectional">Bidirectional Inverter</option>
+                          <option value="unidirectional">Unidirectional (Charge Only)</option>
                         </select>
                         <p className="text-xs text-gray-700 mt-1">
                           {inverterType === 'bidirectional' ? '⚡ Supports charge & discharge' : '⚡ Charge only (typical for solar)'}
@@ -741,7 +741,7 @@ export default function AdvancedQuoteBuilder({
                             value={numberOfInvertersInput}
                             onChange={(e) => setNumberOfInvertersInput(parseInt(e.target.value) || 1)}
                             min="1"
-                            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
+                            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg font-medium shadow-inner"
                             placeholder="Auto-calculated"
                           />
                           <button
@@ -768,7 +768,7 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
                           step="100"
                           min="100"
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg font-medium shadow-inner"
                         />
                       </div>
 
@@ -782,7 +782,7 @@ export default function AdvancedQuoteBuilder({
                           value={inverterManufacturer}
                           onChange={(e) => setInverterManufacturer(e.target.value)}
                           placeholder="e.g., SMA, Sungrow, Power Electronics"
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white placeholder-gray-400 shadow-inner"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg placeholder-gray-400 shadow-inner"
                         />
                       </div>
                     </div>
@@ -848,13 +848,13 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={systemVoltage}
                         onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg font-medium shadow-inner"
                       >
-                        <option value={208} className="bg-gray-800">208V (Small Commercial)</option>
-                        <option value={480} className="bg-gray-800">480V (Standard Industrial)</option>
-                        <option value={600} className="bg-gray-800">600V (Large Industrial)</option>
-                        <option value={4160} className="bg-gray-800">4.16 kV (Medium Voltage)</option>
-                        <option value={13800} className="bg-gray-800">13.8 kV (Utility Scale)</option>
+                        <option value={208}>208V (Small Commercial)</option>
+                        <option value={480}>480V (Standard Industrial)</option>
+                        <option value={600}>600V (Large Industrial)</option>
+                        <option value={4160}>4.16 kV (Medium Voltage)</option>
+                        <option value={13800}>13.8 kV (Utility Scale)</option>
                       </select>
                     </div>
 
@@ -868,7 +868,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
                         step="100"
                         min="100"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg text-white font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg font-medium shadow-inner"
                       />
                       <p className="text-xs text-gray-700 mt-1">Typical: 800V - 1500V DC</p>
                     </div>
