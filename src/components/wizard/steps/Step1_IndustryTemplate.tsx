@@ -106,7 +106,7 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
       color: 'pink'
     },
     {
-      id: 'university',
+      id: 'college',
       icon: '🎓',
       name: 'University/College',
       description: 'Campus-wide energy management',

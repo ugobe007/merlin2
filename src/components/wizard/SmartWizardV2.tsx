@@ -242,7 +242,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             scale = parseInt(useCaseData.bedCount) || 200; // Number of beds
             scale = scale / 100; // Convert to scale factor (per 100 beds)
             break;
-          case 'university':
+          case 'college':
             scale = parseInt(useCaseData.enrollment) || 5000; // Student enrollment
             scale = scale / 1000; // Convert to thousands
             break;

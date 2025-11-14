@@ -286,7 +286,7 @@ export function getScaleUnitDescription(template: string): string {
     'apartment': 'units',
     'car-wash': 'bays',
     'hospital': 'beds',
-    'university': 'students (thousands)',
+    'college': 'students (thousands)',
     'data-center': 'MW IT load',
     'airport': 'million passengers',
     'manufacturing': 'production lines',
