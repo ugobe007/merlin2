@@ -77,6 +77,40 @@ export async function calculateDatabaseBaseline(
       return evResult;
     }
     
+    // **CRITICAL FIX**: Check if user explicitly provided peak load
+    // If user entered peakLoad in MW, use that value directly instead of database/fallback
+    if (useCaseData && typeof useCaseData.peakLoad === 'number' && useCaseData.peakLoad > 0) {
+      const userPowerMW = useCaseData.peakLoad;
+      const durationHrs = useCaseData.operatingHours ? Math.round(useCaseData.operatingHours / 5) : 4; // Default 4 hours
+      const solarMW = Math.round(userPowerMW * 0.8 * 10) / 10; // 80% solar sizing
+      
+      console.log(`👤 [BaselineService] Using user's explicit peak load input: ${userPowerMW} MW`);
+      console.log(`👤 [BaselineService] User inputs:`, { 
+        peakLoad: useCaseData.peakLoad,
+        facilitySize: useCaseData.facilitySize,
+        operatingHours: useCaseData.operatingHours 
+      });
+      console.log(`👤 [BaselineService] Cache key: "${cacheKey}"`);
+      console.log(`👤 [BaselineService] Template: "${templateKey}", Scale: ${scale}`);
+      
+      const userResult = {
+        powerMW: userPowerMW,
+        durationHrs,
+        solarMW,
+        description: `User-specified peak load: ${userPowerMW} MW`,
+        dataSource: 'User Input (Step 2)'
+      };
+      
+      // Validate sizing (user's input should always be valid since they provided it)
+      const validation = validateBessSizing(userPowerMW, userPowerMW);
+      console.log(`✅ [Validation] Using user's explicit peak load: ${userPowerMW} MW (ratio: ${validation.ratio.toFixed(2)}x)`);
+      
+      // Cache the user-specified result
+      baselineCache.set(cacheKey, userResult);
+      console.log(`💾 [BaselineService] Cached user result with key: "${cacheKey}"`);
+      return userResult;
+    }
+    
     // Query database for use case configuration
     console.log(`📡 [BaselineService] Querying database for slug: "${templateKey}"...`);
     const useCase = await useCaseService.getUseCaseBySlug(templateKey);
@@ -89,6 +123,8 @@ export async function calculateDatabaseBaseline(
     if (!useCase || !useCase.configurations || useCase.configurations.length === 0) {
       console.warn(`⚠️ [BaselineService] No database configuration found for ${templateKey}, using fallback`);
       console.warn(`⚠️ [BaselineService] useCase object:`, useCase);
+      console.warn(`⚠️ [BaselineService] Template: "${templateKey}", Scale: ${scale}`);
+      console.warn(`⚠️ [BaselineService] Cache key: "${cacheKey}"`);
       const fallback = getFallbackBaseline(templateKey);
       
       // Cache fallback result (shorter TTL)
@@ -158,6 +194,18 @@ export async function calculateDatabaseBaseline(
       description: `Database configuration: ${defaultConfig.config_name}`,
       dataSource: 'Supabase use_case_configurations'
     };
+    
+    // Validate BESS sizing if user provided peak load
+    if (useCaseData && useCaseData.peakLoad) {
+      const validation = validateBessSizing(powerMW, useCaseData.peakLoad);
+      if (!validation.isValid && validation.warning) {
+        console.error(validation.warning);
+        // Optionally: could adjust powerMW to not exceed 2x user's input
+        // For now, just warn but allow it
+      } else if (validation.ratio > 0) {
+        console.log(`✅ [Validation] BESS sizing OK: ${powerMW} MW is ${validation.ratio.toFixed(2)}x user's peak load (${useCaseData.peakLoad} MW)`);
+      }
+    }
     
     // Cache the successful result
     baselineCache.set(cacheKey, result);
@@ -301,4 +349,39 @@ export function getScaleUnitDescription(template: string): string {
   };
   
   return unitMap[template] || 'units';
+}
+
+/**
+ * Validate BESS sizing against user's stated peak load
+ * Prevents oversizing without explicit justification
+ * 
+ * @returns { isValid: boolean, warning?: string, ratio: number }
+ */
+export function validateBessSizing(
+  recommendedMW: number,
+  userPeakLoadMW?: number
+): { isValid: boolean; warning?: string; ratio: number } {
+  
+  // If user didn't provide peak load, can't validate
+  if (!userPeakLoadMW || userPeakLoadMW <= 0) {
+    return { isValid: true, ratio: 0 };
+  }
+  
+  const ratio = recommendedMW / userPeakLoadMW;
+  
+  // Allow up to 2x oversizing (common for peak shaving + backup)
+  if (ratio <= 2.0) {
+    return { isValid: true, ratio };
+  }
+  
+  // Warn if recommendation exceeds 2x user's peak load
+  const warning = `⚠️ SIZING WARNING: Recommended BESS (${recommendedMW} MW) is ${ratio.toFixed(1)}x your stated peak load (${userPeakLoadMW} MW). This may indicate an error in configuration. Typical BESS sizing is 1-2x peak load. Please review your inputs.`;
+  
+  console.warn(warning);
+  
+  return {
+    isValid: false,
+    warning,
+    ratio
+  };
 }

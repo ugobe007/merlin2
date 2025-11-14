@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Smooth scrolling for the entire app */
+html {
+  scroll-behavior: smooth;
+}
+
 /* Ensure body and html can scroll */
 html, body {
   margin: 0;
@@ -12,6 +17,19 @@ html, body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Custom Slider Styles for AI Wizard */
@@ -76,6 +94,32 @@ input[type="range"].slider::-moz-range-thumb:hover {
 
 .shadow-purple-glow {
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.2);
+}
+
+/* Performance optimization for animations */
+.animate-pulse,
+.animate-fadeIn,
+.animate-ping {
+  will-change: transform, opacity;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+.group {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hardware acceleration for transforms */
+.hover\:scale-105:hover,
+.hover\:scale-110:hover,
+.group-hover\:scale-110,
+.hover\:-translate-y-1:hover,
+.hover\:-translate-y-2:hover,
+.hover\:-translate-y-3:hover {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Cache bust Mon Nov 13 2025 */

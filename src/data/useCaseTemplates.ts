@@ -1092,6 +1092,129 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     ]
   },
 
+  // ==================== OFFICE BUILDING ====================
+  {
+    id: 'office-building-001',
+    name: 'Office Building',
+    slug: 'office-building',
+    description: 'Commercial office buildings have moderate energy needs driven by HVAC, lighting, and office equipment. BESS provides demand charge reduction and backup power during outages.',
+    icon: '🏢',
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 15.5,
+    
+    // Based on Energy Star Commercial Buildings data and CBECS 2018
+    // Office buildings: 1.0-1.5 W/sq ft typical (Energy Star Portfolio Manager)
+    // Small office (15,000 sq ft): ~20kW, Medium office (50,000 sq ft): ~60kW
+    powerProfile: {
+      typicalLoadKw: 60, // 50,000 sq ft × 1.2 W/sq ft = 60kW (standard office)
+      peakLoadKw: 90, // 1.5x typical during peak business hours
+      profileType: 'peaked', // Business hours operation with peak times
+      dailyOperatingHours: 12, // 7AM-7PM typical
+      peakHoursStart: '09:00',
+      peakHoursEnd: '17:00',
+      operatesWeekends: false,
+      seasonalVariation: 1.2 // Summer cooling increases loads
+    },
+    
+    equipment: [
+      {
+        name: 'HVAC Systems',
+        powerKw: 35, // Largest load for commercial office
+        dutyCycle: 0.8,
+        description: 'Central HVAC system with variable air volume (VAV)'
+      },
+      {
+        name: 'Lighting',
+        powerKw: 15, // LED office lighting
+        dutyCycle: 0.9,
+        description: 'LED office lighting, hallways, parking'
+      },
+      {
+        name: 'Office Equipment',
+        powerKw: 8, // Computers, printers, copiers, servers
+        dutyCycle: 0.7,
+        description: 'Workstations, printers, copiers, small server room'
+      },
+      {
+        name: 'Elevators & Pumps',
+        powerKw: 2, // Elevators, water pumps, misc
+        dutyCycle: 0.5,
+        description: 'Elevators, fire pumps, domestic water systems'
+      }
+    ],
+
+    financialParams: {
+      demandChargeSensitivity: 1.5, // High sensitivity - offices benefit from demand charge reduction
+      energyCostMultiplier: 1.0,
+      typicalSavingsPercent: 22,
+      roiAdjustmentFactor: 1.0,
+      peakDemandPenalty: 1.3,
+      incentives: {
+        'commercial': 0.10,
+        'energy_efficiency': 0.08
+      }
+    },
+
+    recommendedApplications: [
+      'demand-charge-reduction',
+      'backup-power',
+      'renewable-integration',
+      'energy-arbitrage'
+    ],
+
+    customQuestions: [
+      {
+        id: 'squareFootage',
+        question: 'Total building square footage',
+        type: 'number',
+        default: 50000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.0012, // 1.2 W/sq ft conversion
+        helpText: 'Total gross building area including common spaces',
+        required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size category',
+        type: 'select',
+        default: 'small',
+        options: [
+          'micro', // < 10,000 sq ft
+          'small', // 10,000-30,000 sq ft
+          'medium', // 30,000-100,000 sq ft
+          'large' // 100,000+ sq ft
+        ],
+        impactType: 'factor',
+        helpText: 'Building size determines baseline power requirements',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Estimated peak electrical load',
+        type: 'number',
+        default: 0.5,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If known, your peak load from utility bill or building management system',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the building is occupied and operating',
+        required: true
+      }
+    ]
+  },
+
   // ==================== EDGE DATA CENTER ====================
   {
     id: 'data-center-001',

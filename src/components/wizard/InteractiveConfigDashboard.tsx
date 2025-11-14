@@ -103,8 +103,9 @@ interface InteractiveConfigDashboardProps {
     windMW: number;
     generatorMW: number;
   }) => void;
-  onBack: () => void;
-  onContinue: () => void;
+  onBack?: () => void; // Optional - only show if provided
+  onContinue?: () => void; // Optional - only show if provided
+  continueButtonText?: string; // Optional - customize button text
 }
 
 const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
@@ -123,7 +124,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   useCaseData,
   onConfigurationChange,
   onBack,
-  onContinue
+  onContinue,
+  continueButtonText = 'Continue to Location & Pricing'
 }) => {
   // Configuration state
   const [storageSizeMW, setStorageSizeMW] = useState(initialStorageSizeMW);
@@ -321,6 +323,22 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
       if (!industryTemplate) return;
 
       try {
+        // Derive grid connection type from gridConnectivity slider
+        let gridConnection: 'grid-tied' | 'microgrid' | 'off-grid' = 'grid-tied';
+        if (gridConnectivity === 0) {
+          gridConnection = 'off-grid';
+        } else if (gridConnectivity < 0.5) {
+          gridConnection = 'microgrid'; // Limited grid, mostly autonomous
+        }
+        
+        // Determine if backup is required based on industry and config
+        const hasBackupRequirement = 
+          industryTemplate === 'hospital' || 
+          industryTemplate === 'datacenter' ||
+          industryTemplate === 'airport' ||
+          generatorMW > 0 || // Has backup generator
+          gridConnectivity < 0.3; // Very limited grid access
+        
         const result = await getAIOptimization({
           storageSizeMW,
           durationHours,
@@ -328,7 +346,11 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           electricityRate,
           solarMW,
           windMW,
-          useCaseData // Pass EV charger counts, hotel rooms, etc.
+          generatorMW, // Pass generator capacity
+          useCaseData, // Pass EV charger counts, hotel rooms, etc.
+          gridConnection, // Pass grid reliability context
+          gridConnectivity, // Pass grid reliability score (0-1)
+          hasBackupRequirement // Pass critical infrastructure flag
         });
 
         setAiOptimization(result);
@@ -345,7 +367,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     // Debounce analysis to avoid too many calls
     const timer = setTimeout(analyzeConfiguration, 1000);
     return () => clearTimeout(timer);
-  }, [storageSizeMW, durationHours, industryTemplate, electricityRate, solarMW, windMW, useCaseData]);
+  }, [storageSizeMW, durationHours, industryTemplate, electricityRate, solarMW, windMW, useCaseData, gridConnectivity, generatorMW]);
 
   // Handle AI optimization button click
   const handleAIOptimization = async () => {
@@ -1884,32 +1906,38 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           </div> {/* End of scrollable content padding */}
         </div> {/* End of scrollable content area */}
 
-        {/* Footer - Fixed at bottom */}
-        <div className="bg-gray-50 p-3 border-t flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-            
-            <div className="text-center">
-              <p className="text-xs text-gray-600">
-                Current Configuration: {storageSizeMW}MW / {durationHours}h • ${(calculations.totalProjectCost / 1000000).toFixed(2)}M • {calculations.paybackYears.toFixed(1)}y ROI
-              </p>
+        {/* Footer - Fixed at bottom - Only show if navigation callbacks provided */}
+        {(onBack || onContinue) && (
+          <div className="bg-gray-50 p-3 border-t flex-shrink-0">
+            <div className="flex justify-between items-center">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+              )}
+              
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-600">
+                  Current Configuration: {storageSizeMW}MW / {durationHours}h • ${(calculations.totalProjectCost / 1000000).toFixed(2)}M • {calculations.paybackYears.toFixed(1)}y ROI
+                </p>
+              </div>
+              
+              {onContinue && (
+                <button
+                  onClick={onContinue}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-colors"
+                >
+                  {continueButtonText}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            
-            <button
-              onClick={onContinue}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-colors"
-            >
-              Continue to Location & Pricing
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
-        </div>
+        )}
       </div>
       </div>
     </>

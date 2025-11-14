@@ -1339,9 +1339,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     // Scroll to top on step change
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    if (step < 6) {
+    if (step < 5) {
       setStep(step + 1);
-    } else if (step === 6) {
+    } else if (step === 5) {
       // Show complete page immediately (costs will calculate in background)
       setShowCompletePage(true);
       // Calculate costs in background without blocking
@@ -1364,9 +1364,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       case 1: return Object.keys(useCaseData).length > 0; // Use case questions answered
       case 2: return storageSizeMW > 0 && durationHours > 0; // Simple configuration
       case 3: return true; // Power generation options (renewable energy) - all optional
-      case 4: return true; // Interactive dashboard - fine-tuning sliders
-      case 5: return location !== '' && electricityRate > 0; // Location & pricing
-      case 6: return true; // Quote summary
+      case 4: return location !== '' && electricityRate > 0; // Location & pricing
+      case 5: return true; // Quote summary
       default: return false;
     }
   };
@@ -1376,10 +1375,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       'Choose Your Industry',           // Step 0
       'Tell Us About Your Operation',   // Step 1
       'Configure Your System',          // Step 2
-      'Power Generation Options',       // Step 3 - NEW! Renewable energy selection
-      'Fine-Tune Your Configuration',   // Step 4 - Interactive dashboard
-      'Location & Pricing',             // Step 5
-      'Review Your Quote'               // Step 6
+      'Power Generation Options',       // Step 3 - Renewable energy selection
+      'Location & Pricing',             // Step 4
+      'Review Your Quote'               // Step 5
     ];
     return titles[step] || '';
   };  const renderStep = () => {
@@ -1462,14 +1460,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           />
         );
       case 4:
-        // Note: This case is handled by the full-screen InteractiveConfigDashboard
-        // check above, so this code won't execute. Kept for clarity.
-        return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Loading Interactive Dashboard...</p>
-          </div>
-        );
-      case 5:
         return (
           <Step4_LocationPricing
             location={location}
@@ -1480,7 +1470,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             setKnowsRate={setKnowsRate}
           />
         );
-      case 6:
+      case 5:
         // 🔍 DEBUG: Log values BEFORE passing to quote summary
         console.log('🚀 [SmartWizardV2] BEFORE Step5_QuoteSummary render:', {
           storageSizeMW,
@@ -1643,43 +1633,8 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
 
   if (!show) return null;
 
-  // Special case: Interactive Dashboard renders as full-screen, not in wizard modal
-  // MOVED FROM STEP 3 TO STEP 4 - Step 3 is now renewable energy selection
-  if (step === 4) {
-    return (
-      <InteractiveConfigDashboard
-        initialStorageSizeMW={storageSizeMW}
-        initialDurationHours={durationHours}
-        initialSolarMW={solarMW}
-        initialWindMW={windMW}
-        initialGeneratorMW={generatorMW}
-        solarSpaceConfig={solarSpaceConfig}
-        evChargerConfig={evChargerConfig}
-        windConfig={windConfig}
-        generatorConfig={generatorConfig}
-        industryTemplate={selectedTemplate}
-        location={location}
-        electricityRate={electricityRate}
-        useCaseData={useCaseData}
-        onConfigurationChange={(config) => {
-          console.log('🔧 [SmartWizardV2] onConfigurationChange received:', config);
-          setStorageSizeMW(config.storageSizeMW);
-          setDurationHours(config.durationHours);
-          setSolarMW(config.solarMW);
-          setWindMW(config.windMW);
-          setGeneratorMW(config.generatorMW);
-          console.log('🔧 [SmartWizardV2] State updated to:', {
-            storageSizeMW: config.storageSizeMW,
-            solarMW: config.solarMW,
-            windMW: config.windMW,
-            generatorMW: config.generatorMW
-          });
-        }}
-        onBack={() => setStep(3)}
-        onContinue={() => setStep(5)}
-      />
-    );
-  }
+  // Interactive Dashboard removed from Smart Wizard workflow
+  // Now available as standalone tool in Advanced Quote Builder
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -1693,13 +1648,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
                 <div>
                   <h2 className="text-2xl font-bold">Smart Wizard</h2>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm opacity-90">Step {step + 1} of 7: {getStepTitle()}</p>
+                    <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
                     <AIStatusIndicator compact={true} />
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* AI Wizard Button moved to Step 5 - no longer in header */}
                 <button
                   onClick={onClose}
                   className="text-white hover:text-gray-200 text-3xl font-bold"
