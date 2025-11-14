@@ -838,6 +838,87 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
           },
         };
 
+      case 'university':
+        return {
+          title: 'University/College Campus Details',
+          icon: '🎓',
+          questions: [
+            {
+              id: 'enrollment',
+              label: 'Student enrollment?',
+              type: 'select',
+              options: [
+                { value: '500', label: 'Very Small (< 1,000 students)' },
+                { value: '2500', label: 'Small (1,000-5,000 students)' },
+                { value: '7500', label: 'Medium (5,000-10,000 students)' },
+                { value: '15000', label: 'Large (10,000-20,000 students)' },
+                { value: '30000', label: 'Very Large (> 20,000 students)' },
+              ],
+            },
+            {
+              id: 'campusType',
+              label: 'Campus type?',
+              type: 'select',
+              options: [
+                { value: 'residential', label: 'Residential (Students live on campus)' },
+                { value: 'commuter', label: 'Commuter (Day students only)' },
+                { value: 'mixed', label: 'Mixed (Both residential & commuter)' },
+              ],
+            },
+            {
+              id: 'facilityTypes',
+              label: 'Facilities included? (Select all that apply)',
+              type: 'multi-select',
+              options: [
+                { value: 'dorms', label: '🏠 Dormitories' },
+                { value: 'dining', label: '🍽️ Dining Halls' },
+                { value: 'athletic', label: '🏋️ Athletic/Recreation Centers' },
+                { value: 'labs', label: '🔬 Research Labs' },
+                { value: 'library', label: '📚 Library/Study Spaces' },
+                { value: 'hospital', label: '🏥 Teaching Hospital/Medical Center' },
+              ],
+            },
+            {
+              id: 'buildingCount',
+              label: 'Approximate number of buildings?',
+              type: 'select',
+              options: [
+                { value: '5', label: '1-10 buildings (Small campus)' },
+                { value: '15', label: '10-20 buildings (Medium campus)' },
+                { value: '30', label: '20-40 buildings (Large campus)' },
+                { value: '50', label: '40+ buildings (Major university)' },
+              ],
+            },
+            {
+              id: 'operations',
+              label: 'Operating pattern?',
+              type: 'select',
+              options: [
+                { value: '24-7', label: '24/7 Year-round (Research/Medical campus)' },
+                { value: 'academic-year', label: 'Academic Year Only (Closed summers)' },
+                { value: 'reduced-summer', label: 'Reduced Summer Operations' },
+              ],
+            },
+            {
+              id: 'sustainability',
+              label: 'Sustainability goals?',
+              type: 'select',
+              options: [
+                { value: 'aggressive', label: 'Aggressive (Net-zero/Carbon neutral target)' },
+                { value: 'moderate', label: 'Moderate (Reduce carbon footprint)' },
+                { value: 'basic', label: 'Basic (Cost savings focus)' },
+              ],
+            },
+          ],
+          insights: {
+            'residential': 'Residential campuses have 24/7 loads from dormitories - excellent for battery storage optimization',
+            'dorms': 'Dormitories create consistent baseline loads perfect for demand management',
+            'athletic': 'Athletic facilities have high peak loads that storage can help manage',
+            'labs': 'Research labs need reliable power - storage provides backup without generator emissions',
+            'aggressive': 'Universities with sustainability goals often qualify for additional grants and funding',
+          },
+        };
+
       case 'government':
         return {
           title: 'Government Building Details',
