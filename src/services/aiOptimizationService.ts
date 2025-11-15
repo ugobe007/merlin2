@@ -1,21 +1,29 @@
 /**
  * AI Optimization Service
  * 
- * Provides intelligent configuration suggestions using centralized calculations.
- * This ensures AI recommendations are CONSISTENT with wizard calculations.
+ * Provides intelligent configuration suggestions using centralized calculations
+ * and latest market data from the AI Data Collection Service.
+ * 
+ * This ensures AI recommendations are:
+ * - CONSISTENT with wizard calculations
+ * - Based on CURRENT pricing from database
+ * - Informed by LATEST industry best practices
+ * - Aware of CURRENT financing options
  * 
  * Key Principle: AI uses the SAME database-driven calculations as the wizard,
- * not separate hardcoded formulas.
+ * enhanced with real-time market intelligence.
  * 
  * Context-Aware Decision Making:
  * - Uses use case templates to inform renewable recommendations
  * - Considers location constraints (urban vs rural, roof space availability)
  * - Maintains persistent recommendations (doesn't contradict itself)
  * - Provides clear reasoning based on actual use case context
+ * - Incorporates latest pricing trends and product availability
  */
 
 import { calculateFinancialMetrics } from './centralizedCalculations';
 import { calculateDatabaseBaseline } from './baselineService';
+import { getLatestAIData } from './aiDataCollectionService';
 
 export interface AIOptimizationInput {
   storageSizeMW: number;

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Home } from 'lucide-react';
 import { PricingAdminDashboard } from './PricingAdminDashboard';
 import CalculationsAdmin from './admin/CalculationsAdmin';
 import UseCaseConfigManager from './admin/UseCaseConfigManager';
 import CacheStatistics from './admin/CacheStatistics';
+import AIDataCollectionAdmin from './admin/AIDataCollectionAdmin';
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 
 /**
@@ -30,7 +32,7 @@ interface AdminStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache' | 'migration'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache' | 'migration' | 'aiData'>('dashboard');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
   
@@ -64,8 +66,15 @@ const AdminDashboard: React.FC = () => {
               <p className="text-purple-200">System Administration & Control</p>
             </div>
           </div>
-          <button className="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg transition-all">
-            Exit Admin
+          
+          {/* Exit to Home Button */}
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all group"
+            title="Return to Home"
+          >
+            <Home className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+            <span className="text-white font-semibold">Exit to Home</span>
           </button>
         </div>
       </div>
@@ -78,12 +87,11 @@ const AdminDashboard: React.FC = () => {
               { key: 'dashboard', label: '📊 Dashboard' },
               { key: 'workflows', label: '⚡ Workflows' },
               { key: 'health', label: '🏥 System Health' },
-              { key: 'users', label: '👥 Users' },
-              { key: 'analytics', label: '📈 Analytics' },
               { key: 'calculations', label: '🧮 Calculations' },
               { key: 'pricing', label: '💰 Pricing Config' },
-              { key: 'cache', label: '⚡ Cache Performance' },
-              { key: 'migration', label: '🔄 Data Migration' },
+              { key: 'aiData', label: '🤖 AI Data' },
+              { key: 'cache', label: '⚡ Cache' },
+              { key: 'migration', label: '🔄 Migration' },
               { key: 'settings', label: '⚙️ Settings' }
             ].map((tab) => (
               <button
@@ -612,6 +620,11 @@ const AdminDashboard: React.FC = () => {
         {/* Cache Performance Tab */}
         {activeTab === 'cache' && (
           <CacheStatistics />
+        )}
+
+        {/* AI Data Collection Tab */}
+        {activeTab === 'aiData' && (
+          <AIDataCollectionAdmin />
         )}
 
         {/* Migration Tab */}

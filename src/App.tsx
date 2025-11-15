@@ -50,12 +50,6 @@ function App() {
   if (showAdmin) {
     return (
       <div>
-        <button
-          onClick={() => setShowAdmin(false)}
-          className="fixed top-4 right-4 z-50 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-all"
-        >
-          Exit Admin Panel
-        </button>
         <AdminDashboard />
       </div>
     );

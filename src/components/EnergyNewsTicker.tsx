@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Zap, DollarSign, Newspaper } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 interface TickerItem {
   type: 'price' | 'news' | 'funding';
@@ -11,30 +12,78 @@ interface TickerItem {
 
 const EnergyNewsTicker: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Real-time energy data (in production, fetch from API)
-  const tickerItems: TickerItem[] = [
+  // Fetch live data from database
+  useEffect(() => {
+    const fetchTickerData = async () => {
+      try {
+        // Fetch latest news from database
+        const { data: newsData, error: newsError } = await supabase
+          .from('industry_news')
+          .select('*')
+          .order('publishDate', { ascending: false })
+          .limit(10);
+
+        if (newsError) {
+          console.error('Error fetching news:', newsError);
+          // Use fallback data if database fetch fails
+          setTickerItems(getFallbackTickerItems());
+          setIsLoading(false);
+          return;
+        }
+
+        // Transform database news into ticker items
+        const newsItems: TickerItem[] = (newsData || []).map(item => ({
+          type: item.category === 'pricing' ? 'price' : 
+                item.category === 'deployment' ? 'funding' : 'news',
+          content: item.title,
+          icon: item.category === 'pricing' ? <DollarSign className="w-4 h-4" /> :
+                item.category === 'deployment' ? <Zap className="w-4 h-4" /> :
+                <Newspaper className="w-4 h-4" />
+        }));
+
+        // Fetch latest pricing data
+        const { data: pricingData, error: pricingError } = await supabase
+          .from('battery_pricing')
+          .select('*')
+          .order('date', { ascending: false })
+          .limit(3);
+
+        if (!pricingError && pricingData) {
+          const priceItems: TickerItem[] = pricingData.map(item => ({
+            type: 'price',
+            content: `${item.chemistry.toUpperCase()} Battery (${item.systemSize})`,
+            value: `$${item.pricePerKWh}/kWh`,
+            change: -5.2, // Calculate from historical data in production
+            icon: <DollarSign className="w-4 h-4" />
+          }));
+          newsItems.push(...priceItems);
+        }
+
+        setTickerItems(newsItems.length > 0 ? newsItems : getFallbackTickerItems());
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error in ticker data fetch:', error);
+        setTickerItems(getFallbackTickerItems());
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickerData();
+    
+    // Refresh ticker data every 5 minutes
+    const refreshInterval = setInterval(fetchTickerData, 5 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Fallback ticker items if database is unavailable
+  const getFallbackTickerItems = (): TickerItem[] => [
     {
       type: 'news',
       content: 'Tesla completes 730 MWh Megapack installation at Moss Landing, CA',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'price',
-      content: 'Wholesale Electricity (PJM)',
-      value: '$45.23/MWh',
-      change: -2.3,
-      icon: <Zap className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'Amazon invests $500M in solar+storage microgrid for data centers',
-      value: '$500M',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Walmart deploys 350 kWh BESS across 75 stores, cutting peak demand 40%',
       icon: <Newspaper className="w-4 h-4" />
     },
     {
@@ -45,121 +94,38 @@ const EnergyNewsTicker: React.FC = () => {
       icon: <DollarSign className="w-4 h-4" />
     },
     {
+      type: 'funding',
+      content: 'Amazon invests $500M in solar+storage microgrid for data centers',
+      value: '$500M',
+      icon: <DollarSign className="w-4 h-4" />
+    },
+    {
       type: 'news',
       content: 'California mandates 52 GW of energy storage by 2045',
       icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'Duke Energy announces $2.4B hybrid solar+BESS project in North Carolina',
-      value: '$2.4B',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Hospital system saves $1.2M annually with 500 kWh peak shaving system',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'DOE awards $3.5B for domestic BESS manufacturing facilities',
-      value: '$3.5B',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Texas grid operator approves 15 GW of new battery storage projects',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'price',
-      content: 'Natural Gas (Henry Hub)',
-      value: '$2.87/MMBtu',
-      change: 1.5,
-      icon: <Zap className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Manufacturing plant achieves 60% energy cost reduction with hybrid BESS',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'NextEra Energy signs $1.8B contract for 2 GWh storage deployment',
-      value: '$1.8B',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'IRA extends 30% ITC for energy storage through 2032',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Hotel chain installs solar+storage, eliminates $800K annual demand charges',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'price',
-      content: 'PCS Inverters (avg)',
-      value: '$180/kW',
-      change: -3.1,
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'Google commits $750M to campus microgrid with 1.5 GWh storage',
-      value: '$750M',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Cold storage facility cuts electricity costs 55% with BESS arbitrage',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'FERC Order 2222 opens wholesale markets to distributed storage',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'Utility announces $1.2B investment in community solar+storage',
-      value: '$1.2B',
-      icon: <DollarSign className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'School district saves $400K/year with 200 kWh backup+peak shaving system',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'price',
-      content: 'Peak Demand Charges (CA)',
-      value: '$18.50/kW',
-      change: 0.5,
-      icon: <Zap className="w-4 h-4" />
-    },
-    {
-      type: 'news',
-      content: 'Data center achieves 99.99% uptime with hybrid solar+BESS+generator',
-      icon: <Newspaper className="w-4 h-4" />
-    },
-    {
-      type: 'funding',
-      content: 'Agricultural co-op receives $85M for solar+storage across 200 farms',
-      value: '$85M',
-      icon: <DollarSign className="w-4 h-4" />
-    },
+    }
   ];
 
+  // Rotate ticker items
   useEffect(() => {
+    if (tickerItems.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % tickerItems.length);
-    }, 8000); // Change every 8 seconds - slower rotation
+    }, 8000); // Change every 8 seconds
 
     return () => clearInterval(interval);
   }, [tickerItems.length]);
+
+  if (isLoading || tickerItems.length === 0) {
+    return (
+      <div className="bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 px-6 rounded-xl shadow-lg">
+        <div className="flex items-center justify-center">
+          <span className="text-sm">Loading market data...</span>
+        </div>
+      </div>
+    );
+  }
 
   const currentItem = tickerItems[currentIndex];
 

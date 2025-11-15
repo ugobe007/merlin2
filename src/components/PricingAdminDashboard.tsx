@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, DollarSign, Database, Download, Upload, RotateCcw, Save, AlertTriangle, CheckCircle, RefreshCw, Bell, Cloud, CloudOff } from 'lucide-react';
 import { pricingConfigService, type PricingConfiguration } from '../services/pricingConfigService';
 import { dailyPricingValidator, type ValidationAlert } from '../services/dailyPricingValidator';
+import { supabase } from '../services/supabase';
 // REMOVED: pricingDatabaseService - archived, conflicts with new schema
 // import { pricingDatabaseService, type DatabaseSyncResult } from '../services/pricingDatabaseService';
 import { dailySyncService } from '../services/dailySyncService';
@@ -77,15 +78,19 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   const checkDatabaseStatus = async () => {
     setDatabaseStatus('checking');
     try {
-      // TODO: Replace with useCaseService connectivity check
-      // const isConnected = await pricingDatabaseService.testConnection();
-      console.warn('⚠️ Database status check disabled - pricingDatabaseService archived');
-      setDatabaseStatus('disconnected'); // Temporarily show as disconnected
+      // Test connection to Supabase by querying a simple table
+      const { data, error } = await supabase
+        .from('use_case_templates')
+        .select('id')
+        .limit(1);
       
-      // if (isConnected) {
-      //   const lastSyncInfo = pricingDatabaseService.getLastSync();
-      //   setLastSync(lastSyncInfo?.lastSyncAt || null);
-      // }
+      if (error) {
+        console.error('Database connection error:', error);
+        setDatabaseStatus('error');
+      } else {
+        setDatabaseStatus('connected');
+        setLastSync(new Date().toISOString());
+      }
     } catch (error) {
       setDatabaseStatus('error');
       console.error('Database status check failed:', error);

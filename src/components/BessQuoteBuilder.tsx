@@ -33,6 +33,8 @@ export default function BessQuoteBuilder() {
   const [startWizardInAdvancedMode, setStartWizardInAdvancedMode] = useState(false);
   // Local state to track if wizard should skip intro
   const [skipWizardIntro, setSkipWizardIntro] = useState(false);
+  // Local state to track the initial view for Advanced Quote Builder
+  const [advancedQuoteBuilderInitialView, setAdvancedQuoteBuilderInitialView] = useState<'landing' | 'custom-config'>('landing');
   
   // Use custom hook for all state management
   const { state, actions, exchangeRates } = useBessQuoteBuilder();
@@ -420,14 +422,21 @@ export default function BessQuoteBuilder() {
       startWizardInAdvancedMode={startWizardInAdvancedMode}
       setStartWizardInAdvancedMode={setStartWizardInAdvancedMode}
       setShowAdvancedQuoteBuilderModal={setShowAdvancedQuoteBuilderModal}
+      setAdvancedQuoteBuilderInitialView={setAdvancedQuoteBuilderInitialView}
       skipWizardIntro={skipWizardIntro}
       setSkipWizardIntro={setSkipWizardIntro}
     />
 
     {/* ADVANCED QUOTE BUILDER - New clean unified component */}
+    {console.log('🏗️ Rendering AdvancedQuoteBuilder with showAdvancedQuoteBuilderModal:', showAdvancedQuoteBuilderModal)}
     <AdvancedQuoteBuilder
       show={showAdvancedQuoteBuilderModal}
-      onClose={() => setShowAdvancedQuoteBuilderModal(false)}
+      initialView={advancedQuoteBuilderInitialView}
+      onClose={() => {
+        setShowAdvancedQuoteBuilderModal(false);
+        // Reset to landing view for next open
+        setAdvancedQuoteBuilderInitialView('landing');
+      }}
       onOpenSmartWizard={() => {
         setShowAdvancedQuoteBuilderModal(false);
         setShowSmartWizard(true);
