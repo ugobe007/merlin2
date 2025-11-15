@@ -19,6 +19,7 @@ const CalculationsAdmin: React.FC = () => {
   const [useCases, setUseCases] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<EquipmentTemplateRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingFormula, setEditingFormula] = useState<FormulaDefinition | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -29,10 +30,11 @@ const CalculationsAdmin: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       // Load use cases with configurations
       const useCasesData = await useCaseService.getAllUseCases(true);
-      setUseCases(useCasesData);
+      setUseCases(useCasesData || []);
 
       // Load equipment templates (will be implemented in useCaseService later)
       // For now, equipment will show as empty until we add the method
@@ -42,6 +44,10 @@ const CalculationsAdmin: React.FC = () => {
       setFormulas(getBuiltInFormulas());
     } catch (error) {
       console.error('Error loading calculations data:', error);
+      setError('Failed to load data. The database tables may not be set up yet. Showing formulas only.');
+      // Still set formulas even if use cases fail
+      setFormulas(getBuiltInFormulas());
+      setUseCases([]);
     } finally {
       setLoading(false);
     }
@@ -431,17 +437,28 @@ const CalculationsAdmin: React.FC = () => {
         ].map(section => (
           <button
             key={section.key}
-            onClick={() => setActiveSection(section.key as typeof activeSection)}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            onClick={() => {
+              console.log('Tab clicked:', section.key);
+              setActiveSection(section.key as typeof activeSection);
+            }}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all cursor-pointer ${
               activeSection === section.key
                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
                 : 'bg-slate-700/50 text-gray-400 hover:text-white hover:bg-slate-700'
             }`}
+            style={{ pointerEvents: 'auto' }}
           >
             {section.label}
           </button>
         ))}
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+          <p className="text-yellow-200 text-sm">⚠️ {error}</p>
+        </div>
+      )}
 
       {/* Content Area */}
       <div className="min-h-[600px]">
