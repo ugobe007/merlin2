@@ -1039,18 +1039,21 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* AI Helper Button - Floating Top Right - Dark to light green gradient with enhanced 3D */}
-      <button
-        onClick={() => setShowAIHelper(!showAIHelper)}
-        className="absolute top-4 right-4 px-4 py-2 bg-gradient-to-br from-green-700 to-green-400 hover:from-green-800 hover:to-green-500 text-white rounded-lg font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 z-10 transform hover:scale-105"
-        style={{
-          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          boxShadow: '0 6px 12px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1), inset 0 -3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
-        }}
-      >
-        <Bot className="w-5 h-5" />
-        AI Assistant
-      </button>
+      {/* AI Helper Button - Centered at Top - Prominent positioning */}
+      <div className="flex justify-center mb-6">
+        <button
+          onClick={() => setShowAIHelper(!showAIHelper)}
+          className="px-8 py-4 bg-gradient-to-br from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3 z-10 transform hover:scale-105 animate-pulse"
+          style={{
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4), 0 6px 12px rgba(0,0,0,0.15), inset 0 -3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
+          }}
+        >
+          <Bot className="w-6 h-6" />
+          <span className="text-lg">AI Assistant - Get Help Here!</span>
+          <span className="inline-block w-2 h-2 bg-green-300 rounded-full animate-ping"></span>
+        </button>
+      </div>
 
       {/* AI Helper Panel - Green theme */}
       {showAIHelper && (
