@@ -42,6 +42,8 @@ interface SmartWizardProps {
 }
 
 const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, startInAdvancedMode = false, onOpenAdvancedQuoteBuilder, skipIntro = false }) => {
+  console.log('🧙 SmartWizardV2 rendered with onOpenAdvancedQuoteBuilder:', !!onOpenAdvancedQuoteBuilder);
+  
   const [step, setStep] = useState(-1); // Start at -1 for intro screen
   const [showIntro, setShowIntro] = useState(true);
   const [showCompletePage, setShowCompletePage] = useState(false);
@@ -1407,6 +1409,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             setSelectedTemplate={setSelectedTemplate}
             useTemplate={useTemplate}
             setUseTemplate={setUseTemplate}
+            onOpenAdvancedQuoteBuilder={onOpenAdvancedQuoteBuilder}
           />
         );
       case 1:

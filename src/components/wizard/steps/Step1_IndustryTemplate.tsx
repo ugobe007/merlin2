@@ -5,6 +5,7 @@ interface Step1_IndustryTemplateProps {
   setSelectedTemplate: (value: string) => void;
   useTemplate: boolean;
   setUseTemplate: (value: boolean) => void;
+  onOpenAdvancedQuoteBuilder?: () => void;
 }
 
 const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
@@ -12,6 +13,7 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
   setSelectedTemplate,
   useTemplate,
   setUseTemplate,
+  onOpenAdvancedQuoteBuilder,
 }) => {
   
   const templates = [
@@ -263,7 +265,17 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                 return (
                   <button
                     key={template.id}
-                    onClick={() => setSelectedTemplate(template.id)}
+                    onClick={() => {
+                      console.log('🎯 Template clicked:', template.id);
+                      console.log('🎯 onOpenAdvancedQuoteBuilder exists?', !!onOpenAdvancedQuoteBuilder);
+                      if (template.id === 'custom' && onOpenAdvancedQuoteBuilder) {
+                        // Redirect to Advanced Quote Builder for custom configuration
+                        console.log('🚀 Calling onOpenAdvancedQuoteBuilder()');
+                        onOpenAdvancedQuoteBuilder();
+                      } else {
+                        setSelectedTemplate(template.id);
+                      }
+                    }}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${colorClasses.bg} ${colorClasses.border} ${colorClasses.shadow} hover:scale-105`}
                   >
                     <div className="space-y-3">
@@ -302,7 +314,16 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                 ⚡ Start from Template (Recommended)
               </button>
               <button
-                onClick={() => setUseTemplate(false)}
+                onClick={() => {
+                  console.log('🎯 Custom Build button (below templates) clicked');
+                  console.log('🎯 onOpenAdvancedQuoteBuilder exists?', !!onOpenAdvancedQuoteBuilder);
+                  if (onOpenAdvancedQuoteBuilder) {
+                    console.log('🚀 Calling onOpenAdvancedQuoteBuilder()');
+                    onOpenAdvancedQuoteBuilder();
+                  } else {
+                    setUseTemplate(false);
+                  }
+                }}
                 className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gray-200 text-gray-600 hover:bg-gray-300"
               >
                 ⚙️ Custom Build
@@ -328,7 +349,13 @@ const Step1_IndustryTemplate: React.FC<Step1_IndustryTemplateProps> = ({
                 ⚡ Start from Template (Recommended)
               </button>
               <button
-                onClick={() => setUseTemplate(false)}
+                onClick={() => {
+                  if (onOpenAdvancedQuoteBuilder) {
+                    onOpenAdvancedQuoteBuilder();
+                  } else {
+                    setUseTemplate(false);
+                  }
+                }}
                 className="px-8 py-4 rounded-xl font-bold text-lg transition-all bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
               >
                 ⚙️ Custom Build

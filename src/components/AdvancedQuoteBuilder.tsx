@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders } from 'lucide-react';
+import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search } from 'lucide-react';
 import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
+import merlinImage from '../assets/images/new_Merlin.png';
 
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
@@ -36,6 +37,9 @@ interface AdvancedQuoteBuilderProps {
   onDurationChange: (value: number) => void;
   onSystemCostChange: (value: number) => void;
   onGenerateQuote?: () => void;
+  
+  // Initial view mode
+  initialView?: ViewMode;
 }
 
 type ViewMode = 'landing' | 'custom-config' | 'interactive-dashboard';
@@ -55,8 +59,11 @@ export default function AdvancedQuoteBuilder({
   onDurationChange,
   onSystemCostChange,
   onGenerateQuote,
+  initialView = 'landing',
 }: AdvancedQuoteBuilderProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('landing');
+  console.log('🏗️ AdvancedQuoteBuilder rendered with show:', show);
+  
+  const [viewMode, setViewMode] = useState<ViewMode>(initialView);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<'word' | 'excel'>('word');
   
@@ -199,13 +206,25 @@ export default function AdvancedQuoteBuilder({
     }
   }, [viewMode, solarMW, windMW, generatorMW]);
 
+  // Reset to initialView when modal opens
+  useEffect(() => {
+    if (show) {
+      console.log('🎭 Modal opened, setting viewMode to:', initialView);
+      setViewMode(initialView);
+    }
+  }, [show, initialView]);
+
   if (!show) return null;
 
   // Tool cards configuration
   const tools = [
     {
       id: 'custom-config',
-      icon: <Wrench className="w-8 h-8" />,
+      icon: (
+        <div className="w-40 h-40 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-2 shadow-2xl">
+          <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain" />
+        </div>
+      ),
       title: 'Start Here',
       description: 'Complete BESS design with electrical specs, renewables, and detailed system parameters',
       color: 'from-amber-500 to-orange-500',
@@ -214,18 +233,18 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'interactive-dashboard',
-      icon: <Sliders className="w-8 h-8" />,
+      icon: <Gauge className="w-8 h-8" />,
       title: 'Interactive Dashboard',
       description: 'Fine-tune your configuration with real-time sliders, see instant cost and ROI updates',
-      color: 'from-cyan-500 to-blue-500',
+      color: 'from-cyan-400 via-blue-500 to-indigo-600',
       action: () => setViewMode('interactive-dashboard'),
     },
     {
       id: 'ai-optimization',
-      icon: <Zap className="w-8 h-8" />,
+      icon: <Wand2 className="w-8 h-8" />,
       title: 'Smart Wizard',
       description: 'Let our AI suggest the optimal system configuration for your use case',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-purple-400 via-pink-500 to-rose-600',
       action: () => {
         // Set flag to skip intro and go directly to step 0 (Industry Template)
         if (setSkipWizardIntro) {
@@ -237,10 +256,10 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'financial-calculator',
-      icon: <Calculator className="w-8 h-8" />,
+      icon: <PiggyBank className="w-8 h-8" />,
       title: 'Financial Calculator',
       description: 'Calculate ROI, payback period, and financing options',
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-emerald-400 via-green-500 to-teal-600',
       action: () => {
         onClose();
         onOpenFinancing?.();
@@ -248,10 +267,10 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'market-analytics',
-      icon: <TrendingUp className="w-8 h-8" />,
+      icon: <BarChart3 className="w-8 h-8" />,
       title: 'Market Analytics',
       description: 'View market trends, pricing intelligence, and competitive analysis',
-      color: 'from-orange-500 to-red-500',
+      color: 'from-orange-400 via-red-500 to-pink-600',
       action: () => {
         onClose();
         onOpenMarketIntel?.();
@@ -259,10 +278,10 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'component-library',
-      icon: <Package className="w-8 h-8" />,
+      icon: <Box className="w-8 h-8" />,
       title: 'Vendor Library',
       description: 'Browse available batteries, inverters, and balance of system equipment',
-      color: 'from-indigo-500 to-purple-500',
+      color: 'from-indigo-400 via-purple-500 to-violet-600',
       action: () => {
         alert('🔧 Component Library\n\nBrowse batteries, solar panels, inverters, and BOS equipment.\n\nComing soon...');
         onClose();
@@ -270,10 +289,10 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'custom-reports',
-      icon: <FileText className="w-8 h-8" />,
+      icon: <ScrollText className="w-8 h-8" />,
       title: 'Custom Reports',
       description: 'Generate detailed proposals, technical specs, and custom documentation',
-      color: 'from-teal-500 to-cyan-500',
+      color: 'from-teal-400 via-cyan-500 to-sky-600',
       action: () => {
         onClose();
         onOpenQuoteTemplates?.();
@@ -281,16 +300,18 @@ export default function AdvancedQuoteBuilder({
     },
     {
       id: 'quote-preview',
-      icon: <Eye className="w-8 h-8" />,
+      icon: <Search className="w-8 h-8" />,
       title: 'Quote Preview',
       description: 'See what your professional quote looks like in Word and Excel formats',
-      color: 'from-blue-500 to-indigo-500',
+      color: 'from-blue-400 via-indigo-500 to-purple-600',
       action: () => setShowQuotePreview(true),
     },
   ];
 
+  console.log('🎭 Current viewMode:', viewMode);
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-600">
+    <div className="fixed inset-0 z-[70] overflow-y-auto bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-600">
       <div className="min-h-screen text-gray-100">
         
         {/* LANDING PAGE VIEW */}
@@ -485,7 +506,7 @@ export default function AdvancedQuoteBuilder({
                     key={tool.id}
                     onClick={tool.action}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    className={`group relative bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 rounded-3xl p-8 text-left transition-all duration-500 hover:scale-105 hover:-translate-y-3 animate-fadeIn overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.6)] border-t-2 border-white/50 ${tool.id === 'custom-config' ? 'md:col-span-2 lg:col-span-3 md:p-12' : ''}`}
+                    className={`group relative bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 rounded-3xl text-left transition-all duration-500 will-change-transform hover:scale-105 hover:-translate-y-3 animate-fadeIn overflow-visible shadow-[0_10px_40px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.6)] border-t-2 border-white/50 ${tool.id === 'custom-config' ? 'md:col-span-2 lg:col-span-3 p-8 md:p-12 min-h-[200px]' : 'p-8 min-h-[320px]'}`}
                   >
                     {/* Magical glow effect on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-20 rounded-3xl transition-all duration-500 blur-xl`} />
@@ -495,25 +516,64 @@ export default function AdvancedQuoteBuilder({
                       <Sparkles className={`${tool.id === 'custom-config' ? 'w-7 h-7' : 'w-5 h-5'} text-yellow-300 animate-pulse`} />
                     </div>
                     
-                    {/* Icon with premium 3D effects */}
-                    <div className={`relative inline-flex ${tool.id === 'custom-config' ? 'p-7' : 'p-5'} rounded-2xl bg-gradient-to-br ${tool.color} mb-6 shadow-[0_8px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] group-hover:shadow-[0_12px_24px_rgba(0,0,0,0.4),0_0_40px_rgba(99,102,241,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] transition-all duration-500 ring-2 ring-white/50 group-hover:ring-white/80 group-hover:scale-110 group-hover:rotate-3`}>
-                      <div className={`text-white drop-shadow-lg ${tool.id === 'custom-config' ? 'scale-125' : ''}`}>{tool.icon}</div>
-                      {/* Glow ring */}
-                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-50 blur-lg transition-all duration-500`} />
-                    </div>
-                    
-                    {/* Content with white text for gradient background */}
-                    <h3 className={`relative ${tool.largeFont ? 'text-4xl md:text-5xl' : 'text-2xl'} font-bold mb-3 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-yellow-200 group-hover:via-pink-200 group-hover:to-cyan-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-lg`}>{tool.title}</h3>
-                    <p className={`relative text-white/90 ${tool.id === 'custom-config' ? 'text-lg md:text-xl' : 'text-sm'} leading-relaxed group-hover:text-white transition-colors duration-300 drop-shadow-md`}>{tool.description}</p>
-                    
-                    {/* Animated arrow indicator */}
-                    <div className="relative mt-6 flex items-center text-white/80 group-hover:text-yellow-200 transition-all duration-300">
-                      <span className="text-sm font-bold tracking-wide drop-shadow-md">Launch Tool</span>
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-3 group-hover:scale-110 transition-all duration-300 drop-shadow-lg" />
-                      <div className="absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
+                    {/* Special horizontal layout for Start Here card with Merlin on left */}
+                    {tool.id === 'custom-config' ? (
+                      <div className="flex items-center gap-8">
+                        {/* Merlin on the left */}
+                        <div className="flex-shrink-0">
+                          {tool.icon}
+                        </div>
+                        
+                        {/* Content on the right */}
+                        <div className="flex-1">
+                          <h3 className="relative text-4xl md:text-5xl font-bold mb-3 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-yellow-200 group-hover:via-pink-200 group-hover:to-cyan-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-lg">
+                            {tool.title}
+                          </h3>
+                          <p className="relative text-white/90 text-lg md:text-xl leading-relaxed group-hover:text-white transition-colors duration-300 drop-shadow-md">
+                            {tool.description}
+                          </p>
+                          
+                          {/* Animated arrow indicator */}
+                          <div className="relative mt-6 flex items-center text-white/80 group-hover:text-yellow-200 transition-all duration-300">
+                            <span className="text-sm font-bold tracking-wide drop-shadow-md">Launch Tool</span>
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-3 group-hover:scale-110 transition-all duration-300 drop-shadow-lg" />
+                            <div className="absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {/* Large colorful icon with glow effect - no box */}
+                        <div className="relative mb-6 inline-flex h-24 w-24 items-center justify-center">
+                          <div className={`bg-gradient-to-br ${tool.color} p-6 rounded-full shadow-2xl group-hover:scale-110 transition-all duration-500`}>
+                            <div className="text-white [&>svg]:w-12 [&>svg]:h-12">
+                              {tool.icon}
+                            </div>
+                          </div>
+                          {/* Animated glow ring on hover */}
+                          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-40 blur-2xl transition-all duration-500`} />
+                        </div>
+                        
+                        {/* Content with white text for gradient background */}
+                        <h3 className="relative text-2xl font-bold mb-3 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-yellow-200 group-hover:via-pink-200 group-hover:to-cyan-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-lg">
+                          {tool.title}
+                        </h3>
+                        <p className="relative text-white/90 text-sm leading-relaxed group-hover:text-white transition-colors duration-300 drop-shadow-md">
+                          {tool.description}
+                        </p>
+                        
+                        {/* Animated arrow indicator */}
+                        <div className="relative mt-6 flex items-center text-white/80 group-hover:text-yellow-200 transition-all duration-300">
+                          <span className="text-sm font-bold tracking-wide drop-shadow-md">Launch Tool</span>
+                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-3 group-hover:scale-110 transition-all duration-300 drop-shadow-lg" />
+                          <div className="absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
+                          </div>
+                        </div>
+                      </>
+                    )}
                     
                     {/* Bottom accent line with 3D effect */}
                     <div className={`absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r ${tool.color} opacity-70 group-hover:opacity-100 transition-all duration-500 rounded-b-3xl shadow-[0_4px_12px_rgba(0,0,0,0.2)]`} />
@@ -526,7 +586,7 @@ export default function AdvancedQuoteBuilder({
 
         {/* CUSTOM CONFIGURATION VIEW */}
         {viewMode === 'custom-config' && (
-          <>
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {/* Enhanced header for config view */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 border-b-2 border-blue-700 shadow-2xl">
               <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
@@ -733,15 +793,15 @@ export default function AdvancedQuoteBuilder({
                 </div>
 
                 {/* Enhanced Application & Use Case Section */}
-                <div className="bg-gradient-to-br from-purple-900 via-purple-700 to-purple-500 border-2 border-purple-400 rounded-2xl p-8 shadow-xl">
+                <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 border-2 border-purple-300 rounded-2xl p-8 shadow-xl">
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Building2 className="w-7 h-7 text-purple-200" />
-                    <span className="text-white drop-shadow-lg">Application & Use Case</span>
+                    <Building2 className="w-7 h-7 text-purple-600" />
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Application & Use Case</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-100">
+                      <label className="block text-sm font-bold mb-2 text-slate-900">
                         Application Type
                       </label>
                       <select
@@ -757,7 +817,7 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-100">
+                      <label className="block text-sm font-bold mb-2 text-slate-900">
                         Primary Use Case
                       </label>
                       <select
@@ -775,7 +835,7 @@ export default function AdvancedQuoteBuilder({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-100">
+                      <label className="block text-sm font-bold mb-2 text-slate-900">
                         Expected Cycles per Year
                       </label>
                       <input
@@ -786,13 +846,13 @@ export default function AdvancedQuoteBuilder({
                         max="1000"
                         className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                       />
-                      <p className="text-xs text-purple-100 mt-1">
+                      <p className="text-xs text-slate-700 mt-1 font-medium">
                         1 cycle = full charge + discharge
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-100">
+                      <label className="block text-sm font-bold mb-2 text-slate-900">
                         Round-Trip Efficiency (%)
                       </label>
                       <input
@@ -885,20 +945,20 @@ export default function AdvancedQuoteBuilder({
                 </div>
 
                 {/* Electrical Specifications Section - INTERACTIVE WITH INPUTS */}
-                <div data-section="electrical" className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/40 rounded-2xl p-8 shadow-2xl scroll-mt-24">
+                <div data-section="electrical" className="bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 border-2 border-purple-800 rounded-2xl p-8 shadow-2xl scroll-mt-24">
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Zap className="w-7 h-7 text-purple-400 drop-shadow-glow" />
-                    Electrical Specifications & PCS Configuration
+                    <Zap className="w-7 h-7 text-yellow-300" />
+                    <span className="bg-gradient-to-r from-yellow-200 via-purple-200 to-blue-200 bg-clip-text text-transparent drop-shadow-lg">Electrical Specifications & PCS Configuration</span>
                   </h3>
                   
                   {/* Power Conversion System (PCS) Configuration */}
-                  <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 border border-purple-500/40 rounded-xl p-6 mb-6 shadow-lg">
-                    <h4 className="text-lg font-bold mb-4 text-white">Power Conversion System (PCS)</h4>
+                  <div className="bg-white border-2 border-purple-300 rounded-xl p-6 mb-6 shadow-lg">
+                    <h4 className="text-lg font-bold mb-4 text-slate-900">Power Conversion System (PCS)</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* PCS Quoting Option */}
                       <div className="col-span-full">
-                        <label className="block text-sm font-semibold mb-3 text-white">
+                        <label className="block text-sm font-semibold mb-3 text-slate-900">
                           PCS Quoting Method
                         </label>
                         <div className="flex gap-4">
@@ -930,7 +990,7 @@ export default function AdvancedQuoteBuilder({
 
                       {/* Inverter Type */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-white">
+                        <label className="block text-sm font-semibold mb-2 text-slate-900">
                           Inverter Type
                         </label>
                         <select
@@ -941,14 +1001,14 @@ export default function AdvancedQuoteBuilder({
                           <option value="bidirectional">Bidirectional Inverter</option>
                           <option value="unidirectional">Unidirectional (Charge Only)</option>
                         </select>
-                        <p className="text-xs text-purple-200 mt-1">
+                        <p className="text-xs text-slate-700 mt-1 font-medium">
                           {inverterType === 'bidirectional' ? '⚡ Supports charge & discharge' : '⚡ Charge only (typical for solar)'}
                         </p>
                       </div>
 
                       {/* Number of Inverters */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-white">
+                        <label className="block text-sm font-semibold mb-2 text-slate-900">
                           Number of Inverters
                         </label>
                         <div className="flex gap-2">
@@ -968,14 +1028,14 @@ export default function AdvancedQuoteBuilder({
                             Auto
                           </button>
                         </div>
-                        <p className="text-xs text-purple-200 mt-1">
+                        <p className="text-xs text-slate-700 mt-1 font-medium">
                           Suggested: {Math.ceil(totalKW / inverterRating)} units @ {inverterRating} kW each
                         </p>
                       </div>
 
                       {/* Inverter Rating */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-white">
+                        <label className="block text-sm font-semibold mb-2 text-slate-900">
                           Inverter Rating (kW per unit)
                         </label>
                         <input
@@ -990,7 +1050,7 @@ export default function AdvancedQuoteBuilder({
 
                       {/* Manufacturer */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-white">
+                        <label className="block text-sm font-semibold mb-2 text-slate-900">
                           Inverter Manufacturer (Optional)
                         </label>
                         <input
@@ -1007,58 +1067,58 @@ export default function AdvancedQuoteBuilder({
                   {/* Electrical Parameters - INPUT FIELDS */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* System Watts */}
-                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-white mb-2 font-semibold">System Power (Watts)</label>
+                    <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-slate-900 mb-2 font-semibold">System Power (Watts)</label>
                       <input
                         type="number"
                         value={systemWattsInput}
                         onChange={(e) => setSystemWattsInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedWatts.toLocaleString()}
-                        className="w-full px-3 py-2 bg-white/10 border border-blue-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-blue-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-blue-800 mt-2">
+                      <p className="text-xs text-blue-900 mt-2 font-bold">
                         {totalKW.toLocaleString()} kW / {(totalKW/1000).toFixed(2)} MW
                       </p>
-                      <p className="text-xs text-blue-200 mt-1">Calculated: {calculatedWatts.toLocaleString()} W</p>
+                      <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedWatts.toLocaleString()} W</p>
                     </div>
 
                     {/* AC Amps */}
-                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-white mb-2 font-semibold">AC Current (3-Phase)</label>
+                    <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-slate-900 mb-2 font-semibold">AC Current (3-Phase)</label>
                       <input
                         type="number"
                         value={systemAmpsACInput}
                         onChange={(e) => setSystemAmpsACInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedAmpsAC.toFixed(0)}
-                        className="w-full px-3 py-2 bg-white/10 border border-yellow-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-yellow-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-yellow-800 mt-2">
+                      <p className="text-xs text-yellow-900 mt-2 font-bold">
                         @ {systemVoltage}V AC Per Phase
                       </p>
-                      <p className="text-xs text-yellow-200 mt-1">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
+                      <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
                     </div>
 
                     {/* DC Amps */}
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/40 rounded-xl p-4 shadow-lg">
-                      <label className="block text-xs text-white mb-2 font-semibold">DC Current (Battery Side)</label>
+                    <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 shadow-lg">
+                      <label className="block text-xs text-slate-900 mb-2 font-semibold">DC Current (Battery Side)</label>
                       <input
                         type="number"
                         value={systemAmpsDCInput}
                         onChange={(e) => setSystemAmpsDCInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedAmpsDC.toFixed(0)}
-                        className="w-full px-3 py-2 bg-white/10 border border-green-400/30 rounded-lg text-white font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-green-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-green-800 mt-2">
+                      <p className="text-xs text-green-900 mt-2 font-bold">
                         @ {dcVoltage}V DC
                       </p>
-                      <p className="text-xs text-green-200 mt-1">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
+                      <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
                     </div>
                   </div>
 
                   {/* Voltage Configuration */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
-                      <label className="block text-sm font-semibold mb-2 text-white">
+                    <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
+                      <label className="block text-sm font-semibold mb-2 text-slate-900">
                         AC System Voltage (V)
                       </label>
                       <select
@@ -1074,8 +1134,8 @@ export default function AdvancedQuoteBuilder({
                       </select>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 shadow-md">
-                      <label className="block text-sm font-semibold mb-2 text-white">
+                    <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
+                      <label className="block text-sm font-semibold mb-2 text-slate-900">
                         DC Battery Voltage (V)
                       </label>
                       <input
@@ -1086,38 +1146,38 @@ export default function AdvancedQuoteBuilder({
                         min="100"
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner"
                       />
-                      <p className="text-xs text-purple-200 mt-1">Typical: 800V - 1500V DC</p>
+                      <p className="text-xs text-slate-700 mt-1 font-medium">Typical: 800V - 1500V DC</p>
                     </div>
                   </div>
 
                   {/* Summary Card */}
-                  <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/50 rounded-xl p-6 shadow-xl">
-                    <h4 className="text-sm font-bold text-purple-200 mb-4 flex items-center gap-2">
-                      <Cpu className="w-5 h-5" />
+                  <div className="bg-white border-2 border-purple-300 rounded-xl p-6 shadow-xl">
+                    <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <Cpu className="w-5 h-5 text-purple-600" />
                       System Summary
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-purple-200 mb-1">Total Power:</p>
-                        <p className="text-xl font-bold text-white">{(totalKW/1000).toFixed(2)} MW</p>
+                        <p className="text-slate-700 mb-1 font-medium">Total Power:</p>
+                        <p className="text-xl font-bold text-slate-900">{(totalKW/1000).toFixed(2)} MW</p>
                       </div>
                       <div>
-                        <p className="text-purple-200 mb-1">Inverters:</p>
-                        <p className="text-xl font-bold text-white">{numberOfInverters} units</p>
+                        <p className="text-slate-700 mb-1 font-medium">Inverters:</p>
+                        <p className="text-xl font-bold text-slate-900">{numberOfInverters} units</p>
                       </div>
                       <div>
-                        <p className="text-purple-200 mb-1">AC Current:</p>
-                        <p className="text-xl font-bold text-yellow-300">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-slate-700 mb-1 font-medium">AC Current:</p>
+                        <p className="text-xl font-bold text-yellow-700">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                       <div>
-                        <p className="text-purple-200 mb-1">DC Current:</p>
-                        <p className="text-xl font-bold text-green-300">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-slate-700 mb-1 font-medium">DC Current:</p>
+                        <p className="text-xl font-bold text-green-700">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-purple-400/30">
+                    <div className="mt-4 pt-4 border-t-2 border-purple-300">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-purple-200">PCS Configuration:</span>
-                        <span className="text-sm font-bold text-purple-200">
+                        <span className="text-sm text-slate-700 font-medium">PCS Configuration:</span>
+                        <span className="text-sm font-bold text-slate-900">
                           {inverterType === 'bidirectional' ? '⚡ Bidirectional' : '→ Unidirectional'} | 
                           {pcsQuoteSeparately ? ' Quoted Separately' : ' Included in System'}
                         </span>
@@ -1125,8 +1185,8 @@ export default function AdvancedQuoteBuilder({
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-purple-900/30 border border-purple-500/40 rounded-lg p-4">
-                    <p className="text-xs text-purple-200">
+                  <div className="mt-4 bg-purple-100 border-2 border-purple-300 rounded-lg p-4">
+                    <p className="text-xs text-slate-900 font-medium">
                       ⚡ <strong>Note:</strong> Input custom values to override calculated specifications. 
                       Leave blank to use auto-calculated values based on {storageSizeMW} MW system rating.
                       {pcsQuoteSeparately && ' PCS will be itemized with detailed manufacturer specifications.'}
@@ -1135,14 +1195,14 @@ export default function AdvancedQuoteBuilder({
                 </div>
 
                 {/* Renewables & Alternative Power Section */}
-                <div data-section="renewables" className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-8 scroll-mt-24">
+                <div data-section="renewables" className="bg-green-50 border-2 border-green-300 rounded-2xl p-8 scroll-mt-24">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold flex items-center gap-3">
-                      <Sparkles className="w-6 h-6 text-green-400" />
-                      Renewables & Alternative Power
+                      <Sparkles className="w-6 h-6 text-green-600" />
+                      <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Renewables & Alternative Power</span>
                     </h3>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <span className="text-sm font-semibold">Include Renewables</span>
+                      <span className="text-sm font-semibold text-slate-900">Include Renewables</span>
                       <div className="relative">
                         <input
                           type="checkbox"
@@ -1235,14 +1295,14 @@ export default function AdvancedQuoteBuilder({
                                 <option value="central">Central Inverter</option>
                               </select>
                             </div>
-                            <div className="md:col-span-2 bg-yellow-900/20 rounded p-3">
-                              <p className="text-sm text-yellow-200">
+                            <div className="md:col-span-2 bg-yellow-200 border-2 border-yellow-400 rounded p-3">
+                              <p className="text-sm text-slate-900 font-bold">
                                 ☀️ Estimated Annual Production: <strong>{(solarCapacityKW * 1400).toLocaleString()} kWh/year</strong> (1,400 hrs/year avg)
                               </p>
-                              <p className="text-xs text-yellow-800 mt-1">
+                              <p className="text-xs text-slate-900 mt-1 font-medium">
                                 Array Size: ~{(solarCapacityKW * 1000 * 6).toLocaleString()} sq ft (~{((solarCapacityKW * 1000 * 6) / 43560).toFixed(2)} acres) | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
                               </p>
-                              <p className="text-xs text-yellow-200 mt-1">
+                              <p className="text-xs text-slate-900 mt-1 font-medium">
                                 💡 Note: Assumes 6 sq ft per watt installed capacity (including spacing)
                               </p>
                             </div>
@@ -1251,9 +1311,9 @@ export default function AdvancedQuoteBuilder({
                       </div>
 
                       {/* Wind Turbine */}
-                      <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-6">
+                      <div className="bg-cyan-50 border-2 border-cyan-300 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-xl font-bold flex items-center gap-2">
+                          <h4 className="text-xl font-bold flex items-center gap-2 text-slate-900">
                             💨 Wind Turbine System
                           </h4>
                           <label className="flex items-center gap-2 cursor-pointer">
@@ -1263,7 +1323,7 @@ export default function AdvancedQuoteBuilder({
                               onChange={(e) => setWindTurbineIncluded(e.target.checked)}
                               className="w-5 h-5 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
                             />
-                            <span className="text-sm">Include Wind</span>
+                            <span className="text-sm text-slate-900 font-semibold">Include Wind</span>
                           </label>
                         </div>
 
@@ -1295,11 +1355,11 @@ export default function AdvancedQuoteBuilder({
                                 <option value="vertical">Vertical Axis (VAWT)</option>
                               </select>
                             </div>
-                            <div className="md:col-span-2 bg-cyan-900/20 rounded p-3">
-                              <p className="text-sm text-cyan-200">
+                            <div className="md:col-span-2 bg-cyan-200 border-2 border-cyan-400 rounded p-3">
+                              <p className="text-sm text-slate-900 font-bold">
                                 💨 Estimated Annual Production: <strong>{(windCapacityKW * 2200).toLocaleString()} kWh/year</strong> (25% capacity factor)
                               </p>
-                              <p className="text-xs text-cyan-300 mt-1">
+                              <p className="text-xs text-slate-900 mt-1 font-medium">
                                 Requires: Average wind speed of 5+ m/s | Tower height: 80-120m for utility scale
                               </p>
                             </div>
@@ -1383,7 +1443,7 @@ export default function AdvancedQuoteBuilder({
                       </div>
 
                       {/* Backup Generators */}
-                      <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6">
+                      <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6">
                         <h4 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900">
                           <GitBranch className="w-5 h-5 text-orange-600" />
                           Backup Generators
@@ -1479,15 +1539,15 @@ export default function AdvancedQuoteBuilder({
                       </div>
 
                       {/* Renewables Summary */}
-                      <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border-2 border-green-500/40 rounded-xl p-6">
-                        <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
-                          <Sparkles className="w-5 h-5 text-green-400" />
+                      <div className="bg-white border-2 border-green-300 rounded-xl p-6">
+                        <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">
+                          <Sparkles className="w-5 h-5 text-green-600" />
                           Combined Renewables Summary
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-green-200 mb-1">Total Renewable</p>
-                            <p className="text-2xl font-bold text-green-400">
+                          <div className="bg-green-50 border-2 border-green-300 rounded p-3">
+                            <p className="text-xs text-slate-700 mb-1 font-medium">Total Renewable</p>
+                            <p className="text-2xl font-bold text-green-700">
                               {(
                                 (solarPVIncluded ? solarCapacityKW : 0) +
                                 (windTurbineIncluded ? windCapacityKW : 0) +
@@ -1495,18 +1555,18 @@ export default function AdvancedQuoteBuilder({
                               ).toFixed(0)} kW
                             </p>
                           </div>
-                          <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-orange-200 mb-1">Backup Gen</p>
-                            <p className="text-2xl font-bold text-orange-400">
+                          <div className="bg-orange-50 border-2 border-orange-300 rounded p-3">
+                            <p className="text-xs text-slate-700 mb-1 font-medium">Backup Gen</p>
+                            <p className="text-2xl font-bold text-orange-700">
                               {(
                                 (dieselGenIncluded ? dieselGenCapacityKW : 0) +
                                 (naturalGasGenIncluded ? naturalGasCapacityKW : 0)
                               ).toFixed(0)} kW
                             </p>
                           </div>
-                          <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-blue-200 mb-1">BESS + Renewable</p>
-                            <p className="text-2xl font-bold text-blue-400">
+                          <div className="bg-blue-50 border-2 border-blue-300 rounded p-3">
+                            <p className="text-xs text-slate-700 mb-1 font-medium">BESS + Renewable</p>
+                            <p className="text-2xl font-bold text-blue-700">
                               {(
                                 totalKW +
                                 (solarPVIncluded ? solarCapacityKW : 0) +
@@ -1514,9 +1574,9 @@ export default function AdvancedQuoteBuilder({
                               ).toFixed(0)} kW
                             </p>
                           </div>
-                          <div className="bg-white/10 rounded p-3">
-                            <p className="text-xs text-purple-200 mb-1">Total Capacity</p>
-                            <p className="text-2xl font-bold text-purple-400">
+                          <div className="bg-purple-50 border-2 border-purple-300 rounded p-3">
+                            <p className="text-xs text-slate-700 mb-1 font-medium">Total Capacity</p>
+                            <p className="text-2xl font-bold text-purple-700">
                               {(
                                 totalKW +
                                 (solarPVIncluded ? solarCapacityKW : 0) +
@@ -1534,41 +1594,43 @@ export default function AdvancedQuoteBuilder({
                   )}
 
                   {!includeRenewables && (
-                    <div className="text-center py-8 text-white">
-                      <p className="text-lg">Enable renewables to configure solar, wind, fuel cells, and backup generators</p>
-                      <p className="text-sm mt-2">Hybrid systems can reduce costs and improve resiliency</p>
+                    <div className="text-center py-8">
+                      <p className="text-lg text-slate-900 font-bold">Enable renewables to configure solar, wind, fuel cells, and backup generators</p>
+                      <p className="text-sm mt-2 text-slate-700 font-medium">Hybrid systems can reduce costs and improve resiliency</p>
                     </div>
                   )}
                 </div>
 
                 {/* System Summary */}
-                <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 rounded-2xl p-8">
-                  <h3 className="text-2xl font-bold mb-6 text-white">📊 System Summary</h3>
+                <div className="bg-white border-2 border-blue-300 rounded-2xl p-8 shadow-xl">
+                  <h3 className="text-2xl font-bold mb-6 text-slate-900 flex items-center gap-2">
+                    📊 System Summary
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-blue-200 mb-1">System Rating</p>
-                      <p className="text-3xl font-bold text-blue-400">
+                    <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4">
+                      <p className="text-sm text-slate-700 mb-1 font-medium">System Rating</p>
+                      <p className="text-3xl font-bold text-blue-700">
                         {storageSizeMW.toFixed(1)} MW
                       </p>
-                      <p className="text-lg text-blue-200">
+                      <p className="text-lg text-slate-700 font-bold">
                         {storageSizeMWh.toFixed(1)} MWh
                       </p>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-green-200 mb-1">Total Cost</p>
-                      <p className="text-3xl font-bold text-green-400">
+                    <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+                      <p className="text-sm text-slate-700 mb-1 font-medium">Total Cost</p>
+                      <p className="text-3xl font-bold text-green-700">
                         ${(systemCost / 1000000).toFixed(2)}M
                       </p>
-                      <p className="text-sm text-green-200">
+                      <p className="text-sm text-slate-700 font-bold">
                         ${(systemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
                       </p>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-purple-200 mb-1">Application</p>
-                      <p className="text-xl font-bold text-purple-400 capitalize">
+                    <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4">
+                      <p className="text-sm text-slate-700 mb-1 font-medium">Application</p>
+                      <p className="text-xl font-bold text-purple-700 capitalize">
                         {applicationType}
                       </p>
-                      <p className="text-sm text-purple-200 capitalize">
+                      <p className="text-sm text-slate-700 font-bold capitalize">
                         {useCase.replace('-', ' ')}
                       </p>
                     </div>
@@ -1640,7 +1702,7 @@ export default function AdvancedQuoteBuilder({
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
       </div>

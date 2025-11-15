@@ -168,6 +168,7 @@ interface ModalManagerProps {
   startWizardInAdvancedMode?: boolean;
   setStartWizardInAdvancedMode?: (value: boolean) => void;
   setShowAdvancedQuoteBuilderModal?: (show: boolean) => void;
+  setAdvancedQuoteBuilderInitialView?: (view: 'landing' | 'custom-config') => void;
   skipWizardIntro?: boolean;
   setSkipWizardIntro?: (value: boolean) => void;
 }
@@ -188,7 +189,7 @@ export default function ModalManager(props: ModalManagerProps) {
     
     // Advanced mode
     startWizardInAdvancedMode, setStartWizardInAdvancedMode, setShowAdvancedQuoteBuilderModal,
-    skipWizardIntro, setSkipWizardIntro,
+    setAdvancedQuoteBuilderInitialView, skipWizardIntro, setSkipWizardIntro,
 
     // Modal setters
     setShowUserProfile, setShowPortfolio, setShowAuthModal, setShowVendorManager, setShowPricingPlans,
@@ -296,10 +297,19 @@ export default function ModalManager(props: ModalManagerProps) {
         startInAdvancedMode={startWizardInAdvancedMode}
         skipIntro={skipWizardIntro}
         onOpenAdvancedQuoteBuilder={() => {
-          // Close wizard and open Advanced Quote Builder
+          // Close wizard and open Advanced Quote Builder in custom-config mode
+          console.log('🔥 ModalManager: onOpenAdvancedQuoteBuilder called');
+          console.log('🔥 setShowAdvancedQuoteBuilderModal exists?', !!setShowAdvancedQuoteBuilderModal);
           setShowSmartWizard(false);
           if (setShowAdvancedQuoteBuilderModal) {
+            console.log('🔥 Setting showAdvancedQuoteBuilderModal to true');
+            // Set initial view to custom-config when coming from Smart Wizard
+            if (setAdvancedQuoteBuilderInitialView) {
+              setAdvancedQuoteBuilderInitialView('custom-config');
+            }
             setShowAdvancedQuoteBuilderModal(true);
+          } else {
+            console.log('❌ setShowAdvancedQuoteBuilderModal is undefined!');
           }
         }}
         onFinish={(wizardData) => {
