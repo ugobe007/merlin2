@@ -586,26 +586,36 @@ export default function AdvancedQuoteBuilder({
 
         {/* CUSTOM CONFIGURATION VIEW */}
         {viewMode === 'custom-config' && (
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 relative overflow-hidden">
+            {/* Animated background orbs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-indigo-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-slate-300/20 to-gray-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            </div>
+
             {/* Enhanced header for config view */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 border-b-2 border-blue-700 shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 border-b-2 border-blue-500 shadow-2xl backdrop-blur-sm">
               <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setViewMode('landing')}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:shadow-lg"
+                    className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:shadow-lg hover:scale-105 active:scale-95"
                     aria-label="Back"
                   >
                     <ArrowLeft className="w-6 h-6" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold text-white">Custom Configuration</h1>
-                    <p className="text-blue-100 text-sm">Manually configure your BESS system</p>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                      <span className="animate-pulse">✨</span>
+                      Custom Configuration
+                      <span className="animate-pulse delay-500">✨</span>
+                    </h1>
+                    <p className="text-blue-100 text-sm font-medium">Manually configure your BESS system with Merlin magic</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:rotate-90 duration-300"
                   aria-label="Close"
                 >
                   <X className="w-6 h-6" />
@@ -614,14 +624,14 @@ export default function AdvancedQuoteBuilder({
             </div>
 
             {/* Configuration Form */}
-            <div className="max-w-6xl mx-auto px-6 py-12">
+            <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
               <div className="space-y-8">
                 
                 {/* Project Information Section */}
-                <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-2xl p-8 shadow-xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Project Information</span>
+                <div className="bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 border-2 border-blue-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <FileText className="w-7 h-7 text-blue-600 animate-pulse" />
+                    <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Project Information</span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -632,7 +642,7 @@ export default function AdvancedQuoteBuilder({
                         type="text"
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
                         placeholder="e.g., Downtown Office Building BESS"
                       />
                     </div>
@@ -641,12 +651,12 @@ export default function AdvancedQuoteBuilder({
                         Location
                       </label>
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <MapPin className="w-5 h-5 text-blue-600 animate-bounce" style={{ animationDuration: '3s' }} />
                         <input
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          className="flex-1 px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                          className="flex-1 px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
                           placeholder="City, State/Country"
                         />
                       </div>
@@ -655,10 +665,14 @@ export default function AdvancedQuoteBuilder({
                 </div>
 
                 {/* Enhanced System Configuration Section */}
-                <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 border-2 border-purple-300 rounded-2xl p-8 shadow-xl">
+                <div className="bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-100 border-2 border-slate-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden">
+                  {/* Animated sparkles */}
+                  <div className="absolute top-4 right-4 text-2xl animate-spin" style={{ animationDuration: '3s' }}>⚡</div>
+                  <div className="absolute bottom-4 left-4 text-2xl animate-bounce" style={{ animationDuration: '2s' }}>🔋</div>
+                  
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Battery className="w-7 h-7 text-purple-600" />
-                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">System Configuration</span>
+                    <Battery className="w-7 h-7 text-indigo-600 animate-pulse" />
+                    <span className="bg-gradient-to-r from-slate-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">System Configuration</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -675,7 +689,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.1"
                           value={storageSizeMW}
                           onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
-                          className="flex-1 h-2 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                          className="flex-1 h-3 bg-gradient-to-r from-slate-300 via-gray-300 to-indigo-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-slate-600 [&::-webkit-slider-thumb]:to-indigo-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
                         />
                         <input
                           type="number"
@@ -684,7 +698,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.1"
                           min="0.1"
                           max="10"
-                          className="w-32 px-3 py-2 bg-white border-2 border-purple-300 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                          className="w-32 px-3 py-2 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                         />
                         <span className="text-slate-900 w-12 text-lg font-bold">MW</span>
                       </div>
@@ -706,7 +720,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.5"
                           value={durationHours}
                           onChange={(e) => onDurationChange(parseFloat(e.target.value))}
-                          className="flex-1 h-2 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                          className="flex-1 h-3 bg-gradient-to-r from-slate-300 via-gray-300 to-indigo-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-slate-600 [&::-webkit-slider-thumb]:to-indigo-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
                         />
                         <input
                           type="number"
@@ -715,7 +729,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.5"
                           min="0.5"
                           max="12"
-                          className="w-32 px-3 py-2 bg-white border-2 border-purple-300 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                          className="w-32 px-3 py-2 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                         />
                         <span className="text-slate-900 w-12 text-lg font-bold">hrs</span>
                       </div>
@@ -732,7 +746,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={chemistry}
                         onChange={(e) => setChemistry(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                       >
                         <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
                         <option value="nmc">NMC - High energy density</option>
@@ -749,7 +763,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={installationType}
                         onChange={(e) => setInstallationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                       >
                         <option value="outdoor">Outdoor (Containerized)</option>
                         <option value="indoor">Indoor (Room/Vault)</option>
@@ -765,7 +779,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={gridConnection}
                         onChange={(e) => setGridConnection(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                       >
                         <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
                         <option value="dc-coupled">DC-Coupled (with Solar)</option>
@@ -786,17 +800,21 @@ export default function AdvancedQuoteBuilder({
                         min="85"
                         max="99"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Enhanced Application & Use Case Section */}
-                <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 border-2 border-purple-300 rounded-2xl p-8 shadow-xl">
+                <div className="bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100 border-2 border-emerald-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden">
+                  {/* Animated icons */}
+                  <div className="absolute top-4 right-4 text-2xl animate-pulse">🏢</div>
+                  <div className="absolute bottom-4 left-4 text-2xl" style={{ animation: 'bounce 2s infinite' }}>💡</div>
+                  
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Building2 className="w-7 h-7 text-purple-600" />
-                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Application & Use Case</span>
+                    <Building2 className="w-7 h-7 text-emerald-600 animate-pulse" />
+                    <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">Application & Use Case</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -807,7 +825,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={applicationType}
                         onChange={(e) => setApplicationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
                       >
                         <option value="residential">Residential</option>
                         <option value="commercial">Commercial & Industrial</option>
@@ -823,7 +841,7 @@ export default function AdvancedQuoteBuilder({
                       <select
                         value={useCase}
                         onChange={(e) => setUseCase(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
                       >
                         <option value="peak-shaving">Peak Shaving / Demand Charge Reduction</option>
                         <option value="arbitrage">Energy Arbitrage / Time-of-Use</option>
@@ -844,7 +862,7 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
                         min="1"
                         max="1000"
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
                       />
                       <p className="text-xs text-slate-700 mt-1 font-medium">
                         1 cycle = full charge + discharge
@@ -862,7 +880,7 @@ export default function AdvancedQuoteBuilder({
                         min="75"
                         max="98"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
                       />
                     </div>
                   </div>
