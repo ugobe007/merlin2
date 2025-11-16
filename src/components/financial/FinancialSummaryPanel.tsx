@@ -25,6 +25,7 @@ interface FinancialSummaryPanelProps {
   setShowQuoteTemplates: (show: boolean) => void;
   setShowPricingPresets: (show: boolean) => void;
   setShowReviewWorkflow: (show: boolean) => void;
+  setShowProfessionalAnalytics?: (show: boolean) => void; // New optional prop
 }
 
 export default function FinancialSummaryPanel({
@@ -47,6 +48,7 @@ export default function FinancialSummaryPanel({
   setShowQuoteTemplates,
   setShowPricingPresets,
   setShowReviewWorkflow,
+  setShowProfessionalAnalytics,
 }: FinancialSummaryPanelProps) {
   return (
     <section className="rounded-2xl p-8 shadow-2xl border-2 border-green-300 bg-gradient-to-b from-green-50 to-white relative overflow-hidden">
@@ -120,6 +122,20 @@ export default function FinancialSummaryPanel({
             >
               📊 Advanced Analytics
             </button>
+            {setShowProfessionalAnalytics && (
+              <button 
+                className="relative w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-purple-400/30 group"
+                onClick={() => setShowProfessionalAnalytics(true)}
+                title="Monte Carlo simulation, sensitivity analysis, risk modeling, scenario planning"
+              >
+                <span className="flex items-center justify-between">
+                  <span>🎓 Professional Financial Modeling</span>
+                  <span className="bg-yellow-400 text-purple-900 text-xs font-black px-2 py-1 rounded-full ml-2 group-hover:bg-yellow-300 transition-colors">
+                    PRO
+                  </span>
+                </span>
+              </button>
+            )}
             <button 
               className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-6 py-4 rounded-lg font-semibold shadow-lg transition-all duration-200 border border-emerald-400/30"
               onClick={() => setShowFinancing(true)}

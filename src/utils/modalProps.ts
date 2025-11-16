@@ -16,6 +16,7 @@ export interface ModalManagerProps {
   showSaveProjectModal: boolean;
   showLoadProjectModal: boolean;
   showAnalytics: boolean;
+  showProfessionalAnalytics: boolean;
   showBESSAnalytics: boolean;
   showFinancing: boolean;
   showTemplates: boolean;
@@ -53,6 +54,7 @@ export interface ModalManagerProps {
   setShowSaveProjectModal: (show: boolean) => void;
   setShowLoadProjectModal: (show: boolean) => void;
   setShowAnalytics: (show: boolean) => void;
+  setShowProfessionalAnalytics: (show: boolean) => void;
   setShowBESSAnalytics: (show: boolean) => void;
   setShowFinancing: (show: boolean) => void;
   setShowTemplates: (show: boolean) => void;

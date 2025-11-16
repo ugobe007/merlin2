@@ -79,6 +79,7 @@ interface AdvancedQuoteBuilderSectionProps {
   setShowCalculationModal: (show: boolean) => void;
   handleExportCalculations: () => void;
   setShowAnalytics: (show: boolean) => void;
+  setShowProfessionalAnalytics?: (show: boolean) => void;
   setShowFinancing: (show: boolean) => void;
   setShowTemplates: (show: boolean) => void;
   setShowUtilityRates: (show: boolean) => void;
@@ -168,6 +169,7 @@ export default function AdvancedQuoteBuilderSection({
   setShowCalculationModal,
   handleExportCalculations,
   setShowAnalytics,
+  setShowProfessionalAnalytics,
   setShowFinancing,
   setShowTemplates,
   setShowUtilityRates,
@@ -381,6 +383,7 @@ export default function AdvancedQuoteBuilderSection({
             setShowCalculationModal={setShowCalculationModal}
             handleExportCalculations={handleExportCalculations}
             setShowAnalytics={setShowAnalytics}
+            setShowProfessionalAnalytics={setShowProfessionalAnalytics}
             setShowFinancing={setShowFinancing}
             setShowTemplates={setShowTemplates}
             setShowUtilityRates={setShowUtilityRates}
