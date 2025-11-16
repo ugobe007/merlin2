@@ -54,7 +54,12 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
 
       if (companyData) {
         const members = authService.getCompanyMembers(companyData.id);
-        setTeamMembers(members);
+        // Map User[] to TeamMember[] with required fields
+        setTeamMembers(members.map(m => ({
+          ...m,
+          role: (m as any).role || 'user',
+          status: 'active' as const
+        })));
       }
     }
   };
@@ -82,7 +87,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
     // Generate profile slug if making profile public and doesn't have one
     let updates = { ...editedData };
     if (editedData.profileVisibility === 'public' && !user.publicProfileSlug) {
-      const slug = authService.generateProfileSlug(user.firstName, user.lastName);
+      const slug = authService.generateProfileSlug(user.firstName || '', user.lastName || '');
       updates.publicProfileSlug = slug;
     }
 
@@ -185,7 +190,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     Team
                     {company && (
                       <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                        {company.seatsUsed}/{company.seatLimit}
+                        {company.seatsUsed ?? 0}/{company.seatLimit ?? 0}
                       </span>
                     )}
                   </button>
@@ -606,11 +611,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">Team Members</h3>
                   <div className="text-sm">
-                    <span className="font-bold text-purple-600">{company?.seatsUsed}</span>
-                    <span className="text-gray-600"> / {company?.seatLimit} seats used</span>
+                    <span className="font-bold text-purple-600">{company?.seatsUsed ?? 0}</span>
+                    <span className="text-gray-600"> / {company?.seatLimit ?? 0} seats used</span>
                   </div>
                 </div>
-                {company && company.seatsUsed >= company.seatLimit && (
+                {company && (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) && (
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-4">
                     <p className="text-sm text-yellow-800">
                       <strong>Seat limit reached.</strong> Upgrade your plan to add more team members.
@@ -626,13 +631,13 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center overflow-hidden">
                           {member.profilePhoto ? (
-                            <img src={member.profilePhoto} alt={member.firstName} className="w-full h-full object-cover" />
+                            <img src={member.profilePhoto} alt={member.firstName || member.name} className="w-full h-full object-cover" />
                           ) : (
                             <User size={24} className="text-white" />
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900">{member.firstName} {member.lastName}</div>
+                          <div className="font-bold text-gray-900">{member.firstName || member.name} {member.lastName || ''}</div>
                           <div className="text-sm text-gray-600">{member.email}</div>
                           {member.jobTitle && (
                             <div className="text-xs text-gray-500 mt-1">{member.jobTitle}</div>
@@ -671,7 +676,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 {!inviteCode ? (
                   <button
                     onClick={handleGenerateInvite}
-                    disabled={company && company.seatsUsed >= company.seatLimit}
+                    disabled={company ? (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) : false}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Mail size={20} />
@@ -719,10 +724,10 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   </div>
                 )}
 
-                {company && company.seatsUsed >= company.seatLimit && (
+                {company && (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) && (
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mt-4">
                     <p className="text-sm text-yellow-800">
-                      <strong>No seats available.</strong> You've reached your limit of {company.seatLimit} users. Upgrade to add more team members.
+                      <strong>No seats available.</strong> You've reached your limit of {company.seatLimit ?? 0} users. Upgrade to add more team members.
                     </p>
                   </div>
                 )}

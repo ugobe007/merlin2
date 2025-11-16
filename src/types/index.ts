@@ -16,7 +16,7 @@ export interface User {
   jobTitle?: string;
   avatar?: string;
   profilePhoto?: string;
-  linkedin?: string;
+  linkedIn?: string; // Match authService field name
   website?: string;
   companyWebsite?: string;
   bio?: string;
