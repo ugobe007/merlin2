@@ -1138,8 +1138,8 @@ export function calculateAdvancedFinancialMetrics(
   const initialInvestment = systemCost.totalCost - taxModel.federalTaxCredit - taxModel.stateTaxCredit - taxModel.localIncentives;
   const cashFlow = calculateCashFlowAnalysis(initialInvestment, annualCashFlows, taxModel.taxShield, inputs.discountRate);
   
-  // Financial metrics calculation
-  const metrics = calculateFinancialMetrics(cashFlow, inputs.discountRate);
+  // Financial metrics calculation (using renamed internal function)
+  const metrics = calculateDCFMetrics(cashFlow, inputs.discountRate);
   
   return {
     metrics,
@@ -1298,9 +1298,11 @@ function calculateCashFlowAnalysis(
 }
 
 /**
- * Calculate comprehensive financial metrics
+ * Calculate comprehensive DCF (Discounted Cash Flow) metrics
+ * @internal - For use within advancedFinancialModeling only
+ * @note Renamed from calculateFinancialMetrics to avoid collision with centralizedCalculations
  */
-function calculateFinancialMetrics(cashFlow: CashFlowAnalysis, discountRate: number): FinancialMetrics {
+function calculateDCFMetrics(cashFlow: CashFlowAnalysis, discountRate: number): FinancialMetrics {
   // NPV calculation
   const npv = cashFlow.cumulativeDiscountedCashFlows[cashFlow.cumulativeDiscountedCashFlows.length - 1] + 
               cashFlow.terminalValue / Math.pow(1 + discountRate, cashFlow.annualCashFlows.length);

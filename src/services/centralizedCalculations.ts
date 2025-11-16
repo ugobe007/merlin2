@@ -64,6 +64,12 @@ export interface FinancialCalculationInput {
   installationCost?: number;
   shippingCost?: number;
   tariffCost?: number;
+  
+  // Advanced financial parameters (optional)
+  projectLifetimeYears?: number;  // Default: 25
+  discountRate?: number;          // Default: 8% (WACC)
+  priceEscalationRate?: number;   // Default: 2% (inflation)
+  includeNPV?: boolean;           // Default: true
 }
 
 export interface FinancialCalculationResult {
@@ -84,10 +90,16 @@ export interface FinancialCalculationResult {
   windSavings: number;
   annualSavings: number;
   
-  // ROI Metrics
+  // ROI Metrics (Simple)
   paybackYears: number;
   roi10Year: number;
   roi25Year: number;
+  
+  // Advanced Metrics (NPV/IRR with degradation)
+  npv?: number;                    // Net Present Value
+  irr?: number;                    // Internal Rate of Return (%)
+  discountedPayback?: number;      // Payback with time value of money
+  levelizedCostOfStorage?: number; // LCOS ($/MWh)
   
   // Metadata
   calculationDate: Date;
@@ -297,7 +309,72 @@ export async function calculateFinancialMetrics(
   });
   
   // ===================================
-  // 4. RETURN COMPLETE RESULTS
+  // 4. CALCULATE ADVANCED METRICS (NPV/IRR)
+  // ===================================
+  
+  const includeNPV = input.includeNPV !== false; // Default to true
+  const projectYears = input.projectLifetimeYears || 25;
+  const discountRate = (input.discountRate || 8) / 100; // Convert to decimal
+  const escalationRate = (input.priceEscalationRate || 2) / 100; // Convert to decimal
+  
+  let npv: number | undefined;
+  let irr: number | undefined;
+  let discountedPayback: number | undefined;
+  let levelizedCostOfStorage: number | undefined;
+  
+  if (includeNPV && annualSavings > 0) {
+    // NPV Calculation with degradation and price escalation
+    npv = -netCost; // Initial investment
+    let cumulativeDiscountedCashFlow = 0;
+    let totalLifetimeEnergy = 0;
+    
+    for (let year = 1; year <= projectYears; year++) {
+      // Apply degradation to system performance
+      const degradationFactor = Math.pow(1 - constants.DEGRADATION_RATE_ANNUAL, year - 1);
+      
+      // Apply price escalation to revenue
+      const escalationFactor = Math.pow(1 + escalationRate, year - 1);
+      
+      // Calculate year's cash flow
+      const yearRevenue = annualSavings * degradationFactor * escalationFactor;
+      const yearOpex = netCost * constants.OM_COST_PERCENT; // Annual O&M
+      const yearCashFlow = yearRevenue - yearOpex;
+      
+      // Discount to present value
+      const discountFactor = Math.pow(1 + discountRate, year);
+      const discountedCashFlow = yearCashFlow / discountFactor;
+      
+      npv += discountedCashFlow;
+      cumulativeDiscountedCashFlow += discountedCashFlow;
+      
+      // Calculate discounted payback (when cumulative NPV > 0)
+      if (!discountedPayback && (cumulativeDiscountedCashFlow + netCost) > 0) {
+        discountedPayback = year;
+      }
+      
+      // Track total energy for LCOS
+      totalLifetimeEnergy += totalEnergyMWh * degradationFactor;
+    }
+    
+    // IRR Approximation (simplified calculation)
+    // For exact IRR, we'd need iterative solver (Newton-Raphson)
+    const totalUndiscountedCashFlows = annualSavings * projectYears;
+    irr = netCost > 0 ? (((totalUndiscountedCashFlows / netCost) - 1) / projectYears) * 100 : 0;
+    
+    // Levelized Cost of Storage (LCOS)
+    const totalLifetimeCosts = netCost + (netCost * constants.OM_COST_PERCENT * projectYears);
+    levelizedCostOfStorage = totalLifetimeEnergy > 0 ? totalLifetimeCosts / totalLifetimeEnergy : 0;
+    
+    console.log('📈 Advanced metrics:', {
+      npv: npv.toFixed(0),
+      irr: irr.toFixed(2) + '%',
+      discountedPayback: discountedPayback?.toFixed(1) + ' years',
+      lcos: levelizedCostOfStorage.toFixed(2) + ' $/MWh'
+    });
+  }
+  
+  // ===================================
+  // 5. RETURN COMPLETE RESULTS
   // ===================================
   
   return {
@@ -318,14 +395,20 @@ export async function calculateFinancialMetrics(
     windSavings,
     annualSavings,
     
-    // ROI Metrics
+    // ROI Metrics (Simple)
     paybackYears,
     roi10Year,
     roi25Year,
     
+    // Advanced Metrics (NPV/IRR with degradation)
+    npv,
+    irr,
+    discountedPayback,
+    levelizedCostOfStorage,
+    
     // Metadata
     calculationDate: new Date(),
-    formulaVersion: '1.0.0',
+    formulaVersion: '2.0.0', // Updated to include NPV/IRR
     dataSource: constants.dataSource,
     constantsUsed: constants
   };
