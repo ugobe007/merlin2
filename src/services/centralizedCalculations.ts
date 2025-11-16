@@ -109,6 +109,92 @@ export interface FinancialCalculationResult {
 }
 
 // ============================================
+// ADVANCED FINANCIAL ANALYSIS INTERFACES
+// ============================================
+
+export interface SensitivityAnalysisResult {
+  parameters: Record<string, {
+    baseValue: number;
+    variations: number[];
+    npvImpact: number[];
+    irrImpact: number[];
+    elasticity: number; // % change in NPV per % change in parameter
+  }>;
+  tornadoChart: Array<{
+    parameter: string;
+    parameterLabel: string;
+    impact: number;
+    direction: 'positive' | 'negative';
+  }>;
+  mostSensitiveParameters: string[];
+}
+
+export interface RiskAnalysisResult {
+  statistics: {
+    meanNPV: number;
+    medianNPV: number;
+    stdDevNPV: number;
+    coefficientOfVariation: number;
+    meanIRR: number;
+    stdDevIRR: number;
+  };
+  valueAtRisk: {
+    var95: number; // 95% confidence level - worst case at 95% probability
+    var99: number; // 99% confidence level
+    expectedShortfall: number; // Average loss beyond VaR95
+  };
+  probabilityOfSuccess: number; // P(NPV > 0)
+  scenarios: {
+    best: { npv: number; irr: number };
+    worst: { npv: number; irr: number };
+    median: { npv: number; irr: number };
+  };
+  distributionData: Array<{ npv: number; frequency: number }>; // For histogram
+}
+
+export interface ScenarioAnalysisResult {
+  optimistic: {
+    assumptions: string[];
+    npv: number;
+    irr: number;
+    paybackYears: number;
+    roi25Year: number;
+  };
+  base: {
+    assumptions: string[];
+    npv: number;
+    irr: number;
+    paybackYears: number;
+    roi25Year: number;
+  };
+  pessimistic: {
+    assumptions: string[];
+    npv: number;
+    irr: number;
+    paybackYears: number;
+    roi25Year: number;
+  };
+  comparisons: {
+    npvSpread: number;
+    irrSpread: number;
+    paybackSpread: number;
+  };
+}
+
+export interface AdvancedFinancialMetrics extends FinancialCalculationResult {
+  // Add advanced metrics to existing result interface
+  mirr?: number; // Modified Internal Rate of Return
+  sensitivityAnalysis?: SensitivityAnalysisResult;
+  riskAnalysis?: RiskAnalysisResult;
+  scenarioAnalysis?: ScenarioAnalysisResult;
+  degradationProfile?: {
+    yearlyCapacityRetention: number[];
+    effectiveLifeYears: number;
+    averageAnnualDegradation: number;
+  };
+}
+
+// ============================================
 // DATABASE CONSTANTS FETCHER
 // ============================================
 
@@ -442,6 +528,401 @@ export function refreshConstantsCache(): void {
   cachedConstants = null;
   cacheTimestamp = 0;
   console.log('🔄 Calculation constants cache cleared');
+}
+
+// ============================================
+// ADVANCED FINANCIAL ANALYSIS FUNCTIONS
+// ============================================
+
+/**
+ * Calculate Modified Internal Rate of Return (MIRR)
+ * More realistic than IRR because it assumes reinvestment at a specified rate
+ */
+export function calculateMIRR(
+  cashFlows: number[], 
+  financeRate: number, 
+  reinvestmentRate: number
+): number {
+  const n = cashFlows.length - 1;
+  
+  // Calculate present value of negative cash flows (financing cost)
+  const pvNegative = cashFlows
+    .map((cf, i) => cf < 0 ? cf / Math.pow(1 + financeRate, i) : 0)
+    .reduce((sum, pv) => sum + pv, 0);
+  
+  // Calculate future value of positive cash flows (reinvestment)
+  const fvPositive = cashFlows
+    .map((cf, i) => cf > 0 ? cf * Math.pow(1 + reinvestmentRate, n - i) : 0)
+    .reduce((sum, fv) => sum + fv, 0);
+  
+  if (pvNegative === 0) return 0;
+  
+  return Math.pow(fvPositive / Math.abs(pvNegative), 1 / n) - 1;
+}
+
+/**
+ * Perform Sensitivity Analysis
+ * Shows how changes in key parameters affect NPV and IRR
+ */
+export async function performSensitivityAnalysis(
+  baseInputs: FinancialCalculationInput,
+  parametersToTest: string[] = ['electricityRate', 'storageSizeMW', 'discountRate', 'projectLifetimeYears'],
+  variationPercent: number = 0.20 // ±20% by default
+): Promise<SensitivityAnalysisResult> {
+  
+  const variationRange = [-variationPercent, -variationPercent/2, 0, variationPercent/2, variationPercent];
+  const results: Record<string, any> = {};
+  const tornadoData: Array<any> = [];
+  
+  // Calculate base case
+  const baseResult = await calculateFinancialMetrics(baseInputs);
+  
+  for (const paramName of parametersToTest) {
+    const npvImpacts: number[] = [];
+    const irrImpacts: number[] = [];
+    let baseValue = 0;
+    
+    for (const variation of variationRange) {
+      const modifiedInputs = { ...baseInputs };
+      
+      switch (paramName) {
+        case 'electricityRate':
+          baseValue = baseInputs.electricityRate;
+          modifiedInputs.electricityRate = baseValue * (1 + variation);
+          break;
+        case 'storageSizeMW':
+          baseValue = baseInputs.storageSizeMW;
+          modifiedInputs.storageSizeMW = baseValue * (1 + variation);
+          break;
+        case 'discountRate':
+          baseValue = baseInputs.discountRate || 0.08;
+          modifiedInputs.discountRate = baseValue * (1 + variation);
+          break;
+        case 'projectLifetimeYears':
+          baseValue = baseInputs.projectLifetimeYears || 25;
+          modifiedInputs.projectLifetimeYears = Math.round(baseValue * (1 + variation));
+          break;
+        case 'priceEscalationRate':
+          baseValue = baseInputs.priceEscalationRate || 0.02;
+          modifiedInputs.priceEscalationRate = baseValue * (1 + variation);
+          break;
+      }
+      
+      const result = await calculateFinancialMetrics(modifiedInputs);
+      npvImpacts.push(result.npv || 0);
+      irrImpacts.push(result.irr || 0);
+    }
+    
+    // Calculate elasticity (% change in NPV per % change in parameter)
+    const baseNPV = baseResult.npv || 0;
+    const elasticity = baseNPV !== 0 
+      ? ((npvImpacts[3] - npvImpacts[1]) / baseNPV) / variationPercent 
+      : 0;
+    
+    results[paramName] = {
+      baseValue,
+      variations: variationRange,
+      npvImpact: npvImpacts,
+      irrImpact: irrImpacts,
+      elasticity
+    };
+    
+    // Calculate tornado chart impact (range of NPV swing)
+    const maxNPV = Math.max(...npvImpacts);
+    const minNPV = Math.min(...npvImpacts);
+    const impact = maxNPV - minNPV;
+    
+    tornadoData.push({
+      parameter: paramName,
+      parameterLabel: formatParameterLabel(paramName),
+      impact,
+      direction: npvImpacts[4] > npvImpacts[0] ? 'positive' as const : 'negative' as const
+    });
+  }
+  
+  // Sort tornado chart by impact magnitude (most sensitive first)
+  tornadoData.sort((a, b) => b.impact - a.impact);
+  
+  return {
+    parameters: results,
+    tornadoChart: tornadoData,
+    mostSensitiveParameters: tornadoData.slice(0, 3).map(d => d.parameter)
+  };
+}
+
+/**
+ * Perform Risk Analysis using Monte Carlo Simulation
+ * Generates probability distribution of financial outcomes
+ */
+export async function performRiskAnalysis(
+  baseInputs: FinancialCalculationInput,
+  numSimulations: number = 1000
+): Promise<RiskAnalysisResult> {
+  
+  const npvResults: number[] = [];
+  const irrResults: number[] = [];
+  
+  // Run Monte Carlo simulation
+  for (let i = 0; i < numSimulations; i++) {
+    // Generate random variations (±30% for most parameters)
+    const modifiedInputs: FinancialCalculationInput = {
+      ...baseInputs,
+      electricityRate: baseInputs.electricityRate * (0.7 + Math.random() * 0.6),
+      storageSizeMW: baseInputs.storageSizeMW * (0.9 + Math.random() * 0.2),
+      discountRate: Math.max(0.03, (baseInputs.discountRate || 0.08) * (0.8 + Math.random() * 0.4)),
+      priceEscalationRate: Math.max(0, (baseInputs.priceEscalationRate || 0.02) * (0.5 + Math.random() * 1.0))
+    };
+    
+    const result = await calculateFinancialMetrics(modifiedInputs);
+    npvResults.push(result.npv || 0);
+    irrResults.push(result.irr || 0);
+  }
+  
+  // Sort results for percentile calculations
+  const sortedNPV = [...npvResults].sort((a, b) => a - b);
+  const sortedIRR = [...irrResults].sort((a, b) => a - b);
+  
+  // Calculate statistics
+  const meanNPV = npvResults.reduce((sum, val) => sum + val, 0) / numSimulations;
+  const meanIRR = irrResults.reduce((sum, val) => sum + val, 0) / numSimulations;
+  const medianNPV = sortedNPV[Math.floor(numSimulations / 2)];
+  const medianIRR = sortedIRR[Math.floor(numSimulations / 2)];
+  
+  const varianceNPV = npvResults.reduce((sum, val) => sum + Math.pow(val - meanNPV, 2), 0) / numSimulations;
+  const stdDevNPV = Math.sqrt(varianceNPV);
+  const varianceIRR = irrResults.reduce((sum, val) => sum + Math.pow(val - meanIRR, 2), 0) / numSimulations;
+  const stdDevIRR = Math.sqrt(varianceIRR);
+  
+  const coefficientOfVariation = meanNPV !== 0 ? stdDevNPV / Math.abs(meanNPV) : 0;
+  
+  // Value at Risk calculations
+  const var95Index = Math.floor(numSimulations * 0.05);
+  const var99Index = Math.floor(numSimulations * 0.01);
+  const var95 = sortedNPV[var95Index];
+  const var99 = sortedNPV[var99Index];
+  
+  // Expected Shortfall (average of worst 5%)
+  const expectedShortfall = sortedNPV.slice(0, var95Index)
+    .reduce((sum, val) => sum + val, 0) / var95Index;
+  
+  // Probability of success (NPV > 0)
+  const successCount = npvResults.filter(npv => npv > 0).length;
+  const probabilityOfSuccess = successCount / numSimulations;
+  
+  // Create histogram data (20 bins)
+  const numBins = 20;
+  const minNPV = Math.min(...npvResults);
+  const maxNPV = Math.max(...npvResults);
+  const binSize = (maxNPV - minNPV) / numBins;
+  const distributionData: Array<{ npv: number; frequency: number }> = [];
+  
+  for (let i = 0; i < numBins; i++) {
+    const binStart = minNPV + i * binSize;
+    const binEnd = binStart + binSize;
+    const count = npvResults.filter(npv => npv >= binStart && npv < binEnd).length;
+    distributionData.push({
+      npv: binStart + binSize / 2,
+      frequency: count / numSimulations
+    });
+  }
+  
+  return {
+    statistics: {
+      meanNPV,
+      medianNPV,
+      stdDevNPV,
+      coefficientOfVariation,
+      meanIRR,
+      stdDevIRR
+    },
+    valueAtRisk: {
+      var95,
+      var99,
+      expectedShortfall
+    },
+    probabilityOfSuccess,
+    scenarios: {
+      best: { 
+        npv: sortedNPV[numSimulations - 1], 
+        irr: sortedIRR[numSimulations - 1] 
+      },
+      worst: { 
+        npv: sortedNPV[0], 
+        irr: sortedIRR[0] 
+      },
+      median: { 
+        npv: medianNPV, 
+        irr: medianIRR 
+      }
+    },
+    distributionData
+  };
+}
+
+/**
+ * Perform Scenario Analysis
+ * Compare optimistic, base, and pessimistic cases
+ */
+export async function performScenarioAnalysis(
+  baseInputs: FinancialCalculationInput
+): Promise<ScenarioAnalysisResult> {
+  
+  // Base case
+  const baseResult = await calculateFinancialMetrics(baseInputs);
+  
+  // Optimistic case: +20% revenue factors, -10% costs
+  const optimisticInputs: FinancialCalculationInput = {
+    ...baseInputs,
+    electricityRate: baseInputs.electricityRate * 1.20,
+    storageSizeMW: baseInputs.storageSizeMW * 1.10,
+    priceEscalationRate: (baseInputs.priceEscalationRate || 0.02) * 1.30,
+    equipmentCost: baseInputs.equipmentCost ? baseInputs.equipmentCost * 0.90 : undefined
+  };
+  const optimisticResult = await calculateFinancialMetrics(optimisticInputs);
+  
+  // Pessimistic case: -20% revenue factors, +10% costs
+  const pessimisticInputs: FinancialCalculationInput = {
+    ...baseInputs,
+    electricityRate: baseInputs.electricityRate * 0.80,
+    storageSizeMW: baseInputs.storageSizeMW * 0.90,
+    priceEscalationRate: (baseInputs.priceEscalationRate || 0.02) * 0.70,
+    equipmentCost: baseInputs.equipmentCost ? baseInputs.equipmentCost * 1.10 : undefined
+  };
+  const pessimisticResult = await calculateFinancialMetrics(pessimisticInputs);
+  
+  return {
+    optimistic: {
+      assumptions: [
+        '+20% electricity rates (favorable market)',
+        '+10% system efficiency',
+        '+30% price escalation',
+        '-10% equipment costs'
+      ],
+      npv: optimisticResult.npv || 0,
+      irr: optimisticResult.irr || 0,
+      paybackYears: optimisticResult.paybackYears,
+      roi25Year: optimisticResult.roi25Year
+    },
+    base: {
+      assumptions: [
+        'Current electricity rates',
+        'Standard system efficiency',
+        'Normal price escalation (2-3%)',
+        'Current market equipment costs'
+      ],
+      npv: baseResult.npv || 0,
+      irr: baseResult.irr || 0,
+      paybackYears: baseResult.paybackYears,
+      roi25Year: baseResult.roi25Year
+    },
+    pessimistic: {
+      assumptions: [
+        '-20% electricity rates (unfavorable market)',
+        '-10% system efficiency',
+        '-30% price escalation',
+        '+10% equipment costs'
+      ],
+      npv: pessimisticResult.npv || 0,
+      irr: pessimisticResult.irr || 0,
+      paybackYears: pessimisticResult.paybackYears,
+      roi25Year: pessimisticResult.roi25Year
+    },
+    comparisons: {
+      npvSpread: (optimisticResult.npv || 0) - (pessimisticResult.npv || 0),
+      irrSpread: (optimisticResult.irr || 0) - (pessimisticResult.irr || 0),
+      paybackSpread: pessimisticResult.paybackYears - optimisticResult.paybackYears
+    }
+  };
+}
+
+/**
+ * Enhanced Financial Analysis with All Advanced Metrics
+ * This is the main entry point for professional financial modeling
+ */
+export async function calculateAdvancedFinancialMetrics(
+  input: FinancialCalculationInput,
+  options: {
+    includeMIRR?: boolean;
+    includeSensitivity?: boolean;
+    includeRiskAnalysis?: boolean;
+    includeScenarios?: boolean;
+    numMonteCarloSims?: number;
+    sensitivityParameters?: string[];
+  } = {}
+): Promise<AdvancedFinancialMetrics> {
+  
+  // 1. Get basic metrics
+  const baseMetrics = await calculateFinancialMetrics(input);
+  
+  const result: AdvancedFinancialMetrics = { ...baseMetrics };
+  
+  // 2. Add MIRR if requested
+  if (options.includeMIRR) {
+    const projectLife = input.projectLifetimeYears || 25;
+    const annualSavings = baseMetrics.annualSavings;
+    const initialCost = baseMetrics.totalProjectCost;
+    
+    // Build cash flow array: [initial investment, year 1 savings, year 2 savings, ...]
+    const cashFlows = [-initialCost, ...Array(projectLife).fill(annualSavings)];
+    
+    result.mirr = calculateMIRR(
+      cashFlows,
+      input.discountRate || 0.08,
+      input.discountRate || 0.08
+    );
+  }
+  
+  // 3. Add sensitivity analysis if requested
+  if (options.includeSensitivity) {
+    result.sensitivityAnalysis = await performSensitivityAnalysis(
+      input,
+      options.sensitivityParameters || ['electricityRate', 'storageSizeMW', 'discountRate', 'projectLifetimeYears'],
+      0.20 // ±20% variation
+    );
+  }
+  
+  // 4. Add risk analysis if requested
+  if (options.includeRiskAnalysis) {
+    result.riskAnalysis = await performRiskAnalysis(
+      input,
+      options.numMonteCarloSims || 1000
+    );
+  }
+  
+  // 5. Add scenario analysis if requested
+  if (options.includeScenarios) {
+    result.scenarioAnalysis = await performScenarioAnalysis(input);
+  }
+  
+  // 6. Add degradation profile
+  const constants = await getCachedConstants();
+  const projectLife = input.projectLifetimeYears || 25;
+  const yearlyRetention: number[] = [];
+  
+  for (let year = 0; year <= projectLife; year++) {
+    const retention = Math.pow(1 - constants.DEGRADATION_RATE_ANNUAL, year);
+    yearlyRetention.push(retention);
+  }
+  
+  result.degradationProfile = {
+    yearlyCapacityRetention: yearlyRetention,
+    effectiveLifeYears: yearlyRetention.findIndex(r => r < 0.80) || projectLife,
+    averageAnnualDegradation: constants.DEGRADATION_RATE_ANNUAL
+  };
+  
+  return result;
+}
+
+// Helper function for parameter labels
+function formatParameterLabel(paramName: string): string {
+  const labels: Record<string, string> = {
+    electricityRate: 'Electricity Rate ($/kWh)',
+    storageSizeMW: 'Storage Size (MW)',
+    discountRate: 'Discount Rate (%)',
+    projectLifetimeYears: 'Project Lifetime (years)',
+    priceEscalationRate: 'Price Escalation (%)'
+  };
+  return labels[paramName] || paramName;
 }
 
 // ============================================

@@ -15,6 +15,7 @@ import CalculationModal from './CalculationModal';
 import SaveProjectModal from './SaveProjectModal';
 import LoadProjectModal from './LoadProjectModal';
 import AdvancedAnalytics from '../AdvancedAnalytics';
+import ProfessionalFinancialModeling from '../ProfessionalFinancialModeling';
 import EnhancedBESSAnalytics from '../EnhancedBESSAnalytics';
 import FinancingCalculator from '../FinancingCalculator';
 import UseCaseTemplates from '../UseCaseTemplates';
@@ -54,6 +55,7 @@ interface ModalManagerProps {
   showSaveProjectModal: boolean;
   showLoadProjectModal: boolean;
   showAnalytics: boolean;
+  showProfessionalAnalytics: boolean;
   showBESSAnalytics: boolean;
   showFinancing: boolean;
   showTemplates: boolean;
@@ -91,6 +93,7 @@ interface ModalManagerProps {
   setShowSaveProjectModal: (show: boolean) => void;
   setShowLoadProjectModal: (show: boolean) => void;
   setShowAnalytics: (show: boolean) => void;
+  setShowProfessionalAnalytics: (show: boolean) => void;
   setShowBESSAnalytics: (show: boolean) => void;
   setShowFinancing: (show: boolean) => void;
   setShowTemplates: (show: boolean) => void;
@@ -181,7 +184,7 @@ export default function ModalManager(props: ModalManagerProps) {
     // Modal states
     showUserProfile, showPortfolio, showAuthModal, showVendorManager, showPricingPlans,
     showWelcomeModal, showAccountSetup, showEnhancedProfile, showJoinModal, showSmartWizard,
-    showCalculationModal, showSaveProjectModal, showLoadProjectModal, showAnalytics, showBESSAnalytics, showFinancing,
+    showCalculationModal, showSaveProjectModal, showLoadProjectModal, showAnalytics, showProfessionalAnalytics, showBESSAnalytics, showFinancing,
     showTemplates, showChatModal, showPricingDataCapture, showMarketIntelligence, showVendorSponsorship,
     showPrivacyPolicy, showTermsOfService, showSecuritySettings, showSystemHealth, showStatusPage,
     showUtilityRates, showQuoteTemplates, showPricingPresets, showReviewWorkflow,
@@ -194,7 +197,7 @@ export default function ModalManager(props: ModalManagerProps) {
     // Modal setters
     setShowUserProfile, setShowPortfolio, setShowAuthModal, setShowVendorManager, setShowPricingPlans,
     setShowWelcomeModal, setShowAccountSetup, setShowEnhancedProfile, setShowJoinModal, setShowSmartWizard,
-    setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowAnalytics, setShowBESSAnalytics, setShowFinancing,
+    setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowAnalytics, setShowProfessionalAnalytics, setShowBESSAnalytics, setShowFinancing,
     setShowTemplates, setShowChatModal, setShowPricingDataCapture, setShowMarketIntelligence, setShowVendorSponsorship,
     setShowPrivacyPolicy, setShowTermsOfService, setShowSecuritySettings, setShowSystemHealth, setShowStatusPage,
     setShowUtilityRates, setShowQuoteTemplates, setShowPricingPresets, setShowReviewWorkflow,
@@ -426,6 +429,31 @@ export default function ModalManager(props: ModalManagerProps) {
             />
           </div>
         </div>,
+        document.body
+      )}
+
+      {/* Professional Financial Modeling Modal */}
+      {showProfessionalAnalytics && createPortal(
+        <ProfessionalFinancialModeling
+          isOpen={showProfessionalAnalytics}
+          onClose={() => setShowProfessionalAnalytics(false)}
+          projectData={{
+            quoteName,
+            powerMW,
+            durationHours: standbyHours,
+            totalCapEx: grandCapEx,
+            annualSavings,
+            electricityRate: valueKwh || 0.12,
+            location: location || 'United States',
+            batteryLifeYears: 25,
+            discountRate: 0.08
+          }}
+          userTier="free"
+          onUpgradeClick={() => {
+            setShowProfessionalAnalytics(false);
+            setShowPricingPlans(true);
+          }}
+        />,
         document.body
       )}
 

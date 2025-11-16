@@ -32,6 +32,7 @@ export default function BessQuoteBuilder() {
   // Local state to track if wizard should start in advanced mode
   const [startWizardInAdvancedMode, setStartWizardInAdvancedMode] = useState(false);
   // Local state to track if wizard should skip intro
+  const [showProfessionalAnalytics, setShowProfessionalAnalytics] = useState(false);
   const [skipWizardIntro, setSkipWizardIntro] = useState(false);
   // Local state to track the initial view for Advanced Quote Builder
   const [advancedQuoteBuilderInitialView, setAdvancedQuoteBuilderInitialView] = useState<'landing' | 'custom-config'>('landing');
@@ -265,7 +266,7 @@ export default function BessQuoteBuilder() {
     {
       showUserProfile, showPortfolio, showAuthModal, showVendorManager, showPricingPlans,
       showWelcomeModal, showAccountSetup, showEnhancedProfile, showJoinModal, showSmartWizard,
-      showCalculationModal, showSaveProjectModal, showLoadProjectModal, showAnalytics, showBESSAnalytics, showFinancing,
+      showCalculationModal, showSaveProjectModal, showLoadProjectModal, showAnalytics, showProfessionalAnalytics, showBESSAnalytics, showFinancing,
       showTemplates, showChatModal, showPricingDataCapture, showMarketIntelligence, showVendorSponsorship,
       showPrivacyPolicy, showTermsOfService, showSecuritySettings, showSystemHealth, showStatusPage,
       showUtilityRates, showQuoteTemplates, showPricingPresets, showReviewWorkflow,
@@ -275,7 +276,7 @@ export default function BessQuoteBuilder() {
     {
       setShowUserProfile, setShowPortfolio, setShowAuthModal, setShowVendorManager, setShowPricingPlans,
       setShowWelcomeModal, setShowAccountSetup, setShowEnhancedProfile, setShowJoinModal, setShowSmartWizard,
-      setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowAnalytics, setShowBESSAnalytics, setShowFinancing,
+      setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowAnalytics, setShowProfessionalAnalytics, setShowBESSAnalytics, setShowFinancing,
       setShowTemplates, setShowChatModal, setShowPricingDataCapture, setShowMarketIntelligence, setShowVendorSponsorship,
       setShowPrivacyPolicy, setShowTermsOfService, setShowSecuritySettings, setShowSystemHealth, setShowStatusPage,
       setShowUtilityRates, setShowQuoteTemplates, setShowPricingPresets, setShowReviewWorkflow,
