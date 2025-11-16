@@ -46,6 +46,8 @@ export interface GetUseCaseParams {
   autonomyDays?: number;
 }
 
+import type { PowerProfile, FinancialParams, SolarCompatibility, CustomQuestion, IndustryStandards, CalculationResults } from '@/types';
+
 export interface UseCaseWithCalculations {
   template: {
     id: string;
@@ -55,12 +57,12 @@ export interface UseCaseWithCalculations {
     icon: string;
     image_url: string | null;
     category: string;
-    powerProfile: any;
-    financialParams: any;
-    solarCompatibility: any;
-    customQuestions: any[];
+    powerProfile: Partial<PowerProfile> | null; // DB data may be incomplete or null
+    financialParams: Partial<FinancialParams> | null; // DB data may be incomplete or null
+    solarCompatibility: Partial<SolarCompatibility> | null; // DB data may be incomplete or null
+    customQuestions: CustomQuestion[];
     recommendedApplications: string[];
-    industryStandards: any;
+    industryStandards: Partial<IndustryStandards> | null; // DB data may be incomplete or null
     version: string;
   };
   equipment: {
@@ -72,11 +74,7 @@ export interface UseCaseWithCalculations {
     category: string;
     dataSource: string;
   }[];
-  calculations: {
-    financial: any;
-    sizing: any;
-    solar: any | null;
-  };
+  calculations: CalculationResults;
   fromCache: boolean;
   executionTimeMs: number;
 }
@@ -237,16 +235,36 @@ export async function getUseCaseWithCalculations(
     }
 
     const results = {
-      template,
+      template: templateData,
       equipment,
       calculations: {
-        financial: bessCalculations,
-        sizing,
-        solar: solarCalculations
+        financial: {
+          netCapex: bessCalculations.capex,
+          annualRevenue: bessCalculations.annualRevenue,
+          annualSavings: bessCalculations.annualRevenue - bessCalculations.annualOpex,
+          paybackYears: bessCalculations.paybackYears,
+          roi: (bessCalculations.netPresentValue / bessCalculations.capex) * 100,
+          npv: bessCalculations.netPresentValue,
+          irr: bessCalculations.internalRateOfReturn,
+        },
+        sizing: {
+          batteryMW: sizing.recommendedPowerMW,
+          durationHours: sizing.recommendedDurationHours,
+          energyMWh: sizing.recommendedCapacityMWh,
+          solarMW: 0, // TODO: Extract from solarCalculations when structure is fixed
+          windMW: 0,
+          generatorMW: 0,
+        },
+        performance: {
+          cyclesPerYear: 365,
+          degradationRate: 0.02,
+          roundtripEfficiency: 0.85,
+          capacityFactor: 0.25,
+        },
       },
       fromCache: false,
       executionTimeMs: Date.now() - startTime
-    };
+    } as UseCaseWithCalculations;
 
     // STEP 6: Cache results
     await saveToCalculationCache(cacheKey, results, Date.now() - startTime);
@@ -498,13 +516,33 @@ async function fetchFromStaticTemplates(
     template,
     equipment,
     calculations: {
-      financial: bessCalculations,
-      sizing,
-      solar: solarCalculations
+      financial: {
+        netCapex: bessCalculations.capex,
+        annualRevenue: bessCalculations.annualRevenue,
+        annualSavings: bessCalculations.annualRevenue - bessCalculations.annualOpex,
+        paybackYears: bessCalculations.paybackYears,
+        roi: (bessCalculations.netPresentValue / bessCalculations.capex) * 100,
+        npv: bessCalculations.netPresentValue,
+        irr: bessCalculations.internalRateOfReturn,
+      },
+      sizing: {
+        batteryMW: sizing.recommendedPowerMW,
+        durationHours: sizing.recommendedDurationHours,
+        energyMWh: sizing.recommendedCapacityMWh,
+        solarMW: 0, // TODO: Extract from solarCalculations when structure is fixed
+        windMW: 0,
+        generatorMW: 0,
+      },
+      performance: {
+        cyclesPerYear: 365,
+        degradationRate: 0.02,
+        roundtripEfficiency: 0.85,
+        capacityFactor: 0.25,
+      },
     },
     fromCache: false,
     executionTimeMs: Date.now() - startTime
-  };
+  } as UseCaseWithCalculations;
 }
 
 // ============================================================================

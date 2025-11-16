@@ -11,24 +11,12 @@
  */
 
 import type { QuoteDocument } from '../types/QuoteDocument';
+import type { WizardState } from '@/types';
 
 /**
  * Convert legacy wizard state to QuoteDocument format
  */
-export function legacyWizardToQuote(wizardState: {
-  selectedTemplate: string;
-  useCaseData: { [key: string]: any };
-  storageSizeMW: number;
-  durationHours: number;
-  solarMW: number;
-  windMW: number;
-  generatorMW: number;
-  electricityRate: number;
-  demandCharge: number;
-  selectedState: string;
-  selectedUtility: string;
-  [key: string]: any;
-}): Partial<QuoteDocument> {
+export function legacyWizardToQuote(wizardState: WizardState): Partial<QuoteDocument> {
   
   const solarMW = wizardState.solarMW || 0;
   const windMW = wizardState.windMW || 0;
