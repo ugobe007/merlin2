@@ -98,26 +98,6 @@ const Step4_QuoteSummary: React.FC<Step4_QuoteSummaryProps> = ({
   onEditConfiguration,
   industryData,
 }) => {
-  // 🐛 DEBUG: Log payback value received by Step4_QuoteSummary
-  console.log('🔍 [Step4_QuoteSummary] Received paybackYears:', paybackYears);
-  console.log('🔍 [Step4_QuoteSummary] Received annualSavings:', annualSavings);
-  console.log('🔍 [Step4_QuoteSummary] Received netCostAfterTaxCredit:', netCostAfterTaxCredit);
-  console.log('🔍 [Step4_QuoteSummary] Received configuration:', {
-    solarSpaceConfig,
-    evChargerConfig,
-    windConfig,
-    generatorConfig
-  });
-  
-  // 🔍 DEBUG: Log POWER VALUES to diagnose 0.3MW issue
-  console.log('⚡ [QuoteSummary] POWER VALUES:', {
-    storageSizeMW: storageSizeMW,
-    solarMW: solarMW,
-    windMW: windMW,
-    generatorMW: generatorMW,
-    calculatedTotal: (storageSizeMW + solarMW + windMW + generatorMW),
-    displayTotal: (storageSizeMW + solarMW + windMW + generatorMW).toFixed(1) + ' MW'
-  });
   
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState('epc');

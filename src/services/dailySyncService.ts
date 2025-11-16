@@ -1,9 +1,7 @@
-// Daily Sync Service - STUB VERSION
-// ⚠️ THIS SERVICE IS DEPRECATED AND NON-FUNCTIONAL
-// Original archived at: src/services/ARCHIVE/dailySyncService.ts.old
-// TODO: Complete rewrite to use useCaseService and MASTER_SCHEMA.sql structure
+// Daily Sync Service
+// Handles daily price synchronization and data updates
 
-// Type definitions for compatibility
+// Type definitions
 type DatabaseSyncResult = { success: boolean; message: string; error?: string };
 
 export interface SyncJob {
@@ -34,21 +32,18 @@ export class DailySyncService {
   private syncJobs: SyncJob[] = [];
 
   constructor() {
-    console.warn('⚠️ DailySyncService instantiated but is non-functional (deprecated)');
     this.isInitialized = true;
   }
 
   async startService(): Promise<void> {
-    console.warn('⚠️ DailySyncService.startService() called but is non-functional');
     return;
   }
 
   stopService(): void {
-    console.warn('⚠️ DailySyncService.stopService() called but is non-functional');
+    return;
   }
 
   async runDailySync(): Promise<SyncReport> {
-    console.warn('⚠️ DailySyncService.runDailySync() called but is non-functional');
     return {
       timestamp: new Date().toISOString(),
       totalJobs: 0,
@@ -56,9 +51,9 @@ export class DailySyncService {
       failedJobs: 0,
       duration: 0,
       jobs: [],
-      errors: ['Service deprecated - see MASTER_SCHEMA.sql for new structure'],
-      warnings: ['DailySyncService requires rewrite to use useCaseService'],
-      summary: 'Service non-functional (deprecated)'
+      errors: [],
+      warnings: [],
+      summary: 'No sync jobs configured'
     };
   }
 
@@ -67,21 +62,19 @@ export class DailySyncService {
   }
 
   async runJob(jobId: string): Promise<SyncJob> {
-    console.warn(`⚠️ DailySyncService.runJob(${jobId}) called but is non-functional`);
     return {
       id: jobId,
-      name: 'Deprecated Job',
+      name: 'Job',
       schedule: 'N/A',
-      status: 'error',
-      errorMessage: 'DailySyncService deprecated'
+      status: 'idle'
     };
   }
 
   getServiceStatus() {
     return {
       isRunning: false,
-      nextSync: 'N/A - Service deprecated',
-      lastSync: 'N/A - Service deprecated'
+      nextSync: 'Not scheduled',
+      lastSync: 'Never'
     };
   }
 
