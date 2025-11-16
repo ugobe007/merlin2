@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, User, Settings, Users, Mail, Building2, Copy, Check, UserCog, Shield, Camera, Globe, Linkedin, Phone, Share2, Eye, EyeOff, ExternalLink, Save } from 'lucide-react';
 import { authService } from '../services/authService';
+import type { User as UserType, Company, TeamMember } from '@/types';
 
 interface EditableUserProfileProps {
   isLoggedIn: boolean;
@@ -16,16 +17,16 @@ type Tab = 'profile' | 'team' | 'invites';
 
 const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, onClose, onLoginSuccess, onLogout, onShowQuoteTemplates, onShowPricingPresets, onShowVendorLeads }) => {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
-  const [user, setUser] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [inviteCode, setInviteCode] = useState<string>('');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [copiedProfile, setCopiedProfile] = useState(false);
   
   // Edit mode states
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<any>({});
+  const [editedData, setEditedData] = useState<Partial<UserType>>({});
   const [saved, setSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
