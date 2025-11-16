@@ -473,8 +473,8 @@ class LocalStorageAuthService {
 // Export singleton instance
 export const authService = new LocalStorageAuthService();
 
-// Debug helper: Make auth utilities available in browser console
-if (typeof window !== 'undefined') {
+// Debug helper: Make auth utilities available in browser console (DEV only)
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   (window as any).authDebug = {
     // List all accounts
     listAccounts: () => {
