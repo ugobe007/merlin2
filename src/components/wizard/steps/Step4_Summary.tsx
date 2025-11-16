@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { UTILITY_RATES } from '../../../utils/energyCalculations';
+import { UTILITY_RATES } from '@/utils/energyCalculations';
 
 interface Step4Props {
     power: number;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
+import { formatSolarCapacity } from '@/utils/solarSizingUtils';
 
 interface Step6_FinalOutputProps {
   quoteData: {

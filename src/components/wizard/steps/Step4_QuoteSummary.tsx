@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Zap, Settings, Truck, Wrench, Edit, FileText } from 'lucide-react';
 import ConsultationModal from '../../modals/ConsultationModal';
-import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '../../../utils/equipmentCalculations';
-import { formatSolarCapacity } from '../../../utils/solarSizingUtils';
+import { calculateEquipmentBreakdown, formatCurrency, formatNumber, type EquipmentBreakdown } from '@/utils/equipmentCalculations';
+import { formatSolarCapacity } from '@/utils/solarSizingUtils';
 import AIStatusIndicator from '../AIStatusIndicator';
 import SimpleVirtualQuoteViewer from '../SimpleVirtualQuoteViewer';
 

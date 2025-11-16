@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { aiStateService } from '../../../services/aiStateService';
+import { aiStateService } from '@/services/aiStateService';
 import AIStatusIndicator from '../AIStatusIndicator';
 
 interface Step2_SimpleConfigurationProps {

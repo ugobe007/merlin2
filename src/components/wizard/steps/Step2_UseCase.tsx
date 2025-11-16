@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Sparkles, TrendingUp, Bot } from 'lucide-react';
-import { aiStateService } from '../../../services/aiStateService';
+import { aiStateService } from '@/services/aiStateService';
 import AIStatusIndicator from '../AIStatusIndicator';
 import AISquareFootageCalculator from '../AISquareFootageCalculator';
 
 // Import use case images with explicit extensions for Vite
-import evChargingStationImage from '../../../assets/images/ev_charging_station.png?url';
-import carWashImage from '../../../assets/images/car_wash_1.jpg?url';
-import hospitalImage from '../../../assets/images/hospital_1.jpg?url';
-import hotelImage from '../../../assets/images/hotel_1.avif?url';
-import airportImage from '../../../assets/images/airports_1.jpg?url';
+import evChargingStationImage from '@/assets/images/ev_charging_station.png?url';
+import carWashImage from '@/assets/images/car_wash_1.jpg?url';
+import hospitalImage from '@/assets/images/hospital_1.jpg?url';
+import hotelImage from '@/assets/images/hotel_1.avif?url';
+import airportImage from '@/assets/images/airports_1.jpg?url';
 
 interface Step2_UseCaseProps {
   selectedIndustry: string;

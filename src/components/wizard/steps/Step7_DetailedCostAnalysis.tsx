@@ -1,5 +1,5 @@
 import React from 'react';
-import { UTILITY_RATES, calculateEnergySavings, calculateAnnualFuelCost, calculateROITimeline, findPaybackYear } from '../../../utils/energyCalculations';
+import { UTILITY_RATES, calculateEnergySavings, calculateAnnualFuelCost, calculateROITimeline, findPaybackYear } from '@/utils/energyCalculations';
 
 interface Step7_DetailedCostAnalysisProps {
   bessPowerMW: number;
