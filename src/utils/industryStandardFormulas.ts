@@ -180,6 +180,17 @@ export interface FinancialInputs {
 /**
  * Industry-Standard Financial Analysis
  * NPV, IRR, Payback Period calculations
+ * 
+ * @deprecated This function is deprecated and will be removed in v2.0
+ * Please use `calculateFinancialMetrics()` from `services/centralizedCalculations.ts` instead.
+ * 
+ * @example
+ * // DEPRECATED:
+ * import { calculateFinancialMetrics } from './utils/industryStandardFormulas';
+ * 
+ * // USE INSTEAD:
+ * import { calculateFinancialMetrics } from './services/centralizedCalculations';
+ * const result = await calculateFinancialMetrics({ ... });
  */
 export const calculateFinancialMetrics = (inputs: FinancialInputs): {
   npv: number;
@@ -189,6 +200,14 @@ export const calculateFinancialMetrics = (inputs: FinancialInputs): {
   roiPercent: number;
   yearByYearCashFlow: Array<{ year: number; cashFlow: number; cumulativeCashFlow: number }>;
 } => {
+  // DEPRECATION WARNING
+  if (import.meta.env.DEV) {
+    console.warn(
+      '⚠️ DEPRECATED: industryStandardFormulas.calculateFinancialMetrics() is deprecated.\n' +
+      'Please use calculateFinancialMetrics() from services/centralizedCalculations.ts instead.'
+    );
+  }
+  
   const {
     capitalCost,
     annualSavings,

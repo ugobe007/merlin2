@@ -470,6 +470,25 @@ export function calculateBESSSize(params: {
 /**
  * Calculate financial returns for a BESS project
  * Based on efinancialmodels.com BESS Financial Model structure
+ * 
+ * @deprecated This function is deprecated and will be removed in v2.0
+ * Please use `calculateFinancialMetrics()` from `centralizedCalculations.ts` instead.
+ * The centralized service now includes NPV/IRR calculations with degradation.
+ * 
+ * @example
+ * // DEPRECATED:
+ * import { calculateBESSFinancials } from './bessDataService';
+ * const result = calculateBESSFinancials(inputs);
+ * 
+ * // USE INSTEAD:
+ * import { calculateFinancialMetrics } from './centralizedCalculations';
+ * const result = await calculateFinancialMetrics({
+ *   storageSizeMW: inputs.powerRatingMW,
+ *   durationHours: inputs.durationHours,
+ *   electricityRate: inputs.electricityRatePerMWh / 1000,
+ *   location: 'your-location',
+ *   includeNPV: true
+ * });
  */
 export function calculateBESSFinancials(inputs: BESSFinancialInputs): {
   capex: number;
@@ -480,6 +499,15 @@ export function calculateBESSFinancials(inputs: BESSFinancialInputs): {
   paybackYears: number;
   levelizedCostOfStorage: number;
 } {
+  // DEPRECATION WARNING
+  if (import.meta.env.DEV) {
+    console.warn(
+      '⚠️ DEPRECATED: calculateBESSFinancials() is deprecated and will be removed in v2.0.\n' +
+      'Please use calculateFinancialMetrics() from centralizedCalculations.ts instead.\n' +
+      'See: src/services/centralizedCalculations.ts'
+    );
+  }
+  
   const { powerRatingMW, durationHours } = inputs;
   const capacityMWh = powerRatingMW * durationHours;
   
