@@ -1,5 +1,5 @@
 import React from 'react';
-import merlinAvatar from '../../../assets/images/new_Merlin.png';
+import merlinAvatar from '@/assets/images/new_Merlin.png';
 
 interface Step0_GoalsProps {
   selectedGoal: string | string[];

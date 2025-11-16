@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, ArrowRight, Zap, TrendingUp, FileCheck, Clock, Shield, Users } from 'lucide-react';
-import merlinImage from '../../../assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_Merlin.png';
 
 interface StepIntroProps {
   onStart: () => void;

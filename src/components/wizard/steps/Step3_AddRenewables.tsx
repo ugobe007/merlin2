@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../../utils/solarSizingUtils';
-import type { BuildingCharacteristics } from '../../../utils/solarSizingUtils';
+import { calculateAutomatedSolarSizing, formatSolarCapacity } from '@/utils/solarSizingUtils';
+import type { BuildingCharacteristics } from '@/utils/solarSizingUtils';
 
 interface Step3_AddRenewablesProps {
   includeRenewables: boolean;

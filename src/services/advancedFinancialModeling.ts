@@ -18,8 +18,6 @@
  */
 
 import type { JSX } from 'react';
-// import { pricingConfigService } from './pricingConfigService'; // ⚠️ TODO: Remove after migration complete
-// import { calculateBESSPricing as calculateBESSPricingDB, calculateSystemCost as calculateSystemCostDB } from './databaseCalculations'; // ⚠️ DISABLED: File doesn't exist
 import { pricingConfigService } from './pricingConfigService'; // ⚠️ TEMPORARY: Still used in some calculations
 
 // Enhanced interfaces for professional BESS modeling

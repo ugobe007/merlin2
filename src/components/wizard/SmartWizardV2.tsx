@@ -499,9 +499,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
   }, [step, storageSizeMW, durationHours]);
 
   // 🚫 AI USE CASE RECOMMENDATION TEMPORARILY DISABLED
-  // TODO: Integrate with centralized calculation service to ensure consistency
+  // TODO [v2.1]: Re-enable AI recommendations with centralizedCalculations.ts v2.0.0
   // Currently uses hardcoded formulas that don't match database-driven calculations
   // causing confusion (e.g., AI suggests 11.5MW vs SmartWizard's 5.4MW for same use case)
+  // Next steps: Integrate with calculateFinancialMetrics() from centralizedCalculations
   /*
   // Generate AI use case recommendation when user completes Step 2
   useEffect(() => {
