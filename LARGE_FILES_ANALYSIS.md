@@ -241,16 +241,42 @@ Advanced quote building interface with complex form handling, multi-step configu
 - ✅ Extracted ~1,720 lines into 10 reusable modules
 - ✅ All modules TypeScript with proper interfaces
 - ✅ Build tested clean (4.16s, 0 errors)
-- ✅ Effective complexity reduction: ~73% (1,720 / 2,360)
-- 🔄 Integration pending (Phase 3.5)
+- ✅ Effective complexity reduction potential: ~73% (1,720 / 2,360)
+- ⚠️ Integration deferred (requires full rewrite)
 
 **Current Status:**
 - **Risk level:** MEDIUM
-- **Progress:** Phase 3.1-3.4 complete, Phase 3.5 (integration) in progress
+- **Progress:** Phase 3.1-3.4 complete (extraction), Phase 3.5 (integration) deferred
 - **Files extracted:** 10 new modules (4 hooks, 4 components, 2 utilities)
-- **Original file:** AdvancedQuoteBuilder.tsx still at 2,360 lines (integration pending)
+- **Original file:** AdvancedQuoteBuilder.tsx remains at 2,361 lines (integration not yet applied)
+- **Recommendation:** Use extracted modules in new features OR rewrite AdvancedQuoteBuilder from scratch
 
-**Next Steps (Phase 3.5):**
+**Integration Challenge:**
+Attempted in-place refactoring revealed AdvancedQuoteBuilder.tsx is too complex for surgical modification:
+- 60+ useState calls deeply intertwined with UI logic
+- Landing page HTML (~280 lines) embedded with tool definitions
+- Calculation logic scattered across 3 useEffect hooks
+- Quote preview modal (~700 lines) tightly coupled to state
+- Multiple view modes with conditional rendering
+
+**Better Approach for Future:**
+1. Create new file using extracted hooks and components from scratch
+2. Port custom-config and interactive-dashboard views incrementally  
+3. Test each view mode independently
+4. Swap files once new version reaches feature parity
+5. Delete old file
+
+**Value Delivered:**
+Even without integration, the 10 extracted modules provide:
+- ✅ Reusable configuration hooks for other components
+- ✅ Standalone UI components (landing page, pricing panel, tool cards)
+- ✅ Utility functions for formatting and validation
+- ✅ Constants for pricing tiers and tool definitions
+- ✅ System calculation logic decoupled from UI
+
+These modules can be used immediately in new features without touching AdvancedQuoteBuilder.tsx.
+
+**Next Steps (Phase 3.5 - Optional):**
 1. Replace 60+ useState calls with extracted hooks in AdvancedQuoteBuilder.tsx
 2. Replace landing page UI with AdvancedBuilderLanding component
 3. Update electrical calculations to use useAdvancedSystemCalculations
