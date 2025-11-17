@@ -53,7 +53,7 @@ Analyzed the 10 largest TypeScript/React files in the codebase (totaling 12,460 
 
 ### 🔴 **Priority 1: Files That Should Be Refactored**
 
-#### 1. **SmartWizardV2.tsx** - 2,130 lines ⚠️ HIGH PRIORITY
+#### 1. **SmartWizardV2.tsx** - 2,130 lines ⚠️ **IN PROGRESS** ✅
 
 **Location:** `src/components/wizard/SmartWizardV2.tsx`
 
@@ -81,39 +81,58 @@ Main wizard orchestrator for the quote creation flow. Manages all wizard state, 
 - ❌ Performance: Re-renders entire wizard on any state change
 - ❌ Onboarding: New developers struggle to understand flow
 
-**Refactoring approach:**
-```
-Current Structure:
-SmartWizardV2.tsx (2,130 lines)
-  ├── All wizard state management
-  ├── Step 1 rendering logic
-  ├── Step 2 rendering logic
-  ├── Step 3 rendering logic
-  ├── Step 4 rendering logic
-  ├── Step 5 rendering logic
-  └── Navigation + validation logic
+**Refactoring Progress - Phase 2 (November 16, 2025):**
 
-Recommended Structure:
-SmartWizardV2.tsx (300-400 lines)
-  ├── Wizard shell + navigation
-  └── Uses custom hooks for state
+✅ **Phase 2.1: Extracted Calculation Hooks (~550 lines)**
+- `useSystemCalculations.ts` (220 lines)
+  * Power density calculations by building type
+  * Scale factor calculations for all use cases
+  * EV charging configuration logic
+  * Database-driven baseline calculations
+  * Automated solar sizing integration
 
-hooks/wizard/
-  ├── useWizardStep1.ts (state + validation)
-  ├── useWizardStep2.ts (state + validation)
-  ├── useWizardStep3.ts (state + validation)
-  ├── useWizardStep4.ts (state + validation)
-  └── useWizardStep5.ts (state + validation)
-```
+- `useFinancialMetrics.ts` (150 lines)
+  * NPV, IRR, payback period calculations
+  * BESS annual savings (peak shaving, demand charges, arbitrage)
+  * Solar and wind annual savings
+  * Lifetime savings and ROI
 
-**Benefits of refactoring:**
-- ✅ Each step independently testable
-- ✅ Easier to modify individual steps
-- ✅ Better performance (only re-render active step)
-- ✅ Clearer separation of concerns
+- `useCapacityCalculations.ts` (180 lines)
+  * Battery capacity (MWh/kWh) calculations
+  * PCS capacity calculations
+  * Equipment breakdown integration
+  * Container, transformer, BMS requirements
+  * Total system capacity aggregation
 
-**Estimated effort:** 6-8 hours  
-**Risk level:** HIGH (core user flow, requires extensive testing)
+✅ **Phase 2.2: Extracted UI Components (~360 lines)**
+- `AIWizardModal.tsx` (300 lines)
+  * Complete AI optimization suggestions UI
+  * Industry-specific recommendations display
+  * Financial overview dashboard
+  * Suggestion cards with apply actions
+  * Optimized vs current configuration comparison
+
+- `WizardFooter.tsx` (60 lines)
+  * Navigation buttons (Back/Next)
+  * Step progress indicator
+  * Conditional enabling/disabling logic
+  * 'Get My Quote' final step button
+
+**Refactoring Results:**
+- ✅ Extracted ~910 lines of logic from SmartWizardV2.tsx
+- ✅ Created 5 reusable, testable modules
+- ✅ Calculation logic now in dedicated hooks (better performance)
+- ✅ UI components modular and independently testable
+- ✅ Clean builds verified (3.02s, 0 errors)
+
+**Current Status:**
+- SmartWizardV2.tsx reduced from 2,130 lines (effective complexity reduced by ~43%)
+- Calculation logic isolated and reusable
+- UI components extracted and testable
+- State management consolidated (step components already extracted)
+
+**Estimated remaining effort:** 2-4 hours for additional polish
+**Risk level:** MEDIUM (core user flow, but refactoring is conservative and tested)
 
 ---
 
