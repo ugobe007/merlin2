@@ -24,19 +24,22 @@ export interface QuestionOption {
 
 export interface QuestionConditional {
   field?: string;
-  operator?: '>' | '==' | '<' | '>=';
+  operator?: '>' | '==' | '<' | '>=' | '!=';
   value?: any;
   dependsOn?: string; // Alternative conditional syntax
 }
 
 export interface Question {
   id: string;
-  label: string;
-  type: 'number' | 'select' | 'multi-select';
+  label?: string;
+  question?: string; // Alternative to label (for compatibility with useCaseTemplates)
+  type: 'number' | 'select' | 'multi-select' | 'multiselect';
   placeholder?: string;
   suffix?: string;
-  options?: QuestionOption[];
+  unit?: string; // Alternative to suffix (for compatibility with useCaseTemplates)
+  options?: (QuestionOption | string)[]; // Allow both formats
   conditional?: QuestionConditional;
+  helpText?: string; // Display help text under question
 }
 
 export interface IndustryQuestionnaire {
@@ -822,6 +825,170 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
       'police-fire': 'Emergency services require instant backup power - battery systems provide <10ms switchover',
       'critical': 'Critical infrastructure often qualifies for grants and incentives for resilience projects',
       '24-7': '24/7 facilities benefit from demand charge reduction and backup power capabilities',
+    },
+  },
+
+  // Apartment/Multifamily Residential
+  'apartment': {
+    title: 'Apartment Complex Configuration',
+    icon: '🏢',
+    questions: [
+      {
+        id: 'numberOfUnits',
+        label: 'How many apartment units?',
+        type: 'number',
+        placeholder: 'e.g., 400',
+        suffix: 'units',
+        helpText: 'Total number of residential units - drives base electrical load',
+      },
+      {
+        id: 'housingType',
+        label: 'Housing classification',
+        type: 'select',
+        options: [
+          { value: 'luxury_apartments', label: 'Luxury Apartments' },
+          { value: 'market_rate', label: 'Market Rate' },
+          { value: 'affordable_housing', label: 'Affordable Housing' },
+          { value: 'senior_housing', label: 'Senior Housing' },
+          { value: 'student_housing', label: 'Student Housing' },
+        ],
+        helpText: 'Housing type affects energy consumption patterns and available incentives',
+      },
+      {
+        id: 'gridSolutionType',
+        label: 'What type of grid solution do you want?',
+        type: 'select',
+        options: [
+          { value: 'grid_tied', label: 'Grid-Tied (cost savings only)' },
+          { value: 'hybrid', label: 'Hybrid (backup + savings)' },
+          { value: 'microgrid', label: 'Microgrid (full independence)' },
+        ],
+        helpText: 'Grid-tied = cost savings only | Hybrid = backup + savings | Microgrid = full energy independence',
+      },
+      {
+        id: 'hasLaundryFacilities',
+        label: 'Does the complex have laundry facilities?',
+        type: 'select',
+        options: [
+          { value: 'none', label: 'No laundry facilities' },
+          { value: 'centralized', label: 'Centralized laundry room' },
+          { value: 'in_unit', label: 'In-unit washers/dryers' },
+          { value: 'both', label: 'Both centralized and in-unit' },
+        ],
+        helpText: 'Laundry adds significant electrical load, especially during peak hours',
+      },
+      {
+        id: 'hasCommercialKitchen',
+        label: 'Is there a commercial kitchen or restaurant?',
+        type: 'select',
+        options: [
+          { value: 'none', label: 'No commercial kitchen' },
+          { value: 'cafe', label: 'Small cafe or coffee shop' },
+          { value: 'restaurant', label: 'Full-service restaurant' },
+          { value: 'catering', label: 'Large catering kitchen' },
+        ],
+        helpText: 'Commercial kitchens add 50-200+ kW depending on size',
+      },
+      {
+        id: 'amenitiesOffered',
+        label: 'What amenities does the complex offer?',
+        type: 'multi-select',
+        options: [
+          { value: 'fitness', label: 'Fitness center' },
+          { value: 'pool', label: 'Swimming pool' },
+          { value: 'spa', label: 'Spa/hot tub' },
+          { value: 'coworking', label: 'Co-working space' },
+          { value: 'theater', label: 'Movie theater' },
+          { value: 'ev_charging', label: 'EV charging' },
+          { value: 'rooftop_lounge', label: 'Rooftop lounge' },
+        ],
+        helpText: 'Each amenity adds to total electrical load - select all that apply',
+      },
+      {
+        id: 'evChargingStatus',
+        label: 'EV charging infrastructure status',
+        type: 'select',
+        options: [
+          { value: 'none', label: 'No EV charging plans' },
+          { value: 'planning', label: 'Planning to add EV charging' },
+          { value: 'existing_level2', label: 'Existing Level 2 chargers' },
+          { value: 'existing_dcfast', label: 'Existing DC fast chargers' },
+          { value: 'mixed', label: 'Mix of Level 2 and DC fast' },
+        ],
+        helpText: 'EV charging can be a major load - BESS can help manage charging costs',
+      },
+      {
+        id: 'evChargingPorts',
+        label: 'How many EV charging ports? (existing or planned)',
+        type: 'number',
+        placeholder: 'e.g., 50',
+        suffix: 'ports',
+        helpText: 'Total number of EV charging ports - each Level 2 port adds ~7-19 kW',
+        conditional: { field: 'evChargingStatus', operator: '!=', value: 'none' },
+      },
+      {
+        id: 'wantsSolar',
+        label: 'Are you interested in adding solar?',
+        type: 'select',
+        options: [
+          { value: 'yes_committed', label: 'Yes, definitely want solar' },
+          { value: 'yes_if_space', label: 'Yes, if space available' },
+          { value: 'maybe', label: 'Maybe, considering it' },
+          { value: 'no', label: 'Not interested in solar' },
+        ],
+        helpText: 'Solar can significantly reduce energy costs and improve ROI',
+      },
+      {
+        id: 'solarSpaceAvailable',
+        label: 'Do you have available space for solar panels?',
+        type: 'select',
+        options: [
+          { value: 'rooftop_ample', label: 'Ample rooftop space (50+ kW)' },
+          { value: 'rooftop_limited', label: 'Limited rooftop space (10-50 kW)' },
+          { value: 'parking_carport', label: 'Parking lot carport potential' },
+          { value: 'ground_mount', label: 'Ground-mount space available' },
+          { value: 'combination', label: 'Multiple solar locations' },
+          { value: 'no_space', label: 'No suitable space' },
+        ],
+        helpText: 'Available space determines maximum solar capacity - parking carports are ideal for apartments',
+        conditional: { field: 'wantsSolar', operator: '!=', value: 'no' },
+      },
+      {
+        id: 'parkingSpaces',
+        label: 'How many parking spaces does the complex have?',
+        type: 'number',
+        placeholder: 'e.g., 500',
+        suffix: 'spaces',
+        helpText: 'Parking lot carports can host large solar arrays (150W per space)',
+      },
+      {
+        id: 'buildingStories',
+        label: 'How many stories/floors?',
+        type: 'number',
+        placeholder: 'e.g., 4',
+        suffix: 'floors',
+        helpText: 'Building height affects elevator load and rooftop solar potential',
+      },
+      {
+        id: 'priorityGoals',
+        label: 'What are your top priorities? (select up to 3)',
+        type: 'multi-select',
+        options: [
+          { value: 'cost_savings', label: 'Cost savings' },
+          { value: 'tenant_amenity', label: 'Tenant amenity (EV charging)' },
+          { value: 'backup_power', label: 'Backup power' },
+          { value: 'sustainability', label: 'Sustainability' },
+          { value: 'property_value', label: 'Property value' },
+          { value: 'demand_management', label: 'Demand management' },
+        ],
+        helpText: 'Your priorities guide system sizing and configuration',
+      },
+    ],
+    insights: {
+      'ev_charging': 'EV charging infrastructure can be a major amenity and load - consider solar carports to offset charging costs',
+      'parking_carport': 'Parking carports offer dual benefits: covered parking for residents and solar power generation (150W per space)',
+      'hybrid': 'Hybrid systems provide both cost savings and backup power - ideal for multifamily properties',
+      'amenities': 'Fitness centers, pools, and other amenities can add 100+ kW to peak load - BESS helps manage demand charges',
     },
   },
 

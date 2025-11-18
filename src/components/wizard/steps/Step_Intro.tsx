@@ -42,8 +42,8 @@ const StepIntro: React.FC<StepIntroProps> = ({ onStart, onSkipToAdvanced }) => {
           {/* Welcome Message - Right Side */}
           <div className="flex-1 text-center md:text-left">
             <div className="mb-6">
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-                Welcome to Merlin's Workshop
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent mb-4 drop-shadow-md">
+                Welcome to Merlin!
               </h1>
               <p className="text-xl md:text-2xl text-gray-700 font-medium mb-2">
                 Let me guide you through your perfect energy storage solution

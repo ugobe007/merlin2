@@ -318,12 +318,10 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   };
 
   const handleLeadCaptureSkip = () => {
-    // User skipped, still allow download but not save
+    // User skipped/closed modal - do NOT download, clear pending action
     setShowLeadCaptureModal(false);
-    if (pendingDownloadFormat) {
-      proceedWithDownload(pendingDownloadFormat);
-    }
     setPendingDownloadFormat(null);
+    // Do not call proceedWithDownload - user must complete form to get download
   };
 
   const proceedWithDownload = (format?: 'PDF' | 'Excel' | 'Word') => {

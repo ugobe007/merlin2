@@ -968,13 +968,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <input
                         type="range"
                         min="0"
-                        max="5"
-                        step="0.1"
+                        max="100"
+                        step="0.5"
                         value={solarMW}
                         onChange={(e) => setSolarMW(parseFloat(e.target.value))}
                         className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer"
                         style={{
-                          background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${(solarMW / 5) * 100}%, rgba(255,255,255,0.2) ${(solarMW / 5) * 100}%, rgba(255,255,255,0.2) 100%)`
+                          background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${(solarMW / 100) * 100}%, rgba(255,255,255,0.2) ${(solarMW / 100) * 100}%, rgba(255,255,255,0.2) 100%)`
                         }}
                       />
                       <span className="text-white/80 text-[10px] w-12">{solarMW.toFixed(1)}MW</span>
@@ -984,13 +984,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <input
                         type="range"
                         min="0"
-                        max="5"
-                        step="0.1"
+                        max="100"
+                        step="0.5"
                         value={windMW}
                         onChange={(e) => setWindMW(parseFloat(e.target.value))}
                         className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer"
                         style={{
-                          background: `linear-gradient(to right, #60a5fa 0%, #60a5fa ${(windMW / 5) * 100}%, rgba(255,255,255,0.2) ${(windMW / 5) * 100}%, rgba(255,255,255,0.2) 100%)`
+                          background: `linear-gradient(to right, #60a5fa 0%, #60a5fa ${(windMW / 100) * 100}%, rgba(255,255,255,0.2) ${(windMW / 100) * 100}%, rgba(255,255,255,0.2) 100%)`
                         }}
                       />
                       <span className="text-white/80 text-[10px] w-12">{windMW.toFixed(1)}MW</span>
@@ -1230,7 +1230,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     <input
                       type="range"
                       min="0"
-                      max="30"
+                      max="100"
                       step="0.5"
                       value={solarMW}
                       onChange={(e) => setSolarMW(parseFloat(e.target.value))}
@@ -1238,7 +1238,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     />
                     <div className="flex justify-between text-xs text-purple-500 mt-1">
                       <span>0 MW</span>
-                      <span>30 MW</span>
+                      <span>100 MW</span>
                     </div>
                   </div>
 
@@ -1250,7 +1250,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     <input
                       type="range"
                       min="0"
-                      max="25"
+                      max="100"
                       step="0.5"
                       value={windMW}
                       onChange={(e) => setWindMW(parseFloat(e.target.value))}
@@ -1258,7 +1258,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     />
                     <div className="flex justify-between text-xs text-purple-500 mt-1">
                       <span>0 MW</span>
-                      <span>25 MW</span>
+                      <span>100 MW</span>
                     </div>
                   </div>
 
@@ -1270,7 +1270,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     <input
                       type="range"
                       min="0"
-                      max="15"
+                      max="100"
                       step="0.5"
                       value={generatorMW}
                       onChange={(e) => setGeneratorMW(parseFloat(e.target.value))}
@@ -1278,7 +1278,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     />
                     <div className="flex justify-between text-xs text-purple-500 mt-1">
                       <span>0 MW</span>
-                      <span>15 MW</span>
+                      <span>100 MW</span>
                     </div>
                   </div>
 
