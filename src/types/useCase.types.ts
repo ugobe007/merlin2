@@ -40,17 +40,28 @@ export interface FinancialParameters {
 
 export interface CustomQuestion {
   id: string;
-  question: string;
-  type: 'number' | 'select' | 'boolean' | 'percentage';
-  default: string | number | boolean;
+  question?: string;
+  label?: string; // Alternative to question (for compatibility)
+  type: 'number' | 'select' | 'multiselect' | 'multi-select' | 'boolean' | 'percentage';
+  default: string | number | boolean | string[];
   unit?: string; // e.g., "sq ft", "rooms", "kW"
-  options?: string[]; // For select type
+  suffix?: string; // Alternative to unit (for compatibility)
+  placeholder?: string;
+  options?: (string | { value: string; label: string; powerKw?: number })[]; // Support power values in options
+  
+  // Conditional logic
+  conditional?: {
+    field?: string;
+    operator?: '>' | '==' | '<' | '>=' | '!=' | '<=';
+    value?: any;
+    dependsOn?: string; // Legacy format
+  };
   
   // How this question impacts the calculation
-  impactType: 'multiplier' | 'additionalLoad' | 'factor' | 'none';
+  impactType: 'multiplier' | 'additionalLoad' | 'factor' | 'power_add' | 'solar_flag' | 'solar_sizing' | 'design_priority' | 'none';
   impactsField?: 'equipmentPower' | 'systemSize' | 'energyCostMultiplier' | 'occupancyFactor';
   multiplierValue?: number;
-  additionalLoadKw?: number;
+  additionalLoadKw?: number; // For number inputs (e.g., kW per EV port)
   
   helpText?: string;
   required?: boolean;

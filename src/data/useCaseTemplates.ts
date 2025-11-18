@@ -123,6 +123,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         additionalLoadKw: 10,
         helpText: 'Detailing adds lighting, HVAC, and equipment loads',
         required: false
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 3000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Your actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for needs' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Determines backup duration and generation requirements',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -247,6 +303,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Number of vehicles charging daily (affects utilization and revenue)',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Site area (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total site area including parking and charging infrastructure',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 18,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the station is available for charging',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Need utility upgrade to support chargers' },
+          { value: 'off_grid', label: 'Off-Grid - Remote location, no grid' },
+          { value: 'microgrid', label: 'Microgrid - Part of independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid capacity critical for EV charging - determines need for generation',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -383,6 +495,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         default: true,
         impactType: 'factor',
         helpText: 'Whether the BESS should provide emergency backup power',
+        required: false
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
         required: false
       }
     ]
@@ -528,6 +696,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Higher automation increases power consumption but improves efficiency',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -625,13 +849,13 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     customQuestions: [
       {
         id: 'numberOfRooms',
-        question: 'Number of guest rooms',
+        question: 'How many guest rooms?',
         type: 'number',
         default: 150,
         unit: 'rooms',
         impactType: 'multiplier',
         impactsField: 'equipmentPower',
-        multiplierValue: 0.0068, // CORRECTED: ~3kW per room average (440kW ÷ 150 rooms)
+        multiplierValue: 0.0068, // ~3kW per room average (440kW ÷ 150 rooms)
         helpText: 'Room count drives HVAC, lighting, and service equipment loads',
         required: true
       },
@@ -641,14 +865,14 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         type: 'select',
         default: 'full_service',
         options: [
-          'limited_service', // Lower energy intensity
-          'full_service', // Standard full-service hotel
-          'luxury_resort', // Higher energy intensity with amenities
-          'extended_stay', // Different load patterns with kitchenettes
-          'boutique_hotel' // Unique energy profile with specialized features
+          'limited_service', // Lower energy intensity (2-2.5 kW/room)
+          'full_service', // Standard full-service hotel (3-3.5 kW/room)
+          'luxury_resort', // Higher energy intensity (4-5 kW/room)
+          'extended_stay', // Different load patterns with kitchenettes (2.5-3 kW/room)
+          'boutique_hotel' // Unique energy profile (3-4 kW/room)
         ],
         impactType: 'factor',
-        helpText: 'Service level affects energy intensity and equipment requirements',
+        helpText: 'Service level affects energy intensity - luxury properties use 50-70% more energy per room',
         required: true
       },
       {
@@ -658,24 +882,202 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         default: 75,
         unit: '%',
         impactType: 'factor',
-        helpText: 'Occupancy drives variable loads (HVAC, laundry, food service)',
+        helpText: 'Occupancy drives variable loads (HVAC, laundry, food service). Industry average is 60-75%',
         required: true
       },
       {
-        id: 'amenitiesProfile',
-        question: 'Major amenities and facilities',
+        id: 'hasRestaurant',
+        question: 'Does the hotel have restaurants or food service?',
         type: 'select',
-        default: 'standard_amenities',
+        default: 'full_kitchen',
         options: [
-          'basic_amenities', // Minimal amenities - lower energy
-          'standard_amenities', // Pool, fitness center, restaurant  
-          'resort_amenities', // Multiple restaurants, spa, recreation
-          'convention_facilities', // Meeting rooms, ballrooms, AV systems
-          'casino_entertainment' // Gaming floors, entertainment venues
+          { value: 'none', label: 'No food service', powerKw: 0 },
+          { value: 'continental_breakfast', label: 'Continental breakfast only', powerKw: 15 },
+          { value: 'cafe_bistro', label: 'Cafe or bistro', powerKw: 40 },
+          { value: 'full_kitchen', label: 'Full restaurant kitchen', powerKw: 115 },
+          { value: 'multiple_restaurants', label: 'Multiple restaurants', powerKw: 250 },
+        ],
+        impactType: 'power_add',
+        helpText: 'Commercial kitchens are major loads - multiple restaurants can add 200+ kW',
+        required: true
+      },
+      {
+        id: 'amenitiesOffered',
+        question: 'What amenities does the hotel offer? (select all)',
+        type: 'multiselect',
+        default: ['pool', 'fitness'],
+        options: [
+          { value: 'pool', label: 'Swimming pool', powerKw: 55 },
+          { value: 'indoor_pool', label: 'Indoor pool', powerKw: 75 },
+          { value: 'hot_tub', label: 'Hot tub/jacuzzi', powerKw: 30 },
+          { value: 'fitness', label: 'Fitness center', powerKw: 27 },
+          { value: 'full_spa', label: 'Full spa facility', powerKw: 115 },
+          { value: 'conference', label: 'Conference/meeting rooms', powerKw: 70 },
+          { value: 'ballroom', label: 'Ballroom/event space', powerKw: 90 },
+          { value: 'business_center', label: 'Business center', powerKw: 15 },
+          { value: 'laundry_valet', label: 'Valet laundry service', powerKw: 75 },
+          { value: 'casino', label: 'Casino gaming floor', powerKw: 350 },
+        ],
+        impactType: 'power_add',
+        helpText: 'Each amenity adds significant load - select all that apply',
+        required: true
+      },
+      {
+        id: 'evChargingStatus',
+        question: 'EV charging for guests',
+        type: 'select',
+        default: 'planning',
+        options: [
+          { value: 'none', label: 'No EV charging', powerKw: 0 },
+          { value: 'planning', label: 'Planning to add', powerKw: 0 },
+          { value: 'level2_few', label: 'Few Level 2 chargers (2-4 ports)', powerKw: 30 },
+          { value: 'level2_many', label: 'Many Level 2 chargers (5-20 ports)', powerKw: 120 },
+          { value: 'dcfast', label: 'DC fast charging', powerKw: 150 },
+          { value: 'tesla_destination', label: 'Tesla Destination Charging', powerKw: 80 },
+        ],
+        impactType: 'power_add',
+        helpText: 'EV charging is becoming a key amenity - can add 50-200+ kW depending on setup',
+        required: true
+      },
+      {
+        id: 'evChargingPorts',
+        question: 'How many EV charging ports? (existing or planned)',
+        type: 'number',
+        default: 0,
+        unit: 'ports',
+        impactType: 'power_add',
+        additionalLoadKw: 10, // 10kW per Level 2 port
+        helpText: 'Each Level 2 port adds ~7-11 kW. DC Fast chargers add 50-150 kW each.',
+        required: false,
+      },
+      {
+        id: 'wantsSolar',
+        question: 'Interest in adding solar panels?',
+        type: 'select',
+        default: 'yes_if_space',
+        options: [
+          'yes_committed', // Definitely want solar
+          'yes_if_space', // Want solar if space available
+          'maybe', // Considering it
+          'no', // Not interested
+        ],
+        impactType: 'solar_flag',
+        helpText: 'Solar reduces operating costs and appeals to eco-conscious guests',
+        required: true
+      },
+      {
+        id: 'rooftopAvailable',
+        question: 'Is rooftop space available for solar?',
+        type: 'select',
+        default: 'partial',
+        options: [
+          'yes_large', // Large rooftop (100+ kW potential)
+          'partial', // Partial rooftop (30-100 kW)
+          'limited', // Limited rooftop (10-30 kW)
+          'no', // No rooftop space
+          'parking_carport', // Parking lot carport option
+        ],
+        impactType: 'solar_sizing',
+        helpText: 'Hotels typically have good rooftop space. Parking carports also work well.',
+        required: true,
+      },
+      {
+        id: 'parkingSpaces',
+        question: 'How many parking spaces?',
+        type: 'number',
+        default: 200,
+        unit: 'spaces',
+        impactType: 'factor',
+        helpText: 'Parking lot solar carports can generate 150W per space (200 spaces = 30 kW)',
+        required: false
+      },
+      {
+        id: 'backupPowerNeeds',
+        question: 'Backup power requirements',
+        type: 'select',
+        default: 'partial',
+        options: [
+          'none', // No backup needed
+          'essential_only', // Emergency lighting, exits, pumps only
+          'partial', // Essential systems + some HVAC
+          'full_facility', // Full facility backup capability
+        ],
+        impactType: 'design_priority',
+        helpText: 'Backup power maintains operations during outages - important for guest satisfaction',
+        required: true
+      },
+      {
+        id: 'priorityGoals',
+        question: 'What are your top priorities? (select up to 3)',
+        type: 'multiselect',
+        default: ['cost_savings', 'guest_amenity'],
+        options: [
+          'cost_savings', // Reduce operating costs
+          'guest_amenity', // EV charging as amenity
+          'backup_power', // Reliability during outages  
+          'sustainability', // Green certification (LEED, etc.)
+          'brand_image', // Environmental brand positioning
+          'demand_management', // Manage demand charges
+        ],
+        impactType: 'design_priority',
+        helpText: 'Your priorities guide system sizing and configuration',
+        required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
         ],
         impactType: 'factor',
-        helpText: 'Amenities significantly impact overall energy consumption',
+        helpText: 'Grid quality affects backup requirements and generation needs',
         required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -827,6 +1229,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Aircraft operations drive ground support equipment and airfield lighting needs',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -977,6 +1435,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Research intensity significantly affects laboratory and specialized equipment loads',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -1088,6 +1602,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         multiplierValue: 1.0,
         helpText: 'How many days per week is the practice open?',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -1211,6 +1781,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Hours per day the building is occupied and operating',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -1328,6 +1954,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'PUE affects cooling load ratio (1.2-2.0 typical range)',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 50000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total data center floor space',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 24,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Data centers typically operate 24/7',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak IT load (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak IT load (leave 0 for calculation from racks)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Tier I/II with single feed' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages (Tier III needs)' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized (needs local generation)' },
+          { value: 'off_grid', label: 'Off-Grid - Remote edge data center' },
+          { value: 'microgrid', label: 'Microgrid - Tier IV fault-tolerant system' }
+        ],
+        impactType: 'factor',
+        helpText: 'CRITICAL for uptime - affects BESS sizing and backup requirements',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -1453,6 +2135,62 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Cold storage size affects refrigeration load and backup power needs',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   },
@@ -1536,14 +2274,14 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
     customQuestions: [
       {
         id: 'numberOfUnits',
-        question: 'Number of residential units',
+        question: 'How many apartment units?',
         type: 'number',
         default: 400,
         unit: 'units',
         impactType: 'multiplier',
         impactsField: 'equipmentPower',
-        multiplierValue: 0.0015, // CORRECTED: 1.5kW per unit average (600kW ÷ 400 units)
-        helpText: 'Unit count drives total electrical load and infrastructure requirements',
+        multiplierValue: 0.0015, // 1.5kW per unit average (600kW ÷ 400 units)
+        helpText: 'Total number of residential units - drives base electrical load',
         required: true
       },
       {
@@ -1563,14 +2301,1547 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         required: true
       },
       {
+        id: 'gridSolutionType',
+        question: 'What type of grid solution do you want?',
+        type: 'select',
+        default: 'grid_tied',
+        options: [
+          'grid_tied', // Standard grid-connected with BESS for peak shaving
+          'hybrid', // Grid + BESS + Solar/Generator for partial independence
+          'microgrid' // Full microgrid with islanding capability
+        ],
+        impactType: 'factor',
+        helpText: 'Grid-tied = cost savings only | Hybrid = backup + savings | Microgrid = full energy independence',
+        required: true
+      },
+      {
+        id: 'hasLaundryFacilities',
+        question: 'Does the complex have laundry facilities?',
+        type: 'select',
+        default: 'centralized',
+        options: [
+          'none', // No laundry facilities
+          'centralized', // Central laundry room (common)
+          'in_unit', // In-unit washers/dryers (higher load)
+          'both' // Both centralized and some in-unit
+        ],
+        impactType: 'power_add',
+        helpText: 'Laundry adds significant electrical load, especially during peak hours',
+        required: true
+      },
+      {
+        id: 'hasCommercialKitchen',
+        question: 'Is there a commercial kitchen or restaurant?',
+        type: 'select',
+        default: 'none',
+        options: [
+          'none', // No commercial kitchen
+          'cafe', // Small cafe or coffee shop
+          'restaurant', // Full-service restaurant
+          'catering' // Large catering kitchen
+        ],
+        impactType: 'power_add',
+        helpText: 'Commercial kitchens add 50-200+ kW depending on size',
+        required: true
+      },
+      {
+        id: 'amenitiesOffered',
+        question: 'What amenities does the complex offer?',
+        type: 'multiselect',
+        default: ['fitness', 'pool'],
+        options: [
+          'fitness', // Fitness center (10-30 kW)
+          'pool', // Swimming pool with heating/filtration (20-50 kW)
+          'spa', // Hot tub/spa (15-30 kW)
+          'coworking', // Co-working space (5-15 kW)
+          'theater', // Movie theater/screening room (5-20 kW)
+          'ev_charging', // EV charging stations (major load)
+          'rooftop_lounge' // Rooftop amenity space with HVAC
+        ],
+        impactType: 'power_add',
+        helpText: 'Each amenity adds to total electrical load - select all that apply',
+        required: true
+      },
+      {
+        id: 'evChargingStatus',
+        question: 'EV charging infrastructure status',
+        type: 'select',
+        default: 'planning',
+        options: [
+          'none', // No EV charging plans
+          'planning', // Planning to add EV charging
+          'existing_level2', // Existing Level 2 chargers (7-19 kW)
+          'existing_dcfast', // Existing DC fast chargers (50-150 kW)
+          'mixed' // Mix of Level 2 and DC fast
+        ],
+        impactType: 'power_add',
+        helpText: 'EV charging can be a major load - BESS can help manage charging costs',
+        required: true
+      },
+      {
         id: 'evChargingPorts',
-        question: 'Number of EV charging ports',
+        question: 'How many EV charging ports? (existing or planned)',
+        type: 'number',
+        default: 0,
+        unit: 'ports',
+        impactType: 'power_add',
+        helpText: 'Total number of EV charging ports - each Level 2 port adds ~7-19 kW',
+        required: false
+      },
+      {
+        id: 'wantsSolar',
+        question: 'Are you interested in adding solar?',
+        type: 'select',
+        default: 'yes_if_space',
+        options: [
+          'yes_committed', // Definitely want solar
+          'yes_if_space', // Want solar if space available
+          'maybe', // Considering it
+          'no' // Not interested in solar
+        ],
+        impactType: 'solar_flag',
+        helpText: 'Solar can significantly reduce energy costs and improve ROI',
+        required: true
+      },
+      {
+        id: 'solarSpaceAvailable',
+        question: 'Do you have available space for solar panels?',
+        type: 'select',
+        default: 'rooftop_only',
+        options: [
+          'rooftop_ample', // Large rooftop space available (50+ kW potential)
+          'rooftop_limited', // Limited rooftop space (10-50 kW potential)
+          'parking_carport', // Parking lot carport potential (high capacity)
+          'ground_mount', // Ground-mount space available
+          'combination', // Multiple solar locations available
+          'no_space' // No suitable space for solar
+        ],
+        impactType: 'solar_sizing',
+        helpText: 'Available space determines maximum solar capacity - parking carports are ideal for apartments',
+        required: true
+      },
+      {
+        id: 'parkingSpaces',
+        question: 'How many parking spaces does the complex have?',
+        type: 'number',
+        default: 500,
+        unit: 'spaces',
+        impactType: 'factor',
+        helpText: 'Parking lot carports can host large solar arrays (150W per space)',
+        required: false
+      },
+      {
+        id: 'buildingStories',
+        question: 'How many stories/floors?',
+        type: 'number',
+        default: 4,
+        unit: 'floors',
+        impactType: 'factor',
+        helpText: 'Building height affects elevator load and rooftop solar potential',
+        required: false
+      },
+      {
+        id: 'priorityGoals',
+        question: 'What are your top priorities? (select up to 3)',
+        type: 'multiselect',
+        default: ['cost_savings', 'tenant_amenity'],
+        options: [
+          'cost_savings', // Reduce operating costs
+          'tenant_amenity', // EV charging as resident amenity
+          'backup_power', // Resilience during outages
+          'sustainability', // Green building certification
+          'property_value', // Increase property value
+          'demand_management' // Manage peak demand charges
+        ],
+        impactType: 'design_priority',
+        helpText: 'Your priorities guide system sizing and configuration',
+        required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size (sq ft)',
+        type: 'number',
+        default: 10000,
+        unit: 'sq ft',
+        impactType: 'factor',
+        helpText: 'Total building/facility square footage',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours per day the facility operates',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak power demand (if known)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          { value: 'reliable', label: 'Reliable Grid - Stable power, rare outages' },
+          { value: 'unreliable', label: 'Unreliable Grid - Frequent outages' },
+          { value: 'limited', label: 'Limited Capacity - Grid undersized for facility' },
+          { value: 'off_grid', label: 'Off-Grid - No grid connection' },
+          { value: 'microgrid', label: 'Microgrid - Independent power system' }
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== GAS STATION/C-STORE ====================
+  {
+    id: 'gas-station-001',
+    name: 'Gas Station/C-Store',
+    slug: 'gas-station',
+    description: 'Convenience stores and fuel stations with refrigeration, pumps, and lighting. BESS reduces demand charges and provides backup power.',
+    icon: '⛽',
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 20,
+    
+    powerProfile: {
+      typicalLoadKw: 150,
+      peakLoadKw: 250,
+      profileType: 'peaked',
+      dailyOperatingHours: 18,
+      peakHoursStart: '07:00',
+      peakHoursEnd: '19:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.15
+    },
+    
+    equipment: [
+      {
+        name: 'Fuel Pumps',
+        powerKw: 30,
+        dutyCycle: 0.6,
+        description: 'Fuel dispensing systems and payment terminals'
+      },
+      {
+        name: 'Refrigeration',
+        powerKw: 80,
+        dutyCycle: 0.95,
+        description: 'Walk-in coolers, beverage cases, food storage'
+      },
+      {
+        name: 'Lighting & HVAC',
+        powerKw: 60,
+        dutyCycle: 0.85,
+        description: 'Interior/exterior lighting, climate control'
+      },
+      {
+        name: 'Car Wash (if equipped)',
+        powerKw: 40,
+        dutyCycle: 0.4,
+        description: 'Automated car wash equipment'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.3,
+      energyCostMultiplier: 1.0,
+      typicalSavingsPercent: 22,
+      roiAdjustmentFactor: 0.93,
+      peakDemandPenalty: 1.2
+    },
+    
+    recommendedApplications: ['peak_shaving', 'backup_power', 'demand_response'],
+    
+    customQuestions: [
+      {
+        id: 'stationType',
+        question: 'Station type',
+        type: 'select',
+        default: 'with-cstore',
+        options: [
+          'gas-only',
+          'with-cstore',
+          'truck-stop'
+        ],
+        impactType: 'factor',
+        helpText: 'Station type affects overall load profile',
+        required: true
+      },
+      {
+        id: 'numPumps',
+        question: 'Number of fuel pumps',
+        type: 'number',
+        default: 8,
+        unit: 'pumps',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.05,
+        helpText: 'Each pump adds to electrical load',
+        required: true
+      },
+      {
+        id: 'hasCarWash',
+        question: 'Has car wash?',
+        type: 'boolean',
+        default: false,
+        impactType: 'power_add',
+        impactsField: 'equipmentPower',
+        helpText: 'Car wash adds significant peak demand',
+        required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size category',
+        type: 'select',
+        default: 'small',
+        options: [
+          'micro',
+          'small',
+          'medium',
+          'large',
+          'mega'
+        ],
+        impactType: 'factor',
+        helpText: 'Facility size affects overall power requirements',
+        required: true
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 18,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Operating hours affect energy consumption patterns',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Estimated peak electrical load',
+        type: 'number',
+        default: 0.25,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'If known, enter your peak demand from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== TRIBAL CASINO ====================
+  {
+    id: 'tribal-casino-001',
+    name: 'Tribal Casino & Resort',
+    slug: 'tribal-casino',
+    description: '24/7 gaming and hospitality operations with mission-critical power needs. BESS ensures uninterrupted gaming, reduces demand charges, and supports energy sovereignty.',
+    icon: '🎰',
+    category: 'commercial',
+    requiredTier: 'semi_premium',
+    isActive: true,
+    displayOrder: 20,
+    
+    powerProfile: {
+      typicalLoadKw: 3500,
+      peakLoadKw: 5000,
+      profileType: 'constant',
+      dailyOperatingHours: 24,
+      peakHoursStart: '18:00',
+      peakHoursEnd: '02:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.15
+    },
+    
+    equipment: [
+      {
+        name: 'Gaming Floor',
+        powerKw: 1500,
+        dutyCycle: 0.95,
+        description: 'Slot machines, table games, lighting'
+      },
+      {
+        name: 'HVAC Systems',
+        powerKw: 1200,
+        dutyCycle: 0.9,
+        description: 'Climate control for large spaces'
+      },
+      {
+        name: 'Hotel Operations',
+        powerKw: 800,
+        dutyCycle: 0.85,
+        description: 'Guest rooms, elevators, laundry'
+      },
+      {
+        name: 'Food & Beverage',
+        powerKw: 500,
+        dutyCycle: 0.7,
+        description: 'Restaurants, kitchens, bars'
+      },
+      {
+        name: 'Entertainment',
+        powerKw: 500,
+        dutyCycle: 0.6,
+        description: 'Show venues, AV systems, lighting'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.8,
+      energyCostMultiplier: 1.2,
+      typicalSavingsPercent: 28,
+      roiAdjustmentFactor: 0.88,
+      peakDemandPenalty: 1.4
+    },
+    
+    recommendedApplications: ['peak_shaving', 'backup_power', 'power_quality', 'microgrid'],
+    
+    customQuestions: [
+      {
+        id: 'facilityType',
+        question: 'Facility configuration',
+        type: 'select',
+        default: 'casino-hotel',
+        options: [
+          'casino-only',
+          'casino-hotel',
+          'resort-complex'
+        ],
+        impactType: 'factor',
+        helpText: 'Facility type affects total power requirements',
+        required: true
+      },
+      {
+        id: 'gamingFloorSize',
+        question: 'Gaming floor area',
+        type: 'number',
+        default: 50000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.00003,
+        helpText: 'Gaming floor determines slot machine and lighting loads',
+        required: true
+      },
+      {
+        id: 'revenueExposure',
+        question: 'Revenue at risk per hour of outage',
+        type: 'number',
+        default: 50000,
+        unit: '$/hr',
+        impactType: 'none',
+        helpText: 'Justifies resilience investment',
+        required: false
+      },
+      {
+        id: 'backupDuration',
+        question: 'Required backup power duration',
+        type: 'number',
+        default: 4,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Hours of backup needed for critical gaming operations',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 5.0,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Current peak demand from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Many tribal casinos have limited or unreliable grid access',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If grid-limited, enter max capacity',
+        required: false
+      },
+      {
+        id: 'energySovereignty',
+        question: 'Energy independence goal',
+        type: 'select',
+        default: 'cost-savings',
+        options: [
+          'maximum-independence',
+          'cost-savings',
+          'hybrid'
+        ],
+        impactType: 'design_priority',
+        helpText: 'Tribal energy sovereignty objectives',
+        required: true
+      }
+    ]
+  },
+
+  // ==================== WAREHOUSE/DISTRIBUTION ====================
+  {
+    id: 'warehouse-001',
+    name: 'Warehouse/Distribution',
+    slug: 'warehouse',
+    description: 'Distribution centers with material handling, climate control, and EV fleet charging. BESS reduces peak demand costs and manages EV charging loads.',
+    icon: '📦',
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 22,
+    
+    powerProfile: {
+      typicalLoadKw: 800,
+      peakLoadKw: 1200,
+      profileType: 'peaked',
+      dailyOperatingHours: 16,
+      peakHoursStart: '08:00',
+      peakHoursEnd: '18:00',
+      operatesWeekends: false,
+      seasonalVariation: 1.3
+    },
+    
+    equipment: [
+      {
+        name: 'Material Handling',
+        powerKw: 300,
+        dutyCycle: 0.6,
+        description: 'Forklifts, conveyors, automation'
+      },
+      {
+        name: 'Lighting',
+        powerKw: 250,
+        dutyCycle: 0.75,
+        description: 'High-bay LED lighting'
+      },
+      {
+        name: 'HVAC/Climate',
+        powerKw: 200,
+        dutyCycle: 0.65,
+        description: 'Ventilation and climate control'
+      },
+      {
+        name: 'Office & IT',
+        powerKw: 150,
+        dutyCycle: 0.8,
+        description: 'Office space, computers, servers'
+      },
+      {
+        name: 'EV Fleet Charging',
+        powerKw: 300,
+        dutyCycle: 0.4,
+        description: 'Electric forklift and vehicle charging'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.5,
+      energyCostMultiplier: 1.0,
+      typicalSavingsPercent: 26,
+      roiAdjustmentFactor: 0.91,
+      peakDemandPenalty: 1.3
+    },
+    
+    recommendedApplications: ['peak_shaving', 'ev_charging', 'demand_response'],
+    
+    customQuestions: [
+      {
+        id: 'warehouseType',
+        question: 'Warehouse operation type',
+        type: 'select',
+        default: 'distribution',
+        options: [
+          'storage',
+          'distribution',
+          'cold-storage',
+          'fulfillment',
+          'mixed'
+        ],
+        impactType: 'factor',
+        helpText: 'Operation type affects load profile',
+        required: true
+      },
+      {
+        id: 'squareFootage',
+        question: 'Facility square footage',
+        type: 'number',
+        default: 200000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.000004,
+        helpText: 'Size determines lighting and HVAC needs',
+        required: true
+      },
+      {
+        id: 'evFleetSize',
+        question: 'Electric fleet size (forklifts + vehicles)',
+        type: 'number',
+        default: 20,
+        unit: 'vehicles',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.008,
+        helpText: 'EV charging creates significant peak demand',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 16,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Operating hours affect energy patterns',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 1.2,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Current peak from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited, enter max capacity',
+        required: false
+      },
+      {
+        id: 'solarRoof',
+        question: 'Rooftop solar potential',
+        type: 'select',
+        default: 'none',
+        options: [
+          'none',
+          'existing',
+          'high-potential',
+          'planned'
+        ],
+        impactType: 'solar_flag',
+        helpText: 'Large roofs ideal for solar + storage',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== GOVERNMENT BUILDING ====================
+  {
+    id: 'government-001',
+    name: 'Government Building',
+    slug: 'government',
+    description: 'Municipal and government facilities with critical operations, resilience requirements, and sustainability mandates. BESS provides backup power and cost savings.',
+    icon: '🏛️',
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 23,
+    
+    powerProfile: {
+      typicalLoadKw: 400,
+      peakLoadKw: 600,
+      profileType: 'peaked',
+      dailyOperatingHours: 10,
+      peakHoursStart: '08:00',
+      peakHoursEnd: '17:00',
+      operatesWeekends: false,
+      seasonalVariation: 1.2
+    },
+    
+    equipment: [
+      {
+        name: 'HVAC Systems',
+        powerKw: 200,
+        dutyCycle: 0.75,
+        description: 'Climate control for offices and public spaces'
+      },
+      {
+        name: 'Lighting',
+        powerKw: 120,
+        dutyCycle: 0.8,
+        description: 'LED office and exterior lighting'
+      },
+      {
+        name: 'IT & Communications',
+        powerKw: 100,
+        dutyCycle: 0.85,
+        description: 'Computers, servers, telecom systems'
+      },
+      {
+        name: 'Security & Safety',
+        powerKw: 80,
+        dutyCycle: 0.95,
+        description: 'Security systems, emergency lighting'
+      },
+      {
+        name: 'Public Services',
+        powerKw: 100,
+        dutyCycle: 0.6,
+        description: 'Service counters, equipment, facilities'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.2,
+      energyCostMultiplier: 0.95,
+      typicalSavingsPercent: 22,
+      roiAdjustmentFactor: 0.94,
+      peakDemandPenalty: 1.15
+    },
+    
+    recommendedApplications: ['backup_power', 'peak_shaving', 'resilience', 'demand_response'],
+    
+    customQuestions: [
+      {
+        id: 'buildingType',
+        question: 'Government facility type',
+        type: 'select',
+        default: 'office',
+        options: [
+          'city-hall',
+          'office',
+          'library',
+          'police-fire',
+          'community-center',
+          'school'
+        ],
+        impactType: 'factor',
+        helpText: 'Building type affects operational requirements',
+        required: true
+      },
+      {
+        id: 'squareFootage',
+        question: 'Building square footage',
+        type: 'number',
+        default: 50000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.000008,
+        helpText: 'Building size determines HVAC and lighting loads',
+        required: true
+      },
+      {
+        id: 'criticalOps',
+        question: 'Has critical operations (911, emergency services)',
+        type: 'boolean',
+        default: false,
+        impactType: 'factor',
+        helpText: 'Critical ops require additional backup capacity',
+        required: true
+      },
+      {
+        id: 'resilienceHours',
+        question: 'Required resilience duration',
+        type: 'number',
+        default: 8,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Community resilience hub or emergency shelter duration',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 10,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Typical business hours',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 0.6,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'From utility bills if known',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality determines backup sizing',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If grid-limited, enter capacity',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== LOGISTICS CENTER ====================
+  {
+    id: 'logistics-center-001',
+    name: 'Logistics Center',
+    slug: 'logistics-center',
+    description: 'Large-scale distribution hubs with high-volume operations, automation, and EV fleets. BESS optimizes energy costs and manages fleet charging.',
+    icon: '🚚',
+    category: 'commercial',
+    requiredTier: 'semi_premium',
+    isActive: true,
+    displayOrder: 24,
+    
+    powerProfile: {
+      typicalLoadKw: 1500,
+      peakLoadKw: 2200,
+      profileType: 'peaked',
+      dailyOperatingHours: 20,
+      peakHoursStart: '06:00',
+      peakHoursEnd: '22:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.4
+    },
+    
+    equipment: [
+      {
+        name: 'Automated Systems',
+        powerKw: 500,
+        dutyCycle: 0.7,
+        description: 'Conveyors, sorters, robotics'
+      },
+      {
+        name: 'Material Handling',
+        powerKw: 400,
+        dutyCycle: 0.65,
+        description: 'Forklifts, pallet jacks, cranes'
+      },
+      {
+        name: 'Climate Control',
+        powerKw: 300,
+        dutyCycle: 0.6,
+        description: 'HVAC and ventilation'
+      },
+      {
+        name: 'Lighting',
+        powerKw: 200,
+        dutyCycle: 0.75,
+        description: 'High-bay warehouse lighting'
+      },
+      {
+        name: 'EV Fleet Charging',
+        powerKw: 400,
+        dutyCycle: 0.5,
+        description: 'Electric truck and equipment charging'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.7,
+      energyCostMultiplier: 1.1,
+      typicalSavingsPercent: 30,
+      roiAdjustmentFactor: 0.89,
+      peakDemandPenalty: 1.35
+    },
+    
+    recommendedApplications: ['peak_shaving', 'ev_charging', 'demand_response', 'load_shifting'],
+    
+    customQuestions: [
+      {
+        id: 'facilityType',
+        question: 'Logistics operation type',
+        type: 'select',
+        default: 'distribution',
+        options: [
+          'parcel-sorting',
+          'freight',
+          'last-mile',
+          'cross-dock',
+          'fulfillment',
+          'distribution'
+        ],
+        impactType: 'factor',
+        helpText: 'Operation type affects load intensity',
+        required: true
+      },
+      {
+        id: 'squareFootage',
+        question: 'Facility square footage',
+        type: 'number',
+        default: 500000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.000003,
+        helpText: 'Large facilities have proportionally higher loads',
+        required: true
+      },
+      {
+        id: 'evFleetPlan',
+        question: 'Electric vehicle fleet size (current + planned 3yr)',
         type: 'number',
         default: 100,
-        unit: 'ports',
+        unit: 'vehicles',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.004,
+        helpText: 'Fleet electrification creates major charging loads',
+        required: false
+      },
+      {
+        id: 'automationLevel',
+        question: 'Automation level',
+        type: 'select',
+        default: 'moderate',
+        options: [
+          'manual',
+          'moderate',
+          'highly-automated'
+        ],
         impactType: 'factor',
-        helpText: 'EV charging infrastructure affects electrical load and battery sizing',
+        helpText: 'Automation significantly affects power demand',
         required: true
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 20,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Operating schedule affects energy patterns',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 2.2,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Current peak from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup and EV charging management',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited, enter max capacity',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== MANUFACTURING ====================
+  {
+    id: 'manufacturing-001',
+    name: 'Manufacturing Facility',
+    slug: 'manufacturing',
+    description: 'Industrial manufacturing with production equipment, motors, and process systems. BESS reduces high demand charges and improves power quality.',
+    icon: '🏭',
+    category: 'industrial',
+    requiredTier: 'semi_premium',
+    isActive: true,
+    displayOrder: 25,
+    
+    powerProfile: {
+      typicalLoadKw: 2500,
+      peakLoadKw: 3500,
+      profileType: 'peaked',
+      dailyOperatingHours: 16,
+      peakHoursStart: '07:00',
+      peakHoursEnd: '23:00',
+      operatesWeekends: false,
+      seasonalVariation: 1.1
+    },
+    
+    equipment: [
+      {
+        name: 'Production Equipment',
+        powerKw: 1500,
+        dutyCycle: 0.75,
+        description: 'CNC machines, assembly lines, tools'
+      },
+      {
+        name: 'HVAC & Ventilation',
+        powerKw: 400,
+        dutyCycle: 0.8,
+        description: 'Climate control and air quality'
+      },
+      {
+        name: 'Compressed Air',
+        powerKw: 300,
+        dutyCycle: 0.7,
+        description: 'Air compressors for pneumatic systems'
+      },
+      {
+        name: 'Process Systems',
+        powerKw: 200,
+        dutyCycle: 0.65,
+        description: 'Pumps, conveyors, material handling'
+      },
+      {
+        name: 'Lighting & Support',
+        powerKw: 100,
+        dutyCycle: 0.85,
+        description: 'Facility lighting and support systems'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.9,
+      energyCostMultiplier: 1.2,
+      typicalSavingsPercent: 32,
+      roiAdjustmentFactor: 0.87,
+      peakDemandPenalty: 1.45
+    },
+    
+    recommendedApplications: ['peak_shaving', 'power_quality', 'backup_power', 'demand_response'],
+    
+    customQuestions: [
+      {
+        id: 'industryType',
+        question: 'Manufacturing industry',
+        type: 'select',
+        default: 'general',
+        options: [
+          'food-processing',
+          'automotive',
+          'electronics',
+          'metals',
+          'plastics',
+          'pharmaceutical',
+          'chemical',
+          'general'
+        ],
+        impactType: 'factor',
+        helpText: 'Industry determines equipment power requirements',
+        required: true
+      },
+      {
+        id: 'plantSize',
+        question: 'Manufacturing plant size',
+        type: 'number',
+        default: 100000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.000025,
+        helpText: 'Plant size affects equipment and support loads',
+        required: true
+      },
+      {
+        id: 'numShifts',
+        question: 'Number of operating shifts',
+        type: 'number',
+        default: 2,
+        unit: 'shifts',
+        impactType: 'factor',
+        helpText: 'More shifts extend operating hours',
+        required: true
+      },
+      {
+        id: 'downtimeCost',
+        question: 'Cost of unplanned downtime',
+        type: 'number',
+        default: 10000,
+        unit: '$/hour',
+        impactType: 'none',
+        helpText: 'Justifies power quality and backup investment',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 16,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Production schedule affects charging windows',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 3.5,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Current peak from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Power quality and backup requirements',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited, enter max capacity',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== AGRICULTURE ====================
+  {
+    id: 'agriculture-001',
+    name: 'Farm/Agriculture',
+    slug: 'agriculture',
+    description: 'Agricultural operations with irrigation, processing, and storage. BESS enables time-of-use optimization and supports off-grid operation.',
+    icon: '🚜',
+    category: 'agricultural',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 26,
+    
+    powerProfile: {
+      typicalLoadKw: 500,
+      peakLoadKw: 800,
+      profileType: 'seasonal',
+      dailyOperatingHours: 10,
+      peakHoursStart: '06:00',
+      peakHoursEnd: '18:00',
+      operatesWeekends: true,
+      seasonalVariation: 2.5
+    },
+    
+    equipment: [
+      {
+        name: 'Irrigation Pumps',
+        powerKw: 300,
+        dutyCycle: 0.6,
+        description: 'Water pumps for crop irrigation'
+      },
+      {
+        name: 'Cold Storage',
+        powerKw: 150,
+        dutyCycle: 0.9,
+        description: 'Refrigeration for produce storage'
+      },
+      {
+        name: 'Processing Equipment',
+        powerKw: 200,
+        dutyCycle: 0.5,
+        description: 'Sorting, cleaning, packing equipment'
+      },
+      {
+        name: 'Ventilation & Climate',
+        powerKw: 100,
+        dutyCycle: 0.7,
+        description: 'Greenhouse climate, barn ventilation'
+      },
+      {
+        name: 'Support Systems',
+        powerKw: 50,
+        dutyCycle: 0.65,
+        description: 'Lighting, shop equipment, utilities'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.1,
+      energyCostMultiplier: 1.0,
+      typicalSavingsPercent: 28,
+      roiAdjustmentFactor: 0.92,
+      peakDemandPenalty: 1.25
+    },
+    
+    recommendedApplications: ['load_shifting', 'solar_integration', 'backup_power', 'time_of_use'],
+    
+    customQuestions: [
+      {
+        id: 'farmType',
+        question: 'Agricultural operation type',
+        type: 'select',
+        default: 'crop',
+        options: [
+          'row-crop',
+          'dairy',
+          'greenhouse',
+          'orchard',
+          'vineyard',
+          'processing',
+          'mixed'
+        ],
+        impactType: 'factor',
+        helpText: 'Farm type determines equipment and power needs',
+        required: true
+      },
+      {
+        id: 'acreage',
+        question: 'Farm acreage',
+        type: 'number',
+        default: 500,
+        unit: 'acres',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.001,
+        helpText: 'Acreage affects irrigation and equipment needs',
+        required: true
+      },
+      {
+        id: 'irrigationLoad',
+        question: 'Irrigation pump capacity',
+        type: 'number',
+        default: 300,
+        unit: 'kW',
+        impactType: 'power_add',
+        impactsField: 'equipmentPower',
+        helpText: 'Primary load for many farms',
+        required: false
+      },
+      {
+        id: 'timeOfUseRates',
+        question: 'Has time-of-use electricity rates',
+        type: 'boolean',
+        default: true,
+        impactType: 'factor',
+        helpText: 'TOU rates drive load-shifting value',
+        required: true
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours (peak season)',
+        type: 'number',
+        default: 10,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Operating hours during irrigation season',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 0.8,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'Peak demand during irrigation season',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Many rural farms have limited grid access',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'Rural grid often capacity-constrained',
+        required: false
+      }
+    ]
+  },
+
+  // ==================== RETAIL STORE ====================
+  {
+    id: 'retail-001',
+    name: 'Retail Store',
+    slug: 'retail',
+    description: 'Retail stores benefit from demand charge reduction through peak shaving during business hours. BESS provides backup power for refrigeration and POS systems.',
+    icon: '🛒',
+    category: 'commercial',
+    requiredTier: 'free',
+    isActive: true,
+    displayOrder: 21,
+    
+    powerProfile: {
+      typicalLoadKw: 300,
+      peakLoadKw: 450,
+      profileType: 'peaked',
+      dailyOperatingHours: 12,
+      peakHoursStart: '10:00',
+      peakHoursEnd: '20:00',
+      operatesWeekends: true,
+      seasonalVariation: 1.25
+    },
+    
+    equipment: [
+      {
+        name: 'HVAC Systems',
+        powerKw: 150,
+        dutyCycle: 0.7,
+        description: 'Heating, ventilation, air conditioning'
+      },
+      {
+        name: 'Lighting',
+        powerKw: 100,
+        dutyCycle: 0.85,
+        description: 'LED retail lighting and displays'
+      },
+      {
+        name: 'Refrigeration',
+        powerKw: 80,
+        dutyCycle: 0.9,
+        description: 'Coolers and freezers for perishables'
+      },
+      {
+        name: 'POS & Equipment',
+        powerKw: 70,
+        dutyCycle: 0.65,
+        description: 'Point-of-sale, security, communications'
+      }
+    ],
+    
+    financialParams: {
+      demandChargeSensitivity: 1.4,
+      energyCostMultiplier: 1.0,
+      typicalSavingsPercent: 24,
+      roiAdjustmentFactor: 0.92,
+      peakDemandPenalty: 1.25
+    },
+    
+    recommendedApplications: ['peak_shaving', 'backup_power', 'demand_response'],
+    
+    customQuestions: [
+      {
+        id: 'retailType',
+        question: 'Facility type',
+        type: 'select',
+        default: 'general',
+        options: [
+          'grocery',
+          'big-box',
+          'strip-mall',
+          'shopping-center',
+          'restaurant',
+          'general'
+        ],
+        impactType: 'factor',
+        helpText: 'Retail type affects equipment and load patterns',
+        required: true
+      },
+      {
+        id: 'squareFootage',
+        question: 'Store square footage',
+        type: 'number',
+        default: 25000,
+        unit: 'sq ft',
+        impactType: 'multiplier',
+        impactsField: 'equipmentPower',
+        multiplierValue: 0.000012,
+        helpText: 'Store size determines HVAC and lighting requirements',
+        required: true
+      },
+      {
+        id: 'demandCharge',
+        question: 'Monthly demand charge rate',
+        type: 'number',
+        default: 15,
+        unit: '$/kW',
+        impactType: 'none',
+        helpText: 'Your utility demand charge rate drives savings potential',
+        required: false
+      },
+      {
+        id: 'operatingHours',
+        question: 'Daily operating hours',
+        type: 'number',
+        default: 12,
+        unit: 'hours',
+        impactType: 'factor',
+        helpText: 'Store hours affect discharge scheduling',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Peak electrical demand',
+        type: 'number',
+        default: 0.45,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'If known from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable',
+          'unreliable',
+          'limited',
+          'off_grid',
+          'microgrid'
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid capacity limit (if applicable)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'Enter limit if grid-constrained, 0 if unlimited',
+        required: false
+      },
+      {
+        id: 'solarInterest',
+        question: 'Solar integration interest',
+        type: 'select',
+        default: 'none',
+        options: [
+          'none',
+          'existing',
+          'planned'
+        ],
+        impactType: 'solar_flag',
+        helpText: 'Solar + storage maximizes value',
+        required: false
       }
     ]
   },
@@ -1688,6 +3959,16 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         required: true
       },
       {
+        id: 'demandCharge',
+        question: 'Monthly demand charge rate',
+        type: 'number',
+        default: 18,
+        unit: '$/kW',
+        impactType: 'none',
+        helpText: 'Your utility demand charge rate - primary savings driver',
+        required: false
+      },
+      {
         id: 'operatingHours',
         question: 'Daily operating hours',
         type: 'number',
@@ -1696,6 +3977,58 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         impactType: 'factor',
         helpText: 'Operating hours affect energy consumption and load patterns',
         required: true
+      },
+      {
+        id: 'facilitySize',
+        question: 'Facility size category',
+        type: 'select',
+        default: 'medium',
+        options: [
+          'micro', // < 50,000 sq ft
+          'small', // 50,000-150,000 sq ft
+          'medium', // 150,000-350,000 sq ft
+          'large', // 350,000-750,000 sq ft
+          'mega' // > 750,000 sq ft (regional malls)
+        ],
+        impactType: 'factor',
+        helpText: 'Facility size affects overall power requirements',
+        required: true
+      },
+      {
+        id: 'peakLoad',
+        question: 'Estimated peak electrical load',
+        type: 'number',
+        default: 1.8,
+        unit: 'MW',
+        impactType: 'none',
+        helpText: 'If known, enter your peak demand from utility bills',
+        required: false
+      },
+      {
+        id: 'gridConnection',
+        question: 'Grid connection quality',
+        type: 'select',
+        default: 'reliable',
+        options: [
+          'reliable', // Stable utility grid
+          'unreliable', // Frequent outages
+          'limited', // Capacity constraints
+          'off_grid', // No grid connection
+          'microgrid' // Independent power system
+        ],
+        impactType: 'factor',
+        helpText: 'Grid quality affects backup requirements and generation needs',
+        required: true
+      },
+      {
+        id: 'gridCapacity',
+        question: 'Grid connection capacity (if limited)',
+        type: 'number',
+        default: 0,
+        unit: 'MW',
+        impactType: 'factor',
+        helpText: 'If limited grid: Enter max capacity from utility. If 0, we assume unlimited grid.',
+        required: false
       }
     ]
   }

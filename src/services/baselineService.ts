@@ -12,6 +12,8 @@
 
 import { useCaseService } from './useCaseService';
 import { baselineCache } from './cacheService';
+import { USE_CASE_TEMPLATES } from '../data/useCaseTemplates';
+import type { UseCaseTemplate } from '../types/useCase.types';
 
 export interface BaselineCalculationResult {
   powerMW: number;
@@ -19,6 +21,13 @@ export interface BaselineCalculationResult {
   solarMW: number;
   description?: string;
   dataSource?: string;
+  // Grid and generation requirements
+  gridConnection?: string;
+  gridCapacity?: number;
+  peakDemandMW?: number;
+  generationRequired?: boolean;
+  generationRecommendedMW?: number;
+  generationReason?: string;
 }
 
 /**
@@ -71,10 +80,15 @@ export async function calculateDatabaseBaseline(
   try {
     if (import.meta.env.DEV) {
       console.log(`🔍 [BaselineService] Fetching configuration for: ${templateKey}`, { scale, useCaseData });
+      console.log(`🔍 [BaselineService] useCaseData keys:`, useCaseData ? Object.keys(useCaseData) : 'null/undefined');
+      console.log(`🔍 [BaselineService] useCaseData values:`, useCaseData);
     }
     
     // Special case: EV Charging uses charger-specific calculation
     if (templateKey === 'ev-charging' && useCaseData) {
+      if (import.meta.env.DEV) {
+        console.log(`🔌 [BaselineService] Calling calculateEVChargingBaseline with:`, useCaseData);
+      }
       const evResult = calculateEVChargingBaseline(useCaseData);
       if (import.meta.env.DEV) {
         console.log(`🔌 [BaselineService] EV Charging calculated:`, evResult);
@@ -83,6 +97,18 @@ export async function calculateDatabaseBaseline(
       // Cache the result
       baselineCache.set(cacheKey, evResult);
       return evResult;
+    }
+    
+    // Special case: Datacenter uses tier-based calculation
+    if ((templateKey === 'datacenter' || templateKey === 'data-center') && useCaseData) {
+      const dcResult = calculateDatacenterBaseline(useCaseData, scale);
+      if (import.meta.env.DEV) {
+        console.log(`🖥️ [BaselineService] Datacenter calculated:`, dcResult);
+      }
+      
+      // Cache the result
+      baselineCache.set(cacheKey, dcResult);
+      return dcResult;
     }
     
     // **CRITICAL FIX**: Check if user explicitly provided peak load
@@ -191,19 +217,93 @@ export async function calculateDatabaseBaseline(
       
     } else {
       // Fallback to simple scale multiplication for other use cases
-      basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
-      if (import.meta.env.DEV) {
-        console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${scale} scale = ${basePowerMW.toFixed(3)} MW`);
+      // SPECIAL CASE: For datacenters, scale represents total MW capacity directly
+      if (templateKey === 'datacenter' || templateKey === 'data-center') {
+        basePowerMW = scale; // Use scale directly as the datacenter capacity in MW
+        if (import.meta.env.DEV) {
+          console.log(`🖥️ [Data Center Calculation] Direct capacity: ${scale} MW (scale = capacity)`);
+        }
+      } else {
+        basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
+        if (import.meta.env.DEV) {
+          console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${scale} scale = ${basePowerMW.toFixed(3)} MW`);
+        }
       }
     }
     
     // Round to nearest 0.01 MW (10 kW precision) for better accuracy
     // This prevents 440 kW from rounding down to 400 kW (was rounding to 0.1 MW)
     // Minimum of 0.2 MW (200 kW) for small facilities
-    const powerMW = Math.max(0.2, Math.round(basePowerMW * 100) / 100);
+    let powerMW = Math.max(0.2, Math.round(basePowerMW * 100) / 100);
     
-    if (import.meta.env.DEV) {
-      console.log(`📊 [Power Calculation] Raw: ${basePowerMW.toFixed(3)} MW → Rounded: ${powerMW} MW`);
+    // Add amenity loads from customQuestions marked with impactType: 'power_add'
+    // This reads power values directly from the template (single source of truth)
+    if (useCaseData) {
+      // Find the template from useCaseTemplates.ts (single source of truth)
+      const templateObj: UseCaseTemplate | undefined = USE_CASE_TEMPLATES.find(
+        (t: UseCaseTemplate) => t.slug === templateKey || t.id === templateKey
+      );
+      
+      if (templateObj?.customQuestions) {
+        let amenityLoadKW = 0;
+        
+        for (const question of templateObj.customQuestions) {
+          if (question.impactType !== 'power_add') continue;
+          
+          const userValue = useCaseData[question.id];
+          if (!userValue) continue;
+          
+          // Handle select questions with powerKw in options
+          if (question.type === 'select' && question.options) {
+            const selectedOption = question.options.find((opt: any) => 
+              typeof opt === 'object' && opt.value === userValue
+            );
+            if (selectedOption && typeof selectedOption === 'object' && 'powerKw' in selectedOption) {
+              amenityLoadKW += (selectedOption as any).powerKw;
+              if (import.meta.env.DEV) {
+                console.log(`  ➕ ${question.id}: +${(selectedOption as any).powerKw} kW (${userValue})`);
+              }
+            }
+          }
+          
+          // Handle multiselect questions with powerKw in options
+          if ((question.type === 'multiselect' || question.type === 'multi-select') && 
+              Array.isArray(userValue) && question.options) {
+            userValue.forEach((value: string) => {
+              const selectedOption = question.options!.find((opt: any) => 
+                typeof opt === 'object' && opt.value === value
+              );
+              if (selectedOption && typeof selectedOption === 'object' && 'powerKw' in selectedOption) {
+                amenityLoadKW += (selectedOption as any).powerKw;
+                if (import.meta.env.DEV) {
+                  console.log(`  ➕ ${question.id}: +${(selectedOption as any).powerKw} kW (${value})`);
+                }
+              }
+            });
+          }
+          
+          // Handle number inputs with additionalLoadKw multiplier
+          if (question.type === 'number' && question.additionalLoadKw && typeof userValue === 'number') {
+            const calculatedLoad = userValue * question.additionalLoadKw;
+            amenityLoadKW += calculatedLoad;
+            if (import.meta.env.DEV) {
+              console.log(`  ➕ ${question.id}: +${calculatedLoad} kW (${userValue} × ${question.additionalLoadKw} kW)`);
+            }
+          }
+        }
+        
+        
+        if (amenityLoadKW > 0) {
+          const amenityLoadMW = amenityLoadKW / 1000;
+          powerMW += amenityLoadMW;
+          if (import.meta.env.DEV) {
+            console.log(`✨ [Amenities] Total additional load: ${amenityLoadKW} kW (${amenityLoadMW.toFixed(2)} MW)`);
+            console.log(`📊 [Final Power] Base + Amenities: ${powerMW.toFixed(2)} MW`);
+          }
+        }
+      }
+    }    if (import.meta.env.DEV) {
+      console.log(`📊 [Power Calculation] Final: ${powerMW.toFixed(3)} MW`);
     }
     
     // Use preferred duration from configuration
@@ -253,6 +353,189 @@ export async function calculateDatabaseBaseline(
 }
 
 /**
+ * Calculate datacenter baseline from user inputs
+ * Handles capacity from rack count × power per rack or direct capacity input
+ */
+function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: number): BaselineCalculationResult {
+  // FIXED: Use template field names (rackCount, tierClassification, powerUsageEffectiveness)
+  let capacity = 0;
+  
+  // Priority 1: Calculate from rackCount (matches template question)
+  const rackCount = parseInt(useCaseData.rackCount) || 0;
+  const powerPerRack = 5; // 5kW per rack (matches template multiplierValue: 0.005 MW)
+  
+  if (rackCount > 0) {
+    const itLoadMW = (rackCount * powerPerRack) / 1000; // IT equipment load
+    const pue = parseFloat(useCaseData.powerUsageEffectiveness) || 1.6; // Default PUE 1.6
+    capacity = itLoadMW * pue; // Total facility load including cooling
+    
+    if (import.meta.env.DEV) {
+      console.log(`🖥️ [Data Center] Calculated from racks:`, {
+        rackCount,
+        powerPerRack: powerPerRack + ' kW',
+        itLoadMW: itLoadMW.toFixed(3) + ' MW',
+        pue,
+        totalCapacity: capacity.toFixed(3) + ' MW (IT + cooling)'
+      });
+    }
+  }
+  
+  // Priority 2: Direct capacity input (if no rackCount)
+  if (!capacity) {
+    capacity = parseFloat(useCaseData.capacity) || 0;
+    if (capacity > 0 && import.meta.env.DEV) {
+      console.log(`🖥️ [Data Center] Using direct capacity input: ${capacity} MW`);
+    }
+  }
+  
+  // Priority 3: Calculate from square footage
+  const squareFootage = parseFloat(useCaseData.squareFootage) || parseFloat(useCaseData.facilitySize) || 0;
+  if (!capacity && squareFootage > 0) {
+    capacity = (squareFootage * 150) / 1000000; // 150 W/sq ft standard
+    if (import.meta.env.DEV) {
+      console.log(`🖥️ [Data Center] Calculated ${capacity.toFixed(3)} MW from ${squareFootage} sq ft`);
+    }
+  }
+  
+  // Priority 4: Use scale parameter (from wizard)
+  if (!capacity && scale > 0) {
+    capacity = scale;
+    if (import.meta.env.DEV) {
+      console.log(`🖥️ [Data Center] Using scale as capacity: ${capacity} MW`);
+    }
+  }
+  
+  // Default to 2MW if nothing provided (matches template default 400 racks × 5kW × 1.6 PUE)
+  if (!capacity) {
+    capacity = 3.2; // 400 racks × 5kW × 1.6 PUE = 3.2 MW
+    if (import.meta.env.DEV) {
+      console.log(`🖥️ [Data Center] No input, using default: ${capacity} MW (400 racks)`);
+    }
+  }
+  
+  // Get tier classification (matches template field name)
+  const tierClass = useCaseData.tierClassification || 'tier_3';
+  const tier = tierClass.replace('_', ''); // Convert tier_3 to tier3
+  
+  // Calculate BESS sizing based on tier and facility size
+  let bessMultiplier = 0.5; // Default 50% of capacity
+  let duration = 4; // Default 4 hours
+  let description = 'Tier III';
+  
+  if (tier === 'tier4') {
+    bessMultiplier = 0.7; // 70% for Tier IV (fault tolerant)
+    duration = 6;
+    description = 'Tier IV (Fault Tolerant)';
+  } else if (tier === 'tier3') {
+    bessMultiplier = 0.5; // 50% for Tier III (concurrently maintainable)
+    duration = 4;
+    description = 'Tier III (Concurrently Maintainable)';
+  } else if (tier === 'tier2') {
+    bessMultiplier = 0.4; // 40% for Tier II
+    duration = 3;
+    description = 'Tier II (Redundant Components)';
+  } else if (tier === 'tier1') {
+    bessMultiplier = 0.3; // 30% for Tier I
+    duration = 2;
+    description = 'Tier I (Basic Capacity)';
+  }
+  
+  const powerMW = Math.max(0.5, Math.round(capacity * bessMultiplier * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🔋 [Data Center BESS] ${description}:`, {
+      facilityCapacity: capacity.toFixed(3) + ' MW',
+      bessMultiplier: (bessMultiplier * 100) + '%',
+      bessSize: powerMW.toFixed(3) + ' MW',
+      duration: duration + ' hours'
+    });
+  }
+  
+  // Calculate solar (limited for datacenters due to 24/7 operation)
+  const solarMW = Math.max(0, Math.round(powerMW * 0.3 * 10) / 10); // 30% of BESS size
+  
+  return {
+    powerMW,
+    durationHrs: duration,
+    solarMW,
+    description: `${description}: ${capacity.toFixed(1)}MW facility → ${powerMW.toFixed(1)}MW BESS`,
+    dataSource: 'Calculated from rack count and tier classification'
+  };
+}
+
+/**
+ * Calculate datacenter BESS sizing based on tier requirements
+ * Uses database-backed multipliers for consistency
+ * 
+ * @param capacity - Datacenter capacity in MW
+ * @param uptimeRequirement - Tier III, Tier IV, etc.
+ * @param gridConnection - single, redundant, microgrid, limited
+ * @param config - Database configuration with load_profile_data containing multipliers
+ * @returns Recommended BESS configuration
+ */
+export function calculateDatacenterBESS(
+  capacity: number,
+  uptimeRequirement: string = 'tier3',
+  gridConnection: string = 'single',
+  config?: any
+): { powerMW: number; durationHours: number; description: string } {
+  
+  // Default multipliers (fallback if not in database)
+  const defaultMultipliers = {
+    tier3: { power: 0.5, duration: 3 },
+    tier4: { power: 0.6, duration: 4 },
+    microgrid: { power: 0.8, duration: 6 },
+    limited: { power: 0.8, duration: 6 }
+  };
+  
+  // Try to get multipliers from database config
+  let multipliers = defaultMultipliers;
+  if (config?.load_profile_data?.datacenter_multipliers) {
+    multipliers = { ...defaultMultipliers, ...config.load_profile_data.datacenter_multipliers };
+    if (import.meta.env.DEV) {
+      console.log('🖥️ [Datacenter] Using database multipliers:', multipliers);
+    }
+  } else if (import.meta.env.DEV) {
+    console.log('🖥️ [Datacenter] Using default multipliers (not found in database)');
+  }
+  
+  // Determine sizing based on grid connection and tier
+  let powerMultiplier: number;
+  let duration: number;
+  let description: string;
+  
+  if (gridConnection === 'microgrid' || gridConnection === 'limited') {
+    const config = multipliers.microgrid || multipliers.limited;
+    powerMultiplier = config.power;
+    duration = config.duration;
+    description = `Microgrid/Limited Grid: ${(powerMultiplier * 100).toFixed(0)}% capacity, ${duration}hr backup`;
+  } else if (uptimeRequirement === 'tier4') {
+    const config = multipliers.tier4;
+    powerMultiplier = config.power;
+    duration = config.duration;
+    description = `Tier IV: ${(powerMultiplier * 100).toFixed(0)}% capacity, ${duration}hr backup`;
+  } else {
+    // Default to Tier III
+    const config = multipliers.tier3;
+    powerMultiplier = config.power;
+    duration = config.duration;
+    description = `Tier III: ${(powerMultiplier * 100).toFixed(0)}% capacity, ${duration}hr backup`;
+  }
+  
+  const powerMW = capacity * powerMultiplier;
+  
+  if (import.meta.env.DEV) {
+    console.log(`🖥️ [Datacenter Sizing] ${capacity}MW × ${powerMultiplier} = ${powerMW}MW / ${duration}hr`);
+  }
+  
+  return {
+    powerMW: Math.round(powerMW * 100) / 100, // Round to 0.01 MW
+    durationHours: duration,
+    description
+  };
+}
+
+/**
  * Calculate EV charging baseline based on charger specifications
  * 
  * This handles the complex calculation for EV charging stations based on:
@@ -261,43 +544,100 @@ export async function calculateDatabaseBaseline(
  * - Peak concurrency factor
  */
 function calculateEVChargingBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
-  const level2Count = parseInt(useCaseData.level2Chargers) || 0;
-  const level2Power = parseFloat(useCaseData.level2Power) || 11; // kW
-  const dcFastCount = parseInt(useCaseData.dcFastChargers) || 0;
-  const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150; // kW
-  const concurrency = Math.min(parseInt(useCaseData.peakConcurrency) || 50, 80) / 100;
+  // FIXED: Match template field names (numberOfDCFastChargers, numberOfLevel2Chargers)
+  const level2Count = parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+  const level2Power = parseFloat(useCaseData.level2Power) || 19.2; // kW (commercial Level 2 standard)
+  const dcFastCount = parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
+  const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150; // kW (DC fast charger standard)
+  const concurrency = Math.min(parseInt(useCaseData.peakConcurrency) || 70, 80) / 100; // 70% default
   
   const totalLevel2 = (level2Count * level2Power) / 1000; // MW
   const totalDCFast = (dcFastCount * dcFastPower) / 1000; // MW
   const totalCharging = totalLevel2 + totalDCFast;
   
   if (import.meta.env.DEV) {
-    console.log('🔌 [BaselineService] EV Charging Calculation:', {
+    console.log('🔌 [EV Charging Calculation] Field mapping check:', {
+      rawData: useCaseData,
+      numberOfLevel2Chargers: useCaseData.numberOfLevel2Chargers,
+      numberOfDCFastChargers: useCaseData.numberOfDCFastChargers
+    });
+    console.log('🔌 [EV Charging Calculation] Power breakdown:', {
       level2Count,
       level2Power,
+      level2Total: totalLevel2.toFixed(3) + ' MW',
       dcFastCount,
       dcFastPower,
-      concurrency,
-      totalLevel2,
-      totalDCFast,
-      totalCharging
+      dcFastTotal: totalDCFast.toFixed(3) + ' MW',
+      concurrency: (concurrency * 100) + '%',
+      totalCharging: totalCharging.toFixed(3) + ' MW'
     });
   }
   
-  // Battery sized for demand management (60-70% of peak with concurrency)
-  const powerMW = Math.max(0.5, Math.min(totalCharging * concurrency * 0.7, totalCharging * 0.8));
-  const roundedPowerMW = Math.round(powerMW * 10) / 10;
+  // Battery sized for peak demand management 
+  // Use 100% of total charging capacity with concurrency factor
+  const powerMW = Math.max(0.2, totalCharging * concurrency);
+  const roundedPowerMW = Math.round(powerMW * 100) / 100; // Round to 0.01 MW precision
+  
+  // GENERATION LOGIC: Determine if solar/generation is required
+  const gridConnection = useCaseData.gridConnection || 'reliable';
+  const gridCapacity = parseFloat(useCaseData.gridCapacity) || 0; // 0 = unlimited
+  const peakDemandMW = totalCharging; // Peak when all chargers active
+  
+  let generationRequired = false;
+  let generationRecommendedMW = 0;
+  let generationReason = '';
+  
+  if (gridConnection === 'off_grid') {
+    // OFF-GRID: Must generate 100% of power
+    generationRequired = true;
+    generationRecommendedMW = Math.round(peakDemandMW * 1.2 * 10) / 10; // 120% for headroom
+    generationReason = 'Off-grid location requires 100% generation capacity';
+  } else if (gridConnection === 'limited' && gridCapacity > 0 && peakDemandMW > gridCapacity) {
+    // LIMITED GRID: Generate the gap
+    const gridGap = peakDemandMW - gridCapacity;
+    generationRequired = true;
+    generationRecommendedMW = Math.round(gridGap * 1.1 * 10) / 10; // 110% gap coverage
+    generationReason = `Peak demand (${peakDemandMW.toFixed(1)}MW) exceeds grid capacity (${gridCapacity}MW) by ${gridGap.toFixed(1)}MW`;
+  } else if (gridConnection === 'limited') {
+    // LIMITED BUT NO CAPACITY ENTERED: Recommend generation
+    generationRequired = false; // Not required without specific capacity
+    generationRecommendedMW = Math.round(peakDemandMW * 0.5 * 10) / 10; // 50% as backup
+    generationReason = 'Limited grid capacity - recommend 50% generation for reliability';
+  } else if (gridConnection === 'unreliable') {
+    // UNRELIABLE: Recommend backup generation
+    generationRecommendedMW = Math.round(peakDemandMW * 0.3 * 10) / 10; // 30% for outages
+    generationReason = 'Unreliable grid - recommend 30% generation for backup during outages';
+  } else if (gridConnection === 'microgrid') {
+    // MICROGRID: Need generation for islanding
+    generationRecommendedMW = Math.round(peakDemandMW * 0.8 * 10) / 10; // 80% for islanding
+    generationReason = 'Microgrid operation requires generation for grid independence';
+  }
   
   if (import.meta.env.DEV) {
-    console.log('🔋 [BaselineService] Recommended Battery Size:', roundedPowerMW, 'MW');
+    console.log('🔋 [EV Charging] Recommended Battery Size:', roundedPowerMW, 'MW');
+    console.log('🔋 [EV Charging] Calculation: ' + totalCharging.toFixed(3) + ' MW × ' + (concurrency * 100) + '% = ' + powerMW.toFixed(3) + ' MW');
+    console.log('☀️ [Generation Analysis]:', {
+      gridConnection,
+      gridCapacity: gridCapacity || 'unlimited',
+      peakDemand: peakDemandMW.toFixed(2) + ' MW',
+      generationRequired,
+      generationRecommended: generationRecommendedMW + ' MW',
+      reason: generationReason
+    });
   }
   
   return {
     powerMW: roundedPowerMW,
     durationHrs: 2, // Short duration for demand management
     solarMW: Math.round(roundedPowerMW * 1.0 * 10) / 10,
-    description: `EV Charging: ${level2Count} L2 + ${dcFastCount} DC Fast chargers`,
-    dataSource: 'Calculated from charger specifications'
+    description: `EV Charging: ${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW) + ${dcFastCount} DC Fast (${(totalDCFast * 1000).toFixed(0)}kW)`,
+    dataSource: 'Calculated from charger specifications',
+    gridConnection,
+    gridCapacity,
+    peakDemandMW,
+    generationRequired,
+    generationRecommendedMW,
+    generationReason
   };
 }
 

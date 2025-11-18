@@ -68,6 +68,16 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
 
   // Step 2: Use Case Data (was Step 2)
   const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
+  
+  // Clear useCaseData when template changes to prevent data contamination
+  useEffect(() => {
+    if (selectedTemplate) {
+      setUseCaseData({});
+      if (import.meta.env.DEV) {
+        console.log(`🔄 [Template Change] Cleared useCaseData for new template: ${selectedTemplate}`);
+      }
+    }
+  }, [selectedTemplate]);
   const [aiUseCaseRecommendation, setAiUseCaseRecommendation] = useState<{
     message: string;
     savings: string;
@@ -200,45 +210,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       if (selectedTemplate && Object.keys(useCaseData).length > 0 && !isQuickstart) {
         let scale = 1; // Default scale
         
-        if (selectedTemplate === 'ev-charging') {
-        // Calculate realistic storage based on charger configuration
-        const level2Count = parseInt(useCaseData.level2Chargers) || 0;
-        const level2Power = parseFloat(useCaseData.level2Power) || 11;
-        const dcFastCount = parseInt(useCaseData.dcFastChargers) || 0;
-        const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150;
-        const peakConcurrency = parseInt(useCaseData.peakConcurrency) || 50;
+        // REMOVED: Duplicate EV charging calculation - now handled by calculateDatabaseBaseline
+        // All use cases now use the unified baseline calculation service
         
-        // Calculate total charging capacity and required storage
-        const totalLevel2Power = (level2Count * level2Power) / 1000; // Convert to MW
-        const totalDCFastPower = (dcFastCount * dcFastPower) / 1000; // Convert to MW
-        const totalChargingPower = totalLevel2Power + totalDCFastPower;
-        
-        // Storage sizing: 60-80% of total charging power for demand management
-        // Plus concurrency factor (how many charge simultaneously)
-        const concurrencyFactor = Math.min(peakConcurrency / 100, 0.8); // Max 80% concurrency
-        const demandManagementSize = totalChargingPower * concurrencyFactor * 0.7; // 70% for demand shaving
-        
-        // Minimum 0.5MW, maximum practical size based on charger count
-        const calculatedPowerMW = Math.max(0.5, Math.min(demandManagementSize, totalChargingPower * 0.8));
-        
-        // Duration: 2-4 hours for peak demand management and grid arbitrage
-        const calculatedDurationHrs = Math.max(2, Math.min(4, 3));
-        
-        setStorageSizeMW(Math.round(calculatedPowerMW * 10) / 10);
-        setDurationHours(calculatedDurationHrs);
-        
-        // Solar is OPTIONAL - start with 0, let user add if they want and have space
-        setSolarMW(0);
-        
-      } else {
         // Extract scale based on use case type
         switch (selectedTemplate) {
           case 'hotel':
-            scale = parseInt(useCaseData.numRooms) || 100; // Number of rooms
+            scale = parseInt(useCaseData.numberOfRooms || useCaseData.numRooms) || 100; // Number of rooms
             scale = scale / 100; // Convert to scale factor (per 100 rooms)
             break;
           case 'car-wash':
-            scale = parseInt(useCaseData.numBays) || 3; // Number of wash bays
+            scale = parseInt(useCaseData.num_bays || useCaseData.numBays) || 3; // Number of wash bays
             break;
           case 'hospital':
             scale = parseInt(useCaseData.bedCount) || 200; // Number of beds
@@ -252,8 +234,19 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             scale = parseInt(useCaseData.numUnits) || 100; // Number of units
             scale = scale / 100; // Convert to scale factor (per 100 units)
             break;
+          case 'datacenter':
           case 'data-center':
-            scale = parseInt(useCaseData.capacity) || 5; // MW capacity
+            // For datacenters, use capacity directly as the scale
+            // This could be from direct capacity input OR calculated from square footage
+            const dcCapacity = parseFloat(useCaseData.capacity) || 5;
+            const dcSquareFootage = parseFloat(useCaseData.squareFootage) || 0;
+            
+            // If square footage provided, calculate capacity from power density (150 W/sq ft)
+            if (dcSquareFootage > 0) {
+              scale = (dcSquareFootage * 150) / 1000000; // Convert W to MW
+            } else {
+              scale = dcCapacity; // Use capacity directly in MW
+            }
             break;
           case 'airport':
             scale = parseInt(useCaseData.annual_passengers) || 5; // Million passengers
@@ -279,7 +272,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             scale = scale / 1000; // Convert to thousands
             break;
           case 'indoor-farm':
-            scale = parseInt(useCaseData.growing_area) || 10000; // Growing area sq ft
+            scale = parseInt(useCaseData.cultivationArea || useCaseData.growing_area) || 10000; // Cultivation area sq ft
             scale = scale / 10000; // Convert to scale factor
             break;
           case 'cold-storage':
@@ -294,21 +287,62 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             scale = 1; // Default scale
         }
         
+        // Variable to store calculated power for solar sizing
+        let calculatedPowerMW: number;
+        let calculatedDurationHrs: number;
+        
         // Use the shared database-driven baseline calculation
         // This ensures wizard and AI use IDENTICAL baseline values
+        // Special cases (EV charging, datacenter) are handled inside baselineService
+        console.log('🎯 [SmartWizard] About to call calculateDatabaseBaseline with:', {
+          selectedTemplate,
+          scale,
+          useCaseData,
+          useCaseDataKeys: Object.keys(useCaseData || {})
+        });
         const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
         console.log('🎯 [SmartWizard] Baseline from shared service:', baseline);
         console.log('🎯 [SmartWizard] Setting storageSizeMW to:', baseline.powerMW);
         
+        calculatedPowerMW = baseline.powerMW;
+        calculatedDurationHrs = baseline.durationHrs;
+        
         setStorageSizeMW(baseline.powerMW);
         setDurationHours(baseline.durationHrs);
+        
+        // GENERATION REQUIREMENT LOGIC: Check if solar/generation is required
+        if (baseline.generationRequired && baseline.generationRecommendedMW && baseline.generationRecommendedMW > 0) {
+          console.log('⚡ [Generation REQUIRED]:', {
+            reason: baseline.generationReason,
+            recommendedMW: baseline.generationRecommendedMW,
+            gridConnection: baseline.gridConnection,
+            gridCapacity: baseline.gridCapacity,
+            peakDemand: baseline.peakDemandMW
+          });
+          
+          // Auto-enable renewables and set solar to meet generation requirement
+          setIncludeRenewables(true);
+          setSolarMW(baseline.generationRecommendedMW);
+          
+          // Show alert to user
+          alert(`⚡ GENERATION REQUIRED\n\n${baseline.generationReason}\n\nRecommended Solar: ${baseline.generationRecommendedMW} MW\n\nThis has been automatically configured in Step 4.`);
+        } else if (baseline.generationRecommendedMW && baseline.generationRecommendedMW > 0) {
+          console.log('☀️ [Generation RECOMMENDED]:', {
+            reason: baseline.generationReason,
+            recommendedMW: baseline.generationRecommendedMW,
+            gridConnection: baseline.gridConnection
+          });
+          
+          // Don't auto-enable, but store the recommendation
+          // User will see it as a suggestion in Step 4
+        }
         
         // Enhanced solar sizing using automated calculation
         const buildingCharacteristics = {
           useCase: selectedTemplate,
           buildingSize: useCaseData.buildingSize || useCaseData.facilitySize,
           facilitySize: useCaseData.facilitySize,
-          peakLoad: baseline.powerMW,
+          peakLoad: calculatedPowerMW, // Use the local variable
           electricalLoad: useCaseData.electricalLoad || useCaseData.peakLoad,
           capacity: useCaseData.capacity,
           numRooms: useCaseData.numRooms,
@@ -319,17 +353,17 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
         };
         
         const solarSuggestion = calculateAutomatedSolarSizing(buildingCharacteristics);
-        // ⚠️ BUG FIX: Don't auto-set solar - store as suggestion only
-        // setSolarMW(solarSuggestion.recommendedMW); // REMOVED - user must choose
-        
-        console.log('🌞 Solar suggestion calculated (not auto-applied):', {
-          template: selectedTemplate,
-          characteristics: buildingCharacteristics,
-          suggestion: solarSuggestion,
-          note: 'User must explicitly choose solar in Step 3'
-        });
+        // ⚠️ BUG FIX: Don't auto-set solar UNLESS generation is required
+        // If generation not required, store as suggestion only
+        if (!baseline.generationRequired) {
+          console.log('🌞 Solar suggestion calculated (not auto-applied):', {
+            template: selectedTemplate,
+            characteristics: buildingCharacteristics,
+            suggestion: solarSuggestion,
+            note: 'User must explicitly choose solar in Step 3'
+          });
+        }
       }
-    }
     };
     
     calculateConfig();
@@ -673,18 +707,30 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           const datacenterRooftopAcres = (datacenterSolarMW * 1000 * 100) / 43560;
           
           if (gridConn === 'microgrid' || gridConn === 'limited') {
+            // Use centralized calculation service
+            const { powerMW, durationHours: dur } = calculateDatacenterBESS(capacity, uptimeReq, gridConn);
+            setStorageSizeMW(powerMW);
+            setDurationHours(dur);
             message = `Datacenters with ${formatPowerCompact(capacity)} capacity and ${gridConn === 'microgrid' ? 'microgrid architecture' : 'limited grid capacity'} require significant battery storage for continuous operation. Battery systems provide instant switchover (< 10ms) compared to generators (10-15 seconds). Solar limited by cooling equipment space.`;
-            configuration = `${formatPowerCompact(capacity * 0.8)} / 6hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional ${formatSolarCapacity(datacenterSolarMW)} Solar`;
+            configuration = `${formatPowerCompact(powerMW)} / ${dur}hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional ${formatSolarCapacity(datacenterSolarMW)} Solar`;
             savings = '$200-400K/year';
             roi = '3-5 years';
           } else if (uptimeReq === 'tier4') {
+            // Use centralized calculation service
+            const { powerMW, durationHours: dur } = calculateDatacenterBESS(capacity, uptimeReq, gridConn);
+            setStorageSizeMW(powerMW);
+            setDurationHours(dur);
             message = `Tier IV datacenters (${formatPowerCompact(capacity)}) require 2N or 2N+1 redundancy with 99.995% uptime. Rooftop space limited by cooling infrastructure - consider off-site solar PPA if renewable energy goals exist.`;
-            configuration = `${formatPowerCompact(capacity * 0.6)} / 4hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional Off-site Solar PPA`;
+            configuration = `${formatPowerCompact(powerMW)} / ${dur}hr BESS + ${formatPowerCompact(capacity * 0.3)} Generator + Optional Off-site Solar PPA`;
             savings = '$150-300K/year';
             roi = '4-6 years';
           } else {
+            // Use centralized calculation service (Tier III default)
+            const { powerMW, durationHours: dur } = calculateDatacenterBESS(capacity, uptimeReq, gridConn);
+            setStorageSizeMW(powerMW);
+            setDurationHours(dur);
             message = `${formatPowerCompact(capacity)} ${uptimeReq.toUpperCase()} datacenters benefit from battery+generator hybrid systems. Batteries handle short outages instantly while generators provide extended runtime. Limited rooftop solar possible if cooling permits.`;
-            configuration = `${formatPowerCompact(capacity * 0.5)} / 3hr BESS + ${formatPowerCompact(capacity * 0.2)} Generator + Optional ${datacenterSolarMW.toFixed(1)}MW Solar`;
+            configuration = `${formatPowerCompact(powerMW)} / ${dur}hr BESS + ${formatPowerCompact(capacity * 0.2)} Generator + Optional ${datacenterSolarMW.toFixed(1)}MW Solar`;
             savings = '$100-200K/year';
             roi = '4-7 years';
           }
@@ -1645,12 +1691,12 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
         {/* Header - Hide on intro screen */}
         {step >= 0 && (
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-2xl">
+          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 text-white p-6 rounded-t-2xl shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <span className="text-4xl">🪄</span>
+                <span className="text-4xl drop-shadow-lg">🪄</span>
                 <div>
-                  <h2 className="text-2xl font-bold">Smart Wizard</h2>
+                  <h2 className="text-2xl font-bold drop-shadow-md">Welcome to Merlin!</h2>
                   <div className="flex items-center gap-3">
                     <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
                     <AIStatusIndicator compact={true} />

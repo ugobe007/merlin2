@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
               { key: 'health', label: '🏥 System Health' },
               { key: 'calculations', label: '🧮 Calculations' },
               { key: 'pricing', label: '💰 Pricing Config' },
-              { key: 'aiData', label: '🤖 AI Data' },
+              { key: 'aiData', label: '🤖 AI Data Collection' },
               { key: 'cache', label: '⚡ Cache' },
               { key: 'migration', label: '🔄 Migration' },
               { key: 'settings', label: '⚙️ Settings' }

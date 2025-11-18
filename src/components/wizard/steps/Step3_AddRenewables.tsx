@@ -254,7 +254,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             <input
               type="range"
               min="0"
-              max="10"
+              max="100"
               step="0.5"
               value={solarMW}
               onChange={(e) => setSolarMW(parseFloat(e.target.value))}
@@ -263,7 +263,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             
             <div className="flex justify-between text-sm text-gray-500 mt-2">
               <span>0 MW (None)</span>
-              <span>10 MW</span>
+              <span>100 MW</span>
             </div>
 
             {/* Solar Space Configuration */}
@@ -503,7 +503,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             <input
               type="range"
               min="0"
-              max="10"
+              max="100"
               step="0.5"
               value={windMW}
               onChange={(e) => setWindMW(parseFloat(e.target.value))}
@@ -512,7 +512,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             
             <div className="flex justify-between text-sm text-gray-500 mt-2">
               <span>0 MW (None)</span>
-              <span>10 MW</span>
+              <span>100 MW</span>
             </div>
 
             {windMW > 0 && (
@@ -672,7 +672,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             <input
               type="range"
               min="0"
-              max="5"
+              max="100"
               step="0.5"
               value={generatorMW}
               onChange={(e) => setGeneratorMW(parseFloat(e.target.value))}
@@ -681,7 +681,7 @@ const Step3_AddRenewables: React.FC<Step3_AddRenewablesProps> = ({
             
             <div className="flex justify-between text-sm text-gray-500 mt-2">
               <span>0 MW (None)</span>
-              <span>5 MW</span>
+              <span>100 MW</span>
             </div>
 
             {generatorMW > 0 && (

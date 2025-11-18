@@ -78,15 +78,28 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   const checkDatabaseStatus = async () => {
     setDatabaseStatus('checking');
     try {
-      // Test connection to Supabase by querying a simple table
+      // Test connection to Supabase with a simple query
+      // Try data_collection_log first (from AI system), fallback to any table
       const { data, error } = await supabase
-        .from('use_case_templates')
+        .from('data_collection_log')
         .select('id')
         .limit(1);
       
       if (error) {
         console.error('Database connection error:', error);
-        setDatabaseStatus('error');
+        // Try alternative table if data_collection_log doesn't exist
+        const { error: altError } = await supabase
+          .from('use_case_templates')
+          .select('id')
+          .limit(1);
+        
+        if (altError) {
+          console.error('Alternative table check failed:', altError);
+          setDatabaseStatus('error');
+        } else {
+          setDatabaseStatus('connected');
+          setLastSync(new Date().toISOString());
+        }
       } else {
         setDatabaseStatus('connected');
         setLastSync(new Date().toISOString());
