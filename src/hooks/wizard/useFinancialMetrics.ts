@@ -96,17 +96,15 @@ export const useFinancialMetrics = ({
           projectLifetimeYears: 25
         });
 
-        const totalUpfront = costs.totalUpfront || financialMetrics.totalProjectCost;
-        const paybackYears = totalUpfront / totalAnnualSavings;
-        const roi = ((totalAnnualSavings * 25 - totalUpfront) / totalUpfront) * 100;
-
+        // ✅ USE CENTRALIZED RESULTS - Single source of truth
+        // DO NOT recalculate payback/roi locally - use what centralizedCalculations returns
         setMetrics({
           npv: financialMetrics.npv || 0,
-          irr: (financialMetrics.irr || 0) * 100, // Convert to percentage
-          paybackYears: Math.round(paybackYears * 10) / 10,
-          annualSavings: totalAnnualSavings,
-          lifetimeSavings: totalAnnualSavings * 25,
-          roi: Math.round(roi),
+          irr: financialMetrics.irr || 0, // Already a percentage from centralized service
+          paybackYears: Math.round(financialMetrics.paybackYears * 10) / 10,
+          annualSavings: financialMetrics.annualSavings,
+          lifetimeSavings: financialMetrics.annualSavings * 25,
+          roi: Math.round(financialMetrics.roi25Year || 0),
           isCalculating: false
         });
 

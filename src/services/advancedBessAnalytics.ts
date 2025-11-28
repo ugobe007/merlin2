@@ -864,8 +864,11 @@ export class BESSOptimizationEngine {
     const battery_cycles_per_year = annualCycles;
     const system_efficiency_percent = 85; // Typical round-trip efficiency
     
-    // Simple ROI calculation
-    const initial_cost = batteryModel.capacity_kWh * 200 + batteryModel.power_kW * 150; // Rough CAPEX estimate
+    // Simple ROI calculation - using NREL ATB 2024 pricing estimate
+    // NOTE: For accurate pricing, use calculateFinancialMetrics() from centralizedCalculations.ts
+    const NREL_PRICE_PER_KWH = 155; // NREL ATB 2024
+    const INVERTER_PRICE_PER_KW = 80; // Industry average
+    const initial_cost = batteryModel.capacity_kWh * NREL_PRICE_PER_KWH + batteryModel.power_kW * INVERTER_PRICE_PER_KW;
     const roi_10_year_percent = ((total_savings_annual * 10 - initial_cost) / initial_cost) * 100;
     
     return {

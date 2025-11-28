@@ -21,6 +21,8 @@ import AIChatModal from './modals/AIChatModal';
 import type { ProfileData } from './modals/AccountSetup';
 import AboutView from './views/AboutView';
 import VendorPortalView from './views/VendorPortalView';
+// Import NREL-based pricing from unified service
+import { getSolarPricing, getWindPricing, getGeneratorPricing } from '@/services/unifiedPricingService';
 
 // NEW: Clean unified Advanced Quote Builder component
 import AdvancedQuoteBuilder from './AdvancedQuoteBuilder';
@@ -195,12 +197,13 @@ export default function BessQuoteBuilder() {
   const totalMWh = powerMW * standbyHours;
   const effectiveBatteryKwh = totalMWh * 1000;
   
-  // BESS pricing per kWh based on system size (from comprehensive_pricing_demo.js)
-  let pricePerKwh = 168; // Default: Small systems (<1 MWh)
+  // BESS pricing per kWh based on system size - NREL ATB 2024
+  // $155/kWh base, with tiered pricing for different sizes
+  let pricePerKwh = 200; // Default: Small systems (<1 MWh) - premium for small scale
   if (effectiveBatteryKwh >= 10000) {
-    pricePerKwh = 118; // Utility scale (>10 MWh): $118/kWh
+    pricePerKwh = 140; // Utility scale (>10 MWh): economies of scale
   } else if (effectiveBatteryKwh >= 1000) {
-    pricePerKwh = 138; // Medium systems (1-10 MWh): $138/kWh
+    pricePerKwh = 155; // Medium systems (1-10 MWh): NREL base rate
   }
   
   // Calculate base BESS cost
@@ -210,10 +213,11 @@ export default function BessQuoteBuilder() {
   const bosMultiplier = 1 + (bosPercent / 100);
   const epcMultiplier = 1 + (epcPercent / 100);
   
-  // Grand CapEx includes BESS + BOS + EPC + renewables
-  const solarCost = solarKwp * 1000; // ~$1000/kWp for solar
-  const windCost = windKw * 1500; // ~$1500/kW for wind
-  const genCost = genKw * 800; // ~$800/kW for generators
+  // Renewable costs using NREL ATB 2024 defaults
+  // Solar: $0.85/W = $850/kWp, Wind: $1200/kW, Generator: $500/kW
+  const solarCost = solarKwp * 850; // NREL ATB 2024: $0.85/W
+  const windCost = windKw * 1200; // NREL ATB 2024: $1,200/kW
+  const genCost = genKw * 500; // NREL standard: $500/kW diesel generator
   
   const grandCapEx = (bessCapEx * bosMultiplier * epcMultiplier) + solarCost + windCost + genCost;
   

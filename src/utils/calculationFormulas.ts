@@ -162,8 +162,8 @@ export const generateCalculationBreakdown = (
     // Generator costs
   let generatorSubtotal = 0;
   if (generatorMW > 0) {
-    // Apply market-rate pricing for natural gas generators (Q4 2025 EIA/market data)
-    const generatorPricePerKW = 350; // Simple cycle natural gas generator
+    // NREL ATB 2024: Natural gas combustion turbine $500/kW
+    const generatorPricePerKW = 500; // NREL ATB 2024 combustion turbine
     generatorSubtotal = generatorMW * 1000 * (generatorPricePerKW / 1000);
     calculations.push({
       section: 'Equipment Costs',
@@ -178,10 +178,9 @@ export const generateCalculationBreakdown = (
       resultUnit: '$',
       explanation: 'Natural gas generator set with controls, switchgear, and interconnection.',
       assumptions: [
-        'Simple cycle natural gas turbine/engine',
+        'NREL ATB 2024 combustion turbine pricing',
         '20-25 year operational life (with maintenance)',
         '30-40% electrical efficiency at full load',
-        'Q4 2025 EIA generator cost data',
         'Includes basic electrical interconnection',
         'Does not include fuel costs or emissions equipment',
       ],
@@ -191,8 +190,8 @@ export const generateCalculationBreakdown = (
   // Solar costs
   let solarSubtotal = 0;
   if (solarMW > 0) {
-    // Apply market-rate pricing based on system size (Q4 2025 SEIA data)
-    const solarPricePerKWp = solarMW >= 5 ? 800 : 1000; // Utility-scale vs commercial pricing
+    // NREL ATB 2024: Utility-scale solar $0.85/W, Commercial $1.00/W
+    const solarPricePerKWp = solarMW >= 5 ? 850 : 1000; // NREL ATB 2024 tiered pricing
     solarSubtotal = solarMW * 1000 * (solarPricePerKWp / 1000);
     calculations.push({
       section: 'Equipment Costs',
@@ -207,10 +206,10 @@ export const generateCalculationBreakdown = (
       resultUnit: '$',
       explanation: 'Solar photovoltaic array with racking, mounting, and balance of system.',
       assumptions: [
+        'NREL ATB 2024 solar pricing data',
         'Monocrystalline or bifacial panels (21-22% efficiency)',
         '25-year performance warranty (85% output at end)',
         solarMW >= 5 ? 'Utility-scale: Fixed-tilt or tracking' : 'Commercial: Rooftop or ground-mount',
-        'Q4 2025 SEIA/Wood Mackenzie pricing',
       ],
     });
   }
@@ -218,8 +217,8 @@ export const generateCalculationBreakdown = (
     // Wind costs
   let windSubtotal = 0;
   if (windMW > 0) {
-    // Apply market-rate pricing based on wind turbine capacity (Q4 2025 AWEA/NREL data)
-    const windPricePerKW = windMW >= 10 ? 1200 : 1400; // Utility-scale vs distributed pricing
+    // NREL ATB 2024: Land-based wind $1,200/kW base
+    const windPricePerKW = 1200; // NREL ATB 2024 land-based wind
     windSubtotal = windMW * 1000 * (windPricePerKW / 1000);
     calculations.push({
       section: 'Equipment Costs',
@@ -234,10 +233,10 @@ export const generateCalculationBreakdown = (
       resultUnit: '$',
       explanation: 'Wind turbine generators with foundations, electrical infrastructure, and grid connection.',
       assumptions: [
+        'NREL ATB 2024 land-based wind pricing',
         'IEC Class I/II wind turbines (2.5-4.5 MW capacity)',
         '25-30 year operational life',
         windMW >= 10 ? 'Utility-scale: Wind farm development' : 'Distributed: Single/few turbines',
-        'Q4 2025 AWEA/NREL wind cost database',
         'Assumes wind resource Class 4 or higher',
       ],
     });

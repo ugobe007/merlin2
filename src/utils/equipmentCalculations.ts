@@ -118,8 +118,10 @@ export const calculateEquipmentBreakdown = async (
 ): Promise<EquipmentBreakdown> => {
   
   const totalEnergyMWh = storageSizeMW * durationHours;
+  const totalEnergyKWh = totalEnergyMWh * 1000;
   
   // Battery System Calculations - Market-based pricing
+  // ✅ FIX: Use actual energy required, not fixed utility-scale units
   const batteryUnitPowerMW = 3;
   const batteryUnitEnergyMWh = 11.5;
   
@@ -129,24 +131,49 @@ export const calculateEquipmentBreakdown = async (
   
   // Use market pricing with realistic cap
   const effectivePricePerKWh = Math.min(marketPricePerKWh, 580); // Cap at realistic $580/kWh for small systems
-  const batteryUnitCost = batteryUnitEnergyMWh * 1000 * effectivePricePerKWh;
   
-  const batteryQuantity = Math.ceil(Math.max(
-    storageSizeMW / batteryUnitPowerMW,
-    totalEnergyMWh / batteryUnitEnergyMWh
-  ));
+  // ✅ CRITICAL FIX: Calculate battery cost based on ACTUAL energy needed, not fixed unit size
+  // Small systems (< 1 MW) should pay per-kWh, not per-unit
+  const isSmallSystem = storageSizeMW < 1.0;
+  
+  let batteryQuantity: number;
+  let actualBatteryTotalCost: number;
+  let displayUnitEnergyMWh: number;
+  let displayUnitCost: number;
+  
+  if (isSmallSystem) {
+    // ✅ For C&I systems < 1 MW: Price based on actual kWh needed (modular approach)
+    // Use containerized/modular units sized appropriately
+    batteryQuantity = 1; // Single modular system
+    actualBatteryTotalCost = totalEnergyKWh * effectivePricePerKWh;
+    displayUnitEnergyMWh = totalEnergyMWh;
+    displayUnitCost = actualBatteryTotalCost;
+    
+    if (import.meta.env.DEV) {
+      console.log(`🔋 [Small System Pricing] ${storageSizeMW.toFixed(2)} MW × ${durationHours}hr = ${totalEnergyKWh} kWh @ $${effectivePricePerKWh}/kWh = $${actualBatteryTotalCost.toLocaleString()}`);
+    }
+  } else {
+    // For utility-scale systems: Use standard unit-based approach
+    batteryQuantity = Math.ceil(Math.max(
+      storageSizeMW / batteryUnitPowerMW,
+      totalEnergyMWh / batteryUnitEnergyMWh
+    ));
+    displayUnitEnergyMWh = batteryUnitEnergyMWh;
+    displayUnitCost = batteryUnitEnergyMWh * 1000 * effectivePricePerKWh;
+    actualBatteryTotalCost = batteryQuantity * displayUnitCost;
+  }
   
   // Get market intelligence recommendations
   const marketIntelligence = getMarketIntelligenceRecommendations(storageSizeMW, location);
   
   const batteries = {
     quantity: batteryQuantity,
-    unitPowerMW: batteryUnitPowerMW,
-    unitEnergyMWh: batteryUnitEnergyMWh,
-    unitCost: batteryUnitCost,
-    totalCost: batteryQuantity * batteryUnitCost,
-    manufacturer: effectivePricePerKWh < 130 ? "CATL/BYD" : "Tesla",
-    model: effectivePricePerKWh < 130 ? "Utility Scale LFP" : "Megapack 2XL",
+    unitPowerMW: isSmallSystem ? storageSizeMW : batteryUnitPowerMW,
+    unitEnergyMWh: displayUnitEnergyMWh,
+    unitCost: displayUnitCost,
+    totalCost: actualBatteryTotalCost, // ✅ FIX: Use actual calculated cost
+    manufacturer: effectivePricePerKWh < 200 ? "CATL/BYD" : "Tesla",
+    model: isSmallSystem ? "Commercial LFP Module" : (effectivePricePerKWh < 200 ? "Utility Scale LFP" : "Megapack 2XL"),
     pricePerKWh: effectivePricePerKWh,
     marketIntelligence: {
       nrelCompliant: true,
@@ -154,7 +181,7 @@ export const calculateEquipmentBreakdown = async (
                         marketIntelligence.analysis.financialMetrics.simplePayback < 12 ? 'Good' : 'Poor',
       paybackPeriod: marketIntelligence.analysis.financialMetrics.simplePayback,
       revenueProjection: marketIntelligence.analysis.revenueProjection.totalAnnualRevenue,
-      dataSource: 'NREL ATB 2024 + Market Intelligence (Cost-Optimized)'
+      dataSource: isSmallSystem ? 'NREL ATB 2024 (C&I Modular)' : 'NREL ATB 2024 + Market Intelligence (Cost-Optimized)'
     }
   };
 
