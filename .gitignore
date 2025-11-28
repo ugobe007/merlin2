@@ -7,7 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs
 dist
 dist-ssr
 *.local
@@ -17,8 +20,9 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Backup directory
+# Backup directories
 .backups
+backup_*/
 
 # Editor directories and files
 .vscode/*
@@ -30,3 +34,38 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+*.webm
+puppeteer-results.txt
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Temporary/generated files
+*.timestamp-*
+html/
+number
+useCaseSlug
+customQuestions
+
+# Backup files
+*.backup
+*.bak
+*.BACKUP*
+*.before-*
+*.pre-*
+
+# SQL check files (keep in database/ folder only)
+check_*.sql
+verify_*.sql
+
+# Archive folders (legacy code)
+src/components/archive_legacy_nov_2025/
+
+# Misc
+*.snippet

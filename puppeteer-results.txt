@@ -1,6 +1,0 @@
-
-🚀 Starting SmartWizard V3 Comprehensive Test
-
-============================================================
-
-📋 TEST 1: Load Homepage
