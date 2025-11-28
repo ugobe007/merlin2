@@ -584,38 +584,71 @@ export default function AdvancedQuoteBuilder({
           </>
         )}
 
-        {/* CUSTOM CONFIGURATION VIEW */}
+        {/* CUSTOM CONFIGURATION VIEW - REDESIGNED TO MATCH SMART WIZARD */}
         {viewMode === 'custom-config' && (
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 relative overflow-hidden">
-            {/* Animated background orbs */}
+          <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 relative overflow-hidden">
+            {/* Animated background orbs - matching Smart Wizard */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-indigo-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse"></div>
-              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-slate-300/20 to-gray-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute top-20 left-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-full blur-2xl animate-pulse delay-500"></div>
             </div>
 
-            {/* Enhanced header for config view */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 border-b-2 border-blue-500 shadow-2xl backdrop-blur-sm">
-              <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
+            {/* Enhanced header for config view - matching Smart Wizard style */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-800/90 via-indigo-700/90 to-blue-700/90 border-b-4 border-purple-400/50 shadow-2xl backdrop-blur-xl">
+              <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setViewMode('landing')}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:shadow-lg hover:scale-105 active:scale-95"
+                    className="p-3 hover:bg-white/20 rounded-xl transition-all text-white hover:shadow-lg hover:scale-105 active:scale-95 border-2 border-white/20 hover:border-white/40"
                     aria-label="Back"
                   >
                     <ArrowLeft className="w-6 h-6" />
                   </button>
                   <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                      <span className="animate-pulse">✨</span>
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                      <span className="text-4xl">🧙‍♂️</span>
                       Custom Configuration
-                      <span className="animate-pulse delay-500">✨</span>
+                      <span className="text-yellow-300 animate-pulse">✨</span>
                     </h1>
-                    <p className="text-blue-100 text-sm font-medium">Manually configure your BESS system with Merlin magic</p>
+                    <p className="text-purple-200 text-sm font-medium">Professional BESS configuration with Merlin's guidance</p>
                   </div>
                 </div>
+                
+                {/* Live Power Level Badge */}
+                <div className="hidden md:flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-xs text-purple-200 font-medium">Your Power Level</p>
+                    <p className="text-2xl font-bold text-white">
+                      {(() => {
+                        const totalKWh = storageSizeMW * durationHours * 1000;
+                        if (totalKWh >= 10000) return '🧙‍♂️ Grand Wizard';
+                        if (totalKWh >= 5000) return '👑 Archmage';
+                        if (totalKWh >= 3500) return '🌟 Sorcerer';
+                        if (totalKWh >= 2000) return '⚡ Enchanter';
+                        if (totalKWh >= 1000) return '🔮 Conjurer';
+                        if (totalKWh >= 500) return '✨ Adept';
+                        return '🪄 Apprentice';
+                      })()}
+                    </p>
+                  </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-3xl shadow-lg border-2 border-amber-300">
+                    {(() => {
+                      const totalKWh = storageSizeMW * durationHours * 1000;
+                      if (totalKWh >= 10000) return '🧙‍♂️';
+                      if (totalKWh >= 5000) return '👑';
+                      if (totalKWh >= 3500) return '🌟';
+                      if (totalKWh >= 2000) return '⚡';
+                      if (totalKWh >= 1000) return '🔮';
+                      if (totalKWh >= 500) return '✨';
+                      return '🪄';
+                    })()}
+                  </div>
+                </div>
+                
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-all text-white hover:rotate-90 duration-300"
+                  className="p-3 hover:bg-white/20 rounded-xl transition-all text-white hover:rotate-90 duration-300 border-2 border-white/20 hover:border-white/40"
                   aria-label="Close"
                 >
                   <X className="w-6 h-6" />
@@ -623,40 +656,70 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* Configuration Form */}
-            <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
-              <div className="space-y-8">
+            {/* Configuration Form - Redesigned with Smart Wizard styling */}
+            <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
+              <div className="space-y-6">
                 
-                {/* Project Information Section */}
-                <div className="bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 border-2 border-blue-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <FileText className="w-7 h-7 text-blue-600 animate-pulse" />
-                    <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Project Information</span>
+                {/* Live System Summary Card - NEW */}
+                <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-blue-600/30 backdrop-blur-xl border-2 border-purple-400/50 rounded-2xl p-6 shadow-2xl">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Power</p>
+                        <p className="text-3xl font-bold text-white">{storageSizeMW.toFixed(1)} <span className="text-lg text-purple-200">MW</span></p>
+                      </div>
+                      <div className="text-2xl text-purple-300">×</div>
+                      <div className="text-center">
+                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Duration</p>
+                        <p className="text-3xl font-bold text-white">{durationHours} <span className="text-lg text-purple-200">hrs</span></p>
+                      </div>
+                      <div className="text-2xl text-purple-300">=</div>
+                      <div className="text-center">
+                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Energy</p>
+                        <p className="text-3xl font-bold text-green-400">{storageSizeMWh.toFixed(1)} <span className="text-lg text-green-300">MWh</span></p>
+                      </div>
+                    </div>
+                    <div className="text-center px-6 py-3 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/50 rounded-xl">
+                      <p className="text-amber-200 text-xs font-medium uppercase tracking-wider">Est. Cost</p>
+                      <p className="text-2xl font-bold text-amber-300">${(systemCost / 1000000).toFixed(2)}M</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Project Information Section - Enhanced */}
+                <div className="bg-white/10 backdrop-blur-xl border-2 border-blue-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-blue-400/50">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white">Project Information</span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Project Name
                       </label>
                       <input
                         type="text"
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm placeholder-purple-300/50"
                         placeholder="e.g., Downtown Office Building BESS"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Location
                       </label>
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-blue-600 animate-bounce" style={{ animationDuration: '3s' }} />
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                          <MapPin className="w-5 h-5 text-white" />
+                        </div>
                         <input
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          className="flex-1 px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
+                          className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm placeholder-purple-300/50"
                           placeholder="City, State/Country"
                         />
                       </div>
@@ -664,21 +727,23 @@ export default function AdvancedQuoteBuilder({
                   </div>
                 </div>
 
-                {/* Enhanced System Configuration Section */}
-                <div className="bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-100 border-2 border-slate-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden">
+                {/* Enhanced System Configuration Section - Matching Smart Wizard */}
+                <div className="bg-white/10 backdrop-blur-xl border-2 border-indigo-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-indigo-400/50 relative overflow-hidden">
                   {/* Animated sparkles */}
                   <div className="absolute top-4 right-4 text-2xl animate-spin" style={{ animationDuration: '3s' }}>⚡</div>
                   <div className="absolute bottom-4 left-4 text-2xl animate-bounce" style={{ animationDuration: '2s' }}>🔋</div>
                   
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Battery className="w-7 h-7 text-indigo-600 animate-pulse" />
-                    <span className="bg-gradient-to-r from-slate-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">System Configuration</span>
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Battery className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white">System Configuration</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Power Capacity */}
                     <div className="md:col-span-2">
-                      <label className="block text-lg font-bold mb-4 text-slate-900">
+                      <label className="block text-lg font-bold mb-4 text-purple-200">
                         Power Capacity (MW)
                       </label>
                       <div className="flex items-center gap-4">
@@ -689,7 +754,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.1"
                           value={storageSizeMW}
                           onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-slate-300 via-gray-300 to-indigo-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-slate-600 [&::-webkit-slider-thumb]:to-indigo-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+                          className="flex-1 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
                         <input
                           type="number"
@@ -697,19 +762,19 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
                           step="0.1"
                           min="0.1"
-                          max="10"
-                          className="w-32 px-3 py-2 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                          max="50"
+                          className="w-28 px-3 py-3 bg-white/10 border-2 border-purple-400/30 text-white rounded-xl text-center text-lg font-bold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                         />
-                        <span className="text-slate-900 w-12 text-lg font-bold">MW</span>
+                        <span className="text-purple-200 w-12 text-lg font-bold">MW</span>
                       </div>
-                      <p className="text-sm text-slate-700 mt-2 font-medium">
-                        Maximum discharge power output
+                      <p className="text-sm text-purple-300 mt-2 font-medium">
+                        Maximum discharge power output • {(storageSizeMW * 1000).toFixed(0)} kW
                       </p>
                     </div>
 
                     {/* Duration */}
                     <div className="md:col-span-2">
-                      <label className="block text-lg font-bold mb-4 text-slate-900">
+                      <label className="block text-lg font-bold mb-4 text-purple-200">
                         Duration (Hours)
                       </label>
                       <div className="flex items-center gap-4">
@@ -720,7 +785,7 @@ export default function AdvancedQuoteBuilder({
                           step="0.5"
                           value={durationHours}
                           onChange={(e) => onDurationChange(parseFloat(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-slate-300 via-gray-300 to-indigo-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-slate-600 [&::-webkit-slider-thumb]:to-indigo-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+                          className="flex-1 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                         />
                         <input
                           type="number"
@@ -728,69 +793,69 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
                           step="0.5"
                           min="0.5"
-                          max="12"
-                          className="w-32 px-3 py-2 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg text-center text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                          max="24"
+                          className="w-28 px-3 py-3 bg-white/10 border-2 border-purple-400/30 text-white rounded-xl text-center text-lg font-bold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                         />
-                        <span className="text-slate-900 w-12 text-lg font-bold">hrs</span>
+                        <span className="text-purple-200 w-12 text-lg font-bold">hrs</span>
                       </div>
-                      <p className="text-sm text-slate-700 mt-2 font-medium">
+                      <p className="text-sm text-purple-300 mt-2 font-medium">
                         How long the system can discharge at full power
                       </p>
                     </div>
 
                     {/* Battery Chemistry */}
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Battery Chemistry
                       </label>
                       <select
                         value={chemistry}
                         onChange={(e) => setChemistry(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
                       >
-                        <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
-                        <option value="nmc">NMC - High energy density</option>
-                        <option value="lto">LTO - Ultra-long life, fast charge</option>
-                        <option value="sodium-ion">Sodium-Ion - Low cost</option>
+                        <option value="lfp" className="bg-gray-800 text-white">LiFePO4 (LFP) - Long life, safe</option>
+                        <option value="nmc" className="bg-gray-800 text-white">NMC - High energy density</option>
+                        <option value="lto" className="bg-gray-800 text-white">LTO - Ultra-long life, fast charge</option>
+                        <option value="sodium-ion" className="bg-gray-800 text-white">Sodium-Ion - Low cost</option>
                       </select>
                     </div>
 
                     {/* Installation Type */}
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Installation Type
                       </label>
                       <select
                         value={installationType}
                         onChange={(e) => setInstallationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
                       >
-                        <option value="outdoor">Outdoor (Containerized)</option>
-                        <option value="indoor">Indoor (Room/Vault)</option>
-                        <option value="rooftop">Rooftop</option>
+                        <option value="outdoor" className="bg-gray-800 text-white">Outdoor (Containerized)</option>
+                        <option value="indoor" className="bg-gray-800 text-white">Indoor (Room/Vault)</option>
+                        <option value="rooftop" className="bg-gray-800 text-white">Rooftop</option>
                       </select>
                     </div>
 
                     {/* Grid Connection */}
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Grid Connection
                       </label>
                       <select
                         value={gridConnection}
                         onChange={(e) => setGridConnection(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
                       >
-                        <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
-                        <option value="dc-coupled">DC-Coupled (with Solar)</option>
-                        <option value="hybrid">Hybrid (AC+DC)</option>
-                        <option value="off-grid">Off-Grid/Island Mode</option>
+                        <option value="ac-coupled" className="bg-gray-800 text-white">AC-Coupled (Grid-tied)</option>
+                        <option value="dc-coupled" className="bg-gray-800 text-white">DC-Coupled (with Solar)</option>
+                        <option value="hybrid" className="bg-gray-800 text-white">Hybrid (AC+DC)</option>
+                        <option value="off-grid" className="bg-gray-800 text-white">Off-Grid/Island Mode</option>
                       </select>
                     </div>
 
                     {/* Inverter Efficiency */}
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-purple-200">
                         Inverter Efficiency (%)
                       </label>
                       <input
@@ -800,60 +865,62 @@ export default function AdvancedQuoteBuilder({
                         min="85"
                         max="99"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-slate-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Enhanced Application & Use Case Section */}
-                <div className="bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100 border-2 border-emerald-400 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden">
+                {/* Enhanced Application & Use Case Section - Dark Theme */}
+                <div className="bg-white/10 backdrop-blur-xl border-2 border-emerald-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-emerald-400/50 relative overflow-hidden">
                   {/* Animated icons */}
                   <div className="absolute top-4 right-4 text-2xl animate-pulse">🏢</div>
                   <div className="absolute bottom-4 left-4 text-2xl" style={{ animation: 'bounce 2s infinite' }}>💡</div>
                   
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Building2 className="w-7 h-7 text-emerald-600 animate-pulse" />
-                    <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">Application & Use Case</span>
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Building2 className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white">Application & Use Case</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-emerald-200">
                         Application Type
                       </label>
                       <select
                         value={applicationType}
                         onChange={(e) => setApplicationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
                       >
-                        <option value="residential">Residential</option>
-                        <option value="commercial">Commercial & Industrial</option>
-                        <option value="utility">Utility Scale</option>
-                        <option value="microgrid">Microgrid</option>
+                        <option value="residential" className="bg-gray-800 text-white">Residential</option>
+                        <option value="commercial" className="bg-gray-800 text-white">Commercial & Industrial</option>
+                        <option value="utility" className="bg-gray-800 text-white">Utility Scale</option>
+                        <option value="microgrid" className="bg-gray-800 text-white">Microgrid</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-emerald-200">
                         Primary Use Case
                       </label>
                       <select
                         value={useCase}
                         onChange={(e) => setUseCase(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
                       >
-                        <option value="peak-shaving">Peak Shaving / Demand Charge Reduction</option>
-                        <option value="arbitrage">Energy Arbitrage / Time-of-Use</option>
-                        <option value="backup">Backup Power / UPS</option>
-                        <option value="solar-shifting">Solar + Storage / Self-Consumption</option>
-                        <option value="frequency-regulation">Frequency Regulation</option>
-                        <option value="renewable-smoothing">Renewable Smoothing</option>
+                        <option value="peak-shaving" className="bg-gray-800 text-white">Peak Shaving / Demand Charge Reduction</option>
+                        <option value="arbitrage" className="bg-gray-800 text-white">Energy Arbitrage / Time-of-Use</option>
+                        <option value="backup" className="bg-gray-800 text-white">Backup Power / UPS</option>
+                        <option value="solar-shifting" className="bg-gray-800 text-white">Solar + Storage / Self-Consumption</option>
+                        <option value="frequency-regulation" className="bg-gray-800 text-white">Frequency Regulation</option>
+                        <option value="renewable-smoothing" className="bg-gray-800 text-white">Renewable Smoothing</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-emerald-200">
                         Expected Cycles per Year
                       </label>
                       <input
@@ -862,15 +929,15 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
                         min="1"
                         max="1000"
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
                       />
-                      <p className="text-xs text-slate-700 mt-1 font-medium">
+                      <p className="text-xs text-emerald-300 mt-1 font-medium">
                         1 cycle = full charge + discharge
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-emerald-200">
                         Round-Trip Efficiency (%)
                       </label>
                       <input
@@ -880,43 +947,45 @@ export default function AdvancedQuoteBuilder({
                         min="75"
                         max="98"
                         step="0.5"
-                        className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-emerald-400 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Enhanced Financial Parameters Section */}
-                <div data-section="financial" className="bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-50 border-2 border-blue-300 rounded-2xl p-8 shadow-xl scroll-mt-24">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <DollarSign className="w-7 h-7 text-blue-600" />
-                    <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Financial Parameters</span>
+                {/* Enhanced Financial Parameters Section - Dark Theme */}
+                <div data-section="financial" className="bg-white/10 backdrop-blur-xl border-2 border-cyan-400/30 rounded-2xl p-6 shadow-2xl scroll-mt-24 hover:border-cyan-400/50 transition-all">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <DollarSign className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white">Financial Parameters</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-cyan-200">
                         Estimated System Cost (USD)
                       </label>
                       <div className="flex items-center gap-4">
-                        <span className="text-slate-900 text-lg font-bold">$</span>
+                        <span className="text-cyan-200 text-lg font-bold">$</span>
                         <input
                           type="number"
                           value={systemCost}
                           onChange={(e) => onSystemCostChange(parseFloat(e.target.value) || 0)}
                           step="10000"
                           min="0"
-                          className="flex-1 px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg text-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                          className="flex-1 px-4 py-3 bg-white/10 border-2 border-cyan-400/30 text-white rounded-xl text-lg font-medium focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
                           placeholder="Enter system cost"
                         />
                       </div>
-                      <p className="text-sm text-slate-700 mt-2 font-medium">
+                      <p className="text-sm text-cyan-300 mt-2 font-medium">
                         Total installed cost including equipment, installation, soft costs, and contingency
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
+                      <label className="block text-sm font-bold mb-2 text-cyan-200">
                         Utility Rate ($/kWh)
                       </label>
                       <input
