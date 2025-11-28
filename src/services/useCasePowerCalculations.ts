@@ -582,8 +582,9 @@ export function calculateUseCasePower(
   switch (slug) {
     case 'office':
     case 'office-building':
+      // Database uses 'squareFeet', UI variants: 'officeSqFt', 'buildingSqFt', 'sqFt'
       return calculateOfficePower(
-        parseInt(useCaseData.officeSqFt || useCaseData.buildingSqFt || useCaseData.sqFt) || 50000
+        parseInt(useCaseData.squareFeet || useCaseData.officeSqFt || useCaseData.buildingSqFt || useCaseData.sqFt) || 50000
       );
       
     case 'hotel':
