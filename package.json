@@ -29,6 +29,7 @@
     "lucide-react": "^0.546.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "resend": "^6.5.2",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
