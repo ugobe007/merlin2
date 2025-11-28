@@ -663,7 +663,7 @@ export function calculateUseCasePower(
     case 'casino':
     case 'tribal-casino':
       return calculateCasinoPower(
-        parseInt(useCaseData.gamingFloorSize || useCaseData.sqFt) || 50000
+        parseInt(useCaseData.gamingFloorSqFt || useCaseData.gamingFloorSize || useCaseData.sqFt) || 50000
       );
       
     case 'indoor-farm':
