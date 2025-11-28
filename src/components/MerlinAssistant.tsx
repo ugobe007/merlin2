@@ -511,10 +511,10 @@ Or click one of the suggested questions below!`,
 
   return (
     <>
-      {/* Floating Button - Bottom Right Corner */}
+      {/* Floating Button - Top Left Corner */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${className}`}
+        className={`fixed top-6 left-6 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${className}`}
         title={isOpen ? 'Close Merlin Assistant' : 'Ask Merlin for Help'}
       >
         {isOpen ? (
@@ -524,9 +524,9 @@ Or click one of the suggested questions below!`,
         )}
       </button>
 
-      {/* Chat Panel - Pops up from bottom right */}
+      {/* Chat Panel - Pops up from top left */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-[9999] w-96 max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed top-24 left-6 z-[9999] w-96 max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
             <div className="flex items-center justify-between">
