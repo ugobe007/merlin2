@@ -624,8 +624,9 @@ export function calculateUseCasePower(
       return calculateAirportPower(passengersInMillions);
       
     case 'manufacturing':
+      // Database uses 'squareFeet', UI variants: 'facilitySqFt', 'sqFt'
       return calculateManufacturingPower(
-        parseInt(useCaseData.facilitySqFt || useCaseData.sqFt) || 100000,
+        parseInt(useCaseData.squareFeet || useCaseData.facilitySqFt || useCaseData.sqFt) || 100000,
         useCaseData.industryType
       );
       
@@ -645,14 +646,16 @@ export function calculateUseCasePower(
       
     case 'retail':
     case 'retail-commercial':
+      // Database uses 'squareFeet', UI variants: 'retailSqFt', 'sqFt'
       return calculateRetailPower(
-        parseInt(useCaseData.retailSqFt || useCaseData.sqFt) || 5000
+        parseInt(useCaseData.squareFeet || useCaseData.retailSqFt || useCaseData.sqFt) || 5000
       );
       
     case 'shopping-center':
     case 'shopping-mall':
+      // Database uses 'squareFeet', UI variants: 'retailSqFt', 'sqFt'
       return calculateShoppingCenterPower(
-        parseInt(useCaseData.retailSqFt || useCaseData.sqFt) || 100000
+        parseInt(useCaseData.squareFeet || useCaseData.retailSqFt || useCaseData.sqFt) || 100000
       );
       
     case 'agriculture':
