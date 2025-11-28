@@ -6,11 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "backup": "./scripts/backup-critical-files.sh",
     "safe-build": "./scripts/backup-critical-files.sh && tsc -b && vite build",
-    "safe-deploy": "./scripts/backup-critical-files.sh && npm run build && flyctl deploy"
+    "safe-deploy": "./scripts/backup-critical-files.sh && npm run build && flyctl deploy",
+    "validate": "node scripts/validate-links.cjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:links": "playwright test link-checker --reporter=line",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:calculations": "npx tsx src/tests/runCalculationTests.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.79.0",
@@ -18,10 +28,12 @@
     "file-saver": "^2.0.5",
     "lucide-react": "^0.546.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^24.6.0",
@@ -34,6 +46,7 @@
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
+    "puppeteer": "^24.31.0",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",

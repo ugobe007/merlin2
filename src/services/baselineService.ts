@@ -28,6 +28,18 @@ export interface BaselineCalculationResult {
   generationRequired?: boolean;
   generationRecommendedMW?: number;
   generationReason?: string;
+  // Grid strategy savings (for limited grid / off-grid scenarios)
+  gridSavingsGoal?: string;
+  gridImportLimitKW?: number;
+  annualGridFees?: number;
+  gridFeeSavings?: number;
+  gridStrategy?: {
+    strategy: string;
+    savingsReason: string;
+    annualSavings: number;
+    requiresGeneration: boolean;
+    recommendedSolarMW: number;
+  };
 }
 
 /**
@@ -111,12 +123,45 @@ export async function calculateDatabaseBaseline(
       return dcResult;
     }
     
+    // Special case: Agriculture uses acreage-based calculation
+    // Scale is already calculated as MW in the wizard, so use it directly
+    if ((templateKey === 'agriculture' || templateKey === 'agricultural') && useCaseData) {
+      // If user specified irrigation load, add it
+      const irrigationKW = parseFloat(useCaseData.irrigationLoad) || 0;
+      
+      // Scale from wizard is already in MW (acreage × 0.4 kW/acre / 1000)
+      // Add irrigation load if specified
+      const totalPowerMW = scale + (irrigationKW / 1000);
+      
+      // Use reasonable duration for agricultural operations (backup during irrigation season)
+      const durationHrs = 4;
+      
+      if (import.meta.env.DEV) {
+        console.log(`🚜 [BaselineService] Agriculture calculation:`);
+        console.log(`   Scale (from acreage): ${scale.toFixed(3)} MW`);
+        console.log(`   Irrigation load: ${irrigationKW} kW = ${(irrigationKW/1000).toFixed(3)} MW`);
+        console.log(`   Total power: ${totalPowerMW.toFixed(3)} MW`);
+      }
+      
+      const agResult = {
+        powerMW: Math.max(0.2, Math.round(totalPowerMW * 100) / 100), // Minimum 200 kW
+        durationHrs,
+        solarMW: 0, // Let user control solar preference
+        description: `Agricultural baseline: ${scale.toFixed(2)} MW from acreage + ${(irrigationKW/1000).toFixed(2)} MW irrigation`,
+        dataSource: 'Wizard (acreage × 0.4 kW/acre)'
+      };
+      
+      baselineCache.set(cacheKey, agResult);
+      return agResult;
+    }
+    
     // **CRITICAL FIX**: Check if user explicitly provided peak load
     // If user entered peakLoad in MW, use that value directly instead of database/fallback
     if (useCaseData && typeof useCaseData.peakLoad === 'number' && useCaseData.peakLoad > 0) {
       const userPowerMW = useCaseData.peakLoad;
       const durationHrs = useCaseData.operatingHours ? Math.round(useCaseData.operatingHours / 5) : 4; // Default 4 hours
-      const solarMW = Math.round(userPowerMW * 0.8 * 10) / 10; // 80% solar sizing
+      // ✅ FIXED: Don't auto-calculate solar - let user control via wantsSolar preference
+      const solarMW = 0;
       
       if (import.meta.env.DEV) {
         console.log(`👤 [BaselineService] Using user's explicit peak load input: ${userPowerMW} MW`);
@@ -309,10 +354,9 @@ export async function calculateDatabaseBaseline(
     // Use preferred duration from configuration
     const durationHrs = Math.max(2, Math.round((defaultConfig.preferred_duration_hours || 4) * 2) / 2);
     
-    // Calculate solar based on power size
-    // Use 1:1 ratio as default (can be customized per use case later)
-    const solarRatio = 1.0;
-    const solarMW = Math.max(0, Math.round(powerMW * solarRatio * 10) / 10);
+    // ✅ FIXED: Don't auto-calculate solar - let user control via wantsSolar preference
+    // Solar should be 0 by default; SmartWizard will set it based on user's answers
+    const solarMW = 0;
     
     const result = {
       powerMW,
@@ -451,8 +495,8 @@ function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: nu
     });
   }
   
-  // Calculate solar (limited for datacenters due to 24/7 operation)
-  const solarMW = Math.max(0, Math.round(powerMW * 0.3 * 10) / 10); // 30% of BESS size
+  // ✅ FIXED: Don't auto-calculate solar - let user control via wantsSolar preference
+  const solarMW = 0;
   
   return {
     powerMW,
@@ -532,6 +576,129 @@ export function calculateDatacenterBESS(
     powerMW: Math.round(powerMW * 100) / 100, // Round to 0.01 MW
     durationHours: duration,
     description
+  };
+}
+
+/**
+ * Calculate Grid Strategy Savings
+ * 
+ * For European and other markets where grid fees are significant,
+ * calculates potential savings from:
+ * - Going off-grid (avoiding all grid fees)
+ * - Limiting grid access (reducing capacity charges)
+ * - Grid-optimized (reducing peak demand charges)
+ * 
+ * @param useCaseData - User inputs including grid connection settings
+ * @param peakDemandMW - Peak power demand of the facility
+ * @returns Grid strategy analysis with savings calculations
+ */
+export function calculateGridStrategySavings(
+  useCaseData: Record<string, any>,
+  peakDemandMW: number
+): BaselineCalculationResult['gridStrategy'] | undefined {
+  const gridConnection = useCaseData.gridConnection || 'full_grid';
+  const gridSavingsGoal = useCaseData.gridSavingsGoal || 'cost_reduction';
+  const annualGridFees = parseFloat(useCaseData.annualGridFees) || 0;
+  const gridImportLimitKW = parseFloat(useCaseData.gridImportLimit) || 0;
+  
+  // If no special grid strategy, return undefined
+  if (gridConnection === 'full_grid' || gridConnection === 'reliable') {
+    return undefined;
+  }
+  
+  let strategy = '';
+  let savingsReason = '';
+  let annualSavings = 0;
+  let requiresGeneration = false;
+  let recommendedSolarMW = 0;
+  
+  switch (gridConnection) {
+    case 'off_grid':
+      // Off-grid: Save 100% of grid fees, but need 100% generation
+      strategy = 'Complete Grid Independence';
+      savingsReason = 'Eliminating grid connection saves all capacity charges and connection fees';
+      annualSavings = annualGridFees; // Save 100% of grid fees
+      requiresGeneration = true;
+      recommendedSolarMW = peakDemandMW * 1.3; // 130% of peak for reliability
+      break;
+      
+    case 'grid_backup':
+      // Grid as backup: Save ~80% of grid fees, need ~80% generation
+      strategy = 'Grid as Emergency Backup';
+      savingsReason = 'Minimal grid reliance reduces capacity charges significantly';
+      annualSavings = annualGridFees * 0.8; // Save 80% of grid fees
+      requiresGeneration = true;
+      recommendedSolarMW = peakDemandMW * 1.0; // 100% of peak
+      break;
+      
+    case 'grid_limited':
+      // Limited grid: Save based on import limit reduction
+      strategy = 'Limited Grid Import';
+      if (gridImportLimitKW > 0) {
+        const limitMW = gridImportLimitKW / 1000;
+        const reductionPercent = Math.max(0, Math.min(1, 1 - (limitMW / peakDemandMW)));
+        savingsReason = `Limiting grid import to ${gridImportLimitKW}kW reduces capacity charges by ${(reductionPercent * 100).toFixed(0)}%`;
+        annualSavings = annualGridFees * reductionPercent;
+        requiresGeneration = limitMW < peakDemandMW * 0.5;
+        recommendedSolarMW = Math.max(0, (peakDemandMW - limitMW) * 0.8);
+      } else {
+        savingsReason = 'Limiting grid dependency reduces capacity charges and connection fees';
+        annualSavings = annualGridFees * 0.5; // Estimate 50% savings
+        recommendedSolarMW = peakDemandMW * 0.5;
+      }
+      break;
+      
+    case 'grid_optimized':
+      // Grid-optimized: Use BESS to reduce peak demand charges
+      strategy = 'Grid-Optimized (Peak Shaving)';
+      savingsReason = 'Using BESS for peak shaving reduces demand charges by 20-40%';
+      annualSavings = annualGridFees * 0.3; // Conservative 30% demand charge reduction
+      requiresGeneration = false;
+      recommendedSolarMW = peakDemandMW * 0.3; // Optional solar for arbitrage
+      break;
+      
+    case 'microgrid':
+      // Microgrid: Community/campus independence
+      strategy = 'Microgrid Operation';
+      savingsReason = 'Microgrid islanding capability reduces grid dependency and charges';
+      annualSavings = annualGridFees * 0.6; // 60% savings from islanding
+      requiresGeneration = true;
+      recommendedSolarMW = peakDemandMW * 0.8;
+      break;
+      
+    default:
+      return undefined;
+  }
+  
+  // Add savings motivation context
+  if (gridSavingsGoal === 'avoid_grid_fees' && annualGridFees > 0) {
+    savingsReason += ` (€${annualGridFees.toLocaleString()}/year in grid fees)`;
+  } else if (gridSavingsGoal === 'energy_independence') {
+    savingsReason += ' with focus on energy self-sufficiency';
+  } else if (gridSavingsGoal === 'carbon_reduction') {
+    savingsReason += ' while maximizing clean energy use';
+  }
+  
+  if (import.meta.env.DEV) {
+    console.log('⚡ [Grid Strategy] Calculated savings:', {
+      gridConnection,
+      gridSavingsGoal,
+      annualGridFees,
+      gridImportLimitKW,
+      peakDemandMW,
+      strategy,
+      annualSavings,
+      recommendedSolarMW,
+      requiresGeneration
+    });
+  }
+  
+  return {
+    strategy,
+    savingsReason,
+    annualSavings,
+    requiresGeneration,
+    recommendedSolarMW
   };
 }
 
@@ -626,10 +793,13 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
     });
   }
   
+  // Calculate grid strategy savings (for European off-grid/limited-grid scenarios)
+  const gridStrategy = calculateGridStrategySavings(useCaseData, peakDemandMW);
+  
   return {
     powerMW: roundedPowerMW,
     durationHrs: 2, // Short duration for demand management
-    solarMW: Math.round(roundedPowerMW * 1.0 * 10) / 10,
+    solarMW: 0, // ✅ FIXED: Don't auto-add solar - let user decide
     description: `EV Charging: ${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW) + ${dcFastCount} DC Fast (${(totalDCFast * 1000).toFixed(0)}kW)`,
     dataSource: 'Calculated from charger specifications',
     gridConnection,
@@ -637,7 +807,12 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
     peakDemandMW,
     generationRequired,
     generationRecommendedMW,
-    generationReason
+    generationReason,
+    gridSavingsGoal: useCaseData.gridSavingsGoal,
+    gridImportLimitKW: parseFloat(useCaseData.gridImportLimit) || 0,
+    annualGridFees: parseFloat(useCaseData.annualGridFees) || 0,
+    gridFeeSavings: gridStrategy?.annualSavings || 0,
+    gridStrategy
   };
 }
 
@@ -648,39 +823,40 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
  * but should only be used as a last resort.
  */
 function getFallbackBaseline(template: string): BaselineCalculationResult {
+  // ✅ FIXED: All fallbacks now have solarMW: 0 - let user control via preferences
   const fallbacks: Record<string, BaselineCalculationResult> = {
     'hotel': {
       powerMW: 2.0,
       durationHrs: 4,
-      solarMW: 2.0,
+      solarMW: 0,
       description: 'Fallback: Standard hotel configuration',
       dataSource: 'Fallback (CBECS 2018)'
     },
     'ev-charging': {
       powerMW: 2.0,
       durationHrs: 2,
-      solarMW: 2.0,
+      solarMW: 0,
       description: 'Fallback: Standard EV charging station',
       dataSource: 'Fallback (DOE Alt Fuels Data)'
     },
     'data-center': {
       powerMW: 5.0,
       durationHrs: 8,
-      solarMW: 3.0,
+      solarMW: 0,
       description: 'Fallback: Standard data center',
       dataSource: 'Fallback (Uptime Institute)'
     },
     'manufacturing': {
       powerMW: 3.0,
       durationHrs: 6,
-      solarMW: 3.5,
+      solarMW: 0,
       description: 'Fallback: Standard manufacturing facility',
       dataSource: 'Fallback (DOE Industrial)'
     },
     'hospital': {
       powerMW: 4.0,
       durationHrs: 8,
-      solarMW: 4.0,
+      solarMW: 0,
       description: 'Fallback: Standard hospital',
       dataSource: 'Fallback (CBECS Healthcare)'
     }
@@ -689,7 +865,7 @@ function getFallbackBaseline(template: string): BaselineCalculationResult {
   const fallback = fallbacks[template] || {
     powerMW: 2.0,
     durationHrs: 4,
-    solarMW: 2.0,
+    solarMW: 0,
     description: 'Fallback: Generic configuration',
     dataSource: 'Fallback (Generic)'
   };

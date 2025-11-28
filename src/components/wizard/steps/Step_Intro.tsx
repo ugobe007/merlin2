@@ -97,6 +97,48 @@ const StepIntro: React.FC<StepIntroProps> = ({ onStart, onSkipToAdvanced }) => {
         </div>
       </div>
 
+      {/* 🎯 Power Profile Introduction - Discovery Experience */}
+      <div className="mb-12 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-300 shadow-xl">
+        <div className="flex items-start gap-6">
+          <div className="flex-shrink-0">
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-4 shadow-lg">
+              <Zap className="w-12 h-12 text-white fill-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Discover: Merlin Power Profile™
+            </h2>
+            <p className="text-lg text-gray-700 mb-4">
+              <strong>An energy amplification system that grows with you.</strong> As you provide details, you'll unlock new capabilities from Level 1 to Level 7. Each level opens:
+            </p>
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-white/80 rounded-lg p-4 border border-amber-200">
+                <div className="text-2xl mb-2">⚡⚡</div>
+                <div className="font-bold text-gray-900 mb-1">Levels 1-2: Foundation</div>
+                <div className="text-sm text-gray-600">Core energy insights & baseline analysis</div>
+              </div>
+              <div className="bg-white/80 rounded-lg p-4 border border-amber-200">
+                <div className="text-2xl mb-2">⚡⚡⚡⚡</div>
+                <div className="font-bold text-gray-900 mb-1">Levels 3-5: Optimization</div>
+                <div className="text-sm text-gray-600">Advanced tools & energy management resources</div>
+              </div>
+              <div className="bg-white/80 rounded-lg p-4 border border-amber-200">
+                <div className="text-2xl mb-2">⚡⚡⚡⚡⚡⚡⚡</div>
+                <div className="font-bold text-orange-600 mb-1">Levels 6-7: Mastery</div>
+                <div className="text-sm text-gray-600">Complete energy intelligence & planning toolkit</div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-lg p-4 border border-orange-300">
+              <p className="text-sm text-gray-800">
+                <strong>💡 How it works:</strong> The more you use Merlin, the more our AI optimizes your Power Profile to unlock additional savings, capabilities, and resources. 
+                We'll help you build your complete energy ecosystem—from integrators and EPCs to financing and engineering support—while providing insights on industry trends like microgrids, private grids, and hybrid configurations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* What You'll Get Section - Expanded */}
       <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-8 mb-12 border-2 border-purple-200">
         <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">What You'll Receive</h2>

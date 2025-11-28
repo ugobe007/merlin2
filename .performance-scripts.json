@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "perf": "node scripts/quick-perf-test.js",
+    "perf:full": "./scripts/run-performance-tests.sh",
+    "perf:profile": "npx ts-node scripts/profile-wizard-flow.ts"
+  }
+}

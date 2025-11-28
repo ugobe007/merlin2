@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Bot } from 'lucide-react';
 import { aiStateService } from '@/services/aiStateService';
-import AIStatusIndicator from '../AIStatusIndicator';
-import { getUseCaseQuestionnaire } from '@/services/useCaseQuestionService';
-import QuestionRenderer from '../QuestionRenderer';
-import AIRecommendationPanel from '../AIRecommendationPanel';
+import AIStatusIndicator from '../../wizard/AIStatusIndicator';
+import { useCaseService } from '@/services/useCaseService';
+import QuestionRenderer from '../../wizard/QuestionRenderer';
+import AIRecommendationPanel from '../../wizard/AIRecommendationPanel';
 
 // Import use case images with explicit extensions for Vite
 import evChargingStationImage from '@/assets/images/ev_charging_station.png?url';
@@ -56,16 +56,63 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
     }
   };
 
-  const [showAIHelper, setShowAIHelper] = useState(false);
-  const [showAIGuidance, setShowAIGuidance] = useState(false);
+  // Removed AI assistance - keeping wizard simple and focused
 
-  // Show AI guidance when user completes questions
+  // State for loading questions from database
+  const [useCaseConfig, setUseCaseConfig] = useState<any>(null);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+
+  // Fetch questions from Supabase database
   useEffect(() => {
-    const hasAnswers = Object.keys(useCaseData).length > 0;
-    if (hasAnswers) {
-      setShowAIGuidance(true);
+    const loadQuestions = async () => {
+      try {
+        setLoadingQuestions(true);
+        const useCaseDetails = await useCaseService.getUseCaseBySlug(selectedIndustry);
+        
+        if (useCaseDetails) {
+          setUseCaseConfig({
+            title: useCaseDetails.name,
+            icon: useCaseDetails.icon || '📋',
+            questions: useCaseDetails.custom_questions || []
+          });
+          
+          if (import.meta.env.DEV) {
+            console.log('✅ [Step2_UseCase] Loaded questions from Supabase:', {
+              slug: selectedIndustry,
+              name: useCaseDetails.name,
+              questionCount: useCaseDetails.custom_questions?.length,
+              requiredCount: useCaseDetails.custom_questions?.filter((q: any) => q.required).length,
+              questions: useCaseDetails.custom_questions
+            });
+          }
+          
+          // ✅ SYSTEMATIC FIX: Store for parent validation
+          (window as any).__currentUseCaseDetails = useCaseDetails;
+          
+          // ✅ Apply default values from database to fix empty select fields
+          const defaults: { [key: string]: any } = {};
+          useCaseDetails.custom_questions?.forEach((q: any) => {
+            if (q.default && !useCaseData[q.id]) {
+              defaults[q.id] = q.default;
+            }
+          });
+          if (Object.keys(defaults).length > 0) {
+            setUseCaseData({ ...useCaseData, ...defaults });
+          }
+        } else {
+          console.warn('⚠️ [Step2_UseCase] No use case found for slug:', selectedIndustry);
+        }
+      } catch (error) {
+        console.error('❌ [Step2_UseCase] Error loading questions:', error);
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+    
+    if (selectedIndustry) {
+      loadQuestions();
     }
-  }, [useCaseData]);
+  }, [selectedIndustry]);
 
   const handleInputChange = (key: string, value: any) => {
     setUseCaseData({ ...useCaseData, [key]: value });
@@ -79,8 +126,21 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
     }
   };
 
+  // Show loading state while fetching questions
+  if (loadingQuestions || !useCaseConfig) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading questionnaire...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Get use case configuration from centralized templates
-  const useCaseConfig = getUseCaseQuestionnaire(selectedIndustry);
+  // ⚠️ DEPRECATED: Now loading from Supabase instead of hardcoded templates
+  // const useCaseConfig = getUseCaseQuestionnaire(selectedIndustry);
   
   // Debug logging
   if (import.meta.env.DEV) {
@@ -156,14 +216,11 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
               return true;
             })
             .map((question: any) => {
-              if (import.meta.env.DEV) {
-                console.log('🎨 [Step2_UseCase] Rendering question:', question.id, question);
-              }
               return (
                 <QuestionRenderer
                   key={question.id}
                   question={question}
-                  value={useCaseData[question.id] || ''}
+                  value={useCaseData[question.id] || question.default || ''}
                   selectedIndustry={selectedIndustry}
                   useCaseData={useCaseData}
                   onChange={handleInputChange}
@@ -178,14 +235,7 @@ const Step2_UseCase: React.FC<Step2_UseCaseProps> = ({
         )}
       </div>
 
-      {/* AI Recommendation Panel */}
-      {showAIGuidance && aiRecommendation && (
-        <AIRecommendationPanel
-          aiRecommendation={aiRecommendation}
-          onAccept={handleAcceptAIConfiguration}
-          onAdvanceToConfiguration={onAdvanceToConfiguration}
-        />
-      )}
+      {/* AI Recommendation Panel removed - keeping wizard simple */}
     </div>
   );
 };

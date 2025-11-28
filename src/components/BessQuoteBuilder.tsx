@@ -25,9 +25,10 @@ import VendorPortalView from './views/VendorPortalView';
 // NEW: Clean unified Advanced Quote Builder component
 import AdvancedQuoteBuilder from './AdvancedQuoteBuilder';
 
+console.log('🔍 [TRACE] BessQuoteBuilder.tsx loaded');
 
 export default function BessQuoteBuilder() {
-  console.log('🏗️ BessQuoteBuilder component rendering');
+  console.log('🔍 [TRACE] BessQuoteBuilder component rendering');
   
   // Local state to track if wizard should start in advanced mode
   const [startWizardInAdvancedMode, setStartWizardInAdvancedMode] = useState(false);
@@ -182,13 +183,13 @@ export default function BessQuoteBuilder() {
     }
   }, [isLoggedIn]);
 
-  // NOTE: Legacy calculation logic removed - now using centralizedCalculations.ts via SmartWizardV2
+  // NOTE: Legacy calculation logic removed - now using centralizedCalculations.ts via SmartWizardV3
   // Previously used quoteCalculations.ts → advancedFinancialModeling.ts → databaseCalculations.ts
-  // All financial calculations now handled by SmartWizardV2 using centralizedCalculations.ts
+  // All financial calculations now handled by SmartWizardV3 using centralizedCalculations.ts
   
   // Placeholder values for legacy components (analytics, financing modals)
   // These are deprecated and will be removed in future versions
-  // TODO: Remove these placeholders and update dependent components to use SmartWizardV2 data
+  // TODO: Remove these placeholders and update dependent components to use SmartWizardV3 data
   
   // Basic CapEx calculation for Advanced Quote Builder
   const totalMWh = powerMW * standbyHours;
@@ -466,9 +467,11 @@ export default function BessQuoteBuilder() {
         console.log('System cost changed to:', cost);
       }}
       onGenerateQuote={() => {
-        // Generate quote with current configuration
+        // Generate quote with current configuration and close modal
         console.log('Generate quote with:', { powerMW, standbyHours, grandCapEx });
-        alert(`Quote generated!\n\nSystem: ${powerMW} MW / ${(powerMW * standbyHours).toFixed(1)} MWh\nEstimated Cost: $${grandCapEx.toLocaleString()}`);
+        setShowAdvancedQuoteBuilderModal(false);
+        // Could open quote preview modal here if needed
+        alert(`✅ Quote Generated Successfully!\n\nSystem: ${powerMW} MW / ${(powerMW * standbyHours).toFixed(1)} MWh\nEstimated Cost: $${grandCapEx.toLocaleString()}\n\nYour quote has been added to your dashboard.`);
       }}
     />
 

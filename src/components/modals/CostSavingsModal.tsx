@@ -17,7 +17,7 @@ export default function CostSavingsModal({ isOpen, onClose, onShowSmartWizard }:
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-2xl">
+        <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-t-2xl">
           <div className="flex justify-between items-center">
             <h2 className="text-3xl font-bold">💰 Reduce Energy Costs</h2>
             <button 

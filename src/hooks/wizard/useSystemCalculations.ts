@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { calculateDatabaseBaseline } from '../../services/baselineService';
 import { calculateAutomatedSolarSizing, type SolarSizingResult } from '../../utils/solarSizingUtils';
+import { calculateUseCasePower, calculateEVChargingPower } from '../../services/useCasePowerCalculations';
 
 /**
  * Custom hook for system calculation logic in SmartWizardV2
  * Extracts complex calculation logic from the main component
+ * 
+ * ⚠️ IMPORTANT: This hook now delegates power calculations to useCasePowerCalculations.ts
+ * DO NOT add hardcoded power density values here - update the centralized service instead!
  */
 
 interface UseSystemCalculationsProps {
@@ -31,30 +35,24 @@ export const useSystemCalculations = ({
   const [isCalculating, setIsCalculating] = useState(false);
 
   /**
-   * Get power density based on building type (W/sq ft)
-   * Based on CBECS & industry standards
+   * @deprecated Use calculateUseCasePower() from useCasePowerCalculations.ts instead
+   * This function is kept for backward compatibility but should not be used.
+   * All power density standards are now in: src/services/useCasePowerCalculations.ts
    */
-  const getPowerDensity = (buildingType: string, subType?: string): number => {
-    switch (buildingType) {
-      case 'hotel': return 9; // 8-10 W/sq ft (24/7, HVAC, kitchen, laundry)
-      case 'datacenter': return 150; // 100-200 W/sq ft (high-density IT loads)
-      case 'tribal-casino': return 15; // 12-18 W/sq ft (gaming, lighting, 24/7 HVAC)
-      case 'logistics-center':
-        if (subType === 'cold-storage') return 25; // 20-30 W/sq ft (refrigeration)
-        if (subType === 'fulfillment') return 8; // 6-10 W/sq ft (automation, conveyors)
-        return 5; // 3-7 W/sq ft (standard warehouse)
-      case 'shopping-center': return 10; // 8-12 W/sq ft (retail, HVAC, lighting)
-      case 'office': return 6; // 5-7 W/sq ft (lighting, computers, HVAC)
-      case 'retail': return 8; // 6-10 W/sq ft (lighting, HVAC, some equipment)
-      case 'indoor-farm': return 35; // 30-40 W/sq ft (grow lights, climate control)
-      default: return 7; // Generic commercial baseline
-    }
+  const _deprecated_getPowerDensity = (buildingType: string, _subType?: string): number => {
+    console.warn('⚠️ DEPRECATED: getPowerDensity() is deprecated. Use calculateUseCasePower() from useCasePowerCalculations.ts');
+    // Redirect to centralized calculation
+    const result = calculateUseCasePower(buildingType, {});
+    return result.powerMW * 1000; // Return as kW for backward compatibility
   };
 
   /**
-   * Calculate scale factor based on use case type and data
+   * @deprecated Use calculateScaleFactor from baselineService or calculateUseCasePower directly
+   * This function is kept for backward compatibility.
    */
   const calculateScaleFactor = (template: string, data: { [key: string]: any }): number => {
+    // For most use cases, we now use calculateUseCasePower directly
+    // This function is only used as a fallback
     switch (template) {
       case 'hotel':
         return (parseInt(data.numRooms) || 100) / 100;
@@ -94,35 +92,28 @@ export const useSystemCalculations = ({
 
   /**
    * Calculate EV charging configuration
+   * @deprecated Use calculateEVChargingPower() from useCasePowerCalculations.ts instead
+   * This function delegates to the centralized calculation.
    */
   const calculateEVChargingConfig = (data: { [key: string]: any }) => {
-    const level2Count = parseInt(data.level2Chargers) || 0;
-    const level2Power = parseFloat(data.level2Power) || 11;
-    const dcFastCount = parseInt(data.dcFastChargers) || 0;
-    const dcFastPower = parseFloat(data.dcFastPower) || 150;
-    const peakConcurrency = parseInt(data.peakConcurrency) || 50;
-
-    // Calculate total charging capacity
-    const totalLevel2Power = (level2Count * level2Power) / 1000; // MW
-    const totalDCFastPower = (dcFastCount * dcFastPower) / 1000; // MW
-    const totalChargingPower = totalLevel2Power + totalDCFastPower;
-
-    // Storage sizing: 60-80% of total charging power for demand management
-    const concurrencyFactor = Math.min(peakConcurrency / 100, 0.8); // Max 80%
-    const demandManagementSize = totalChargingPower * concurrencyFactor * 0.7;
-
-    // Minimum 0.5MW, maximum practical size based on charger count
-    const calculatedPowerMW = Math.max(0.5, Math.min(demandManagementSize, totalChargingPower * 0.8));
-    const calculatedDurationHrs = Math.max(2, Math.min(4, 3)); // 2-4 hours
-
+    // Use centralized EV charging calculation
+    const result = calculateEVChargingPower(
+      parseInt(data.numberOfLevel1Chargers) || 0,
+      parseInt(data.numberOfLevel2Chargers || data.level2Chargers) || 0,
+      parseInt(data.numberOfDCFastChargers || data.dcFastChargers) || 0
+    );
+    
+    console.log('🔌 [useSystemCalculations] EV config from centralized calc:', result);
+    
     return {
-      powerMW: Math.round(calculatedPowerMW * 10) / 10,
-      durationHrs: calculatedDurationHrs
+      powerMW: result.powerMW,
+      durationHrs: result.durationHrs
     };
   };
 
   /**
    * Auto-calculate realistic configuration based on use case data
+   * Uses centralized calculations from useCasePowerCalculations.ts
    */
   useEffect(() => {
     const calculateConfig = async () => {
@@ -133,29 +124,40 @@ export const useSystemCalculations = ({
       setIsCalculating(true);
 
       try {
-        // Special handling for EV charging
+        // ✅ PRIMARY: Use centralized power calculation for ALL use cases
+        // This is the SINGLE SOURCE OF TRUTH for power calculations
+        const centralizedResult = calculateUseCasePower(selectedTemplate, useCaseData);
+        console.log('⚡ [useSystemCalculations] Centralized power calculation:', centralizedResult);
+        
+        // Special handling for EV charging (centralized calc is sufficient)
         if (selectedTemplate === 'ev-charging') {
-          const evConfig = calculateEVChargingConfig(useCaseData);
-          setStorageSizeMW(evConfig.powerMW);
-          setDurationHours(evConfig.durationHrs);
+          setStorageSizeMW(centralizedResult.powerMW);
+          setDurationHours(centralizedResult.durationHrs);
           setSolarSuggestion(null); // Solar is optional for EV charging
         } else {
-          // Standard use case calculation
+          // For other use cases, also check database baseline for additional config
           const scale = calculateScaleFactor(selectedTemplate, useCaseData);
           
           // Use shared database-driven baseline calculation
           const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
-          console.log('🎯 [useSystemCalculations] Baseline from shared service:', baseline);
+          console.log('🎯 [useSystemCalculations] Database baseline:', baseline);
           
-          setStorageSizeMW(baseline.powerMW);
-          setDurationHours(baseline.durationHrs);
+          // Use the higher of centralized or database calculation
+          // This ensures we don't undersize due to missing database entries
+          const finalPowerMW = Math.max(centralizedResult.powerMW, baseline.powerMW);
+          const finalDurationHrs = baseline.durationHrs || centralizedResult.durationHrs;
+          
+          console.log(`📊 [useSystemCalculations] Final power: ${finalPowerMW} MW (centralized: ${centralizedResult.powerMW}, baseline: ${baseline.powerMW})`);
+          
+          setStorageSizeMW(finalPowerMW);
+          setDurationHours(finalDurationHrs);
 
           // Enhanced solar sizing using automated calculation
           const buildingCharacteristics = {
             useCase: selectedTemplate,
             buildingSize: useCaseData.buildingSize || useCaseData.facilitySize,
             facilitySize: useCaseData.facilitySize,
-            peakLoad: baseline.powerMW,
+            peakLoad: finalPowerMW,
             electricalLoad: useCaseData.electricalLoad || useCaseData.peakLoad,
             capacity: useCaseData.capacity,
             numRooms: useCaseData.numRooms,

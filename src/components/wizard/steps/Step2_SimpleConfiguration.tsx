@@ -14,6 +14,13 @@ interface Step2_SimpleConfigurationProps {
     roi: string;
     configuration: string;
   };
+  baselineResult?: {
+    peakDemandMW?: number;
+    gridCapacity?: number;
+    generationRecommendedMW?: number;
+  };
+  onNext?: () => void;
+  onBack?: () => void;
 }
 
 const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
@@ -23,9 +30,22 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
   setDurationHours,
   industryTemplate,
   aiRecommendation,
+  baselineResult,
+  onNext,
+  onBack,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isApplyingAI, setIsApplyingAI] = useState(false);
+  
+  // Calculate recommended configuration from baseline
+  const recommendedMW = baselineResult?.peakDemandMW || storageSizeMW;
+  const recommendedHours = baselineResult?.peakDemandMW ? 
+    (baselineResult.peakDemandMW < 1 ? 4 : baselineResult.peakDemandMW < 3 ? 4 : 6) : durationHours;
+  
+  const handleUseRecommended = () => {
+    setStorageSizeMW(recommendedMW);
+    setDurationHours(recommendedHours);
+  };
   
   // Extract MW and hours from AI configuration string
   // Format: "2.5MW / 4hr BESS + 1.2MW Solar"
@@ -89,79 +109,117 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
     <div className="space-y-8">
       <div className="text-center space-y-4">
         <div className="flex justify-center items-center gap-3">
-          <h2 className="text-4xl font-bold text-gray-800">
-            Configure Your Energy Storage System
-          </h2>
-          <AIStatusIndicator compact={true} />
+          <div className="text-5xl">🧙‍♂️</div>
+          <div>
+            <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+              Merlin's Recommendation
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Based on your {industryTemplate || 'business'} requirements
+            </p>
+            <p className="text-xs text-purple-600 font-semibold mt-2 animate-pulse">
+              👆 Click and adjust the sliders to customize your Power Profile
+            </p>
+          </div>
         </div>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          {industryTemplate && industryTemplate !== 'custom' 
-            ? "These values are pre-filled based on your industry. Adjust them to match your needs."
-            : "Use the sliders to configure your system size and storage duration"}
-        </p>
       </div>
 
-      {/* 🚫 AI RECOMMENDATION TEMPORARILY DISABLED - Will re-enable after integration with centralized calculations */}
-      {/* AI Recommendation Section */}
-      {false && aiRecommendation && aiConfig && (
-        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 rounded-2xl p-6 border-2 border-blue-300 shadow-lg">
-          <div className="flex items-start gap-4">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-full flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+      {/* AI-Generated Recommendation Card */}
+      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-300 shadow-xl">
+        <div className="text-center mb-6">
+          <p className="text-lg text-gray-700">
+            Based on your inputs, here's the optimal battery storage system:
+          </p>
+          
+          {/* USE RECOMMENDED BUTTON */}
+          {baselineResult && (recommendedMW !== storageSizeMW || recommendedHours !== durationHours) && (
+            <button
+              onClick={handleUseRecommended}
+              className="mt-4 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full text-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
+            >
+              <span className="text-2xl">✨</span>
+              <span>Use Recommended Power Profile</span>
+              <span className="text-sm font-normal opacity-90">({recommendedMW.toFixed(1)} MW × {recommendedHours}hr)</span>
+            </button>
+          )}
+        </div>
+
+        {/* Main Recommendation Visual */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 text-center shadow-md">
+            <div className="text-4xl mb-2">⚡</div>
+            <div className="text-sm text-gray-600 font-medium mb-1">Battery Power</div>
+            <div className="text-3xl font-bold text-blue-600">{storageSizeMW.toFixed(1)} MW</div>
+            <div className="text-xs text-gray-500 mt-1">{sizeInfo.description}</div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 text-center shadow-md">
+            <div className="text-4xl mb-2">⏱️</div>
+            <div className="text-sm text-gray-600 font-medium mb-1">Storage Duration</div>
+            <div className="text-3xl font-bold text-purple-600">{durationHours} hours</div>
+            <div className="text-xs text-gray-500 mt-1">{durationInfo.description}</div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 text-center shadow-md">
+            <div className="text-4xl mb-2">🔋</div>
+            <div className="text-sm text-gray-600 font-medium mb-1">Total Energy</div>
+            <div className="text-3xl font-bold text-green-600">{totalEnergyMWh.toFixed(1)} MWh</div>
+            <div className="text-xs text-gray-500 mt-1">Stored capacity</div>
+          </div>
+        </div>
+
+        {/* Why This Works - Explanation */}
+        <div className="bg-white/80 rounded-xl p-6 mb-6">
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span className="text-xl">💡</span>
+            Why This Configuration Works
+          </h3>
+          <ul className="space-y-2 text-sm text-gray-700">
+            <li className="flex items-start gap-2">
+              <span className="text-green-500 font-bold">✓</span>
+              <span>Sized for your facility's peak demand requirements</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-green-500 font-bold">✓</span>
+              <span>Optimized for grid capacity and backup needs</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-green-500 font-bold">✓</span>
+              <span>Maximizes cost savings during peak rate periods</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-green-500 font-bold">✓</span>
+              <span>Industry-standard configuration for {industryTemplate || 'your business'}</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Power Profile Indicator */}
+        <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-4 border-2 border-yellow-400">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-gray-700">Your Power Profile</div>
+              <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-orange-600">
+                Level {Math.min(7, Math.ceil(storageSizeMW / 2))} - {['Apprentice', 'Adept', 'Conjurer', 'Enchanter', 'Sorcerer', 'Archmage', 'Grand Wizard'][Math.min(6, Math.floor(storageSizeMW / 2))]}
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                🤖 AI Recommended Configuration
-              </h3>
-              
-              <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
-                <p className="text-gray-700 leading-relaxed">
-                  {aiRecommendation?.message || 'AI recommendation unavailable'}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-3 mb-4">
-                <div className="bg-green-100 rounded-lg p-3 border border-green-300">
-                  <div className="text-green-700 font-semibold text-sm">Potential Savings</div>
-                  <div className="text-lg font-bold text-green-900">{aiRecommendation?.savings || 'N/A'}</div>
-                </div>
-                <div className="bg-blue-100 rounded-lg p-3 border border-blue-300">
-                  <div className="text-blue-700 font-semibold text-sm">ROI Timeline</div>
-                  <div className="text-lg font-bold text-blue-900">{aiRecommendation?.roi || 'N/A'}</div>
-                </div>
-                <div className="bg-purple-100 rounded-lg p-3 border border-purple-300">
-                  <div className="text-purple-700 font-semibold text-sm">Recommended Size</div>
-                  <div className="text-lg font-bold text-purple-900">{aiConfig?.mw || 0}MW / {aiConfig?.hours || 0}hr</div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowConfirmModal(true)}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Accept AI Configuration
-              </button>
-
-              <div className="mt-3 flex items-center gap-2 text-gray-600 text-sm">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Based on your specific use case and industry benchmarks</span>
-              </div>
+            <div className="text-4xl">
+              {'⚡'.repeat(Math.min(7, Math.ceil(storageSizeMW / 2)))}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      <div className="bg-white rounded-xl border-2 border-blue-400 p-8 shadow-lg space-y-8">
+      {/* Optional Fine-Tuning Section - Minimized */}
+      <details className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+        <summary className="cursor-pointer font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-2">
+          <span>🔧</span>
+          <span>Need to adjust? Fine-tune the configuration</span>
+        </summary>
         
-        {/* Energy Storage Size */}
-        <div className="space-y-4">
+        <div className="mt-6 space-y-6">
+          {/* Energy Storage Size */}
+          <div className="space-y-4">
           <div className="flex items-center justify-between">
             <label className="text-xl font-bold text-gray-800">
               Energy Storage Size
@@ -335,6 +393,7 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
           </div>
         </div>
       </div>
+      </details>
 
       <style>{`
         .slider::-webkit-slider-thumb {
@@ -429,6 +488,29 @@ const Step2_SimpleConfiguration: React.FC<Step2_SimpleConfigurationProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Navigation Buttons */}
+      {onNext && onBack && (
+        <div className="flex justify-between pt-6 mt-6 border-t-2 border-gray-200">
+          <button
+            onClick={onBack}
+            className="px-6 py-3 rounded-xl font-bold transition-all bg-gray-300 hover:bg-gray-400 text-gray-800"
+          >
+            ← Back
+          </button>
+          <button
+            onClick={onNext}
+            disabled={storageSizeMW <= 0 || durationHours <= 0}
+            className={`px-8 py-3 rounded-xl font-bold transition-all ${
+              storageSizeMW > 0 && durationHours > 0
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>
