@@ -511,23 +511,22 @@ Or click one of the suggested questions below!`,
 
   return (
     <>
-      {/* Floating Button - Upper Right Corner */}
+      {/* Floating Button - Bottom Right Corner */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed top-4 right-4 z-[9999] text-4xl transition-all duration-300 hover:scale-125 ${className}`}
+        className={`fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${className}`}
         title={isOpen ? 'Close Merlin Assistant' : 'Ask Merlin for Help'}
-        style={{ fontSize: '2.5rem' }}
       >
         {isOpen ? (
-          <span className="text-gray-500 hover:text-gray-700 text-2xl">✕</span>
+          <span className="text-white text-xl">✕</span>
         ) : (
-          <span className="drop-shadow-lg cursor-pointer">🧙‍♂️</span>
+          <span className="text-2xl">🧙‍♂️</span>
         )}
       </button>
 
-      {/* Chat Panel - Drops down from upper right */}
+      {/* Chat Panel - Pops up from bottom right */}
       {isOpen && (
-        <div className="fixed top-16 right-4 z-[9999] w-96 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-300">
+        <div className="fixed bottom-24 right-6 z-[9999] w-96 max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
             <div className="flex items-center justify-between">
