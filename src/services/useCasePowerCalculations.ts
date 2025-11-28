@@ -702,8 +702,9 @@ export function calculateUseCasePower(
       
     case 'government':
     case 'public-building':
+      // Database uses 'squareFeet', UI variants: 'buildingSqFt', 'sqFt'
       return calculateGovernmentPower(
-        parseInt(useCaseData.buildingSqFt || useCaseData.sqFt) || 75000
+        parseInt(useCaseData.squareFeet || useCaseData.buildingSqFt || useCaseData.sqFt) || 75000
       );
       
     case 'microgrid':
