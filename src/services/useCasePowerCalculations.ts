@@ -694,8 +694,9 @@ export function calculateUseCasePower(
       );
       
     case 'car-wash':
+      // Database uses 'washBays', UI variants: 'bayCount', 'numBays'
       return calculateCarWashPower(
-        parseInt(useCaseData.bayCount || useCaseData.numBays) || 3,
+        parseInt(useCaseData.washBays || useCaseData.bayCount || useCaseData.numBays) || 3,
         useCaseData.washType
       );
       
@@ -769,7 +770,8 @@ export function calculateUseCasePower(
     case 'residential':
       // Residential is different from commercial - use residential benchmark
       // Average US home: ~1.2 kW average, 5-10 kW peak
-      const homeSqFt = parseInt(useCaseData.sqFt || useCaseData.homeSize) || 2000;
+      // Database uses 'squareFeet', UI variants: 'sqFt', 'homeSize'
+      const homeSqFt = parseInt(useCaseData.squareFeet || useCaseData.sqFt || useCaseData.homeSize) || 2000;
       const homes = parseInt(useCaseData.homeCount || useCaseData.units) || 1;
       const resWattsPerSqFt = 5; // Residential benchmark (lower than commercial)
       const resPowerKW = (homeSqFt * resWattsPerSqFt * homes) / 1000;
