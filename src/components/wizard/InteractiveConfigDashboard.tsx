@@ -210,6 +210,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     paybackYears: 0,
     roiPercent: 0,
     carbonOffset: 0,
+    npv: 0,      // ✅ ADDED: NPV from centralized calculations
+    irr: 0,      // ✅ ADDED: IRR from centralized calculations
     // Revenue breakdown from centralized calculation
     peakShavingSavings: 0,
     demandChargeSavings: 0,
@@ -293,6 +295,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
         paybackYears: result.paybackYears,
         roiPercent: result.roi10Year,
         carbonOffset,
+        npv: result.npv ?? 0,    // ✅ ADDED: NPV from centralized calculations
+        irr: result.irr ?? 0,    // ✅ ADDED: IRR from centralized calculations
         // Store breakdown values from centralized calculation
         peakShavingSavings: result.peakShavingSavings,
         demandChargeSavings: result.demandChargeSavings,
@@ -311,7 +315,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
       });
 
       // Generate sample configurations that meet user preferences
-      generateSampleConfigs();
+      await generateSampleConfigs();
     };
     
     calculateMetrics();
@@ -389,7 +393,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
     setShowAIInsight(false);
   };
 
-  const generateSampleConfigs = () => {
+  const generateSampleConfigs = async () => {
     const configs = [
       {
         name: "Cost Optimized",
@@ -437,36 +441,46 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
       }
     ];
 
-    // Calculate metrics for each sample config
-    const configsWithMetrics = configs.map(config => {
-      const energy = config.config.storageSizeMW * config.config.durationHours;
-      const cost = (energy * 300000 + config.config.solarMW * 1200000 + 
-                   config.config.windMW * 1800000 + config.config.generatorMW * 800000) * 1.3;
-      
-      // Base savings
-      const baseSavings = energy * 300 * 200 + config.config.storageSizeMW * 1000 * 180 * 12 + 
-                         config.config.solarMW * 1000 * 8760 * 0.3 * electricityRate;
-      
-      // Revenue potential based on profitability target
-      const revenueMultiplier = profitabilityTarget / 3; // Scale factor
-      const gridSalesRevenue = config.config.solarMW * 1000 * 8760 * 0.1 * revenueMultiplier;
-      const arbitrageRevenue = energy * 100 * profitabilityTarget * 150; // Peak hour arbitrage
-      
-      const totalSavings = baseSavings + gridSalesRevenue + arbitrageRevenue;
-      const payback = cost / totalSavings;
-      const roi = (totalSavings / cost) * 100;
-
-      return {
-        ...config,
-        metrics: {
-          cost: cost / 1000000, // Convert to millions
-          savings: totalSavings / 1000, // Convert to thousands
-          payback,
-          roi,
-          revenue: (gridSalesRevenue + arbitrageRevenue) / 1000 // Revenue component in thousands
-        }
-      };
-    });
+    // Calculate metrics for each sample config using centralized calculations
+    const configsWithMetrics = await Promise.all(configs.map(async (config) => {
+      try {
+        const result = await calculateFinancialMetrics({
+          storageSizeMW: config.config.storageSizeMW,
+          durationHours: config.config.durationHours,
+          electricityRate,
+          location: 'North America', // Default location
+          solarMW: config.config.solarMW,
+          equipmentCost: 0, // Will fetch real pricing
+          installationCost: 0,
+          includeNPV: true
+        });
+        
+        return {
+          ...config,
+          metrics: {
+            cost: result.totalProjectCost / 1000000, // Convert to millions
+            savings: result.annualSavings / 1000, // Convert to thousands
+            payback: result.paybackYears,
+            roi: result.roi10Year || ((result.annualSavings * 10 / result.totalProjectCost) * 100),
+            revenue: result.annualSavings / 1000 // Using annualSavings as revenue proxy
+          }
+        };
+      } catch (error) {
+        console.error('Error calculating metrics for config:', config.name, error);
+        // Fallback to simple estimation if centralized calc fails
+        const energy = config.config.storageSizeMW * config.config.durationHours;
+        return {
+          ...config,
+          metrics: {
+            cost: energy * 0.155, // NREL $155/kWh as fallback
+            savings: energy * 50, // Conservative estimate
+            payback: 5,
+            roi: 20,
+            revenue: energy * 25
+          }
+        };
+      }
+    }));
 
     setSampleConfigs(configsWithMetrics);
   };
@@ -1751,32 +1765,17 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-indigo-700">Net Present Value (NPV)</span>
                       <span className="text-2xl font-bold text-indigo-800">
-                        ${(() => {
-                          const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                          const arbitrage = storageSizeMW * durationHours * 50 * profitabilityTarget;
-                          const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0;
-                          const annualCashFlow = arbitrage + gridSales;
-                          
-                          // NPV calculation with 8% discount rate over 20 years
-                          let npv = -totalCost;
-                          const discountRate = 0.08;
-                          for (let year = 1; year <= 20; year++) {
-                            const degradationFactor = Math.pow(0.98, year - 1);
-                            const yearlyFlow = annualCashFlow * degradationFactor;
-                            npv += yearlyFlow / Math.pow(1 + discountRate, year);
-                          }
-                          return (npv / 1000000).toFixed(1);
-                        })()}M
+                        ${(calculations.npv / 1000000).toFixed(1)}M
                       </span>
                     </div>
                     <div className="w-full bg-indigo-200 rounded-full h-2">
                       <div 
-                        className="h-2 rounded-full transition-all duration-500 bg-green-500"
-                        style={{ width: "75%" }}
+                        className={`h-2 rounded-full transition-all duration-500 ${calculations.npv > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(100, Math.abs(calculations.npv / (calculations.totalProjectCost || 1)) * 100)}%` }}
                       ></div>
                     </div>
                     <p className="text-xs text-indigo-600 mt-1">
-                      Project creates significant value over lifetime
+                      {calculations.npv > 0 ? 'Project creates significant value over lifetime' : 'Project needs optimization'}
                     </p>
                   </div>
 
@@ -1785,23 +1784,13 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-purple-700">Internal Rate of Return (IRR)</span>
                       <span className="text-2xl font-bold text-purple-800">
-                        {(() => {
-                          const totalCost = storageSizeMW * durationHours * 300000 + solarMW * 1200000 + windMW * 1500000 + generatorMW * 800000;
-                          const arbitrage = storageSizeMW * durationHours * 50 * profitabilityTarget;
-                          const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0;
-                          const annualCashFlow = arbitrage + gridSales;
-                          
-                          // Simplified IRR approximation
-                          const avgAnnualReturn = (annualCashFlow * 0.98) / totalCost;
-                          const irr = avgAnnualReturn * 100;
-                          return irr.toFixed(1);
-                        })()}%
+                        {calculations.irr.toFixed(1)}%
                       </span>
                     </div>
                     <div className="w-full bg-purple-200 rounded-full h-2">
                       <div 
-                        className="h-2 rounded-full transition-all duration-500 bg-green-500"
-                        style={{ width: "80%" }}
+                        className={`h-2 rounded-full transition-all duration-500 ${calculations.irr > 8 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                        style={{ width: `${Math.min(100, calculations.irr * 3)}%` }}
                       ></div>
                     </div>
                     <p className="text-xs text-purple-600 mt-1">

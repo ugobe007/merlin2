@@ -1,10 +1,40 @@
 # Calculation Files Audit Report
 ## Date: Session - Comprehensive Cleanup
-## Last Updated: Current Session
+## Last Updated: November 28, 2025
 
 ## Overview
 
 This audit identifies all calculation-related files in the codebase and their roles in the SINGLE SOURCE OF TRUTH architecture.
+
+---
+
+## 🚨 CRITICAL FIX - November 28, 2025
+
+### equipmentCalculations.ts - Small System Pricing Bug
+**Bug**: Small systems (<1 MW) were forced to use utility-scale battery units (11.5 MWh @ $6.67M each)
+**Symptom**: 0.35 MW hotel quoted $6.67M instead of ~$243K → 19+ year payback
+**Root Cause**: Lines 134-146 forced `Math.ceil(totalEnergyMWh / 11.5)` for ALL systems
+**Fix Applied**:
+```typescript
+// For small systems (<1MW), use actual kWh pricing instead of utility-scale units
+if (storageSizeMW < 1) {
+  const totalEnergyKWh = storageSizeMW * 1000 * durationHours;
+  const effectivePricePerKWh = pricingResult.price || pricingResult.priceRange?.low || 155;
+  totalBatteryCost = totalEnergyKWh * effectivePricePerKWh;
+}
+```
+
+### centralizedCalculations.ts - Fallback Pricing Fix  
+**Bug**: When `equipmentCost=0`, used hardcoded $350K/MWh fallback
+**Fix**: Now imports `getBatteryPricing()` and fetches real NREL pricing
+
+### InteractiveConfigDashboard.tsx - Hardcoded Sample Configs
+**Bug**: Sample config generator used `energy * 300000` hardcoded pricing
+**Fix**: Now calls `calculateFinancialMetrics()` for each config with real pricing
+
+### unifiedQuoteCalculator.ts - NEW Single Entry Point
+**Created**: Orchestrates all calculation services into single `calculateQuote()` function
+**Purpose**: Prevent future calculation inconsistencies by providing one entry point
 
 ---
 

@@ -88,10 +88,15 @@ export default function PowerAdjustmentModal({
     }
     
     // Recalculate savings and payback based on system size changes
+    // NOTE: This is a simplified proportional adjustment for UI responsiveness
+    // For accurate financials, the final quote uses centralizedCalculations.calculateFinancialMetrics()
     if (field === 'systemSizeMW' || field === 'duration' || field === 'systemSizeMWh') {
       const sizeRatio = updated.systemSizeMW / useCase.systemSizeMW;
       updated.totalAnnualSavings = Math.round(useCase.totalAnnualSavings * sizeRatio);
-      updated.paybackYears = updated.systemCost / updated.totalAnnualSavings;
+      // Simple payback formula (consistent with centralizedCalculations.ts line 388)
+      updated.paybackYears = updated.totalAnnualSavings > 0 
+        ? updated.systemCost / updated.totalAnnualSavings 
+        : 999;
     }
     
     setAdjustedParams(updated);

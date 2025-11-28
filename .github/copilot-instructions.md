@@ -2,35 +2,57 @@
 
 ## ⚠️ CRITICAL: Single Sources of Truth
 
-**CALCULATION ARCHITECTURE - THREE PILLARS:**
+**CALCULATION ARCHITECTURE - FOUR PILLARS:**
 
-1. **Power/Demand Calculations** → `useCasePowerCalculations.ts` (NEW - Nov 2025)
+1. **Quote Calculator** → `unifiedQuoteCalculator.ts` (NEW - Nov 28, 2025)
+   - **USE THIS FOR ALL QUOTE CALCULATIONS**
+   - `calculateQuote()` - Complete quote with equipment + financials
+   - `estimatePayback()` - Quick estimate for UI previews
+   - Orchestrates all other services
+   - ✅ **SINGLE ENTRY POINT** for quote generation
+
+2. **Power/Demand Calculations** → `useCasePowerCalculations.ts`
    - Industry-standard peak demand values (ASHRAE, CBECS, Energy Star)
    - Individual calculators: `calculateOfficePower()`, `calculateHotelPower()`, etc.
    - Master function: `calculateUseCasePower(slug, useCaseData)`
    - ✅ **SINGLE SOURCE OF TRUTH** for all power calculations
 
-2. **Financial Calculations** → `centralizedCalculations.ts`
+3. **Financial Calculations** → `centralizedCalculations.ts`
    - `calculateFinancialMetrics()` - NPV, IRR, ROI, payback
    - Database-driven constants (not hardcoded)
    - Advanced analysis: sensitivity, risk, Monte Carlo
    - ✅ **SINGLE SOURCE OF TRUTH** for all financial metrics
 
-3. **Equipment Pricing** → `equipmentCalculations.ts`
+4. **Equipment Pricing** → `equipmentCalculations.ts`
    - `calculateEquipmentBreakdown()` - Batteries, inverters, transformers
-   - Database-driven pricing from `pricing_configurations` table
-   - Market intelligence integration
+   - **FIXED Nov 28**: Small systems (< 1 MW) now priced per-kWh, not per-unit
+   - Market intelligence integration via NREL ATB 2024
    - ✅ **SINGLE SOURCE OF TRUTH** for equipment costs
 
 **PROTECTED FILES - DO NOT MODIFY WITHOUT REVIEW:**
 - `advancedFinancialModeling.ts` - IRR-based pricing models
 - `useCasePowerCalculations.ts` - Industry power standards
+- `centralizedCalculations.ts` - Financial formulas
+- `equipmentCalculations.ts` - Equipment pricing logic
 
 **DEPRECATED - DO NOT USE:**
-- ❌ `bessDataService.calculateBESSFinancials()` - Use `centralizedCalculations.calculateFinancialMetrics()`
-- ❌ `useSystemCalculations.getPowerDensity()` - Use `useCasePowerCalculations.calculateUseCasePower()`
-- ❌ `useSystemCalculations.calculateEVChargingConfig()` - Use `useCasePowerCalculations.calculateEVChargingPower()`
-- ❌ `useAdvancedSystemCalculations.getBESSPricePerKwh()` - Use `equipmentCalculations.ts`
+- ❌ `bessDataService.calculateBESSFinancials()` - Use `unifiedQuoteCalculator.calculateQuote()`
+- ❌ `pricingService.calculateROI()` - Use `centralizedCalculations.calculateFinancialMetrics()`
+- ❌ `marketIntelligence.simplePayback` - Use `calculateFinancialMetrics().paybackYears`
+- ❌ `InteractiveConfigDashboard` hardcoded prices - Use `calculateEquipmentBreakdown()`
+- ❌ ANY hardcoded $/kWh values - Use `getBatteryPricing()` from unifiedPricingService
+
+**FORBIDDEN PATTERNS:**
+```typescript
+// ❌ NEVER do this:
+const cost = storageSizeMW * durationHours * 300000; // Hardcoded!
+const payback = cost / savings; // Manual calculation!
+
+// ✅ ALWAYS do this:
+import { calculateQuote } from '@/services/unifiedQuoteCalculator';
+const quote = await calculateQuote({ storageSizeMW, durationHours, ... });
+// Use quote.financials.paybackYears, quote.costs.netCost, etc.
+```
 
 See `CALCULATION_FILES_AUDIT.md` for complete architecture documentation.
 

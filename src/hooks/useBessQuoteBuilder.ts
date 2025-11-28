@@ -342,16 +342,16 @@ export function useBessQuoteBuilder() {
   const [powerUnit, setPowerUnit] = useState('MW');
   const [applicationType, setApplicationType] = useState<'residential' | 'commercial' | 'utility' | 'ups'>('residential');
   
-  // Assumptions state
-  const [batteryKwh, setBatteryKwh] = useState(140);
-  const [pcsKw, setPcsKw] = useState(150);
+  // Assumptions state - NREL ATB 2024 pricing defaults
+  const [batteryKwh, setBatteryKwh] = useState(155); // NREL ATB 2024: $155/kWh
+  const [pcsKw, setPcsKw] = useState(80); // NREL ATB 2024: $80/kW inverter
   const [bosPercent, setBosPercent] = useState(0.12);
   const [epcPercent, setEpcPercent] = useState(0.15);
   const [offGridPcsFactor, setOffGridPcsFactor] = useState(1.25);
   const [onGridPcsFactor, setOnGridPcsFactor] = useState(1);
-  const [genKw, setGenKw] = useState(300);
-  const [solarKwp, setSolarKwp] = useState(0);
-  const [windKw, setWindKw] = useState(1200);
+  const [genKw, setGenKw] = useState(500); // NREL ATB 2024: $500/kW diesel/gas generator
+  const [solarKwp, setSolarKwp] = useState(850); // NREL ATB 2024: $0.85/W = $850/kWp
+  const [windKw, setWindKw] = useState(1200); // NREL ATB 2024: $1,200/kW land-based wind
   const [tariffPercent, setTariffPercent] = useState(0.10);
 
   // Effects

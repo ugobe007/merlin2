@@ -22,6 +22,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { getBatteryPricing } from './unifiedPricingService';
 
 // ============================================
 // INTERFACES
@@ -320,22 +321,23 @@ export async function calculateFinancialMetrics(
   // 1. CALCULATE COSTS
   // ===================================
   const totalEnergyMWh = storageSizeMW * durationHours;
+  const totalEnergyKWh = totalEnergyMWh * 1000;
   
-  // If costs not provided, calculate them
+  // If costs not provided, fetch real pricing from unifiedPricingService
   let finalEquipmentCost = equipmentCost;
   let finalInstallationCost = installationCost;
   let finalShippingCost = shippingCost;
   let finalTariffCost = tariffCost;
   
   if (equipmentCost === 0) {
-    // Calculate equipment cost using database pricing
-    // This would call the existing equipmentCalculations.ts
-    // For now, use a placeholder
-    const estimatedCostPerMWh = 350000; // This should come from database
-    finalEquipmentCost = totalEnergyMWh * estimatedCostPerMWh;
-    finalInstallationCost = finalEquipmentCost * 0.08;
-    finalShippingCost = finalEquipmentCost * 0.03;
-    finalTariffCost = finalEquipmentCost * 0.10;
+    // ✅ FIX: Fetch actual NREL ATB 2024 pricing ($155/kWh) instead of placeholder
+    const batteryPricing = await getBatteryPricing(storageSizeMW, durationHours);
+    finalEquipmentCost = totalEnergyKWh * batteryPricing.pricePerKWh;
+    finalInstallationCost = finalEquipmentCost * 0.15; // 15% installation (industry standard)
+    finalShippingCost = finalEquipmentCost * 0.03;     // 3% shipping
+    finalTariffCost = finalEquipmentCost * 0.05;       // 5% tariff (reduced from 10%)
+    
+    console.log(`💰 [Pricing] Using NREL ATB 2024: $${batteryPricing.pricePerKWh}/kWh × ${totalEnergyKWh} kWh = $${finalEquipmentCost.toLocaleString()}`);
   }
   
   const totalProjectCost = finalEquipmentCost + finalInstallationCost + finalShippingCost + finalTariffCost;

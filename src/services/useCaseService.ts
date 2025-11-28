@@ -6,6 +6,8 @@
 
 import { supabase } from './supabaseClient';
 import { baselineCache, useCaseCache } from './cacheService';
+import { getBatteryPricing } from './unifiedPricingService';
+import { calculateFinancialMetrics } from './centralizedCalculations';
 import type { Database } from '../types/database.types';
 
 // Database types
@@ -567,17 +569,29 @@ export class UseCaseService {
         !best || (current.annual_savings || 0) > (best.annual_savings || 0) ? current : best
       , pricingScenarios[0]);
 
-      // Calculate system cost (simplified)
-      const systemCostPerKwh = 600; // $600/kWh installed cost estimate
+      // ✅ FIX: Use centralized pricing service (NREL ATB 2024 ~$155/kWh) instead of hardcoded $600/kWh
+      const batteryPricing = await getBatteryPricing(recommendedSizeMw, preferredDurationHours);
+      const systemCostPerKwh = batteryPricing.pricePerKWh || 155; // Fallback to NREL if fetch fails
       const estimatedCost = recommendedSizeMw * 1000 * preferredDurationHours * systemCostPerKwh;
       
-      // Calculate projected savings (use pricing scenario or configuration default)
-      const projectedSavings = bestPricingScenario?.annual_savings || 
-        (estimatedCost * (modifiedConfig.typical_savings_percent / 100) * 0.4); // 40% of system cost as annual savings
+      // ✅ FIX: Use centralized financial calculations for consistent payback/ROI
+      const financials = await calculateFinancialMetrics({
+        storageSizeMW: recommendedSizeMw,
+        durationHours: preferredDurationHours,
+        electricityRate: 0.12, // Default rate
+        location: 'North America',
+        equipmentCost: estimatedCost,
+        installationCost: estimatedCost * 0.15,
+        includeNPV: false
+      });
       
-      // Calculate payback and ROI
-      const paybackYears = projectedSavings > 0 ? estimatedCost / projectedSavings : 999;
-      const roiPercentage = projectedSavings > 0 ? ((projectedSavings * 25 - estimatedCost) / estimatedCost) * 100 : 0;
+      // Use centralized results or fallback to scenario savings
+      const projectedSavings = financials.annualSavings || bestPricingScenario?.annual_savings || 
+        (estimatedCost * (modifiedConfig.typical_savings_percent / 100) * 0.4);
+      
+      // ✅ Use centralized payback/ROI instead of manual calculation
+      const paybackYears = financials.paybackYears;
+      const roiPercentage = financials.roi25Year;
 
       const result: CalculationResponse = {
         use_case_id: useCaseId,
