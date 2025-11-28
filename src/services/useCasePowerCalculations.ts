@@ -633,14 +633,16 @@ export function calculateUseCasePower(
     case 'warehouse':
     case 'logistics':
     case 'logistics-center':
+      // Database uses 'squareFeet', UI variants: 'warehouseSqFt', 'sqFt'
       return calculateWarehousePower(
-        parseInt(useCaseData.warehouseSqFt || useCaseData.sqFt) || 250000,
+        parseInt(useCaseData.squareFeet || useCaseData.warehouseSqFt || useCaseData.sqFt) || 250000,
         useCaseData.isColdStorage === true || useCaseData.warehouseType === 'cold-storage'
       );
       
     case 'cold-storage':
+      // Database uses 'squareFeet', UI variants: 'storageVolume', 'sqFt'
       return calculateWarehousePower(
-        parseInt(useCaseData.storageVolume || useCaseData.sqFt) || 50000,
+        parseInt(useCaseData.squareFeet || useCaseData.storageVolume || useCaseData.sqFt) || 50000,
         true // Always cold storage
       );
       
@@ -751,8 +753,9 @@ export function calculateUseCasePower(
       
     case 'distribution-center':
       // Alias for warehouse/logistics (same calculation)
+      // Database uses 'squareFeet', UI variants: 'warehouseSqFt', 'sqFt'
       return calculateWarehousePower(
-        parseInt(useCaseData.warehouseSqFt || useCaseData.sqFt) || 250000,
+        parseInt(useCaseData.squareFeet || useCaseData.warehouseSqFt || useCaseData.sqFt) || 250000,
         useCaseData.isColdStorage === true || useCaseData.warehouseType === 'cold-storage'
       );
       
