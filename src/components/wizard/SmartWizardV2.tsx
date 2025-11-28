@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { generatePDF, generateExcel, generateWord } from '../../utils/quoteExport';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { calculateAutomatedSolarSizing, formatSolarCapacity } from '../../utils/solarSizingUtils';
 import { formatSolarSavings, formatTotalProjectSavings } from '../../utils/financialFormatting';
 import { formatPowerCompact } from '../../utils/powerFormatting';
+import { validateFinancialCalculation } from '../../utils/calculationValidator';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
-import { calculateDatabaseBaseline } from '../../services/baselineService';
+import { calculateDatabaseBaseline, calculateDatacenterBESS } from '../../services/baselineService';
+import { calculatePowerProfile } from '../../services/powerProfileService';
+import { calculateUseCasePower, POWER_DENSITY_STANDARDS, type PowerCalculationResult } from '../../services/useCasePowerCalculations';
 import { aiStateService } from '../../services/aiStateService';
 import { useCaseService } from '../../services/useCaseService';
 import {
@@ -20,17 +23,28 @@ import {
   type ControlStrategy
 } from '../../services/advancedBessAnalytics';
 
-// New customer-focused steps
+// New customer-focused steps (V3 steps used temporarily with type bypass)
 import StepIntro from './steps/Step_Intro';
-import Step1_IndustryTemplate from './steps/Step1_IndustryTemplate';
-import Step2_UseCase from './steps/Step2_UseCase';
+import Step1_IndustryTemplate from './steps_v3/Step1_IndustryTemplate';
+import Step2_UseCase from './steps_v3/Step2_UseCase';
 import Step3_SimpleConfiguration from './steps/Step2_SimpleConfiguration';
-import Step3_AddRenewables from './steps/Step3_AddRenewables';
-import InteractiveConfigDashboard from './InteractiveConfigDashboard';
-import Step4_LocationPricing from './steps/Step4_LocationPricing';
-import Step5_QuoteSummary from './steps/Step4_QuoteSummary';
+import Step4_PowerRecommendation from './steps_v3/Step4_PowerRecommendation';
+import Step4_AddRenewables from './steps/Step3_AddRenewables';
+import Step5_LocationPricing from './steps_v3/Step4_LocationPricing';
+import Step6_QuoteSummary from './steps_v3/Step5_QuoteSummary';
+
+// NEW 7-Step Wizard Components
+import Step1_IndustryAndLocation from './steps_v3/Step1_IndustryAndLocation';
+import Step3_AddGoodies from './steps_v3/Step3_AddGoodies';
+import Step4_GoalsAndInterests from './steps_v3/Step4_GoalsAndInterests';
+import Step5_PowerRecommendation from './steps_v3/Step5_PowerRecommendation';
+import Step6_PreliminaryQuote from './steps_v3/Step6_PreliminaryQuote';
+import Step7_FinalQuote from './steps_v3/Step7_FinalQuote';
+import BatteryConfigModal from '../modals/BatteryConfigModal';
+import RequestQuoteModal from '../modals/RequestQuoteModal';
 import QuoteCompletePage from './QuoteCompletePage';
-import AIStatusIndicator from './AIStatusIndicator';
+import { PowerMeterWidget } from './widgets/PowerMeterWidget';
+import PowerProfileIndicator from './PowerProfileIndicator';
 
 interface SmartWizardProps {
   show: boolean;
@@ -42,15 +56,31 @@ interface SmartWizardProps {
 }
 
 const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, startInAdvancedMode = false, onOpenAdvancedQuoteBuilder, skipIntro = false }) => {
-  console.log('🧙 SmartWizardV2 rendered with onOpenAdvancedQuoteBuilder:', !!onOpenAdvancedQuoteBuilder);
+  // ============================================================================
+  // SMARTWIZARD V2 - GUIDED QUOTE BUILDER
+  // ============================================================================
+  // Purpose: Hand-hold beginners through BESS configuration
+  // Target Users: Non-technical decision makers, facility managers
+  // Key Features:
+  //   1. Power Status Bar - Real-time system overview (batteries + generation)
+  //   2. Power Gap Alerts - Warns when generation is insufficient
+  //   3. ML Data Collection - Tracks session for AI recommendations
+  //   4. Database-driven baselines - Industry-specific sizing
+  // 
+  // Contrast: Advanced Quote Builder (pro users, self-directed)
+  // ============================================================================
   
+  // ============================================================================
+  // NAVIGATION & UI STATE
+  // ============================================================================
   const [step, setStep] = useState(-1); // Start at -1 for intro screen
   const [showIntro, setShowIntro] = useState(true);
   const [showCompletePage, setShowCompletePage] = useState(false);
+  const [showRequestQuoteModal, setShowRequestQuoteModal] = useState(false);
   const [showAIWizard, setShowAIWizard] = useState(false);
-  const [isQuickstart, setIsQuickstart] = useState(false); // Track if this is a quickstart session
-  const [wizardInitialized, setWizardInitialized] = useState(false); // Track if wizard has been initialized
-  const modalContentRef = useRef<HTMLDivElement>(null); // Ref for scrollable content
+  const [isQuickstart, setIsQuickstart] = useState(false);
+  const [wizardInitialized, setWizardInitialized] = useState(false);
+  const modalContentRef = useRef<HTMLDivElement>(null);
   const [aiSuggestions, setAiSuggestions] = useState<Array<{
     type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
     title: string;
@@ -62,22 +92,34 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     action: () => void;
   }>>([]);
 
-  // Step 1: Industry Template (was Step 1)
+  // ============================================================================
+  // STEP 0: INDUSTRY TEMPLATE SELECTION
+  // ============================================================================
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [useTemplate, setUseTemplate] = useState(true);
-
-  // Step 2: Use Case Data (was Step 2)
-  const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
+  const [availableUseCases, setAvailableUseCases] = useState<any[]>([]);
   
-  // Clear useCaseData when template changes to prevent data contamination
-  useEffect(() => {
-    if (selectedTemplate) {
-      setUseCaseData({});
-      if (import.meta.env.DEV) {
-        console.log(`🔄 [Template Change] Cleared useCaseData for new template: ${selectedTemplate}`);
-      }
-    }
-  }, [selectedTemplate]);
+  // ✅ SYSTEMATIC FIX: Store loaded use case details for dynamic validation
+  const useCaseDetailsRef = useRef<any>(null);
+
+  // ============================================================================
+  // STEP 1: USE CASE QUESTIONNAIRE
+  // ============================================================================
+  // Collects industry-specific data (sq ft, # rooms, peak load, etc.)
+  // Powers ML model training + baseline calculations
+  // SINGLE SOURCE OF TRUTH: useCaseData stores all user answers from Step2_UseCase
+  // and is used by all calculation logic (scale extraction, baseline calculations)
+  const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
+  const [previousTemplate, setPreviousTemplate] = useState<string | null>(null);
+  
+  // ============================================================================
+  // NEW 7-STEP WIZARD STATE
+  // ============================================================================
+  const [userGoals, setUserGoals] = useState<string[]>([]);
+  const [showBatteryConfigModal, setShowBatteryConfigModal] = useState(false);
+  const [evChargerCount, setEvChargerCount] = useState(0);
+  const [use7StepFlow, setUse7StepFlow] = useState(false); // Feature flag for new flow
+  
   const [aiUseCaseRecommendation, setAiUseCaseRecommendation] = useState<{
     message: string;
     savings: string;
@@ -85,27 +127,150 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     configuration: string;
   } | null>(null);
 
-  // Step 3: Configuration (calculated based on industry template)
-  const [storageSizeMW, setStorageSizeMW] = useState(2);
-  const [durationHours, setDurationHours] = useState(4);
+  // 🎯 POWER PROFILE STATE - Gamification system
+  const [powerProfileLevel, setPowerProfileLevel] = useState(1);
+  const [powerProfilePoints, setPowerProfilePoints] = useState(0);
+  const [powerProfileCompletedChecks, setPowerProfileCompletedChecks] = useState<string[]>([]);
 
-  // Power density calculations by building type (W/sq ft) - Based on CBECS & industry standards
-  const getPowerDensity = (buildingType: string, subType?: string): number => {
-    switch (buildingType) {
-      case 'hotel': return 9; // 8-10 W/sq ft (24/7, HVAC, kitchen, laundry)
-      case 'datacenter': return 150; // 100-200 W/sq ft (high-density IT loads)
-      case 'tribal-casino': return 15; // 12-18 W/sq ft (gaming, lighting, 24/7 HVAC)
-      case 'logistics-center':
-        if (subType === 'cold-storage') return 25; // 20-30 W/sq ft (refrigeration)
-        if (subType === 'fulfillment') return 8; // 6-10 W/sq ft (automation, conveyors)
-        return 5; // 3-7 W/sq ft (standard warehouse)
-      case 'shopping-center': return 10; // 8-12 W/sq ft (retail, HVAC, lighting)
-      case 'office': return 6; // 5-7 W/sq ft (lighting, computers, HVAC)
-      case 'retail': return 8; // 6-10 W/sq ft (lighting, HVAC, some equipment)
-      case 'indoor-farm': return 35; // 30-40 W/sq ft (grow lights, climate control)
-      default: return 7; // Generic commercial baseline
+  // ============================================================================
+  // STEP 2-3: BESS CONFIGURATION (Batteries + Power Profile)
+  // ============================================================================
+  // Calculated automatically from use case data via calculateDatabaseBaseline()
+  // Stored in ML dataset for recommendation engine improvement
+  const [storageSizeMW, setStorageSizeMW] = useState<number>(0);
+  const [durationHours, setDurationHours] = useState(0);
+  const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
+  
+  // ============================================================================
+  // FINANCIAL METRICS STATE (For Steps 6 & 7)
+  // ============================================================================
+  const [equipmentCost, setEquipmentCost] = useState<number>(0);
+  const [installationCost, setInstallationCost] = useState<number>(0);
+  const [annualSavings, setAnnualSavings] = useState<number>(0);
+  const [paybackYears, setPaybackYears] = useState<number>(0);
+  const [roi10Year, setRoi10Year] = useState<number>(0);
+  const [roi25Year, setRoi25Year] = useState<number>(0);
+  const [npv, setNpv] = useState<number>(0);
+  const [irr, setIrr] = useState<number>(0);
+  
+  // POWER PROFILE: Grid connection analysis + generation requirements
+  // Powers the "Power Gap" detection in Power Status Bar
+  const [baselineResult, setBaselineResult] = useState<{
+    generationRequired?: boolean;       // True if grid inadequate
+    generationRecommendedMW?: number;  // Size of generators needed
+    generationReason?: string;         // Why generation is needed
+    gridConnection?: string;           // Grid type (reliable/unreliable/none)
+    gridCapacity?: number;             // Available grid power (MW)
+    peakDemandMW?: number;            // Facility peak load (MW)
+    existingSolarMW?: number;         // Existing solar capacity offset
+    existingEvLoadMW?: number;        // Existing EV charger load
+  } | undefined>(undefined);
+
+  // ✅ REMOVED: Old getPowerDensity function (lines 168-184)
+  // Now using centralized POWER_DENSITY_STANDARDS from useCasePowerCalculations.ts
+  // This ensures single source of truth for all power density values
+
+  // ============================================================================
+  // EFFECTS - All state must be declared before these
+  // ============================================================================
+  
+  // Clear use case data when template changes to prevent data contamination
+  useEffect(() => {
+    if (selectedTemplate && previousTemplate && selectedTemplate !== previousTemplate) {
+      setUseCaseData({});
     }
-  };
+    if (selectedTemplate) {
+      setPreviousTemplate(selectedTemplate);
+    }
+  }, [selectedTemplate, previousTemplate]);
+  
+  // 🔥 FIX STEP 2 CRASH: Fetch use case details when template is selected
+  useEffect(() => {
+    const fetchUseCaseDetails = async () => {
+      if (!selectedTemplate) {
+        useCaseDetailsRef.current = null;
+        return;
+      }
+      
+      try {
+        console.log('🔍 Fetching use case details for template:', selectedTemplate);
+        const details = await useCaseService.getUseCaseBySlug(selectedTemplate);
+        console.log('✅ Loaded use case details:', details);
+        console.log('📋 Custom questions count:', details?.custom_questions?.length || 0);
+        console.log('📋 Custom questions:', details?.custom_questions);
+        useCaseDetailsRef.current = details;
+        
+        // 🎯 CRITICAL FIX: Pre-populate useCaseData with custom question defaults
+        // This ensures calculateDatabaseBaseline() has values to work with
+        const customQuestions = details?.custom_questions || (details as any)?.customQuestions || [];
+        if (customQuestions.length > 0) {
+          const defaultAnswers: Record<string, any> = {};
+          customQuestions.forEach((q: any) => {
+            if (q.default !== undefined && q.default !== null && q.default !== '') {
+              // Convert default to appropriate type
+              if (q.type === 'number') {
+                defaultAnswers[q.id] = parseFloat(q.default);
+              } else if (q.type === 'boolean') {
+                defaultAnswers[q.id] = q.default === 'true' || q.default === true;
+              } else {
+                defaultAnswers[q.id] = q.default;
+              }
+            }
+          });
+          console.log('🎯 Pre-populating useCaseData with defaults:', defaultAnswers);
+          setUseCaseData(prev => ({ ...prev, ...defaultAnswers }));
+        }
+        
+        // 🎯 STRATEGIC FIX: Apply defaults from database configurations instead of hardcoded values
+        if (details && details.configurations && details.configurations.length > 0) {
+          // Find the default configuration (is_default = true) or use first one
+          const defaultConfig = details.configurations.find((c: any) => c.is_default) || details.configurations[0];
+          
+          if (defaultConfig) {
+            // Calculate MW from typical load kW
+            const mw = (defaultConfig.typical_load_kw || 500) / 1000; // Convert kW to MW
+            const hours = defaultConfig.preferred_duration_hours || 3;
+            
+            console.log(`✅ Applying database defaults for "${selectedTemplate}":`, { 
+              typical_load_kw: defaultConfig.typical_load_kw,
+              mw,
+              hours 
+            });
+            setStorageSizeMW(mw);
+            setDurationHours(hours);
+          } else {
+            console.warn(`⚠️ No configuration found for "${selectedTemplate}" - using fallback`);
+            setStorageSizeMW(0.5);
+            setDurationHours(3);
+          }
+        } else {
+          console.warn(`⚠️ No configurations in database for "${selectedTemplate}" - using fallback`);
+          setStorageSizeMW(0.5);
+          setDurationHours(3);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load use case details:', error);
+        useCaseDetailsRef.current = null;
+        // Set fallback on error
+        setStorageSizeMW(0.5);
+        setDurationHours(3);
+      }
+    };
+    
+    fetchUseCaseDetails();
+  }, [selectedTemplate]);
+  
+  // 🔥 FIX SESSION PERSISTENCE BUG - Clear data when wizard opens
+  useEffect(() => {
+    if (show && !wizardInitialized) {
+      if (import.meta.env.DEV) {
+        console.log('🧹 Clearing wizard data for new session');
+      }
+      // Clear all user-entered data for fresh start
+      setUseCaseData({});
+      // Don't clear selectedTemplate - user might have selected from intro
+    }
+  }, [show, wizardInitialized]);
 
   // 🔥 SCROLL TO TOP - Use ref for reliable scrolling
   useEffect(() => {
@@ -116,19 +281,39 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     }
   }, [step]);
 
+  // 🔥 FETCH USE CASES - Load from database on mount
+  useEffect(() => {
+    const fetchUseCases = async () => {
+      try {
+        const useCases = await useCaseService.getAllUseCases();
+        console.log('📋 Loaded use cases:', useCases);
+        setAvailableUseCases(useCases);
+      } catch (error) {
+        console.error('❌ Failed to load use cases:', error);
+        setAvailableUseCases([]);
+      }
+    };
+    
+    if (show) {
+      fetchUseCases();
+    }
+  }, [show]);
+
   // 🔥 INITIALIZE WIZARD - Only run ONCE when opening
   useEffect(() => {
-    console.log('📊 Wizard mount effect, show:', show, 'initialized:', wizardInitialized);
+    if (import.meta.env.DEV) {
+      console.log('📊 Wizard mount effect, show:', show, 'initialized:', wizardInitialized);
+    }
     
     if (show && !wizardInitialized) {
       // Initialize wizard state ONCE
-      console.log('🎬 Initializing wizard for first time');
+      if (import.meta.env.DEV) console.log('🎬 Initializing wizard for first time');
       
       // Start with intro or skip to step 0 based on prop
       if (skipIntro) {
         setStep(0);
         setShowIntro(false);
-        console.log('⚡ Skipping intro, starting at step 0');
+        if (import.meta.env.DEV) console.log('⚡ Skipping intro, starting at step 0');
       } else {
         setStep(-1);
         setShowIntro(true);
@@ -204,138 +389,136 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     }
   }, [show, wizardInitialized, startInAdvancedMode, skipIntro]);
 
+  // Calculate default baseline when template is selected (before questions answered)
+  // This ensures Power Status Bar has data to display immediately
+  useEffect(() => {
+    const calculateDefaultBaseline = async () => {
+      if (!selectedTemplate || isQuickstart) return;
+      
+      // Only run if we don't have use case data yet (before questions answered)
+      if (Object.keys(useCaseData).length > 0) return;
+      
+      if (import.meta.env.DEV) {
+        console.log('🔷 [DEFAULT BASELINE] Calculating for template:', selectedTemplate);
+      }
+      
+      try {
+        setIsCalculatingBaseline(true);
+        
+        // Calculate with default scale (will use database defaults)
+        const baseline = await calculateDatabaseBaseline(selectedTemplate, 1, {});
+        
+        if (import.meta.env.DEV) {
+          console.log('🔷 [DEFAULT BASELINE] Result:', baseline);
+        }
+        
+        // Set initial values
+        setStorageSizeMW(baseline.powerMW);
+        setDurationHours(baseline.durationHrs);
+        
+        // 🔥 CRITICAL: Calculate NET peak demand including existing systems
+        // Field names match database: existingSolarKW (uppercase W), existingEVChargers
+        const existingSolarMW = (useCaseData?.existingSolarKW || useCaseData?.existingSolarKw || 0) / 1000;
+        const existingEvLoadMW = (useCaseData?.existingEVChargers || useCaseData?.existingEvPorts || 0) * 0.007; // 7kW per L2 port
+        const netPeakDemandMW = (baseline.peakDemandMW || 0) + existingEvLoadMW - existingSolarMW;
+
+        if (import.meta.env.DEV) {
+          console.log('⚡ NET Peak Demand Calculation:', {
+            basePeak: baseline.peakDemandMW,
+            existingSolar: existingSolarMW,
+            existingEV: existingEvLoadMW,
+            netPeak: netPeakDemandMW
+          });
+        }
+
+        // Store baseline for Power Status Bar
+        setBaselineResult({
+          generationRequired: baseline.generationRequired,
+          generationRecommendedMW: baseline.generationRecommendedMW,
+          generationReason: baseline.generationReason,
+          gridConnection: baseline.gridConnection,
+          gridCapacity: baseline.gridCapacity,
+          peakDemandMW: netPeakDemandMW, // Use NET peak demand
+          existingSolarMW, // Store for display
+          existingEvLoadMW // Store for display
+        });
+        
+        setIsCalculatingBaseline(false);
+      } catch (error) {
+        console.error('❌ Failed to calculate default baseline:', error);
+        setIsCalculatingBaseline(false);
+      }
+    };
+    
+    calculateDefaultBaseline();
+  }, [selectedTemplate, isQuickstart]);
+
   // Auto-calculate realistic configuration based on use case data
   useEffect(() => {
     const calculateConfig = async () => {
       if (selectedTemplate && Object.keys(useCaseData).length > 0 && !isQuickstart) {
-        let scale = 1; // Default scale
         
-        // REMOVED: Duplicate EV charging calculation - now handled by calculateDatabaseBaseline
-        // All use cases now use the unified baseline calculation service
+        // ============================================================
+        // 🎯 SINGLE SOURCE OF TRUTH: Use centralized power calculations
+        // All industry-standard calculations are in useCasePowerCalculations.ts
+        // This ensures consistency across the entire application
+        // ============================================================
         
-        // Extract scale based on use case type
-        switch (selectedTemplate) {
-          case 'hotel':
-            scale = parseInt(useCaseData.numberOfRooms || useCaseData.numRooms) || 100; // Number of rooms
-            scale = scale / 100; // Convert to scale factor (per 100 rooms)
-            break;
-          case 'car-wash':
-            scale = parseInt(useCaseData.num_bays || useCaseData.numBays) || 3; // Number of wash bays
-            break;
-          case 'hospital':
-            scale = parseInt(useCaseData.bedCount) || 200; // Number of beds
-            scale = scale / 100; // Convert to scale factor (per 100 beds)
-            break;
-          case 'college':
-            scale = parseInt(useCaseData.enrollment) || 5000; // Student enrollment
-            scale = scale / 1000; // Convert to thousands
-            break;
-          case 'apartment':
-            scale = parseInt(useCaseData.numUnits) || 100; // Number of units
-            scale = scale / 100; // Convert to scale factor (per 100 units)
-            break;
-          case 'datacenter':
-          case 'data-center':
-            // For datacenters, use capacity directly as the scale
-            // This could be from direct capacity input OR calculated from square footage
-            const dcCapacity = parseFloat(useCaseData.capacity) || 5;
-            const dcSquareFootage = parseFloat(useCaseData.squareFootage) || 0;
-            
-            // If square footage provided, calculate capacity from power density (150 W/sq ft)
-            if (dcSquareFootage > 0) {
-              scale = (dcSquareFootage * 150) / 1000000; // Convert W to MW
-            } else {
-              scale = dcCapacity; // Use capacity directly in MW
-            }
-            break;
-          case 'airport':
-            scale = parseInt(useCaseData.annual_passengers) || 5; // Million passengers
-            break;
-          case 'manufacturing':
-            scale = parseInt(useCaseData.numLines) || parseInt(useCaseData.production_lines) || 2; // Production lines
-            break;
-          case 'warehouse':
-          case 'logistics':
-            scale = parseInt(useCaseData.facility_size) || 100; // Thousand sq ft
-            scale = scale / 100; // Convert to scale factor
-            break;
-          case 'retail':
-            scale = parseInt(useCaseData.store_size) || 50; // Thousand sq ft
-            scale = scale / 10; // Convert to scale factor
-            break;
-          case 'casino':
-            scale = parseInt(useCaseData.gaming_floor_size) || 50000; // Gaming floor sq ft
-            scale = scale / 50000; // Convert to scale factor
-            break;
-          case 'agricultural':
-            scale = parseInt(useCaseData.farm_size) || 1000; // Acres
-            scale = scale / 1000; // Convert to thousands
-            break;
-          case 'indoor-farm':
-            scale = parseInt(useCaseData.cultivationArea || useCaseData.growing_area) || 10000; // Cultivation area sq ft
-            scale = scale / 10000; // Convert to scale factor
-            break;
-          case 'cold-storage':
-            scale = parseInt(useCaseData.storage_volume) || parseInt(useCaseData.capacity) || 50000; // Storage volume
-            scale = scale / 50000; // Convert to scale factor
-            break;
-          case 'microgrid':
-            scale = parseInt(useCaseData.numBuildings) || parseInt(useCaseData.homes) || 50; // Buildings/homes
-            scale = scale / 50; // Convert to scale factor
-            break;
-          default:
-            scale = 1; // Default scale
+        if (import.meta.env.DEV) {
+          console.log('🎯 [SmartWizard] Calculating power using centralized calculations:', {
+            selectedTemplate,
+            useCaseData,
+            useCaseDataKeys: Object.keys(useCaseData || {})
+          });
         }
         
-        // Variable to store calculated power for solar sizing
-        let calculatedPowerMW: number;
-        let calculatedDurationHrs: number;
+        setIsCalculatingBaseline(true);
         
-        // Use the shared database-driven baseline calculation
-        // This ensures wizard and AI use IDENTICAL baseline values
-        // Special cases (EV charging, datacenter) are handled inside baselineService
-        console.log('🎯 [SmartWizard] About to call calculateDatabaseBaseline with:', {
-          selectedTemplate,
-          scale,
-          useCaseData,
-          useCaseDataKeys: Object.keys(useCaseData || {})
+        // Use the centralized power calculation (SINGLE SOURCE OF TRUTH)
+        const powerResult = calculateUseCasePower(selectedTemplate, useCaseData);
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ [SmartWizard] Centralized calculation result:', powerResult);
+          console.log(`📊 [SmartWizard] ${powerResult.calculationMethod}`);
+          console.log(`📊 [SmartWizard] ${powerResult.description}`);
+        }
+        
+        const calculatedPowerMW = powerResult.powerMW;
+        const calculatedDurationHrs = powerResult.durationHrs;
+        
+        setStorageSizeMW(calculatedPowerMW);
+        setDurationHours(calculatedDurationHrs);
+        
+        // ✅ FIXED: Only set solar from baseline if user wants solar
+        // Check wantsSolar from useCaseData - if 'No' or 'no', don't set solar
+        const wantsSolarAnswer = useCaseData?.wantsSolar;
+        const userWantsSolar = wantsSolarAnswer === undefined || 
+                               wantsSolarAnswer === true || 
+                               wantsSolarAnswer === 'yes' || 
+                               wantsSolarAnswer === 'Yes';
+        
+        // Note: Solar sizing is now handled in Step 3/4 based on user preference
+        // The centralized power calculation doesn't auto-set solar
+        if (!userWantsSolar) {
+          // User explicitly said no to solar - ensure it's 0
+          setSolarMW(0);
+          if (import.meta.env.DEV) {
+            console.log('🚫 [SmartWizard] User declined solar, setting to 0');
+          }
+        }
+        
+        setIsCalculatingBaseline(false);
+        
+        // Store calculation result for Step3 to use
+        // Note: Generation requirements are now handled based on grid connection in Step 4
+        setBaselineResult({
+          generationRequired: false,
+          generationRecommendedMW: undefined,
+          generationReason: undefined,
+          gridConnection: useCaseData.gridConnection,
+          gridCapacity: undefined,
+          peakDemandMW: calculatedPowerMW
         });
-        const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
-        console.log('🎯 [SmartWizard] Baseline from shared service:', baseline);
-        console.log('🎯 [SmartWizard] Setting storageSizeMW to:', baseline.powerMW);
-        
-        calculatedPowerMW = baseline.powerMW;
-        calculatedDurationHrs = baseline.durationHrs;
-        
-        setStorageSizeMW(baseline.powerMW);
-        setDurationHours(baseline.durationHrs);
-        
-        // GENERATION REQUIREMENT LOGIC: Check if solar/generation is required
-        if (baseline.generationRequired && baseline.generationRecommendedMW && baseline.generationRecommendedMW > 0) {
-          console.log('⚡ [Generation REQUIRED]:', {
-            reason: baseline.generationReason,
-            recommendedMW: baseline.generationRecommendedMW,
-            gridConnection: baseline.gridConnection,
-            gridCapacity: baseline.gridCapacity,
-            peakDemand: baseline.peakDemandMW
-          });
-          
-          // Auto-enable renewables and set solar to meet generation requirement
-          setIncludeRenewables(true);
-          setSolarMW(baseline.generationRecommendedMW);
-          
-          // Show alert to user
-          alert(`⚡ GENERATION REQUIRED\n\n${baseline.generationReason}\n\nRecommended Solar: ${baseline.generationRecommendedMW} MW\n\nThis has been automatically configured in Step 4.`);
-        } else if (baseline.generationRecommendedMW && baseline.generationRecommendedMW > 0) {
-          console.log('☀️ [Generation RECOMMENDED]:', {
-            reason: baseline.generationReason,
-            recommendedMW: baseline.generationRecommendedMW,
-            gridConnection: baseline.gridConnection
-          });
-          
-          // Don't auto-enable, but store the recommendation
-          // User will see it as a suggestion in Step 4
-        }
         
         // Enhanced solar sizing using automated calculation
         const buildingCharacteristics = {
@@ -354,26 +537,53 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
         
         const solarSuggestion = calculateAutomatedSolarSizing(buildingCharacteristics);
         // ⚠️ BUG FIX: Don't auto-set solar UNLESS generation is required
-        // If generation not required, store as suggestion only
-        if (!baseline.generationRequired) {
-          console.log('🌞 Solar suggestion calculated (not auto-applied):', {
-            template: selectedTemplate,
-            characteristics: buildingCharacteristics,
-            suggestion: solarSuggestion,
-            note: 'User must explicitly choose solar in Step 3'
-          });
-        }
+        // Solar suggestion calculated but NOT auto-applied - user must choose in Step 3
+        // (generationRequired is always false at this point since we set it above)
+        console.log('🌞 Solar suggestion calculated (not auto-applied):', {
+          template: selectedTemplate,
+          characteristics: buildingCharacteristics,
+          suggestion: solarSuggestion,
+          note: 'User must explicitly choose solar in Step 3'
+        });
       }
     };
     
-    calculateConfig();
-  }, [selectedTemplate, useCaseData, isQuickstart]);
+    // Calculate when on Step 1 (questionnaire) and user has answered questions
+    // OR when moving to Step 2 (configuration)
+    // This shows power preview on the questionnaire page
+    if ((step === 1 || step === 2) && Object.keys(useCaseData).length > 0) {
+      // Debounce to avoid calculating on every keystroke
+      const timeoutId = setTimeout(() => {
+        calculateConfig();
+      }, 100); // ✅ Reduced from 500ms to 100ms to eliminate visible glitch
+      
+      return () => clearTimeout(timeoutId);
+    }
+    
+    // Return empty cleanup if conditions not met
+    return () => {};
+  }, [selectedTemplate, step, isQuickstart]);
+
+  // ✅ CRITICAL: Reset solar when user says "No" to wantsSolar question
+  useEffect(() => {
+    const wantsSolarAnswer = useCaseData?.wantsSolar;
+    // If user explicitly says "No" to solar, reset solarMW to 0
+    if (wantsSolarAnswer === 'no' || wantsSolarAnswer === 'No' || wantsSolarAnswer === false) {
+      if (solarMW > 0) {
+        setSolarMW(0);
+        if (import.meta.env.DEV) {
+          console.log('🚫 [SmartWizard] wantsSolar changed to No, resetting solar to 0');
+        }
+      }
+    }
+  }, [useCaseData?.wantsSolar]);
 
   // Step 4: Renewables (was Step 4)
   const [includeRenewables, setIncludeRenewables] = useState(false);
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
   const [generatorMW, setGeneratorMW] = useState(0);
+  const [generatorsExplicitlyAdded, setGeneratorsExplicitlyAdded] = useState(false);
   
   // Solar space configuration
   const [solarSpaceConfig, setSolarSpaceConfig] = useState<{
@@ -424,6 +634,53 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
   const [electricityRate, setElectricityRate] = useState(0.15);
   const [knowsRate, setKnowsRate] = useState(false);
 
+  // Equipment breakdown state (calculated asynchronously) - MUST be declared before useEffect that uses it
+  const [equipmentBreakdown, setEquipmentBreakdown] = useState<any>(null);
+
+  // ============================================================================
+  // CALCULATE FINANCIAL METRICS (For Steps 6 & 7)
+  // ============================================================================
+  // ✅ FIX: Use values from costs state (populated by calculateCosts callback)
+  // The calculateCosts function uses equipmentBreakdown with CORRECT database pricing
+  // DO NOT use hardcoded pricing like $400K/MWh - that's inaccurate!
+  useEffect(() => {
+    const calculateFinancials = async () => {
+      if (storageSizeMW > 0 && durationHours > 0 && location) {
+        try {
+          // ✅ Get accurate equipment costs from equipmentBreakdown
+          // equipmentBreakdown is calculated with database pricing in calculateCosts
+          if (equipmentBreakdown?.totals) {
+            setEquipmentCost(equipmentBreakdown.totals.equipmentCost || 0);
+            setInstallationCost(equipmentBreakdown.totals.installationCost || 0);
+          }
+          
+          // Get financial metrics from centralized calculations
+          const metrics = await calculateFinancialMetrics({
+            storageSizeMW,
+            durationHours,
+            location: location || 'California',
+            electricityRate: electricityRate || 0.12,
+            solarMW: solarMW || 0,
+            equipmentCost: equipmentBreakdown?.totals?.equipmentCost,
+            installationCost: equipmentBreakdown?.totals?.installationCost,
+            includeNPV: true,
+          });
+
+          setAnnualSavings(metrics.annualSavings || 0);
+          setPaybackYears(metrics.paybackYears || 0);
+          setRoi10Year(metrics.roi10Year || 0);
+          setRoi25Year(metrics.roi25Year || 0);
+          setNpv(metrics.npv || 0);
+          setIrr(metrics.irr || 0);
+        } catch (error) {
+          console.error('Failed to calculate financial metrics:', error);
+        }
+      }
+    };
+
+    calculateFinancials();
+  }, [storageSizeMW, durationHours, location, electricityRate, solarMW, equipmentBreakdown]);
+
   // Step 5: Options (tracked in Step5_QuoteSummary component)
   const [selectedInstallation, setSelectedInstallation] = useState('epc');
   const [selectedShipping, setSelectedShipping] = useState('best-value');
@@ -442,9 +699,6 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     paybackYears: 0
   });
 
-  // Equipment breakdown state (calculated asynchronously)
-  const [equipmentBreakdown, setEquipmentBreakdown] = useState<any>(null);
-
   // Advanced Analytics State - Integration of Mathematical Models and ML
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [loadPatternAnalysis, setLoadPatternAnalysis] = useState<any>(null);
@@ -461,6 +715,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     optimalDurationHrs: number;
     optimalSolarMW: number;
     improvementText: string;
+    gridStrategy?: {
+      strategy: string;
+      savingsReason: string;
+      annualSavings: number;
+      requiresGeneration: boolean;
+      recommendedSolarMW: number;
+    };
   } | null>(null);
 
   // Calculate AI baseline whenever industry changes
@@ -506,16 +767,51 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     }
   }, [selectedTemplate]);
 
-  // Calculate improvement text when user reaches step 5
+  // 🎯 CALCULATE POWER PROFILE - Update level as user progresses
   useEffect(() => {
-    if (step === 5 && aiBaseline) {
+    if (!selectedTemplate) return;
+
+    const profileData = {
+      selectedTemplate,
+      useCaseData,
+      storageSizeMW,
+      durationHours,
+      location,
+      electricityRate,
+      solarMW,
+      windMW,
+      generatorMW
+    };
+
+    const profile = calculatePowerProfile(profileData);
+    setPowerProfileLevel(profile.level);
+    setPowerProfilePoints(profile.points);
+    setPowerProfileCompletedChecks(profile.completedChecks);
+
+    if (import.meta.env.DEV) {
+      console.log('🎯 Power Profile updated:', {
+        level: profile.level,
+        points: profile.points,
+        checks: profile.completedChecks.length
+      });
+    }
+  }, [selectedTemplate, useCaseData, storageSizeMW, durationHours, location, electricityRate, solarMW, windMW, generatorMW]);
+
+  // Calculate improvement text when user reaches step 5
+  // ✅ Uses equipmentBreakdown from database-driven calculations (Single Source of Truth)
+  useEffect(() => {
+    if (step === 5 && aiBaseline && equipmentBreakdown?.totals) {
       const userEnergyMWh = storageSizeMW * durationHours;
       const optimalEnergyMWh = aiBaseline.optimalPowerMW * aiBaseline.optimalDurationHrs;
       const efficiencyDiff = ((optimalEnergyMWh / userEnergyMWh - 1) * 100);
       
-      const userCost = (storageSizeMW * durationHours * 250000) + (storageSizeMW * 150000); // Battery + PCS
-      const optimalCost = (aiBaseline.optimalPowerMW * aiBaseline.optimalDurationHrs * 250000) + (aiBaseline.optimalPowerMW * 150000);
-      const costDiff = userCost - optimalCost;
+      // ✅ Use actual equipment costs from database, not hardcoded values
+      const userCost = equipmentBreakdown.totals.totalProjectCost;
+      // For optimal cost comparison, use ratio-based estimate from user cost
+      // (Proper comparison would require async recalc with optimal config)
+      const costRatio = (optimalEnergyMWh / userEnergyMWh);
+      const estimatedOptimalCost = userCost * costRatio;
+      const costDiff = userCost - estimatedOptimalCost;
       
       let improvementText = '';
       if (Math.abs(efficiencyDiff) < 10 && Math.abs(costDiff) < 100000) {
@@ -530,7 +826,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       
       setAiBaseline(prev => prev ? { ...prev, improvementText } : null);
     }
-  }, [step, storageSizeMW, durationHours]);
+  }, [step, storageSizeMW, durationHours, equipmentBreakdown]);
 
   // 🚫 AI USE CASE RECOMMENDATION TEMPORARILY DISABLED
   // TODO [v2.1]: Re-enable AI recommendations with centralizedCalculations.ts v2.0.0
@@ -694,9 +990,9 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           let capacity = parseFloat(useCaseData.capacity) || 5;
           
           // If square footage provided, calculate capacity from power density
+          // ✅ USES CENTRALIZED POWER DENSITY: 150 W/sq ft (data center standard)
           if (squareFootageDC > 0) {
-            const powerDensity = getPowerDensity('datacenter');
-            capacity = (squareFootageDC * powerDensity) / 1000000; // Convert W to MW
+            capacity = (squareFootageDC * POWER_DENSITY_STANDARDS.datacenter) / 1000000; // Convert W to MW
           }
           
           const uptimeReq = useCaseData.uptimeRequirement || 'tier3';
@@ -790,10 +1086,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           const casinoOperations = useCaseData.operations || '24-7';
           
           // Calculate power from square footage if provided
+          // ✅ USES CENTRALIZED POWER DENSITY: 18 W/sq ft (casino gaming floor)
           let casinoPowerMW: number;
           if (squareFootageCasino > 0) {
-            const powerDensity = getPowerDensity('tribal-casino');
-            casinoPowerMW = (squareFootageCasino * powerDensity) / 1000000;
+            casinoPowerMW = (squareFootageCasino * POWER_DENSITY_STANDARDS.casino) / 1000000;
           } else {
             // Fall back to facility size estimate
             const sizeMap: Record<string, number> = { micro: 0.15, small: 0.5, medium: 1.5, large: 4.0 };
@@ -813,10 +1109,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           const hasColdStorage = useCaseData.criticalLoads?.includes('refrigeration');
           
           // Calculate power from square footage if provided
+          // ✅ USES CENTRALIZED POWER DENSITY: warehouse 2 W/sq ft, coldStorage 8 W/sq ft
           let logisticsPowerMW: number;
           if (squareFootageLog > 0) {
-            const powerDensity = getPowerDensity('logistics-center', logFacilityType);
-            logisticsPowerMW = (squareFootageLog * powerDensity) / 1000000;
+            // Use appropriate density based on facility type
+            const logisticsDensity = hasColdStorage || logFacilityType === 'cold-storage' 
+              ? POWER_DENSITY_STANDARDS.coldStorage 
+              : POWER_DENSITY_STANDARDS.warehouse;
+            logisticsPowerMW = (squareFootageLog * logisticsDensity) / 1000000;
           } else {
             // Fall back to facility size estimate
             const sizeMap: Record<string, number> = { micro: 0.15, small: 0.5, medium: 1.5, large: 4.0 };
@@ -841,10 +1141,10 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           const centerSize = useCaseData.centerSize || 'community';
           
           // Calculate power from square footage if provided
+          // ✅ USES CENTRALIZED POWER DENSITY: 10 W/sq ft (shopping center)
           let mallPowerMW: number;
           if (squareFootageMall > 0) {
-            const powerDensity = getPowerDensity('shopping-center');
-            mallPowerMW = (squareFootageMall * powerDensity) / 1000000;
+            mallPowerMW = (squareFootageMall * POWER_DENSITY_STANDARDS.shoppingCenter) / 1000000;
           } else {
             // Fall back to center size estimate
             const sizeMap: Record<string, number> = { strip: 0.5, community: 2.0, regional: 5.0 };
@@ -871,46 +1171,110 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
   // End of disabled AI recommendation code
 
 
-  // Apply industry template defaults
-  useEffect(() => {
-    const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
-    if (useTemplate && templateKey && templateKey !== 'custom') {
-      // Industry-validated sizing based on NREL Commercial Reference Buildings
-      // and EPRI Energy Storage Database (real-world deployment data)
-      // CORRECTED: Sizing based on actual facility loads and economics
-      const templates: { [key: string]: { mw: number; hours: number } } = {
-        'manufacturing': { mw: 3, hours: 4 }, // NREL manufacturing baseline: 2-5MW typical
-        'office': { mw: 0.15, hours: 3 }, // CORRECTED: Small commercial office 50-300kW typical (was 1MW)
-        'small-office': { mw: 0.08, hours: 2 }, // Very small office: <10 employees
-        'medical-office': { mw: 0.10, hours: 2 }, // Medical/professional office practice
-        'datacenter': { mw: 10, hours: 6 }, // Uptime Institute: 5-20MW typical for enterprise
-        'warehouse': { mw: 2, hours: 3 }, // DOE logistics facilities: 1-3MW standard
-        'hotel': { mw: 1.2, hours: 4 }, // ✅ CORRECTED: CBECS 2018: ~1.2MW for 400-room hotel (2.93kW/room)
-        'retail': { mw: 0.5, hours: 3 }, // CBECS retail: 0.2-1MW per location
-        'agriculture': { mw: 1.5, hours: 6 }, // USDA agricultural energy survey: 1-3MW
-        'car-wash': { mw: 0.05, hours: 2 }, // CORRECTED: 50kW for 38kW facility (peak shaving)
-        'ev-charging': { mw: 1, hours: 2 }, // NREL EV infrastructure: 0.5-2MW per hub
-        'apartment': { mw: 1, hours: 4 }, // CBECS multifamily: 0.5-2MW per 100 units
-        'university': { mw: 5, hours: 5 }, // APPA higher education: 3-10MW per campus
-        'indoor-farm': { mw: 0.4, hours: 4 }, // CEA industry data: 0.2-1MW per facility
-        'hospital': { mw: 3, hours: 4 }, // CORRECTED: Added hospital sizing for 2.3MW load
-        'dental-office': { mw: 0.12, hours: 2 } // Small healthcare practice: 120kW peak load
-      };
+  // 🗑️ REMOVED: Hardcoded template defaults - now using database configurations
+  // All defaults are loaded from use_case_configurations table via getUseCaseBySlug()
+  // This ensures consistency between database and frontend without manual maintenance
 
-      const templateKey = Array.isArray(selectedTemplate) ? selectedTemplate[0] : selectedTemplate;
-      const template = templates[templateKey];
-      if (template) {
-        setStorageSizeMW(template.mw);
-        setDurationHours(template.hours);
-      }
+  // Cost calculations - SINGLE SOURCE OF TRUTH: equipmentCalculations.ts
+  // ✅ PERFORMANCE: Memoize with useCallback to prevent unnecessary recalculations
+  const calculateCosts = useCallback(async () => {
+    // ✅ USE ONLY equipmentCalculations.ts - it queries database pricing via unifiedPricingService
+    const gridConnection = useCaseData?.gridConnection || 'on-grid';
+    
+    if (import.meta.env.DEV) {
+      console.log('🔍 [SmartWizardV2] calculateCosts called with useCaseData:', {
+        hasUseCaseData: !!useCaseData,
+        level2_11kw: useCaseData?.level2_11kw,
+        dcfast_150kw: useCaseData?.dcfast_150kw,
+        allKeys: Object.keys(useCaseData || {})
+      });
     }
-  }, [selectedTemplate, useTemplate]);
+    
+    const equipmentBreakdown = await calculateEquipmentBreakdown(
+      storageSizeMW, 
+      durationHours, 
+      solarMW, 
+      windMW, 
+      generatorMW,
+      { selectedIndustry: selectedTemplate || 'manufacturing', useCaseData },
+      gridConnection,
+      location || 'California'
+    );
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ [SmartWizardV2] Using equipmentCalculations.ts as SINGLE SOURCE OF TRUTH:', {
+        equipmentCost: equipmentBreakdown.totals.equipmentCost,
+        installationCost: equipmentBreakdown.totals.installationCost,
+        totalProjectCost: equipmentBreakdown.totals.totalProjectCost,
+        hasSolar: !!equipmentBreakdown.solar,
+        solarCost: equipmentBreakdown.solar?.totalCost || 0,
+        hasEVChargers: !!equipmentBreakdown.evChargers,
+        evChargersCost: equipmentBreakdown.evChargers?.totalChargingCost || 0
+      });
+    }
+    
+    // Calculate financial metrics using equipment breakdown totals
+    const totalProjectCost = equipmentBreakdown.totals.totalProjectCost;
+    
+    // ✅ Enhance financial calculations for office buildings
+    // Office buildings benefit from higher demand charges and backup power value
+    const isOffice = selectedTemplate === 'office' || selectedTemplate === 'medical-office' || selectedTemplate === 'dental-office';
+    const demandChargeRate = isOffice ? 25000 : undefined; // $25K/MW-month for offices (vs $15K default)
+    const includeBackupValue = isOffice; // Include business continuity value for offices
+    
+    if (import.meta.env.DEV) {
+      console.log('🏢 [Office Financial Enhancement Check]:', {
+        selectedTemplate,
+        isOffice,
+        demandChargeRate,
+        includeBackupValue
+      });
+    }
+    
+    // ✅ Use centralizedCalculations for accurate financial metrics
+    const financialMetrics = await calculateFinancialMetrics({
+      storageSizeMW: storageSizeMW,
+      durationHours: durationHours,
+      location: location || 'California',
+      electricityRate: electricityRate || 0.15,
+      solarMW: solarMW,
+      equipmentCost: equipmentBreakdown.totals.equipmentCost,
+      installationCost: equipmentBreakdown.totals.installationCost,
+      includeNPV: true
+    });
+    
+    const calculatedCosts = {
+      equipmentCost: equipmentBreakdown.totals.equipmentCost,
+      installationCost: equipmentBreakdown.totals.installationCost,
+      shippingCost: 0, // Already included in equipment costs from database
+      tariffCost: 0, // Already included in equipment costs from database  
+      totalProjectCost: equipmentBreakdown.totals.totalProjectCost, // ✅ Use equipment breakdown total, not financial metrics
+      taxCredit: equipmentBreakdown.totals.totalProjectCost * 0.3, // Calculate tax credit from correct total
+      netCost: equipmentBreakdown.totals.totalProjectCost * 0.7, // Net cost after 30% tax credit
+      annualSavings: financialMetrics.annualSavings,
+      paybackYears: (equipmentBreakdown.totals.totalProjectCost * 0.7) / financialMetrics.annualSavings // Recalc with correct costs
+    };
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ [SmartWizardV2] Using centralizedCalculations for financial metrics:', {
+        paybackYears: calculatedCosts.paybackYears,
+        annualSavings: calculatedCosts.annualSavings,
+        npv: financialMetrics.npv,
+        irr: financialMetrics.irr
+      });
+    }
+    
+    // Update state so dashboard can use these values
+    setCosts(calculatedCosts);
+    
+    return calculatedCosts;
+  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, selectedTemplate, location, electricityRate, useCaseData]);
 
   // Calculate costs whenever configuration changes
+  // ✅ PERFORMANCE: Debounce to prevent excessive recalculations during rapid changes
   useEffect(() => {
     const updateCosts = async () => {
       const calculatedCosts = await calculateCosts();
-      setCosts(calculatedCosts);
       
       // Also calculate equipment breakdown for use in render
       const gridConnection = useCaseData.gridConnection || 'on-grid';
@@ -927,96 +1291,14 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       setEquipmentBreakdown(breakdown);
     };
     
-    updateCosts();
-  }, [storageSizeMW, durationHours, solarMW, windMW, generatorMW, selectedInstallation, selectedShipping, selectedTemplate, location, useCaseData]);
-
-  // Cost calculations
-  const calculateCosts = async () => {
-    const totalEnergyMWh = storageSizeMW * durationHours;
+    // ✅ PERFORMANCE: Debounce updates to prevent excessive recalculations
+    // Only recalculate after user stops changing values for 300ms
+    const debounceTimer = setTimeout(() => {
+      updateCosts();
+    }, 300);
     
-    // Equipment costs
-    const batteryCostPerKWh = 250; // $250/kWh
-    const batteryCost = totalEnergyMWh * 1000 * batteryCostPerKWh;
-    
-    const pcsCostPerKW = 150; // $150/kW
-    const pcsCost = storageSizeMW * 1000 * pcsCostPerKW;
-    
-    const solarCost = solarMW * 1000000; // $1M/MW
-    const windCost = windMW * 1500000; // $1.5M/MW
-    const generatorCost = generatorMW * 800000; // $800K/MW
-    
-    const equipmentCost = batteryCost + pcsCost + solarCost + windCost + generatorCost;
-    
-    // Installation costs (base, before markup)
-    const baseInstallationCost = equipmentCost * 0.20; // 20% of equipment cost
-    
-    // Installation markup based on selection
-    const installationMultipliers: { [key: string]: number } = {
-      'epc': 1.30,
-      'contractor': 1.20,
-      'self': 1.0
-    };
-    const installationCost = baseInstallationCost * (installationMultipliers[selectedInstallation] || 1.3);
-    
-    // Shipping costs
-    const baseShippingCost = totalEnergyMWh * 15000; // $15K/MWh base
-    const shippingMultipliers: { [key: string]: number } = {
-      'best-value': 1.0,
-      'usa': 1.4,
-      'china': 0.8
-    };
-    const shippingCost = baseShippingCost * (shippingMultipliers[selectedShipping] || 1.0);
-    
-    // Tariffs (21% on battery from China)
-    const tariffCost = batteryCost * 0.21;
-    
-    // Calculate equipment breakdown for accurate totals
-    const equipmentBreakdown = await calculateEquipmentBreakdown(
-      storageSizeMW, 
-      durationHours, 
-      solarMW, 
-      windMW, 
-      generatorMW,
-      { selectedIndustry: selectedTemplate || 'manufacturing' },
-      'on-grid',
-      location || 'California'
-    );
-    
-    // Use equipment breakdown totals for accuracy
-    const totalProjectCost = equipmentBreakdown.totals.totalProjectCost;
-    
-    // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
-    // ⚠️ DO NOT pass equipment costs - let service calculate them for consistency
-    const result = await calculateFinancialMetrics({
-      storageSizeMW,
-      durationHours,
-      solarMW,
-      windMW,
-      location: location || 'California',
-      electricityRate
-      // Removed: equipmentCost, installationCost, shippingCost, tariffCost
-      // Let centralized service calculate these for consistency
-    });
-    
-    console.log('💰 Financial calculations from centralized service (data source:', result.dataSource + ')');
-    
-    const calculatedCosts = {
-      equipmentCost,
-      installationCost,
-      shippingCost,
-      tariffCost,
-      totalProjectCost: result.totalProjectCost,
-      taxCredit: result.taxCredit,
-      netCost: result.netCost,
-      annualSavings: result.annualSavings,
-      paybackYears: result.paybackYears
-    };
-    
-    // Update state so dashboard can use these values
-    setCosts(calculatedCosts);
-    
-    return calculatedCosts;
-  };
+    return () => clearTimeout(debounceTimer);
+  }, [calculateCosts, storageSizeMW, durationHours, solarMW, windMW, generatorMW, selectedTemplate, location, useCaseData]);
 
   const analyzeConfiguration = async () => {
     const suggestions: Array<{
@@ -1388,9 +1670,21 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     // Scroll to top on step change
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
+    // ✅ CRITICAL: Check validation before allowing navigation
+    if (!canProceed()) {
+      console.warn('⚠️ Cannot proceed - validation failed', { step, canProceed: canProceed() });
+      return;
+    }
+    
     if (step < 5) {
       setStep(step + 1);
     } else if (step === 5) {
+      // ✅ CRITICAL: Ensure storageSizeMW is calculated before showing complete page
+      if (!storageSizeMW || storageSizeMW === 0) {
+        console.error('❌ Cannot proceed: storageSizeMW not calculated', { storageSizeMW, step });
+        alert('Please wait for system calculations to complete before proceeding.');
+        return;
+      }
       // Show complete page immediately (costs will calculate in background)
       setShowCompletePage(true);
       // Calculate costs in background without blocking
@@ -1402,40 +1696,268 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
     // Scroll to top on step change
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    if (step > 0) {
+    // Allow going back to intro from step 0
+    if (step >= 0) {
       setStep(step - 1);
     }
+  };
+
+  // ============================================================================
+  // DOWNLOAD HANDLERS (For Step 7)
+  // ============================================================================
+  
+  // Play magic wand sound effect
+  const playDownloadSound = () => {
+    try {
+      const audio = new Audio('/src/assets/sounds/Magic_Poof.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    } catch (err) {
+      console.log('Could not play sound:', err);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      playDownloadSound();
+      
+      const quoteData = {
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW: windMW || 0,
+        generatorMW: generatorMW || 0,
+        location,
+        industryTemplate: selectedTemplate,
+        gridConnection: 'grid-tied',
+        totalProjectCost: equipmentCost + installationCost,
+        annualSavings,
+        paybackYears,
+        taxCredit: (equipmentCost + installationCost) * 0.30,
+        netCost: (equipmentCost + installationCost) * 0.70,
+        installationOption: selectedInstallation || 'epc',
+        shippingOption: selectedShipping || 'best-value',
+        financingOption: selectedFinancing || 'cash',
+      };
+      
+      const equipmentBreakdown = {
+        battery: { cost: equipmentCost * 0.6, capacity: storageSizeMW },
+        inverter: { cost: equipmentCost * 0.25, capacity: storageSizeMW },
+        bms: { cost: equipmentCost * 0.10, capacity: storageSizeMW },
+        ems: { cost: equipmentCost * 0.05, capacity: storageSizeMW },
+      };
+      
+      await generatePDF(quoteData, equipmentBreakdown);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      playDownloadSound();
+      
+      const quoteData = {
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW: windMW || 0,
+        generatorMW: generatorMW || 0,
+        location,
+        industryTemplate: selectedTemplate,
+        gridConnection: 'grid-tied',
+        totalProjectCost: equipmentCost + installationCost,
+        annualSavings,
+        paybackYears,
+        taxCredit: (equipmentCost + installationCost) * 0.30,
+        netCost: (equipmentCost + installationCost) * 0.70,
+        installationOption: selectedInstallation || 'epc',
+        shippingOption: selectedShipping || 'best-value',
+        financingOption: selectedFinancing || 'cash',
+      };
+      
+      const equipmentBreakdown = {
+        battery: { cost: equipmentCost * 0.6, capacity: storageSizeMW },
+        inverter: { cost: equipmentCost * 0.25, capacity: storageSizeMW },
+        bms: { cost: equipmentCost * 0.10, capacity: storageSizeMW },
+        ems: { cost: equipmentCost * 0.05, capacity: storageSizeMW },
+      };
+      
+      await generateExcel(quoteData, equipmentBreakdown);
+    } catch (error) {
+      console.error('Excel generation failed:', error);
+      alert('Failed to generate Excel. Please try again.');
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    try {
+      playDownloadSound();
+      
+      const quoteData = {
+        storageSizeMW,
+        durationHours,
+        solarMW,
+        windMW: windMW || 0,
+        generatorMW: generatorMW || 0,
+        location,
+        industryTemplate: selectedTemplate,
+        gridConnection: 'grid-tied',
+        totalProjectCost: equipmentCost + installationCost,
+        annualSavings,
+        paybackYears,
+        taxCredit: (equipmentCost + installationCost) * 0.30,
+        netCost: (equipmentCost + installationCost) * 0.70,
+        installationOption: selectedInstallation || 'epc',
+        shippingOption: selectedShipping || 'best-value',
+        financingOption: selectedFinancing || 'cash',
+      };
+      
+      const equipmentBreakdown = {
+        battery: { cost: equipmentCost * 0.6, capacity: storageSizeMW },
+        inverter: { cost: equipmentCost * 0.25, capacity: storageSizeMW },
+        bms: { cost: equipmentCost * 0.10, capacity: storageSizeMW },
+        ems: { cost: equipmentCost * 0.05, capacity: storageSizeMW },
+      };
+      
+      await generateWord(quoteData, equipmentBreakdown);
+    } catch (error) {
+      console.error('Word generation failed:', error);
+      alert('Failed to generate Word document. Please try again.');
+    }
+  };
+
+  const handleSaveAndComplete = () => {
+    const quoteData = {
+      storageSizeMW,
+      durationHours,
+      energyCapacity: storageSizeMW * durationHours,
+      solarMW,
+      windMW,
+      generatorMW,
+      location,
+      electricityRate,
+      selectedTemplate,
+      customAnswers: useCaseData, // Use useCaseData as single source of truth
+      userGoals,
+      equipmentCost,
+      installationCost,
+      annualSavings,
+      paybackYears,
+      roi10Year,
+      roi25Year,
+      npv,
+      irr,
+    };
+    
+    onFinish(quoteData);
+    setShowCompletePage(true);
   };
 
   const canProceed = () => {
     switch (step) {
       case 0: return useTemplate ? selectedTemplate !== '' : true;
-      case 1: return Object.keys(useCaseData).length > 0; // Use case questions answered
-      case 2: return storageSizeMW > 0 && durationHours > 0; // Simple configuration
-      case 3: return true; // Power generation options (renewable energy) - all optional
+      case 1: {
+        // ✅ SYSTEMATIC FIX: Dynamic validation works for ALL use cases
+        // No more hardcoded field names - validates whatever questions are marked required in database
+        
+        // Get loaded use case details from Step2_UseCase component
+        const useCaseDetails = (window as any).__currentUseCaseDetails || useCaseDetailsRef.current;
+        
+        // If no questions loaded yet, allow proceed if ANY data entered
+        if (!useCaseDetails?.custom_questions) {
+          return Object.keys(useCaseData).length > 0;
+        }
+        
+        // Store for future validation checks
+        useCaseDetailsRef.current = useCaseDetails;
+        
+        // Get all required questions from database
+        const requiredQuestions = useCaseDetails.custom_questions.filter(
+          (q: any) => q.required === true
+        );
+        
+        if (requiredQuestions.length === 0) {
+          // No required questions - allow proceed if ANY data entered
+          return Object.keys(useCaseData).length > 0;
+        }
+        
+        // Check if all required fields are filled
+        const missingFields: string[] = [];
+        const allRequiredFilled = requiredQuestions.every((q: any) => {
+          const value = useCaseData[q.id];
+          const isFilled = value !== undefined && value !== '' && value !== null;
+          
+          // For number fields, check if >= 0 (except optional ones)
+          if (q.type === 'number' && isFilled) {
+            const numValue = typeof value === 'string' ? parseFloat(value) : value;
+            const isValid = !isNaN(numValue) && numValue >= 0;
+            if (!isValid) {
+              missingFields.push(q.id);
+            }
+            return isValid;
+          }
+          
+          if (!isFilled) {
+            missingFields.push(q.id);
+          }
+          return isFilled;
+        });
+        
+        // Only log when validation FAILS
+        if (!allRequiredFilled && import.meta.env.DEV) {
+          console.log('⚠️ [canProceed] Missing required fields:', {
+            useCase: selectedTemplate,
+            missingFields,
+            requiredCount: requiredQuestions.length
+          });
+        }
+        
+        return allRequiredFilled;
+      }
+      case 2: return storageSizeMW > 0 && durationHours > 0; // Merlin's Recommendation (battery config)
+      case 3: return true; // Power Recommendation Acceptance
       case 4: return location !== '' && electricityRate > 0; // Location & pricing
-      case 5: return true; // Quote summary
+      case 5: return true; // Quote Summary
       default: return false;
     }
   };
 
   const getStepTitle = () => {
+    if (use7StepFlow) {
+      const newTitles = [
+        'Industry & Location',              // Step 0 (NEW: Combined)
+        'Power Profile',                    // Step 1 (Use Case Questions)
+        'Add Extras',                      // Step 2 (Solar/EV/Wind)
+        'Your Goals',                       // Step 3 (Cost/Revenue/Sustainability)
+        'Power Recommendation',             // Step 4 (Completed Profile)
+        'Preliminary Quote',                // Step 5 (Equipment + Costs)
+        'Final Quote',                      // Step 6 (Installers + Financing)
+      ];
+      return newTitles[step] || '';
+    }
+    
+    // Legacy 6-step flow
     const titles = [
       'Choose Your Industry',           // Step 0
-      'Tell Us About Your Operation',   // Step 1
-      'Configure Your System',          // Step 2
-      'Power Generation Options',       // Step 3 - Renewable energy selection
-      'Location & Pricing',             // Step 4
-      'Review Your Quote'               // Step 5
+      'Build Your Power Profile',       // Step 1
+      'Merlin\'s Recommendation',       // Step 2
+      'Customize Your Power Profile',   // Step 3
+      'Location & Utility Pricing',     // Step 4
+      'Quote Summary',                  // Step 5
     ];
     return titles[step] || '';
   };  const renderStep = () => {
+    console.log('🎬 [renderStep] Current step:', step, 'selectedTemplate:', selectedTemplate);
+    
     if (step === -1) {
       return (
         <StepIntro
           onStart={() => {
             setShowIntro(false);
             setStep(0);
+            setUse7StepFlow(true); // Enable new flow
           }}
           onSkipToAdvanced={() => {
             // Close wizard and open Advanced Quote Builder
@@ -1448,27 +1970,238 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
       );
     }
 
+    // ============================================================================
+    // NEW 7-STEP FLOW
+    // ============================================================================
+    if (use7StepFlow) {
+      switch (step) {
+        case 0:
+          // Step 1: Industry + Location (Combined)
+          return (
+            <Step1_IndustryAndLocation
+              selectedTemplate={selectedTemplate}
+              availableUseCases={availableUseCases}
+              location={location}
+              onSelectTemplate={setSelectedTemplate}
+              onUpdateLocation={setLocation}
+              onNext={() => setStep(1)}
+              onBack={() => setStep(-1)}
+            />
+          );
+        case 1:
+          // Step 2: Power Profile (Use Case Questions) + Advanced Config Button
+          if (!useCaseDetailsRef.current) {
+            return (
+              <div className="text-center py-12 space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="text-gray-600 text-lg">Loading use case details...</p>
+                <button 
+                  onClick={() => setStep(0)}
+                  className="mt-4 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  ← Back
+                </button>
+              </div>
+            );
+          }
+          return (
+            <>
+              <Step2_UseCase
+                useCase={useCaseDetailsRef.current}
+                answers={useCaseData}
+                onUpdateAnswers={setUseCaseData}
+                onNext={() => setStep(2)}
+                onBack={() => setStep(0)}
+                onOpenBatteryConfigModal={() => setShowBatteryConfigModal(true)}
+                onOpenAdvancedQuoteBuilder={() => {
+                  onClose();
+                  if (onOpenAdvancedQuoteBuilder) {
+                    onOpenAdvancedQuoteBuilder();
+                  }
+                }}
+              />
+            </>
+          );
+        case 2:
+          // Step 3: Add Extras (Solar/EV/Generators/Wind)
+          // Show Solar/EV based on user answers from Step 1 custom questions
+          // Default to showing if the field doesn't exist (backward compatibility)
+          const wantsSolarValue = useCaseData?.wantsSolar;
+          const wantsEVValue = useCaseData?.wantsEVCharging;
+          const showSolarSection = wantsSolarValue === undefined || wantsSolarValue === true || wantsSolarValue === 'yes' || wantsSolarValue === 'Yes';
+          const showEVSection = wantsEVValue === undefined || wantsEVValue === true || wantsEVValue === 'yes' || wantsEVValue === 'Yes';
+          
+          if (import.meta.env.DEV) {
+            console.log('🎛️ [Step3] Conditional display:', {
+              wantsSolar: wantsSolarValue,
+              wantsEVCharging: wantsEVValue,
+              showSolar: showSolarSection,
+              showEV: showEVSection
+            });
+          }
+          
+          return (
+            <Step3_AddGoodies
+              solarMWp={solarMW}
+              evChargerCount={evChargerCount}
+              generatorKW={generatorMW * 1000}
+              windMWp={windMW}
+              onUpdateSolar={setSolarMW}
+              onUpdateEV={setEvChargerCount}
+              onUpdateGenerator={(kW) => setGeneratorMW(kW / 1000)}
+              onUpdateWind={setWindMW}
+              onNext={() => setStep(3)}
+              onBack={() => setStep(1)}
+              showSolar={showSolarSection}
+              showEV={showEVSection}
+            />
+          );
+        case 3:
+          // Step 4: Goals & Interests
+          return (
+            <Step4_GoalsAndInterests
+              onNext={() => setStep(4)}
+              onBack={() => setStep(2)}
+              onUpdateGoals={setUserGoals}
+            />
+          );
+        case 4:
+          // Step 5: Power Recommendation (Completed Profile)
+          return (
+            <Step5_PowerRecommendation
+              storageSizeMW={storageSizeMW}
+              durationHours={durationHours}
+              energyCapacity={storageSizeMW * durationHours}
+              solarMWp={solarMW}
+              evChargerCount={evChargerCount}
+              generatorKW={generatorMW * 1000}
+              windMWp={windMW}
+              selectedTemplate={useCaseDetailsRef.current}
+              location={location}
+              goals={userGoals}
+              equipmentBreakdown={equipmentBreakdown}
+              gridStrategy={aiBaseline?.gridStrategy}
+              gridConnection={useCaseData?.gridConnection}
+              annualGridFees={parseFloat(useCaseData?.annualGridFees) || 0}
+              // ✅ NEW: Callbacks for user adjustments
+              onStorageChange={(sizeMW, duration) => {
+                setStorageSizeMW(sizeMW);
+                setDurationHours(duration);
+              }}
+              onSolarChange={(solar) => setSolarMW(solar)}
+              onWindChange={(wind) => setWindMW(wind)}
+              onGeneratorChange={(genKW) => setGeneratorMW(genKW / 1000)}
+              onEVChargersChange={(count) => setEvChargerCount(count)}
+              onNext={() => setStep(5)}
+              onBack={() => setStep(3)}
+            />
+          );
+        case 5:
+          // Step 6: Preliminary Quote
+          return (
+            <Step6_PreliminaryQuote
+              storageSizeMW={storageSizeMW}
+              durationHours={durationHours}
+              energyCapacity={storageSizeMW * durationHours}
+              solarMW={solarMW}
+              windMW={windMW}
+              generatorMW={generatorMW}
+              evChargerCount={evChargerCount}
+              equipmentBreakdown={equipmentBreakdown}
+              equipmentCost={equipmentCost}
+              installationCost={installationCost}
+              annualSavings={annualSavings}
+              paybackYears={paybackYears}
+              roi10Year={roi10Year}
+              roi25Year={roi25Year}
+              npv={npv}
+              irr={irr}
+              selectedTemplate={useCaseDetailsRef.current}
+              location={location}
+              onNext={() => setStep(6)}
+              onBack={() => setStep(4)}
+            />
+          );
+        case 6:
+          // Step 7: Final Quote (Installers + Financing + Downloads)
+          return (
+            <Step7_FinalQuote
+              storageSizeMW={storageSizeMW}
+              durationHours={durationHours}
+              energyCapacity={storageSizeMW * durationHours}
+              solarMW={solarMW}
+              windMW={windMW}
+              generatorMW={generatorMW}
+              evChargerCount={evChargerCount}
+              equipmentBreakdown={equipmentBreakdown}
+              equipmentCost={equipmentCost}
+              installationCost={installationCost}
+              annualSavings={annualSavings}
+              paybackYears={paybackYears}
+              roi10Year={roi10Year}
+              selectedTemplate={useCaseDetailsRef.current}
+              location={location}
+              onBack={() => setStep(5)}
+              onDownloadPDF={handleDownloadPDF}
+              onDownloadExcel={handleDownloadExcel}
+              onDownloadWord={handleDownloadWord}
+              onComplete={handleSaveAndComplete}
+            />
+          );
+        default:
+          return null;
+      }
+    }
+
+    // ============================================================================
+    // LEGACY 6-STEP FLOW (Original)
+    // ============================================================================
     switch (step) {
       case 0:
         return (
           <Step1_IndustryTemplate
-            selectedTemplate={selectedTemplate}
-            setSelectedTemplate={setSelectedTemplate}
-            useTemplate={useTemplate}
-            setUseTemplate={setUseTemplate}
-            onOpenAdvancedQuoteBuilder={onOpenAdvancedQuoteBuilder}
+            {...{
+              selectedTemplate,
+              availableUseCases,
+              zipCode: location,
+              onZipCodeChange: setLocation,
+              onSelectTemplate: setSelectedTemplate,
+              onNext: () => setStep(1),
+              onBack: () => setStep(-1)
+            } as any}
           />
         );
       case 1:
+        // Add null check to prevent crashes
+        if (!useCaseDetailsRef.current) {
+          return (
+            <div className="text-center py-12 space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="text-gray-600 text-lg">Loading use case details...</p>
+              <p className="text-sm text-gray-500">If this takes more than a few seconds, please go back and try again</p>
+              <button 
+                onClick={() => setStep(0)}
+                className="mt-4 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                ← Back to Use Case Selection
+              </button>
+            </div>
+          );
+        }
         return (
           <Step2_UseCase
-            selectedIndustry={selectedTemplate}
-            useCaseData={useCaseData}
-            setUseCaseData={setUseCaseData}
-            aiRecommendation={aiUseCaseRecommendation}
-            setStorageSizeMW={setStorageSizeMW}
-            setDurationHours={setDurationHours}
-            onAdvanceToConfiguration={() => setStep(2)}
+            useCase={useCaseDetailsRef.current}
+            answers={useCaseData}
+            onUpdateAnswers={setUseCaseData}
+            onNext={() => setStep(2)}
+            onBack={() => setStep(0)}
+            onOpenBatteryConfigModal={() => setShowBatteryConfigModal(true)}
+            onOpenAdvancedQuoteBuilder={() => {
+              onClose();
+              if (onOpenAdvancedQuoteBuilder) {
+                onOpenAdvancedQuoteBuilder();
+              }
+            }}
           />
         );
       case 2:
@@ -1480,86 +2213,90 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
             setDurationHours={setDurationHours}
             industryTemplate={selectedTemplate}
             aiRecommendation={aiUseCaseRecommendation || undefined}
+            baselineResult={baselineResult}
+            onNext={() => setStep(3)}
+            onBack={() => setStep(1)}
           />
         );
       case 3:
         return (
-          <Step3_AddRenewables
-            includeRenewables={includeRenewables}
-            setIncludeRenewables={setIncludeRenewables}
-            solarMW={solarMW}
-            setSolarMW={setSolarMW}
-            windMW={windMW}
-            setWindMW={setWindMW}
-            generatorMW={generatorMW}
-            setGeneratorMW={setGeneratorMW}
-            solarSpaceConfig={solarSpaceConfig}
-            setSolarSpaceConfig={setSolarSpaceConfig}
-            evChargerConfig={evChargerConfig}
-            setEVChargerConfig={setEVChargerConfig}
-            windConfig={windConfig}
-            setWindConfig={setWindConfig}
-            generatorConfig={generatorConfig}
-            setGeneratorConfig={setGeneratorConfig}
-            useCase={selectedTemplate}
-            buildingSize={useCaseData.buildingSize || useCaseData.facilitySize}
-            facilitySize={useCaseData.facilitySize}
-            peakLoad={storageSizeMW}
-            electricalLoad={useCaseData.electricalLoad || useCaseData.peakLoad}
-            useCaseAnswers={useCaseData}
-          />
-        );
-      case 4:
-        return (
-          <Step4_LocationPricing
-            location={location}
-            setLocation={setLocation}
-            electricityRate={electricityRate}
-            setElectricityRate={setElectricityRate}
-            knowsRate={knowsRate}
-            setKnowsRate={setKnowsRate}
-          />
-        );
-      case 5:
-        // 🔍 DEBUG: Log values BEFORE passing to quote summary
-        console.log('🚀 [SmartWizardV2] BEFORE Step5_QuoteSummary render:', {
-          storageSizeMW,
-          durationHours,
-          solarMW,
-          windMW,
-          generatorMW,
-          totalPowerMW: (storageSizeMW + solarMW + windMW + generatorMW)
-        });
-        
-        return (
-          <Step5_QuoteSummary
+          <Step4_PowerRecommendation
             storageSizeMW={storageSizeMW}
             durationHours={durationHours}
             solarMW={solarMW}
             windMW={windMW}
             generatorMW={generatorMW}
-            solarSpaceConfig={solarSpaceConfig}
-            evChargerConfig={evChargerConfig}
-            windConfig={windConfig}
-            generatorConfig={generatorConfig}
-            location={location}
+            setSolarMW={setSolarMW}
+            setWindMW={setWindMW}
+            setGeneratorMW={setGeneratorMW}
             industryTemplate={selectedTemplate}
-            equipmentCost={costs.equipmentCost}
-            installationCost={costs.installationCost}
-            shippingCost={costs.shippingCost}
-            tariffCost={costs.tariffCost}
-            annualSavings={costs.annualSavings}
-            paybackYears={costs.paybackYears}
-            taxCredit30Percent={costs.taxCredit}
-            netCostAfterTaxCredit={costs.netCost}
-            onOpenAIWizard={handleOpenAIWizard}
-            showAIWizard={showAIWizard}
-            aiBaseline={aiBaseline}
-            onEditConfiguration={() => setStep(3)}
-            industryData={{
-              selectedIndustry: selectedTemplate,
-              useCaseData: useCaseData
-            }}
+            onNext={() => setStep(4)}
+            onBack={() => setStep(2)}
+          />
+        );
+      case 4:
+        return (
+          <Step5_LocationPricing
+            location={location}
+            onUpdateLocation={setLocation}
+            electricityRate={electricityRate}
+            onUpdateRate={setElectricityRate}
+            storageSizeMW={storageSizeMW}
+            durationHours={durationHours}
+            solarMW={solarMW}
+            windMW={windMW}
+            generatorMW={generatorMW}
+            onEditPowerProfile={() => setStep(3)}
+            onNext={() => setStep(5)}
+            onBack={() => setStep(3)}
+          />
+        );
+      case 5:
+        // 🔍 DEBUG: Log values BEFORE passing to quote summary
+        if (import.meta.env.DEV) {
+          console.log('🚀 [SmartWizardV2] BEFORE Step6_QuoteSummary render:', {
+            storageSizeMW,
+            durationHours,
+            solarMW,
+            windMW,
+            generatorMW,
+            totalPowerMW: (storageSizeMW + solarMW + windMW + generatorMW)
+          });
+        }
+        
+        return (
+          <Step6_QuoteSummary
+            {...{
+              storageSizeMW,
+              durationHours,
+              solarMW,
+              windMW,
+              generatorMW,
+              solarSpaceConfig,
+              evChargerConfig,
+              windConfig,
+              generatorConfig,
+              location,
+              industryTemplate: selectedTemplate,
+              equipmentCost: costs.equipmentCost,
+              installationCost: costs.installationCost,
+              shippingCost: costs.shippingCost,
+              tariffCost: costs.tariffCost,
+              annualSavings: costs.annualSavings,
+              paybackYears: costs.paybackYears,
+              taxCredit30Percent: costs.taxCredit,
+              netCostAfterTaxCredit: costs.netCost,
+              onOpenAIWizard: handleOpenAIWizard,
+              showAIWizard,
+              aiBaseline,
+              onEditConfiguration: () => setStep(3),
+              onNext: handleNext,
+              onBack: handleBack,
+              industryData: {
+                selectedIndustry: selectedTemplate,
+                useCaseData: useCaseData
+              }
+            } as any}
           />
         );
       default:
@@ -1670,11 +2407,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           alert('Quote saved successfully!');
         }}
         onRequestConsultation={() => {
-          // Open email with consultation request
-          window.location.href = 'mailto:info@merlinenergy.com?subject=Consultation Request&body=Hi, I completed my BESS quote and would like to schedule a consultation to discuss my project.';
+          // Open Request Quote modal instead of mailto
+          setShowRequestQuoteModal(true);
         }}
         onClose={() => {
           setShowCompletePage(false);
+          // Mark wizard as completed so intro is skipped next time
+          localStorage.setItem('merlin_wizard_completed', 'true');
           onClose();
         }}
       />
@@ -1687,23 +2426,33 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
   // Now available as standalone tool in Advanced Quote Builder
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8 max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header - Hide on intro screen */}
         {step >= 0 && (
-          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 text-white p-6 rounded-t-2xl shadow-lg">
+          <div className="bg-gradient-to-r from-purple-800 via-purple-600 to-sky-400 text-white p-6 rounded-t-2xl shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <span className="text-4xl drop-shadow-lg">🪄</span>
                 <div>
                   <h2 className="text-2xl font-bold drop-shadow-md">Welcome to Merlin!</h2>
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm opacity-90">Step {step + 1} of 6: {getStepTitle()}</p>
-                    <AIStatusIndicator compact={true} />
-                  </div>
+                  <p className="text-sm opacity-90">Step {step + 1} of {use7StepFlow ? 7 : 6}: {getStepTitle()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                {/* Merlin Help Link */}
+                <button
+                  onClick={() => {
+                    // Find and click the Merlin assistant button
+                    const merlinBtn = document.querySelector('[title="Ask Merlin for Help"]') as HTMLButtonElement;
+                    if (merlinBtn) merlinBtn.click();
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm font-medium transition-all"
+                  title="Need help? Ask Merlin!"
+                >
+                  <span className="text-lg">🧙‍♂️</span>
+                  <span className="hidden md:inline">Help</span>
+                </button>
                 <button
                   onClick={onClose}
                   className="text-white hover:text-gray-200 text-3xl font-bold"
@@ -1713,12 +2462,161 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
               </div>
             </div>
             
+            {/* Clickable Step Indicators - Dynamically sized based on flow */}
+            <div className="flex justify-between items-center mb-3">
+              {(use7StepFlow ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5]).map((stepNum) => {
+                const stepTitles7 = [
+                  'Industry',   // 0
+                  'Questions',  // 1 
+                  'Extras',     // 2
+                  'Goals',      // 3
+                  'Power',      // 4
+                  'Quote',      // 5
+                  'Final'       // 6
+                ];
+                const stepTitles6 = [
+                  'Industry',
+                  'Questions', 
+                  'Recommend',
+                  'Customize',
+                  'Location',
+                  'Quote'
+                ];
+                const stepTitles = use7StepFlow ? stepTitles7 : stepTitles6;
+                const isCompleted = step > stepNum;
+                const isCurrent = step === stepNum;
+                const isClickable = step >= stepNum || stepNum === 0;
+                
+                return (
+                  <button
+                    key={stepNum}
+                    onClick={() => isClickable && setStep(stepNum)}
+                    disabled={!isClickable}
+                    className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all ${
+                      isCurrent 
+                        ? 'bg-white/30 scale-105' 
+                        : isCompleted 
+                          ? 'bg-white/20 hover:bg-white/30 cursor-pointer' 
+                          : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    title={isClickable ? `Go to Step ${stepNum + 1}: ${stepTitles[stepNum]}` : 'Complete previous steps first'}
+                  >
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      isCurrent 
+                        ? 'bg-white text-purple-700' 
+                        : isCompleted 
+                          ? 'bg-green-400 text-white' 
+                          : 'bg-white/40 text-white'
+                    }`}>
+                      {isCompleted ? '✓' : stepNum + 1}
+                    </span>
+                    <span className="text-xs font-medium">{stepTitles[stepNum]}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
             {/* Progress bar */}
-            <div className="mt-4 bg-white/20 rounded-full h-2">
+            <div className="bg-white/20 rounded-full h-2">
               <div
                 className="bg-white rounded-full h-2 transition-all duration-300"
-                style={{ width: `${((step + 1) / 6) * 100}%` }}
+                style={{ width: `${((step + 1) / (use7StepFlow ? 7 : 6)) * 100}%` }}
               />
+            </div>
+          </div>
+        )}
+
+        {/* ================================================================== */}
+        {/* NAVIGATION BAR - Power Status + Power Profile                      */}
+        {/* ================================================================== */}
+        {/* Purpose: Help users understand their power profile & capabilities  */}
+        {/* Shows:                                                             */}
+        {/*   - Power adequacy gauge (RED/GREEN status)                         */}
+        {/*   - Total system capacity (batteries + generation)                  */}
+        {/*   - Power gap alerts (when generation needed but not added)         */}
+        {/*   - Quick stats (Peak, Grid, Battery, Generation)                   */}
+        {/* Visible: Steps 1-6 for 7-step flow, Steps 1-5 for legacy           */}
+        {/* ================================================================== */}
+        {step >= 1 && step <= (use7StepFlow ? 6 : 5) && (
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white px-6 py-4 border-b-2 border-slate-600 shadow-lg">
+            <div className="flex items-center justify-between gap-6">
+              {/* LEFT: Power Meter Widget + Power Profile Indicator */}
+              <div className="flex items-center gap-4 flex-shrink-0">
+                <PowerMeterWidget
+                  peakDemandMW={baselineResult?.peakDemandMW || 0}
+                  totalGenerationMW={solarMW + windMW + generatorMW}
+                  gridAvailableMW={baselineResult?.gridCapacity || 0}
+                  gridConnection={useCaseData.gridConnection === 'off-grid' ? 'off-grid' : 
+                                 useCaseData.gridReliability === 'unreliable' ? 'unreliable' :
+                                 'reliable'}
+                  compact={true}
+                />
+                
+                {/* 🎯 POWER PROFILE INDICATOR */}
+                <div className="border-l border-slate-600 pl-4">
+                  <PowerProfileIndicator
+                    level={powerProfileLevel}
+                    points={powerProfilePoints}
+                    nextLevelPoints={[0, 11, 21, 31, 46, 61, 81, 100][powerProfileLevel] || 100}
+                    compact={true}
+                  />
+                </div>
+              </div>
+
+              {/* CENTER: System Size Display */}
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚡</span>
+                <div>
+                  <p className="text-xs opacity-70 uppercase tracking-wide">Power Configuration</p>
+                  <p className="font-bold text-lg">{(storageSizeMW + solarMW + windMW + generatorMW).toFixed(1)} MW System</p>
+                </div>
+              </div>
+              
+              {/* POWER GAP ALERT: Generation Required */}
+              {baselineResult && baselineResult.generationRequired && (
+                <div className="flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/30 rounded-lg px-4 py-2">
+                  <span className="text-xl">🔌</span>
+                  <div className="text-right">
+                    <p className="text-xs opacity-80">Backup Power Needed</p>
+                    <p className="font-bold">{baselineResult.generationRecommendedMW?.toFixed(1) || 0} MW Generators</p>
+                  </div>
+                  {generatorMW === 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                      Not Added
+                    </span>
+                  )}
+                  {generatorMW > 0 && (
+                    <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      ✓ Added ({generatorMW.toFixed(1)} MW)
+                    </span>
+                  )}
+                </div>
+              )}
+              
+              {/* RIGHT: Quick Stats Row */}
+              <div className="flex items-center gap-2">
+                <div className="bg-white/10 rounded px-3 py-1 text-center">
+                  <p className="text-xs opacity-70">Peak</p>
+                  <p className="font-bold text-sm">{(baselineResult?.peakDemandMW || 0).toFixed(1)} MW</p>
+                </div>
+                <div className="bg-white/10 rounded px-3 py-1 text-center">
+                  <p className="text-xs opacity-70">Grid</p>
+                  <p className="font-bold text-sm">{(baselineResult?.gridCapacity || 0).toFixed(1)} MW</p>
+                </div>
+                <div className="bg-white/10 rounded px-3 py-1 text-center">
+                  <p className="text-xs opacity-70">Battery</p>
+                  <p className="font-bold text-sm">{storageSizeMW.toFixed(1)} MW</p>
+                </div>
+                <div className="bg-white/10 rounded px-3 py-1 text-center">
+                  <p className="text-xs opacity-70">
+                    {generatorMW > 0 && solarMW === 0 && windMW === 0 ? 'Gen' :
+                     solarMW > 0 && generatorMW === 0 && windMW === 0 ? 'Solar' :
+                     windMW > 0 && solarMW === 0 && generatorMW === 0 ? 'Wind' :
+                     'Gen'}
+                  </p>
+                  <p className="font-bold text-sm">{(solarMW + windMW + generatorMW).toFixed(1)} MW</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1738,43 +2636,13 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
         {/* Content */}
         <div 
           ref={modalContentRef}
-          className={`${step === -1 ? 'p-12' : 'p-8'} max-h-[70vh] overflow-y-auto`}
+          className={`${step === -1 ? 'p-12' : 'p-8'} flex-1 overflow-y-auto`}
         >
           {renderStep()}
         </div>
 
-        {/* Footer - Hide on intro screen */}
-        {step >= 0 && (
-          <div className="bg-gray-50 p-6 rounded-b-2xl border-t-2 border-gray-200 flex items-center justify-between">
-            <button
-              onClick={handleBack}
-              disabled={step === 0}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                step === 0
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
-              }`}
-            >
-              ← Back
-            </button>
-
-            <div className="text-sm text-gray-500">
-              Step {step + 1} of 7
-            </div>
-
-            <button
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className={`px-8 py-3 rounded-xl font-bold transition-all ${
-              canProceed()
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {step === 5 ? 'Get My Quote →' : 'Next →'}
-          </button>
-          </div>
-        )}
+        {/* Footer - REMOVED: Each step now has its own navigation buttons */}
+        {/* Panel navigation was causing confusion with duplicate buttons */}
       </div>
 
       {/* AI Wizard - Intelligent Suggestions Modal */}
@@ -1827,7 +2695,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
                   <div className="text-right">
                     <div className="text-sm opacity-90 mb-1">Current System</div>
                     <div className="text-2xl font-bold">{formatPowerCompact(storageSizeMW)} / {durationHours}hr</div>
-                    <div className="text-sm">{(storageSizeMW * durationHours).toFixed(2)} MWh Total</div>
+                    <div className="text-sm">{storageSizeMW ? (storageSizeMW * durationHours).toFixed(2) : '--'} MWh Total</div>
                   </div>
                 </div>
               </div>
@@ -1932,7 +2800,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
                 <div className="bg-white rounded-xl p-4 text-center shadow-sm border-2 border-orange-300">
                   <div className="text-sm text-gray-600 mb-1">Total Energy Capacity</div>
                   <div className="text-3xl font-bold text-orange-600">
-                    {(storageSizeMW * durationHours).toFixed(2)} MWh
+                    {storageSizeMW ? (storageSizeMW * durationHours).toFixed(2) : '--'} MWh
                   </div>
                 </div>
 
@@ -2067,7 +2935,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => {
-                            console.log('🔄 Apply & Re-analyze clicked');
+                            if (import.meta.env.DEV) console.log('🔄 Apply & Re-analyze clicked');
                             suggestion.action();
                             // Small delay to ensure state updates, then refresh AI analysis
                             setTimeout(() => {
@@ -2080,7 +2948,7 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
                         </button>
                         <button
                           onClick={() => {
-                            console.log('✅ Apply & Continue clicked - updating configuration');
+                            if (import.meta.env.DEV) console.log('✅ Apply & Continue clicked - updating configuration');
                             suggestion.action();
                             setShowAIWizard(false);
                             // Force re-render by briefly going to different step and back
@@ -2169,6 +3037,34 @@ const SmartWizardV2: React.FC<SmartWizardProps> = ({ show, onClose, onFinish, st
           </div>
         </div>
       )}
+
+      {/* Battery Configuration Modal (for Step 2 Advanced Config) */}
+      <BatteryConfigModal
+        isOpen={showBatteryConfigModal}
+        onClose={() => setShowBatteryConfigModal(false)}
+        currentPowerMW={storageSizeMW}
+        currentDurationHours={durationHours}
+        onSave={(powerMW, durationHours) => {
+          setStorageSizeMW(powerMW);
+          setDurationHours(durationHours);
+          setShowBatteryConfigModal(false);
+        }}
+      />
+
+      {/* Request Quote Modal (replaces mailto: links) */}
+      <RequestQuoteModal
+        isOpen={showRequestQuoteModal}
+        onClose={() => setShowRequestQuoteModal(false)}
+        quoteData={{
+          storageSizeMW,
+          durationHours,
+          energyCapacity: storageSizeMW * durationHours,
+          solarMW: solarMW,
+          totalCost: equipmentBreakdown?.totals?.totalProjectCost,
+          industryName: selectedTemplate,
+          location,
+        }}
+      />
     </div>
   );
 };

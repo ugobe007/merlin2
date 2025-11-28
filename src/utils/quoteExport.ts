@@ -1,4 +1,463 @@
-// Professional quote export utilities for PDF, Excel, and Word
+// Professional quote export utilities for PDF, Excel, Word, and Power Profile Certificate
+
+// Power Profile Certificate - Wizard's Journey achievement levels
+const POWER_LEVELS = [
+  { name: 'Apprentice', minKWh: 0, maxKWh: 500, icon: '🪄', gradient: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)', description: 'Beginning your energy journey' },
+  { name: 'Adept', minKWh: 500, maxKWh: 1000, icon: '✨', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', description: 'Mastering energy basics' },
+  { name: 'Conjurer', minKWh: 1000, maxKWh: 2000, icon: '🔮', gradient: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)', description: 'Commanding energy flows' },
+  { name: 'Enchanter', minKWh: 2000, maxKWh: 3500, icon: '⚡', gradient: 'linear-gradient(135deg, #6d28d9 0%, #4338ca 100%)', description: 'Enchanting power systems' },
+  { name: 'Sorcerer', minKWh: 3500, maxKWh: 5000, icon: '🌟', gradient: 'linear-gradient(135deg, #5b21b6 0%, #312e81 100%)', description: 'Wielding significant power' },
+  { name: 'Archmage', minKWh: 5000, maxKWh: 10000, icon: '👑', gradient: 'linear-gradient(135deg, #4338ca 0%, #1e1b4b 100%)', description: 'Master of energy realms' },
+  { name: 'Grand Wizard', minKWh: 10000, maxKWh: Infinity, icon: '🧙‍♂️', gradient: 'linear-gradient(135deg, #5b21b6 0%, #1e1b4b 100%)', description: 'Supreme energy sovereign' }
+];
+
+interface PowerCertificateData {
+  storageSizeMW: number;
+  durationHours: number;
+  solarMW?: number;
+  windMW?: number;
+  generatorMW?: number;
+  evChargers?: number;
+  location?: string;
+  industryTemplate?: string;
+  projectName?: string;
+  userName?: string;
+}
+
+/**
+ * Generate Power Profile Certificate - A printable achievement certificate
+ * Shows the wizard level achieved based on total energy capacity
+ */
+export const generatePowerCertificate = (data: PowerCertificateData): void => {
+  const totalKWh = data.storageSizeMW * data.durationHours * 1000;
+  const powerLevel = POWER_LEVELS.find(
+    level => totalKWh >= level.minKWh && totalKWh < level.maxKWh
+  ) || POWER_LEVELS[0];
+  
+  const levelIndex = POWER_LEVELS.indexOf(powerLevel);
+  const progressToNextLevel = powerLevel.maxKWh === Infinity 
+    ? 100 
+    : Math.min(100, ((totalKWh - powerLevel.minKWh) / (powerLevel.maxKWh - powerLevel.minKWh)) * 100);
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow pop-ups to download the certificate');
+    return;
+  }
+
+  const certificateHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Power Profile Certificate - ${powerLevel.name}</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        @page {
+          size: landscape;
+          margin: 0.5in;
+        }
+        
+        body {
+          font-family: 'Georgia', 'Times New Roman', serif;
+          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #5b21b6 70%, #7c3aed 100%);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+        
+        .certificate-container {
+          width: 100%;
+          max-width: 1000px;
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+          border-radius: 20px;
+          padding: 50px;
+          box-shadow: 
+            0 0 60px rgba(124, 58, 237, 0.4),
+            0 0 100px rgba(79, 70, 229, 0.2),
+            inset 0 0 100px rgba(255, 255, 255, 0.5);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        /* Decorative corners */
+        .certificate-container::before,
+        .certificate-container::after {
+          content: '✦';
+          position: absolute;
+          font-size: 40px;
+          color: rgba(124, 58, 237, 0.3);
+        }
+        .certificate-container::before {
+          top: 20px;
+          left: 25px;
+        }
+        .certificate-container::after {
+          bottom: 20px;
+          right: 25px;
+        }
+        
+        .corner-decoration {
+          position: absolute;
+          font-size: 40px;
+          color: rgba(124, 58, 237, 0.3);
+        }
+        .corner-tl { top: 20px; left: 25px; }
+        .corner-tr { top: 20px; right: 25px; }
+        .corner-bl { bottom: 20px; left: 25px; }
+        .corner-br { bottom: 20px; right: 25px; }
+        
+        /* Decorative border */
+        .border-decoration {
+          position: absolute;
+          top: 15px;
+          left: 15px;
+          right: 15px;
+          bottom: 15px;
+          border: 3px solid;
+          border-image: linear-gradient(135deg, #7c3aed, #4f46e5, #7c3aed) 1;
+          border-radius: 15px;
+          pointer-events: none;
+        }
+        
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        
+        .merlin-badge {
+          font-size: 60px;
+          margin-bottom: 10px;
+          text-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+        }
+        
+        .title {
+          font-size: 14px;
+          letter-spacing: 8px;
+          color: #6d28d9;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        
+        .certificate-title {
+          font-size: 42px;
+          font-weight: bold;
+          background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #4f46e5 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 5px;
+        }
+        
+        .subtitle {
+          font-size: 18px;
+          color: #6b7280;
+          font-style: italic;
+        }
+        
+        .level-achievement {
+          text-align: center;
+          margin: 40px 0;
+        }
+        
+        .level-icon {
+          font-size: 100px;
+          display: block;
+          margin-bottom: 20px;
+          filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.5));
+        }
+        
+        .level-name {
+          font-size: 56px;
+          font-weight: bold;
+          background: ${powerLevel.gradient};
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: none;
+          margin-bottom: 10px;
+        }
+        
+        .level-description {
+          font-size: 20px;
+          color: #4b5563;
+          font-style: italic;
+        }
+        
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin: 40px 0;
+        }
+        
+        .stat-box {
+          text-align: center;
+          padding: 20px;
+          background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+          border-radius: 12px;
+          border: 2px solid #c4b5fd;
+        }
+        
+        .stat-icon {
+          font-size: 28px;
+          margin-bottom: 8px;
+        }
+        
+        .stat-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #5b21b6;
+          margin-bottom: 4px;
+        }
+        
+        .stat-label {
+          font-size: 12px;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        
+        .progress-section {
+          margin: 30px 0;
+          text-align: center;
+        }
+        
+        .level-progress {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 15px;
+        }
+        
+        .level-dot {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid #c4b5fd;
+          background: #f5f3ff;
+          position: relative;
+        }
+        
+        .level-dot.achieved {
+          background: linear-gradient(135deg, #7c3aed, #5b21b6);
+          border-color: #5b21b6;
+        }
+        
+        .level-dot.current {
+          width: 30px;
+          height: 30px;
+          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          border-color: #f59e0b;
+          box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        
+        .progress-bar-container {
+          width: 100%;
+          max-width: 500px;
+          margin: 0 auto;
+          height: 12px;
+          background: #e5e7eb;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+        
+        .progress-bar {
+          height: 100%;
+          background: ${powerLevel.gradient};
+          border-radius: 6px;
+          width: ${progressToNextLevel}%;
+          transition: width 1s ease;
+        }
+        
+        .progress-text {
+          font-size: 14px;
+          color: #6b7280;
+          margin-top: 10px;
+        }
+        
+        .footer-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 2px dashed #c4b5fd;
+        }
+        
+        .date-section {
+          text-align: left;
+        }
+        
+        .date-label {
+          font-size: 12px;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        
+        .date-value {
+          font-size: 16px;
+          color: #374151;
+          font-weight: 600;
+        }
+        
+        .signature-section {
+          text-align: center;
+        }
+        
+        .signature-line {
+          width: 200px;
+          height: 2px;
+          background: #7c3aed;
+          margin-bottom: 5px;
+        }
+        
+        .signature-name {
+          font-size: 24px;
+          font-family: 'Brush Script MT', cursive;
+          color: #5b21b6;
+        }
+        
+        .signature-title {
+          font-size: 12px;
+          color: #6b7280;
+        }
+        
+        .merlin-logo {
+          text-align: right;
+        }
+        
+        .logo-text {
+          font-size: 24px;
+          font-weight: bold;
+          color: #5b21b6;
+        }
+        
+        .logo-tagline {
+          font-size: 10px;
+          color: #6b7280;
+          letter-spacing: 2px;
+        }
+        
+        @media print {
+          body {
+            background: white;
+            padding: 0;
+          }
+          .certificate-container {
+            box-shadow: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="certificate-container">
+        <div class="border-decoration"></div>
+        <span class="corner-decoration corner-tr">✦</span>
+        <span class="corner-decoration corner-bl">✦</span>
+        
+        <div class="header">
+          <div class="merlin-badge">🧙‍♂️</div>
+          <div class="title">Merlin Energy Solutions</div>
+          <div class="certificate-title">Power Profile Certificate</div>
+          <div class="subtitle">Official Achievement Recognition</div>
+        </div>
+        
+        <div class="level-achievement">
+          <span class="level-icon">${powerLevel.icon}</span>
+          <div class="level-name">${powerLevel.name}</div>
+          <div class="level-description">"${powerLevel.description}"</div>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value">${data.storageSizeMW.toFixed(2)} MW</div>
+            <div class="stat-label">Power Output</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">🔋</div>
+            <div class="stat-value">${(data.storageSizeMW * data.durationHours).toFixed(2)} MWh</div>
+            <div class="stat-label">Energy Capacity</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value">${data.durationHours} hrs</div>
+            <div class="stat-label">Duration</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">${data.solarMW && data.solarMW > 0 ? '☀️' : data.windMW && data.windMW > 0 ? '💨' : '🔌'}</div>
+            <div class="stat-value">${
+              (data.solarMW || 0) + (data.windMW || 0) + (data.generatorMW || 0) / 1000 > 0 
+                ? ((data.solarMW || 0) + (data.windMW || 0) + ((data.generatorMW || 0) / 1000)).toFixed(2) + ' MW' 
+                : 'Grid Only'
+            }</div>
+            <div class="stat-label">Generation</div>
+          </div>
+        </div>
+        
+        <div class="progress-section">
+          <div class="level-progress">
+            ${POWER_LEVELS.map((level, i) => `
+              <div class="level-dot ${i < levelIndex ? 'achieved' : ''} ${i === levelIndex ? 'current' : ''}" 
+                   title="${level.name}">
+              </div>
+            `).join('')}
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+          </div>
+          <div class="progress-text">
+            ${powerLevel.maxKWh === Infinity 
+              ? 'Maximum level achieved! You are a true Grand Wizard of energy!' 
+              : `${progressToNextLevel.toFixed(0)}% progress to ${POWER_LEVELS[levelIndex + 1]?.name || 'next level'} (${totalKWh.toFixed(0)} / ${powerLevel.maxKWh} kWh)`
+            }
+          </div>
+        </div>
+        
+        <div class="footer-section">
+          <div class="date-section">
+            <div class="date-label">Certificate Date</div>
+            <div class="date-value">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            ${data.location ? `<div class="date-value" style="font-size: 14px; color: #6b7280; margin-top: 5px;">📍 ${data.location}</div>` : ''}
+          </div>
+          
+          <div class="signature-section">
+            <div class="signature-line"></div>
+            <div class="signature-name">Merlin</div>
+            <div class="signature-title">Chief Energy Wizard</div>
+          </div>
+          
+          <div class="merlin-logo">
+            <div class="logo-text">🧙‍♂️ MERLIN</div>
+            <div class="logo-tagline">ENERGY SOLUTIONS</div>
+          </div>
+        </div>
+      </div>
+      
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 500);
+        }
+      </script>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(certificateHTML);
+  printWindow.document.close();
+};
 
 interface QuoteData {
   storageSizeMW: number;
