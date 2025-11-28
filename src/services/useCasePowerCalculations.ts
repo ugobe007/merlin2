@@ -608,10 +608,12 @@ export function calculateUseCasePower(
     case 'ev-charging':
     case 'ev-charging-station':
       // Support multiple field name formats from different parts of the UI
+      // Database: dcfastCount, level2Count
+      // UI variants: numberOfDCFastChargers, dcFastChargers, numberOfLevel2Chargers, level2Chargers
       return calculateEVChargingPower(
-        parseInt(useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0,
-        parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0,
-        parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0
+        parseInt(useCaseData.level1Count || useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0,
+        parseInt(useCaseData.level2Count || useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0,
+        parseInt(useCaseData.dcfastCount || useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0
       );
       
     case 'airport':
