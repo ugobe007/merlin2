@@ -242,7 +242,7 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       optimalPowerMW: quoteData.storageSizeMW, // Use their correctly calculated battery size
       optimalDurationHrs: quoteData.durationHours,
       optimalSolarMW: quoteData.solarMW || 0,
-      costPerMWh: 350000, // Base cost per MWh
+      costPerMWh: 155000, // NREL ATB 2024: $155/kWh = $155,000/MWh base rate
       annualSavingsRate: 0.15, // 15% of system cost annually
     };
   };

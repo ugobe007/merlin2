@@ -63,14 +63,15 @@ interface UseAdvancedSystemCalculationsProps {
  * @deprecated For accurate pricing, use calculateEquipmentBreakdown() from equipmentCalculations.ts
  */
 function getBESSPricePerKwh(capacityKWh: number): number {
-  // These are rough estimates aligned with market intelligence
-  // Actual pricing should come from database via equipmentCalculations.ts
+  // NREL ATB 2024 tiered pricing - aligned with unifiedPricingService.ts
+  // These are simplified estimates for quick UI calculations
+  // For accurate quotes, use calculateEquipmentBreakdown() from equipmentCalculations.ts
   if (capacityKWh >= 10000) {
-    return 280; // Utility scale (>10 MWh): ~$280/kWh (NREL ATB 2024)
+    return 140; // Utility scale (>10 MWh): $140/kWh (NREL ATB 2024 + volume discount)
   } else if (capacityKWh >= 1000) {
-    return 350; // Medium systems (1-10 MWh): ~$350/kWh
+    return 155; // Medium systems (1-10 MWh): $155/kWh (NREL ATB 2024 base)
   }
-  return 450; // Small systems (<1 MWh): ~$450/kWh
+  return 200; // Small systems (<1 MWh): $200/kWh (NREL ATB 2024 + C&I premium)
 }
 
 /**
@@ -79,12 +80,13 @@ function getBESSPricePerKwh(capacityKWh: number): number {
  * ⚠️ WARNING: These are simplified estimates.
  * For accurate pricing, use equipmentCalculations.ts with database lookup.
  */
+// NREL ATB 2024 renewable costs - aligned with unifiedPricingService.ts
 const RENEWABLE_COSTS = {
-  solar: 850, // $850/kWp (commercial scale, includes installation)
-  wind: 1500, // $1500/kW (onshore)
+  solar: 850, // $850/kWp (NREL ATB 2024 commercial scale)
+  wind: 1200, // $1200/kW (NREL ATB 2024 land-based wind)
   fuelCell: 2000, // $2000/kW
-  diesel: 800, // $800/kW
-  naturalGas: 1000, // $1000/kW
+  diesel: 500, // $500/kW (aligned with generator pricing)
+  naturalGas: 500, // $500/kW (aligned with generator pricing)
 };
 
 /**
