@@ -704,14 +704,45 @@ export function calculateUseCasePower(
         parseInt(useCaseData.buildingSqFt || useCaseData.sqFt) || 75000
       );
       
+    case 'microgrid':
+      // Microgrid: Calculate based on total connected loads
+      // If EV chargers specified, use EV calculation
+      const mgLevel2 = parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+      const mgDcFast = parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
+      
+      if (mgLevel2 > 0 || mgDcFast > 0) {
+        // Has EV chargers - use EV calculation
+        return calculateEVChargingPower(0, mgLevel2, mgDcFast);
+      }
+      
+      // Fall back to square footage calculation
+      const mgSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 50000;
+      const mgWattsPerSqFt = 8; // Higher density for microgrids (mixed loads)
+      const mgPowerKW = (mgSqFt * mgWattsPerSqFt) / 1000;
+      const mgPowerMW = mgPowerKW / 1000;
+      
+      return {
+        powerMW: Math.max(0.1, Math.round(mgPowerMW * 100) / 100),
+        durationHrs: 4,
+        description: `Microgrid: ${mgSqFt.toLocaleString()} sq ft × ${mgWattsPerSqFt} W/sqft = ${mgPowerKW.toFixed(1)} kW`,
+        calculationMethod: 'Microgrid mixed-load benchmark (8 W/sq ft)',
+        inputs: { mgSqFt, mgWattsPerSqFt, mgLevel2, mgDcFast }
+      };
+      
     default:
       // Generic fallback - use square footage if available
       const genericSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 10000;
       const genericWattsPerSqFt = 5; // Conservative default
       const genericPowerKW = (genericSqFt * genericWattsPerSqFt) / 1000;
+      const genericPowerMW = genericPowerKW / 1000; // FIX: Correct conversion to MW
+      
+      // Log warning for unrecognized slug
+      if (import.meta.env.DEV) {
+        console.warn(`⚠️ [useCasePowerCalculations] Unrecognized slug: "${slug}" - using generic fallback`);
+      }
       
       return {
-        powerMW: Math.max(0.05, Math.round(genericPowerKW / 10) / 100),
+        powerMW: Math.max(0.05, Math.round(genericPowerMW * 100) / 100), // FIX: Correct math
         durationHrs: 4,
         description: `Generic: ${genericSqFt.toLocaleString()} sq ft × ${genericWattsPerSqFt} W/sqft = ${genericPowerKW.toFixed(1)} kW`,
         calculationMethod: 'Generic commercial benchmark (5 W/sq ft)',
