@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { POWER_PROFILE_BENEFITS } from '@/services/featureGatingService';
 
 interface PricingPlansProps {
   onClose: () => void;
@@ -68,70 +69,72 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
   };
 
   const getLearnMoreContent = (tier: string) => {
-    const content: Record<string, { title: string; description: string; highlights: string[] }> = {
+    const content: Record<string, { title: string; description: string; highlights: string[]; powerProfile: string }> = {
       'starter': {
-        title: 'Starter Plan - Perfect for Getting Started',
-        description: 'The Starter plan is ideal for individuals exploring BESS technology or working on occasional quotes. You can test out the platform\'s core features with no commitment.',
+        title: 'Starter Plan - Begin Your Energy Journey',
+        description: 'The Starter plan is perfect for exploring BESS technology. As you use the platform, you\'ll build your Power Profile - unlocking new insights and capabilities.',
+        powerProfile: 'Levels 1-3: Initiate → Practitioner → Specialist',
         highlights: [
           'Generate up to 3 professional quotes per month',
-          'Access to basic BESS calculator with essential configurations',
-          'Choose from 2 industry-standard use case templates',
-          'Export your quotes to Word or Excel formats',
-          'Email support for any questions',
-          'No credit card required - completely free forever',
-          'Perfect for learning and small-scale projects'
+          'Basic BESS system sizing and recommendations',
+          'Simple ROI and payback calculations',
+          'PDF export with Merlin branding',
+          'Request official quotes from Merlin Energy experts',
+          'Build your Power Profile as you explore',
+          'No credit card required - free forever',
+          'Perfect for learning and small projects'
         ]
       },
       'professional': {
-        title: 'Professional Plan - For Serious Energy Professionals',
-        description: 'The Professional plan unlocks unlimited quoting power and advanced features. Perfect for consultants, developers, and energy professionals who need comprehensive tools and analytics.',
+        title: 'Professional Plan - Unlock Your Full Potential',
+        description: 'Unlock advanced analytics, AI recommendations, and detailed financial modeling. Your Power Profile grows with you, unlocking powerful tools as you become an energy expert.',
+        powerProfile: 'Levels 1-6: Initiate → Practitioner → Specialist → Architect → Strategist → Authority',
         highlights: [
-          'Unlimited quote generations - no monthly limits',
-          'Save and manage up to 25 projects for easy access',
-          'Full hybrid system configurations (Solar + Storage)',
-          'AI-powered Smart Wizard for guided quote building',
-          'Advanced analytics dashboard with NPV, IRR, and ROI calculations',
-          'Comprehensive financing calculator (Loan, Lease, PPA options)',
-          'Add your custom logo to all quotes for professional branding',
-          'Access to all 8 standard industry use case templates',
-          'Portfolio management tools for tracking multiple projects',
-          'Priority email support with faster response times',
-          'Perfect for consultants, developers, and growing businesses'
+          'Unlimited quote generations',
+          'Save and manage up to 25 projects',
+          'NPV, IRR, and discounted cash flow analysis',
+          'AI-powered system recommendations',
+          'Detailed equipment breakdown with alternatives',
+          'Financing calculator (Loan, Lease, PPA options)',
+          'Clean exports without watermarks',
+          'Custom logo on all quotes',
+          'Priority email support',
+          'Perfect for consultants and developers'
         ]
       },
       'enterprise_pro': {
-        title: 'Enterprise Pro - Scale Your Team',
-        description: 'Enterprise Pro is designed for teams that need collaboration, unlimited projects, and advanced customization. Ideal for established firms producing quotes at scale.',
+        title: 'Enterprise Pro - Complete Platform Mastery',
+        description: 'Unlock all 7 Power Profile levels, market intelligence, team collaboration, and enterprise features. The complete toolkit for energy professionals who need maximum capability.',
+        powerProfile: 'All 7 Levels: Initiate → Practitioner → Specialist → Architect → Strategist → Authority → Luminary',
         highlights: [
-          'Everything included in Professional plan',
-          'Unlimited saved projects - no storage limits',
-          'Multi-user collaboration with up to 5 team members',
-          'All premium use case templates for specialized industries',
-          'Vendor quote management system for tracking bids',
-          'Sensitivity analysis and scenario modeling tools',
-          'White-label branding with custom colors and logos',
-          'Priority support with phone access for urgent needs',
-          'Advanced export options (PDF, DOCX, XLSX)',
-          'Team workspace for shared projects and resources',
-          'Perfect for engineering firms, EPCs, and growing enterprises'
+          'Everything included in Professional',
+          'Unlimited projects with team workspace',
+          'All 7 Power Profile levels unlocked',
+          'Real-time market intelligence reports',
+          'Sensitivity analysis and scenario modeling',
+          'Team collaboration (up to 5 members)',
+          'Vendor quote management system',
+          'White-label branding with custom colors',
+          'Priority phone support',
+          'Perfect for firms and growing enterprises'
         ]
       },
       'business': {
         title: 'Business Plan - Enterprise-Grade Solution',
-        description: 'The Business plan provides a fully customized, enterprise-grade solution with dedicated support and unlimited capabilities. Built for organizations that need maximum flexibility and control.',
+        description: 'A fully customized, enterprise-grade solution with dedicated support, unlimited users, and API access. Built for organizations that need maximum flexibility and control.',
+        powerProfile: 'All Features + Dedicated Energy Advisor',
         highlights: [
           'Everything included in Enterprise Pro',
-          'Unlimited team members - scale without restrictions',
-          'Custom use case template creation tailored to your workflows',
-          'Dedicated account manager for personalized support',
-          'Comprehensive training and onboarding for your team',
-          'Custom integrations with your existing systems',
-          'Full API access for automation and custom applications',
-          '99.9% SLA with priority support and rapid response',
-          'Quarterly business reviews to optimize your usage',
-          'Custom feature development based on your needs',
-          'Volume pricing based on your organization\'s requirements',
-          'Perfect for large enterprises, utilities, and high-volume operations'
+          'Unlimited team members',
+          'Custom use case template creation',
+          'Dedicated account manager',
+          'Comprehensive training & onboarding',
+          'Custom integrations with your systems',
+          'Full API access for automation',
+          '99.9% SLA with priority support',
+          'Quarterly business reviews',
+          'Custom feature development',
+          'Perfect for enterprises and utilities'
         ]
       }
     };
@@ -195,13 +198,22 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all">
             <div className="mb-4">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
-              <p className="text-sm text-gray-600 mb-4">For new creators getting started with BESS quotes</p>
+              <p className="text-sm text-gray-600 mb-4">Begin your energy journey - no commitment</p>
               
               <div className="mb-4">
                 <div className="flex items-baseline">
                   <span className="text-5xl font-bold text-gray-900">$0</span>
                   <span className="text-gray-600 ml-2">forever</span>
                 </div>
+              </div>
+
+              {/* Power Profile Badge */}
+              <div className="mb-4 p-3 bg-purple-50 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">⚡</span>
+                  <span className="text-sm font-semibold text-purple-700">Power Profile Levels 1-3</span>
+                </div>
+                <p className="text-xs text-purple-600">Build your energy expertise as you use the platform</p>
               </div>
 
               <button
@@ -219,38 +231,38 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </button>
             </div>
 
-                        <div className="space-y-3 text-sm">
+            <div className="space-y-3 text-sm">
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">3 quote generations per month</span>
+                <span className="text-gray-700">3 quotes per month</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Basic BESS calculator</span>
+                <span className="text-gray-700">Basic system sizing</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">2 standard use case templates</span>
+                <span className="text-gray-700">Simple ROI & payback estimates</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Word & Excel export</span>
+                <span className="text-gray-700">PDF export (Merlin branded)</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Email support</span>
+                <span className="text-gray-700">Request official quotes</span>
               </div>
               <div className="flex items-start">
                 <span className="text-gray-400 mr-2">✗</span>
-                <span className="text-gray-400 line-through">Save & load projects</span>
+                <span className="text-gray-400">NPV, IRR, DCF analysis</span>
               </div>
               <div className="flex items-start">
                 <span className="text-gray-400 mr-2">✗</span>
-                <span className="text-gray-400 line-through">Advanced analytics</span>
+                <span className="text-gray-400">AI recommendations</span>
               </div>
               <div className="flex items-start">
                 <span className="text-gray-400 mr-2">✗</span>
-                <span className="text-gray-400 line-through">Custom branding</span>
+                <span className="text-gray-400">Power Profile Levels 4-7</span>
               </div>
             </div>
           </div>
@@ -278,12 +290,21 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
 
               {billingCycle === 'annual' && (
-                <div className="mb-4">
+                <div className="mb-2">
                   <span className="text-green-600 font-semibold text-sm">
                     💰 Save ${getSavings(49)} annually
                   </span>
                 </div>
               )}
+
+              {/* Power Profile Badge */}
+              <div className="mb-4 p-3 bg-gradient-to-r from-purple-100 to-violet-100 rounded-xl border border-purple-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">📈</span>
+                  <span className="text-sm font-semibold text-purple-700">Power Profile Levels 1-6</span>
+                </div>
+                <p className="text-xs text-purple-600">Unlock advanced analytics & AI recommendations</p>
+              </div>
 
               <button
                 onClick={() => handleSelectPlan('professional')}
@@ -301,7 +322,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
             </div>
 
             <div className="text-xs text-gray-600 mb-4 pb-4 border-b border-gray-200">
-              1 user • Individual license
+              1 user • 25 projects • Unlimited quotes
             </div>
 
             <div className="space-y-3 text-sm">
@@ -311,7 +332,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Save up to 25 projects</span>
+                <span className="text-gray-700">NPV, IRR, ROI & payback calculations</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
@@ -319,15 +340,11 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">🪄 Smart Wizard AI guidance</span>
+                <span className="text-gray-700">AI-powered recommendations</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Advanced analytics dashboard</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">NPV, IRR, ROI & payback calculations</span>
+                <span className="text-gray-700">Detailed equipment breakdown</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
@@ -335,15 +352,11 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
+                <span className="text-gray-700">Clean exports (no watermark)</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
                 <span className="text-gray-700">Custom logo on quotes</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">All 8 standard use case templates</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Portfolio management tools</span>
               </div>
               <div className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
@@ -356,7 +369,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
           <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-purple-200 hover:border-purple-400 transition-all">
             <div className="mb-4">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise Pro</h3>
-              <p className="text-sm text-gray-600 mb-4">For professionals who produce at scale</p>
+              <p className="text-sm text-gray-600 mb-4">For teams producing quotes at scale</p>
               
               <div className="mb-2">
                 <div className="flex items-baseline">
@@ -369,30 +382,39 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
 
               {billingCycle === 'annual' && (
-                <div className="mb-4">
+                <div className="mb-2">
                   <span className="text-green-600 font-semibold text-sm">
                     💰 Save ${getSavings(149)} annually
                   </span>
                 </div>
               )}
 
+              {/* Power Profile Badge - Full Access */}
+              <div className="mb-4 p-3 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl border border-indigo-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🌟</span>
+                  <span className="text-sm font-semibold text-indigo-700">All 7 Power Profile Levels</span>
+                </div>
+                <p className="text-xs text-indigo-600">Complete platform mastery + market intelligence</p>
+              </div>
+
               <button
                 onClick={() => handleSelectPlan('enterprise_pro')}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all"
+                className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all"
               >
                 Select Plan
               </button>
               
               <button
                 onClick={() => setShowLearnMore('enterprise_pro')}
-                className="w-full mt-2 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className="w-full mt-2 py-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
               >
                 Learn More →
               </button>
             </div>
 
             <div className="text-xs text-gray-600 mb-4 pb-4 border-b border-gray-200">
-              Up to 5 users • Team license
+              Up to 5 users • Unlimited projects
             </div>
 
             <div className="space-y-3 text-sm">
@@ -402,35 +424,27 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Unlimited saved projects</span>
+                <span className="text-gray-700">Sensitivity analysis & scenarios</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">All premium use case templates</span>
+                <span className="text-gray-700">Real-time market intelligence</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Multi-user collaboration (up to 5 team members)</span>
+                <span className="text-gray-700">Team collaboration (5 members)</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Vendor quote management system</span>
+                <span className="text-gray-700">Vendor quote management</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Sensitivity analysis & scenario modeling</span>
+                <span className="text-gray-700">White-label branding</span>
               </div>
               <div className="flex items-start">
                 <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">White-label branding (custom colors & logos)</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Priority support with phone access</span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-purple-600 mr-2">✓</span>
-                <span className="text-gray-700">Advanced export options (PDF, DOCX, XLSX)</span>
+                <span className="text-gray-700">Priority phone support</span>
               </div>
             </div>
           </div>
@@ -553,6 +567,19 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
             <p className="text-lg text-gray-700 mb-6 leading-relaxed">
               {getLearnMoreContent(showLearnMore).description}
             </p>
+
+            {/* Power Profile Section */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+              <h3 className="text-lg font-bold text-purple-800 mb-2 flex items-center gap-2">
+                <span>⚡</span> Power Profile Access
+              </h3>
+              <p className="text-purple-700 font-medium">
+                {getLearnMoreContent(showLearnMore).powerProfile}
+              </p>
+              <p className="text-sm text-purple-600 mt-2">
+                Your Power Profile grows as you use the platform, unlocking new capabilities and insights.
+              </p>
+            </div>
 
             <div className="mb-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Key Features & Benefits:</h3>

@@ -22,6 +22,8 @@ import {
   validateQuote
 } from '../types/QuoteDocument';
 
+console.log('🔍 [TRACE] QuoteContext.tsx loaded');
+
 interface QuoteContextValue {
   // Current quote document
   quote: QuoteDocument;

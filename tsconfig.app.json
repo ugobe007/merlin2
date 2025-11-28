@@ -48,6 +48,8 @@
     "node_modules",
     "dist",
     "src/components/wizard/backup",
+    "src/components/archive_legacy_nov_2025",
+    "src/hooks/useSmartWizardV2.ts",
     "backup_archive",
     "**/__tests__/**",
     "**/*.test.ts",

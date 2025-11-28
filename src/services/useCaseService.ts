@@ -173,10 +173,26 @@ export class UseCaseService {
         this.getRecommendedApplicationsByUseCaseId(useCase.id)
       ]);
 
+      // Transform custom_questions from database format to frontend format
+      const rawQuestions = questionsResult.status === 'fulfilled' ? questionsResult.value : [];
+      const transformedQuestions = rawQuestions.map(q => ({
+        id: (q as any).field_name || q.id,
+        question: q.question_text,
+        type: q.question_type,
+        default: q.default_value,
+        required: q.is_required,
+        options: (q as any).options,
+        min: q.min_value,
+        max: q.max_value,
+        helpText: q.help_text,
+        placeholder: (q as any).placeholder,
+      }));
+
       return {
         ...useCase,
         configurations: configurationsResult.status === 'fulfilled' ? configurationsResult.value : [],
-        custom_questions: questionsResult.status === 'fulfilled' ? questionsResult.value : [],
+        custom_questions: transformedQuestions,
+        customQuestions: transformedQuestions,  // Add both formats for compatibility
         recommended_applications: applicationsResult.status === 'fulfilled' ? applicationsResult.value : []
       };
 

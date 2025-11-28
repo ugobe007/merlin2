@@ -1783,36 +1783,6 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         required: true
       },
       {
-        id: 'facilitySize',
-        question: 'Facility size (sq ft)',
-        type: 'number',
-        default: 10000,
-        unit: 'sq ft',
-        impactType: 'factor',
-        helpText: 'Total building/facility square footage',
-        required: false
-      },
-      {
-        id: 'operatingHours',
-        question: 'Daily operating hours',
-        type: 'number',
-        default: 12,
-        unit: 'hours',
-        impactType: 'factor',
-        helpText: 'Hours per day the facility operates',
-        required: true
-      },
-      {
-        id: 'peakLoad',
-        question: 'Peak power demand (if known)',
-        type: 'number',
-        default: 0,
-        unit: 'MW',
-        impactType: 'none',
-        helpText: 'Optional: Actual peak load from utility bill (leave 0 for auto-calculation)',
-        required: false
-      },
-      {
         id: 'gridConnection',
         question: 'Grid connection quality',
         type: 'select',

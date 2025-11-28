@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import UseCaseROI from '../UseCaseROI';
 import type { UseCaseData } from '../UseCaseROI';
 import QuoteBuilderLanding from '../wizard/QuoteBuilderLanding';
+import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
 import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
@@ -44,14 +45,26 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const [showQuoteBuilderLanding, setShowQuoteBuilderLanding] = useState(false);
   const [selectedUseCaseForQuote, setSelectedUseCaseForQuote] = useState<UseCaseData | null>(null);
+  const [showRealWorldModal, setShowRealWorldModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<'hotel' | 'data-center' | 'ev-charging'>('hotel');
 
   const handleLoadTemplate = (useCase: UseCaseData) => {
     console.log('🎯🎯🎯 HeroSection handleLoadTemplate called with:', useCase.industry);
-    console.log('🚀 Opening Quote Builder Landing Page');
+    console.log('📍 Scrolling to Explore More Industries carousel');
     
-    // Show the quote builder landing page instead of jumping to wizard
-    setSelectedUseCaseForQuote(useCase);
-    setShowQuoteBuilderLanding(true);
+    // Scroll to the carousel section smoothly
+    const carouselSection = document.querySelector('section.my-8');
+    if (carouselSection) {
+      carouselSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Flash/highlight effect
+      carouselSection.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-50');
+      setTimeout(() => {
+        carouselSection.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-50');
+      }, 2000);
+    }
+    
+    console.log('💡 Tip: Click a use case card in "Explore More Industries" below to launch SmartWizard');
   };
 
   const handleGenerateQuote = () => {
@@ -128,14 +141,8 @@ export default function HeroSection({
         <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white p-12">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-purple-600/20 animate-pulse"></div>
           
-          {/* Top Right Buttons - Customer Focused */}
-          <div className="absolute top-6 right-6 z-20 flex gap-3">
-            <button 
-              className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:bg-white/20 transition-colors border border-white/30"
-              onClick={() => setShowAbout(true)}
-            >
-              About Merlin
-            </button>
+          {/* Top Right Button - Join Now */}
+          <div className="absolute top-6 right-6 z-20">
             <button 
               className="bg-gradient-to-b from-blue-100 to-blue-200 text-blue-800 px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-200 hover:to-blue-300 transition-colors border-2 border-blue-300"
               onClick={() => setShowJoinModal(true)}
@@ -154,39 +161,48 @@ export default function HeroSection({
                 Get a custom energy storage quote in 3 minutes
               </p>
               
-              {/* Smart Wizard Benefits */}
+              {/* Power Profile & Smart Wizard Benefits */}
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border-2 border-white/20">
                 <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="text-3xl">⚡</span>
-                  Smart Wizard Benefits:
+                  <span className="text-3xl">🧙‍♂️</span>
+                  Start Saving with SmartWizard
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">💰</span>
+                <div className="mb-4 pb-4 border-b border-white/20">
+                  <p className="text-lg text-white/90 mb-2">
+                    Merlin's AI calculates actual costs and savings for businesses like yours
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-cyan-200 cursor-pointer hover:text-cyan-100 transition-colors">
+                    <span>👉</span>
+                    <span>Click here to explore real world savings</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">💰</span>
                     <div>
-                      <p className="font-bold text-lg">See Your Savings</p>
-                      <p className="text-sm text-white/80">Instant ROI calculation with payback timeline</p>
+                      <p className="font-bold">Optimized Savings</p>
+                      <p className="text-xs text-white/80">AI learns your needs for better results</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">⚙️</span>
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">🏗️</span>
                     <div>
-                      <p className="font-bold text-lg">Personalized Configuration</p>
-                      <p className="text-sm text-white/80">Sized perfectly for your energy needs</p>
+                      <p className="font-bold">Resource Ecosystem</p>
+                      <p className="text-xs text-white/80">EPCs, integrators, financing & more</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">📊</span>
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">📊</span>
                     <div>
-                      <p className="font-bold text-lg">Compare Options</p>
-                      <p className="text-sm text-white/80">Installation, shipping & financing side-by-side</p>
+                      <p className="font-bold">Industry Intelligence</p>
+                      <p className="text-xs text-white/80">Trends, microgrids, hybrid systems</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">📄</span>
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">🤖</span>
                     <div>
-                      <p className="font-bold text-lg">Download Your Quote</p>
-                      <p className="text-sm text-white/80">PDF & Excel formats ready to share</p>
+                      <p className="font-bold">AI That Learns</p>
+                      <p className="text-xs text-white/80">Your usage improves the platform</p>
                     </div>
                   </div>
                 </div>
@@ -201,13 +217,13 @@ export default function HeroSection({
                   
                   <button 
                     onClick={() => setShowSmartWizard(true)}
-                    className="relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white px-12 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl border-4 border-cyan-300 hover:scale-105 transition-transform"
+                    className="relative bg-gradient-to-r from-purple-700 via-purple-800 to-indigo-900 text-white px-16 py-7 rounded-3xl font-extrabold text-3xl shadow-2xl border-4 border-purple-400 hover:scale-105 transition-transform hover:from-purple-800 hover:via-indigo-900 hover:to-purple-950"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl animate-bounce">⚡</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-5xl animate-bounce">⚡</span>
                       <div className="text-left">
-                        <div className="text-2xl">Smart Wizard</div>
-                        <div className="text-xs font-normal text-cyan-100 mt-1">7 simple steps • 3 minutes • No signup</div>
+                        <div className="text-3xl">Smart Wizard</div>
+                        <div className="text-sm font-normal text-purple-200 mt-1">7 simple steps • 3 minutes • No signup</div>
                       </div>
                     </div>
                   </button>
@@ -243,10 +259,21 @@ export default function HeroSection({
             {/* Right Side - Merlin Mascot */}
             <div className="lg:col-span-4 flex justify-center items-center">
               <div className="relative">
+                {/* Merlin's Magic Tooltip - Smaller with Purple to Silver Gradient */}
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
+                  <div className="bg-gradient-to-r from-purple-500 to-gray-300 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg border border-purple-300">
+                    ✨ Merlin's Magic
+                  </div>
+                  <div className="w-3 h-3 bg-purple-500 transform rotate-45 mx-auto -mt-1.5 border-b border-r border-purple-300"></div>
+                </div>
+
                 {/* Glow effect behind Merlin */}
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 via-purple-400/50 to-blue-400/50 rounded-full blur-3xl opacity-60 animate-pulse"></div>
                 
-                <div className="relative bg-white/10 backdrop-blur-sm rounded-3xl p-6 border-4 border-white/30 shadow-2xl">
+                <div 
+                  onClick={() => setShowAbout(true)}
+                  className="relative bg-white/10 backdrop-blur-sm rounded-3xl p-6 border-4 border-white/30 shadow-2xl cursor-pointer hover:scale-105 transition-transform hover:border-yellow-300"
+                >
                   <img 
                     src={merlinImage} 
                     alt="Merlin - Your Energy Advisor" 
@@ -266,155 +293,171 @@ export default function HeroSection({
           </div>
         </div>
 
-        {/* Three Value Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
-          {/* Cost Savings Card */}
+        {/* Three Value Pillars - HORIZONTAL LAYOUT WITH COLORS */}
+        <div className="flex justify-center gap-6 px-8 py-12">
+          {/* Cost Savings Card - DEEP PURPLE */}
           <div 
             onClick={() => setShowCostSavingsModal(true)}
-            className="bg-white rounded-2xl p-6 shadow-xl border-2 border-green-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            className="group relative flex-1 max-w-md bg-gradient-to-br from-purple-600 to-purple-900 rounded-3xl p-6 shadow-2xl hover:shadow-[0_25px_70px_rgba(147,51,234,0.5)] transition-all duration-500 cursor-pointer overflow-hidden"
           >
-            <div className="text-5xl mb-4 text-center">💰</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Reduce Energy Costs</h3>
-            <p className="text-gray-600 mb-4 text-center">
-              Cut your electricity bills by 30-50% with smart energy storage and peak shaving
-            </p>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Store cheap off-peak energy</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Avoid expensive peak rates</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Reduce demand charges</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Lower utility bills permanently</span>
-              </li>
-            </ul>
-            <div className="mt-6 text-center">
-              <span className="text-3xl font-bold text-green-600">$50K+</span>
-              <p className="text-sm text-gray-500">Average annual savings</p>
-            </div>
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-green-700 transition-colors">
-                <span className="text-lg">💰</span>
-                Explore Cost Savings
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">💰</div>
+              <div className="flex-1 text-white">
+                <h3 className="text-xl font-bold mb-2">Reduce Energy Costs</h3>
+                <p className="text-purple-100 text-sm mb-3">Cut electricity bills by 30-50%</p>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 inline-block">
+                  <span className="text-3xl font-black text-white">$50K+</span>
+                  <span className="text-xs text-white/90 ml-2">avg annual savings</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Revenue Generation Card */}
+          {/* Revenue Generation Card - LIGHT BLUE */}
           <div 
             onClick={() => setShowRevenueModal(true)}
-            className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            className="group relative flex-1 max-w-md bg-gradient-to-br from-sky-300 to-blue-500 rounded-3xl p-6 shadow-2xl hover:shadow-[0_25px_70px_rgba(56,189,248,0.5)] transition-all duration-500 cursor-pointer overflow-hidden"
           >
-            <div className="text-5xl mb-4 text-center">📈</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Generate Revenue</h3>
-            <p className="text-gray-600 mb-4 text-center">
-              Turn your battery into a profit center with grid services and energy arbitrage
-            </p>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
-                <span>Frequency regulation services</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
-                <span>Demand response programs</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
-                <span>Energy arbitrage opportunities</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
-                <span>Capacity market payments</span>
-              </li>
-            </ul>
-            <div className="mt-6 text-center">
-              <span className="text-3xl font-bold text-blue-600">3-5 year</span>
-              <p className="text-sm text-gray-500">Typical ROI timeline</p>
-            </div>
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-blue-700 transition-colors">
-                <span className="text-lg">📈</span>
-                Explore Revenue
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">📈</div>
+              <div className="flex-1 text-white">
+                <h3 className="text-xl font-bold mb-2">Generate Revenue</h3>
+                <p className="text-sky-100 text-sm mb-3">Turn batteries into profit centers</p>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 inline-block">
+                  <span className="text-3xl font-black text-white">$30K+</span>
+                  <span className="text-xs text-white/90 ml-2">extra revenue/year</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Sustainability Card */}
+          {/* Sustainability Card - AMBER ORANGE */}
           <div 
             onClick={() => setShowSustainabilityModal(true)}
-            className="bg-white rounded-2xl p-6 shadow-xl border-2 border-emerald-400 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+            className="group relative flex-1 max-w-md bg-gradient-to-br from-amber-400 to-orange-600 rounded-3xl p-6 shadow-2xl hover:shadow-[0_25px_70px_rgba(251,191,36,0.5)] transition-all duration-500 cursor-pointer overflow-hidden"
           >
-            <div className="text-5xl mb-4 text-center">🌱</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Achieve Sustainability</h3>
-            <p className="text-gray-600 mb-4 text-center">
-              Meet your environmental goals and qualify for valuable tax incentives
-            </p>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start">
-                <span className="text-emerald-500 mr-2">✓</span>
-                <span>Reduce carbon footprint</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-emerald-500 mr-2">✓</span>
-                <span>Maximize solar/wind usage</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-emerald-500 mr-2">✓</span>
-                <span>30% Federal tax credit (ITC)</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-emerald-500 mr-2">✓</span>
-                <span>State & local incentives</span>
-              </li>
-            </ul>
-            <div className="mt-6 text-center">
-              <span className="text-3xl font-bold text-emerald-600">Net Zero</span>
-              <p className="text-sm text-gray-500">Energy independence ready</p>
-            </div>
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-emerald-700 transition-colors">
-                <span className="text-lg">�</span>
-                Explore Sustainability
+            <div className="flex items-center gap-4">
+              <div className="text-6xl">🌱</div>
+              <div className="flex-1 text-white">
+                <h3 className="text-xl font-bold mb-2">Achieve Sustainability</h3>
+                <p className="text-amber-100 text-sm mb-3">Reach environmental goals</p>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 inline-block">
+                  <span className="text-3xl font-black text-white">100%</span>
+                  <span className="text-xs text-white/90 ml-2">clean energy potential</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* EXAMPLE CONFIGURATIONS SECTION - Use Case ROI Showcase */}
-      <section className="my-8">
-        {/* Section Header - Tightened */}
-        <div className="text-center mb-6">
-          <div className="inline-block mb-2">
-            <span className="text-4xl">🔋</span>
-          </div>
-          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 mb-2">
+      {/* REAL-WORLD APPLICATIONS - PHOTO-BASED REDESIGN */}
+      <section className="my-16 px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-3">
             Real-World Applications
           </h2>
-          <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-            See how businesses are using energy storage to 
-            <span className="text-green-600 font-bold"> reduce costs</span>, 
-            <span className="text-blue-600 font-bold"> generate revenue</span>, and 
-            <span className="text-purple-600 font-bold"> go green</span>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            See how businesses save money and go green with battery storage
           </p>
         </div>
 
-        {/* Use Case Showcase - Enhanced Visual Design */}
-        <div className="relative bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-3xl shadow-2xl border-2 border-blue-200 p-10">
-          {/* Decorative corners */}
-          <div className="absolute top-4 left-4 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-2xl"></div>
-          <div className="absolute bottom-4 right-4 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full blur-2xl"></div>
+        {/* Photo Grid with Metrics Overlay */}
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          <div className="relative z-10">
+          {/* Hotel Card */}
+          <div className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+               onClick={() => {
+                 console.log('🏨 Hotel card clicked');
+                 setSelectedApplication('hotel');
+                 setShowRealWorldModal(true);
+               }}>
+            <div className="aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80)' }}>
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
+              <h3 className="text-white font-bold text-xl mb-2">Luxury Hotel</h3>
+              <div className="grid grid-cols-2 gap-3 text-white text-sm">
+                <div>
+                  <div className="text-green-400 font-bold text-lg">$1.38M/yr</div>
+                  <div className="text-xs opacity-80">Cost Savings</div>
+                </div>
+                <div>
+                  <div className="text-blue-400 font-bold text-lg">9 months</div>
+                  <div className="text-xs opacity-80">Payback</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Center Card */}
+          <div className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+               onClick={() => {
+                 console.log('💾 Data Center card clicked');
+                 setSelectedApplication('data-center');
+                 setShowRealWorldModal(true);
+               }}>
+            <div className="aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1639322537228-f710d846310a?w=800&q=80)' }}>
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
+              <h3 className="text-white font-bold text-xl mb-2">Cloud Data Center</h3>
+              <div className="grid grid-cols-2 gap-3 text-white text-sm">
+                <div>
+                  <div className="text-green-400 font-bold text-lg">$250K/yr</div>
+                  <div className="text-xs opacity-80">Cost Savings</div>
+                </div>
+                <div>
+                  <div className="text-blue-400 font-bold text-lg">3.5 years</div>
+                  <div className="text-xs opacity-80">Payback</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* EV Charging Card */}
+          <div className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+               onClick={() => {
+                 console.log('⚡ EV Charging card clicked');
+                 setSelectedApplication('ev-charging');
+                 setShowRealWorldModal(true);
+               }}>
+            <div className="aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=80)' }}>
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
+              <h3 className="text-white font-bold text-xl mb-2">Fast Charging Hub</h3>
+              <div className="grid grid-cols-2 gap-3 text-white text-sm">
+                <div>
+                  <div className="text-green-400 font-bold text-lg">$8.7M/yr</div>
+                  <div className="text-xs opacity-80">Cost Savings</div>
+                </div>
+                <div>
+                  <div className="text-blue-400 font-bold text-lg">6 months</div>
+                  <div className="text-xs opacity-80">Payback</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="text-center mt-12">
+          <p className="text-gray-600 mb-2 font-medium">These are real examples with actual ROI data</p>
+          <p className="text-sm text-gray-500">Click any card to see full case study →</p>
+        </div>
+      </section>
+
+      {/* Original rotating carousel below */}
+      <section className="my-8">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">
+            Explore More Industries
+          </h3>
+        </div>
+        {/* Use Case Showcase */}
+        <div className="relative">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
             <UseCaseROI 
               autoRotate={true}
               rotationInterval={10000}
@@ -433,6 +476,14 @@ export default function HeroSection({
           onCancel={handleCancelQuoteBuilder}
         />
       )}
+
+      {/* Real World Applications Modal */}
+      <RealWorldApplicationModal
+        show={showRealWorldModal}
+        onClose={() => setShowRealWorldModal(false)}
+        application={selectedApplication}
+        onStartWizard={() => setShowSmartWizard(true)}
+      />
     </>
   );
 }

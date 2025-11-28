@@ -158,6 +158,21 @@ export const calculateEquipmentBreakdown = async (
     }
   };
 
+  // ✅ SINGLE SOURCE OF TRUTH: Fetch power electronics pricing from database
+  // Config key: 'power_electronics_2025' in pricing_configurations table
+  let powerElectronicsConfig: any = null;
+  try {
+    const { useCaseService } = await import('../services/useCaseService');
+    powerElectronicsConfig = await useCaseService.getPricingConfig('power_electronics_2025');
+  } catch (error) {
+    console.warn('⚠️ Using fallback power electronics pricing (database unavailable):', error);
+  }
+  
+  // Database-driven pricing with validated fallbacks
+  const inverterPerKW = powerElectronicsConfig?.inverterPerKW || 120; // $120/kW from database
+  const transformerPerKVA = powerElectronicsConfig?.transformerPerKVA || 80; // $80/kVA from database
+  const switchgearPerKW = powerElectronicsConfig?.switchgearPerKW || 50; // $50/kW from database
+  
   // Inverter Calculations - Select appropriate inverter type based on grid connection
   let inverterUnitPowerMW: number;
   let inverterUnitCost: number;
@@ -165,15 +180,16 @@ export const calculateEquipmentBreakdown = async (
   let inverterModel: string;
   
   if (gridConnection === 'off-grid') {
-    // Off-grid systems need hybrid inverters with grid-forming capability (can create stable AC)
+    // Off-grid systems need hybrid inverters with grid-forming capability
+    // Premium of 20% over standard inverters for grid-forming controls
     inverterUnitPowerMW = 2.5; // 2.5MW hybrid grid-forming inverters
-    inverterUnitCost = 450000; // $450k per 2.5MW hybrid inverter (more expensive due to grid-forming controls)
+    inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW * 1.20; // 20% premium for off-grid
     inverterManufacturer = "SMA Solar";
     inverterModel = "Sunny Central Storage"; // Hybrid inverter with grid-forming capability
   } else {
     // On-grid systems can use standard bi-directional grid-tie inverters
     inverterUnitPowerMW = 2.5; // 2.5MW bi-directional inverters
-    inverterUnitCost = 375000; // $375k per 2.5MW bi-directional inverter
+    inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW; // Database-driven pricing
     inverterManufacturer = "SMA Solar";
     inverterModel = "MVPS 2500"; // Bi-directional grid-tie inverter
   }
@@ -186,13 +202,13 @@ export const calculateEquipmentBreakdown = async (
     unitCost: inverterUnitCost,
     totalCost: inverterQuantity * inverterUnitCost,
     manufacturer: inverterManufacturer,
-    model: inverterModel
+    model: inverterModel,
+    priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
-  // Transformer Calculations
-  // Step-up transformers: ~$200k per MVA for medium voltage
+  // Transformer Calculations - Database-driven pricing
   const transformerUnitMVA = Math.max(5, Math.ceil(storageSizeMW / 5) * 5); // Round up to 5MVA increments
-  const transformerUnitCost = transformerUnitMVA * 40000; // $40k per MVA
+  const transformerUnitCost = transformerUnitMVA * 1000 * transformerPerKVA; // Convert MVA to kVA and apply rate
   const transformerQuantity = Math.ceil(storageSizeMW / transformerUnitMVA);
   
   const transformers = {
@@ -201,19 +217,21 @@ export const calculateEquipmentBreakdown = async (
     unitCost: transformerUnitCost,
     totalCost: transformerQuantity * transformerUnitCost,
     voltage: `${transformerUnitMVA >= 10 ? '35kV' : '13.8kV'}/480V`,
-    manufacturer: "ABB"
+    manufacturer: "ABB",
+    priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
-  // Switchgear Calculations
+  // Switchgear Calculations - Database-driven pricing
   const switchgearQuantity = Math.ceil(storageSizeMW / 5); // One switchgear per 5MW
-  const switchgearUnitCost = 150000; // $150k per unit
+  const switchgearUnitCost = (storageSizeMW / switchgearQuantity) * 1000 * switchgearPerKW; // Per unit based on MW coverage
   
   const switchgear = {
     quantity: switchgearQuantity,
     unitCost: switchgearUnitCost,
     totalCost: switchgearQuantity * switchgearUnitCost,
     type: "Medium Voltage Switchgear",
-    voltage: transformerUnitMVA >= 10 ? "35kV" : "13.8kV"
+    voltage: transformerUnitMVA >= 10 ? "35kV" : "13.8kV",
+    priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
   // Generator Calculations

@@ -10,6 +10,9 @@ import type { RenewablesConfiguration } from './useRenewablesConfiguration';
  * - System cost calculations based on capacity and pricing tiers
  * - Renewable energy integration costs
  * 
+ * ⚠️ NOTE: This hook uses simplified pricing for AdvancedQuoteBuilder.
+ * For accurate quotes, use equipmentCalculations.ts with database pricing.
+ * 
  * Extracted from AdvancedQuoteBuilder.tsx (Phase 3.2)
  */
 
@@ -49,22 +52,36 @@ interface UseAdvancedSystemCalculationsProps {
 
 /**
  * BESS pricing per kWh based on system size (Q4 2025 pricing)
+ * 
+ * ⚠️ WARNING: These are simplified estimates for the Advanced Quote Builder UI.
+ * For accurate quotes, use equipmentCalculations.ts which fetches from database.
+ * 
+ * Database pricing keys:
+ * - 'bess_pricing_2025' for battery costs
+ * - 'power_electronics_2025' for inverters
+ * 
+ * @deprecated For accurate pricing, use calculateEquipmentBreakdown() from equipmentCalculations.ts
  */
 function getBESSPricePerKwh(capacityKWh: number): number {
+  // These are rough estimates aligned with market intelligence
+  // Actual pricing should come from database via equipmentCalculations.ts
   if (capacityKWh >= 10000) {
-    return 118; // Utility scale (>10 MWh): $118/kWh
+    return 280; // Utility scale (>10 MWh): ~$280/kWh (NREL ATB 2024)
   } else if (capacityKWh >= 1000) {
-    return 138; // Medium systems (1-10 MWh): $138/kWh
+    return 350; // Medium systems (1-10 MWh): ~$350/kWh
   }
-  return 168; // Small systems (<1 MWh): $168/kWh
+  return 450; // Small systems (<1 MWh): ~$450/kWh
 }
 
 /**
  * Renewable energy cost per kW (installed)
+ * 
+ * ⚠️ WARNING: These are simplified estimates.
+ * For accurate pricing, use equipmentCalculations.ts with database lookup.
  */
 const RENEWABLE_COSTS = {
-  solar: 1000, // $1000/kWp
-  wind: 1500, // $1500/kW
+  solar: 850, // $850/kWp (commercial scale, includes installation)
+  wind: 1500, // $1500/kW (onshore)
   fuelCell: 2000, // $2000/kW
   diesel: 800, // $800/kW
   naturalGas: 1000, // $1000/kW

@@ -24,11 +24,8 @@
  */
 
 import { supabase } from './supabaseClient';
-import { 
-  calculateBESSSize,
-  calculateBESSFinancials, 
-  type BESSFinancialInputs 
-} from './bessDataService';
+import { calculateBESSSize } from './bessDataService';
+import { calculateFinancialMetrics } from './centralizedCalculations';
 import { calculateSolarBESSSystem } from './solarSizingService';
 import { getUseCaseBySlug } from '../data/useCaseTemplates';
 import crypto from 'crypto';
@@ -173,42 +170,18 @@ export async function getUseCaseWithCalculations(
     // STEP 4: Run calculations
     console.log('🧮 Running calculations...');
     
-    const bessCalculations = calculateBESSFinancials({
-      powerRatingMW: template.powerProfile.peakLoadKw / 1000,
-      durationHours: 4, // Default, can be customized
-      systemAvailability: 95,
-      roundTripEfficiency: 85,
-      dailyCycles: 1.5,
-      degradationRate: 2.5,
-      projectLifetimeYears: 20,
-      
-      // Use template financial params
-      batteryCostPerMWh: 250000,
-      pcsCostPerMW: 150000,
-      bomCostPerMW: 100000,
-      epcCostPerMW: 200000,
-      interconnectionCostPerMW: 50000,
-      developmentCostPercent: 5,
-      contingencyPercent: 10,
-      
-      operationMaintenanceCostPerMWhPerYear: 15000,
-      insurancePercentOfCapex: 0.5,
-      propertyTaxPercentOfCapex: 1.0,
-      landLeaseCostPerYear: 50000,
-      
-      electricityRatePerMWh: 120,
-      demandChargePerMWPerMonth: 15000 * template.financialParams.demandChargeSensitivity,
-      ancillaryServicesRevenuePerMWPerYear: 50000,
-      capacityPaymentPerMWPerYear: 30000,
-      priceEscalationRate: 2.5,
-      
-      equityPercent: 40,
-      debtPercent: 60,
-      debtInterestRate: 5.5,
-      debtTermYears: 15,
-      itcTaxCredit: 30,
-      taxRate: 26,
-      discountRate: 8
+    // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
+    const powerRatingMW = template.powerProfile.peakLoadKw / 1000;
+    const durationHours = 4; // Default, can be customized
+    
+    // Use centralized financial metrics calculator (database-driven)
+    const financialMetrics = await calculateFinancialMetrics({
+      storageSizeMW: powerRatingMW,
+      durationHours,
+      location: location || 'United States', // Use provided location or default
+      electricityRate: 0.12, // Default rate, can be region-specific
+      solarMW: 0, // Will be added in step 5 if enabled
+      includeNPV: true
     });
 
     const sizing = calculateBESSSize({
@@ -239,13 +212,13 @@ export async function getUseCaseWithCalculations(
       equipment,
       calculations: {
         financial: {
-          netCapex: bessCalculations.capex,
-          annualRevenue: bessCalculations.annualRevenue,
-          annualSavings: bessCalculations.annualRevenue - bessCalculations.annualOpex,
-          paybackYears: bessCalculations.paybackYears,
-          roi: (bessCalculations.netPresentValue / bessCalculations.capex) * 100,
-          npv: bessCalculations.netPresentValue,
-          irr: bessCalculations.internalRateOfReturn,
+          netCapex: financialMetrics.netCost,
+          annualRevenue: financialMetrics.annualSavings,
+          annualSavings: financialMetrics.annualSavings,
+          paybackYears: financialMetrics.paybackYears,
+          roi: financialMetrics.roi10Year,
+          npv: financialMetrics.npv || 0,
+          irr: financialMetrics.irr || 0,
         },
         sizing: {
           batteryMW: sizing.recommendedPowerMW,
@@ -458,38 +431,14 @@ async function fetchFromStaticTemplates(
     dataSource: ''
   }));
 
-  // Run calculations (same as database path)
-  const bessCalculations = calculateBESSFinancials({
-    powerRatingMW: template.powerProfile.peakLoadKw / 1000,
+  // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
+  const financialMetrics = await calculateFinancialMetrics({
+    storageSizeMW: template.powerProfile.peakLoadKw / 1000,
     durationHours: 4,
-    systemAvailability: 95,
-    roundTripEfficiency: 85,
-    dailyCycles: 1.5,
-    degradationRate: 2.5,
-    projectLifetimeYears: 20,
-    batteryCostPerMWh: 250000,
-    pcsCostPerMW: 150000,
-    bomCostPerMW: 100000,
-    epcCostPerMW: 200000,
-    interconnectionCostPerMW: 50000,
-    developmentCostPercent: 5,
-    contingencyPercent: 10,
-    operationMaintenanceCostPerMWhPerYear: 15000,
-    insurancePercentOfCapex: 0.5,
-    propertyTaxPercentOfCapex: 1.0,
-    landLeaseCostPerYear: 50000,
-    electricityRatePerMWh: 120,
-    demandChargePerMWPerMonth: 15000 * template.financialParams.demandChargeSensitivity,
-    ancillaryServicesRevenuePerMWPerYear: 50000,
-    capacityPaymentPerMWPerYear: 30000,
-    priceEscalationRate: 2.5,
-    equityPercent: 40,
-    debtPercent: 60,
-    debtInterestRate: 5.5,
-    debtTermYears: 15,
-    itcTaxCredit: 30,
-    taxRate: 26,
-    discountRate: 8
+    location: location || 'United States', // Use provided location or default
+    electricityRate: 0.12, // Default rate
+    solarMW: 0,
+    includeNPV: true
   });
 
   const sizing = calculateBESSSize({
@@ -517,13 +466,13 @@ async function fetchFromStaticTemplates(
     equipment,
     calculations: {
       financial: {
-        netCapex: bessCalculations.capex,
-        annualRevenue: bessCalculations.annualRevenue,
-        annualSavings: bessCalculations.annualRevenue - bessCalculations.annualOpex,
-        paybackYears: bessCalculations.paybackYears,
-        roi: (bessCalculations.netPresentValue / bessCalculations.capex) * 100,
-        npv: bessCalculations.netPresentValue,
-        irr: bessCalculations.internalRateOfReturn,
+        netCapex: financialMetrics.netCost,
+        annualRevenue: financialMetrics.annualSavings,
+        annualSavings: financialMetrics.annualSavings,
+        paybackYears: financialMetrics.paybackYears,
+        roi: financialMetrics.roi10Year,
+        npv: financialMetrics.npv || 0,
+        irr: financialMetrics.irr || 0,
       },
       sizing: {
         batteryMW: sizing.recommendedPowerMW,

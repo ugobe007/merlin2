@@ -50,6 +50,8 @@ interface Step3_AddRenewablesProps {
   peakLoad?: number;
   electricalLoad?: number;
   useCaseAnswers?: Record<string, any>;
+  storageSizeMW?: number;
+  baselineResult?: any;
 }
 
 type SolarSpaceType = 'rooftop' | 'ground' | 'canopy' | 'mixed';

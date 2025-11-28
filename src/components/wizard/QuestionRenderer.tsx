@@ -70,6 +70,11 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     return null;
   }
 
+  // 🔇 Hide generator capacity field - breaks logic per user request
+  if (question.id === 'generatorSizeKw' || question.id === 'generatorCapacity') {
+    return null;
+  }
+
   const handleInputChange = (newValue: any) => {
     onChange(question.id, newValue);
   };
@@ -416,6 +421,8 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           <div className="flex items-center gap-3">
             <input
               type="number"
+              name={question.id}
+              data-testid={`input-${question.id}`}
               value={value || ''}
               onChange={(e) => handleInputChange(parseFloat(e.target.value) || 0)}
               placeholder={question.placeholder}
@@ -446,11 +453,11 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             <p className="text-sm text-gray-600 mb-3">{question.helpText}</p>
           )}
           <select
-            value={value || ''}
+            value={value || question.default || ''}
             onChange={(e) => handleInputChange(e.target.value)}
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg text-gray-900 focus:outline-none focus:border-blue-500"
           >
-            <option value="">Select an option...</option>
+            <option value="" disabled>Select an option...</option>
             {selectOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}

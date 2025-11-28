@@ -1,0 +1,234 @@
+/**
+ * useQuoteBuilder Hook
+ * =====================
+ * UI layer - React hook for quote building in wizards.
+ * 
+ * This hook provides a clean interface for UI components to:
+ * - Build quotes using the application workflow
+ * - Manage wizard state
+ * - Handle loading and errors
+ * 
+ * Replaces direct service calls from components.
+ */
+
+import { useState, useCallback } from 'react';
+import { 
+  buildQuote, 
+  getUseCasesForSelection, 
+  getUseCaseDetails,
+  type BuildQuoteInput,
+  type QuoteResult 
+} from '@/application/workflows/buildQuote';
+import type { UseCaseResponse } from '@/core/domain';
+
+interface QuoteBuilderState {
+  // Quote data
+  currentQuote: QuoteResult | null;
+  
+  // Wizard state
+  selectedUseCaseSlug: string | null;
+  useCaseAnswers: UseCaseResponse;
+  location: string;
+  electricityRate: number;
+  
+  // Overrides
+  storageSizeMW: number | null;
+  durationHours: number | null;
+  solarMW: number | null;
+  
+  // UI state
+  isBuilding: boolean;
+  error: string | null;
+  availableUseCases: any[];
+  useCaseDetails: any | null;
+}
+
+export function useQuoteBuilder() {
+  const [state, setState] = useState<QuoteBuilderState>({
+    currentQuote: null,
+    selectedUseCaseSlug: null,
+    useCaseAnswers: {},
+    location: 'California',
+    electricityRate: 0.15,
+    storageSizeMW: null,
+    durationHours: null,
+    solarMW: null,
+    isBuilding: false,
+    error: null,
+    availableUseCases: [],
+    useCaseDetails: null
+  });
+
+  /**
+   * Load available use cases
+   */
+  const loadUseCases = useCallback(async (options?: {
+    category?: string;
+    tier?: string;
+  }) => {
+    try {
+      const useCases = await getUseCasesForSelection(options);
+      setState(prev => ({
+        ...prev,
+        availableUseCases: useCases,
+        error: null
+      }));
+      return useCases;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load use cases';
+      setState(prev => ({ ...prev, error: errorMessage }));
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Select a use case and load its details
+   */
+  const selectUseCase = useCallback(async (useCaseSlug: string) => {
+    try {
+      const details = await getUseCaseDetails(useCaseSlug);
+    console.log("🔍 [selectUseCase] Called with slug:", useCaseSlug);
+      setState(prev => ({
+        ...prev,
+        selectedUseCaseSlug: useCaseSlug,
+        useCaseDetails: details,
+        useCaseAnswers: {}, // Reset answers when changing use case
+        error: null
+      }));
+      return details;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load use case details';
+      setState(prev => ({ ...prev, error: errorMessage }));
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Update use case answers
+   */
+  const updateAnswers = useCallback((answers: Partial<UseCaseResponse>) => {
+    setState(prev => ({
+      ...prev,
+      useCaseAnswers: {
+        ...prev.useCaseAnswers,
+        ...answers
+      }
+    }));
+  }, []);
+
+  /**
+   * Update location and pricing
+   */
+  const updateLocation = useCallback((location: string, electricityRate?: number) => {
+    setState(prev => ({
+      ...prev,
+      location,
+      ...(electricityRate !== undefined && { electricityRate })
+    }));
+  }, []);
+
+  /**
+   * Update size overrides
+   */
+  const updateSizing = useCallback((updates: {
+    storageSizeMW?: number;
+    durationHours?: number;
+    solarMW?: number;
+  }) => {
+    setState(prev => ({
+      ...prev,
+      ...updates
+    }));
+  }, []);
+
+  /**
+   * Build the complete quote
+   */
+  const buildCurrentQuote = useCallback(async () => {
+    if (!state.selectedUseCaseSlug) {
+      throw new Error('No use case selected');
+    }
+
+    setState(prev => ({ ...prev, isBuilding: true, error: null }));
+
+    try {
+      const input: BuildQuoteInput = {
+        useCaseSlug: state.selectedUseCaseSlug,
+        useCaseAnswers: state.useCaseAnswers,
+        location: state.location,
+        electricityRate: state.electricityRate,
+        storageSizeMWOverride: state.storageSizeMW ?? undefined,
+        durationHoursOverride: state.durationHours ?? undefined,
+        solarMWOverride: state.solarMW ?? undefined
+      };
+
+      const quote = await buildQuote(input);
+
+      setState(prev => ({
+        ...prev,
+        currentQuote: quote,
+        isBuilding: false,
+        error: null
+      }));
+
+      return quote;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to build quote';
+      setState(prev => ({
+        ...prev,
+        isBuilding: false,
+        error: errorMessage
+      }));
+      throw error;
+    }
+  }, [state.selectedUseCaseSlug, state.useCaseAnswers, state.location, state.electricityRate, state.storageSizeMW, state.durationHours, state.solarMW]);
+
+  /**
+   * Reset the quote builder
+   */
+  const reset = useCallback(() => {
+    setState({
+      currentQuote: null,
+      selectedUseCaseSlug: null,
+      useCaseAnswers: {},
+      location: 'California',
+      electricityRate: 0.15,
+      storageSizeMW: null,
+      durationHours: null,
+      solarMW: null,
+      isBuilding: false,
+      error: null,
+      availableUseCases: [],
+      useCaseDetails: null
+    });
+  }, []);
+
+  return {
+    // State
+    currentQuote: state.currentQuote,
+    selectedUseCaseSlug: state.selectedUseCaseSlug,
+    useCaseDetails: state.useCaseDetails,
+    availableUseCases: state.availableUseCases,
+    useCaseAnswers: state.useCaseAnswers,
+    location: state.location,
+    electricityRate: state.electricityRate,
+    sizing: {
+      storageSizeMW: state.storageSizeMW,
+      durationHours: state.durationHours,
+      solarMW: state.solarMW
+    },
+    
+    // UI state
+    isBuilding: state.isBuilding,
+    error: state.error,
+    
+    // Actions
+    loadUseCases,
+    selectUseCase,
+    updateAnswers,
+    updateLocation,
+    updateSizing,
+    buildQuote: buildCurrentQuote,
+    reset
+  };
+}
