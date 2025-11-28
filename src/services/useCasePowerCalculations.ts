@@ -729,6 +729,50 @@ export function calculateUseCasePower(
         inputs: { mgSqFt, mgWattsPerSqFt, mgLevel2, mgDcFast }
       };
       
+    // =====================================================
+    // SLUG ALIASES: Database slugs that alias to existing handlers
+    // Added Nov 28, 2025 to prevent falling to default case
+    // =====================================================
+    
+    case 'edge-data-center':
+      // Alias for datacenter (same calculation)
+      return calculateDatacenterPower(
+        parseInt(useCaseData.itLoadKW) || undefined,
+        parseInt(useCaseData.rackCount) || undefined,
+        parseFloat(useCaseData.rackDensityKW) || 8
+      );
+      
+    case 'distribution-center':
+      // Alias for warehouse/logistics (same calculation)
+      return calculateWarehousePower(
+        parseInt(useCaseData.warehouseSqFt || useCaseData.sqFt) || 250000,
+        useCaseData.isColdStorage === true || useCaseData.warehouseType === 'cold-storage'
+      );
+      
+    case 'apartment-building':
+      // Alias for apartment/apartments
+      return calculateApartmentPower(
+        parseInt(useCaseData.unitCount || useCaseData.units) || 100,
+        parseInt(useCaseData.commonAreaSqFt || useCaseData.sqFt) || 10000
+      );
+      
+    case 'residential':
+      // Residential is different from commercial - use residential benchmark
+      // Average US home: ~1.2 kW average, 5-10 kW peak
+      const homeSqFt = parseInt(useCaseData.sqFt || useCaseData.homeSize) || 2000;
+      const homes = parseInt(useCaseData.homeCount || useCaseData.units) || 1;
+      const resWattsPerSqFt = 5; // Residential benchmark (lower than commercial)
+      const resPowerKW = (homeSqFt * resWattsPerSqFt * homes) / 1000;
+      const resPowerMW = resPowerKW / 1000;
+      
+      return {
+        powerMW: Math.max(0.01, Math.round(resPowerMW * 100) / 100),
+        durationHrs: 4,
+        description: `Residential: ${homes} home(s) × ${homeSqFt.toLocaleString()} sq ft × ${resWattsPerSqFt} W/sqft = ${resPowerKW.toFixed(1)} kW`,
+        calculationMethod: 'Residential benchmark (5 W/sq ft peak)',
+        inputs: { homes, homeSqFt, resWattsPerSqFt }
+      };
+      
     default:
       // Generic fallback - use square footage if available
       const genericSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 10000;
