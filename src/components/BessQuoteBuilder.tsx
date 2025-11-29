@@ -474,17 +474,48 @@ export default function BessQuoteBuilder() {
         // Generate quote with current configuration
         console.log('Generate quote with:', { powerMW, standbyHours, grandCapEx });
         
-        // Create quote object for preview
+        const batteryMWh = powerMW * standbyHours;
+        const batterySystemCost = batteryMWh * 200000; // $200/kWh for batteries
+        const pcsCost = powerMW * 80000; // $80k/MW for PCS
+        const bosCost = grandCapEx * (bosPercent / 100);
+        const epcCost = grandCapEx * (epcPercent / 100);
+        
+        // Create complete quote object for QuotePreviewModal
         const generatedQuote = {
-          id: `QUOTE-${Date.now()}`,
-          name: `Custom ${powerMW} MW / ${standbyHours}hr System`,
-          systemSizeMW: powerMW,
-          durationHours: standbyHours,
-          totalCapacity: powerMW * standbyHours,
-          estimatedCost: grandCapEx,
-          createdAt: new Date().toISOString(),
-          status: 'generated',
-          source: 'Advanced Quote Builder'
+          clientName: 'Custom Configuration',
+          projectName: `${powerMW} MW / ${standbyHours}hr BESS System`,
+          bessPowerMW: powerMW,
+          duration: standbyHours,
+          batteryMWh: batteryMWh,
+          solarMW: solarMWp || 0,
+          windMW: windMW || 0,
+          generatorMW: generatorMW || 0,
+          gridConnection: gridMode || 'On-grid',
+          application: useCase || 'Commercial',
+          location: location || 'United States',
+          warranty: warranty || '10 years',
+          pcsIncluded: true,
+          costs: {
+            batterySystem: batterySystemCost,
+            pcs: pcsCost,
+            transformers: powerMW * 25000,
+            inverters: powerMW * 15000,
+            switchgear: powerMW * 20000,
+            microgridControls: 50000,
+            solar: (solarMWp || 0) * 850000,
+            solarInverters: (solarMWp || 0) * 50000,
+            wind: (windMW || 0) * 1200000,
+            windConverters: (windMW || 0) * 100000,
+            generator: (generatorMW || 0) * 200000,
+            generatorControls: (generatorMW || 0) > 0 ? 25000 : 0,
+            bos: bosCost,
+            epc: epcCost,
+            tariffs: grandCapEx * 0.05,
+            shipping: grandCapEx * 0.03,
+            grandTotal: grandCapEx
+          },
+          annualSavings: batteryMWh * 365 * 0.15 * 1000, // Estimated savings
+          paybackPeriod: grandCapEx / (batteryMWh * 365 * 0.15 * 1000)
         };
         
         // Set the quote and open preview
