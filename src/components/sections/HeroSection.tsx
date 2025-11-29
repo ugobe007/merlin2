@@ -60,21 +60,57 @@ export default function HeroSection({
   const handleGenerateQuote = () => {
     if (!selectedUseCaseForQuote) return;
     
-    console.log('📄 Generating quote for:', selectedUseCaseForQuote.industry);
+    console.log('📄 Generating downloadable quote for:', selectedUseCaseForQuote.industry);
     
-    // Store use case data and jump to quote generation (step 5)
-    const wizardData = {
-      selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, '-'),
-      storageSizeMW: selectedUseCaseForQuote.systemSizeMW,
-      durationHours: selectedUseCaseForQuote.duration,
-      location: selectedCountry,
-      jumpToStep: 5, // Go directly to quote summary
-      useCase: selectedUseCaseForQuote
+    const uc = selectedUseCaseForQuote;
+    const batteryMWh = uc.systemSizeMW * uc.duration;
+    const batterySystemCost = batteryMWh * 200000; // $200/kWh
+    const pcsCost = uc.systemSizeMW * 80000; // $80k/MW
+    const bosCost = uc.systemCost * (bosPercent / 100);
+    const epcCost = uc.systemCost * (epcPercent / 100);
+    
+    // Create complete quote object for QuotePreviewModal
+    const generatedQuote = {
+      clientName: uc.industry,
+      projectName: `${uc.industry} - ${uc.systemSizeMW} MW / ${uc.duration}hr BESS`,
+      bessPowerMW: uc.systemSizeMW,
+      duration: uc.duration,
+      batteryMWh: batteryMWh,
+      solarMW: 0,
+      windMW: 0,
+      generatorMW: 0,
+      gridConnection: 'On-grid',
+      application: uc.industry,
+      location: selectedCountry || 'United States',
+      warranty: '10 years',
+      pcsIncluded: true,
+      costs: {
+        batterySystem: batterySystemCost,
+        pcs: pcsCost,
+        transformers: uc.systemSizeMW * 25000,
+        inverters: uc.systemSizeMW * 15000,
+        switchgear: uc.systemSizeMW * 20000,
+        microgridControls: 50000,
+        solar: 0,
+        solarInverters: 0,
+        wind: 0,
+        windConverters: 0,
+        generator: 0,
+        generatorControls: 0,
+        bos: bosCost,
+        epc: epcCost,
+        tariffs: uc.systemCost * 0.05,
+        shipping: uc.systemCost * 0.03,
+        grandTotal: uc.systemCost
+      },
+      annualSavings: uc.totalAnnualSavings,
+      paybackPeriod: uc.paybackYears
     };
     
-    localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
+    // Close landing modal and show quote preview with download option
     setShowQuoteBuilderLanding(false);
-    setShowSmartWizard(true);
+    setCurrentQuote(generatedQuote);
+    setShowQuotePreview(true);
   };
 
   const handleCustomizeSystem = () => {
