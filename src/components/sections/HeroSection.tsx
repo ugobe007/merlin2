@@ -50,21 +50,11 @@ export default function HeroSection({
 
   const handleLoadTemplate = (useCase: UseCaseData) => {
     console.log('🎯🎯🎯 HeroSection handleLoadTemplate called with:', useCase.industry);
-    console.log('📍 Scrolling to Explore More Industries carousel');
+    console.log('🚀 Opening QuoteBuilderLanding modal for:', useCase.industry);
     
-    // Scroll to the carousel section smoothly
-    const carouselSection = document.querySelector('section.my-8');
-    if (carouselSection) {
-      carouselSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      // Flash/highlight effect
-      carouselSection.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-50');
-      setTimeout(() => {
-        carouselSection.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-50');
-      }, 2000);
-    }
-    
-    console.log('💡 Tip: Click a use case card in "Explore More Industries" below to launch SmartWizard');
+    // Set the selected use case and show the QuoteBuilderLanding modal
+    setSelectedUseCaseForQuote(useCase);
+    setShowQuoteBuilderLanding(true);
   };
 
   const handleGenerateQuote = () => {

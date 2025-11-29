@@ -471,11 +471,26 @@ export default function BessQuoteBuilder() {
         console.log('System cost changed to:', cost);
       }}
       onGenerateQuote={() => {
-        // Generate quote with current configuration and close modal
+        // Generate quote with current configuration
         console.log('Generate quote with:', { powerMW, standbyHours, grandCapEx });
+        
+        // Create quote object for preview
+        const generatedQuote = {
+          id: `QUOTE-${Date.now()}`,
+          name: `Custom ${powerMW} MW / ${standbyHours}hr System`,
+          systemSizeMW: powerMW,
+          durationHours: standbyHours,
+          totalCapacity: powerMW * standbyHours,
+          estimatedCost: grandCapEx,
+          createdAt: new Date().toISOString(),
+          status: 'generated',
+          source: 'Advanced Quote Builder'
+        };
+        
+        // Set the quote and open preview
+        setCurrentQuote(generatedQuote);
         setShowAdvancedQuoteBuilderModal(false);
-        // Could open quote preview modal here if needed
-        alert(`✅ Quote Generated Successfully!\n\nSystem: ${powerMW} MW / ${(powerMW * standbyHours).toFixed(1)} MWh\nEstimated Cost: $${grandCapEx.toLocaleString()}\n\nYour quote has been added to your dashboard.`);
+        setShowQuotePreview(true);
       }}
     />
 
