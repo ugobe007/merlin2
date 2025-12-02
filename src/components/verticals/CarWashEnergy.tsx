@@ -220,6 +220,17 @@ export default function CarWashEnergy() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   
+  // Hero carousel state (shared between mobile and desktop views)
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  
+  // Auto-rotate hero images
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+  
   // Lead capture
   const [leadInfo, setLeadInfo] = useState<LeadInfo>({
     businessName: '',
@@ -235,6 +246,35 @@ export default function CarWashEnergy() {
   
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
+  
+  // Quick Estimate Modal - Progressive Disclosure (Option A)
+  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
+  const [quickBays, setQuickBays] = useState(4);
+  const [quickWashType, setQuickWashType] = useState<'express' | 'fullservice' | 'selfservice' | 'inbay'>('express');
+  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
+  
+  // Quick estimate calculation
+  const calculateQuickEstimate = (bays: number, washType: string) => {
+    // Simplified savings based on wash type and bay count
+    const savingsPerBay: Record<string, number> = {
+      'express': 12000,    // Express tunnels: high volume, high savings
+      'fullservice': 15000, // Full service: more equipment
+      'selfservice': 3000,  // Self-service: lower usage
+      'inbay': 8000,        // In-bay automatic: moderate
+    };
+    const baseSavings = (savingsPerBay[washType] || 10000) * bays;
+    // Add some variance for realism
+    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
+    const payback = 2.5 + Math.random() * 1.5; // 2.5-4 years
+    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
+  };
+  
+  // Auto-calculate when quick estimate inputs change
+  useEffect(() => {
+    if (showQuickEstimate) {
+      calculateQuickEstimate(quickBays, quickWashType);
+    }
+  }, [quickBays, quickWashType, showQuickEstimate]);
   
   // Calculate quote when inputs change (debounced)
   useEffect(() => {
@@ -356,13 +396,14 @@ export default function CarWashEnergy() {
       </header>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION - Edge-Bleeding Image Design
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzAwYmNkNCIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
         
-        <div className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* Left content - contained */}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-24 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div>
@@ -395,16 +436,16 @@ export default function CarWashEnergy() {
                 </div>
               </div>
               
-              <a 
-                href="#calculator"
+              <button 
+                onClick={() => setShowQuickEstimate(true)}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
               >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </button>
               
               {/* Down Arrow Indicator */}
-              <div className="mt-8 flex flex-col items-center animate-bounce">
+              <div className="mt-8 flex flex-col items-center animate-bounce lg:items-start">
                 <p className="text-cyan-300 text-sm font-medium mb-2">See Your Savings Below</p>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 border border-emerald-400/50 flex items-center justify-center">
                   <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,12 +455,11 @@ export default function CarWashEnergy() {
               </div>
             </div>
             
-            {/* Right: Car Wash Image Carousel + Stats */}
-            <div className="relative">
-              {/* Image Carousel */}
+            {/* Right side placeholder for mobile only - actual content is absolutely positioned */}
+            <div className="lg:hidden">
               <ImageCarousel />
               
-              {/* Stats cards */}
+              {/* Stats cards - mobile only */}
               <div className="grid grid-cols-3 gap-3 max-w-xl mx-auto">
                 <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-emerald-400/30 shadow-lg">
                   <p className="text-3xl font-black text-emerald-400">$47K</p>
@@ -433,6 +473,71 @@ export default function CarWashEnergy() {
                   <p className="text-3xl font-black text-purple-400">50%</p>
                   <p className="text-xs text-purple-200 font-medium">Demand Savings</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* ========== RIGHT HALF - Edge-Bleeding Image (Desktop Only) ========== */}
+        <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-1/2">
+          <div className="relative w-full h-full">
+            {CAROUSEL_IMAGES.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === heroImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {/* Full-bleed image - no rounded corners on right edge */}
+                <img 
+                  src={image.src} 
+                  alt={image.alt}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Gradient overlay - fades into background on left */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(30,58,138,1) 0%, rgba(30,58,138,0.8) 15%, transparent 40%), linear-gradient(to top, rgba(30,58,138,0.9) 0%, transparent 50%)'
+                  }}
+                />
+              </div>
+            ))}
+            
+            {/* Financial overlay card */}
+            <div className="absolute bottom-8 left-8 right-8">
+              <div className="backdrop-blur-xl rounded-3xl p-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+                  <div>
+                    <p className="text-white font-bold">Powered by Merlin</p>
+                    <p className="text-cyan-300 text-sm">AI-Optimized Battery Storage</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-emerald-400">$47K</div>
+                    <div className="text-xs text-cyan-300/70 mt-1">Annual Savings</div>
+                  </div>
+                  <div className="text-center border-x border-white/10 px-2">
+                    <div className="text-3xl font-black text-cyan-300">3.2yr</div>
+                    <div className="text-xs text-cyan-300/70 mt-1">Payback</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-purple-400">50%</div>
+                    <div className="text-xs text-cyan-300/70 mt-1">Demand Cut</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Peak demand badge */}
+            <div className="absolute top-8 right-8">
+              <div className="bg-amber-500/90 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+                <p className="text-xs font-bold text-amber-900">PEAK DEMAND</p>
+                <p className="text-2xl font-black text-white">100-250 kW</p>
               </div>
             </div>
           </div>
@@ -940,6 +1045,154 @@ export default function CarWashEnergy() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          QUICK ESTIMATE MODAL - Progressive Disclosure (Option A)
+          Shows instant value with minimal input, then offers detailed wizard
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {showQuickEstimate && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowQuickEstimate(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Modal */}
+          <div 
+            className="relative bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-800 rounded-3xl shadow-2xl shadow-cyan-500/20 max-w-lg w-full overflow-hidden border border-cyan-400/40"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowQuickEstimate(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Header with Merlin */}
+            <div className="relative px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
+                  <p className="text-cyan-300 text-sm">Answer 2 questions, get instant results</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Questions */}
+            <div className="px-8 pb-6 space-y-6">
+              {/* Question 1: Wash Type */}
+              <div>
+                <label className="block text-cyan-200 font-medium mb-3">What type of car wash?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'express', label: 'Express Tunnel', desc: '30-60 cars/hr' },
+                    { id: 'fullservice', label: 'Full-Service', desc: '50-100 cars/hr' },
+                    { id: 'selfservice', label: 'Self-Service', desc: '2-4 per bay/hr' },
+                    { id: 'inbay', label: 'In-Bay Auto', desc: '6-10 cars/hr' },
+                  ].map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setQuickWashType(type.id as typeof quickWashType)}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        quickWashType === type.id
+                          ? 'bg-gradient-to-r from-cyan-500/30 to-emerald-500/30 border-2 border-cyan-400'
+                          : 'bg-white/5 border border-white/10 hover:border-cyan-400/50'
+                      }`}
+                    >
+                      <p className="font-semibold text-white text-sm">{type.label}</p>
+                      <p className="text-cyan-300/70 text-xs">{type.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Question 2: Number of Bays */}
+              <div>
+                <label className="block text-cyan-200 font-medium mb-3">
+                  How many {quickWashType === 'express' || quickWashType === 'fullservice' ? 'tunnel bays' : 'wash bays'}?
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={1}
+                    max={quickWashType === 'selfservice' ? 20 : 8}
+                    value={quickBays}
+                    onChange={(e) => setQuickBays(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  />
+                  <div className="w-16 text-center">
+                    <span className="text-3xl font-black text-cyan-400">{quickBays}</span>
+                    <span className="text-cyan-300 text-sm ml-1">bays</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Results - Always visible, updates in real-time */}
+            <div className="bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-purple-500/20 px-8 py-6 border-t border-cyan-500/20">
+              <div className="text-center mb-4">
+                <p className="text-cyan-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
+                <p className="text-5xl font-black text-white">
+                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
+                </p>
+                <p className="text-emerald-400 text-sm mt-1">
+                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
+                </p>
+              </div>
+              
+              {/* What's included */}
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Peak Shaving</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Demand Cut</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Shield className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Backup Power</p>
+                </div>
+              </div>
+              
+              {/* CTAs */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    setInputs(prev => ({ ...prev, numberOfBays: quickBays }));
+                    setShowWizard(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  Get Detailed Quote
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    // Scroll to calculator section
+                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                >
+                  Or try our simple calculator below
+                </button>
+              </div>
+              
+              {/* Trust signal */}
+              <p className="text-center text-cyan-300/50 text-xs mt-4">
+                2 minute detailed quote • No commitment required
+              </p>
+            </div>
           </div>
         </div>
       )}

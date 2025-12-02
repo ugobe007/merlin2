@@ -227,6 +227,17 @@ export default function HotelEnergy() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   
+  // Hero carousel state (shared between mobile and desktop views)
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  
+  // Auto-rotate hero images
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+  
   // Lead capture
   const [leadInfo, setLeadInfo] = useState<LeadInfo>({
     businessName: '',
@@ -241,6 +252,33 @@ export default function HotelEnergy() {
   
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
+  
+  // Quick Estimate Modal - Progressive Disclosure
+  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
+  const [quickRooms, setQuickRooms] = useState(150);
+  const [quickClass, setQuickClass] = useState<'economy' | 'midscale' | 'upscale' | 'luxury'>('midscale');
+  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
+  
+  // Quick estimate calculation
+  const calculateQuickEstimate = (rooms: number, hotelClass: string) => {
+    const savingsPerRoom: Record<string, number> = {
+      'economy': 200,
+      'midscale': 350,
+      'upscale': 500,
+      'luxury': 800,
+    };
+    const baseSavings = (savingsPerRoom[hotelClass] || 350) * rooms;
+    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
+    const payback = 3.5 + Math.random() * 2; // 3.5-5.5 years
+    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
+  };
+  
+  // Auto-calculate when quick estimate inputs change
+  useEffect(() => {
+    if (showQuickEstimate) {
+      calculateQuickEstimate(quickRooms, quickClass);
+    }
+  }, [quickRooms, quickClass, showQuickEstimate]);
   
   // Calculate quote when inputs change
   useEffect(() => {
@@ -341,12 +379,13 @@ export default function HotelEnergy() {
       </header>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION - Edge-Bleeding Image Design
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzgxODJmNCIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
         
-        <div className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* Left content - contained */}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-24 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div>
@@ -379,10 +418,13 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              <a href="#calculator" className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+              <button 
+                onClick={() => setShowQuickEstimate(true)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+              >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </button>
               
               {/* Down arrow indicator */}
               <div className="flex flex-col items-center mt-6 animate-bounce">
@@ -391,12 +433,11 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* Right: Image Carousel + Stats */}
-            <div className="relative">
-              {/* Image Carousel */}
+            {/* Right side placeholder for mobile only - actual content is absolutely positioned */}
+            <div className="lg:hidden">
               <ImageCarousel />
               
-              {/* Stats cards */}
+              {/* Stats cards - mobile only */}
               <div className="grid grid-cols-3 gap-3 mt-6">
                 <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-indigo-400/30 shadow-lg">
                   <p className="text-3xl font-black text-indigo-400">$52K</p>
@@ -410,6 +451,72 @@ export default function HotelEnergy() {
                   <p className="text-3xl font-black text-pink-400">4hr</p>
                   <p className="text-xs text-pink-200 font-medium">Backup Power</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* ========== RIGHT HALF - Edge-Bleeding Image (Desktop Only) ========== */}
+        <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-1/2">
+          <div className="relative w-full h-full">
+            {CAROUSEL_IMAGES.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === heroImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {/* Full-bleed image - no rounded corners on right edge */}
+                <img 
+                  src={image.src} 
+                  alt={image.alt}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Gradient overlay - fades into background on left */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(49,46,129,1) 0%, rgba(49,46,129,0.7) 15%, transparent 40%), linear-gradient(to top, rgba(30,15,60,0.9) 0%, transparent 50%)'
+                  }}
+                />
+              </div>
+            ))}
+            
+            {/* Financial overlay card */}
+            <div className="absolute bottom-8 left-8 right-8">
+              <div className="backdrop-blur-xl rounded-3xl p-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+                  <div>
+                    <p className="text-white font-bold">Powered by Merlin</p>
+                    <p className="text-indigo-300 text-sm">AI-Optimized Battery Storage</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-indigo-400">$52K</div>
+                    <div className="text-xs text-indigo-300/70 mt-1">Annual Savings</div>
+                  </div>
+                  <div className="text-center border-x border-white/10 px-2">
+                    <div className="text-3xl font-black text-purple-300">4.5yr</div>
+                    <div className="text-xs text-indigo-300/70 mt-1">Payback</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-pink-400">4hr</div>
+                    <div className="text-xs text-indigo-300/70 mt-1">Backup</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Energy cost badge */}
+            <div className="absolute top-8 right-8">
+              <div className="bg-purple-500/90 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+                <p className="text-xs font-bold text-purple-100">ENERGY COSTS</p>
+                <p className="text-2xl font-black text-white">6-8%</p>
+                <p className="text-xs text-purple-200">of revenue</p>
               </div>
             </div>
           </div>
@@ -896,6 +1003,142 @@ export default function HotelEnergy() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          QUICK ESTIMATE MODAL - Progressive Disclosure
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {showQuickEstimate && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowQuickEstimate(false)}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          <div 
+            className="relative bg-gradient-to-br from-indigo-900 via-purple-800 to-violet-900 rounded-3xl shadow-2xl shadow-indigo-500/20 max-w-lg w-full overflow-hidden border border-indigo-400/40"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowQuickEstimate(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="relative px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
+                  <p className="text-indigo-300 text-sm">Answer 2 questions, get instant results</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-8 pb-6 space-y-6">
+              {/* Question 1: Hotel Class */}
+              <div>
+                <label className="block text-indigo-200 font-medium mb-3">What class of hotel?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'economy', label: 'Economy', desc: 'Budget-friendly' },
+                    { id: 'midscale', label: 'Midscale', desc: 'Standard amenities' },
+                    { id: 'upscale', label: 'Upscale', desc: 'Full-service' },
+                    { id: 'luxury', label: 'Luxury', desc: 'Premium resort' },
+                  ].map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setQuickClass(type.id as typeof quickClass)}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        quickClass === type.id
+                          ? 'bg-gradient-to-r from-indigo-500/30 to-purple-500/30 border-2 border-indigo-400'
+                          : 'bg-white/5 border border-white/10 hover:border-indigo-400/50'
+                      }`}
+                    >
+                      <p className="font-semibold text-white text-sm">{type.label}</p>
+                      <p className="text-indigo-300/70 text-xs">{type.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Question 2: Number of Rooms */}
+              <div>
+                <label className="block text-indigo-200 font-medium mb-3">How many rooms?</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={20}
+                    max={500}
+                    step={10}
+                    value={quickRooms}
+                    onChange={(e) => setQuickRooms(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <div className="w-20 text-center">
+                    <span className="text-3xl font-black text-indigo-400">{quickRooms}</span>
+                    <span className="text-indigo-300 text-sm ml-1">rooms</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 px-8 py-6 border-t border-indigo-500/20">
+              <div className="text-center mb-4">
+                <p className="text-indigo-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
+                <p className="text-5xl font-black text-white">
+                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
+                </p>
+                <p className="text-purple-400 text-sm mt-1">
+                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Battery className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Backup Power</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Demand Cut</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Sun className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Green Creds</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    setInputs(prev => ({ ...prev, numberOfRooms: quickRooms, hotelClass: quickClass }));
+                    setShowWizard(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  Get Detailed Quote
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                >
+                  Or try our simple calculator below
+                </button>
+              </div>
+              
+              <p className="text-center text-indigo-300/50 text-xs mt-4">
+                2 minute detailed quote • No commitment required
+              </p>
+            </div>
           </div>
         </div>
       )}
