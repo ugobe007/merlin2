@@ -1,20 +1,27 @@
 /**
- * BESS Data Service - Single Source of Truth
+ * ⚠️ DEPRECATED - DO NOT USE FOR NEW CODE
  * 
- * ✅ UPDATED: Now fetches pricing from database (pricing_configurations table)
- * Use getBESSFinancialInputs() to get database-driven defaults
+ * This file is being phased out. Use the following instead:
  * 
- * Consolidates:
- * 1. Financial modeling (based on efinancialmodels.com BESS template)
- * 2. Use case energy profiles (hotels, car washes, retail, data centers, etc.)
- * 3. BESS sizing methodologies
+ * POWER CALCULATIONS:
+ *   → useCasePowerCalculations.ts - calculateUseCasePower(slug, data)
+ *   → evChargingCalculations.ts - calculateEVHubPower(config)
  * 
- * Data sources:
- * - Database: pricing_configurations (bess_pricing_2025, power_electronics_2025, balance_of_plant_2025)
- * - efinancialmodels.com BESS Financial Model
- * - Energy Star Data Trends
- * - EIA Commercial Building Energy Consumption
- * - Industry case studies and research
+ * FINANCIAL CALCULATIONS:
+ *   → centralizedCalculations.ts - calculateFinancialMetrics(params)
+ *   → professionalFinancialModel.ts - generateProfessionalModel(project)
+ * 
+ * EQUIPMENT PRICING:
+ *   → unifiedPricingService.ts - getBatteryPricing(), getInverterPricing()
+ *   → equipmentCalculations.ts - calculateEquipmentBreakdown()
+ * 
+ * FULL QUOTES:
+ *   → unifiedQuoteCalculator.ts - calculateQuote(params) ← USE THIS!
+ * 
+ * The only function still actively used is getBESSFinancialInputs() which
+ * fetches database-driven constants. This will be migrated to centralizedCalculations.ts.
+ * 
+ * @deprecated Use unifiedQuoteCalculator.ts for new quote calculations
  */
 
 // ============================================================================

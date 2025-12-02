@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { MapPin, DollarSign, Lightbulb, TrendingUp, AlertTriangle } from 'lucide-react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 import { analyzeUtilityRate } from '@/utils/utilityRateAnalysis';
 
 interface Step4Props extends BaseStepProps {

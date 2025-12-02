@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { PowerGapVisualization } from '../PowerGapVisualization';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 import type { PowerGapAnalysis } from '@/services/powerGapAnalysis';
 
 interface Step25PowerGapProps extends BaseStepProps {

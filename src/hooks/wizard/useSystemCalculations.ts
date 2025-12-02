@@ -4,7 +4,7 @@ import { calculateAutomatedSolarSizing, type SolarSizingResult } from '../../uti
 import { calculateUseCasePower, calculateEVChargingPower } from '../../services/useCasePowerCalculations';
 
 /**
- * Custom hook for system calculation logic in SmartWizardV2
+ * Custom hook for system calculation logic in StreamlinedWizard
  * Extracts complex calculation logic from the main component
  * 
  * ⚠️ IMPORTANT: This hook now delegates power calculations to useCasePowerCalculations.ts

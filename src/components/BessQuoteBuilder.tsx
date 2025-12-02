@@ -22,7 +22,7 @@ import type { ProfileData } from './modals/AccountSetup';
 import AboutView from './views/AboutView';
 import VendorPortalView from './views/VendorPortalView';
 // Import NREL-based pricing from unified service
-import { getSolarPricing, getWindPricing, getGeneratorPricing } from '@/services/unifiedPricingService';
+import { getBatteryPricing, getSolarPricing, getWindPricing, getGeneratorPricing } from '@/services/unifiedPricingService';
 
 // NEW: Clean unified Advanced Quote Builder component
 import AdvancedQuoteBuilder from './AdvancedQuoteBuilder';
@@ -193,31 +193,50 @@ export default function BessQuoteBuilder() {
   // These are deprecated and will be removed in future versions
   // TODO: Remove these placeholders and update dependent components to use SmartWizardV3 data
   
-  // Basic CapEx calculation for Advanced Quote Builder
+  // ✅ USE SSOT: State for battery pricing from unifiedPricingService
+  const [batteryPricePerKwh, setBatteryPricePerKwh] = useState(155); // Default NREL ATB 2024
+  const [solarPricePerKw, setSolarPricePerKw] = useState(850);
+  const [windPricePerKw, setWindPricePerKw] = useState(1200);
+  const [genPricePerKw, setGenPricePerKw] = useState(500);
+  
+  // Fetch SSOT pricing on mount and when size changes
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const totalMWh = powerMW * standbyHours;
+        const batteryPricing = await getBatteryPricing(powerMW, standbyHours, selectedCountry || 'United States');
+        setBatteryPricePerKwh(batteryPricing.pricePerKWh);
+        
+        const solar = await getSolarPricing();
+        setSolarPricePerKw(solar.pricePerWatt * 1000); // Convert $/W to $/kW
+        
+        const wind = await getWindPricing();
+        setWindPricePerKw(wind.pricePerKW);
+        
+        const gen = await getGeneratorPricing();
+        setGenPricePerKw(gen.pricePerKW);
+      } catch (error) {
+        console.error('Error fetching SSOT pricing:', error);
+      }
+    };
+    fetchPricing();
+  }, [powerMW, standbyHours, selectedCountry]);
+  
+  // Basic CapEx calculation for Advanced Quote Builder using SSOT pricing
   const totalMWh = powerMW * standbyHours;
   const effectiveBatteryKwh = totalMWh * 1000;
   
-  // BESS pricing per kWh based on system size - NREL ATB 2024
-  // $155/kWh base, with tiered pricing for different sizes
-  let pricePerKwh = 200; // Default: Small systems (<1 MWh) - premium for small scale
-  if (effectiveBatteryKwh >= 10000) {
-    pricePerKwh = 140; // Utility scale (>10 MWh): economies of scale
-  } else if (effectiveBatteryKwh >= 1000) {
-    pricePerKwh = 155; // Medium systems (1-10 MWh): NREL base rate
-  }
-  
-  // Calculate base BESS cost
-  const bessCapEx = effectiveBatteryKwh * pricePerKwh;
+  // Calculate base BESS cost using SSOT pricing
+  const bessCapEx = effectiveBatteryKwh * batteryPricePerKwh;
   
   // Add BOS and EPC costs (balance of system and engineering/procurement/construction)
   const bosMultiplier = 1 + (bosPercent / 100);
   const epcMultiplier = 1 + (epcPercent / 100);
   
-  // Renewable costs using NREL ATB 2024 defaults
-  // Solar: $0.85/W = $850/kWp, Wind: $1200/kW, Generator: $500/kW
-  const solarCost = solarKwp * 850; // NREL ATB 2024: $0.85/W
-  const windCost = windKw * 1200; // NREL ATB 2024: $1,200/kW
-  const genCost = genKw * 500; // NREL standard: $500/kW diesel generator
+  // Renewable costs using SSOT pricing
+  const solarCost = solarKwp * solarPricePerKw;
+  const windCost = windKw * windPricePerKw;
+  const genCost = genKw * genPricePerKw;
   
   const grandCapEx = (bessCapEx * bosMultiplier * epcMultiplier) + solarCost + windCost + genCost;
   
@@ -308,13 +327,14 @@ export default function BessQuoteBuilder() {
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div 
+      className="min-h-screen"
+      style={{
+        background: 'linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 20%, #a78bfa 40%, #8b5cf6 60%, #7c3aed 80%, #6d28d9 100%)'
+      }}
+    >
       
-      <main className="p-8">
-        {/* Energy News Ticker - Matches hero width */}
-        <div className="my-6">
-          <EnergyNewsTicker />
-        </div>
+      <main>
         
         {/* HERO SECTION */}
         <HeroSection
@@ -349,65 +369,72 @@ export default function BessQuoteBuilder() {
         {/* Footer with Admin Access */}
         <footer className="mt-12 border-t border-purple-300 pt-8 pb-6">
           <div className="text-center">
-            <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
               <button
                 onClick={() => setShowStatusPage(true)}
-                className="text-gray-600 hover:text-green-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 <span>🟢</span>
                 <span>System Status</span>
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-amber-400/50 font-bold">|</span>
               <button
                 onClick={() => setShowPrivacyPolicy(true)}
-                className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 Privacy Policy
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-amber-400/50 font-bold">|</span>
               <button
                 onClick={() => setShowTermsOfService(true)}
-                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 Terms of Service
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-amber-400/50 font-bold">|</span>
               <button
                 onClick={() => setShowSecuritySettings(true)}
-                className="text-gray-600 hover:text-green-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 <span>🔒</span>
                 <span>Security & Privacy</span>
               </button>
             </div>
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-amber-300 text-lg font-bold mb-4" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
               © 2025 Merlin Energy. All rights reserved.
             </p>
             {/* Always show admin tools for development */}
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               <button
                 onClick={() => setShowSystemHealth(true)}
-                className="text-gray-600 hover:text-blue-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 <span>📊</span>
                 <span>System Health</span>
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-amber-400/50 font-bold">|</span>
               <button
                 onClick={() => setShowVendorManager(true)}
-                className="text-gray-600 hover:text-purple-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
               >
                 <span>🔧</span>
                 <span>Admin Panel</span>
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-amber-400/50 font-bold">|</span>
               {isLoggedIn && (
                 <button
                   onClick={() => {
                     setIsLoggedIn(false);
                     alert('You have been logged out successfully');
                   }}
-                  className="text-gray-600 hover:text-red-600 text-xs font-medium transition-colors inline-flex items-center gap-1"
+                  className="text-amber-400 hover:text-amber-300 text-base font-bold transition-colors inline-flex items-center gap-1"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                 >
                   <span>🚪</span>
                   <span>Sign Out</span>

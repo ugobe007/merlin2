@@ -10,19 +10,26 @@
  * - Different formulas producing different results
  * 
  * Database Tables Used:
- * - calculation_formulas: Stores all calculation formulas and constants
+ * - calculation_constants: Simple key-value constants (NEW - SMB platform)
+ * - calculation_formulas: Complex calculation formulas
  * - pricing_configurations: Stores equipment pricing
+ * 
+ * Priority for fetching constants:
+ * 1. calculation_constants table (SMB platform - simple key-value)
+ * 2. calculation_formulas table (legacy - complex formulas)
+ * 3. TypeScript fallbacks (if database unavailable)
  * 
  * Usage:
  * import { calculateFinancialMetrics } from '@/services/centralizedCalculations';
  * const results = await calculateFinancialMetrics({ powerMW, durationHours, ...config });
  * 
- * Version: 1.0.0
- * Date: November 11, 2025
+ * Version: 2.0.0 - Now integrates with calculation_constants table
+ * Date: November 30, 2025
  */
 
 import { supabase } from './supabaseClient';
 import { getBatteryPricing } from './unifiedPricingService';
+import { getConstant, getFinancialConstants } from './calculationConstantsService';
 
 // ============================================
 // INTERFACES
@@ -202,10 +209,29 @@ export interface AdvancedFinancialMetrics extends FinancialCalculationResult {
 /**
  * Fetch all calculation constants from the database
  * This is the SINGLE SOURCE OF TRUTH
+ * 
+ * Priority:
+ * 1. calculation_constants table (SMB platform - simple, admin-editable)
+ * 2. calculation_formulas table (legacy - complex formulas)
+ * 3. TypeScript fallbacks
  */
 export async function getCalculationConstants(): Promise<CalculationConstants> {
   try {
-    // Fetch all calculation formulas from database
+    // PRIORITY 1: Try calculation_constants table (new SMB platform SSOT)
+    const [
+      itcRate,
+      discountRate,
+      degradationRate,
+    ] = await Promise.all([
+      getConstant('federal_itc_rate'),
+      getConstant('discount_rate'),
+      getConstant('battery_degradation_rate'),
+    ]);
+    
+    // If we got values from calculation_constants, build from there
+    const hasNewConstants = itcRate !== null || discountRate !== null;
+    
+    // PRIORITY 2: Try calculation_formulas table (legacy)
     const { data: formulas, error } = await supabase
       .from('calculation_formulas')
       .select('*')
@@ -222,26 +248,33 @@ export async function getCalculationConstants(): Promise<CalculationConstants> {
         'om_cost_percent'
       ]);
 
-    if (error) throw error;
+    if (error && !error.message?.includes('does not exist')) {
+      console.warn('⚠️ calculation_formulas query error:', error.message);
+    }
 
-    // Build constants object from database
+    // Build constants object - prefer calculation_constants, fallback to formulas
     const constants: CalculationConstants = {
       PEAK_SHAVING_MULTIPLIER: extractConstant(formulas, 'peak_shaving_multiplier', 365),
       DEMAND_CHARGE_MONTHLY_PER_MW: extractConstant(formulas, 'demand_charge_monthly_per_mw', 15000),
       GRID_SERVICE_REVENUE_PER_MW: extractConstant(formulas, 'grid_service_revenue_per_mw', 30000),
       SOLAR_CAPACITY_FACTOR: extractConstant(formulas, 'solar_capacity_factor', 1500),
       WIND_CAPACITY_FACTOR: extractConstant(formulas, 'wind_capacity_factor', 2500),
-      FEDERAL_TAX_CREDIT_RATE: extractConstant(formulas, 'federal_tax_credit_rate', 0.30),
+      // Use calculation_constants values if available, otherwise fallback
+      FEDERAL_TAX_CREDIT_RATE: itcRate ?? extractConstant(formulas, 'federal_tax_credit_rate', 0.30),
       ANNUAL_CYCLES: extractConstant(formulas, 'annual_cycles', 365),
       ROUND_TRIP_EFFICIENCY: extractConstant(formulas, 'round_trip_efficiency', 0.85),
-      DEGRADATION_RATE_ANNUAL: extractConstant(formulas, 'degradation_rate_annual', 0.02),
+      DEGRADATION_RATE_ANNUAL: degradationRate ?? extractConstant(formulas, 'degradation_rate_annual', 0.02),
       OM_COST_PERCENT: extractConstant(formulas, 'om_cost_percent', 0.025),
       lastUpdated: new Date(),
-      dataSource: formulas && formulas.length > 0 ? 'database' : 'fallback'
+      dataSource: hasNewConstants ? 'database' : (formulas && formulas.length > 0 ? 'database' : 'fallback')
     };
 
-    console.log('✅ Calculation constants loaded from database:', constants.dataSource);
-    console.log('📊 Loaded', formulas?.length || 0, 'formulas from database');
+    if (import.meta.env.DEV) {
+      console.log('✅ Calculation constants loaded:', constants.dataSource);
+      if (hasNewConstants) {
+        console.log('📊 Using calculation_constants table (ITC:', itcRate, ')');
+      }
+    }
     return constants;
 
   } catch (error) {
@@ -268,8 +301,9 @@ export async function getCalculationConstants(): Promise<CalculationConstants> {
 /**
  * Helper function to extract constant value from formula record
  */
-function extractConstant(formulas: any[], formulaName: string, fallbackValue: number): number {
-  const formula = formulas?.find(f => f.formula_key === formulaName);
+function extractConstant(formulas: any[] | null, formulaName: string, fallbackValue: number): number {
+  if (!formulas) return fallbackValue;
+  const formula = formulas.find(f => f.formula_key === formulaName);
   if (!formula) return fallbackValue;
   
   // Try to extract numeric value from formula_expression or variables

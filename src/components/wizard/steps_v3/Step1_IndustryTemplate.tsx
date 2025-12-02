@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { Building2, Factory, Store, Zap, Car, Hotel, Server } from 'lucide-react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import { Building2, Factory, Store, Zap, Car, Hotel, Server, Droplets, ExternalLink } from 'lucide-react';
+import type { BaseStepProps } from '@/types/wizard.types';
 
 interface Step1Props extends BaseStepProps {
   selectedTemplate: string | null;
@@ -22,7 +22,13 @@ const INDUSTRY_ICONS: Record<string, any> = {
   'office': Building2,
   'manufacturing': Factory,
   'retail': Store,
+  'car-wash': Droplets,
   'default': Zap
+};
+
+// Special verticals that redirect to dedicated sites
+const VERTICAL_REDIRECTS: Record<string, string> = {
+  'car-wash': '/carwashenergy', // Will be carwashenergy.com in production
 };
 
 const Step1_IndustryTemplate: React.FC<Step1Props> = ({
@@ -91,6 +97,40 @@ const Step1_IndustryTemplate: React.FC<Step1Props> = ({
 
       {/* Use Case Grid */}
       <div className="space-y-8">
+        {/* Special Verticals Section - Car Wash */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="text-2xl">⭐</span> Specialized Solutions
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Car Wash - Redirects to carwashenergy.com */}
+            <a
+              href="/carwashenergy"
+              className="p-5 rounded-xl border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 via-blue-50 to-purple-50 text-left transition-all hover:shadow-xl hover:scale-105 hover:border-cyan-500 group relative overflow-hidden"
+            >
+              <div className="absolute top-2 right-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />
+                Dedicated Site
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 text-white shadow-lg">
+                  <Droplets className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 group-hover:text-cyan-700 transition-colors">
+                    Car Wash
+                  </h4>
+                  <p className="text-sm text-gray-500">Specialized quote builder</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-cyan-600 font-medium">
+                🚗 Tailored for car wash owners with bay-specific calculations
+              </p>
+            </a>
+          </div>
+        </div>
+
+        {/* Standard Use Cases */}
         {Object.entries(groupedUseCases).map(([industry, useCases]) => (
           <div key={industry}>
             <h3 className="text-xl font-semibold text-gray-800 mb-4">{industry}</h3>

@@ -26,7 +26,7 @@ export interface ValidationResult {
  * 
  * @param localResult - Calculation result from component/service
  * @param inputs - Input parameters for central calculation
- * @param source - Source identifier (e.g., "SmartWizardV2", "AdvancedQuoteBuilder")
+ * @param source - Source identifier (e.g., "StreamlinedWizard", "AdvancedQuoteBuilder")
  * @returns Validation result or null if in production
  * 
  * @example

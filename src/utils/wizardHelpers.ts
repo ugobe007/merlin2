@@ -1,7 +1,7 @@
 /**
  * Wizard utility functions
  * 
- * Helper functions extracted from SmartWizardV2.tsx for:
+ * Helper functions extracted from StreamlinedWizard for:
  * - Power density calculations by building type
  * - Scale factor calculations for different industries
  * - Building-specific power requirements

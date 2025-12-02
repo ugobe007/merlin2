@@ -13,7 +13,7 @@
  * It is kept for reference only and will be removed in a future update.
  * 
  * Migration Status:
- * - ✅ SmartWizardV2 migrated to baselineService.ts
+ * - ✅ StreamlinedWizard migrated to baselineService.ts
  * - ✅ aiOptimizationService migrated to baselineService.ts
  * - ⏳ Remaining files to migrate: See BASELINE_SERVICE_MIGRATION.md
  * 

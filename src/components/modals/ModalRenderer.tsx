@@ -29,7 +29,7 @@ const QuoteTemplates = React.lazy(() => import('../QuoteTemplates'));
 const PricingPresets = React.lazy(() => import('../PricingPresets'));
 const QuoteReviewWorkflow = React.lazy(() => import('../QuoteReviewWorkflow'));
 const UseCaseROI = React.lazy(() => import('../UseCaseROI'));
-const SmartWizard = React.lazy(() => import('../wizard/SmartWizardV2'));
+const StreamlinedWizard = React.lazy(() => import('../wizard/StreamlinedWizard'));
 const SaveProjectModal = React.lazy(() => import('./SaveProjectModal'));
 const LoadProjectModal = React.lazy(() => import('./LoadProjectModal'));
 const QuotePreviewModal = React.lazy(() => import('./QuotePreviewModal'));
@@ -252,9 +252,9 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
         />
       )}
 
-      {/* Smart Wizard */}
+      {/* Smart Wizard - Now using StreamlinedWizard */}
       {isModalOpen('showSmartWizard') && (
-        <SmartWizard
+        <StreamlinedWizard
           show={isModalOpen('showSmartWizard')}
           onClose={() => closeModal('showSmartWizard')}
           onFinish={handleCreateWithWizard}

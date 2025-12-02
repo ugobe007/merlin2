@@ -2,7 +2,7 @@
  * BASELINE CALCULATION SERVICE
  * 
  * Single source of truth for industry baseline calculations.
- * Used by both SmartWizardV2 and AI optimization.
+ * Used by StreamlinedWizard and AI optimization.
  * 
  * This service queries the Supabase database for use case configurations
  * and calculates recommended BESS sizing based on actual data.
@@ -14,6 +14,7 @@ import { useCaseService } from './useCaseService';
 import { baselineCache } from './cacheService';
 import { USE_CASE_TEMPLATES } from '../data/useCaseTemplates';
 import type { UseCaseTemplate } from '../types/useCase.types';
+import { DATACENTER_TIER_STANDARDS, AMENITY_POWER_STANDARDS } from './useCasePowerCalculations';
 
 export interface BaselineCalculationResult {
   powerMW: number;
@@ -461,28 +462,13 @@ function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: nu
   const tierClass = useCaseData.tierClassification || 'tier_3';
   const tier = tierClass.replace('_', ''); // Convert tier_3 to tier3
   
-  // Calculate BESS sizing based on tier and facility size
-  let bessMultiplier = 0.5; // Default 50% of capacity
-  let duration = 4; // Default 4 hours
-  let description = 'Tier III';
+  // ✅ USE SSOT: Get tier standards from useCasePowerCalculations.ts
+  const tierKey = tier as keyof typeof DATACENTER_TIER_STANDARDS;
+  const tierStandards = DATACENTER_TIER_STANDARDS[tierKey] || DATACENTER_TIER_STANDARDS.tier3;
   
-  if (tier === 'tier4') {
-    bessMultiplier = 0.7; // 70% for Tier IV (fault tolerant)
-    duration = 6;
-    description = 'Tier IV (Fault Tolerant)';
-  } else if (tier === 'tier3') {
-    bessMultiplier = 0.5; // 50% for Tier III (concurrently maintainable)
-    duration = 4;
-    description = 'Tier III (Concurrently Maintainable)';
-  } else if (tier === 'tier2') {
-    bessMultiplier = 0.4; // 40% for Tier II
-    duration = 3;
-    description = 'Tier II (Redundant Components)';
-  } else if (tier === 'tier1') {
-    bessMultiplier = 0.3; // 30% for Tier I
-    duration = 2;
-    description = 'Tier I (Basic Capacity)';
-  }
+  const bessMultiplier = tierStandards.bessMultiplier;
+  const duration = tierStandards.durationHours;
+  const description = tierStandards.name;
   
   const powerMW = Math.max(0.5, Math.round(capacity * bessMultiplier * 100) / 100);
   
@@ -711,24 +697,42 @@ export function calculateGridStrategySavings(
  * - Peak concurrency factor
  */
 function calculateEVChargingBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
-  // FIXED: Match template field names (numberOfDCFastChargers, numberOfLevel2Chargers)
-  const level2Count = parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+  // FIXED: Support ALL field name variants from database and UI
+  // Database seeds use: level2Count, dcfastCount, numberOfLevel1Chargers
+  // Migration uses: numberOfLevel2Chargers, numberOfDCFastChargers
+  const level1Count = parseInt(useCaseData.level1Count || useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0;
+  const level2Count = parseInt(useCaseData.level2Count || useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+  const level1Power = 1.9; // kW (Level 1 standard)
   const level2Power = parseFloat(useCaseData.level2Power) || 19.2; // kW (commercial Level 2 standard)
-  const dcFastCount = parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
+  const dcFastCount = parseInt(useCaseData.dcfastCount || useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
   const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150; // kW (DC fast charger standard)
   const concurrency = Math.min(parseInt(useCaseData.peakConcurrency) || 70, 80) / 100; // 70% default
   
+  const totalLevel1 = (level1Count * level1Power) / 1000; // MW
   const totalLevel2 = (level2Count * level2Power) / 1000; // MW
   const totalDCFast = (dcFastCount * dcFastPower) / 1000; // MW
-  const totalCharging = totalLevel2 + totalDCFast;
+  const totalCharging = totalLevel1 + totalLevel2 + totalDCFast;
   
   if (import.meta.env.DEV) {
-    console.log('🔌 [EV Charging Calculation] Field mapping check:', {
-      rawData: useCaseData,
-      numberOfLevel2Chargers: useCaseData.numberOfLevel2Chargers,
-      numberOfDCFastChargers: useCaseData.numberOfDCFastChargers
+    console.log('🔌 [EV Charging Baseline] Field mapping check:', {
+      rawDataKeys: Object.keys(useCaseData || {}),
+      // Level 1 variants
+      level1Count_raw: useCaseData.level1Count,
+      numberOfLevel1Chargers_raw: useCaseData.numberOfLevel1Chargers,
+      resolved_level1: level1Count,
+      // Level 2 variants
+      level2Count_raw: useCaseData.level2Count,
+      numberOfLevel2Chargers_raw: useCaseData.numberOfLevel2Chargers,
+      resolved_level2: level2Count,
+      // DC Fast variants
+      dcfastCount_raw: useCaseData.dcfastCount,
+      numberOfDCFastChargers_raw: useCaseData.numberOfDCFastChargers,
+      resolved_dcFast: dcFastCount
     });
-    console.log('🔌 [EV Charging Calculation] Power breakdown:', {
+    console.log('🔌 [EV Charging Baseline] Power breakdown:', {
+      level1Count,
+      level1Power,
+      level1Total: totalLevel1.toFixed(3) + ' MW',
       level2Count,
       level2Power,
       level2Total: totalLevel2.toFixed(3) + ' MW',
@@ -800,7 +804,7 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
     powerMW: roundedPowerMW,
     durationHrs: 2, // Short duration for demand management
     solarMW: 0, // ✅ FIXED: Don't auto-add solar - let user decide
-    description: `EV Charging: ${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW) + ${dcFastCount} DC Fast (${(totalDCFast * 1000).toFixed(0)}kW)`,
+    description: `EV Charging: ${level1Count > 0 ? level1Count + ' L1 (' + (totalLevel1 * 1000).toFixed(0) + 'kW) + ' : ''}${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW) + ${dcFastCount} DC Fast (${(totalDCFast * 1000).toFixed(0)}kW)`,
     dataSource: 'Calculated from charger specifications',
     gridConnection,
     gridCapacity,
@@ -930,9 +934,88 @@ export function validateBessSizing(
   
   console.warn(warning);
   
+  
   return {
     isValid: false,
     warning,
     ratio
+  };
+}
+
+// ============================================================================
+// LEGACY COMPATIBILITY - calculateBESSSize
+// ============================================================================
+
+/**
+ * @deprecated Use calculateDatabaseBaseline() for new code
+ * 
+ * This function maintains backward compatibility with dataIntegrationService.ts
+ * which previously imported from bessDataService.ts.
+ */
+export interface BESSSizingParameters {
+  peakDemandkW: number;
+  averageDemandkW: number;
+  dailyEnergyConsumptionkWh: number;
+  peakDemandReductionTargetPercent: number;
+  recommendedPowerMW: number;
+  recommendedDurationHours: number;
+  recommendedCapacityMWh: number;
+  estimatedAnnualSavings: number;
+}
+
+export function calculateBESSSize(params: {
+  peakDemandkW: number;
+  averageDemandkW: number;
+  dailyEnergyConsumptionkWh: number;
+  useCase: string;
+  primaryObjective: 'peak-shaving' | 'backup' | 'arbitrage' | 'all';
+}): BESSSizingParameters {
+  const { peakDemandkW, averageDemandkW, dailyEnergyConsumptionkWh, primaryObjective } = params;
+  
+  let recommendedPowerMW: number;
+  let recommendedDurationHours: number;
+  let peakShavingPercent = 30;
+  
+  switch (primaryObjective) {
+    case 'peak-shaving':
+      recommendedPowerMW = (peakDemandkW * 0.30) / 1000; // 30% peak shaving
+      recommendedDurationHours = 2;
+      peakShavingPercent = 30;
+      break;
+      
+    case 'backup':
+      recommendedPowerMW = (averageDemandkW * 1.2) / 1000; // 120% of average
+      recommendedDurationHours = 4;
+      peakShavingPercent = 0;
+      break;
+      
+    case 'arbitrage':
+      recommendedPowerMW = (peakDemandkW * 0.6) / 1000;
+      recommendedDurationHours = 6;
+      peakShavingPercent = 20;
+      break;
+      
+    case 'all':
+    default:
+      recommendedPowerMW = (peakDemandkW * 0.4) / 1000;
+      recommendedDurationHours = 4;
+      peakShavingPercent = 25;
+      break;
+  }
+  
+  const recommendedCapacityMWh = recommendedPowerMW * recommendedDurationHours;
+  
+  // Estimate savings: peak shaving typically saves $100-200/kW/year
+  const estimatedAnnualSavings = peakDemandkW * (peakShavingPercent / 100) * 150;
+  
+  return {
+    peakDemandkW,
+    averageDemandkW,
+    dailyEnergyConsumptionkWh,
+    peakDemandReductionTargetPercent: peakShavingPercent,
+    recommendedPowerMW,
+    recommendedDurationHours,
+    recommendedCapacityMWh,
+    estimatedAnnualSavings
   };
 }

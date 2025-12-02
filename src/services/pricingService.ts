@@ -1,15 +1,18 @@
 /**
- * PRICING SERVICE - Single Source of Truth
+ * ⚠️ DEPRECATED - DO NOT USE FOR NEW CODE
  * 
- * Centralized pricing calculations for BESS systems using Grid-Synk industry standards.
- * All pricing logic flows through this service to ensure consistency.
+ * This file uses legacy Malaysian Ringgit (RM) pricing which conflicts
+ * with the USD-based unified pricing system.
  * 
- * Industry Standards (Grid-Synk):
- * - Battery: RM 800-1200/kWh depending on scale
- * - PCS: RM 200-300/kW depending on capacity
- * - Transformer: RM 150-250/kVA
- * - Installation: 15-20% of equipment cost
- * - Margin: 20-25% standard
+ * USE INSTEAD:
+ *   → unifiedPricingService.ts - getBatteryPricing(), getInverterPricing()
+ *   → equipmentCalculations.ts - calculateEquipmentBreakdown()
+ *   → centralizedCalculations.ts - calculateFinancialMetrics()
+ *   → unifiedQuoteCalculator.ts - calculateQuote() ← SINGLE ENTRY POINT
+ * 
+ * This file will be removed in a future release.
+ * 
+ * @deprecated Use unifiedPricingService.ts for all equipment pricing
  */
 
 import { 

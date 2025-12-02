@@ -4,7 +4,6 @@ import { formatPowerCompact } from '../../utils/powerFormatting';
 
 /**
  * AI Wizard Modal Component
- * Extracted from SmartWizardV2 to reduce file size and improve maintainability
  * Displays AI-powered optimization suggestions for BESS configuration
  */
 

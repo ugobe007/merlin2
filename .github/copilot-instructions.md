@@ -1,8 +1,24 @@
 # Copilot Instructions for Merlin BESS Quote Builder
 
+## 🚀 BUSINESS STRATEGY - READ FIRST!
+
+**BEFORE making ANY changes, read:** `MERLIN_STRATEGIC_ROADMAP.md` in project root
+- Contains the 5-phase business plan
+- Merlin = Platform/Engine powering SMB verticals + Merlin Pro
+- Updated December 1, 2025
+
+## 🎨 UI/UX DESIGN - READ SECOND!
+
+**BEFORE making ANY UI changes, read:** `DESIGN_NOTES.md` in project root
+- Contains current design specifications, color palette, component layouts
+- Updated after each design session
+- **AI agents MUST update this file after significant UI changes**
+
+---
+
 ## ⚠️ CRITICAL: Single Sources of Truth
 
-**CALCULATION ARCHITECTURE - FOUR PILLARS:**
+**CALCULATION ARCHITECTURE - SIX PILLARS:**
 
 1. **Quote Calculator** → `unifiedQuoteCalculator.ts` (NEW - Nov 28, 2025)
    - **USE THIS FOR ALL QUOTE CALCULATIONS**
@@ -17,23 +33,43 @@
    - Master function: `calculateUseCasePower(slug, useCaseData)`
    - ✅ **SINGLE SOURCE OF TRUTH** for all power calculations
 
-3. **Financial Calculations** → `centralizedCalculations.ts`
+3. **EV Charging Hub Calculations** → `evChargingCalculations.ts` (NEW - Nov 30, 2025)
+   - **USE FOR ALL EV CHARGING CONFIGURATIONS**
+   - Supports: Level 2 (7/11/19/22 kW), DCFC (50/150 kW), HPC (250/350 kW)
+   - `calculateEVHubPower()` - Power requirements with concurrency
+   - `calculateEVHubCosts()` - Hardware, installation, make-ready costs
+   - `calculateEVHubBESSSize()` - Recommended BESS for peak shaving
+   - ⚠️ **NO "Level 3" EXISTS** - Industry uses L1, L2, DCFC, HPC
+   - ✅ **SINGLE SOURCE OF TRUTH** for EV charging calculations
+
+4. **Financial Calculations** → `centralizedCalculations.ts`
    - `calculateFinancialMetrics()` - NPV, IRR, ROI, payback
    - Database-driven constants (not hardcoded)
    - Advanced analysis: sensitivity, risk, Monte Carlo
    - ✅ **SINGLE SOURCE OF TRUTH** for all financial metrics
 
-4. **Equipment Pricing** → `equipmentCalculations.ts`
+5. **Equipment Pricing** → `equipmentCalculations.ts`
    - `calculateEquipmentBreakdown()` - Batteries, inverters, transformers
    - **FIXED Nov 28**: Small systems (< 1 MW) now priced per-kWh, not per-unit
    - Market intelligence integration via NREL ATB 2024
-   - ✅ **SINGLE SOURCE OF TRUTH** for equipment costs
+   - ✅ **SINGLE SOURCE OF TRUTH** for BESS equipment costs
+
+6. **Professional Financial Model** → `professionalFinancialModel.ts` (NEW - Nov 29, 2025)
+   - **USE FOR BANK/INVESTOR-READY DOCUMENTS**
+   - `generateProfessionalModel()` - Full 3-statement model with DSCR
+   - Features: 3-Statement Model, DSCR, Levered/Unlevered IRR, MACRS, Revenue Stacking
+   - `generateSensitivityMatrix()` - Parameter sensitivity for banks
+   - ✅ **SINGLE SOURCE OF TRUTH** for professional project finance
 
 **PROTECTED FILES - DO NOT MODIFY WITHOUT REVIEW:**
 - `advancedFinancialModeling.ts` - IRR-based pricing models
 - `useCasePowerCalculations.ts` - Industry power standards
+- `evChargingCalculations.ts` - EV charger specs and pricing
 - `centralizedCalculations.ts` - Financial formulas
 - `equipmentCalculations.ts` - Equipment pricing logic
+- `professionalFinancialModel.ts` - Bank-ready 3-statement model
+- `baselineService.ts` - Database-driven BESS sizing + calculateBESSSize()
+- `dataIntegrationService.ts` - Unified API (uses baselineService)
 
 **DEPRECATED - DO NOT USE:**
 - ❌ `bessDataService.calculateBESSFinancials()` - Use `unifiedQuoteCalculator.calculateQuote()`
@@ -41,6 +77,7 @@
 - ❌ `marketIntelligence.simplePayback` - Use `calculateFinancialMetrics().paybackYears`
 - ❌ `InteractiveConfigDashboard` hardcoded prices - Use `calculateEquipmentBreakdown()`
 - ❌ ANY hardcoded $/kWh values - Use `getBatteryPricing()` from unifiedPricingService
+- ❌ "Level 3 chargers" - **NO SUCH THING** - Use DCFC or HPC
 
 **FORBIDDEN PATTERNS:**
 ```typescript
@@ -131,7 +168,7 @@ interface FinancialCalculationInput {
 
 **Example**:
 ```typescript
-// In SmartWizardV2.tsx or any component
+// In StreamlinedWizard.tsx or any component
 const baseline = await calculateDatabaseBaseline(template, answers);
 const pricing = await getBatteryPricing(baseline.bessKwh);
 
@@ -179,7 +216,7 @@ if (user?.tier === 'PREMIUM' || user?.tier === 'ADMIN') {
 1. Add to Supabase `use_cases` table (SQL or admin panel)
 2. Create custom questions in `use_case_configurations`
 3. Add baseline calculations to `baselineService.ts` if industry-specific
-4. Test with SmartWizardV2
+4. Test with StreamlinedWizard (at `/wizard` route)
 
 ### Modifying Financial Calculations
 1. **DO NOT MODIFY** protected services: `advancedFinancialModeling.ts`, `baselineService.ts`, `unifiedPricingService.ts`
@@ -224,10 +261,10 @@ flyctl deploy            # Deploy to production
    - ❌ `industryStandardFormulas.calculateFinancialMetrics()` - name conflict, deprecated
    - ✅ **Use `centralizedCalculations.calculateFinancialMetrics()` for ALL financial calculations**
 
-3. **SmartWizardV2 Missing Financial Calculations**:
-   - Current wizard calculates equipment costs but NOT financial metrics
-   - Must add `calculateFinancialMetrics()` call after equipment breakdown
-   - See `CALCULATION_AUDIT_REPORT.md` for fix
+3. **Wizard Architecture (UPDATED Dec 1, 2025)**:
+   - ✅ **StreamlinedWizard** is the SINGLE SOURCE OF TRUTH for all wizard flows
+   - SmartWizardV2/V3 have been REMOVED from codebase
+   - StreamlinedWizard uses `centralizedCalculations.ts` for all financial metrics
 
 4. **Modal Props**: ModalManager has 20+ prop type errors. Use ModalRenderer for all new modals.
 

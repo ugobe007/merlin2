@@ -10,6 +10,10 @@
  * - ASHRAE standards
  * - Industry-specific research papers
  * 
+ * EV CHARGING NOTE: For full EV Charging Hub calculations (with multiple charger
+ * types, HPC support, and cost estimation), use evChargingCalculations.ts which
+ * is the SINGLE SOURCE OF TRUTH for EV-specific calculations.
+ * 
  * DO NOT modify these calculations without consulting industry data!
  */
 
@@ -53,6 +57,111 @@ export const POWER_DENSITY_STANDARDS = {
   // Special
   agriculturePerAcre: 0.6,  // 0.3-1.0 kW/acre (irrigation pumps at peak)
   airportPerMillion: 1.5,   // 1.2-2.0 MW per million passengers/year
+};
+
+/**
+ * DATACENTER TIER STANDARDS - SSOT for BESS sizing by tier
+ * Source: Uptime Institute Tier Classification System
+ * 
+ * Tier I:   99.671% uptime (28.8 hrs downtime/year) - Basic capacity
+ * Tier II:  99.741% uptime (22.0 hrs downtime/year) - Redundant components  
+ * Tier III: 99.982% uptime (1.6 hrs downtime/year) - Concurrently maintainable
+ * Tier IV:  99.995% uptime (0.4 hrs downtime/year) - Fault tolerant
+ */
+export const DATACENTER_TIER_STANDARDS = {
+  tier1: {
+    name: 'Tier I (Basic Capacity)',
+    bessMultiplier: 0.30,      // 30% of IT load
+    durationHours: 2,
+    description: 'Basic capacity, single path, no redundancy'
+  },
+  tier2: {
+    name: 'Tier II (Redundant Components)',
+    bessMultiplier: 0.40,      // 40% of IT load
+    durationHours: 3,
+    description: 'Redundant capacity components, single path'
+  },
+  tier3: {
+    name: 'Tier III (Concurrently Maintainable)',
+    bessMultiplier: 0.50,      // 50% of IT load
+    durationHours: 4,
+    description: 'Multiple paths, one active, concurrently maintainable'
+  },
+  tier4: {
+    name: 'Tier IV (Fault Tolerant)',
+    bessMultiplier: 0.70,      // 70% of IT load
+    durationHours: 6,
+    description: 'Multiple active paths, fault tolerant'
+  }
+};
+
+/**
+ * AMENITY POWER STANDARDS - SSOT for hotel/hospitality amenity loads
+ * Source: ASHRAE HVAC Applications Handbook, hospitality energy audits
+ * 
+ * These represent PEAK DEMAND for each amenity type.
+ * Used by hotel, resort, and hospitality use cases.
+ */
+export const AMENITY_POWER_STANDARDS = {
+  // Water Features
+  swimmingPool: {
+    name: 'Swimming Pool',
+    powerKW: 25,               // Pumps, heating, lighting peak
+    description: 'Pool pumps, heating, underwater lighting'
+  },
+  spaHotTub: {
+    name: 'Spa/Hot Tub',
+    powerKW: 20,               // Heating elements, jets, pumps
+    description: 'Spa heating, jet pumps, circulation'
+  },
+  
+  // Fitness & Recreation
+  fitnessCenter: {
+    name: 'Fitness Center',
+    powerKW: 15,               // Equipment, HVAC, lighting
+    description: 'Gym equipment, enhanced HVAC, lighting'
+  },
+  tennisCourtLighted: {
+    name: 'Lighted Tennis Court',
+    powerKW: 8,                // Per court lighting
+    description: 'Sports lighting per court'
+  },
+  
+  // Food & Beverage
+  restaurant: {
+    name: 'Full-Service Restaurant',
+    powerKW: 50,               // Kitchen equipment, HVAC, lighting
+    description: 'Commercial kitchen, dining area HVAC'
+  },
+  barLounge: {
+    name: 'Bar/Lounge',
+    powerKW: 20,               // Refrigeration, lighting, audio
+    description: 'Beverage coolers, ambient lighting, A/V'
+  },
+  banquetHall: {
+    name: 'Banquet/Conference Hall',
+    powerKW: 30,               // Per 5000 sq ft
+    description: 'HVAC, lighting, A/V equipment'
+  },
+  
+  // Guest Services
+  laundryFacility: {
+    name: 'Commercial Laundry',
+    powerKW: 40,               // Industrial washers, dryers
+    description: 'Commercial laundry equipment'
+  },
+  parkingGarage: {
+    name: 'Parking Garage',
+    powerKW: 5,                // Per 100 spaces
+    description: 'Lighting, ventilation, gates'
+  },
+  
+  // EV Charging (reference only - use evChargingCalculations.ts for full calcs)
+  evChargingL2: {
+    name: 'EV Charger (Level 2)',
+    powerKW: 7.2,              // Standard 7.2 kW charger
+    description: 'Guest/valet EV charging'
+  }
 };
 
 /**
@@ -169,10 +278,15 @@ export function calculateDatacenterPower(
 
 /**
  * Calculate power requirement for EV Charging Station
+ * 
+ * @deprecated Use evChargingCalculations.ts for full EV hub calculations
+ * This function is kept for backward compatibility with legacy code.
+ * For new code, use calculateEVHubPower() from evChargingCalculations.ts
+ * 
  * Source: SAE J1772, CCS/CHAdeMO standards
  * 
  * @param level1Count - Number of Level 1 chargers (1.9 kW each)
- * @param level2Count - Number of Level 2 chargers (19.2 kW each)
+ * @param level2Count - Number of Level 2 chargers (19.2 kW each)  
  * @param dcFastCount - Number of DC Fast chargers (150 kW each)
  * @returns Power in MW
  */
@@ -181,9 +295,13 @@ export function calculateEVChargingPower(
   level2Count: number = 0,
   dcFastCount: number = 0
 ): PowerCalculationResult {
-  // Industry standard power ratings
+  // ⚠️ DEPRECATED: This uses simplified fixed power ratings
+  // For accurate calculations with variable charger types, use evChargingCalculations.ts
+  
+  // Delegate to evChargingCalculations.ts when possible
+  // For now, keep legacy logic for backward compatibility
   const level1Power = 1.9;   // kW (120V/16A)
-  const level2Power = 19.2;  // kW (240V/80A commercial)
+  const level2Power = 19.2;  // kW (240V/80A commercial)  
   const dcFastPower = 150;   // kW (typical commercial DC fast)
   
   const level1TotalKW = level1Count * level1Power;
@@ -197,7 +315,7 @@ export function calculateEVChargingPower(
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: 2, // Short duration for demand charge management
     description: `EV Charging: L1(${level1Count}×${level1Power}kW) + L2(${level2Count}×${level2Power}kW) + DC(${dcFastCount}×${dcFastPower}kW) = ${totalKW.toFixed(1)} kW`,
-    calculationMethod: 'SAE J1772/CCS standards',
+    calculationMethod: 'SAE J1772/CCS standards (legacy - use evChargingCalculations.ts for new code)',
     inputs: { level1Count, level2Count, dcFastCount, level1Power, level2Power, dcFastPower }
   };
 }
@@ -608,14 +726,72 @@ export function calculateUseCasePower(
       
     case 'ev-charging':
     case 'ev-charging-station':
-      // Support multiple field name formats from different parts of the UI
-      // Database: dcfastCount, level2Count
-      // UI variants: numberOfDCFastChargers, dcFastChargers, numberOfLevel2Chargers, level2Chargers
-      return calculateEVChargingPower(
-        parseInt(useCaseData.level1Count || useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0,
-        parseInt(useCaseData.level2Count || useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0,
-        parseInt(useCaseData.dcfastCount || useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0
-      );
+    case 'ev-charging-hub':
+      // =========================================================================
+      // EV CHARGING - Uses evChargingCalculations.ts for full power tiers
+      // Supports: Level 2 (7kW/11kW/19kW/22kW), DCFC (50kW/150kW), HPC (250kW/350kW)
+      // =========================================================================
+      
+      // Support both new granular config and legacy field names
+      const evConfig = {
+        // New granular fields (from advanced UI)
+        level2_7kw: parseInt(useCaseData.level2_7kw) || 0,
+        level2_11kw: parseInt(useCaseData.level2_11kw) || 0,
+        level2_19kw: parseInt(useCaseData.level2_19kw) || 0,
+        level2_22kw: parseInt(useCaseData.level2_22kw) || 0,
+        dcfc_50kw: parseInt(useCaseData.dcfc_50kw) || 0,
+        dcfc_150kw: parseInt(useCaseData.dcfc_150kw) || 0,
+        hpc_250kw: parseInt(useCaseData.hpc_250kw) || 0,
+        hpc_350kw: parseInt(useCaseData.hpc_350kw) || 0,
+        // Legacy fields for backward compatibility
+        level1Count: parseInt(useCaseData.level1Count || useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0,
+        level2Count: parseInt(useCaseData.level2Count || useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0,
+        dcFastCount: parseInt(useCaseData.dcfastCount || useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0,
+      };
+      
+      // Check if using new granular config or legacy
+      const hasGranularConfig = evConfig.level2_7kw > 0 || evConfig.level2_11kw > 0 || 
+                                evConfig.dcfc_50kw > 0 || evConfig.hpc_250kw > 0 || evConfig.hpc_350kw > 0;
+      
+      if (hasGranularConfig) {
+        // Use new comprehensive EV charging calculation
+        // Import dynamically to avoid circular dependencies
+        const { calculateEVHubPower } = require('./evChargingCalculations');
+        const concurrency = parseInt(useCaseData.peakConcurrency) || 70;
+        const evResult = calculateEVHubPower(evConfig, concurrency);
+        
+        if (import.meta.env.DEV) {
+          console.log('🔌 [EV Hub Power] Using granular config:', {
+            config: evConfig,
+            result: evResult
+          });
+        }
+        
+        return {
+          powerMW: evResult.peakDemandMW,
+          durationHrs: 2,
+          description: evResult.description,
+          calculationMethod: evResult.calculationMethod,
+          inputs: evConfig
+        };
+      }
+      
+      // Fall back to legacy calculation for simple configs
+      const evLevel1 = evConfig.level1Count;
+      const evLevel2 = evConfig.level2Count;
+      const evDcFast = evConfig.dcFastCount;
+      
+      // 🔌 DEBUG: Log all EV charging field lookups
+      if (import.meta.env.DEV) {
+        console.log('🔌 [EV Charging Power] Legacy field resolution:', {
+          useCaseDataKeys: Object.keys(useCaseData || {}),
+          resolved_level1: evLevel1,
+          resolved_level2: evLevel2,
+          resolved_dcFast: evDcFast
+        });
+      }
+      
+      return calculateEVChargingPower(evLevel1, evLevel2, evDcFast);
       
     case 'airport':
       // Convert raw passenger count to millions (user enters 600000, we need 0.6)

@@ -2,7 +2,7 @@ import React from 'react';
 
 /**
  * Wizard Footer Component
- * Extracted from SmartWizardV2 for better maintainability
+ * Extracted from wizard for better maintainability
  * Handles navigation buttons and step progress
  */
 

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search } from 'lucide-react';
+import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle } from 'lucide-react';
 import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
+import { generateProfessionalModel, type ProfessionalModelResult } from '@/services/professionalFinancialModel';
+import { calculateQuote } from '@/services/unifiedQuoteCalculator';
+import { getBatteryPricing, getSolarPricing, getWindPricing, getGeneratorPricing } from '@/services/unifiedPricingService';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
+import { saveAs } from 'file-saver';
 import merlinImage from '../assets/images/new_Merlin.png';
 
 /**
@@ -49,7 +54,7 @@ interface AdvancedQuoteBuilderProps {
   initialView?: ViewMode;
 }
 
-type ViewMode = 'landing' | 'custom-config' | 'interactive-dashboard';
+type ViewMode = 'landing' | 'custom-config' | 'interactive-dashboard' | 'professional-model';
 
 export default function AdvancedQuoteBuilder({
   show,
@@ -73,6 +78,17 @@ export default function AdvancedQuoteBuilder({
   const [viewMode, setViewMode] = useState<ViewMode>(initialView);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<'word' | 'excel'>('word');
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+  
+  // NEW: Professional Financial Model state
+  const [professionalModel, setProfessionalModel] = useState<ProfessionalModelResult | null>(null);
+  const [isGeneratingModel, setIsGeneratingModel] = useState(false);
+  const [selectedISORegion, setSelectedISORegion] = useState<'CAISO' | 'ERCOT' | 'PJM' | 'NYISO' | 'ISO-NE' | 'MISO' | 'SPP'>('CAISO');
+  const [projectLeverage, setProjectLeverage] = useState(60); // % debt
+  const [interestRate, setInterestRate] = useState(7); // %
+  const [loanTermYears, setLoanTermYears] = useState(15);
   
   // NEW: State for Interactive Dashboard integration
   const [solarMW, setSolarMW] = useState(0);
@@ -148,34 +164,38 @@ export default function AdvancedQuoteBuilder({
   
   // Calculate system cost based on storage size and NREL ATB 2024 pricing
   useEffect(() => {
-    const effectiveBatteryKwh = storageSizeMWh * 1000;
+    const calculateCosts = async () => {
+      const effectiveBatteryKwh = storageSizeMWh * 1000;
+      
+      // ✅ USE SSOT: Get battery pricing from unifiedPricingService (NREL ATB 2024)
+      const batteryPricing = await getBatteryPricing(storageSizeMW, durationHours, 'United States');
+      const pricePerKwh = batteryPricing.pricePerKWh; // Tiered by system size automatically
+      
+      // Calculate base BESS cost
+      const bessCapEx = effectiveBatteryKwh * pricePerKwh;
+      
+      // Add BOS and EPC costs (using typical values)
+      const bosMultiplier = 1.15; // 15% BOS costs
+      const epcMultiplier = 1.10; // 10% EPC costs
+      
+      // ✅ USE SSOT: Get renewable pricing from unifiedPricingService
+      const solarPricing = await getSolarPricing();
+      const windPricing = await getWindPricing();
+      const generatorPricing = await getGeneratorPricing();
+      
+      const solarCost = solarPVIncluded ? solarCapacityKW * solarPricing.pricePerWatt * 1000 : 0; // $/W → $/kW
+      const windCost = windTurbineIncluded ? windCapacityKW * windPricing.pricePerKW : 0;
+      const fuelCellCost = fuelCellIncluded ? fuelCellCapacityKW * 3000 : 0; // Industry: $3,000/kW hydrogen
+      const dieselCost = dieselGenIncluded ? dieselGenCapacityKW * generatorPricing.pricePerKW : 0;
+      const natGasCost = naturalGasGenIncluded ? naturalGasCapacityKW * 700 : 0; // Industry: $700/kW nat gas
+      
+      const calculatedSystemCost = (bessCapEx * bosMultiplier * epcMultiplier) + 
+        solarCost + windCost + fuelCellCost + dieselCost + natGasCost;
+      
+      onSystemCostChange(calculatedSystemCost);
+    };
     
-    // BESS pricing per kWh - NREL ATB 2024 with tiered economies of scale
-    let pricePerKwh = 200; // Default: Small systems (<1 MWh) - premium for small scale
-    if (effectiveBatteryKwh >= 10000) {
-      pricePerKwh = 140; // Utility scale (>10 MWh): economies of scale
-    } else if (effectiveBatteryKwh >= 1000) {
-      pricePerKwh = 155; // Medium systems (1-10 MWh): NREL ATB 2024 base rate
-    }
-    
-    // Calculate base BESS cost
-    const bessCapEx = effectiveBatteryKwh * pricePerKwh;
-    
-    // Add BOS and EPC costs (using typical values)
-    const bosMultiplier = 1.15; // 15% BOS costs
-    const epcMultiplier = 1.10; // 10% EPC costs
-    
-    // Renewable costs using NREL ATB 2024 pricing
-    const solarCost = solarPVIncluded ? solarCapacityKW * 850 : 0; // NREL: $0.85/W = $850/kWp
-    const windCost = windTurbineIncluded ? windCapacityKW * 1200 : 0; // NREL: $1,200/kW
-    const fuelCellCost = fuelCellIncluded ? fuelCellCapacityKW * 3000 : 0; // Industry: $3,000/kW hydrogen
-    const dieselCost = dieselGenIncluded ? dieselGenCapacityKW * 500 : 0; // NREL: $500/kW diesel
-    const natGasCost = naturalGasGenIncluded ? naturalGasCapacityKW * 700 : 0; // Industry: $700/kW nat gas
-    
-    const calculatedSystemCost = (bessCapEx * bosMultiplier * epcMultiplier) + 
-      solarCost + windCost + fuelCellCost + dieselCost + natGasCost;
-    
-    onSystemCostChange(calculatedSystemCost);
+    calculateCosts();
   }, [storageSizeMW, durationHours, storageSizeMWh, solarPVIncluded, solarCapacityKW, 
       windTurbineIncluded, windCapacityKW, fuelCellIncluded, fuelCellCapacityKW,
       dieselGenIncluded, dieselGenCapacityKW, naturalGasGenIncluded, naturalGasCapacityKW, onSystemCostChange]);
@@ -223,99 +243,352 @@ export default function AdvancedQuoteBuilder({
 
   if (!show) return null;
 
-  // Tool cards configuration
+  // Tool cards configuration - organized into tiers
+  // CORE: Always available | PROFESSIONAL: Premium badge | PREMIUM: Locked/teased
   const tools = [
+    // === CORE TOOLS (Row 1) ===
     {
       id: 'custom-config',
-      icon: (
-        <div className="w-40 h-40 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-2 shadow-2xl">
-          <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain" />
-        </div>
-      ),
-      title: 'Start Here',
-      description: 'Complete BESS design with electrical specs, renewables, and detailed system parameters',
-      color: 'from-amber-500 to-orange-500',
+      icon: <Sliders className="w-8 h-8" />,
+      title: 'System Configuration',
+      description: 'Design your complete BESS system with electrical specs, renewables, and detailed parameters',
+      color: 'from-blue-500 via-indigo-500 to-purple-600',
       action: () => setViewMode('custom-config'),
-      largeFont: true, // Make this button's font larger
+      tier: 'core',
     },
     {
       id: 'interactive-dashboard',
       icon: <Gauge className="w-8 h-8" />,
       title: 'Interactive Dashboard',
-      description: 'Fine-tune your configuration with real-time sliders, see instant cost and ROI updates',
+      description: 'Fine-tune with real-time sliders and see instant cost & ROI updates',
       color: 'from-cyan-400 via-blue-500 to-indigo-600',
       action: () => setViewMode('interactive-dashboard'),
-    },
-    {
-      id: 'ai-optimization',
-      icon: <Wand2 className="w-8 h-8" />,
-      title: 'Smart Wizard',
-      description: 'Let our AI suggest the optimal system configuration for your use case',
-      color: 'from-purple-400 via-pink-500 to-rose-600',
-      action: () => {
-        // Set flag to skip intro and go directly to step 0 (Industry Template)
-        if (setSkipWizardIntro) {
-          setSkipWizardIntro(true);
-        }
-        onClose();
-        onOpenSmartWizard?.();
-      },
+      tier: 'core',
     },
     {
       id: 'financial-calculator',
       icon: <PiggyBank className="w-8 h-8" />,
       title: 'Financial Calculator',
-      description: 'Calculate ROI, payback period, and financing options',
+      description: 'Calculate ROI, payback period, NPV, and financing options',
       color: 'from-emerald-400 via-green-500 to-teal-600',
       action: () => {
         onClose();
         onOpenFinancing?.();
       },
+      tier: 'core',
+    },
+    // === PROFESSIONAL TOOLS (Row 2) ===
+    {
+      id: 'professional-financial',
+      icon: <Landmark className="w-8 h-8" />,
+      title: 'Bank-Ready Model',
+      description: '3-Statement pro-forma with DSCR, LCOS, IRR, MACRS, and revenue stacking',
+      color: 'from-amber-400 via-yellow-500 to-orange-600',
+      action: () => setViewMode('professional-model'),
+      tier: 'professional',
+      badge: 'NEW',
     },
     {
-      id: 'market-analytics',
-      icon: <BarChart3 className="w-8 h-8" />,
-      title: 'Market Analytics',
-      description: 'View market trends, pricing intelligence, and competitive analysis',
-      color: 'from-orange-400 via-red-500 to-pink-600',
-      action: () => {
-        onClose();
-        onOpenMarketIntel?.();
-      },
-    },
-    {
-      id: 'component-library',
-      icon: <Box className="w-8 h-8" />,
-      title: 'Vendor Library',
-      description: 'Browse available batteries, inverters, and balance of system equipment',
-      color: 'from-indigo-400 via-purple-500 to-violet-600',
-      action: () => {
-        alert('🔧 Component Library\n\nBrowse batteries, solar panels, inverters, and BOS equipment.\n\nComing soon...');
-        onClose();
-      },
+      id: 'quote-preview',
+      icon: <FileSpreadsheet className="w-8 h-8" />,
+      title: 'Quote Export',
+      description: 'Generate professional quotes in Word and Excel formats',
+      color: 'from-blue-400 via-indigo-500 to-purple-600',
+      action: () => setShowQuotePreview(true),
+      tier: 'professional',
     },
     {
       id: 'custom-reports',
       icon: <ScrollText className="w-8 h-8" />,
       title: 'Custom Reports',
-      description: 'Generate detailed proposals, technical specs, and custom documentation',
+      description: 'Generate detailed proposals, technical specs, and documentation',
       color: 'from-teal-400 via-cyan-500 to-sky-600',
       action: () => {
         onClose();
         onOpenQuoteTemplates?.();
       },
+      tier: 'professional',
+    },
+    // === PREMIUM TOOLS (Row 3 - Teased/Locked) ===
+    {
+      id: 'market-analytics',
+      icon: <BarChart3 className="w-8 h-8" />,
+      title: 'Market Analytics',
+      description: 'Market trends, pricing intelligence, and competitive analysis',
+      color: 'from-orange-400 via-red-500 to-pink-600',
+      action: () => {
+        onClose();
+        onOpenMarketIntel?.();
+      },
+      tier: 'premium',
+      locked: false, // Set to true to lock
     },
     {
-      id: 'quote-preview',
-      icon: <Search className="w-8 h-8" />,
-      title: 'Quote Preview',
-      description: 'See what your professional quote looks like in Word and Excel formats',
-      color: 'from-blue-400 via-indigo-500 to-purple-600',
-      action: () => setShowQuotePreview(true),
+      id: 'vendor-library',
+      icon: <Box className="w-8 h-8" />,
+      title: 'Vendor Library',
+      description: 'Browse batteries, inverters, solar panels, and BOS equipment',
+      color: 'from-indigo-400 via-purple-500 to-violet-600',
+      action: () => {
+        alert('🔧 Vendor Library\n\nBrowse and compare equipment from leading manufacturers.\n\n✨ Coming Q1 2026');
+      },
+      tier: 'premium',
+      locked: true,
+      comingSoon: true,
+    },
+    {
+      id: 'ai-optimization',
+      icon: <Wand2 className="w-8 h-8" />,
+      title: 'AI Optimizer',
+      description: 'Let AI analyze your facility and recommend optimal configurations',
+      color: 'from-purple-400 via-pink-500 to-rose-600',
+      action: () => {
+        alert('🤖 AI Optimizer\n\nAdvanced AI-powered system optimization.\n\n✨ Coming Q1 2026');
+      },
+      tier: 'premium',
+      locked: true,
+      comingSoon: true,
     },
   ];
 
   console.log('🎭 Current viewMode:', viewMode);
+
+  // Export handler function
+  const handleExportQuote = async (format: 'word' | 'excel' | 'pdf') => {
+    setIsExporting(true);
+    setExportSuccess(false);
+    
+    try {
+      if (format === 'word') {
+        // ✅ SINGLE SOURCE OF TRUTH: Use unifiedQuoteCalculator for ALL pricing/financials
+        const quoteResult = await calculateQuote({
+          storageSizeMW,
+          durationHours,
+          solarMW: solarPVIncluded ? solarCapacityKW / 1000 : 0,
+          windMW: windTurbineIncluded ? windCapacityKW / 1000 : 0,
+          generatorMW: dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0,
+          location: location || 'California',
+          electricityRate: utilityRate,
+          gridConnection: gridConnection === 'off-grid' ? 'off-grid' : gridConnection === 'ac-coupled' ? 'on-grid' : 'limited',
+          useCase: useCase,
+        });
+        
+        // Extract values from unified calculator
+        const totalMWh = storageSizeMW * durationHours;
+        const effectiveBatteryKwh = totalMWh * 1000;
+        const bessCapEx = quoteResult.equipment.batteries.totalCost;
+        const solarCost = quoteResult.equipment.solar?.totalCost || 0;
+        const windCost = quoteResult.equipment.wind?.totalCost || 0;
+        const totalProjectCost = quoteResult.costs.totalProjectCost;
+        const annualSavings = quoteResult.financials.annualSavings;
+        const paybackYears = quoteResult.financials.paybackYears;
+        const roi25Year = quoteResult.financials.roi25Year;
+        
+        const doc = new Document({
+          sections: [{
+            children: [
+              // Header
+              new Paragraph({
+                children: [
+                  new TextRun({ text: '⚡ MERLIN Energy', bold: true, size: 48, color: '7C3AED' }),
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 },
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'Battery Energy Storage System Quote', size: 28, color: '4F46E5' }),
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 400 },
+              }),
+              
+              // Quote Info
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Quote #MER-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`, size: 20 }),
+                  new TextRun({ text: `  |  ${new Date().toLocaleDateString()}`, size: 20 }),
+                ],
+                alignment: AlignmentType.RIGHT,
+                spacing: { after: 400 },
+              }),
+
+              // Project Information Section
+              new Paragraph({ text: 'PROJECT INFORMATION', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Project Name:', bold: true })] })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+                    new TableCell({ children: [new Paragraph(projectName || 'BESS Project')] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Location:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(location || 'Not specified')] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Application:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(applicationType.charAt(0).toUpperCase() + applicationType.slice(1))] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Use Case:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(useCase.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()))] }),
+                  ]}),
+                ],
+              }),
+
+              new Paragraph({ text: '', spacing: { after: 300 } }),
+
+              // System Specifications Section
+              new Paragraph({ text: 'SYSTEM SPECIFICATIONS', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Power Rating:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${storageSizeMW.toFixed(2)} MW`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Energy Capacity:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${totalMWh.toFixed(2)} MWh (${effectiveBatteryKwh.toLocaleString()} kWh)`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Duration:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${durationHours} hours`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Battery Chemistry:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(chemistry.toUpperCase())] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Round-Trip Efficiency:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${roundTripEfficiency}%`)] }),
+                  ]}),
+                ],
+              }),
+
+              new Paragraph({ text: '', spacing: { after: 300 } }),
+
+              // Electrical Specifications
+              new Paragraph({ text: 'ELECTRICAL SPECIFICATIONS', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'AC System Voltage:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${systemVoltage}V`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'DC Battery Voltage:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${dcVoltage}V`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Inverter Type:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(inverterType === 'bidirectional' ? 'Bidirectional' : 'Unidirectional')] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Number of Inverters:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${numberOfInverters} units @ ${inverterRating} kW each`)] }),
+                  ]}),
+                ],
+              }),
+
+              new Paragraph({ text: '', spacing: { after: 300 } }),
+
+              // Pricing Section
+              new Paragraph({ text: 'PRICING & INVESTMENT', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'BESS Equipment:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${bessCapEx.toLocaleString()}`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'BOS & Installation:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${(bessCapEx * 0.25).toLocaleString()}`)] }),
+                  ]}),
+                  ...(solarPVIncluded ? [new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Solar PV System:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${solarCost.toLocaleString()}`)] }),
+                  ]})] : []),
+                  ...(windTurbineIncluded ? [new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Wind System:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${windCost.toLocaleString()}`)] }),
+                  ]})] : []),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'TOTAL PROJECT COST:', bold: true, color: '7C3AED' })] })] }),
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `$${totalProjectCost.toLocaleString()}`, bold: true, color: '7C3AED' })] })] }),
+                  ]}),
+                ],
+              }),
+
+              new Paragraph({ text: '', spacing: { after: 300 } }),
+
+              // Financial Analysis
+              new Paragraph({ text: 'FINANCIAL ANALYSIS', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Estimated Annual Savings:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${annualSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Simple Payback:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${paybackYears.toFixed(1)} years`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '25-Year ROI:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`${roi25Year.toFixed(0)}%`)] }),
+                  ]}),
+                  new TableRow({ children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Cost per kWh:', bold: true })] })] }),
+                    new TableCell({ children: [new Paragraph(`$${(totalProjectCost / effectiveBatteryKwh).toFixed(2)}/kWh`)] }),
+                  ]}),
+                ],
+              }),
+
+              new Paragraph({ text: '', spacing: { after: 400 } }),
+
+              // Footer
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'Generated by MERLIN Energy Quote Builder', italics: true, size: 18, color: '9CA3AF' }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `© ${new Date().getFullYear()} MERLIN Energy. All rights reserved.`, italics: true, size: 16, color: '9CA3AF' }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          }],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        const fileName = `${(projectName || 'BESS_Quote').replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.docx`;
+        saveAs(blob, fileName);
+        setExportSuccess(true);
+        
+        setTimeout(() => {
+          setExportSuccess(false);
+        }, 3000);
+        
+      } else if (format === 'excel') {
+        alert('📊 Excel Export\n\nExcel export coming soon!\nFor now, use Word export for full quotes.');
+      } else if (format === 'pdf') {
+        alert('📄 PDF Export\n\nPDF export coming soon!\nFor now, use Word export and convert to PDF.');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('❌ Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-600">
@@ -502,90 +775,272 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* Premium tool cards grid with 3D light gradient styling */}
-            <div className="max-w-7xl mx-auto px-6 py-12">
-              <h3 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-lg">
-                ✨ Professional Tools & Wizards
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {tools.map((tool, index) => (
-                  <button
-                    key={tool.id}
-                    onClick={tool.action}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                    className={`group relative bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 rounded-3xl text-left transition-all duration-500 will-change-transform hover:scale-105 hover:-translate-y-3 animate-fadeIn overflow-visible shadow-[0_10px_40px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.6)] border-t-2 border-white/50 ${tool.id === 'custom-config' ? 'md:col-span-2 lg:col-span-3 p-8 md:p-12 min-h-[200px]' : 'p-8 min-h-[320px]'}`}
-                  >
-                    {/* Magical glow effect on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-20 rounded-3xl transition-all duration-500 blur-xl`} />
-                    
-                    {/* Sparkle effect */}
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Sparkles className={`${tool.id === 'custom-config' ? 'w-7 h-7' : 'w-5 h-5'} text-yellow-300 animate-pulse`} />
+            {/* Welcome Popup Modal */}
+            {showWelcomePopup && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl max-w-2xl w-full shadow-2xl border border-purple-500/30 overflow-hidden animate-fadeIn">
+                  {/* Header with Merlin */}
+                  <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 p-6 text-center relative">
+                    <img src={merlinImage} alt="Merlin" className="w-24 h-24 mx-auto mb-3 drop-shadow-2xl" />
+                    <h2 className="text-2xl font-bold text-white mb-1">Welcome to the Quote Builder!</h2>
+                    <p className="text-purple-200 text-sm">Let me guide you through your professional tools</p>
+                  </div>
+                  
+                  {/* Tools explanation */}
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-start gap-4 p-4 bg-purple-800/30 rounded-xl border border-purple-500/20">
+                      <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-lg flex-shrink-0">
+                        <Sliders className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">System Configuration</h3>
+                        <p className="text-purple-200 text-sm">Start here! Design your complete BESS system with detailed electrical specs, renewable integration, and all parameters.</p>
+                      </div>
                     </div>
                     
-                    {/* Special horizontal layout for Start Here card with Merlin on left */}
-                    {tool.id === 'custom-config' ? (
-                      <div className="flex items-center gap-8">
-                        {/* Merlin on the left */}
-                        <div className="flex-shrink-0">
-                          {tool.icon}
-                        </div>
-                        
-                        {/* Content on the right */}
-                        <div className="flex-1">
-                          <h3 className="relative text-4xl md:text-5xl font-bold mb-3 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-yellow-200 group-hover:via-pink-200 group-hover:to-cyan-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-lg">
-                            {tool.title}
-                          </h3>
-                          <p className="relative text-white/90 text-lg md:text-xl leading-relaxed group-hover:text-white transition-colors duration-300 drop-shadow-md">
-                            {tool.description}
-                          </p>
-                          
-                          {/* Animated arrow indicator */}
-                          <div className="relative mt-6 flex items-center text-white/80 group-hover:text-yellow-200 transition-all duration-300">
-                            <span className="text-sm font-bold tracking-wide drop-shadow-md">Launch Tool</span>
-                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-3 group-hover:scale-110 transition-all duration-300 drop-shadow-lg" />
-                            <div className="absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
-                            </div>
-                          </div>
+                    <div className="flex items-start gap-4 p-4 bg-indigo-800/30 rounded-xl border border-indigo-500/20">
+                      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-lg flex-shrink-0">
+                        <Gauge className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">Interactive Dashboard</h3>
+                        <p className="text-indigo-200 text-sm">Fine-tune your system with real-time sliders. See instant cost and ROI updates as you adjust.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4 p-4 bg-blue-800/30 rounded-xl border border-blue-500/20">
+                      <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg flex-shrink-0">
+                        <Landmark className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">Bank-Ready Model</h3>
+                        <p className="text-blue-200 text-sm">Generate professional 3-statement financial models for investors and lenders. Includes DSCR, IRR, and MACRS depreciation.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action button */}
+                  <div className="p-6 pt-2">
+                    <button
+                      onClick={() => setShowWelcomePopup(false)}
+                      className="w-full bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 hover:from-purple-400 hover:via-indigo-400 hover:to-blue-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Got it! Let's Build a Quote ✨
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tool cards grid - Merlin themed */}
+            <div className="max-w-7xl mx-auto px-6 py-12">
+              
+              {/* FEATURED: System Configuration - Large Hero Card */}
+              <div className="mb-10">
+                <button
+                  onClick={() => setViewMode('custom-config')}
+                  className="group w-full relative bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl p-8 text-left transition-all duration-300 hover:scale-[1.02] hover:-translate-y-2 overflow-hidden shadow-2xl hover:shadow-purple-500/30 border-2 border-purple-400/50 hover:border-purple-300/70"
+                >
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-transparent to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <div className="flex items-center gap-8">
+                    {/* Merlin Image */}
+                    <div className="flex-shrink-0">
+                      <div className="w-32 h-32 bg-gradient-to-br from-purple-500/30 to-indigo-500/30 rounded-2xl p-2 shadow-2xl border border-white/20">
+                        <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain drop-shadow-lg" />
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow animate-pulse">
+                          START HERE
+                        </span>
+                      </div>
+                      <h3 className="text-3xl md:text-4xl font-bold text-white mb-3 group-hover:text-purple-100 transition-colors">
+                        System Configuration
+                      </h3>
+                      <p className="text-purple-100 text-lg leading-relaxed group-hover:text-white transition-colors max-w-2xl">
+                        Design your complete BESS system with detailed electrical specifications, renewable energy integration, and all system parameters. This is where your quote begins.
+                      </p>
+                      
+                      {/* Arrow indicator */}
+                      <div className="mt-6 flex items-center text-purple-200 group-hover:text-white transition-all">
+                        <span className="font-bold">Launch Configuration Tool</span>
+                        <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-3 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom accent */}
+                  <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-400 via-indigo-400 to-blue-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+
+              {/* Section: Other Core Tools */}
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                  <Wrench className="w-6 h-6 text-purple-400" />
+                  Configuration Tools
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {tools.filter(t => t.tier === 'core' && t.id !== 'custom-config').map((tool, index) => (
+                    <button
+                      key={tool.id}
+                      onClick={tool.action}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      className="group relative bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-blue-900/50 rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fadeIn overflow-hidden shadow-xl hover:shadow-2xl border border-purple-500/30 hover:border-purple-400/50"
+                    >
+                      {/* Glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 rounded-2xl transition-all duration-300" />
+                      
+                      {/* Icon */}
+                      <div className="relative mb-4 inline-flex">
+                        <div className="bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-all duration-300">
+                          <div className="text-white">{tool.icon}</div>
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        {/* Large colorful icon with glow effect - no box */}
-                        <div className="relative mb-6 inline-flex h-24 w-24 items-center justify-center">
-                          <div className={`bg-gradient-to-br ${tool.color} p-6 rounded-full shadow-2xl group-hover:scale-110 transition-all duration-500`}>
-                            <div className="text-white [&>svg]:w-12 [&>svg]:h-12">
-                              {tool.icon}
-                            </div>
-                          </div>
-                          {/* Animated glow ring on hover */}
-                          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-40 blur-2xl transition-all duration-500`} />
+                      
+                      {/* Content */}
+                      <h4 className="relative text-xl font-bold mb-2 text-white group-hover:text-purple-300 transition-colors">
+                        {tool.title}
+                      </h4>
+                      <p className="relative text-purple-200/80 text-sm leading-relaxed group-hover:text-purple-100 transition-colors">
+                        {tool.description}
+                      </p>
+                      
+                      {/* Arrow */}
+                      <div className="relative mt-4 flex items-center text-purple-400 group-hover:text-purple-300 transition-all">
+                        <span className="text-xs font-semibold">Open Tool</span>
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                      
+                      {/* Bottom accent */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Professional Tools */}
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                  <Crown className="w-6 h-6 text-amber-400" />
+                  Professional Tools
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tools.filter(t => t.tier === 'professional').map((tool, index) => (
+                    <button
+                      key={tool.id}
+                      onClick={tool.action}
+                      style={{ animationDelay: `${(index + 3) * 100}ms` }}
+                      className="group relative bg-gradient-to-br from-amber-900/30 via-purple-900/30 to-indigo-900/30 rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fadeIn overflow-hidden shadow-xl hover:shadow-2xl border border-amber-500/30 hover:border-amber-400/50"
+                    >
+                      {/* Glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 rounded-2xl transition-all duration-300" />
+                      
+                      {/* Badge */}
+                      {'badge' in tool && tool.badge && (
+                        <div className="absolute top-3 right-3 z-10">
+                          <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full shadow animate-pulse">
+                            {tool.badge}
+                          </span>
                         </div>
-                        
-                        {/* Content with white text for gradient background */}
-                        <h3 className="relative text-2xl font-bold mb-3 text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-yellow-200 group-hover:via-pink-200 group-hover:to-cyan-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-lg">
-                          {tool.title}
-                        </h3>
-                        <p className="relative text-white/90 text-sm leading-relaxed group-hover:text-white transition-colors duration-300 drop-shadow-md">
-                          {tool.description}
-                        </p>
-                        
-                        {/* Animated arrow indicator */}
-                        <div className="relative mt-6 flex items-center text-white/80 group-hover:text-yellow-200 transition-all duration-300">
-                          <span className="text-sm font-bold tracking-wide drop-shadow-md">Launch Tool</span>
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-3 group-hover:scale-110 transition-all duration-300 drop-shadow-lg" />
-                          <div className="absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
+                      )}
+                      
+                      {/* Icon */}
+                      <div className="relative mb-4 inline-flex">
+                        <div className={`bg-gradient-to-br ${tool.color} p-4 rounded-xl shadow-lg group-hover:scale-110 transition-all duration-300`}>
+                          <div className="text-white">{tool.icon}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <h4 className="relative text-xl font-bold mb-2 text-white group-hover:text-amber-300 transition-colors">
+                        {tool.title}
+                      </h4>
+                      <p className="relative text-purple-200/80 text-sm leading-relaxed group-hover:text-purple-100 transition-colors">
+                        {tool.description}
+                      </p>
+                      
+                      {/* Arrow */}
+                      <div className="relative mt-4 flex items-center text-amber-400 group-hover:text-amber-300 transition-all">
+                        <span className="text-xs font-semibold">Open Tool</span>
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                      
+                      {/* Bottom accent */}
+                      <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Premium Tools */}
+              <div>
+                <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                  Premium Features
+                  <span className="text-sm font-normal text-purple-300/70 ml-2">Upgrade to unlock</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tools.filter(t => t.tier === 'premium').map((tool, index) => (
+                    <button
+                      key={tool.id}
+                      onClick={'locked' in tool && tool.locked ? undefined : tool.action}
+                      disabled={'locked' in tool && tool.locked}
+                      style={{ animationDelay: `${(index + 6) * 100}ms` }}
+                      className={`group relative bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 rounded-2xl p-6 text-left transition-all duration-300 animate-fadeIn overflow-hidden shadow-xl border border-purple-500/20 ${'locked' in tool && tool.locked ? 'opacity-75 cursor-not-allowed' : 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:border-purple-400/50'}`}
+                    >
+                      {/* Lock overlay for locked tools */}
+                      {'locked' in tool && tool.locked && (
+                        <div className="absolute inset-0 bg-slate-900/50 rounded-2xl z-10 flex items-center justify-center">
+                          <div className="text-center">
+                            <Lock className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                            {'comingSoon' in tool && tool.comingSoon && (
+                              <span className="text-xs text-purple-300 font-medium">Coming Soon</span>
+                            )}
                           </div>
                         </div>
-                      </>
-                    )}
-                    
-                    {/* Bottom accent line with 3D effect */}
-                    <div className={`absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r ${tool.color} opacity-70 group-hover:opacity-100 transition-all duration-500 rounded-b-3xl shadow-[0_4px_12px_rgba(0,0,0,0.2)]`} />
-                  </button>
-                ))}
+                      )}
+                      
+                      {/* Glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 rounded-2xl transition-all duration-300" />
+                      
+                      {/* Icon */}
+                      <div className="relative mb-4 inline-flex">
+                        <div className={`bg-gradient-to-br ${tool.color} p-4 rounded-xl shadow-lg group-hover:scale-110 transition-all duration-300`}>
+                          <div className="text-white">{tool.icon}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <h4 className="relative text-xl font-bold mb-2 text-white group-hover:text-purple-300 transition-colors">
+                        {tool.title}
+                      </h4>
+                      <p className="relative text-purple-200/70 text-sm leading-relaxed group-hover:text-purple-100 transition-colors">
+                        {tool.description}
+                      </p>
+                      
+                      {/* Arrow or Lock indicator */}
+                      <div className="relative mt-4 flex items-center text-purple-400 group-hover:text-purple-300 transition-all">
+                        {'locked' in tool && tool.locked ? (
+                          <span className="text-xs font-semibold text-purple-400">Premium Feature</span>
+                        ) : (
+                          <>
+                            <span className="text-xs font-semibold">Open Tool</span>
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Bottom accent */}
+                      <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </>
@@ -1041,13 +1496,13 @@ export default function AdvancedQuoteBuilder({
                 {/* Electrical Specifications Section - INTERACTIVE WITH INPUTS */}
                 <div data-section="electrical" className="bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 border-2 border-purple-800 rounded-2xl p-8 shadow-2xl scroll-mt-24">
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Zap className="w-7 h-7 text-yellow-300" />
-                    <span className="bg-gradient-to-r from-yellow-200 via-purple-200 to-blue-200 bg-clip-text text-transparent drop-shadow-lg">Electrical Specifications & PCS Configuration</span>
+                    <Zap className="w-7 h-7 text-purple-200" />
+                    <span className="bg-gradient-to-r from-purple-200 via-indigo-200 to-blue-200 bg-clip-text text-transparent drop-shadow-lg">Electrical Specifications & PCS Configuration</span>
                   </h3>
                   
                   {/* Power Conversion System (PCS) Configuration */}
-                  <div className="bg-white border-2 border-purple-300 rounded-xl p-6 mb-6 shadow-lg">
-                    <h4 className="text-lg font-bold mb-4 text-slate-900">Power Conversion System (PCS)</h4>
+                  <div className="bg-gradient-to-br from-slate-50 to-purple-50 border-2 border-purple-400 rounded-xl p-6 mb-6 shadow-lg">
+                    <h4 className="text-lg font-bold mb-4 text-purple-900">Power Conversion System (PCS)</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* PCS Quoting Option */}
@@ -1056,27 +1511,27 @@ export default function AdvancedQuoteBuilder({
                           PCS Quoting Method
                         </label>
                         <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-gray-100 transition-all flex-1">
+                          <label className="flex items-center gap-2 cursor-pointer bg-purple-50 border border-purple-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-purple-100 transition-all flex-1">
                             <input
                               type="radio"
                               checked={!pcsQuoteSeparately}
                               onChange={() => setPcsQuoteSeparately(false)}
-                              className="w-4 h-4 text-purple-500"
+                              className="w-4 h-4 text-purple-600"
                             />
                             <span className="text-sm font-medium">Included with BESS System</span>
                           </label>
-                          <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-gray-100 transition-all flex-1">
+                          <label className="flex items-center gap-2 cursor-pointer bg-purple-50 border border-purple-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-purple-100 transition-all flex-1">
                             <input
                               type="radio"
                               checked={pcsQuoteSeparately}
                               onChange={() => setPcsQuoteSeparately(true)}
-                              className="w-4 h-4 text-purple-500"
+                              className="w-4 h-4 text-purple-600"
                             />
                             <span className="text-sm font-medium">Quote PCS Separately</span>
                           </label>
                         </div>
                         {pcsQuoteSeparately && (
-                          <p className="text-xs text-yellow-800 mt-2 bg-yellow-100 border border-yellow-400 rounded-lg p-2">
+                          <p className="text-xs text-indigo-800 mt-2 bg-indigo-100 border border-indigo-400 rounded-lg p-2">
                             💡 PCS will be itemized separately in the quote with detailed specifications
                           </p>
                         )}
@@ -1090,7 +1545,7 @@ export default function AdvancedQuoteBuilder({
                         <select
                           value={inverterType}
                           onChange={(e) => setInverterType(e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner hover:bg-gray-100 transition-colors"
+                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner hover:border-purple-400 transition-colors"
                         >
                           <option value="bidirectional">Bidirectional Inverter</option>
                           <option value="unidirectional">Unidirectional (Charge Only)</option>
@@ -1111,12 +1566,12 @@ export default function AdvancedQuoteBuilder({
                             value={numberOfInvertersInput}
                             onChange={(e) => setNumberOfInvertersInput(parseInt(e.target.value) || 1)}
                             min="1"
-                            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                            className="flex-1 px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner"
                             placeholder="Auto-calculated"
                           />
                           <button
                             onClick={() => setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))}
-                            className="px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/50 rounded-lg text-sm font-semibold transition-all"
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 border border-purple-700 rounded-lg text-sm font-semibold text-white transition-all"
                             title="Auto-calculate based on system size"
                           >
                             Auto
@@ -1138,7 +1593,7 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
                           step="100"
                           min="100"
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner"
                         />
                       </div>
 
@@ -1152,7 +1607,7 @@ export default function AdvancedQuoteBuilder({
                           value={inverterManufacturer}
                           onChange={(e) => setInverterManufacturer(e.target.value)}
                           placeholder="e.g., SMA, Sungrow, Power Electronics"
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg placeholder-gray-400 shadow-inner"
+                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg placeholder-slate-400 shadow-inner"
                         />
                       </div>
                     </div>
@@ -1161,48 +1616,48 @@ export default function AdvancedQuoteBuilder({
                   {/* Electrical Parameters - INPUT FIELDS */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* System Watts */}
-                    <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 shadow-lg">
+                    <div className="bg-gradient-to-br from-purple-100 to-purple-50 border-2 border-purple-400 rounded-xl p-4 shadow-lg">
                       <label className="block text-xs text-slate-900 mb-2 font-semibold">System Power (Watts)</label>
                       <input
                         type="number"
                         value={systemWattsInput}
                         onChange={(e) => setSystemWattsInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedWatts.toLocaleString()}
-                        className="w-full px-3 py-2 bg-white border-2 border-blue-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-purple-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-blue-900 mt-2 font-bold">
+                      <p className="text-xs text-purple-900 mt-2 font-bold">
                         {totalKW.toLocaleString()} kW / {(totalKW/1000).toFixed(2)} MW
                       </p>
                       <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedWatts.toLocaleString()} W</p>
                     </div>
 
                     {/* AC Amps */}
-                    <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 shadow-lg">
+                    <div className="bg-gradient-to-br from-indigo-100 to-indigo-50 border-2 border-indigo-400 rounded-xl p-4 shadow-lg">
                       <label className="block text-xs text-slate-900 mb-2 font-semibold">AC Current (3-Phase)</label>
                       <input
                         type="number"
                         value={systemAmpsACInput}
                         onChange={(e) => setSystemAmpsACInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedAmpsAC.toFixed(0)}
-                        className="w-full px-3 py-2 bg-white border-2 border-yellow-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-indigo-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-yellow-900 mt-2 font-bold">
+                      <p className="text-xs text-indigo-900 mt-2 font-bold">
                         @ {systemVoltage}V AC Per Phase
                       </p>
                       <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedAmpsAC.toFixed(0)} A</p>
                     </div>
 
                     {/* DC Amps */}
-                    <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 shadow-lg">
+                    <div className="bg-gradient-to-br from-blue-100 to-blue-50 border-2 border-blue-400 rounded-xl p-4 shadow-lg">
                       <label className="block text-xs text-slate-900 mb-2 font-semibold">DC Current (Battery Side)</label>
                       <input
                         type="number"
                         value={systemAmpsDCInput}
                         onChange={(e) => setSystemAmpsDCInput(e.target.value === '' ? '' : parseFloat(e.target.value))}
                         placeholder={calculatedAmpsDC.toFixed(0)}
-                        className="w-full px-3 py-2 bg-white border-2 border-green-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
+                        className="w-full px-3 py-2 bg-white border-2 border-blue-300 rounded-lg text-slate-900 font-medium text-sm shadow-inner"
                       />
-                      <p className="text-xs text-green-900 mt-2 font-bold">
+                      <p className="text-xs text-blue-900 mt-2 font-bold">
                         @ {dcVoltage}V DC
                       </p>
                       <p className="text-xs text-slate-700 mt-1 font-medium">Calculated: {calculatedAmpsDC.toFixed(0)} A</p>
@@ -1211,14 +1666,14 @@ export default function AdvancedQuoteBuilder({
 
                   {/* Voltage Configuration */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
+                    <div className="bg-gradient-to-br from-slate-50 to-indigo-50 border-2 border-indigo-400 rounded-lg p-4 shadow-md">
                       <label className="block text-sm font-semibold mb-2 text-slate-900">
                         AC System Voltage (V)
                       </label>
                       <select
                         value={systemVoltage}
                         onChange={(e) => setSystemVoltage(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-white border-2 border-indigo-300 text-slate-900 rounded-lg font-medium shadow-inner"
                       >
                         <option value={208}>208V (Small Commercial)</option>
                         <option value={480}>480V (Standard Industrial)</option>
@@ -1228,7 +1683,7 @@ export default function AdvancedQuoteBuilder({
                       </select>
                     </div>
 
-                    <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-blue-400 rounded-lg p-4 shadow-md">
                       <label className="block text-sm font-semibold mb-2 text-slate-900">
                         DC Battery Voltage (V)
                       </label>
@@ -1238,15 +1693,15 @@ export default function AdvancedQuoteBuilder({
                         onChange={(e) => setDcVoltage(parseInt(e.target.value) || 1000)}
                         step="100"
                         min="100"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                        className="w-full px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium shadow-inner"
                       />
                       <p className="text-xs text-slate-700 mt-1 font-medium">Typical: 800V - 1500V DC</p>
                     </div>
                   </div>
 
                   {/* Summary Card */}
-                  <div className="bg-white border-2 border-purple-300 rounded-xl p-6 shadow-xl">
-                    <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-slate-50 to-purple-50 border-2 border-purple-400 rounded-xl p-6 shadow-xl">
+                    <h4 className="text-sm font-bold text-purple-900 mb-4 flex items-center gap-2">
                       <Cpu className="w-5 h-5 text-purple-600" />
                       System Summary
                     </h4>
@@ -1261,11 +1716,11 @@ export default function AdvancedQuoteBuilder({
                       </div>
                       <div>
                         <p className="text-slate-700 mb-1 font-medium">AC Current:</p>
-                        <p className="text-xl font-bold text-yellow-700">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-xl font-bold text-indigo-700">{maxAmpsAC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                       <div>
                         <p className="text-slate-700 mb-1 font-medium">DC Current:</p>
-                        <p className="text-xl font-bold text-green-700">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
+                        <p className="text-xl font-bold text-blue-700">{maxAmpsDC.toLocaleString(undefined, {maximumFractionDigits: 0})} A</p>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t-2 border-purple-300">
@@ -1279,7 +1734,7 @@ export default function AdvancedQuoteBuilder({
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-purple-100 border-2 border-purple-300 rounded-lg p-4">
+                  <div className="mt-4 bg-gradient-to-r from-purple-100 via-indigo-100 to-blue-100 border-2 border-purple-300 rounded-lg p-4">
                     <p className="text-xs text-slate-900 font-medium">
                       ⚡ <strong>Note:</strong> Input custom values to override calculated specifications. 
                       Leave blank to use auto-calculated values based on {storageSizeMW} MW system rating.
@@ -2371,14 +2826,46 @@ export default function AdvancedQuoteBuilder({
                 >
                   Close Preview
                 </button>
-                <button
-                  onClick={() => {
-                    alert('📥 Export functionality coming soon!\n\nYou will be able to download this quote as:\n• Microsoft Word (.docx)\n• Excel Spreadsheet (.xlsx)\n• PDF Document (.pdf)');
-                  }}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                >
-                  📥 Download Quote
-                </button>
+                
+                {/* Export Format Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleExportQuote('word')}
+                    disabled={isExporting}
+                    className="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isExporting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Exporting...
+                      </>
+                    ) : exportSuccess ? (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        Downloaded!
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-5 h-5" />
+                        Word (.docx)
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleExportQuote('excel')}
+                    className="px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    Excel
+                  </button>
+                  <button
+                    onClick={() => handleExportQuote('pdf')}
+                    className="px-5 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    PDF
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2429,6 +2916,476 @@ export default function AdvancedQuoteBuilder({
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* Professional Financial Model View */}
+      {viewMode === 'professional-model' && (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-900">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900 via-orange-800 to-yellow-900 border-b-4 border-amber-500 shadow-2xl">
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setViewMode('landing')}
+                    className="flex items-center gap-2 text-amber-200 hover:text-white transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="text-sm font-medium">Back</span>
+                  </button>
+                  <div className="h-8 w-px bg-amber-600/50" />
+                  <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-2xl">
+                    <Landmark className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-amber-100">Bank-Ready Financial Model</h1>
+                    <p className="text-amber-300 text-xs">Professional 3-Statement Pro-Forma for Investors</p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-amber-200 hover:text-white transition-colors p-2 hover:bg-amber-800/50 rounded-lg"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            {/* Configuration Panel */}
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-amber-500/30 shadow-xl mb-8">
+              <h2 className="text-xl font-bold text-amber-100 mb-6 flex items-center gap-2">
+                <Sliders className="w-5 h-5" />
+                Model Configuration
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* System Size (from parent) */}
+                <div>
+                  <label className="block text-sm font-medium text-amber-200 mb-2">System Size (MW)</label>
+                  <div className="bg-slate-700/50 rounded-lg px-4 py-3 text-white font-mono text-lg">
+                    {storageSizeMW.toFixed(2)} MW / {durationHours}h
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">{(storageSizeMW * durationHours * 1000).toLocaleString()} kWh total</p>
+                </div>
+
+                {/* ISO Region */}
+                <div>
+                  <label className="block text-sm font-medium text-amber-200 mb-2">ISO Region</label>
+                  <select
+                    value={selectedISORegion}
+                    onChange={(e) => setSelectedISORegion(e.target.value as typeof selectedISORegion)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="CAISO">CAISO (California)</option>
+                    <option value="ERCOT">ERCOT (Texas)</option>
+                    <option value="PJM">PJM (Mid-Atlantic)</option>
+                    <option value="NYISO">NYISO (New York)</option>
+                    <option value="ISO-NE">ISO-NE (New England)</option>
+                    <option value="MISO">MISO (Midwest)</option>
+                    <option value="SPP">SPP (Southwest)</option>
+                  </select>
+                </div>
+
+                {/* Leverage */}
+                <div>
+                  <label className="block text-sm font-medium text-amber-200 mb-2">Debt Ratio: {projectLeverage}%</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    value={projectLeverage}
+                    onChange={(e) => setProjectLeverage(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>0% (All Equity)</span>
+                    <span>80% (Leveraged)</span>
+                  </div>
+                </div>
+
+                {/* Interest Rate */}
+                <div>
+                  <label className="block text-sm font-medium text-amber-200 mb-2">Interest Rate</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.25"
+                      min="3"
+                      max="15"
+                      value={interestRate}
+                      onChange={(e) => setInterestRate(Number(e.target.value))}
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500"
+                    />
+                    <span className="text-slate-400">%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Example Output Preview - Shows users what to expect */}
+              {!professionalModel && (
+                <div className="mt-6 bg-slate-800/30 rounded-xl p-6 border border-amber-500/20">
+                  <h3 className="text-lg font-semibold text-amber-200 mb-4 flex items-center gap-2">
+                    <Eye className="w-5 h-5" />
+                    Example Output Preview
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Based on your {storageSizeMW.toFixed(2)} MW / {durationHours}h system, here's an estimate of what your Bank-Ready Model will include:
+                  </p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">Est. CapEx</p>
+                      <p className="text-lg font-bold text-white">${((storageSizeMW * durationHours * 1000 * 155 * 1.25) / 1000000).toFixed(1)}M</p>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">Est. Equity</p>
+                      <p className="text-lg font-bold text-emerald-400">${((storageSizeMW * durationHours * 1000 * 155 * 1.25 * (1 - projectLeverage/100)) / 1000000).toFixed(1)}M</p>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">Target IRR</p>
+                      <p className="text-lg font-bold text-amber-300">12-18%</p>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">DSCR Target</p>
+                      <p className="text-lg font-bold text-blue-300">≥1.25x</p>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">Payback</p>
+                      <p className="text-lg font-bold text-purple-300">6-10 yrs</p>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-slate-400">Project Life</p>
+                      <p className="text-lg font-bold text-cyan-300">25 yrs</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <p className="text-amber-200 font-semibold mb-2">📊 3-Statement Model</p>
+                      <ul className="text-slate-400 text-xs space-y-1">
+                        <li>• Income Statement (25 years)</li>
+                        <li>• Balance Sheet</li>
+                        <li>• Cash Flow Statement</li>
+                      </ul>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <p className="text-amber-200 font-semibold mb-2">💰 Revenue Stacking</p>
+                      <ul className="text-slate-400 text-xs space-y-1">
+                        <li>• Energy Arbitrage</li>
+                        <li>• Frequency Regulation</li>
+                        <li>• Capacity Payments</li>
+                      </ul>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <p className="text-amber-200 font-semibold mb-2">🏦 Bank Metrics</p>
+                      <ul className="text-slate-400 text-xs space-y-1">
+                        <li>• DSCR Analysis</li>
+                        <li>• Levered/Unlevered IRR</li>
+                        <li>• MACRS Depreciation</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Generate Button */}
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={async () => {
+                    setIsGeneratingModel(true);
+                    try {
+                      const result = await generateProfessionalModel({
+                        storageSizeMW,
+                        durationHours,
+                        location: location || 'California',
+                        isoRegion: selectedISORegion,
+                        debtEquityRatio: projectLeverage / 100,
+                        interestRate: interestRate / 100,
+                        loanTermYears,
+                        electricityRate: utilityRate,
+                        demandChargeRate: demandCharge,
+                        revenueStreams: {
+                          energyArbitrage: true,
+                          demandChargeReduction: true,
+                          frequencyRegulation: true,
+                          spinningReserve: true,
+                          capacityPayments: true,
+                          resourceAdequacy: true,
+                        },
+                      });
+                      setProfessionalModel(result);
+                    } catch (error) {
+                      console.error('Error generating model:', error);
+                    } finally {
+                      setIsGeneratingModel(false);
+                    }
+                  }}
+                  disabled={isGeneratingModel}
+                  className="flex items-center gap-3 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-400 hover:via-orange-400 hover:to-yellow-400 text-slate-900 font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                >
+                  {isGeneratingModel ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                      Generating Model...
+                    </>
+                  ) : (
+                    <>
+                      <Calculator className="w-5 h-5" />
+                      Generate Bank-Ready Model
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Results */}
+            {professionalModel && (
+              <div className="space-y-8">
+                {/* Executive Summary */}
+                <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-500/50 shadow-xl">
+                  <h2 className="text-2xl font-bold text-amber-100 mb-6 flex items-center gap-2">
+                    <FileSpreadsheet className="w-6 h-6" />
+                    Executive Summary
+                  </h2>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {/* Key Metrics */}
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Total CapEx</p>
+                      <p className="text-2xl font-bold text-white">${(professionalModel.summary.totalCapex / 1000000).toFixed(2)}M</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Equity Investment</p>
+                      <p className="text-2xl font-bold text-emerald-400">${(professionalModel.summary.equityInvestment / 1000000).toFixed(2)}M</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Levered IRR</p>
+                      <p className="text-2xl font-bold text-amber-300">{(professionalModel.summary.leveredIRR * 100).toFixed(1)}%</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Unlevered IRR</p>
+                      <p className="text-2xl font-bold text-blue-300">{(professionalModel.summary.unleveredIRR * 100).toFixed(1)}%</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">NPV (25yr)</p>
+                      <p className="text-2xl font-bold text-emerald-300">${(professionalModel.summary.npv / 1000000).toFixed(2)}M</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">MOIC</p>
+                      <p className="text-2xl font-bold text-purple-300">{professionalModel.summary.moic.toFixed(2)}x</p>
+                    </div>
+                  </div>
+
+                  {/* Second Row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">LCOS</p>
+                      <p className="text-2xl font-bold text-cyan-300">${professionalModel.summary.lcos.toFixed(0)}/MWh</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Min DSCR</p>
+                      <p className={`text-2xl font-bold ${professionalModel.summary.minimumDSCR >= 1.25 ? 'text-emerald-300' : 'text-red-400'}`}>
+                        {professionalModel.summary.minimumDSCR.toFixed(2)}x
+                      </p>
+                      <p className="text-xs text-slate-500">Target: ≥1.25x</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Avg DSCR</p>
+                      <p className="text-2xl font-bold text-blue-300">{professionalModel.summary.averageDSCR.toFixed(2)}x</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Simple Payback</p>
+                      <p className="text-2xl font-bold text-amber-200">{professionalModel.summary.simplePayback.toFixed(1)} yrs</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">Y1 Revenue</p>
+                      <p className="text-2xl font-bold text-emerald-200">${(professionalModel.summary.totalAnnualRevenue / 1000000).toFixed(2)}M</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Revenue Streams */}
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    Year 1 Revenue Breakdown ({selectedISORegion})
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {professionalModel.revenueProjection?.[0] && Object.entries(professionalModel.revenueProjection[0])
+                      .filter(([key]) => key !== 'year' && key !== 'totalRevenue')
+                      .map(([stream, value]) => (
+                      <div key={stream} className="bg-slate-700/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-400 capitalize">{stream.replace(/([A-Z])/g, ' $1').trim()}</p>
+                        <p className="text-lg font-bold text-emerald-300">
+                          ${typeof value === 'number' ? (value / 1000).toFixed(0) : 0}k
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3-Statement Preview */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Income Statement */}
+                  <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-2xl p-6 border border-blue-500/30">
+                    <h3 className="text-lg font-bold text-blue-200 mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Income Statement (Y1)
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Revenue</span>
+                        <span className="font-mono">${(professionalModel.incomeStatements?.[0]?.totalRevenue / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Operating Costs</span>
+                        <span className="font-mono text-red-300">-${(professionalModel.incomeStatements?.[0]?.totalOpex / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300 border-t border-slate-600 pt-2">
+                        <span>EBITDA</span>
+                        <span className="font-mono text-emerald-300">${(professionalModel.incomeStatements?.[0]?.ebitda / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Depreciation</span>
+                        <span className="font-mono text-slate-400">-${(professionalModel.incomeStatements?.[0]?.depreciation / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Interest</span>
+                        <span className="font-mono text-red-300">-${(professionalModel.incomeStatements?.[0]?.interestExpense / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-white font-bold border-t border-slate-600 pt-2">
+                        <span>Net Income</span>
+                        <span className="font-mono text-emerald-400">${(professionalModel.incomeStatements?.[0]?.netIncome / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Balance Sheet */}
+                  <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 border border-emerald-500/30">
+                    <h3 className="text-lg font-bold text-emerald-200 mb-4 flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      Balance Sheet (Y1)
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Assets</span>
+                        <span className="font-mono">${(professionalModel.balanceSheets?.[0]?.totalAssets / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Liabilities</span>
+                        <span className="font-mono text-red-300">${(professionalModel.balanceSheets?.[0]?.totalLiabilities / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Equity</span>
+                        <span className="font-mono text-blue-300">${(professionalModel.balanceSheets?.[0]?.totalEquity / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-white font-bold border-t border-slate-600 pt-2">
+                        <span>D/E Ratio</span>
+                        <span className="font-mono">{((professionalModel.balanceSheets?.[0]?.totalLiabilities || 0) / (professionalModel.balanceSheets?.[0]?.totalEquity || 1)).toFixed(2)}x</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cash Flow */}
+                  <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-500/30">
+                    <h3 className="text-lg font-bold text-amber-200 mb-4 flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      Cash Flow (Y1)
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Operating CF</span>
+                        <span className="font-mono text-emerald-300">${(professionalModel.cashFlowStatements?.[0]?.operatingCashFlow / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Principal Repayment</span>
+                        <span className="font-mono text-red-300">-${(professionalModel.cashFlowStatements?.[0]?.principalRepayment / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>DSCR</span>
+                        <span className={`font-mono ${(professionalModel.debtSchedule?.[0]?.dscr || 0) >= 1.25 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {(professionalModel.debtSchedule?.[0]?.dscr || 0).toFixed(2)}x
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-white font-bold border-t border-slate-600 pt-2">
+                        <span>Free Cash Flow</span>
+                        <span className="font-mono text-emerald-400">${(professionalModel.cashFlowStatements?.[0]?.freeCashFlowToEquity / 1000000 || 0).toFixed(2)}M</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DSCR & Debt Schedule Chart (simplified table) */}
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Banknote className="w-5 h-5 text-amber-400" />
+                    Debt Service Coverage Ratio (DSCR) by Year
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-slate-400 border-b border-slate-700">
+                          <th className="text-left py-2">Year</th>
+                          {[1, 2, 3, 4, 5, 10, 15, 20, 25].map(y => (
+                            <th key={y} className="text-right py-2">{y}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="text-white">
+                          <td className="py-2 font-medium">DSCR</td>
+                          {[0, 1, 2, 3, 4, 9, 14, 19, 24].map((i, idx) => (
+                            <td key={idx} className={`text-right py-2 font-mono ${
+                              (professionalModel.debtSchedule?.[i]?.dscr || 0) >= 1.25 
+                                ? 'text-emerald-400' 
+                                : (professionalModel.debtSchedule?.[i]?.dscr || 0) >= 1.0 
+                                  ? 'text-yellow-400' 
+                                  : 'text-red-400'
+                            }`}>
+                              {(professionalModel.debtSchedule?.[i]?.dscr || 0).toFixed(2)}x
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    <span className="text-emerald-400">●</span> ≥1.25x (Bankable) | 
+                    <span className="text-yellow-400 ml-2">●</span> 1.0-1.25x (Marginal) | 
+                    <span className="text-red-400 ml-2">●</span> &lt;1.0x (Below Threshold)
+                  </p>
+                </div>
+
+                {/* Export Options */}
+                <div className="flex justify-center gap-4 mt-8">
+                  <button
+                    onClick={() => {
+                      // Export to Excel (placeholder)
+                      alert('Excel export coming soon! This will generate a full 25-year financial model workbook.');
+                    }}
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    Export to Excel
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Export to PDF (placeholder)
+                      alert('PDF export coming soon! This will generate a bank-ready investment memo.');
+                    }}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    <FileText className="w-5 h-5" />
+                    Export to PDF
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
