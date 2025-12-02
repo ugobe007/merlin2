@@ -2,8 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Zap, DollarSign, TrendingUp, Settings } from 'lucide-react';
 import { formatTotalProjectSavings, formatSolarSavings } from '../../utils/financialFormatting';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
+import { getConstant } from '../../services/calculationConstantsService';
 import { getAIOptimization, type AIOptimizationResult } from '../../services/aiOptimizationService';
 import { AIInsightBadge, AIOptimizationButton } from './AIInsightBadge';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REVENUE CONSTANTS - Loaded from database on mount (SINGLE SOURCE OF TRUTH)
+// These are used for interactive slider projections, cached for performance
+// ═══════════════════════════════════════════════════════════════════════════════
+interface RevenueConstants {
+  ARBITRAGE_PER_MWH: number;           // $/MWh for energy arbitrage
+  GRID_SALES_RATE: number;             // $/kWh for grid sales
+  ANCILLARY_SERVICES_PER_MW: number;   // $/MW-year for ancillary services
+  FREQUENCY_REG_PER_MW: number;        // $/MW-year for frequency regulation
+  CAPACITY_MARKETS_PER_MW: number;     // $/MW-year for capacity markets
+  CARBON_OFFSET_FACTOR: number;        // tons CO2 per MWh
+  HOURS_PER_YEAR: number;              // 8760 hours
+  BATTERY_DEGRADATION_ANNUAL: number;  // 2% = 0.98 multiplier
+}
+
+// Fallback defaults (used while loading from DB)
+const DEFAULT_REVENUE_CONSTANTS: RevenueConstants = {
+  ARBITRAGE_PER_MWH: 50,
+  GRID_SALES_RATE: 0.08,
+  ANCILLARY_SERVICES_PER_MW: 120,
+  FREQUENCY_REG_PER_MW: 80,
+  CAPACITY_MARKETS_PER_MW: 60,
+  CARBON_OFFSET_FACTOR: 0.0004,
+  HOURS_PER_YEAR: 8760,
+  BATTERY_DEGRADATION_ANNUAL: 0.98,
+};
 
 // Scroll utility function
 const scrollToSection = (sectionId: string) => {
@@ -225,6 +253,54 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [showAIInsight, setShowAIInsight] = useState(false);
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // REVENUE CONSTANTS - Loaded from database (SINGLE SOURCE OF TRUTH)
+  // Used for interactive slider projections, cached for slider performance
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const [revenueConstants, setRevenueConstants] = useState<RevenueConstants>(DEFAULT_REVENUE_CONSTANTS);
+  
+  // Load revenue constants from database on mount
+  useEffect(() => {
+    const loadRevenueConstants = async () => {
+      try {
+        const [
+          arbitrage,
+          gridSalesRate,
+          ancillary,
+          freqReg,
+          capacity,
+          carbonFactor,
+          degradation
+        ] = await Promise.all([
+          getConstant('ARBITRAGE_PER_MWH'),
+          getConstant('GRID_SALES_RATE'),
+          getConstant('ANCILLARY_SERVICES_PER_MW'),
+          getConstant('FREQUENCY_REG_PER_MW'),
+          getConstant('CAPACITY_MARKETS_PER_MW'),
+          getConstant('CARBON_OFFSET_FACTOR'),
+          getConstant('BATTERY_DEGRADATION_ANNUAL'),
+        ]);
+        
+        setRevenueConstants({
+          ARBITRAGE_PER_MWH: arbitrage ?? DEFAULT_REVENUE_CONSTANTS.ARBITRAGE_PER_MWH,
+          GRID_SALES_RATE: gridSalesRate ?? DEFAULT_REVENUE_CONSTANTS.GRID_SALES_RATE,
+          ANCILLARY_SERVICES_PER_MW: ancillary ?? DEFAULT_REVENUE_CONSTANTS.ANCILLARY_SERVICES_PER_MW,
+          FREQUENCY_REG_PER_MW: freqReg ?? DEFAULT_REVENUE_CONSTANTS.FREQUENCY_REG_PER_MW,
+          CAPACITY_MARKETS_PER_MW: capacity ?? DEFAULT_REVENUE_CONSTANTS.CAPACITY_MARKETS_PER_MW,
+          CARBON_OFFSET_FACTOR: carbonFactor ?? DEFAULT_REVENUE_CONSTANTS.CARBON_OFFSET_FACTOR,
+          HOURS_PER_YEAR: 8760, // This is a constant
+          BATTERY_DEGRADATION_ANNUAL: degradation ?? DEFAULT_REVENUE_CONSTANTS.BATTERY_DEGRADATION_ANNUAL,
+        });
+        
+        console.log('[InteractiveConfigDashboard] Loaded revenue constants from database');
+      } catch (error) {
+        console.warn('[InteractiveConfigDashboard] Using fallback revenue constants:', error);
+      }
+    };
+    
+    loadRevenueConstants();
+  }, []);
+
   // Sample configurations based on user preferences
   const [sampleConfigs, setSampleConfigs] = useState<Array<{
     name: string;
@@ -270,7 +346,8 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
       // Calculate totalEnergyMWh locally since centralized service doesn't return it
       const totalEnergyMWh = storageSizeMW * durationHours;
       
-      const carbonOffset = (totalEnergyMWh * 0.4 + solarMW * 1000 * 8760 * 0.3 * 0.0004) * 365; // tons CO2/year
+      // Carbon offset calculation using database constants
+      const carbonOffset = (totalEnergyMWh * 0.4 + solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * 0.3 * revenueConstants.CARBON_OFFSET_FACTOR) * 365; // tons CO2/year
       
       console.log('📊 Setting dashboard calculations:', {
         totalEnergyMWh,
@@ -1563,19 +1640,19 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
 
                   <div className="bg-white/30 p-3 rounded-lg">
                     <div className="text-sm text-purple-700 space-y-1">
-                      {/* Enhanced revenue calculation with multiple streams */}
+                      {/* Enhanced revenue calculation with multiple streams - USES DATABASE CONSTANTS */}
                       {(() => {
-                        const energyArbitrage = storageSizeMW * durationHours * 50 * profitabilityTarget;
-                        const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0;
-                        const ancillaryServices = profitabilityTarget >= 4 ? storageSizeMW * 120 * profitabilityTarget : 0;
-                        const frequencyReg = profitabilityTarget >= 4 ? storageSizeMW * 80 * profitabilityTarget : 0;
-                        const capacityMarkets = profitabilityTarget >= 5 ? storageSizeMW * 60 * profitabilityTarget : 0;
+                        const energyArbitrage = storageSizeMW * durationHours * revenueConstants.ARBITRAGE_PER_MWH * profitabilityTarget;
+                        const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * revenueConstants.GRID_SALES_RATE * profitabilityTarget : 0;
+                        const ancillaryServices = profitabilityTarget >= 4 ? storageSizeMW * revenueConstants.ANCILLARY_SERVICES_PER_MW * profitabilityTarget : 0;
+                        const frequencyReg = profitabilityTarget >= 4 ? storageSizeMW * revenueConstants.FREQUENCY_REG_PER_MW * profitabilityTarget : 0;
+                        const capacityMarkets = profitabilityTarget >= 5 ? storageSizeMW * revenueConstants.CAPACITY_MARKETS_PER_MW * profitabilityTarget : 0;
                         const totalAnnualRevenue = energyArbitrage + gridSales + ancillaryServices + frequencyReg + capacityMarkets;
                         
                         // Battery health optimization (inspired by GreenVoltis SOC management)
                         const cyclesPerYear = (profitabilityTarget * 200); // More aggressive trading = more cycles
                         const depthOfDischarge = Math.min(0.9, 0.6 + (profitabilityTarget * 0.06)); // Higher profitability = deeper DOD
-                        const batteryDegradation = Math.pow(0.98, lifetimeYears); // 2% annual degradation
+                        const batteryDegradation = Math.pow(revenueConstants.BATTERY_DEGRADATION_ANNUAL, lifetimeYears);
                         const healthOptimizedRevenue = totalAnnualRevenue * batteryDegradation;
                         
                         const lifetimeSavings = (minSavings + healthOptimizedRevenue) * lifetimeYears;
@@ -1688,7 +1765,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <div className="flex justify-between">
                         <span>CO₂ Avoided Annually:</span>
                         <span className="font-bold text-emerald-800">
-                          {((storageSizeMW * durationHours * 365 + solarMW * 1000 * 8760 * 0.4) * 0.0004).toFixed(1)} tons
+                          {((storageSizeMW * durationHours * 365 + solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * 0.4) * revenueConstants.CARBON_OFFSET_FACTOR).toFixed(1)} tons
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1706,7 +1783,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <div className="mt-3 pt-2 border-t border-emerald-200">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-emerald-600">
-                            {((storageSizeMW * durationHours * 365 + solarMW * 1000 * 8760 * 0.4) * 0.0004 / 15).toFixed(1)}
+                            {((storageSizeMW * durationHours * 365 + solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * 0.4) * revenueConstants.CARBON_OFFSET_FACTOR / 15).toFixed(1)}
                           </div>
                           <div className="text-xs text-emerald-600">Cars off road equivalent</div>
                         </div>
@@ -1804,9 +1881,9 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <span className="text-sm font-medium text-emerald-700">Monthly Cash Flow</span>
                       <span className="text-2xl font-bold text-emerald-800">
                         ${(() => {
-                          const arbitrage = storageSizeMW * durationHours * 50 * profitabilityTarget;
-                          const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * 8760 * 0.08 * profitabilityTarget : 0;
-                          const ancillary = profitabilityTarget >= 4 ? storageSizeMW * 120 * profitabilityTarget : 0;
+                          const arbitrage = storageSizeMW * durationHours * revenueConstants.ARBITRAGE_PER_MWH * profitabilityTarget;
+                          const gridSales = profitabilityTarget >= 3 ? solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * revenueConstants.GRID_SALES_RATE * profitabilityTarget : 0;
+                          const ancillary = profitabilityTarget >= 4 ? storageSizeMW * revenueConstants.ANCILLARY_SERVICES_PER_MW * profitabilityTarget : 0;
                           const monthlyCashFlow = (arbitrage + gridSales + ancillary) / 12;
                           return (monthlyCashFlow / 1000).toFixed(0);
                         })()}k
@@ -1817,7 +1894,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                         <div className="font-medium text-emerald-700">Revenue</div>
                         <div className="text-emerald-600">
                           ${(() => {
-                            const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) / 12;
+                            const revenue = (storageSizeMW * durationHours * revenueConstants.ARBITRAGE_PER_MWH * profitabilityTarget) / 12;
                             return (revenue / 1000).toFixed(0);
                           })()}k
                         </div>
@@ -1832,7 +1909,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                         <div className="font-medium text-emerald-700">Net Flow</div>
                         <div className="text-emerald-800 font-bold">
                           ${(() => {
-                            const revenue = (storageSizeMW * durationHours * 50 * profitabilityTarget) / 12;
+                            const revenue = (storageSizeMW * durationHours * revenueConstants.ARBITRAGE_PER_MWH * profitabilityTarget) / 12;
                             const costs = (storageSizeMW * 2000) / 12;
                             return ((revenue - costs) / 1000).toFixed(0);
                           })()}k

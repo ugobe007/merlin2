@@ -22,7 +22,7 @@ interface Step6Props {
   // Equipment breakdown
   equipmentBreakdown?: any;
   
-  // Financials
+  // Financials (from centralizedCalculations - SINGLE SOURCE OF TRUTH)
   equipmentCost?: number;
   installationCost?: number;
   annualSavings?: number;
@@ -31,6 +31,8 @@ interface Step6Props {
   roi25Year?: number;
   npv?: number;
   irr?: number;
+  taxCredit?: number;   // From centralizedCalculations.taxCredit
+  netCost?: number;     // From centralizedCalculations.netCost
   
   // Context
   selectedTemplate?: any;
@@ -58,6 +60,8 @@ const Step6_PreliminaryQuote: React.FC<Step6Props> = ({
   roi25Year = 0,
   npv = 0,
   irr = 0,
+  taxCredit: taxCreditProp,     // From centralizedCalculations
+  netCost: netCostProp,         // From centralizedCalculations
   selectedTemplate,
   location,
   onNext,
@@ -90,9 +94,13 @@ const Step6_PreliminaryQuote: React.FC<Step6Props> = ({
   // Total Project Cost (Turnkey)
   const totalProjectCost = equipmentBreakdown?.totals?.totalProjectCost || (totalEquipmentCost + installationServices);
   
-  // Federal Tax Credit (30% of entire project cost)
-  const federalTaxCredit = totalProjectCost * 0.30;
-  const netCost = totalProjectCost - federalTaxCredit;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // USE CENTRALIZED CALCULATIONS (SINGLE SOURCE OF TRUTH)
+  // Tax credit and net cost come from centralizedCalculations.ts
+  // The 30% ITC rate is defined in the database calculation_constants table
+  // ═══════════════════════════════════════════════════════════════════════════
+  const federalTaxCredit = taxCreditProp ?? (totalProjectCost * 0.30); // Fallback if prop not passed
+  const netCost = netCostProp ?? (totalProjectCost - federalTaxCredit);
 
   const handleNext = () => {
     // Auto-scroll to bottom before proceeding

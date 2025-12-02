@@ -1,4 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { getConstant } from '../services/calculationConstantsService';
+
+/**
+ * AdvancedAnalytics - Interactive What-If Analysis Tool
+ * 
+ * NOTE: This component INTENTIONALLY does local calculations because it's
+ * an interactive tool with sliders that let users adjust parameters in real-time.
+ * 
+ * The BASE VALUES (degradation, discount rate, O&M) come from the database
+ * via calculationConstantsService (SINGLE SOURCE OF TRUTH).
+ * 
+ * Users can then adjust these values with sliders to see how changes affect ROI.
+ */
 
 interface AdvancedAnalyticsProps {
   isOpen: boolean;
@@ -30,11 +43,38 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   onClose,
   projectData,
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOAD BASE VALUES FROM DATABASE (SINGLE SOURCE OF TRUTH)
+  // These are the defaults - users can adjust with sliders for "what-if" analysis
+  // ═══════════════════════════════════════════════════════════════════════════
   const [batteryLifeYears, setBatteryLifeYears] = useState(projectData.batteryLifeYears || 15);
   const [discountRate, setDiscountRate] = useState(projectData.discountRate || 0.08);
-  const [degradationRate, setDegradationRate] = useState(0.02); // 2% per year
-  const [inflationRate, setInflationRate] = useState(0.03); // 3% inflation
-  const [operatingCostsPercent, setOperatingCostsPercent] = useState(0.025); // 2.5% O&M
+  const [degradationRate, setDegradationRate] = useState(0.02);
+  const [inflationRate, setInflationRate] = useState(0.03);
+  const [operatingCostsPercent, setOperatingCostsPercent] = useState(0.025);
+  const [constantsLoaded, setConstantsLoaded] = useState(false);
+  
+  // Load database constants on mount
+  useEffect(() => {
+    const loadConstants = async () => {
+      try {
+        const [degradation, discount, oAndM] = await Promise.all([
+          getConstant('BATTERY_DEGRADATION_RATE'),
+          getConstant('DISCOUNT_RATE'),
+          getConstant('O_AND_M_PERCENT'),
+        ]);
+        if (degradation !== null) setDegradationRate(degradation);
+        if (discount !== null) setDiscountRate(projectData.discountRate || discount);
+        if (oAndM !== null) setOperatingCostsPercent(oAndM);
+        setConstantsLoaded(true);
+        console.log('[AdvancedAnalytics] Loaded constants from database:', { degradation, discount, oAndM });
+      } catch (error) {
+        console.warn('[AdvancedAnalytics] Using fallback constants:', error);
+        setConstantsLoaded(true);
+      }
+    };
+    loadConstants();
+  }, [projectData.discountRate]);
 
   // Calculate advanced financial metrics
   const metrics = useMemo((): FinancialMetrics => {
