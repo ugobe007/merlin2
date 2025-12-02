@@ -532,6 +532,7 @@ export default function StreamlinedWizard({
               systemKWh={wizardState.batteryKWh}
               durationHours={wizardState.durationHours}
               onShowExplainer={() => setShowPowerProfileExplainer(true)}
+              onSectionClick={(index) => setCurrentSection(index)}
             />
           </div>
           
@@ -549,6 +550,7 @@ export default function StreamlinedWizard({
                 durationHours={wizardState.durationHours}
                 compact
                 onShowExplainer={() => setShowPowerProfileExplainer(true)}
+                onSectionClick={(index) => setCurrentSection(index)}
               />
             </div>
         
@@ -732,6 +734,18 @@ export default function StreamlinedWizard({
             className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 1 ? 'hidden' : ''}`}
           >
             <div className="max-w-5xl mx-auto">
+              {/* Section Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentSection(0)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Location
+                </button>
+                <div className="text-sm text-gray-400">Step 2 of 6</div>
+              </div>
+              
               <div className="text-center mb-10">
                 <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-5 py-2 mb-4">
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -839,6 +853,18 @@ export default function StreamlinedWizard({
             className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 2 ? 'hidden' : ''}`}
           >
             <div className="max-w-3xl mx-auto">
+              {/* Section Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentSection(1)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Industry
+                </button>
+                <div className="text-sm text-gray-400">Step 3 of 6</div>
+              </div>
+              
               {/* Progress badges */}
               <div className="flex flex-wrap gap-2 justify-center mb-6">
                 <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-4 py-1.5">
@@ -1098,6 +1124,18 @@ export default function StreamlinedWizard({
             className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 3 ? 'hidden' : ''}`}
           >
             <div className="max-w-3xl mx-auto">
+              {/* Section Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentSection(2)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Details
+                </button>
+                <div className="text-sm text-gray-400">Step 4 of 6</div>
+              </div>
+              
               {/* Progress badges */}
               <div className="flex flex-wrap gap-2 justify-center mb-6">
                 <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-4 py-1.5">
@@ -1649,6 +1687,18 @@ export default function StreamlinedWizard({
             className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 4 ? 'hidden' : ''}`}
           >
             <div className="max-w-6xl mx-auto">
+              {/* Section Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentSection(3)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Goals
+                </button>
+                <div className="text-sm text-gray-400">Step 5 of 6</div>
+              </div>
+              
               <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 bg-purple-100 border border-purple-300 rounded-full px-5 py-2 mb-4">
                   <Sparkles className="w-4 h-4 text-purple-600" />
@@ -2148,6 +2198,18 @@ export default function StreamlinedWizard({
             className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 5 ? 'hidden' : ''}`}
           >
             <div className="max-w-5xl mx-auto">
+              {/* Section Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentSection(4)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Configuration
+                </button>
+                <div className="text-sm text-gray-400">Step 6 of 6 • Final Quote</div>
+              </div>
+              
               {wizardState.quoteResult ? (
                 <>
                   {/* Header */}

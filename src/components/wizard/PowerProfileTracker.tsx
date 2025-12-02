@@ -42,6 +42,7 @@ export interface PowerProfileTrackerProps {
   durationHours?: number;   // Backup duration in hours
   compact?: boolean;
   onShowExplainer?: () => void;
+  onSectionClick?: (sectionIndex: number) => void; // Navigate to section
 }
 
 // ============================================
@@ -97,6 +98,7 @@ export default function PowerProfileTracker({
   durationHours,
   compact = false,
   onShowExplainer,
+  onSectionClick,
 }: PowerProfileTrackerProps) {
   const levelInfo = getLevelInfo(totalPoints);
   const nextLevelPoints = getNextLevelPoints(totalPoints);
@@ -221,16 +223,21 @@ export default function PowerProfileTracker({
             const isCompleted = completedSections.includes(section.id);
             const isCurrent = index === currentSection;
             const isUpcoming = index > currentSection && !isCompleted;
+            const canNavigate = isCompleted || isCurrent || index <= currentSection;
             
             return (
-              <div
+              <button
                 key={section.id}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                onClick={() => canNavigate && onSectionClick?.(index)}
+                disabled={!canNavigate}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
                   isCurrent
                     ? 'bg-purple-500/20 border border-purple-400/50 shadow-lg shadow-purple-500/20'
                     : isCompleted
-                      ? 'bg-emerald-500/10 border border-emerald-400/30'
-                      : 'bg-white/5 border border-transparent'
+                      ? 'bg-emerald-500/10 border border-emerald-400/30 hover:bg-emerald-500/20 cursor-pointer'
+                      : canNavigate
+                        ? 'bg-white/5 border border-transparent hover:bg-white/10 cursor-pointer'
+                        : 'bg-white/5 border border-transparent opacity-50 cursor-not-allowed'
                 }`}
               >
                 {/* Status Icon */}
@@ -262,13 +269,14 @@ export default function PowerProfileTracker({
                   </div>
                 </div>
                 
-                {/* Points Badge */}
-                {isCompleted && (
-                  <div className="text-xs font-bold text-emerald-400">
-                    +{section.pointsAwarded}
+                {/* Points Badge or Edit indicator */}
+                {isCompleted ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-emerald-400">+{section.pointsAwarded}</span>
+                    <span className="text-xs text-gray-500">✏️</span>
                   </div>
-                )}
-              </div>
+                ) : null}
+              </button>
             );
           })}
         </div>
