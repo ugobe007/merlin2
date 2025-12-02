@@ -432,8 +432,8 @@ export default function EVChargingWizard({
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-emerald-500/30 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-emerald-400/40 shadow-2xl shadow-emerald-500/20">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-900/50 via-teal-900/30 to-emerald-900/50 px-6 py-4 border-b border-emerald-500/20">
           <div className="flex items-center justify-between">

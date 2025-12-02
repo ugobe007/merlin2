@@ -1350,7 +1350,7 @@ export default function StreamlinedWizard({
                   </div>
                   {wizardState.geoRecommendations && (
                     <div className="text-right">
-                      <div className="text-sky-500 font-bold">~{wizardState.geoRecommendations.profile.avgWindSpeed || 8} mph</div>
+                      <div className="text-sky-500 font-bold">~{Math.round((wizardState.geoRecommendations.profile.windCapacityFactor || 0.25) * 30)} mph</div>
                       <div className="text-xs text-gray-500">avg wind</div>
                     </div>
                   )}
@@ -2382,6 +2382,7 @@ export default function StreamlinedWizard({
                           windTurbineKW: 0,
                           generatorKW: 0,
                           generatorFuel: 'natural-gas',
+                          generatorType: 'traditional',
                           batteryKW: 0,
                           batteryKWh: 0,
                           solarKW: 0,

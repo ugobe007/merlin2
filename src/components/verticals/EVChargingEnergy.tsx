@@ -220,6 +220,17 @@ export default function EVChargingEnergy() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   
+  // Hero carousel state (shared between mobile and desktop views)
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  
+  // Auto-rotate hero images
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+  
   // Lead capture
   const [leadInfo, setLeadInfo] = useState<LeadInfo>({
     businessName: '',
@@ -234,6 +245,33 @@ export default function EVChargingEnergy() {
   
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
+  
+  // Quick Estimate Modal - Progressive Disclosure
+  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
+  const [quickChargerType, setQuickChargerType] = useState<'level2' | 'dcfc' | 'hpc' | 'mixed'>('dcfc');
+  const [quickPorts, setQuickPorts] = useState(4);
+  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
+  
+  // Quick estimate calculation
+  const calculateQuickEstimate = (ports: number, chargerType: string) => {
+    const savingsPerPort: Record<string, number> = {
+      'level2': 2000,    // Level 2: Lower demand, lower savings
+      'dcfc': 15000,     // DCFC: High demand spikes
+      'hpc': 25000,      // HPC: Very high demand
+      'mixed': 12000,    // Mixed: Average
+    };
+    const baseSavings = (savingsPerPort[chargerType] || 12000) * ports;
+    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
+    const payback = 2 + Math.random() * 2; // 2-4 years
+    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
+  };
+  
+  // Auto-calculate when quick estimate inputs change
+  useEffect(() => {
+    if (showQuickEstimate) {
+      calculateQuickEstimate(quickPorts, quickChargerType);
+    }
+  }, [quickPorts, quickChargerType, showQuickEstimate]);
   
   // Calculate quote when inputs change (debounced)
   useEffect(() => {
@@ -334,12 +372,13 @@ export default function EVChargingEnergy() {
       </header>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION - Edge-Bleeding Image Design
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzEwYjk4MSIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
         
-        <div className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* Left content - contained */}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-24 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div>
@@ -372,10 +411,13 @@ export default function EVChargingEnergy() {
                 </div>
               </div>
               
-              <a href="#calculator" className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+              <button 
+                onClick={() => setShowQuickEstimate(true)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+              >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </button>
               
               {/* Down Arrow Indicator */}
               <div className="mt-8 flex flex-col items-center animate-bounce">
@@ -388,12 +430,11 @@ export default function EVChargingEnergy() {
               </div>
             </div>
             
-            {/* Right: Image Carousel + Stats */}
-            <div className="relative">
-              {/* Image Carousel */}
+            {/* Right side placeholder for mobile only - actual content is absolutely positioned */}
+            <div className="lg:hidden">
               <ImageCarousel />
               
-              {/* Stats cards */}
+              {/* Stats cards - mobile only */}
               <div className="grid grid-cols-3 gap-3 mt-6">
                 <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-emerald-400/30 shadow-lg">
                   <p className="text-3xl font-black text-emerald-400">$90K</p>
@@ -407,6 +448,72 @@ export default function EVChargingEnergy() {
                   <p className="text-3xl font-black text-cyan-400">60%</p>
                   <p className="text-xs text-cyan-200 font-medium">Demand Savings</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* ========== RIGHT HALF - Edge-Bleeding Image (Desktop Only) ========== */}
+        <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-1/2">
+          <div className="relative w-full h-full">
+            {CAROUSEL_IMAGES.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === heroImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {/* Full-bleed image - no rounded corners on right edge */}
+                <img 
+                  src={image.src} 
+                  alt={image.alt}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Gradient overlay - fades into background on left */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(6,78,59,1) 0%, rgba(6,78,59,0.7) 15%, transparent 40%), linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 50%)'
+                  }}
+                />
+              </div>
+            ))}
+            
+            {/* Financial overlay card */}
+            <div className="absolute bottom-8 left-8 right-8">
+              <div className="backdrop-blur-xl rounded-3xl p-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+                  <div>
+                    <p className="text-white font-bold">Powered by Merlin</p>
+                    <p className="text-emerald-300 text-sm">AI-Optimized Battery Storage</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-emerald-400">$90K</div>
+                    <div className="text-xs text-emerald-300/70 mt-1">Annual Savings</div>
+                  </div>
+                  <div className="text-center border-x border-white/10 px-2">
+                    <div className="text-3xl font-black text-teal-300">2.8yr</div>
+                    <div className="text-xs text-emerald-300/70 mt-1">Payback</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-cyan-400">60%</div>
+                    <div className="text-xs text-emerald-300/70 mt-1">Demand Cut</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Demand spikes badge */}
+            <div className="absolute top-8 right-8">
+              <div className="bg-red-500/90 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+                <p className="text-xs font-bold text-red-100">DEMAND SPIKES</p>
+                <p className="text-2xl font-black text-white">$5-15K</p>
+                <p className="text-xs text-red-200">/month charges</p>
               </div>
             </div>
           </div>
@@ -890,6 +997,150 @@ export default function EVChargingEnergy() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          QUICK ESTIMATE MODAL - Progressive Disclosure
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {showQuickEstimate && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowQuickEstimate(false)}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          <div 
+            className="relative bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl shadow-2xl shadow-emerald-500/20 max-w-lg w-full overflow-hidden border border-emerald-400/40"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowQuickEstimate(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="relative px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
+                  <p className="text-emerald-300 text-sm">Answer 2 questions, get instant results</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-8 pb-6 space-y-6">
+              {/* Question 1: Charger Type */}
+              <div>
+                <label className="block text-emerald-200 font-medium mb-3">What type of chargers?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'level2', label: 'Level 2', desc: '7-22 kW' },
+                    { id: 'dcfc', label: 'DC Fast', desc: '50-150 kW' },
+                    { id: 'hpc', label: 'High Power', desc: '250-350 kW' },
+                    { id: 'mixed', label: 'Mixed', desc: 'Combination' },
+                  ].map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setQuickChargerType(type.id as typeof quickChargerType)}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        quickChargerType === type.id
+                          ? 'bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border-2 border-emerald-400'
+                          : 'bg-white/5 border border-white/10 hover:border-emerald-400/50'
+                      }`}
+                    >
+                      <p className="font-semibold text-white text-sm">{type.label}</p>
+                      <p className="text-emerald-300/70 text-xs">{type.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Question 2: Number of Ports */}
+              <div>
+                <label className="block text-emerald-200 font-medium mb-3">How many charging ports?</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={1}
+                    max={quickChargerType === 'level2' ? 20 : 12}
+                    value={quickPorts}
+                    onChange={(e) => setQuickPorts(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  />
+                  <div className="w-20 text-center">
+                    <span className="text-3xl font-black text-emerald-400">{quickPorts}</span>
+                    <span className="text-emerald-300 text-sm ml-1">ports</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 px-8 py-6 border-t border-emerald-500/20">
+              <div className="text-center mb-4">
+                <p className="text-emerald-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
+                <p className="text-5xl font-black text-white">
+                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
+                </p>
+                <p className="text-teal-400 text-sm mt-1">
+                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">Peak Shaving</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">50%+ Cut</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <Battery className="w-5 h-5 text-teal-400 mx-auto mb-1" />
+                  <p className="text-xs text-white/70">More Capacity</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    // Map to inputs
+                    if (quickChargerType === 'level2') {
+                      setInputs(prev => ({ ...prev, level2Ports: quickPorts, dcfcPorts: 0, hpcPorts: 0 }));
+                    } else if (quickChargerType === 'dcfc') {
+                      setInputs(prev => ({ ...prev, level2Ports: 0, dcfcPorts: quickPorts, hpcPorts: 0 }));
+                    } else if (quickChargerType === 'hpc') {
+                      setInputs(prev => ({ ...prev, level2Ports: 0, dcfcPorts: 0, hpcPorts: quickPorts }));
+                    } else {
+                      setInputs(prev => ({ ...prev, level2Ports: Math.floor(quickPorts/2), dcfcPorts: Math.ceil(quickPorts/2), hpcPorts: 0 }));
+                    }
+                    setShowWizard(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  Get Detailed Quote
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQuickEstimate(false);
+                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                >
+                  Or try our simple calculator below
+                </button>
+              </div>
+              
+              <p className="text-center text-emerald-300/50 text-xs mt-4">
+                2 minute detailed quote • No commitment required
+              </p>
+            </div>
           </div>
         </div>
       )}

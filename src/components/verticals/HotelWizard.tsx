@@ -447,8 +447,8 @@ export default function HotelWizard({
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-indigo-500/30 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gradient-to-br from-indigo-900 via-purple-800 to-violet-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-indigo-400/40 shadow-2xl shadow-indigo-500/20">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-900/50 via-purple-900/30 to-indigo-900/50 px-6 py-4 border-b border-indigo-500/20">
           <div className="flex items-center justify-between">

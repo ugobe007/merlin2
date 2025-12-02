@@ -1088,10 +1088,10 @@ export default function CarWashWizard({
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-purple-500/30 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-cyan-400/40 shadow-2xl shadow-cyan-500/20">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-900/50 via-cyan-900/30 to-purple-900/50 px-6 py-4 border-b border-purple-500/20">
+        <div className="bg-gradient-to-r from-cyan-800/80 via-teal-700/60 to-cyan-800/80 px-6 py-4 border-b border-cyan-400/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
