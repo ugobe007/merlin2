@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import merlinIcon from '@/assets/images/wizard_icon1.png';
 
 interface Message {
   id: string;
@@ -511,28 +512,28 @@ Or click one of the suggested questions below!`,
 
   return (
     <>
-      {/* Floating Button - Top Left Corner */}
+      {/* Floating Help Button - Upper Left Corner with Wizard Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed top-6 left-6 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${className}`}
+        className={`fixed top-20 left-4 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center border-2 border-purple-400/50 ${className}`}
         title={isOpen ? 'Close Merlin Assistant' : 'Ask Merlin for Help'}
       >
         {isOpen ? (
-          <span className="text-white text-xl">✕</span>
+          <span className="text-white text-lg">✕</span>
         ) : (
-          <span className="text-2xl">🧙‍♂️</span>
+          <img src={merlinIcon} alt="Ask Merlin" className="w-10 h-10 drop-shadow-lg" />
         )}
       </button>
 
-      {/* Chat Panel - Pops up from top left */}
+      {/* Chat Panel - Pops down from upper left */}
       {isOpen && (
-        <div className="fixed top-24 left-6 z-[9999] w-96 max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-36 left-4 z-[9999] w-96 max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-xl">🧙‍♂️</span>
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center p-1">
+                  <img src={merlinIcon} alt="Merlin" className="w-8 h-8" />
                 </div>
                 <div>
                   <h3 className="font-bold">Merlin Assistant</h3>

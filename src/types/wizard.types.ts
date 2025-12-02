@@ -1,8 +1,11 @@
 /**
- * SmartWizardV3 Type Definitions
+ * Wizard Type Definitions
  * ================================
  * Single source of truth for all wizard types
+ * Used by StreamlinedWizard and all wizard-related services
+ * 
  * Created: 2025-11-24
+ * Updated: 2025-12-01 - Consolidated from SmartWizardV3.types.ts
  */
 
 import type { PowerGapAnalysis } from '@/services/powerGapAnalysis';
@@ -78,12 +81,12 @@ export interface SmartWizardState {
   ui: WizardUIState;
   
   // Calculated results
-  currentQuote: any | null; // TODO: Create proper QuoteResult type
-  powerGapAnalysis: PowerGapAnalysis | null; // Power Gap intelligence
+  currentQuote: any | null;
+  powerGapAnalysis: PowerGapAnalysis | null;
   
   // Available options (from database)
-  availableUseCases: any[]; // TODO: Create proper UseCase type
-  useCaseDetails: any | null; // TODO: Create proper UseCaseDetails type
+  availableUseCases: any[];
+  useCaseDetails: any | null;
 }
 
 // ============================================================================
@@ -151,7 +154,7 @@ export interface UseSmartWizardReturn {
 // COMPONENT PROPS
 // ============================================================================
 
-export interface SmartWizardV3Props {
+export interface StreamlinedWizardProps {
   show: boolean;
   onClose: () => void;
   onFinish: (data: any) => void;
@@ -170,7 +173,6 @@ export interface BaseStepProps {
   onSkip?: () => void;
 }
 
-// Individual step props will extend BaseStepProps and add their specific needs
 export interface Step1Props extends BaseStepProps {
   selectedTemplate: string | null;
   availableTemplates: any[];

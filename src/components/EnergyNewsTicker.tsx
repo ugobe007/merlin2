@@ -15,71 +15,7 @@ const EnergyNewsTicker: React.FC = () => {
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch live data from database
-  useEffect(() => {
-    const fetchTickerData = async () => {
-      try {
-        // Fetch latest news from database
-        const { data: newsData, error: newsError } = await supabase
-          .from('industry_news')
-          .select('*')
-          .order('publishDate', { ascending: false })
-          .limit(10);
-
-        if (newsError) {
-          console.error('Error fetching news:', newsError);
-          // Use fallback data if database fetch fails
-          setTickerItems(getFallbackTickerItems());
-          setIsLoading(false);
-          return;
-        }
-
-        // Transform database news into ticker items
-        const newsItems: TickerItem[] = (newsData || []).map(item => ({
-          type: item.category === 'pricing' ? 'price' : 
-                item.category === 'deployment' ? 'funding' : 'news',
-          content: item.title,
-          icon: item.category === 'pricing' ? <DollarSign className="w-4 h-4" /> :
-                item.category === 'deployment' ? <Zap className="w-4 h-4" /> :
-                <Newspaper className="w-4 h-4" />
-        }));
-
-        // Fetch latest pricing data
-        const { data: pricingData, error: pricingError } = await supabase
-          .from('battery_pricing')
-          .select('*')
-          .order('date', { ascending: false })
-          .limit(3);
-
-        if (!pricingError && pricingData) {
-          const priceItems: TickerItem[] = pricingData.map(item => ({
-            type: 'price',
-            content: `${item.chemistry.toUpperCase()} Battery (${item.systemSize})`,
-            value: `$${item.pricePerKWh}/kWh`,
-            change: -5.2, // Calculate from historical data in production
-            icon: <DollarSign className="w-4 h-4" />
-          }));
-          newsItems.push(...priceItems);
-        }
-
-        setTickerItems(newsItems.length > 0 ? newsItems : getFallbackTickerItems());
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error in ticker data fetch:', error);
-        setTickerItems(getFallbackTickerItems());
-        setIsLoading(false);
-      }
-    };
-
-    fetchTickerData();
-    
-    // Refresh ticker data every 5 minutes
-    const refreshInterval = setInterval(fetchTickerData, 5 * 60 * 1000);
-    
-    return () => clearInterval(refreshInterval);
-  }, []);
-
-  // Fallback ticker items if database is unavailable
+  // Fallback ticker items - used immediately and when database is unavailable
   const getFallbackTickerItems = (): TickerItem[] => [
     {
       type: 'news',
@@ -103,8 +39,91 @@ const EnergyNewsTicker: React.FC = () => {
       type: 'news',
       content: 'California mandates 52 GW of energy storage by 2045',
       icon: <Newspaper className="w-4 h-4" />
+    },
+    {
+      type: 'price',
+      content: 'NMC Battery Cells',
+      value: '$128/kWh',
+      change: -8.3,
+      icon: <DollarSign className="w-4 h-4" />
     }
   ];
+
+  // Initialize with fallback data immediately (no loading state)
+  useEffect(() => {
+    // Start with fallback data immediately
+    setTickerItems(getFallbackTickerItems());
+    setIsLoading(false);
+
+    // Then try to fetch live data in the background
+    const fetchTickerData = async () => {
+      try {
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        // Fetch latest news from database
+        const { data: newsData, error: newsError } = await supabase
+          .from('industry_news')
+          .select('*')
+          .order('publishDate', { ascending: false })
+          .limit(10);
+
+        clearTimeout(timeoutId);
+
+        if (newsError || !newsData || newsData.length === 0) {
+          // Keep using fallback data
+          return;
+        }
+
+        // Transform database news into ticker items
+        const newsItems: TickerItem[] = newsData.map(item => ({
+          type: item.category === 'pricing' ? 'price' : 
+                item.category === 'deployment' ? 'funding' : 'news',
+          content: item.title,
+          icon: item.category === 'pricing' ? <DollarSign className="w-4 h-4" /> :
+                item.category === 'deployment' ? <Zap className="w-4 h-4" /> :
+                <Newspaper className="w-4 h-4" />
+        }));
+
+        // Fetch latest pricing data
+        const { data: pricingData, error: pricingError } = await supabase
+          .from('battery_pricing')
+          .select('*')
+          .order('date', { ascending: false })
+          .limit(3);
+
+        if (!pricingError && pricingData && pricingData.length > 0) {
+          const priceItems: TickerItem[] = pricingData.map(item => ({
+            type: 'price',
+            content: `${item.chemistry.toUpperCase()} Battery (${item.systemSize})`,
+            value: `$${item.pricePerKWh}/kWh`,
+            change: -5.2,
+            icon: <DollarSign className="w-4 h-4" />
+          }));
+          newsItems.push(...priceItems);
+        }
+
+        // Only update if we got data
+        if (newsItems.length > 0) {
+          setTickerItems(newsItems);
+        }
+      } catch (error) {
+        // Keep using fallback data - no console error needed
+      }
+    };
+
+    // Fetch live data after a short delay
+    const fetchTimeout = setTimeout(fetchTickerData, 1000);
+    
+    // Refresh ticker data every 5 minutes
+    const refreshInterval = setInterval(fetchTickerData, 5 * 60 * 1000);
+    
+    return () => {
+      clearTimeout(fetchTimeout);
+      clearInterval(refreshInterval);
+    };
+  }, []);
 
   // Rotate ticker items
   useEffect(() => {

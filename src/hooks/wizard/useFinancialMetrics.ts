@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
 
 /**
- * Custom hook for financial calculations in SmartWizardV2
+ * Custom hook for financial calculations in StreamlinedWizard
  * Handles NPV, IRR, payback period, and savings calculations
  */
 

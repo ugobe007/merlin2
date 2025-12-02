@@ -20,7 +20,7 @@ import type {
   BessSizing,
   UseCaseAnswers,
   EVConfiguration
-} from '../components/wizard/SmartWizardV3.types';
+} from '@/types/wizard.types';
 
 // Import services
 import { calculateDatabaseBaseline } from '@/services/baselineService';

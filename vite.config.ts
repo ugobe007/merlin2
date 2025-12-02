@@ -27,7 +27,7 @@ export default defineConfig({
           
           // App chunks - split by functionality
           'wizard': [
-            './src/components/wizard/SmartWizardV2.tsx',
+            './src/components/wizard/StreamlinedWizard.tsx',
             './src/components/wizard/InteractiveConfigDashboard.tsx',
           ],
           'modals': [

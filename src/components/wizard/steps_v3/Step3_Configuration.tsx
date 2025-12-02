@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Battery, Sun, Car, Zap } from 'lucide-react';
-import type { BaseStepProps, BessSizing, EVConfiguration } from '../SmartWizardV3.types';
+import type { BaseStepProps, BessSizing, EVConfiguration } from '@/types/wizard.types';
 
 interface Step3Props extends BaseStepProps {
   sizing: BessSizing;

@@ -5,8 +5,9 @@
  * Single source of truth for equipment pricing in the Merlin energy storage system.
  * 
  * Data Sources (in priority order):
- * 1. Database (Supabase) - Admin-configured pricing for specific industries/locations
- * 2. NREL ATB 2024 - National Renewable Energy Laboratory Annual Technology Baseline
+ * 1. Database `calculation_constants` table - Admin-configurable, no deploy needed
+ * 2. Database `equipment_pricing` table - Vendor-specific pricing
+ * 3. NREL ATB 2024 - National Renewable Energy Laboratory Annual Technology Baseline
  * 
  * This service provides intelligent fallback from database to NREL standards,
  * ensuring accurate pricing for both custom configurations and standard systems.
@@ -20,11 +21,16 @@
  * For large utility-scale systems (>10MW), also consider using Grid-Synk validation
  * from @/services/pricingService to verify pricing against industry standards.
  * 
- * Version: 1.0.0
- * Date: November 17, 2025
+ * Version: 2.0.0 - Now uses database-driven calculation_constants as primary SSOT
+ * Date: November 30, 2025
  */
 
 import { supabase } from './supabaseClient';
+import { 
+  getConstant, 
+  getPricingConstants,
+  clearConstantsCache 
+} from './calculationConstantsService';
 import type {
   BatteryPricing,
   InverterPricing,
@@ -85,6 +91,16 @@ export function clearPricingCache(): void {
     cacheExpiryMinutes: 60
   };
   console.log('💾 Unified pricing cache cleared');
+}
+
+/**
+ * Clear ALL caches (pricing + calculation constants)
+ * Call this after admin updates pricing in database
+ */
+export function clearAllPricingCaches(): void {
+  clearPricingCache();
+  clearConstantsCache();
+  console.log('🔄 All pricing caches cleared - will fetch fresh from database');
 }
 
 // ============================================
@@ -158,14 +174,56 @@ const NREL_GENERATOR_PRICING: GeneratorPricing = {
 
 /**
  * Fetch battery pricing from database with intelligent fallback
+ * 
+ * Priority:
+ * 1. calculation_constants table (size-tiered pricing)
+ * 2. equipment_pricing table (vendor-specific)
+ * 3. NREL ATB 2024 fallback constants
  */
 async function fetchBatteryPricingFromDB(
   powerMW: number,
   durationHours: number,
   location: string = 'United States'
 ): Promise<BatteryPricing> {
+  const energyMWh = powerMW * durationHours;
+  const energyKWh = energyMWh * 1000;
+  
   try {
-    // Try to fetch from database (silently fail if table doesn't exist)
+    // PRIORITY 1: Try calculation_constants table (database SSOT)
+    let pricePerKWh: number | null = null;
+    let dataSource: 'database' | 'nrel' = 'database';
+    
+    if (energyKWh >= 10000) {
+      // 10+ MWh = large utility scale
+      pricePerKWh = await getConstant('battery_cost_per_kwh_large');
+    } else if (energyKWh >= 1000) {
+      // 1-10 MWh = commercial scale
+      pricePerKWh = await getConstant('battery_cost_per_kwh_medium');
+    } else {
+      // < 1 MWh = small/SMB scale
+      pricePerKWh = await getConstant('battery_cost_per_kwh_small');
+    }
+    
+    // If we got a value from calculation_constants, use it
+    if (pricePerKWh !== null) {
+      if (import.meta.env.DEV) {
+        console.log(`💾 Battery pricing from calculation_constants: $${pricePerKWh}/kWh (${energyKWh.toFixed(0)} kWh system)`);
+      }
+      return {
+        pricePerKWh,
+        manufacturer: energyKWh >= 10000 ? 'CATL/BYD' : energyKWh >= 1000 ? 'Great Power' : 'LiON Energy',
+        model: energyKWh >= 10000 ? 'Utility Scale LFP' : energyKWh >= 1000 ? 'Commercial Container' : 'Small Commercial',
+        chemistry: 'LFP',
+        warrantyYears: 10,
+        cycleLife: 4000,
+        efficiency: 0.85,
+        dataSource: 'database',
+        lastUpdated: new Date(),
+        confidence: 'high'
+      };
+    }
+    
+    // PRIORITY 2: Try equipment_pricing table (vendor-specific)
     const { data, error } = await supabase
       .from('equipment_pricing')
       .select('*')
@@ -175,26 +233,26 @@ async function fetchBatteryPricingFromDB(
       .limit(1)
       .single();
 
-    // Silently fall back to NREL if database unavailable (404/400 errors are expected)
-    if (error || !data) {
-      // Only log if it's NOT a missing table error
-      if (error && !error.message?.includes('relation') && !error.message?.includes('does not exist')) {
-        console.log('⚠️  Database pricing unavailable, using NREL ATB 2024');
+    if (!error && data) {
+      // Size-based adjustments from vendor pricing
+      let vendorPrice = data.price_per_kwh || NREL_ATB_2024_BATTERY.pricePerKWh;
+      
+      if (energyMWh >= 100) {
+        // Utility-scale discount
+        vendorPrice = vendorPrice * 0.85;
+      } else if (energyMWh < 20) {
+        // Small system premium
+        vendorPrice = vendorPrice * 1.3;
       }
-      return NREL_ATB_2024_BATTERY;
-    }
-
-    // Calculate size-based adjustments
-    const energyMWh = powerMW * durationHours;
-    let pricingData = NREL_ATB_2024_BATTERY;
-
-    // Size-based pricing (economies of scale)
-    if (energyMWh >= 100) {
-      // Utility-scale (100+ MWh)
-      pricingData = {
-        pricePerKWh: data.price_per_kwh || 135,
-        manufacturer: data.manufacturer || 'CATL/BYD',
-        model: data.model || 'Utility Scale LFP',
+      
+      if (import.meta.env.DEV) {
+        console.log(`💾 Battery pricing from equipment_pricing: $${vendorPrice.toFixed(0)}/kWh (${data.manufacturer})`);
+      }
+      
+      return {
+        pricePerKWh: Math.round(vendorPrice),
+        manufacturer: data.manufacturer || 'Various',
+        model: data.model || 'Commercial LFP',
         chemistry: 'LFP',
         warrantyYears: 10,
         cycleLife: 4000,
@@ -203,43 +261,18 @@ async function fetchBatteryPricingFromDB(
         lastUpdated: new Date(data.updated_at),
         confidence: 'high'
       };
-    } else if (energyMWh >= 20) {
-      // Commercial-scale (20-100 MWh)
-      pricingData = {
-        pricePerKWh: data.price_per_kwh ? data.price_per_kwh * 1.15 : 155,
-        manufacturer: data.manufacturer || 'Great Power',
-        model: data.model || 'Commercial Container',
-        chemistry: 'LFP',
-        warrantyYears: 10,
-        cycleLife: 4000,
-        efficiency: 0.85,
-        dataSource: 'database',
-        lastUpdated: new Date(data.updated_at),
-        confidence: 'high'
-      };
-    } else {
-      // Small commercial (< 20 MWh)
-      pricingData = {
-        pricePerKWh: data.price_per_kwh ? data.price_per_kwh * 1.4 : 200,
-        manufacturer: data.manufacturer || 'LiON Energy',
-        model: data.model || 'Small Commercial',
-        chemistry: 'LFP',
-        warrantyYears: 10,
-        cycleLife: 4000,
-        efficiency: 0.85,
-        dataSource: 'database',
-        lastUpdated: new Date(data.updated_at),
-        confidence: 'medium'
-      };
     }
-
-    console.log(`💾 Battery pricing from database: $${pricingData.pricePerKWh}/kWh (${pricingData.manufacturer})`);
-    return pricingData;
+    
+    // PRIORITY 3: Fall back to NREL constants
+    if (import.meta.env.DEV) {
+      console.log(`📦 Battery pricing from NREL fallback: $${NREL_ATB_2024_BATTERY.pricePerKWh}/kWh`);
+    }
+    return NREL_ATB_2024_BATTERY;
 
   } catch (error: any) {
-    // Silently fall back for missing tables (404/400 errors expected in dev)
+    // Silently fall back for missing tables (expected in dev)
     if (!error?.message?.includes('relation') && !error?.message?.includes('does not exist')) {
-      console.error('❌ Database fetch failed:', error);
+      console.warn('⚠️ Database fetch failed:', error);
     }
     return NREL_ATB_2024_BATTERY;
   }
@@ -247,9 +280,25 @@ async function fetchBatteryPricingFromDB(
 
 /**
  * Fetch inverter pricing from database
+ * Priority: calculation_constants → equipment_pricing → NREL
  */
 async function fetchInverterPricingFromDB(powerMW: number): Promise<InverterPricing> {
   try {
+    // PRIORITY 1: Try calculation_constants
+    const pricePerKW = await getConstant('inverter_cost_per_kw');
+    if (pricePerKW !== null) {
+      return {
+        pricePerKW,
+        manufacturer: 'Various (Industry Standard)',
+        model: 'Grid-Scale Inverter',
+        efficiency: 0.97,
+        warrantyYears: 10,
+        dataSource: 'database',
+        lastUpdated: new Date()
+      };
+    }
+    
+    // PRIORITY 2: Try equipment_pricing
     const { data, error } = await supabase
       .from('equipment_pricing')
       .select('*')
@@ -259,19 +308,20 @@ async function fetchInverterPricingFromDB(powerMW: number): Promise<InverterPric
       .limit(1)
       .single();
 
-    if (error || !data) {
-      return NREL_INVERTER_PRICING;
+    if (!error && data) {
+      return {
+        pricePerKW: data.price_per_kw || 80,
+        manufacturer: data.manufacturer || 'Various',
+        model: data.model || 'Grid-Scale Inverter',
+        efficiency: 0.97,
+        warrantyYears: 10,
+        dataSource: 'database',
+        lastUpdated: new Date(data.updated_at)
+      };
     }
-
-    return {
-      pricePerKW: data.price_per_kw || 80,
-      manufacturer: data.manufacturer || 'Various',
-      model: data.model || 'Grid-Scale Inverter',
-      efficiency: 0.97,
-      warrantyYears: 10,
-      dataSource: 'database',
-      lastUpdated: new Date(data.updated_at)
-    };
+    
+    // PRIORITY 3: NREL fallback
+    return NREL_INVERTER_PRICING;
   } catch (error) {
     return NREL_INVERTER_PRICING;
   }
@@ -279,9 +329,25 @@ async function fetchInverterPricingFromDB(powerMW: number): Promise<InverterPric
 
 /**
  * Fetch solar pricing from database
+ * Priority: calculation_constants → equipment_pricing → NREL
  */
 async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
   try {
+    // PRIORITY 1: Try calculation_constants
+    const pricePerWatt = await getConstant('solar_cost_per_watt');
+    if (pricePerWatt !== null) {
+      return {
+        pricePerWatt,
+        manufacturer: 'Various (NREL ATB 2024)',
+        model: 'Utility-Scale Solar',
+        efficiency: 0.20,
+        warrantyYears: 25,
+        dataSource: 'database',
+        lastUpdated: new Date()
+      };
+    }
+    
+    // PRIORITY 2: Try equipment_pricing
     const { data, error } = await supabase
       .from('equipment_pricing')
       .select('*')
@@ -291,19 +357,20 @@ async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
       .limit(1)
       .single();
 
-    if (error || !data) {
-      return NREL_SOLAR_PRICING;
+    if (!error && data) {
+      return {
+        pricePerWatt: data.price_per_watt || 0.85,
+        manufacturer: data.manufacturer || 'Various',
+        model: data.model || 'Utility-Scale Solar',
+        efficiency: 0.20,
+        warrantyYears: 25,
+        dataSource: 'database',
+        lastUpdated: new Date(data.updated_at)
+      };
     }
-
-    return {
-      pricePerWatt: data.price_per_watt || 0.85,
-      manufacturer: data.manufacturer || 'Various',
-      model: data.model || 'Utility-Scale Solar',
-      efficiency: 0.20,
-      warrantyYears: 25,
-      dataSource: 'database',
-      lastUpdated: new Date(data.updated_at)
-    };
+    
+    // PRIORITY 3: NREL fallback
+    return NREL_SOLAR_PRICING;
   } catch (error) {
     return NREL_SOLAR_PRICING;
   }

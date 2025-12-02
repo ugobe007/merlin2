@@ -5,16 +5,177 @@
  */
 
 import React from 'react';
-import { X, TrendingUp, Zap, DollarSign, Clock, ArrowRight, Building2, Database, Car } from 'lucide-react';
+import { X, TrendingUp, Zap, DollarSign, Clock, ArrowRight, Building2, Database, Car, Factory, Store, Thermometer } from 'lucide-react';
+
+export type ApplicationType = 'hotel' | 'data-center' | 'ev-charging' | 'office' | 'manufacturing' | 'retail' | 'cold-storage';
 
 interface RealWorldApplicationModalProps {
   show: boolean;
   onClose: () => void;
-  application: 'hotel' | 'data-center' | 'ev-charging';
+  application: ApplicationType;
   onStartWizard?: () => void;
 }
 
-const applicationData = {
+const applicationData: Record<ApplicationType, {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  image: string;
+  facilitySize: string;
+  peakPowerKW: number;
+  avgPowerKW: number;
+  dailyEnergyKWh: number;
+  operatingHours: string;
+  systemSizeMW: number;
+  systemSizeMWh: number;
+  duration: number;
+  demandChargeBefore: number;
+  demandChargeAfter: number;
+  energyCostBefore: number;
+  energyCostAfter: number;
+  totalAnnualSavings: number;
+  systemCost: number;
+  paybackYears: number;
+  roi25Year: string;
+  benefits: string[];
+  challenges: string[];
+}> = {
+  'office': {
+    title: 'Corporate Office Building',
+    subtitle: '75,000 sq ft Class A office with 500 employees',
+    icon: <Building2 className="w-12 h-12 text-blue-600" />,
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070',
+    facilitySize: '75,000 sq ft',
+    peakPowerKW: 350,
+    avgPowerKW: 180,
+    dailyEnergyKWh: 4320,
+    operatingHours: 'M-F 7am-7pm, reduced weekends',
+    systemSizeMW: 0.4,
+    systemSizeMWh: 0.8,
+    duration: 2,
+    demandChargeBefore: 420000,
+    demandChargeAfter: 210000,
+    energyCostBefore: 890000,
+    energyCostAfter: 633000,
+    totalAnnualSavings: 467000,
+    systemCost: 420000,
+    paybackYears: 0.9,
+    roi25Year: '2,680%',
+    benefits: [
+      'Peak shaving during business hours',
+      'HVAC optimization with TOU arbitrage',
+      'Backup power for critical systems',
+      'Green building certification credits'
+    ],
+    challenges: [
+      'Morning startup surge (7-9am)',
+      'Afternoon HVAC peak (2-4pm)',
+      'High demand charges in commercial rates',
+      'Elevator and lighting loads'
+    ]
+  },
+  'manufacturing': {
+    title: 'Manufacturing Facility',
+    subtitle: 'Medium-scale production plant with heavy machinery',
+    icon: <Factory className="w-12 h-12 text-orange-600" />,
+    image: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?q=80&w=2070',
+    facilitySize: '200,000 sq ft',
+    peakPowerKW: 2800,
+    avgPowerKW: 1800,
+    dailyEnergyKWh: 43200,
+    operatingHours: '24/7 production shifts',
+    systemSizeMW: 2.5,
+    systemSizeMWh: 5.0,
+    duration: 2,
+    demandChargeBefore: 3200000,
+    demandChargeAfter: 1520000,
+    energyCostBefore: 5800000,
+    energyCostAfter: 4288000,
+    totalAnnualSavings: 3192000,
+    systemCost: 2625000,
+    paybackYears: 0.82,
+    roi25Year: '2,940%',
+    benefits: [
+      'Smooth production line startups',
+      'Eliminate penalty demand charges',
+      'Power quality for sensitive equipment',
+      'Uninterrupted production during outages'
+    ],
+    challenges: [
+      'Heavy motor startup surges',
+      'Shift change power spikes',
+      'Welding and CNC machine loads',
+      'Compressed air system demand'
+    ]
+  },
+  'retail': {
+    title: 'Large Retail Store',
+    subtitle: 'Big box retailer with refrigeration and high foot traffic',
+    icon: <Store className="w-12 h-12 text-green-600" />,
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070',
+    facilitySize: '120,000 sq ft',
+    peakPowerKW: 450,
+    avgPowerKW: 280,
+    dailyEnergyKWh: 6720,
+    operatingHours: '8am-10pm daily',
+    systemSizeMW: 0.5,
+    systemSizeMWh: 1.0,
+    duration: 2,
+    demandChargeBefore: 540000,
+    demandChargeAfter: 281000,
+    energyCostBefore: 1150000,
+    energyCostAfter: 869000,
+    totalAnnualSavings: 540000,
+    systemCost: 525000,
+    paybackYears: 0.97,
+    roi25Year: '2,470%',
+    benefits: [
+      'Refrigeration load optimization',
+      'Peak shaving during shopping hours',
+      'Backup power for POS systems',
+      'Reduced demand charges'
+    ],
+    challenges: [
+      'Refrigeration defrost cycles',
+      'Holiday and weekend peak loads',
+      'HVAC for large open spaces',
+      'Lighting and display power'
+    ]
+  },
+  'cold-storage': {
+    title: 'Cold Storage Warehouse',
+    subtitle: 'Temperature-controlled distribution center',
+    icon: <Thermometer className="w-12 h-12 text-cyan-600" />,
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070',
+    facilitySize: '80,000 sq ft',
+    peakPowerKW: 1200,
+    avgPowerKW: 850,
+    dailyEnergyKWh: 20400,
+    operatingHours: '24/7 critical cooling',
+    systemSizeMW: 1.2,
+    systemSizeMWh: 2.4,
+    duration: 2,
+    demandChargeBefore: 1440000,
+    demandChargeAfter: 691000,
+    energyCostBefore: 2750000,
+    energyCostAfter: 1993000,
+    totalAnnualSavings: 1506000,
+    systemCost: 1260000,
+    paybackYears: 0.84,
+    roi25Year: '2,890%',
+    benefits: [
+      'Compressor load smoothing',
+      'Defrost cycle optimization',
+      'Critical backup for inventory',
+      'Massive demand charge reduction'
+    ],
+    challenges: [
+      'Continuous refrigeration load',
+      'Defrost cycle power spikes',
+      'Door opening heat infiltration',
+      'Compressor cycling patterns'
+    ]
+  },
   'hotel': {
     title: 'Luxury Hotel - 300 Rooms',
     subtitle: 'Full-service property with restaurant, gym, conference center',

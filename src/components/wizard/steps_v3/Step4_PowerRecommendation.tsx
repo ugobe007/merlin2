@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Zap, Battery, Sun, Wind, TrendingUp, Check, Settings } from 'lucide-react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 
 interface Step4Props extends BaseStepProps {
   storageSizeMW: number;

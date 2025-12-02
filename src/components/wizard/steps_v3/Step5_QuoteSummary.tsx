@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { CheckCircle, Edit, DollarSign, TrendingUp, Calendar } from 'lucide-react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 
 interface Step5Props extends BaseStepProps {
   quote: any;

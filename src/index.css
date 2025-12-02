@@ -85,6 +85,16 @@ input[type="range"].slider::-moz-range-thumb:hover {
 
 @keyframes float {
   0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Float animation with opacity for background elements */
+@keyframes float-bg {
+  0%, 100% {
     transform: translateY(0px) translateX(0px);
     opacity: 0.3;
   }
@@ -116,6 +126,103 @@ input[type="range"].slider::-moz-range-thumb:hover {
 .animate-float-delayed {
   animation: float-delayed 4s ease-in-out infinite;
   animation-delay: 1s;
+}
+
+/* Shimmer effect for savings display */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Floating animation for cards */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Gradient border spin */
+@keyframes gradient-spin {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-spin {
+  background-size: 200% 200%;
+  animation: gradient-spin 3s ease infinite;
+}
+
+/* Slide in animations for Merlin modal */
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeSlideIn {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 40px rgba(251,191,36,0.2);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(251,191,36,0.35);
+  }
+}
+
+@keyframes flowLine {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  50% {
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
 }
 
 /* Enhanced glow effects for Merlin theme */

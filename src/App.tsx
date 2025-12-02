@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import BessQuoteBuilder from './components/BessQuoteBuilder';
 import AdminDashboard from './components/AdminDashboard';
 import MerlinAssistant from './components/MerlinAssistant';
+import CarWashEnergy from './components/verticals/CarWashEnergy';
+import EVChargingEnergy from './components/verticals/EVChargingEnergy';
+import HotelEnergy from './components/verticals/HotelEnergy';
+import StreamlinedWizard from './components/wizard/StreamlinedWizard';
 import { QuoteProvider } from './contexts/QuoteContext';
 
 // Test calculations temporarily disabled for production build
@@ -17,8 +21,19 @@ function App() {
   // Check for admin access via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   const adminParam = urlParams.get('admin');
+  const verticalParam = urlParams.get('vertical');
+  
+  // Check for path-based routing (e.g., /carwashenergy)
+  const pathname = window.location.pathname;
   
   const [showAdmin, setShowAdmin] = useState(adminParam === 'true');
+  const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
+  const [activeVertical, setActiveVertical] = useState<string | null>(
+    verticalParam || 
+    (pathname === '/carwashenergy' ? 'carwash' : 
+     pathname === '/evchargingenergy' ? 'evcharging' :
+     pathname === '/hotelenergy' ? 'hotel' : null)
+  );
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
   useEffect(() => {
@@ -56,6 +71,33 @@ function App() {
       <div>
         <AdminDashboard />
       </div>
+    );
+  }
+
+  // White-label verticals
+  // Access via ?vertical=carwash or eventually carwashenergy.com
+  if (activeVertical === 'carwash') {
+    return <CarWashEnergy />;
+  }
+  
+  // Access via ?vertical=evcharging or /evchargingenergy
+  if (activeVertical === 'evcharging') {
+    return <EVChargingEnergy />;
+  }
+  
+  // Access via ?vertical=hotel or /hotelenergy
+  if (activeVertical === 'hotel') {
+    return <HotelEnergy />;
+  }
+  
+  // Access via /wizard - Streamlined Wizard (new UX)
+  if (showStreamlinedWizard) {
+    return (
+      <StreamlinedWizard 
+        show={true}
+        onClose={() => window.location.href = '/'}
+        onFinish={(data) => console.log('Quote finished:', data)}
+      />
     );
   }
 

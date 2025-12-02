@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { calculateEquipmentBreakdown, type EquipmentBreakdown } from '../../utils/equipmentCalculations';
 
 /**
- * Custom hook for capacity and equipment calculations in SmartWizardV2
+ * Custom hook for capacity and equipment calculations in StreamlinedWizard
  * Handles battery sizing, PCS calculations, and equipment breakdowns
  */
 

@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 import type { PowerGapAnalysis } from '@/services/powerGapAnalysis';
 import { PowerGapVisualization } from '../PowerGapVisualization';
 

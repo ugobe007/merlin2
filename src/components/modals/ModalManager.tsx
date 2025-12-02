@@ -10,7 +10,7 @@ import WelcomeModal from './WelcomeModal';
 import AccountSetup from './AccountSetup';
 import EnhancedProfile from '../EnhancedProfile';
 import JoinMerlinModal from './JoinMerlinModal';
-import SmartWizard from '../wizard/SmartWizardV2';
+import StreamlinedWizard from '../wizard/StreamlinedWizard';
 import CalculationModal from './CalculationModal';
 import SaveProjectModal from './SaveProjectModal';
 import LoadProjectModal from './LoadProjectModal';
@@ -284,7 +284,8 @@ export default function ModalManager(props: ModalManagerProps) {
         }}
       />
       
-      <SmartWizard
+      {/* Streamlined Wizard - New UX */}
+      <StreamlinedWizard
         show={showSmartWizard}
         onClose={() => {
           setShowSmartWizard(false);
@@ -297,22 +298,16 @@ export default function ModalManager(props: ModalManagerProps) {
             setSkipWizardIntro(false);
           }
         }}
-        startInAdvancedMode={startWizardInAdvancedMode}
-        skipIntro={skipWizardIntro}
-        onOpenAdvancedQuoteBuilder={() => {
+        onOpenAdvanced={() => {
           // Close wizard and open Advanced Quote Builder in custom-config mode
-          console.log('🔥 ModalManager: onOpenAdvancedQuoteBuilder called');
-          console.log('🔥 setShowAdvancedQuoteBuilderModal exists?', !!setShowAdvancedQuoteBuilderModal);
+          console.log('🔥 ModalManager: onOpenAdvanced called');
           setShowSmartWizard(false);
           if (setShowAdvancedQuoteBuilderModal) {
             console.log('🔥 Setting showAdvancedQuoteBuilderModal to true');
-            // Set initial view to custom-config when coming from Smart Wizard
             if (setAdvancedQuoteBuilderInitialView) {
               setAdvancedQuoteBuilderInitialView('custom-config');
             }
             setShowAdvancedQuoteBuilderModal(true);
-          } else {
-            console.log('❌ setShowAdvancedQuoteBuilderModal is undefined!');
           }
         }}
         onFinish={(wizardData) => {

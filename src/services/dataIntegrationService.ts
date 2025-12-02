@@ -3,7 +3,7 @@
  * 
  * Purpose: Single entry point that combines:
  * 1. Database queries (use_case_templates + equipment_database)
- * 2. Calculation engine (bessDataService.ts)
+ * 2. Calculation engine (baselineService.ts) - Replaces deprecated bessDataService
  * 3. Solar sizing (solarSizingService.ts)
  * 4. Cache management (calculation_cache table)
  * 
@@ -24,7 +24,7 @@
  */
 
 import { supabase } from './supabaseClient';
-import { calculateBESSSize } from './bessDataService';
+import { calculateBESSSize } from './baselineService'; // Migrated from deprecated bessDataService
 import { calculateFinancialMetrics } from './centralizedCalculations';
 import { calculateSolarBESSSystem } from './solarSizingService';
 import { getUseCaseBySlug } from '../data/useCaseTemplates';

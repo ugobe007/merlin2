@@ -12,7 +12,7 @@
  * - RECOMMENDATION: What action to take
  */
 
-import type { UseCaseAnswers } from '@/components/wizard/SmartWizardV3.types';
+import type { UseCaseAnswers } from '@/types/wizard.types';
 import type { BaselineCalculationResult } from '@/services/baselineService';
 
 export interface PowerGapAnalysis {

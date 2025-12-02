@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { BaseStepProps } from '../SmartWizardV3.types';
+import type { BaseStepProps } from '@/types/wizard.types';
 
 interface Step2Props extends BaseStepProps {
   useCase: any;

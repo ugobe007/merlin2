@@ -552,24 +552,24 @@ const AdminDashboard: React.FC = () => {
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-slate-700/50 p-4 rounded-lg">
                   <h4 className="font-semibold text-white mb-2">🔋 BESS Systems</h4>
-                  <p className="text-gray-400 text-sm">Cabinet (&lt;1MW): $439/kWh</p>
-                  <p className="text-gray-400 text-sm">Mid-size (1-3MW): $378/kWh</p>
-                  <p className="text-gray-400 text-sm">Container (3+MW): $104/kWh</p>
-                  <p className="text-orange-300 text-xs mt-2">Dynapower/Sinexcel/Great Power quotes</p>
+                  <p className="text-gray-400 text-sm">Small (&lt;1MWh): ~$200/kWh</p>
+                  <p className="text-gray-400 text-sm">Medium (1-10MWh): ~$155/kWh</p>
+                  <p className="text-gray-400 text-sm">Utility (10+MWh): ~$140/kWh</p>
+                  <p className="text-blue-300 text-xs mt-2">NREL ATB 2024 via unifiedPricingService</p>
                 </div>
                 
                 <div className="bg-slate-700/50 p-4 rounded-lg">
                   <h4 className="font-semibold text-white mb-2">⚡ Generators</h4>
-                  <p className="text-gray-400 text-sm">Natural Gas: $321/kW</p>
-                  <p className="text-gray-400 text-sm">Diesel: $280/kW</p>
-                  <p className="text-orange-300 text-xs mt-2">Based on Eaton/Cummins quote</p>
+                  <p className="text-gray-400 text-sm">Natural Gas: ~$700/kW</p>
+                  <p className="text-gray-400 text-sm">Diesel: ~$500/kW</p>
+                  <p className="text-blue-300 text-xs mt-2">NREL ATB 2024 via unifiedPricingService</p>
                 </div>
                 
                 <div className="bg-slate-700/50 p-4 rounded-lg">
                   <h4 className="font-semibold text-white mb-2">🚗 EV Charging</h4>
-                  <p className="text-gray-400 text-sm">Level 2: $8k/unit</p>
-                  <p className="text-gray-400 text-sm">DC Fast: $45k/unit</p>
-                  <p className="text-orange-300 text-xs mt-2">Market-verified pricing</p>
+                  <p className="text-gray-400 text-sm">Level 2: $2-8k/unit</p>
+                  <p className="text-gray-400 text-sm">DCFC: $35-85k/unit</p>
+                  <p className="text-blue-300 text-xs mt-2">evChargingCalculations.ts SSOT</p>
                 </div>
               </div>
               

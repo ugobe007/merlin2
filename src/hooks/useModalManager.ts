@@ -39,7 +39,8 @@ type ModalName =
   | 'showPricingPresets'
   | 'showReviewWorkflow'
   | 'showQuotePreview'
-  | 'showLayoutPreferenceModal';
+  | 'showLayoutPreferenceModal'
+  | 'showVerticalRedirect';
 
 type ModalState = Record<ModalName, boolean>;
 
@@ -87,6 +88,7 @@ export const useModalManager = () => {
     showReviewWorkflow: false,
     showQuotePreview: false,
     showLayoutPreferenceModal: false,
+    showVerticalRedirect: false,
   });
 
   // Open a specific modal
