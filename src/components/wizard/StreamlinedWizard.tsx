@@ -89,6 +89,7 @@ interface WizardState {
   // Backup generator
   generatorKW: number;   // Generator capacity
   generatorFuel: 'diesel' | 'natural-gas' | 'propane';
+  generatorType: 'traditional' | 'linear'; // Traditional (Cummins/Cat) vs Linear (Mainspring)
   
   // Section 5: Configuration
   batteryKW: number;
@@ -248,6 +249,7 @@ export default function StreamlinedWizard({
     windTurbineKW: 0,
     generatorKW: 0,
     generatorFuel: 'natural-gas',
+    generatorType: 'traditional',
     batteryKW: 0,
     batteryKWh: 0,
     solarKW: 0,
@@ -526,6 +528,9 @@ export default function StreamlinedWizard({
               level={Math.floor(totalPoints / 25) + 1}
               selectedLocation={wizardState.state}
               selectedIndustry={wizardState.industryName}
+              systemSize={wizardState.batteryKW}
+              systemKWh={wizardState.batteryKWh}
+              durationHours={wizardState.durationHours}
               onShowExplainer={() => setShowPowerProfileExplainer(true)}
             />
           </div>
@@ -539,6 +544,9 @@ export default function StreamlinedWizard({
                 completedSections={completedSections}
                 totalPoints={totalPoints}
                 level={Math.floor(totalPoints / 25) + 1}
+                systemSize={wizardState.batteryKW}
+                systemKWh={wizardState.batteryKWh}
+                durationHours={wizardState.durationHours}
                 compact
                 onShowExplainer={() => setShowPowerProfileExplainer(true)}
               />
@@ -1157,13 +1165,24 @@ export default function StreamlinedWizard({
                 })}
               </div>
               
-              {/* Solar Toggle */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200 mb-4">
+              {/* Solar Toggle with AI Recommendation */}
+              <div className={`rounded-2xl p-6 border-2 mb-4 transition-all ${
+                wizardState.wantsSolar 
+                  ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-400 shadow-lg shadow-amber-500/20' 
+                  : 'bg-gradient-to-br from-amber-50/50 to-orange-50/50 border-amber-200'
+              }`}>
                 <label className="flex items-center gap-4 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={wizardState.wantsSolar}
-                    onChange={(e) => setWizardState(prev => ({ ...prev, wantsSolar: e.target.checked }))}
+                    onChange={(e) => {
+                      const batteryKW = wizardState.batteryKW || 500;
+                      setWizardState(prev => ({ 
+                        ...prev, 
+                        wantsSolar: e.target.checked,
+                        solarKW: e.target.checked ? Math.round(batteryKW * 1.2) : 0 
+                      }));
+                    }}
                     className="w-6 h-6 rounded accent-amber-500"
                   />
                   <div className="flex-1">
@@ -1180,19 +1199,91 @@ export default function StreamlinedWizard({
                     </div>
                   )}
                 </label>
+                
+                {/* Expanded Configuration when enabled */}
+                {wizardState.wantsSolar && (
+                  <div className="mt-4 pt-4 border-t border-amber-200 space-y-4">
+                    {/* AI Recommendation Badge */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span className="text-amber-700 font-medium">Merlin recommends:</span>
+                      <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-xs">
+                        {Math.round((wizardState.batteryKW || 500) * 1.2)} kW
+                      </span>
+                      <span className="text-gray-500 text-xs">(120% of battery power for optimal charging)</span>
+                    </div>
+                    
+                    {/* Power Adjustment */}
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600 w-20">Solar kW:</span>
+                      <button
+                        onClick={() => setWizardState(prev => ({ ...prev, solarKW: Math.max(50, (prev.solarKW || 0) - 50) }))}
+                        className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1 relative">
+                        <input
+                          type="range"
+                          min="50"
+                          max={Math.max(2000, (wizardState.batteryKW || 500) * 2)}
+                          step="50"
+                          value={wizardState.solarKW || 0}
+                          onChange={(e) => setWizardState(prev => ({ ...prev, solarKW: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                        />
+                      </div>
+                      <button
+                        onClick={() => setWizardState(prev => ({ ...prev, solarKW: Math.min(5000, (prev.solarKW || 0) + 50) }))}
+                        className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                      <div className="w-24 text-right">
+                        <span className="text-2xl font-black text-amber-600">{wizardState.solarKW || 0}</span>
+                        <span className="text-sm text-gray-500 ml-1">kW</span>
+                      </div>
+                    </div>
+                    
+                    {/* Specs Info */}
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Est. Annual Gen</div>
+                        <div className="font-bold text-amber-700">
+                          {Math.round((wizardState.solarKW || 0) * (wizardState.geoRecommendations?.profile.avgSolarHoursPerDay || 5) * 365 / 1000).toLocaleString()} MWh
+                        </div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Voltage</div>
+                        <div className="font-bold text-amber-700">480V 3-Phase</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Est. Cost</div>
+                        <div className="font-bold text-amber-700">${((wizardState.solarKW || 0) * 1200).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
-              {/* Wind Power Toggle */}
-              <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-6 border border-sky-200 mb-4">
+              {/* Wind Power Toggle with AI Recommendation */}
+              <div className={`rounded-2xl p-6 border-2 mb-4 transition-all ${
+                wizardState.wantsWind 
+                  ? 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-400 shadow-lg shadow-sky-500/20' 
+                  : 'bg-gradient-to-br from-sky-50/50 to-blue-50/50 border-sky-200'
+              }`}>
                 <label className="flex items-center gap-4 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={wizardState.wantsWind}
-                    onChange={(e) => setWizardState(prev => ({ 
-                      ...prev, 
-                      wantsWind: e.target.checked,
-                      windTurbineKW: e.target.checked ? 100 : 0 
-                    }))}
+                    onChange={(e) => {
+                      const batteryKW = wizardState.batteryKW || 500;
+                      setWizardState(prev => ({ 
+                        ...prev, 
+                        wantsWind: e.target.checked,
+                        windTurbineKW: e.target.checked ? Math.round(batteryKW * 0.5) : 0 
+                      }));
+                    }}
                     className="w-6 h-6 rounded accent-sky-500"
                   />
                   <div className="flex-1">
@@ -1204,24 +1295,94 @@ export default function StreamlinedWizard({
                   </div>
                   {wizardState.geoRecommendations && (
                     <div className="text-right">
-                      <div className="text-sky-500 font-bold">~8 mph</div>
+                      <div className="text-sky-500 font-bold">~{wizardState.geoRecommendations.profile.avgWindSpeed || 8} mph</div>
                       <div className="text-xs text-gray-500">avg wind</div>
                     </div>
                   )}
                 </label>
+                
+                {/* Expanded Configuration when enabled */}
+                {wizardState.wantsWind && (
+                  <div className="mt-4 pt-4 border-t border-sky-200 space-y-4">
+                    {/* AI Recommendation Badge */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Sparkles className="w-4 h-4 text-sky-500" />
+                      <span className="text-sky-700 font-medium">Merlin recommends:</span>
+                      <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-bold text-xs">
+                        {Math.round((wizardState.batteryKW || 500) * 0.5)} kW
+                      </span>
+                      <span className="text-gray-500 text-xs">(50% of battery for wind supplement)</span>
+                    </div>
+                    
+                    {/* Power Adjustment */}
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600 w-20">Wind kW:</span>
+                      <button
+                        onClick={() => setWizardState(prev => ({ ...prev, windTurbineKW: Math.max(25, (prev.windTurbineKW || 0) - 25) }))}
+                        className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1">
+                        <input
+                          type="range"
+                          min="25"
+                          max={Math.max(1000, (wizardState.batteryKW || 500))}
+                          step="25"
+                          value={wizardState.windTurbineKW || 0}
+                          onChange={(e) => setWizardState(prev => ({ ...prev, windTurbineKW: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-sky-200 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                        />
+                      </div>
+                      <button
+                        onClick={() => setWizardState(prev => ({ ...prev, windTurbineKW: Math.min(2000, (prev.windTurbineKW || 0) + 25) }))}
+                        className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                      <div className="w-24 text-right">
+                        <span className="text-2xl font-black text-sky-600">{wizardState.windTurbineKW || 0}</span>
+                        <span className="text-sm text-gray-500 ml-1">kW</span>
+                      </div>
+                    </div>
+                    
+                    {/* Specs Info */}
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Capacity Factor</div>
+                        <div className="font-bold text-sky-700">~25-35%</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Voltage</div>
+                        <div className="font-bold text-sky-700">480V 3-Phase</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Est. Cost</div>
+                        <div className="font-bold text-sky-700">${((wizardState.windTurbineKW || 0) * 1800).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
-              {/* Backup Generator Toggle */}
-              <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-slate-200 mb-6">
+              {/* Backup Generator Toggle with AI Recommendation + Types */}
+              <div className={`rounded-2xl p-6 border-2 mb-6 transition-all ${
+                wizardState.wantsGenerator 
+                  ? 'bg-gradient-to-br from-slate-50 to-gray-100 border-slate-400 shadow-lg shadow-slate-500/20' 
+                  : 'bg-gradient-to-br from-slate-50/50 to-gray-50/50 border-slate-200'
+              }`}>
                 <label className="flex items-center gap-4 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={wizardState.wantsGenerator}
-                    onChange={(e) => setWizardState(prev => ({ 
-                      ...prev, 
-                      wantsGenerator: e.target.checked,
-                      generatorKW: e.target.checked ? 500 : 0 
-                    }))}
+                    onChange={(e) => {
+                      const batteryKW = wizardState.batteryKW || 500;
+                      setWizardState(prev => ({ 
+                        ...prev, 
+                        wantsGenerator: e.target.checked,
+                        generatorKW: e.target.checked ? Math.round(batteryKW * 0.75) : 0 
+                      }));
+                    }}
                     className="w-6 h-6 rounded accent-slate-500"
                   />
                   <div className="flex-1">
@@ -1246,6 +1407,144 @@ export default function StreamlinedWizard({
                     </div>
                   )}
                 </label>
+                
+                {/* Expanded Configuration when enabled */}
+                {wizardState.wantsGenerator && (
+                  <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+                    {/* Generator Type Selection */}
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2 font-medium">Generator Type:</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Traditional Generator */}
+                        <button
+                          onClick={() => setWizardState(prev => ({ ...prev, generatorType: 'traditional' }))}
+                          className={`p-3 rounded-xl border-2 text-left transition-all ${
+                            wizardState.generatorType !== 'linear' 
+                              ? 'border-slate-400 bg-slate-100' 
+                              : 'border-slate-200 bg-white hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">⚙️</span>
+                            <span className="font-bold text-sm text-gray-800">Traditional</span>
+                          </div>
+                          <p className="text-xs text-gray-500">Diesel/NG engines (Cummins, Caterpillar)</p>
+                          <p className="text-xs text-slate-600 mt-1">Lower upfront cost, proven reliability</p>
+                        </button>
+                        
+                        {/* Linear Generator */}
+                        <button
+                          onClick={() => setWizardState(prev => ({ ...prev, generatorType: 'linear' }))}
+                          className={`p-3 rounded-xl border-2 text-left transition-all ${
+                            wizardState.generatorType === 'linear' 
+                              ? 'border-emerald-400 bg-emerald-50' 
+                              : 'border-slate-200 bg-white hover:border-emerald-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">🔋</span>
+                            <span className="font-bold text-sm text-gray-800">Linear Generator</span>
+                          </div>
+                          <p className="text-xs text-gray-500">Mainspring, Bloom Energy</p>
+                          <p className="text-xs text-emerald-600 mt-1">Higher efficiency, lower emissions</p>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* AI Recommendation Badge */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Sparkles className="w-4 h-4 text-slate-500" />
+                      <span className="text-slate-700 font-medium">Merlin recommends:</span>
+                      <span className="bg-slate-200 text-slate-800 px-2 py-0.5 rounded-full font-bold text-xs">
+                        {Math.round((wizardState.batteryKW || 500) * 0.75)} kW
+                      </span>
+                      <span className="text-gray-500 text-xs">(75% of battery for backup redundancy)</span>
+                    </div>
+                    
+                    {/* Power Adjustment */}
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600 w-24">Generator:</span>
+                      <button
+                        onClick={() => {
+                          const current = wizardState.generatorKW || 0;
+                          const step = current > 10000 ? 5000 : current > 1000 ? 1000 : 100;
+                          setWizardState(prev => ({ ...prev, generatorKW: Math.max(100, current - step) }));
+                        }}
+                        className="w-10 h-10 bg-slate-200 hover:bg-slate-300 rounded-lg flex items-center justify-center text-slate-700 font-bold"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1">
+                        <input
+                          type="range"
+                          min="100"
+                          max="100000"
+                          step="100"
+                          value={wizardState.generatorKW || 0}
+                          onChange={(e) => setWizardState(prev => ({ ...prev, generatorKW: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          const current = wizardState.generatorKW || 0;
+                          const step = current >= 10000 ? 5000 : current >= 1000 ? 1000 : 100;
+                          setWizardState(prev => ({ ...prev, generatorKW: Math.min(100000, current + step) }));
+                        }}
+                        className="w-10 h-10 bg-slate-200 hover:bg-slate-300 rounded-lg flex items-center justify-center text-slate-700 font-bold"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                      <div className="w-32 text-right">
+                        {(wizardState.generatorKW || 0) >= 1000 ? (
+                          <>
+                            <span className="text-2xl font-black text-slate-700">{((wizardState.generatorKW || 0) / 1000).toFixed(1)}</span>
+                            <span className="text-sm text-gray-500 ml-1">MW</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-2xl font-black text-slate-700">{wizardState.generatorKW || 0}</span>
+                            <span className="text-sm text-gray-500 ml-1">kW</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Specs Info */}
+                    <div className="grid grid-cols-4 gap-3 text-center">
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Fuel Type</div>
+                        <div className="font-bold text-slate-700 capitalize">{wizardState.generatorFuel.replace('-', ' ')}</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Voltage</div>
+                        <div className="font-bold text-slate-700">480V 3Φ</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Amperage</div>
+                        <div className="font-bold text-slate-700">{Math.round((wizardState.generatorKW || 0) / 0.48 / 1.732)}A</div>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="text-xs text-gray-500">Est. Cost</div>
+                        <div className="font-bold text-slate-700">${((wizardState.generatorKW || 0) * (wizardState.generatorType === 'linear' ? 2500 : 800)).toLocaleString()}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Linear Generator Info */}
+                    {wizardState.generatorType === 'linear' && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm">
+                        <div className="flex items-center gap-2 text-emerald-700 font-medium mb-1">
+                          <Info className="w-4 h-4" />
+                          <span>About Linear Generators</span>
+                        </div>
+                        <p className="text-emerald-600 text-xs">
+                          Linear generators (like Mainspring) use a free-piston linear engine that converts fuel directly to electricity 
+                          with ~90% efficiency, significantly reducing emissions and fuel costs compared to traditional rotary engines.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               {/* Continue button */}
@@ -1502,11 +1801,11 @@ export default function StreamlinedWizard({
                   {/* Duration */}
                   <div className="mb-6">
                     <label className="flex justify-between text-sm text-gray-500 mb-2">
-                      <span>Storage Duration</span>
+                      <span>Backup Duration (Industry Standard)</span>
                       <span className="text-purple-600 font-bold">{wizardState.durationHours} hours</span>
                     </label>
                     <div className="grid grid-cols-4 gap-2">
-                      {[2, 4, 6, 8].map((hours) => (
+                      {[2, 4, 6, 10].map((hours) => (
                         <button
                           key={hours}
                           onClick={() => setWizardState(prev => ({
