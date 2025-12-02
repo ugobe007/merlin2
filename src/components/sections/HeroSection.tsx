@@ -783,65 +783,159 @@ export default function HeroSection({
             </div>
           </div>
 
-          {/* Value Proposition Cards */}
+          {/* Value Proposition Cards - Enhanced with animated illustrations */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            {/* No Guesswork */}
+            {/* No Guesswork - with visual diagram */}
             <div 
-              className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 text-center"
+              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 text-center hover:border-purple-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
-              <div className="text-5xl mb-6" style={{ filter: 'drop-shadow(0 4px 12px rgba(139,92,246,0.4))' }}>🎯</div>
+              {/* Animated Icon Container */}
+              <div className="relative w-24 h-24 mx-auto mb-5">
+                {/* Animated rings */}
+                <div className="absolute inset-0 border-2 border-dashed border-purple-500/30 rounded-full animate-spin" style={{ animationDuration: '20s' }} />
+                <div className="absolute inset-2 border border-purple-400/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+                {/* Center icon with glow */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    <div className="absolute -inset-2 bg-purple-500/30 rounded-full blur-lg group-hover:bg-purple-400/40 transition-colors" />
+                    <span className="relative text-5xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(139,92,246,0.5))' }}>🎯</span>
+                  </div>
+                </div>
+                {/* Mini data points around */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
+                <div className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
+              </div>
               <h4 className="text-xl font-bold text-white mb-3">Zero Guesswork</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed">
-                Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what you need. No more oversizing or undersizing.
+              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
+                Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what you need.
               </p>
+              {/* Visual detail - mini formula */}
+              <div className="text-xs text-purple-400/60 font-mono bg-slate-800/50 rounded-lg py-2 px-3 inline-block">
+                Peak kW × Duration = Optimal Size
+              </div>
             </div>
 
-            {/* No Vendor Calls */}
+            {/* No Vendor Calls - with phone/time visual */}
             <div 
-              className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-amber-500/20 text-center"
+              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
-              <div className="text-5xl mb-6" style={{ filter: 'drop-shadow(0 4px 12px rgba(251,191,36,0.4))' }}>📞</div>
+              {/* Animated Icon Container */}
+              <div className="relative w-24 h-24 mx-auto mb-5">
+                {/* Background glow */}
+                <div className="absolute inset-0 bg-amber-500/10 rounded-full animate-pulse" />
+                {/* Crossed out phone animation */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    <div className="absolute -inset-2 bg-amber-500/30 rounded-full blur-lg group-hover:bg-amber-400/40 transition-colors" />
+                    <span className="relative text-5xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(251,191,36,0.5))' }}>📞</span>
+                    {/* X mark overlay - animated */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-0.5 bg-red-500 rotate-45 opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                </div>
+                {/* Time saved indicators */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                  Save 10+ hours
+                </div>
+              </div>
               <h4 className="text-xl font-bold text-white mb-3">Skip the Vendor Calls</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed">
-                Get accurate quotes instantly without calling 5 different vendors. Real market pricing from NREL benchmarks, not sales tactics.
+              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
+                Get accurate quotes instantly. Real market pricing from NREL benchmarks, not sales tactics.
               </p>
+              {/* Comparison bar */}
+              <div className="flex items-center justify-center gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <span className="w-3 h-3 bg-red-500/60 rounded-full" />
+                  <span className="text-red-300/70 line-through">5 vendor calls</span>
+                </div>
+                <span className="text-purple-400">→</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-3 h-3 bg-emerald-500 rounded-full" />
+                  <span className="text-emerald-300">1 Merlin quote</span>
+                </div>
+              </div>
             </div>
 
-            {/* Maximum Savings */}
+            {/* Maximum Savings - with chart animation */}
             <div 
-              className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-emerald-500/20 text-center"
+              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 text-center hover:border-emerald-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
-              <div className="text-5xl mb-6" style={{ filter: 'drop-shadow(0 4px 12px rgba(16,185,129,0.4))' }}>📈</div>
+              {/* Animated Chart Visual */}
+              <div className="relative w-24 h-24 mx-auto mb-5">
+                {/* Background glow */}
+                <div className="absolute inset-0 bg-emerald-500/10 rounded-full animate-pulse" />
+                {/* Mini bar chart rising animation */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-1 h-12">
+                  <div className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse" style={{ height: '40%', animationDelay: '0s' }} />
+                  <div className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse" style={{ height: '60%', animationDelay: '0.2s' }} />
+                  <div className="w-3 bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-sm animate-pulse" style={{ height: '100%', animationDelay: '0.4s' }} />
+                </div>
+                {/* Up arrow */}
+                <div className="absolute top-2 right-2 text-emerald-400 animate-bounce" style={{ animationDuration: '1.5s' }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                  </svg>
+                </div>
+                {/* $ indicator */}
+                <div className="absolute top-2 left-2 text-amber-400 font-bold text-lg">$</div>
+              </div>
               <h4 className="text-xl font-bold text-white mb-3">Maximum Savings</h4>
-              <p className="text-purple-300/70 text-sm leading-relaxed">
-                Our AI optimizes for peak shaving, demand reduction, and TOU arbitrage to maximize your ROI. Plus 30% federal tax credit included.
+              <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
+                AI optimizes peak shaving, demand reduction, and TOU arbitrage to maximize ROI.
               </p>
+              {/* Savings breakdown mini */}
+              <div className="flex justify-center gap-2 text-xs">
+                <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">Peak Shaving</span>
+                <span className="bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full">TOU</span>
+                <span className="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full">Grid</span>
+              </div>
             </div>
           </div>
 
-          {/* Stats Bar */}
+          {/* Stats Bar - Enhanced with animated counters and icons */}
           <div 
-            className="bg-gradient-to-r from-slate-800/60 via-purple-900/40 to-slate-800/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16"
+            className="relative bg-gradient-to-r from-slate-800/60 via-purple-900/40 to-slate-800/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16 overflow-hidden"
             style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
           >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 mb-2">30+</div>
+            {/* Animated background shimmer */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
+              style={{ animation: 'shimmer 4s ease-in-out infinite' }}
+            />
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10">
+              <div className="group">
+                <div className="flex justify-center mb-2">
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🏢</span>
+                </div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 mb-2 group-hover:scale-110 transition-transform">30+</div>
                 <div className="text-purple-300/70 text-sm">Industry Templates</div>
               </div>
-              <div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 mb-2">$2M+</div>
+              <div className="group">
+                <div className="flex justify-center mb-2">
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">💰</span>
+                </div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 mb-2 group-hover:scale-110 transition-transform">$2M+</div>
                 <div className="text-purple-300/70 text-sm">Savings Calculated</div>
               </div>
-              <div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2">5 min</div>
+              <div className="group">
+                <div className="flex justify-center mb-2">
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">⚡</span>
+                </div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">5 min</div>
                 <div className="text-purple-300/70 text-sm">Average Quote Time</div>
               </div>
-              <div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500 mb-2">30%</div>
+              <div className="group">
+                <div className="flex justify-center mb-2">
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🎁</span>
+                </div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500 mb-2 group-hover:scale-110 transition-transform">30%</div>
                 <div className="text-purple-300/70 text-sm">Federal Tax Credit</div>
               </div>
             </div>
