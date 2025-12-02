@@ -34,6 +34,8 @@ interface Step7Props {
   annualSavings?: number;
   paybackYears?: number;
   roi10Year?: number;
+  taxCredit?: number;   // From centralizedCalculations.taxCredit
+  netCost?: number;     // From centralizedCalculations.netCost
   selectedTemplate?: any;
   location?: string;
   
@@ -59,6 +61,8 @@ const Step7_FinalQuote: React.FC<Step7Props> = ({
   annualSavings = 0,
   paybackYears = 0,
   roi10Year = 0,
+  taxCredit: taxCreditProp,     // From centralizedCalculations
+  netCost: netCostProp,         // From centralizedCalculations
   selectedTemplate,
   location,
   onBack,
@@ -74,11 +78,13 @@ const Step7_FinalQuote: React.FC<Step7Props> = ({
   const [showDownloadGate, setShowDownloadGate] = useState(false);
   const [pendingDownloadType, setPendingDownloadType] = useState<'pdf' | 'excel' | 'word' | null>(null);
 
-  // ✅ FIX: Use equipmentBreakdown totals (same as Step6) for consistency
-  // Fallback to prop values if breakdown not available
+  // ═══════════════════════════════════════════════════════════════════════════
+  // USE CENTRALIZED CALCULATIONS (SINGLE SOURCE OF TRUTH)
+  // Tax credit and net cost come from centralizedCalculations.ts
+  // ═══════════════════════════════════════════════════════════════════════════
   const totalProjectCost = equipmentBreakdown?.totals?.totalProjectCost || (equipmentCost + installationCost);
-  const federalTaxCredit = totalProjectCost * 0.30;
-  const netCost = totalProjectCost - federalTaxCredit;
+  const federalTaxCredit = taxCreditProp ?? (totalProjectCost * 0.30); // Fallback if prop not passed
+  const netCost = netCostProp ?? (totalProjectCost - federalTaxCredit);
 
   const handleDownloadClick = (type: 'pdf' | 'excel' | 'word') => {
     setPendingDownloadType(type);
