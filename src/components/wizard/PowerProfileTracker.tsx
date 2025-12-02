@@ -39,6 +39,7 @@ export interface PowerProfileTrackerProps {
   estimatedSavings?: number;
   systemSize?: number;
   compact?: boolean;
+  onShowExplainer?: () => void;
 }
 
 // ============================================
@@ -91,6 +92,7 @@ export default function PowerProfileTracker({
   estimatedSavings,
   systemSize,
   compact = false,
+  onShowExplainer,
 }: PowerProfileTrackerProps) {
   const levelInfo = getLevelInfo(totalPoints);
   const nextLevelPoints = getNextLevelPoints(totalPoints);
@@ -101,15 +103,19 @@ export default function PowerProfileTracker({
     return (
       <div className="bg-gradient-to-r from-purple-900 to-purple-950 border-b border-purple-500/30 px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <button 
+            onClick={onShowExplainer}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
             <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-white">{levelInfo.emoji} {levelInfo.name}</span>
                 <span className="text-xs text-purple-300">{totalPoints} pts</span>
+                <span className="text-amber-400 text-xs">ⓘ</span>
               </div>
             </div>
-          </div>
+          </button>
           
           {/* Progress dots */}
           <div className="flex items-center gap-1.5">
@@ -149,7 +155,13 @@ export default function PowerProfileTracker({
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Power Profile</h3>
-            <p className="text-xs text-purple-300">Track your journey</p>
+            <button 
+              onClick={onShowExplainer}
+              className="text-xs text-purple-300 hover:text-amber-300 transition-colors flex items-center gap-1"
+            >
+              <span>Track your journey</span>
+              <span className="text-amber-400">ⓘ</span>
+            </button>
           </div>
         </div>
         

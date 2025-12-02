@@ -279,6 +279,9 @@ export default function StreamlinedWizard({
   // Animation state
   const [isTransitioning, setIsTransitioning] = useState(false);
   
+  // Power Profile Explainer modal state
+  const [showPowerProfileExplainer, setShowPowerProfileExplainer] = useState(false);
+  
   // Load use cases on mount
   useEffect(() => {
     const loadUseCases = async () => {
@@ -499,31 +502,47 @@ export default function StreamlinedWizard({
   if (!show) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 25%, #c4b5fd 50%, #a78bfa 75%, #8b5cf6 100%)' }}>
-      {/* Power Profile Tracker - Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <PowerProfileTracker
-          currentSection={currentSection}
-          completedSections={completedSections}
-          totalPoints={totalPoints}
-          level={Math.floor(totalPoints / 25) + 1}
-          selectedLocation={wizardState.state}
-          selectedIndustry={wizardState.industryName}
-        />
-      </div>
+    <>
+      {/* Dark backdrop overlay - keeps user on main page context */}
+      <div 
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Power Profile - Top Bar */}
-        <div className="lg:hidden">
-          <PowerProfileTracker
-            currentSection={currentSection}
-            completedSections={completedSections}
-            totalPoints={totalPoints}
-            level={Math.floor(totalPoints / 25) + 1}
-            compact
-          />
-        </div>
+      {/* Modal Container - Centered popup, not full page */}
+      <div className="fixed inset-4 md:inset-8 lg:inset-12 xl:inset-16 z-50 flex flex-col rounded-3xl overflow-hidden shadow-2xl" 
+        style={{ 
+          background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 25%, #c4b5fd 50%, #a78bfa 75%, #8b5cf6 100%)',
+          boxShadow: '0 25px 100px rgba(91,33,182,0.4), 0 0 0 1px rgba(255,255,255,0.1)'
+        }}
+      >
+        <div className="flex flex-1 overflow-hidden">
+          {/* Power Profile Tracker - Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <PowerProfileTracker
+              currentSection={currentSection}
+              completedSections={completedSections}
+              totalPoints={totalPoints}
+              level={Math.floor(totalPoints / 25) + 1}
+              selectedLocation={wizardState.state}
+              selectedIndustry={wizardState.industryName}
+              onShowExplainer={() => setShowPowerProfileExplainer(true)}
+            />
+          </div>
+          
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Mobile Power Profile - Top Bar */}
+            <div className="lg:hidden">
+              <PowerProfileTracker
+                currentSection={currentSection}
+                completedSections={completedSections}
+                totalPoints={totalPoints}
+                level={Math.floor(totalPoints / 25) + 1}
+                compact
+                onShowExplainer={() => setShowPowerProfileExplainer(true)}
+              />
+            </div>
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-purple-200 bg-white/80 backdrop-blur-sm">
@@ -1989,6 +2008,139 @@ export default function StreamlinedWizard({
           <span>AI-Optimized Battery Storage Solutions</span>
         </div>
       </div>
-    </div>
+      </div>
+      </div>
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          POWER PROFILE EXPLAINER MODAL
+          Explains what Power Profile is and why it helps users
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {showPowerProfileExplainer && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          onClick={() => setShowPowerProfileExplainer(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          
+          {/* Modal Content */}
+          <div 
+            className="relative bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-purple-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Merlin */}
+            <div className="relative p-6 pb-4 border-b border-purple-500/20">
+              <div className="absolute top-4 right-4">
+                <button 
+                  onClick={() => setShowPowerProfileExplainer(false)}
+                  className="w-8 h-8 bg-purple-800/50 hover:bg-purple-700/50 rounded-full flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-purple-500 via-amber-500 to-cyan-500 rounded-full blur-lg opacity-40 animate-pulse" />
+                  <img src={merlinImage} alt="Merlin" className="relative w-16 h-16 drop-shadow-2xl" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">What is Power Profile?</h2>
+                  <p className="text-purple-300/70 text-sm">Your path to smarter energy decisions</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Hero Statement */}
+              <div className="text-center py-4">
+                <p className="text-lg text-purple-200 leading-relaxed">
+                  Power Profile turns complex energy calculations into a <span className="text-amber-400 font-bold">guided journey</span> — 
+                  helping you build better quotes <span className="text-emerald-400 font-bold">faster</span> than doing it alone.
+                </p>
+              </div>
+              
+              {/* Three Benefits */}
+              <div className="grid gap-4">
+                {/* Smarter */}
+                <div className="flex items-start gap-4 bg-slate-800/40 rounded-2xl p-4 border border-purple-500/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shrink-0">
+                    <span className="text-2xl">🧠</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Smarter</h3>
+                    <p className="text-purple-300/80 text-sm">
+                      AI analyzes 30+ industry profiles, local utility rates, and equipment specs — calculations that would take hours to research on your own.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Faster */}
+                <div className="flex items-start gap-4 bg-slate-800/40 rounded-2xl p-4 border border-amber-500/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                    <span className="text-2xl">⚡</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Faster</h3>
+                    <p className="text-purple-300/80 text-sm">
+                      Get a professional, bank-ready quote in 5 minutes. No vendor calls, no waiting for proposals, no back-and-forth emails.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Better Results */}
+                <div className="flex items-start gap-4 bg-slate-800/40 rounded-2xl p-4 border border-emerald-500/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shrink-0">
+                    <span className="text-2xl">📈</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Better Results</h3>
+                    <p className="text-purple-300/80 text-sm">
+                      Optimized for maximum savings with peak shaving, TOU arbitrage, and revenue stacking — strategies most quotes miss entirely.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Gamification Explanation */}
+              <div className="bg-gradient-to-r from-purple-800/30 to-indigo-800/30 rounded-2xl p-4 border border-purple-400/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-xl">🎮</span>
+                  <h4 className="font-bold text-white">Track Your Progress</h4>
+                </div>
+                <p className="text-purple-300/80 text-sm mb-3">
+                  As you complete each section, you earn points and level up your Power Profile. It's not just fun — 
+                  it helps you understand exactly what goes into building the perfect energy system.
+                </p>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 bg-emerald-400 rounded-full" />
+                    <span className="text-emerald-300">Completed sections</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 bg-amber-400 rounded-full" />
+                    <span className="text-amber-300">Points earned</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 bg-purple-400 rounded-full" />
+                    <span className="text-purple-300">Level progression</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* CTA */}
+              <button 
+                onClick={() => setShowPowerProfileExplainer(false)}
+                className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Got it! Let's build my quote</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
