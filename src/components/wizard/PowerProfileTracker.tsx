@@ -121,14 +121,16 @@ export default function PowerProfileTracker({
             </div>
           </button>
           
-          {/* PROMINENT kWh/MWh Display - Mobile */}
+          {/* PROMINENT kWh/MWh/GWh Display - Mobile */}
           {systemKWh && systemKWh > 0 && (
             <div className="flex items-center gap-2 bg-emerald-500/20 px-3 py-1 rounded-lg border border-emerald-400/30">
               <Battery className="w-4 h-4 text-emerald-400" />
               <span className="text-sm font-bold text-emerald-400">
-                {systemKWh >= 1000 
-                  ? `${(systemKWh / 1000).toFixed(1)} MWh`
-                  : `${systemKWh.toLocaleString()} kWh`
+                {systemKWh >= 1000000 
+                  ? `${(systemKWh / 1000000).toFixed(1)} GWh`
+                  : systemKWh >= 1000 
+                    ? `${(systemKWh / 1000).toFixed(1)} MWh`
+                    : `${systemKWh.toLocaleString()} kWh`
                 }
               </span>
               {durationHours && (
@@ -280,15 +282,23 @@ export default function PowerProfileTracker({
             <div className="text-center">
               <div className="text-xs text-emerald-300 uppercase tracking-wider mb-1">Your Energy Storage</div>
               <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                {systemKWh >= 1000 
-                  ? `${(systemKWh / 1000).toFixed(1)} MWh`
-                  : `${systemKWh.toLocaleString()} kWh`
+                {systemKWh >= 1000000 
+                  ? `${(systemKWh / 1000000).toFixed(1)} GWh`
+                  : systemKWh >= 1000 
+                    ? `${(systemKWh / 1000).toFixed(1)} MWh`
+                    : `${systemKWh.toLocaleString()} kWh`
                 }
               </div>
               {durationHours && (
                 <div className="text-xs text-gray-400 mt-1">
                   {systemSize && systemSize > 0 && (
-                    <span className="text-emerald-400">{systemSize >= 1000 ? `${(systemSize/1000).toFixed(1)} MW` : `${systemSize} kW`}</span>
+                    <span className="text-emerald-400">
+                      {systemSize >= 1000000 
+                        ? `${(systemSize/1000000).toFixed(1)} GW`
+                        : systemSize >= 1000 
+                          ? `${(systemSize/1000).toFixed(1)} MW` 
+                          : `${systemSize} kW`}
+                    </span>
                   )}
                   {systemSize && durationHours && <span className="mx-1">×</span>}
                   <span className="text-purple-400">{durationHours}hr backup</span>
@@ -320,7 +330,11 @@ export default function PowerProfileTracker({
                 <Battery className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="text-gray-400">Power:</span>
                 <span className="text-emerald-400 font-bold">
-                  {systemSize >= 1000 ? `${(systemSize/1000).toFixed(1)} MW` : `${systemSize} kW`}
+                  {systemSize >= 1000000 
+                    ? `${(systemSize/1000000).toFixed(1)} GW`
+                    : systemSize >= 1000 
+                      ? `${(systemSize/1000).toFixed(1)} MW` 
+                      : `${systemSize} kW`}
                 </span>
               </div>
             )}

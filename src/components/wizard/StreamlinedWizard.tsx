@@ -1217,7 +1217,11 @@ export default function StreamlinedWizard({
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600 w-20">Solar kW:</span>
                       <button
-                        onClick={() => setWizardState(prev => ({ ...prev, solarKW: Math.max(50, (prev.solarKW || 0) - 50) }))}
+                        onClick={() => {
+                          const current = wizardState.solarKW || 0;
+                          const step = current > 100000 ? 10000 : current > 10000 ? 5000 : current > 1000 ? 1000 : 100;
+                          setWizardState(prev => ({ ...prev, solarKW: Math.max(100, current - step) }));
+                        }}
                         className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
                       >
                         <Minus className="w-5 h-5" />
@@ -1225,23 +1229,36 @@ export default function StreamlinedWizard({
                       <div className="flex-1 relative">
                         <input
                           type="range"
-                          min="50"
-                          max={Math.max(2000, (wizardState.batteryKW || 500) * 2)}
-                          step="50"
+                          min="100"
+                          max="1000000"
+                          step="100"
                           value={wizardState.solarKW || 0}
                           onChange={(e) => setWizardState(prev => ({ ...prev, solarKW: parseInt(e.target.value) }))}
                           className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
                         />
                       </div>
                       <button
-                        onClick={() => setWizardState(prev => ({ ...prev, solarKW: Math.min(5000, (prev.solarKW || 0) + 50) }))}
+                        onClick={() => {
+                          const current = wizardState.solarKW || 0;
+                          const step = current >= 100000 ? 10000 : current >= 10000 ? 5000 : current >= 1000 ? 1000 : 100;
+                          setWizardState(prev => ({ ...prev, solarKW: Math.min(1000000, current + step) }));
+                        }}
                         className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
-                      <div className="w-24 text-right">
-                        <span className="text-2xl font-black text-amber-600">{wizardState.solarKW || 0}</span>
-                        <span className="text-sm text-gray-500 ml-1">kW</span>
+                      <div className="w-28 text-right">
+                        {(wizardState.solarKW || 0) >= 1000 ? (
+                          <>
+                            <span className="text-2xl font-black text-amber-600">{((wizardState.solarKW || 0) / 1000).toFixed(1)}</span>
+                            <span className="text-sm text-gray-500 ml-1">MW</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-2xl font-black text-amber-600">{wizardState.solarKW || 0}</span>
+                            <span className="text-sm text-gray-500 ml-1">kW</span>
+                          </>
+                        )}
                       </div>
                     </div>
                     
@@ -1318,7 +1335,11 @@ export default function StreamlinedWizard({
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600 w-20">Wind kW:</span>
                       <button
-                        onClick={() => setWizardState(prev => ({ ...prev, windTurbineKW: Math.max(25, (prev.windTurbineKW || 0) - 25) }))}
+                        onClick={() => {
+                          const current = wizardState.windTurbineKW || 0;
+                          const step = current > 50000 ? 5000 : current > 10000 ? 2500 : current > 1000 ? 500 : 100;
+                          setWizardState(prev => ({ ...prev, windTurbineKW: Math.max(100, current - step) }));
+                        }}
                         className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
                       >
                         <Minus className="w-5 h-5" />
@@ -1326,23 +1347,36 @@ export default function StreamlinedWizard({
                       <div className="flex-1">
                         <input
                           type="range"
-                          min="25"
-                          max={Math.max(1000, (wizardState.batteryKW || 500))}
-                          step="25"
+                          min="100"
+                          max="500000"
+                          step="100"
                           value={wizardState.windTurbineKW || 0}
                           onChange={(e) => setWizardState(prev => ({ ...prev, windTurbineKW: parseInt(e.target.value) }))}
                           className="w-full h-2 bg-sky-200 rounded-lg appearance-none cursor-pointer accent-sky-500"
                         />
                       </div>
                       <button
-                        onClick={() => setWizardState(prev => ({ ...prev, windTurbineKW: Math.min(2000, (prev.windTurbineKW || 0) + 25) }))}
+                        onClick={() => {
+                          const current = wizardState.windTurbineKW || 0;
+                          const step = current >= 50000 ? 5000 : current >= 10000 ? 2500 : current >= 1000 ? 500 : 100;
+                          setWizardState(prev => ({ ...prev, windTurbineKW: Math.min(500000, current + step) }));
+                        }}
                         className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
-                      <div className="w-24 text-right">
-                        <span className="text-2xl font-black text-sky-600">{wizardState.windTurbineKW || 0}</span>
-                        <span className="text-sm text-gray-500 ml-1">kW</span>
+                      <div className="w-28 text-right">
+                        {(wizardState.windTurbineKW || 0) >= 1000 ? (
+                          <>
+                            <span className="text-2xl font-black text-sky-600">{((wizardState.windTurbineKW || 0) / 1000).toFixed(1)}</span>
+                            <span className="text-sm text-gray-500 ml-1">MW</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-2xl font-black text-sky-600">{wizardState.windTurbineKW || 0}</span>
+                            <span className="text-sm text-gray-500 ml-1">kW</span>
+                          </>
+                        )}
                       </div>
                     </div>
                     
@@ -1478,7 +1512,7 @@ export default function StreamlinedWizard({
                         <input
                           type="range"
                           min="100"
-                          max="100000"
+                          max="500000"
                           step="100"
                           value={wizardState.generatorKW || 0}
                           onChange={(e) => setWizardState(prev => ({ ...prev, generatorKW: parseInt(e.target.value) }))}
@@ -1488,8 +1522,8 @@ export default function StreamlinedWizard({
                       <button
                         onClick={() => {
                           const current = wizardState.generatorKW || 0;
-                          const step = current >= 10000 ? 5000 : current >= 1000 ? 1000 : 100;
-                          setWizardState(prev => ({ ...prev, generatorKW: Math.min(100000, current + step) }));
+                          const step = current >= 100000 ? 10000 : current >= 10000 ? 5000 : current >= 1000 ? 1000 : 100;
+                          setWizardState(prev => ({ ...prev, generatorKW: Math.min(500000, current + step) }));
                         }}
                         className="w-10 h-10 bg-slate-200 hover:bg-slate-300 rounded-lg flex items-center justify-center text-slate-700 font-bold"
                       >
@@ -1774,13 +1808,19 @@ export default function StreamlinedWizard({
                   <div className="mb-6">
                     <label className="flex justify-between text-sm text-gray-500 mb-2">
                       <span>Power Rating</span>
-                      <span className="text-purple-600 font-bold">{wizardState.batteryKW} kW ({(wizardState.batteryKW / 1000).toFixed(2)} MW)</span>
+                      <span className="text-purple-600 font-bold">
+                        {wizardState.batteryKW >= 1000000 
+                          ? `${(wizardState.batteryKW / 1000000).toFixed(1)} GW`
+                          : wizardState.batteryKW >= 1000 
+                            ? `${(wizardState.batteryKW / 1000).toFixed(1)} MW` 
+                            : `${wizardState.batteryKW} kW`}
+                      </span>
                     </label>
                     <input
                       type="range"
-                      min={50}
-                      max={5000}
-                      step={50}
+                      min={100}
+                      max={3000000}
+                      step={100}
                       value={wizardState.batteryKW}
                       onChange={(e) => {
                         const kw = parseInt(e.target.value);
@@ -1793,8 +1833,8 @@ export default function StreamlinedWizard({
                       className="w-full accent-purple-500"
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>50 kW</span>
-                      <span>5,000 kW</span>
+                      <span>100 kW</span>
+                      <span className="text-purple-500 font-medium">3 GW (Data Center Scale)</span>
                     </div>
                   </div>
                   
@@ -1827,9 +1867,21 @@ export default function StreamlinedWizard({
                   
                   {/* Total Storage */}
                   <div className="bg-purple-100 rounded-xl p-4 text-center border border-purple-200">
-                    <div className="text-3xl font-black text-purple-600">{wizardState.batteryKWh.toLocaleString()} kWh</div>
+                    <div className="text-3xl font-black text-purple-600">
+                      {wizardState.batteryKWh >= 1000000 
+                        ? `${(wizardState.batteryKWh / 1000000).toFixed(1)} GWh`
+                        : wizardState.batteryKWh >= 1000 
+                          ? `${(wizardState.batteryKWh / 1000).toFixed(1)} MWh` 
+                          : `${wizardState.batteryKWh.toLocaleString()} kWh`}
+                    </div>
                     <div className="text-sm text-gray-500">Total Storage Capacity</div>
-                    <div className="text-lg text-purple-500 mt-1">${wizardState.estimatedCost.battery.toLocaleString()}</div>
+                    <div className="text-lg text-purple-500 mt-1">
+                      {wizardState.estimatedCost.battery >= 1000000000 
+                        ? `$${(wizardState.estimatedCost.battery / 1000000000).toFixed(2)}B`
+                        : wizardState.estimatedCost.battery >= 1000000 
+                          ? `$${(wizardState.estimatedCost.battery / 1000000).toFixed(1)}M` 
+                          : `$${wizardState.estimatedCost.battery.toLocaleString()}`}
+                    </div>
                   </div>
                 </div>
                 
@@ -1858,29 +1910,48 @@ export default function StreamlinedWizard({
                       <div className="mb-6">
                         <label className="flex justify-between text-sm text-gray-500 mb-2">
                           <span>Solar Capacity</span>
-                          <span className="text-amber-600 font-bold">{wizardState.solarKW} kW ({(wizardState.solarKW / 1000).toFixed(2)} MW)</span>
+                          <span className="text-amber-600 font-bold">
+                            {wizardState.solarKW >= 1000000 
+                              ? `${(wizardState.solarKW / 1000000).toFixed(1)} GW`
+                              : wizardState.solarKW >= 1000 
+                                ? `${(wizardState.solarKW / 1000).toFixed(1)} MW` 
+                                : `${wizardState.solarKW} kW`}
+                          </span>
                         </label>
                         <input
                           type="range"
                           min={0}
-                          max={5000}
-                          step={50}
+                          max={1000000}
+                          step={100}
                           value={wizardState.solarKW}
                           onChange={(e) => setWizardState(prev => ({ ...prev, solarKW: parseInt(e.target.value) }))}
                           className="w-full accent-amber-500"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0 kW</span>
-                          <span>5,000 kW</span>
+                          <span className="text-amber-500 font-medium">1 GW (Utility Scale)</span>
                         </div>
                       </div>
                       
                       <div className="bg-amber-100 rounded-xl p-4 text-center border border-amber-200">
                         <div className="text-3xl font-black text-amber-600">
-                          ~{Math.round(wizardState.solarKW * (wizardState.geoRecommendations?.profile.avgSolarHoursPerDay || 5)).toLocaleString()} kWh/day
+                          {(() => {
+                            const dailyKWh = Math.round(wizardState.solarKW * (wizardState.geoRecommendations?.profile.avgSolarHoursPerDay || 5));
+                            return dailyKWh >= 1000000 
+                              ? `~${(dailyKWh / 1000000).toFixed(1)} GWh/day`
+                              : dailyKWh >= 1000 
+                                ? `~${(dailyKWh / 1000).toFixed(0)} MWh/day` 
+                                : `~${dailyKWh.toLocaleString()} kWh/day`;
+                          })()}
                         </div>
                         <div className="text-sm text-gray-500">Estimated Daily Generation</div>
-                        <div className="text-lg text-amber-500 mt-1">${wizardState.estimatedCost.solar.toLocaleString()}</div>
+                        <div className="text-lg text-amber-500 mt-1">
+                          {wizardState.estimatedCost.solar >= 1000000000 
+                            ? `$${(wizardState.estimatedCost.solar / 1000000000).toFixed(2)}B`
+                            : wizardState.estimatedCost.solar >= 1000000 
+                              ? `$${(wizardState.estimatedCost.solar / 1000000).toFixed(0)}M` 
+                              : `$${wizardState.estimatedCost.solar.toLocaleString()}`}
+                        </div>
                       </div>
                     </>
                   ) : (
