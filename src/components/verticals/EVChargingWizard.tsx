@@ -1,21 +1,25 @@
 /**
- * EV CHARGING WIZARD - Smart Quote Builder
- * =========================================
+ * EV CHARGING HUB WIZARD - For Dedicated Charging Station Operators
+ * ==================================================================
  * 
- * USER-FRIENDLY wizard for EV charging station planning.
- * Designed for business owners (hotels, hospitals, offices) who want
- * to add EV charging without needing technical expertise.
+ * THIS WIZARD IS FOR: Businesses whose PRIMARY purpose is EV charging
+ *   ✅ Highway charging stations
+ *   ✅ Urban charging hubs
+ *   ✅ Destination charging lots
+ *   ✅ Fleet depots
+ *   ✅ Retail co-located stations
+ *   ✅ Investors / PE firms evaluating EV charging
  * 
- * Design Philosophy:
- * - Ask simple questions, provide smart recommendations
- * - "What kind of business?" not "How many Level 2 vs DCFC ports?"
- * - Auto-calculate optimal setup based on business type and scale
- * - Show clear ROI and savings upfront
- * - Hide complexity behind "Customize" options for pros
+ * THIS WIZARD IS NOT FOR: Businesses adding EV charging as an AMENITY
+ *   ❌ Hotels with guest chargers → Use HotelWizard
+ *   ❌ Hospitals with patient/staff chargers → Use HospitalWizard
+ *   ❌ Offices with employee chargers → Use OfficeWizard
+ *   ❌ Car washes adding chargers → Use CarWashWizard
  * 
- * DER Integration (Dec 2025):
- * - Grid services revenue shown as "bonus savings" (not technical jargon)
- * - V2G explained as "Turn parked EVs into backup power"
+ * Architecture (Dec 2025 Refactor):
+ * - Station Types: highway, urban, destination, fleet, retail
+ * - User Roles: operator, investor, developer, explorer
+ * - Auto-calculates optimal BESS + solar sizing for each station type
  * 
  * Uses: 
  * - calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
@@ -73,89 +77,94 @@ const CONCIERGE_TIERS = {
 } as const;
 
 // ============================================
-// USER-FRIENDLY BUSINESS TYPES
+// EV CHARGING STATION TYPES - FOR DEDICATED OPERATORS
 // ============================================
+// This wizard is for businesses whose PRIMARY purpose is EV charging
+// NOT for hotels/hospitals/offices that want to ADD EV charging as an amenity
 
-const BUSINESS_TYPES = {
-  hotel: {
-    name: 'Hotel / Resort',
-    icon: Hotel,
-    description: 'Guest amenity & sustainability',
-    examples: 'Marriott, Hilton, boutique hotels',
-    defaultChargers: { level2: 8, dcfc: 0 },
-    avgDwellTime: '8+ hours (overnight)',
-    recommendation: 'Level 2 chargers are perfect - guests charge while they sleep!',
-    gridServicesNote: 'Earn extra revenue during low-occupancy periods',
+const STATION_TYPES = {
+  highway: {
+    name: 'Highway / Travel Corridor',
+    icon: Car,
+    description: 'Fast charging for road trippers',
+    examples: 'I-95 corridor, rest stops, truck stops',
+    defaultChargers: { level2: 4, dcfc: 8, hpc: 4 },
+    avgDwellTime: '15-45 minutes',
+    recommendation: 'Focus on DCFC & HPC - drivers want to charge fast and go!',
+    gridServicesNote: 'High peak demand = big savings with BESS',
+    peakDemandProfile: 'high',
   },
-  hospital: {
-    name: 'Hospital / Healthcare',
-    icon: Hospital,
-    description: 'Staff, patients & visitors',
-    examples: 'Hospitals, clinics, medical centers',
-    defaultChargers: { level2: 12, dcfc: 2 },
-    avgDwellTime: '2-8 hours',
-    recommendation: 'Mix of Level 2 for staff + fast chargers for visitors',
-    gridServicesNote: 'Battery backup doubles as emergency power!',
-  },
-  office: {
-    name: 'Office Building',
+  urban: {
+    name: 'Urban Charging Hub',
     icon: Building,
-    description: 'Employee benefit & tenant attraction',
-    examples: 'Corporate HQ, office parks, co-working',
-    defaultChargers: { level2: 10, dcfc: 0 },
-    avgDwellTime: '8+ hours (workday)',
-    recommendation: 'Level 2 chargers - employees charge during work hours',
-    gridServicesNote: 'Reduce demand charges during peak office hours',
+    description: 'City center fast charging',
+    examples: 'Downtown parking, city lots, public stations',
+    defaultChargers: { level2: 8, dcfc: 12, hpc: 0 },
+    avgDwellTime: '30-90 minutes',
+    recommendation: 'Mix of DCFC for quick stops + Level 2 for longer visits',
+    gridServicesNote: 'Prime location for grid services revenue',
+    peakDemandProfile: 'medium',
   },
-  retail: {
-    name: 'Retail / Shopping',
-    icon: ShoppingBag,
-    description: 'Customer convenience & dwell time',
-    examples: 'Malls, grocery stores, shopping centers',
-    defaultChargers: { level2: 4, dcfc: 4 },
-    avgDwellTime: '30 min - 2 hours',
-    recommendation: 'Fast chargers attract customers who shop while charging',
-    gridServicesNote: 'Offset high electricity costs during store hours',
-  },
-  university: {
-    name: 'College / University',
-    icon: GraduationCap,
-    description: 'Students, faculty & sustainability goals',
-    examples: 'Universities, community colleges, schools',
-    defaultChargers: { level2: 16, dcfc: 2 },
-    avgDwellTime: '4-8 hours',
-    recommendation: 'Mostly Level 2 for all-day parking, some fast for visitors',
-    gridServicesNote: 'Great for campus sustainability initiatives',
-  },
-  airport: {
-    name: 'Airport / Transit',
-    icon: Plane,
-    description: 'Travelers, employees & rideshare',
-    examples: 'Airports, train stations, bus depots',
-    defaultChargers: { level2: 20, dcfc: 8 },
-    avgDwellTime: '1-7 days',
-    recommendation: 'High capacity with fast charging for rideshare pickup',
-    gridServicesNote: 'Large-scale DER opportunity with fleet charging',
+  destination: {
+    name: 'Destination Charging',
+    icon: ParkingCircle,
+    description: 'Where EVs park for hours',
+    examples: 'Parking garages, park & ride, long-term lots',
+    defaultChargers: { level2: 20, dcfc: 4, hpc: 0 },
+    avgDwellTime: '2-8 hours',
+    recommendation: 'Heavy on Level 2 - customers have time to charge',
+    gridServicesNote: 'Great for demand response programs',
+    peakDemandProfile: 'low',
   },
   fleet: {
-    name: 'Fleet / Logistics',
+    name: 'Fleet Depot',
     icon: Warehouse,
-    description: 'Delivery, service & company vehicles',
-    examples: 'Delivery hubs, service companies, rental',
-    defaultChargers: { level2: 8, dcfc: 8 },
+    description: 'Commercial fleet charging',
+    examples: 'Delivery hubs, bus depots, taxi/rideshare lots',
+    defaultChargers: { level2: 16, dcfc: 8, hpc: 0 },
     avgDwellTime: 'Overnight + quick top-ups',
-    recommendation: 'Fast chargers for daytime, Level 2 for overnight',
-    gridServicesNote: 'Fleet batteries can earn V2G revenue when parked',
+    recommendation: 'Level 2 for overnight, DCFC for midday top-ups',
+    gridServicesNote: 'V2G potential with predictable schedules',
+    peakDemandProfile: 'scheduled',
   },
-  restaurant: {
-    name: 'Restaurant / Cafe',
-    icon: Coffee,
-    description: 'Dine & charge experience',
-    examples: 'Restaurants, cafes, drive-thrus',
-    defaultChargers: { level2: 2, dcfc: 2 },
-    avgDwellTime: '30 min - 2 hours',
-    recommendation: 'Fast chargers match dining time perfectly',
-    gridServicesNote: 'Attract eco-conscious customers',
+  retail: {
+    name: 'Retail Co-Location',
+    icon: ShoppingBag,
+    description: 'Standalone station near retail',
+    examples: 'Standalone lots near malls, big box stores',
+    defaultChargers: { level2: 4, dcfc: 8, hpc: 2 },
+    avgDwellTime: '20-60 minutes',
+    recommendation: 'Fast chargers to match shopping duration',
+    gridServicesNote: 'Revenue from charging + grid services',
+    peakDemandProfile: 'medium',
+  },
+} as const;
+
+// User roles - Who is using this wizard?
+const USER_ROLES = {
+  operator: {
+    name: 'Station Operator',
+    icon: '⚡',
+    description: 'I own/operate EV charging stations',
+    helpText: 'Get detailed equipment and ROI analysis',
+  },
+  investor: {
+    name: 'Investor / PE Firm',
+    icon: '💼',
+    description: 'Evaluating EV charging investments',
+    helpText: 'Explore various configurations and returns',
+  },
+  developer: {
+    name: 'Site Developer',
+    icon: '🏗️',
+    description: 'Planning new charging locations',
+    helpText: 'Site planning with infrastructure costs',
+  },
+  explorer: {
+    name: 'Just Exploring',
+    icon: '🔍',
+    description: 'Curious about the numbers',
+    helpText: 'See what EV charging economics look like',
   },
 } as const;
 
@@ -281,8 +290,11 @@ export default function EVChargingWizard({
   // Concierge Tier Selection
   const [conciergeTier, setConciergeTier] = useState<keyof typeof CONCIERGE_TIERS>('standard');
   
-  // Step 1: Business Type (Simple!)
-  const [businessType, setBusinessType] = useState<keyof typeof BUSINESS_TYPES>('hotel');
+  // User Role Selection
+  const [userRole, setUserRole] = useState<keyof typeof USER_ROLES>('operator');
+  
+  // Step 1: Station Type (for dedicated EV charging operators)
+  const [stationType, setStationType] = useState<keyof typeof STATION_TYPES>('urban');
   const [businessName, setBusinessName] = useState(mergedInputs.businessName);
   
   // Step 2: Scale & Location (Simple!)
@@ -298,29 +310,33 @@ export default function EVChargingWizard({
   const [customChargers, setCustomChargers] = useState({
     level2: 0,
     dcfc: 0,
+    hpc: 0,
   });
   
   // ============================================
   // SMART RECOMMENDATION ENGINE
   // ============================================
   
-  // Auto-calculate recommended setup based on business type and scale
+  // Auto-calculate recommended setup based on station type and scale
   const getSmartRecommendation = () => {
-    const business = BUSINESS_TYPES[businessType];
+    const station = STATION_TYPES[stationType];
     const scaleConfig = SCALE_OPTIONS[scale];
     
-    // Calculate charger counts based on business defaults * scale multiplier
-    const level2Count = Math.round(business.defaultChargers.level2 * scaleConfig.multiplier);
-    const dcfcCount = Math.round(business.defaultChargers.dcfc * scaleConfig.multiplier);
+    // Calculate charger counts based on station defaults * scale multiplier
+    const level2Count = Math.round(station.defaultChargers.level2 * scaleConfig.multiplier);
+    const dcfcCount = Math.round(station.defaultChargers.dcfc * scaleConfig.multiplier);
+    const hpcCount = Math.round(station.defaultChargers.hpc * scaleConfig.multiplier);
     
     // Use custom values if user has modified them
     const finalLevel2 = showAdvanced && customChargers.level2 > 0 ? customChargers.level2 : Math.max(2, level2Count);
     const finalDCFC = showAdvanced && customChargers.dcfc > 0 ? customChargers.dcfc : dcfcCount;
+    const finalHPC = showAdvanced && customChargers.hpc > 0 ? customChargers.hpc : hpcCount;
     
     // Calculate power requirements
     const level2Power = finalLevel2 * 11; // Average Level 2 is 11kW
-    const dcfcPower = finalDCFC * 100; // Average DCFC is 100kW  
-    const totalPowerKW = level2Power + dcfcPower;
+    const dcfcPower = finalDCFC * 150; // Average DCFC is 150kW
+    const hpcPower = finalHPC * 350; // HPC is 350kW
+    const totalPowerKW = level2Power + dcfcPower + hpcPower;
     const peakDemandKW = Math.round(totalPowerKW * 0.7); // 70% concurrency
     
     // Get state electricity rates
@@ -352,6 +368,7 @@ export default function EVChargingWizard({
       chargers: {
         level2: finalLevel2,
         dcfc: finalDCFC,
+        hpc: finalHPC,
         totalPowerKW,
         peakDemandKW,
       },
@@ -371,9 +388,9 @@ export default function EVChargingWizard({
         solarOffset: Math.round(solarSavings),
         gridServices: Math.round(gridServicesSavings),
       },
-      businessInsight: business.recommendation,
-      gridServicesNote: business.gridServicesNote,
-      dwellTime: business.avgDwellTime,
+      stationInsight: station.recommendation,
+      gridServicesNote: station.gridServicesNote,
+      dwellTime: station.avgDwellTime,
     };
   };
   
@@ -595,9 +612,9 @@ export default function EVChargingWizard({
       [''],
       ['Quote Date', new Date().toLocaleDateString()],
       [''],
-      ['BUSINESS INFORMATION'],
-      ['Business Name', businessName || BUSINESS_TYPES[businessType].name],
-      ['Business Type', BUSINESS_TYPES[businessType].name],
+      ['STATION INFORMATION'],
+      ['Station Name', businessName || STATION_TYPES[stationType].name],
+      ['Station Type', STATION_TYPES[stationType].name],
       ['Scale', SCALE_OPTIONS[scale].name],
       ['Location', state],
       [''],
@@ -721,54 +738,96 @@ export default function EVChargingWizard({
                 </div>
               </div>
               
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">What kind of business do you have?</h3>
-                <p className="text-emerald-200/70">We'll recommend the perfect EV charging setup for you</p>
+              {/* User Role Selection */}
+              <div className="mb-6">
+                <p className="text-center text-emerald-200/70 text-sm mb-3">I am a...</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {Object.entries(USER_ROLES).map(([key, role]) => (
+                    <button
+                      key={key}
+                      onClick={() => setUserRole(key as keyof typeof USER_ROLES)}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        userRole === key 
+                          ? 'border-cyan-500 bg-cyan-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <span className="text-2xl">{role.icon}</span>
+                      <p className="font-bold text-white text-xs mt-1">{role.name}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-                {Object.entries(BUSINESS_TYPES).map(([key, business]) => {
-                  const Icon = business.icon;
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">What type of EV charging station?</h3>
+                <p className="text-emerald-200/70">Select your station type for optimized recommendations</p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(STATION_TYPES).map(([key, station]) => {
+                  const Icon = station.icon;
                   return (
                     <button
                       key={key}
-                      onClick={() => setBusinessType(key as keyof typeof BUSINESS_TYPES)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all hover:scale-105 ${
-                        businessType === key 
+                      onClick={() => setStationType(key as keyof typeof STATION_TYPES)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all hover:scale-105 ${
+                        stationType === key 
                           ? 'border-emerald-500 bg-emerald-500/20 shadow-lg shadow-emerald-500/20' 
                           : 'border-white/10 hover:border-white/30 bg-white/5'
                       }`}
                     >
-                      <Icon className={`w-8 h-8 mx-auto mb-2 ${businessType === key ? 'text-emerald-400' : 'text-white/60'}`} />
-                      <p className="font-bold text-white text-sm">{business.name}</p>
-                      <p className="text-xs text-emerald-200/60 mt-1">{business.description}</p>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Icon className={`w-8 h-8 ${stationType === key ? 'text-emerald-400' : 'text-white/60'}`} />
+                        <div>
+                          <p className="font-bold text-white">{station.name}</p>
+                          <p className="text-xs text-emerald-200/60">{station.description}</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-white/50 mt-2">{station.examples}</p>
+                      <div className="flex gap-2 mt-2">
+                        <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-cyan-300">
+                          L2: {station.defaultChargers.level2}
+                        </span>
+                        <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-amber-300">
+                          DCFC: {station.defaultChargers.dcfc}
+                        </span>
+                        {station.defaultChargers.hpc > 0 && (
+                          <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-purple-300">
+                            HPC: {station.defaultChargers.hpc}
+                          </span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
               
-              {/* Selected business info */}
+              {/* Selected station info */}
               <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-4 border border-emerald-400/30">
                 <div className="flex items-start gap-3">
                   <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5" />
                   <div>
-                    <p className="text-white font-medium">Why EV charging for {BUSINESS_TYPES[businessType].name}?</p>
-                    <p className="text-emerald-200/70 text-sm mt-1">{BUSINESS_TYPES[businessType].recommendation}</p>
+                    <p className="text-white font-medium">{STATION_TYPES[stationType].name} Station</p>
+                    <p className="text-emerald-200/70 text-sm mt-1">{STATION_TYPES[stationType].recommendation}</p>
                     <p className="text-xs text-cyan-400 mt-2">
-                      💡 {BUSINESS_TYPES[businessType].gridServicesNote}
+                      ⏱️ Typical dwell time: {STATION_TYPES[stationType].avgDwellTime}
+                    </p>
+                    <p className="text-xs text-purple-400 mt-1">
+                      💡 {STATION_TYPES[stationType].gridServicesNote}
                     </p>
                   </div>
                 </div>
               </div>
               
-              {/* Optional: Business name */}
+              {/* Optional: Station name */}
               <div>
-                <label className="block text-sm text-emerald-200 mb-2">Business name (optional)</label>
+                <label className="block text-sm text-emerald-200 mb-2">Station name (optional)</label>
                 <input
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g., Downtown Marriott"
+                  placeholder="e.g., Highway 101 Charging Hub"
                   className="w-full bg-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 border border-white/10 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
@@ -781,8 +840,8 @@ export default function EVChargingWizard({
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">How big is your location?</h3>
-                <p className="text-emerald-200/70">This helps us size your charging station</p>
+                <h3 className="text-2xl font-bold text-white mb-2">How big is your station?</h3>
+                <p className="text-emerald-200/70">This helps us size your charging infrastructure</p>
               </div>
               
               {/* Scale Selection */}
@@ -807,7 +866,7 @@ export default function EVChargingWizard({
               
               {/* State Selection */}
               <div>
-                <label className="block text-sm text-emerald-200 mb-2">Where is your location?</label>
+                <label className="block text-sm text-emerald-200 mb-2">Where is your station located?</label>
                 <select
                   value={state}
                   onChange={(e) => setState(e.target.value)}
@@ -829,7 +888,7 @@ export default function EVChargingWizard({
                   <div>
                     <p className="text-sm text-cyan-200">Your estimated setup</p>
                     <p className="text-2xl font-bold text-white">
-                      {recommendation.chargers.level2} Level 2 + {recommendation.chargers.dcfc} Fast Chargers
+                      {recommendation.chargers.level2} L2 + {recommendation.chargers.dcfc} DCFC{recommendation.chargers.hpc > 0 ? ` + ${recommendation.chargers.hpc} HPC` : ''}
                     </p>
                   </div>
                   <div className="text-right">
@@ -848,7 +907,7 @@ export default function EVChargingWizard({
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-white mb-2">Here's what we recommend</h3>
-                <p className="text-emerald-200/70">Based on your {BUSINESS_TYPES[businessType].name.toLowerCase()}</p>
+                <p className="text-emerald-200/70">Based on your {STATION_TYPES[stationType].name.toLowerCase()} station</p>
               </div>
               
               {/* The Big Number - Monthly Savings */}
@@ -1011,7 +1070,7 @@ export default function EVChargingWizard({
                       {businessName ? `${businessName} - ` : ''}Your EV Charging Quote
                     </h3>
                     <p className="text-emerald-200/70">
-                      {BUSINESS_TYPES[businessType].name} • {SCALE_OPTIONS[scale].description} • {state}
+                      {STATION_TYPES[stationType].name} • {SCALE_OPTIONS[scale].description} • {state}
                     </p>
                   </div>
                   
