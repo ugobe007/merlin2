@@ -47,6 +47,30 @@ import {
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
+import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
+import { quickCO2Estimate, calculateEVChargingCO2Impact } from '@/services/environmentalMetricsService';
+
+// ============================================
+// CONCIERGE SERVICE TIERS
+// ============================================
+
+const CONCIERGE_TIERS = {
+  standard: {
+    name: 'Quick Quote',
+    description: 'Self-service quote builder',
+    icon: '⚡',
+    features: ['Instant recommendations', 'Download quote', 'Basic support'],
+    color: 'emerald',
+  },
+  pro: {
+    name: 'Concierge Pro',
+    description: 'White-glove service with dedicated expert',
+    icon: '👑',
+    features: ['Dedicated energy advisor', 'Custom financing options', 'Site assessment', 'Priority installation', 'Extended warranty'],
+    color: 'amber',
+    badge: 'Premium',
+  },
+} as const;
 
 // ============================================
 // USER-FRIENDLY BUSINESS TYPES
@@ -253,6 +277,9 @@ export default function EVChargingWizard({
   const [isCalculating, setIsCalculating] = useState(false);
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Concierge Tier Selection
+  const [conciergeTier, setConciergeTier] = useState<keyof typeof CONCIERGE_TIERS>('standard');
   
   // Step 1: Business Type (Simple!)
   const [businessType, setBusinessType] = useState<keyof typeof BUSINESS_TYPES>('hotel');
@@ -656,6 +683,44 @@ export default function EVChargingWizard({
               ================================================ */}
           {currentStep === 0 && (
             <div className="space-y-6">
+              {/* Concierge Tier Selection */}
+              <div className="mb-6">
+                <p className="text-center text-emerald-200/70 text-sm mb-3">Choose your experience</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(CONCIERGE_TIERS).map(([key, tier]) => (
+                    <button
+                      key={key}
+                      onClick={() => setConciergeTier(key as keyof typeof CONCIERGE_TIERS)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all relative ${
+                        conciergeTier === key 
+                          ? key === 'pro' 
+                            ? 'border-amber-500 bg-amber-500/20 shadow-lg shadow-amber-500/20' 
+                            : 'border-emerald-500 bg-emerald-500/20'
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      {'badge' in tier && (
+                        <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                          {tier.badge}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{tier.icon}</span>
+                        <span className="font-bold text-white">{tier.name}</span>
+                      </div>
+                      <p className="text-xs text-emerald-200/60">{tier.description}</p>
+                      <ul className="mt-2 space-y-1">
+                        {tier.features.slice(0, 3).map((feature, i) => (
+                          <li key={i} className="text-xs text-white/50 flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-400" />{feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-white mb-2">What kind of business do you have?</h3>
                 <p className="text-emerald-200/70">We'll recommend the perfect EV charging setup for you</p>
@@ -962,24 +1027,34 @@ export default function EVChargingWizard({
                     <p className="text-emerald-200/70 mt-2">That's ${Math.round(quoteResult.financials.annualSavings / 12).toLocaleString()}/month back in your pocket</p>
                   </div>
                   
-                  {/* Key Stats */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white/10 rounded-xl p-4 text-center">
-                      <p className="text-3xl font-bold text-emerald-400">{quoteResult.financials.paybackYears.toFixed(1)}</p>
-                      <p className="text-xs text-emerald-200/70">Years to Payback</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center">
-                      <p className="text-3xl font-bold text-teal-400">{Math.round(quoteResult.financials.roi25Year)}%</p>
-                      <p className="text-xs text-teal-200/70">25-Year ROI</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center">
-                      <p className="text-3xl font-bold text-cyan-400">{recommendation.recommendation.bessKW} kW</p>
-                      <p className="text-xs text-cyan-200/70">Battery Size</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center">
-                      <p className="text-3xl font-bold text-amber-400">${Math.round(quoteResult.costs.netCost / 1000)}k</p>
-                      <p className="text-xs text-amber-200/70">Net Investment</p>
-                    </div>
+                  {/* Key Metrics Dashboard */}
+                  <KeyMetricsDashboard
+                    input={{
+                      vertical: 'ev-charging',
+                      systemSizeKW: recommendation.recommendation.bessKW,
+                      systemSizeKWh: recommendation.recommendation.bessKWh,
+                      annualSavings: quoteResult.financials.annualSavings,
+                      paybackYears: quoteResult.financials.paybackYears,
+                      roi10Year: quoteResult.financials.roi10Year,
+                      roi25Year: quoteResult.financials.roi25Year,
+                      netCost: quoteResult.costs.netCost,
+                      totalChargers: recommendation.chargers.level2 + recommendation.chargers.dcfc,
+                      peakDemandReduction: Math.round(recommendation.chargers.peakDemandKW * 0.4),
+                      state: state,
+                      annualKWhDisplaced: recommendation.recommendation.bessKWh * 365,
+                    }}
+                    layout="grid"
+                    maxMetrics={6}
+                    showCO2Details={true}
+                  />
+                  
+                  {/* CO2 Badge */}
+                  <div className="flex justify-center">
+                    <CO2Badge
+                      annualSavingsKWh={recommendation.recommendation.bessKWh * 365}
+                      state={state}
+                      systemType="ev-charging"
+                    />
                   </div>
                   
                   {/* Investment Summary */}
@@ -1068,8 +1143,33 @@ export default function EVChargingWizard({
                     </div>
                   </div>
                   
-                  {/* CTA */}
-                  {onRequestConsultation && (
+                  {/* CTA - Different based on Concierge tier */}
+                  {conciergeTier === 'pro' ? (
+                    <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-4 border border-amber-400/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">👑</span>
+                        <div>
+                          <p className="font-bold text-amber-400">Concierge Pro Benefits</p>
+                          <p className="text-sm text-amber-200/70">Your dedicated advisor will contact you within 24 hours</p>
+                        </div>
+                      </div>
+                      <ul className="grid grid-cols-2 gap-2 text-sm mb-4">
+                        {CONCIERGE_TIERS.pro.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-amber-200">
+                            <CheckCircle className="w-4 h-4 text-amber-400" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={onRequestConsultation}
+                        className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-500 hover:via-orange-500 hover:to-amber-500 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-2"
+                      >
+                        <Phone className="w-5 h-5" />
+                        Schedule VIP Consultation
+                      </button>
+                    </div>
+                  ) : onRequestConsultation && (
                     <button
                       onClick={onRequestConsultation}
                       className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-2"
