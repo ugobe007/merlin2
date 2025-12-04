@@ -33,7 +33,7 @@ import {
   Sparkles, Car, TrendingDown, Phone, FileText, FileSpreadsheet, File, Bolt,
   BarChart3, Network, Building, Globe, Hotel, Hospital, GraduationCap, 
   Plane, ShoppingBag, Warehouse, Coffee, Settings, ChevronDown, ChevronUp,
-  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle
+  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
@@ -255,10 +255,11 @@ const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
 // ============================================
 
 const WIZARD_STEPS = [
-  { id: 'business', title: 'Your Business', icon: Building },
-  { id: 'scale', title: 'Size & Location', icon: ParkingCircle },
-  { id: 'recommendation', title: 'Our Recommendation', icon: Sparkles },
-  { id: 'quote', title: 'Your Savings', icon: DollarSign },
+  { id: 'who', title: 'Who You Are', icon: Users },
+  { id: 'what', title: 'Your Station', icon: Car },
+  { id: 'how', title: 'Operations', icon: Clock },
+  { id: 'goals', title: 'Your Goals', icon: Target },
+  { id: 'quote', title: 'Your Quote', icon: DollarSign },
 ];
 
 // ============================================
@@ -696,13 +697,66 @@ export default function EVChargingWizard({
         <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
           
           {/* ================================================
-              STEP 0: What Kind of Business? (Simple!)
+              STEP 0: WHO ARE YOU?
+              - User Role (Owner / Investor / Developer / Explorer)
+              - Location (State) ← CRITICAL: Determines pricing
+              - [Optional] Concierge Tier
               ================================================ */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              {/* Concierge Tier Selection */}
-              <div className="mb-6">
-                <p className="text-center text-emerald-200/70 text-sm mb-3">Choose your experience</p>
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-white mb-2">Let's start with you</h3>
+                <p className="text-emerald-200/70">Tell us about yourself and your location</p>
+              </div>
+              
+              {/* User Role Selection */}
+              <div>
+                <label className="block text-sm text-emerald-200 mb-3">I am a...</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(USER_ROLES).map(([key, role]) => (
+                    <button
+                      key={key}
+                      onClick={() => setUserRole(key as keyof typeof USER_ROLES)}
+                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                        userRole === key 
+                          ? 'border-emerald-500 bg-emerald-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <span className="text-2xl">{role.icon}</span>
+                      <p className="font-bold text-white text-sm mt-2">{role.name}</p>
+                      <p className="text-xs text-emerald-200/60 mt-1">{role.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Location Selection */}
+              <div>
+                <label className="block text-sm text-emerald-200 mb-2">Where is your charging station located?</label>
+                <select
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="w-full bg-white/10 rounded-lg px-4 py-3 text-white border border-white/10 focus:border-emerald-500 focus:outline-none"
+                >
+                  {Object.keys(STATE_RATES).map((st) => (
+                    <option key={st} value={st} className="bg-gray-800">{st}</option>
+                  ))}
+                </select>
+                <div className="mt-3 p-3 bg-emerald-500/10 rounded-lg border border-emerald-400/20">
+                  <p className="text-sm text-emerald-200">
+                    <span className="font-medium">📍 {state}</span> electricity rates:
+                  </p>
+                  <div className="flex gap-4 mt-1 text-xs text-white/70">
+                    <span>Energy: ${(STATE_RATES[state]?.rate || 0.14).toFixed(2)}/kWh</span>
+                    <span>Demand: ${STATE_RATES[state]?.demandCharge || 18}/kW</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Concierge Tier (Optional) */}
+              <div>
+                <label className="block text-sm text-emerald-200 mb-3">Choose your experience</label>
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(CONCIERGE_TIERS).map(([key, tier]) => (
                     <button
@@ -711,7 +765,7 @@ export default function EVChargingWizard({
                       className={`p-4 rounded-xl border-2 text-left transition-all relative ${
                         conciergeTier === key 
                           ? key === 'pro' 
-                            ? 'border-amber-500 bg-amber-500/20 shadow-lg shadow-amber-500/20' 
+                            ? 'border-amber-500 bg-amber-500/20' 
                             : 'border-emerald-500 bg-emerald-500/20'
                           : 'border-white/10 hover:border-white/30 bg-white/5'
                       }`}
@@ -722,105 +776,16 @@ export default function EVChargingWizard({
                         </span>
                       )}
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">{tier.icon}</span>
+                        <span className="text-xl">{tier.icon}</span>
                         <span className="font-bold text-white">{tier.name}</span>
                       </div>
                       <p className="text-xs text-emerald-200/60">{tier.description}</p>
-                      <ul className="mt-2 space-y-1">
-                        {tier.features.slice(0, 3).map((feature, i) => (
-                          <li key={i} className="text-xs text-white/50 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-400" />{feature}
-                          </li>
-                        ))}
-                      </ul>
                     </button>
                   ))}
                 </div>
               </div>
               
-              {/* User Role Selection */}
-              <div className="mb-6">
-                <p className="text-center text-emerald-200/70 text-sm mb-3">I am a...</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {Object.entries(USER_ROLES).map(([key, role]) => (
-                    <button
-                      key={key}
-                      onClick={() => setUserRole(key as keyof typeof USER_ROLES)}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        userRole === key 
-                          ? 'border-cyan-500 bg-cyan-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <span className="text-2xl">{role.icon}</span>
-                      <p className="font-bold text-white text-xs mt-1">{role.name}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">What type of EV charging station?</h3>
-                <p className="text-emerald-200/70">Select your station type for optimized recommendations</p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(STATION_TYPES).map(([key, station]) => {
-                  const Icon = station.icon;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setStationType(key as keyof typeof STATION_TYPES)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all hover:scale-105 ${
-                        stationType === key 
-                          ? 'border-emerald-500 bg-emerald-500/20 shadow-lg shadow-emerald-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <Icon className={`w-8 h-8 ${stationType === key ? 'text-emerald-400' : 'text-white/60'}`} />
-                        <div>
-                          <p className="font-bold text-white">{station.name}</p>
-                          <p className="text-xs text-emerald-200/60">{station.description}</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-white/50 mt-2">{station.examples}</p>
-                      <div className="flex gap-2 mt-2">
-                        <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-cyan-300">
-                          L2: {station.defaultChargers.level2}
-                        </span>
-                        <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-amber-300">
-                          DCFC: {station.defaultChargers.dcfc}
-                        </span>
-                        {station.defaultChargers.hpc > 0 && (
-                          <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-purple-300">
-                            HPC: {station.defaultChargers.hpc}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {/* Selected station info */}
-              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-4 border border-emerald-400/30">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5" />
-                  <div>
-                    <p className="text-white font-medium">{STATION_TYPES[stationType].name} Station</p>
-                    <p className="text-emerald-200/70 text-sm mt-1">{STATION_TYPES[stationType].recommendation}</p>
-                    <p className="text-xs text-cyan-400 mt-2">
-                      ⏱️ Typical dwell time: {STATION_TYPES[stationType].avgDwellTime}
-                    </p>
-                    <p className="text-xs text-purple-400 mt-1">
-                      💡 {STATION_TYPES[stationType].gridServicesNote}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Optional: Station name */}
+              {/* Station Name (Optional) */}
               <div>
                 <label className="block text-sm text-emerald-200 mb-2">Station name (optional)</label>
                 <input
@@ -835,65 +800,89 @@ export default function EVChargingWizard({
           )}
           
           {/* ================================================
-              STEP 1: Scale & Location (Simple!)
+              STEP 1: WHAT DO YOU HAVE?
+              - Station Type (Highway / Urban / Destination / Fleet / Retail)
+              - Scale (size/charger counts)
               ================================================ */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">How big is your station?</h3>
-                <p className="text-emerald-200/70">This helps us size your charging infrastructure</p>
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-white mb-2">What type of charging station?</h3>
+                <p className="text-emerald-200/70">Select your station type for optimized recommendations</p>
+              </div>
+              
+              {/* Station Type Selection */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(STATION_TYPES).map(([key, station]) => {
+                  const Icon = station.icon;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setStationType(key as keyof typeof STATION_TYPES)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        stationType === key 
+                          ? 'border-emerald-500 bg-emerald-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <Icon className={`w-6 h-6 ${stationType === key ? 'text-emerald-400' : 'text-white/60'}`} />
+                        <div>
+                          <p className="font-bold text-white">{station.name}</p>
+                          <p className="text-xs text-emerald-200/60">{station.description}</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-white/50 mt-1">{station.examples}</p>
+                    </button>
+                  );
+                })}
               </div>
               
               {/* Scale Selection */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-                {Object.entries(SCALE_OPTIONS).map(([key, option]) => (
-                  <button
-                    key={key}
-                    onClick={() => setScale(key as keyof typeof SCALE_OPTIONS)}
-                    className={`p-4 rounded-xl border-2 text-center transition-all ${
-                      scale === key 
-                        ? 'border-emerald-500 bg-emerald-500/20' 
-                        : 'border-white/10 hover:border-white/30 bg-white/5'
-                    }`}
-                  >
-                    <span className="text-3xl">{option.icon}</span>
-                    <p className="font-bold text-white mt-2">{option.name}</p>
-                    <p className="text-sm text-emerald-200/70">{option.description}</p>
-                    <p className="text-xs text-white/50 mt-1">{option.parkingSpots}</p>
-                  </button>
-                ))}
-              </div>
-              
-              {/* State Selection */}
               <div>
-                <label className="block text-sm text-emerald-200 mb-2">Where is your station located?</label>
-                <select
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="w-full bg-white/10 rounded-lg px-4 py-3 text-white border border-white/10 focus:border-emerald-500 focus:outline-none"
-                >
-                  {Object.keys(STATE_RATES).map((st) => (
-                    <option key={st} value={st} className="bg-gray-800">{st}</option>
+                <label className="block text-sm text-emerald-200 mb-3">How big is your station?</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(SCALE_OPTIONS).map(([key, option]) => (
+                    <button
+                      key={key}
+                      onClick={() => setScale(key as keyof typeof SCALE_OPTIONS)}
+                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                        scale === key 
+                          ? 'border-emerald-500 bg-emerald-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <span className="text-2xl">{option.icon}</span>
+                      <p className="font-bold text-white mt-1 text-sm">{option.name}</p>
+                      <p className="text-xs text-emerald-200/70">{option.description}</p>
+                    </button>
                   ))}
-                </select>
-                <p className="text-xs text-emerald-200/60 mt-2">
-                  💡 Electricity in {state}: ${(STATE_RATES[state]?.rate || 0.14).toFixed(2)}/kWh • 
-                  Demand charges: ${STATE_RATES[state]?.demandCharge || 18}/kW
-                </p>
+                </div>
               </div>
               
-              {/* Quick Preview */}
-              <div className="bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 rounded-xl p-4 border border-cyan-400/30">
-                <div className="flex items-center justify-between">
+              {/* Station Type Info */}
+              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-400/20">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-cyan-200">Your estimated setup</p>
-                    <p className="text-2xl font-bold text-white">
-                      {recommendation.chargers.level2} L2 + {recommendation.chargers.dcfc} DCFC{recommendation.chargers.hpc > 0 ? ` + ${recommendation.chargers.hpc} HPC` : ''}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-emerald-200">Peak demand</p>
-                    <p className="text-xl font-bold text-emerald-400">{recommendation.chargers.peakDemandKW} kW</p>
+                    <p className="text-white font-medium">{STATION_TYPES[stationType].name}</p>
+                    <p className="text-sm text-emerald-200/70 mt-1">{STATION_TYPES[stationType].recommendation}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-cyan-300">
+                        L2: {STATION_TYPES[stationType].defaultChargers.level2}
+                      </span>
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-amber-300">
+                        DCFC: {STATION_TYPES[stationType].defaultChargers.dcfc}
+                      </span>
+                      {STATION_TYPES[stationType].defaultChargers.hpc > 0 && (
+                        <span className="text-xs bg-white/10 px-2 py-1 rounded text-purple-300">
+                          HPC: {STATION_TYPES[stationType].defaultChargers.hpc}
+                        </span>
+                      )}
+                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">
+                        ⏱️ {STATION_TYPES[stationType].avgDwellTime}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -901,131 +890,72 @@ export default function EVChargingWizard({
           )}
           
           {/* ================================================
-              STEP 2: Smart Recommendation (Auto-calculated!)
+              STEP 2: HOW DO YOU OPERATE?
+              - Current setup preview
+              - Peak demand
+              - Monthly costs
               ================================================ */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">Here's what we recommend</h3>
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-white mb-2">Your charging infrastructure</h3>
                 <p className="text-emerald-200/70">Based on your {STATION_TYPES[stationType].name.toLowerCase()} station</p>
               </div>
               
-              {/* The Big Number - Monthly Savings */}
-              <div className="bg-gradient-to-br from-emerald-500/30 via-teal-500/20 to-cyan-500/30 rounded-2xl p-6 border-2 border-emerald-400/50 text-center">
-                <p className="text-emerald-200 uppercase tracking-widest text-sm font-bold mb-1">You could save</p>
-                <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">
-                  ${recommendation.savings.annual.toLocaleString()}/year
-                </p>
-                <p className="text-emerald-200/70 mt-2">with battery storage + solar</p>
+              {/* Charger Configuration */}
+              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+                  <Car className="w-5 h-5 text-emerald-400" />
+                  Recommended Charger Mix
+                </h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-cyan-500/10 rounded-lg border border-cyan-400/20">
+                    <p className="text-3xl font-bold text-cyan-400">{recommendation.chargers.level2}</p>
+                    <p className="text-sm text-white">Level 2</p>
+                    <p className="text-xs text-cyan-200/60">7-22 kW each</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-500/10 rounded-lg border border-amber-400/20">
+                    <p className="text-3xl font-bold text-amber-400">{recommendation.chargers.dcfc}</p>
+                    <p className="text-sm text-white">DCFC</p>
+                    <p className="text-xs text-amber-200/60">50-150 kW each</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-400/20">
+                    <p className="text-3xl font-bold text-purple-400">{recommendation.chargers.hpc}</p>
+                    <p className="text-sm text-white">HPC</p>
+                    <p className="text-xs text-purple-200/60">250-350 kW each</p>
+                  </div>
+                </div>
               </div>
               
-              {/* Recommended Setup - Cards */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* EV Chargers */}
+              {/* Power & Cost Preview */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Car className="w-5 h-5 text-blue-400" />
-                    <span className="font-bold text-white">EV Chargers</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{recommendation.chargers.level2 + recommendation.chargers.dcfc}</p>
-                  <p className="text-sm text-emerald-200/70">
-                    {recommendation.chargers.level2} Level 2 • {recommendation.chargers.dcfc} Fast
-                  </p>
-                  <p className="text-xs text-white/50 mt-2">{recommendation.dwellTime} typical stay</p>
+                  <p className="text-sm text-emerald-200 mb-1">Total Connected Load</p>
+                  <p className="text-3xl font-bold text-white">{recommendation.chargers.totalPowerKW.toLocaleString()} kW</p>
+                  <p className="text-xs text-white/50 mt-1">Peak demand: {recommendation.chargers.peakDemandKW.toLocaleString()} kW</p>
                 </div>
-                
-                {/* Battery Storage */}
-                <div className={`rounded-xl p-4 border ${wantsBatteryStorage ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-white/5 border-white/10'}`}>
-                  <label className="flex items-center gap-2 mb-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={wantsBatteryStorage}
-                      onChange={(e) => setWantsBatteryStorage(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500"
-                    />
-                    <Battery className="w-5 h-5 text-emerald-400" />
-                    <span className="font-bold text-white">Battery Storage</span>
-                  </label>
-                  {wantsBatteryStorage ? (
-                    <>
-                      <p className="text-3xl font-bold text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
-                      <p className="text-sm text-emerald-200/70">{recommendation.recommendation.bessKWh} kWh capacity</p>
-                      <p className="text-xs text-emerald-400 mt-2">
-                        Saves ${recommendation.savings.demandChargeReduction.toLocaleString()}/yr in demand charges
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-white/50">Not included</p>
-                  )}
-                </div>
-                
-                {/* Solar Canopy */}
-                <div className={`rounded-xl p-4 border ${wantsSolarCanopy ? 'bg-amber-500/10 border-amber-400/30' : 'bg-white/5 border-white/10'}`}>
-                  <label className="flex items-center gap-2 mb-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={wantsSolarCanopy}
-                      onChange={(e) => setWantsSolarCanopy(e.target.checked)}
-                      className="w-4 h-4 accent-amber-500"
-                    />
-                    <Sun className="w-5 h-5 text-amber-400" />
-                    <span className="font-bold text-white">Solar Canopy</span>
-                  </label>
-                  {wantsSolarCanopy ? (
-                    <>
-                      <p className="text-3xl font-bold text-amber-400">{recommendation.recommendation.solarKW} kW</p>
-                      <p className="text-sm text-amber-200/70">Shades cars + free power</p>
-                      <p className="text-xs text-amber-400 mt-2">
-                        Saves ${recommendation.savings.solarOffset.toLocaleString()}/yr
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-white/50">Not included</p>
-                  )}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <p className="text-sm text-emerald-200 mb-1">Est. Monthly Electric Bill</p>
+                  <p className="text-3xl font-bold text-white">${recommendation.costs.monthlyElectricity.toLocaleString()}</p>
+                  <p className="text-xs text-white/50 mt-1">Without battery storage</p>
                 </div>
               </div>
               
-              {/* Grid Services Bonus (Optional - Advanced) */}
-              <div className={`rounded-xl p-4 border ${wantsGridServices ? 'bg-purple-500/10 border-purple-400/30' : 'bg-white/5 border-white/10'}`}>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={wantsGridServices}
-                    onChange={(e) => setWantsGridServices(e.target.checked)}
-                    className="w-5 h-5 accent-purple-500"
-                  />
-                  <Network className="w-5 h-5 text-purple-400" />
-                  <div className="flex-1">
-                    <span className="font-bold text-white">Earn Extra from the Grid</span>
-                    <span className="ml-2 text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">Bonus</span>
-                    <p className="text-sm text-purple-200/70">
-                      Your battery can earn money by helping stabilize the electric grid
-                    </p>
-                  </div>
-                  {wantsGridServices && wantsBatteryStorage && (
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-purple-400">+${recommendation.savings.gridServices.toLocaleString()}/yr</p>
-                    </div>
-                  )}
-                </label>
-              </div>
-              
-              {/* Advanced Customization Toggle */}
+              {/* Customize Chargers (Optional) */}
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors"
               >
                 <Settings className="w-4 h-4" />
-                {showAdvanced ? 'Hide' : 'Show'} advanced options
+                {showAdvanced ? 'Hide' : 'Customize'} charger counts
                 {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               
               {showAdvanced && (
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-4">
-                  <p className="text-sm text-white/70">Customize your charger count:</p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="text-sm text-emerald-200">Level 2 Chargers</label>
+                      <label className="text-xs text-emerald-200">Level 2 Chargers</label>
                       <input
                         type="number"
                         min={0}
@@ -1036,13 +966,24 @@ export default function EVChargingWizard({
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-emerald-200">Fast Chargers (DCFC)</label>
+                      <label className="text-xs text-emerald-200">DCFC</label>
                       <input
                         type="number"
                         min={0}
                         max={20}
                         value={customChargers.dcfc || recommendation.chargers.dcfc}
                         onChange={(e) => setCustomChargers({...customChargers, dcfc: parseInt(e.target.value) || 0})}
+                        className="w-full bg-white/10 rounded px-3 py-2 text-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-emerald-200">HPC</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={customChargers.hpc || recommendation.chargers.hpc}
+                        onChange={(e) => setCustomChargers({...customChargers, hpc: parseInt(e.target.value) || 0})}
                         className="w-full bg-white/10 rounded px-3 py-2 text-white mt-1"
                       />
                     </div>
@@ -1053,9 +994,130 @@ export default function EVChargingWizard({
           )}
           
           {/* ================================================
-              STEP 3: Your Quote (Results!)
+              STEP 3: WHAT DO YOU WANT?
+              - Goals (Cost savings, Backup, Sustainability)
+              - Add-ons (Battery, Solar, Grid Services)
               ================================================ */}
           {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-white mb-2">What are your goals?</h3>
+                <p className="text-emerald-200/70">Select the options that matter most to you</p>
+              </div>
+              
+              {/* Savings Preview */}
+              <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl p-5 border border-emerald-400/30 text-center">
+                <p className="text-sm text-emerald-200 mb-1">Potential Annual Savings</p>
+                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">
+                  ${recommendation.savings.annual.toLocaleString()}
+                </p>
+                <p className="text-xs text-emerald-200/60 mt-1">With battery storage + solar</p>
+              </div>
+              
+              {/* Energy Options */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-white">Energy Solutions</h4>
+                
+                {/* Battery Storage */}
+                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  wantsBatteryStorage ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
+                }`} onClick={() => setWantsBatteryStorage(!wantsBatteryStorage)}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={wantsBatteryStorage}
+                      onChange={(e) => setWantsBatteryStorage(e.target.checked)}
+                      className="w-5 h-5 accent-emerald-500"
+                    />
+                    <Battery className="w-5 h-5 text-emerald-400" />
+                    <div className="flex-1">
+                      <p className="font-medium text-white">Battery Storage (BESS)</p>
+                      <p className="text-sm text-emerald-200/70">Reduce demand charges by up to 40%</p>
+                    </div>
+                    {wantsBatteryStorage && (
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
+                        <p className="text-xs text-emerald-200/60">{recommendation.recommendation.bessKWh} kWh</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Solar Canopy */}
+                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  wantsSolarCanopy ? 'bg-amber-500/10 border-amber-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
+                }`} onClick={() => setWantsSolarCanopy(!wantsSolarCanopy)}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={wantsSolarCanopy}
+                      onChange={(e) => setWantsSolarCanopy(e.target.checked)}
+                      className="w-5 h-5 accent-amber-500"
+                    />
+                    <Sun className="w-5 h-5 text-amber-400" />
+                    <div className="flex-1">
+                      <p className="font-medium text-white">Solar Canopy</p>
+                      <p className="text-sm text-amber-200/70">Shade for vehicles + free electricity</p>
+                    </div>
+                    {wantsSolarCanopy && (
+                      <div className="text-right">
+                        <p className="font-bold text-amber-400">{recommendation.recommendation.solarKW} kW</p>
+                        <p className="text-xs text-amber-200/60">~${recommendation.savings.solarOffset.toLocaleString()}/yr</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Grid Services */}
+                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  wantsGridServices ? 'bg-purple-500/10 border-purple-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
+                }`} onClick={() => wantsBatteryStorage && setWantsGridServices(!wantsGridServices)}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={wantsGridServices}
+                      disabled={!wantsBatteryStorage}
+                      onChange={(e) => setWantsGridServices(e.target.checked)}
+                      className="w-5 h-5 accent-purple-500"
+                    />
+                    <Network className="w-5 h-5 text-purple-400" />
+                    <div className="flex-1">
+                      <p className="font-medium text-white">
+                        Grid Services 
+                        <span className="ml-2 text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">Bonus Revenue</span>
+                      </p>
+                      <p className="text-sm text-purple-200/70">
+                        {wantsBatteryStorage ? 'Earn money by helping stabilize the grid' : 'Requires battery storage'}
+                      </p>
+                    </div>
+                    {wantsGridServices && wantsBatteryStorage && (
+                      <div className="text-right">
+                        <p className="font-bold text-purple-400">+${recommendation.savings.gridServices.toLocaleString()}/yr</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Grid Services Explanation */}
+              {wantsBatteryStorage && (
+                <div className="bg-white/5 rounded-lg p-3 text-xs text-white/60">
+                  <p className="flex items-center gap-1">
+                    <HelpCircle className="w-3 h-3" />
+                    {STATION_TYPES[stationType].gridServicesNote}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* ================================================
+              STEP 4: YOUR QUOTE
+              - Calculated results
+              - Key metrics
+              - Export & Contact
+              ================================================ */}
+          {currentStep === 4 && (
             <div className="space-y-6">
               {isCalculating ? (
                 <div className="flex flex-col items-center justify-center py-12">
