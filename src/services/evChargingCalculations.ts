@@ -11,6 +11,11 @@
  * - High Power Charging (HPC): 150-350 kW - premium fast charging
  * - Ultra-Fast: 350+ kW - emerging technology
  * 
+ * DER Integration (NEW - Dec 2025):
+ * - Grid Services: Demand response, frequency regulation
+ * - V2G (Vehicle-to-Grid): Bi-directional power flow
+ * - Prosumer Mode: Combined charging + storage + solar
+ * 
  * Reference: West London EV Hub Quote (Oct 2025)
  * - 100 × 7 kW L2 = 700 kW
  * - 20 × 150 kW DCFC = 3,000 kW
@@ -45,6 +50,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 8, // 0-100% for 60kWh battery
     hardwareCostUSD: 5000,
     installCostUSD: 3000,
+    v2gCapable: false,
   },
   level2_11kw: {
     name: 'Level 2 (11 kW)',
@@ -55,6 +61,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 5.5,
     hardwareCostUSD: 6500,
     installCostUSD: 3500,
+    v2gCapable: true, // Some 11kW chargers support V2G
   },
   level2_19kw: {
     name: 'Level 2 (19.2 kW)',
@@ -65,6 +72,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 3,
     hardwareCostUSD: 8000,
     installCostUSD: 4000,
+    v2gCapable: true,
   },
   level2_22kw: {
     name: 'Level 2 (22 kW)',
@@ -75,6 +83,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 2.7,
     hardwareCostUSD: 10000,
     installCostUSD: 4500,
+    v2gCapable: true,
   },
   
   // DC Fast Charging (DCFC)
@@ -87,6 +96,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 1.2,
     hardwareCostUSD: 35000,
     installCostUSD: 15000,
+    v2gCapable: true, // Most DCFC support V2G with proper inverters
   },
   dcfc_150kw: {
     name: 'DCFC (150 kW)',
@@ -97,6 +107,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 0.4,
     hardwareCostUSD: 55000,
     installCostUSD: 30000,
+    v2gCapable: true,
   },
   
   // High Power Charging (HPC)
@@ -109,6 +120,7 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 0.24,
     hardwareCostUSD: 90000,
     installCostUSD: 40000,
+    v2gCapable: true,
   },
   hpc_350kw: {
     name: 'HPC (350 kW)',
@@ -119,6 +131,100 @@ export const EV_CHARGER_SPECS = {
     typicalChargeTimeHrs: 0.17,
     hardwareCostUSD: 130000,
     installCostUSD: 50000,
+    v2gCapable: true,
+  },
+} as const;
+
+// ============================================================================
+// DER / GRID SERVICES CONFIGURATION
+// ============================================================================
+
+export const GRID_SERVICES = {
+  demandResponse: {
+    name: 'Demand Response',
+    description: 'Reduce charging load during grid stress events',
+    revenuePerKWYear: 50, // $50/kW-year typical DR payment
+    participationHoursPerYear: 100, // Typical DR event hours
+    penaltyPerMissedEvent: 500,
+  },
+  frequencyRegulation: {
+    name: 'Frequency Regulation',
+    description: 'Provide grid frequency support via fast dispatch',
+    revenuePerMWHour: 25, // $/MWh for regulation service
+    availabilityHoursPerYear: 4000, // Hours battery can participate
+    requiresBidirectional: true,
+  },
+  peakShaving: {
+    name: 'Peak Demand Shaving',
+    description: 'Reduce utility demand charges',
+    savingsPerKWMonth: 15, // Typical demand charge savings
+    typicalReductionPercent: 30,
+  },
+  arbitrage: {
+    name: 'Energy Arbitrage',
+    description: 'Buy low, sell high during price differentials',
+    typicalSpreadPerKWh: 0.08, // $/kWh spread
+    cyclesPerDay: 1.5,
+    requiresStorageWithCharging: true,
+  },
+  capacityPayment: {
+    name: 'Capacity Payment',
+    description: 'Payment for guaranteed capacity availability',
+    revenuePerKWYear: 80, // $/kW-year capacity payment
+    requiredAvailability: 0.95, // 95% availability required
+  },
+} as const;
+
+export const V2G_CONFIG = {
+  // V2G-capable vehicles (as of 2024-2025)
+  compatibleVehicles: [
+    'Nissan Leaf (CHAdeMO)',
+    'Ford F-150 Lightning',
+    'Hyundai Ioniq 5/6 (with V2L adapter)',
+    'Kia EV6 (with V2L adapter)',
+    'VW ID.4 (upcoming)',
+    'BMW iX (upcoming)',
+  ],
+  // V2G economics
+  avgVehicleBatteryKWh: 77, // Average EV battery size
+  usableForV2G: 0.30, // 30% of battery typically available for V2G
+  roundTripEfficiency: 0.85, // 85% round-trip efficiency
+  batteryDegradationCostPerCycle: 0.02, // $/kWh degradation cost
+  // Revenue potential
+  v2gRevenuePerKWhDischarge: 0.15, // Revenue per kWh discharged
+  avgDischargeEventsPerDay: 2,
+} as const;
+
+export const PROSUMER_MODES = {
+  standard: {
+    name: 'Standard Charging',
+    description: 'Traditional one-way charging only',
+    features: ['EV Charging', 'Basic monitoring'],
+    gridServicesEnabled: false,
+    v2gEnabled: false,
+  },
+  gridInteractive: {
+    name: 'Grid-Interactive',
+    description: 'Smart charging with demand response',
+    features: ['Smart Charging', 'Demand Response', 'Load Management', 'TOU Optimization'],
+    gridServicesEnabled: true,
+    v2gEnabled: false,
+  },
+  v2gReady: {
+    name: 'V2G Ready',
+    description: 'Bi-directional charging with grid services',
+    features: ['Bi-directional Charging', 'V2G/V2H', 'Grid Services', 'Frequency Regulation', 'Peak Shaving'],
+    gridServicesEnabled: true,
+    v2gEnabled: true,
+  },
+  fullProsumer: {
+    name: 'Full Prosumer',
+    description: 'Complete DER integration with solar + storage',
+    features: ['Solar Integration', 'BESS + EV', 'V2G', 'All Grid Services', 'Energy Trading', 'Microgrid Capable'],
+    gridServicesEnabled: true,
+    v2gEnabled: true,
+    solarIntegration: true,
+    storageIntegration: true,
   },
 } as const;
 
@@ -429,6 +535,328 @@ export const WEST_LONDON_EV_HUB_CONFIG: EVChargerConfig = {
   hpc_350kw: 16,
 };
 
+// ============================================================================
+// GRID SERVICES REVENUE CALCULATION
+// ============================================================================
+
+export interface GridServicesRevenueResult {
+  demandResponseRevenue: number;
+  frequencyRegulationRevenue: number;
+  peakShavingSavings: number;
+  arbitrageRevenue: number;
+  capacityPaymentRevenue: number;
+  totalAnnualRevenue: number;
+  v2gRevenue: number;
+  breakdown: {
+    demandResponse: { kWEnrolled: number; eventsPerYear: number; revenuePerEvent: number };
+    frequencyReg: { mwCapacity: number; hoursAvailable: number; pricePerMWh: number };
+    peakShaving: { kWReduced: number; demandChargePerKW: number; monthsPerYear: number };
+    arbitrage: { kWhCycled: number; spreadPerKWh: number; daysPerYear: number };
+    capacity: { kWCapacity: number; pricePerKWYear: number };
+  };
+}
+
+/**
+ * Calculate potential grid services revenue for an EV charging hub with BESS
+ */
+export function calculateGridServicesRevenue(
+  powerResult: EVHubPowerResult,
+  bessConfig: {
+    powerMW: number;
+    energyMWh: number;
+  },
+  options: {
+    enableDemandResponse?: boolean;
+    enableFrequencyReg?: boolean;
+    enablePeakShaving?: boolean;
+    enableArbitrage?: boolean;
+    enableCapacityPayment?: boolean;
+    demandChargePerKW?: number;
+    v2gVehicleCount?: number; // Number of V2G-capable vehicles typically connected
+  } = {}
+): GridServicesRevenueResult {
+  const {
+    enableDemandResponse = true,
+    enableFrequencyReg = true,
+    enablePeakShaving = true,
+    enableArbitrage = true,
+    enableCapacityPayment = true,
+    demandChargePerKW = 15,
+    v2gVehicleCount = 0,
+  } = options;
+
+  const bessKW = bessConfig.powerMW * 1000;
+  const bessKWh = bessConfig.energyMWh * 1000;
+
+  // Demand Response Revenue
+  const drKWEnrolled = enableDemandResponse ? bessKW : 0;
+  const drEventsPerYear = 15; // Typical DR events per year
+  const drRevenuePerEvent = drKWEnrolled * (GRID_SERVICES.demandResponse.revenuePerKWYear / drEventsPerYear);
+  const demandResponseRevenue = drKWEnrolled * GRID_SERVICES.demandResponse.revenuePerKWYear;
+
+  // Frequency Regulation Revenue
+  const freqRegMW = enableFrequencyReg ? bessConfig.powerMW * 0.5 : 0; // 50% of capacity for freq reg
+  const freqRegHours = GRID_SERVICES.frequencyRegulation.availabilityHoursPerYear * 0.3; // 30% utilization
+  const frequencyRegulationRevenue = freqRegMW * freqRegHours * GRID_SERVICES.frequencyRegulation.revenuePerMWHour;
+
+  // Peak Shaving Savings
+  const peakShavingKW = enablePeakShaving ? Math.min(bessKW, powerResult.peakDemandKW * 0.3) : 0;
+  const peakShavingSavings = peakShavingKW * demandChargePerKW * 12; // 12 months
+
+  // Energy Arbitrage Revenue
+  const arbitrageCycles = enableArbitrage ? GRID_SERVICES.arbitrage.cyclesPerDay * 250 : 0; // 250 working days
+  const arbitrageKWh = arbitrageCycles * bessKWh * 0.8; // 80% DoD
+  const arbitrageRevenue = arbitrageKWh * GRID_SERVICES.arbitrage.typicalSpreadPerKWh;
+
+  // Capacity Payment Revenue
+  const capacityKW = enableCapacityPayment ? bessKW * GRID_SERVICES.capacityPayment.requiredAvailability : 0;
+  const capacityPaymentRevenue = capacityKW * GRID_SERVICES.capacityPayment.revenuePerKWYear;
+
+  // V2G Revenue (if V2G vehicles are present)
+  const v2gKWhPerVehicle = V2G_CONFIG.avgVehicleBatteryKWh * V2G_CONFIG.usableForV2G * V2G_CONFIG.roundTripEfficiency;
+  const v2gDailyKWh = v2gVehicleCount * v2gKWhPerVehicle * V2G_CONFIG.avgDischargeEventsPerDay;
+  const v2gAnnualKWh = v2gDailyKWh * 250; // 250 days/year
+  const v2gRevenue = v2gAnnualKWh * V2G_CONFIG.v2gRevenuePerKWhDischarge;
+
+  const totalAnnualRevenue = demandResponseRevenue + frequencyRegulationRevenue + 
+                              peakShavingSavings + arbitrageRevenue + capacityPaymentRevenue + v2gRevenue;
+
+  return {
+    demandResponseRevenue: Math.round(demandResponseRevenue),
+    frequencyRegulationRevenue: Math.round(frequencyRegulationRevenue),
+    peakShavingSavings: Math.round(peakShavingSavings),
+    arbitrageRevenue: Math.round(arbitrageRevenue),
+    capacityPaymentRevenue: Math.round(capacityPaymentRevenue),
+    v2gRevenue: Math.round(v2gRevenue),
+    totalAnnualRevenue: Math.round(totalAnnualRevenue),
+    breakdown: {
+      demandResponse: { kWEnrolled: drKWEnrolled, eventsPerYear: drEventsPerYear, revenuePerEvent: Math.round(drRevenuePerEvent) },
+      frequencyReg: { mwCapacity: freqRegMW, hoursAvailable: freqRegHours, pricePerMWh: GRID_SERVICES.frequencyRegulation.revenuePerMWHour },
+      peakShaving: { kWReduced: peakShavingKW, demandChargePerKW, monthsPerYear: 12 },
+      arbitrage: { kWhCycled: Math.round(arbitrageKWh), spreadPerKWh: GRID_SERVICES.arbitrage.typicalSpreadPerKWh, daysPerYear: 250 },
+      capacity: { kWCapacity: capacityKW, pricePerKWYear: GRID_SERVICES.capacityPayment.revenuePerKWYear },
+    },
+  };
+}
+
+// ============================================================================
+// V2G (VEHICLE-TO-GRID) CALCULATIONS
+// ============================================================================
+
+export interface V2GResult {
+  totalV2GCapacityKW: number;
+  availableEnergyKWh: number;
+  annualRevenueUSD: number;
+  batteryDegradationCostUSD: number;
+  netAnnualBenefitUSD: number;
+  compatibleChargerCount: number;
+  avgVehiclesConnected: number;
+  peakV2GDischargeKW: number;
+  gridServicesPotential: {
+    frequencyRegulation: boolean;
+    demandResponse: boolean;
+    peakShaving: boolean;
+    backupPower: boolean;
+  };
+}
+
+/**
+ * Calculate V2G potential for an EV charging hub
+ */
+export function calculateV2GPotential(
+  config: EVChargerConfig,
+  options: {
+    avgVehiclesConnectedPercent?: number; // What % of V2G-capable ports have cars connected
+    avgVehicleBatteryKWh?: number;
+    v2gAvailabilityHoursPerDay?: number;
+    demandChargeRate?: number;
+  } = {}
+): V2GResult {
+  const {
+    avgVehiclesConnectedPercent = 40,
+    avgVehicleBatteryKWh = V2G_CONFIG.avgVehicleBatteryKWh,
+    v2gAvailabilityHoursPerDay = 8,
+    demandChargeRate = 15,
+  } = options;
+
+  const normalizedConfig = normalizeEVChargerConfig(config);
+
+  // Count V2G-capable chargers (11kW+ L2 and all DC)
+  const v2gCapableL2 = (normalizedConfig.level2_11kw || 0) + 
+                       (normalizedConfig.level2_19kw || 0) + 
+                       (normalizedConfig.level2_22kw || 0);
+  const v2gCapableDC = (normalizedConfig.dcfc_50kw || 0) + 
+                       (normalizedConfig.dcfc_150kw || 0) + 
+                       (normalizedConfig.hpc_250kw || 0) + 
+                       (normalizedConfig.hpc_350kw || 0);
+  const compatibleChargerCount = v2gCapableL2 + v2gCapableDC;
+
+  // Calculate average connected vehicles
+  const avgVehiclesConnected = Math.round(compatibleChargerCount * (avgVehiclesConnectedPercent / 100));
+
+  // V2G power capacity (limited by charger, not vehicle)
+  const l2V2GPower = v2gCapableL2 * 11; // Assume 11kW avg for L2 V2G
+  const dcV2GPower = v2gCapableDC * 50; // Assume 50kW avg for DC V2G (derated for V2G)
+  const totalV2GCapacityKW = (l2V2GPower + dcV2GPower) * (avgVehiclesConnectedPercent / 100);
+
+  // Available energy from connected vehicles
+  const availableEnergyKWh = avgVehiclesConnected * avgVehicleBatteryKWh * V2G_CONFIG.usableForV2G;
+
+  // Annual discharge cycles
+  const annualDischargeEvents = V2G_CONFIG.avgDischargeEventsPerDay * 250; // 250 days
+  const annualKWhDischarged = availableEnergyKWh * annualDischargeEvents * V2G_CONFIG.roundTripEfficiency;
+
+  // Revenue calculation
+  const annualRevenueUSD = annualKWhDischarged * V2G_CONFIG.v2gRevenuePerKWhDischarge;
+
+  // Battery degradation cost
+  const batteryDegradationCostUSD = annualKWhDischarged * V2G_CONFIG.batteryDegradationCostPerCycle;
+
+  return {
+    totalV2GCapacityKW: Math.round(totalV2GCapacityKW),
+    availableEnergyKWh: Math.round(availableEnergyKWh),
+    annualRevenueUSD: Math.round(annualRevenueUSD),
+    batteryDegradationCostUSD: Math.round(batteryDegradationCostUSD),
+    netAnnualBenefitUSD: Math.round(annualRevenueUSD - batteryDegradationCostUSD),
+    compatibleChargerCount,
+    avgVehiclesConnected,
+    peakV2GDischargeKW: Math.round(totalV2GCapacityKW * 0.8), // 80% of capacity for grid services
+    gridServicesPotential: {
+      frequencyRegulation: totalV2GCapacityKW >= 100, // Need 100kW+ for freq reg
+      demandResponse: totalV2GCapacityKW >= 50,
+      peakShaving: totalV2GCapacityKW >= 25,
+      backupPower: availableEnergyKWh >= 50,
+    },
+  };
+}
+
+// ============================================================================
+// MULTI-SITE PORTFOLIO CALCULATION
+// ============================================================================
+
+export interface SiteConfig {
+  siteId: string;
+  siteName: string;
+  location: string;
+  chargerConfig: EVChargerConfig;
+  bessConfig?: { powerMW: number; energyMWh: number };
+  prosumerMode: keyof typeof PROSUMER_MODES;
+}
+
+export interface PortfolioResult {
+  totalSites: number;
+  totalChargers: number;
+  totalConnectedPowerMW: number;
+  totalBESSPowerMW: number;
+  totalBESSEnergyMWh: number;
+  aggregateGridServicesRevenue: number;
+  aggregateV2GRevenue: number;
+  totalAnnualRevenue: number;
+  portfolioMetrics: {
+    avgUtilization: number;
+    totalChargingSessions: number;
+    energyDeliveredMWh: number;
+    co2AvoidedTons: number;
+  };
+  siteBreakdown: Array<{
+    siteId: string;
+    siteName: string;
+    powerMW: number;
+    gridServicesRevenue: number;
+    v2gRevenue: number;
+  }>;
+}
+
+/**
+ * Calculate aggregate metrics for a multi-site EV charging portfolio
+ * Designed for PE firms and multi-site operators
+ */
+export function calculatePortfolioMetrics(
+  sites: SiteConfig[],
+  options: {
+    avgUtilizationPercent?: number;
+    avgSessionsPerChargerPerDay?: number;
+    avgKWhPerSession?: number;
+    co2PerKWh?: number; // kg CO2 avoided per kWh (vs gasoline)
+  } = {}
+): PortfolioResult {
+  const {
+    avgUtilizationPercent = 35,
+    avgSessionsPerChargerPerDay = 3,
+    avgKWhPerSession = 30,
+    co2PerKWh = 0.4, // kg CO2 avoided per kWh of EV charging
+  } = options;
+
+  let totalChargers = 0;
+  let totalConnectedPowerKW = 0;
+  let totalBESSPowerKW = 0;
+  let totalBESSEnergyKWh = 0;
+  let aggregateGridServicesRevenue = 0;
+  let aggregateV2GRevenue = 0;
+  const siteBreakdown: PortfolioResult['siteBreakdown'] = [];
+
+  for (const site of sites) {
+    const powerResult = calculateEVHubPower(site.chargerConfig);
+    const chargerCount = powerResult.breakdown.chargerCounts.level2Total + 
+                         powerResult.breakdown.chargerCounts.dcfcTotal + 
+                         powerResult.breakdown.chargerCounts.hpcTotal;
+    
+    totalChargers += chargerCount;
+    totalConnectedPowerKW += powerResult.totalPowerKW;
+
+    let siteGridRevenue = 0;
+    let siteV2GRevenue = 0;
+
+    if (site.bessConfig) {
+      totalBESSPowerKW += site.bessConfig.powerMW * 1000;
+      totalBESSEnergyKWh += site.bessConfig.energyMWh * 1000;
+
+      // Grid services for sites with BESS
+      const gridRevenue = calculateGridServicesRevenue(powerResult, site.bessConfig);
+      siteGridRevenue = gridRevenue.totalAnnualRevenue - gridRevenue.v2gRevenue;
+      aggregateGridServicesRevenue += siteGridRevenue;
+    }
+
+    // V2G potential
+    if (PROSUMER_MODES[site.prosumerMode].v2gEnabled) {
+      const v2gResult = calculateV2GPotential(site.chargerConfig);
+      siteV2GRevenue = v2gResult.netAnnualBenefitUSD;
+      aggregateV2GRevenue += siteV2GRevenue;
+    }
+
+    siteBreakdown.push({
+      siteId: site.siteId,
+      siteName: site.siteName,
+      powerMW: powerResult.totalPowerMW,
+      gridServicesRevenue: siteGridRevenue,
+      v2gRevenue: siteV2GRevenue,
+    });
+  }
+
+  // Calculate portfolio metrics
+  const totalChargingSessions = totalChargers * avgSessionsPerChargerPerDay * 365;
+  const energyDeliveredKWh = totalChargingSessions * avgKWhPerSession;
+  const co2AvoidedKg = energyDeliveredKWh * co2PerKWh;
+
+  return {
+    totalSites: sites.length,
+    totalChargers,
+    totalConnectedPowerMW: totalConnectedPowerKW / 1000,
+    totalBESSPowerMW: totalBESSPowerKW / 1000,
+    totalBESSEnergyMWh: totalBESSEnergyKWh / 1000,
+    aggregateGridServicesRevenue: Math.round(aggregateGridServicesRevenue),
+    aggregateV2GRevenue: Math.round(aggregateV2GRevenue),
+    totalAnnualRevenue: Math.round(aggregateGridServicesRevenue + aggregateV2GRevenue),
+    portfolioMetrics: {
+      avgUtilization: avgUtilizationPercent,
+      totalChargingSessions: Math.round(totalChargingSessions),
+      energyDeliveredMWh: Math.round(energyDeliveredKWh / 1000),
+      co2AvoidedTons: Math.round(co2AvoidedKg / 1000),
+    },
+    siteBreakdown,
+  };
+}
+
 /**
  * Validate our calculations against the West London quote
  */
@@ -459,3 +887,4 @@ export function validateWestLondonCalculation(): void {
   console.log(`  Total: $${costs.totalCostUSD.toLocaleString()}`);
   console.log('='.repeat(60));
 }
+
