@@ -429,9 +429,18 @@ export default function HotelWizard({
   }
 
   // Run quote calculation when reaching final step
+  // Always recalculate when entering final step to pick up any changes from previous steps
   useEffect(() => {
-    if (currentStep === WIZARD_STEPS.length - 1 && !quoteResult) {
+    if (currentStep === WIZARD_STEPS.length - 1) {
       generateQuote();
+    }
+  }, [currentStep]);
+  
+  // Clear quote result when user navigates back from final step
+  // This ensures slider changes will trigger a fresh calculation
+  useEffect(() => {
+    if (currentStep < WIZARD_STEPS.length - 1 && quoteResult) {
+      setQuoteResult(null);
     }
   }, [currentStep]);
   
@@ -496,7 +505,7 @@ export default function HotelWizard({
         </div>
         
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
           {/* Step 0: Hotel Type */}
           {currentStep === 0 && (
             <div className="space-y-6">

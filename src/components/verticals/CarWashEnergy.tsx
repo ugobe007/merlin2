@@ -14,10 +14,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, Mail, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, FileText } from 'lucide-react';
+import { Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, Mail, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, FileText, MapPin, Loader2 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { supabase } from '@/services/supabaseClient';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
+import { useUtilityRates } from '@/hooks/useUtilityRates';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import carWashImage from '@/assets/images/car_wash_1.jpg';
 import carWashTunnel from '@/assets/images/car_wash_tunnel.jpg';
@@ -32,6 +33,7 @@ interface CarWashInputs {
   numberOfBays: number;
   carsPerDay: number;
   state: string;
+  zipCode: string;
   includesVacuums: boolean;
   includesDryers: boolean;
   currentMonthlyBill: number;
@@ -66,16 +68,56 @@ const PEAK_HOURS = 5;
 
 // State electricity rates (simplified - will use database in production)
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
-  'California': { rate: 0.22, demandCharge: 25 },
-  'Texas': { rate: 0.12, demandCharge: 15 },
-  'Florida': { rate: 0.14, demandCharge: 12 },
-  'New York': { rate: 0.20, demandCharge: 22 },
+  'Alabama': { rate: 0.13, demandCharge: 12 },
+  'Alaska': { rate: 0.22, demandCharge: 15 },
   'Arizona': { rate: 0.13, demandCharge: 18 },
-  'Nevada': { rate: 0.11, demandCharge: 16 },
+  'Arkansas': { rate: 0.10, demandCharge: 11 },
+  'California': { rate: 0.22, demandCharge: 25 },
   'Colorado': { rate: 0.12, demandCharge: 14 },
-  'Washington': { rate: 0.10, demandCharge: 10 },
-  'Oregon': { rate: 0.11, demandCharge: 11 },
+  'Connecticut': { rate: 0.21, demandCharge: 20 },
+  'Delaware': { rate: 0.12, demandCharge: 13 },
+  'Florida': { rate: 0.14, demandCharge: 12 },
   'Georgia': { rate: 0.12, demandCharge: 13 },
+  'Hawaii': { rate: 0.33, demandCharge: 30 },
+  'Idaho': { rate: 0.10, demandCharge: 10 },
+  'Illinois': { rate: 0.13, demandCharge: 14 },
+  'Indiana': { rate: 0.12, demandCharge: 12 },
+  'Iowa': { rate: 0.11, demandCharge: 11 },
+  'Kansas': { rate: 0.12, demandCharge: 13 },
+  'Kentucky': { rate: 0.11, demandCharge: 11 },
+  'Louisiana': { rate: 0.10, demandCharge: 12 },
+  'Maine': { rate: 0.17, demandCharge: 15 },
+  'Maryland': { rate: 0.14, demandCharge: 15 },
+  'Massachusetts': { rate: 0.22, demandCharge: 22 },
+  'Michigan': { rate: 0.16, demandCharge: 16 },
+  'Minnesota': { rate: 0.13, demandCharge: 13 },
+  'Mississippi': { rate: 0.11, demandCharge: 11 },
+  'Missouri': { rate: 0.11, demandCharge: 12 },
+  'Montana': { rate: 0.11, demandCharge: 10 },
+  'Nebraska': { rate: 0.10, demandCharge: 11 },
+  'Nevada': { rate: 0.11, demandCharge: 16 },
+  'New Hampshire': { rate: 0.19, demandCharge: 18 },
+  'New Jersey': { rate: 0.16, demandCharge: 17 },
+  'New Mexico': { rate: 0.12, demandCharge: 13 },
+  'New York': { rate: 0.20, demandCharge: 22 },
+  'North Carolina': { rate: 0.11, demandCharge: 12 },
+  'North Dakota': { rate: 0.10, demandCharge: 10 },
+  'Ohio': { rate: 0.12, demandCharge: 13 },
+  'Oklahoma': { rate: 0.10, demandCharge: 11 },
+  'Oregon': { rate: 0.11, demandCharge: 11 },
+  'Pennsylvania': { rate: 0.14, demandCharge: 14 },
+  'Rhode Island': { rate: 0.21, demandCharge: 20 },
+  'South Carolina': { rate: 0.12, demandCharge: 12 },
+  'South Dakota': { rate: 0.11, demandCharge: 10 },
+  'Tennessee': { rate: 0.11, demandCharge: 11 },
+  'Texas': { rate: 0.12, demandCharge: 15 },
+  'Utah': { rate: 0.10, demandCharge: 12 },
+  'Vermont': { rate: 0.18, demandCharge: 16 },
+  'Virginia': { rate: 0.12, demandCharge: 13 },
+  'Washington': { rate: 0.10, demandCharge: 10 },
+  'West Virginia': { rate: 0.11, demandCharge: 11 },
+  'Wisconsin': { rate: 0.13, demandCharge: 13 },
+  'Wyoming': { rate: 0.10, demandCharge: 10 },
   'Other': { rate: 0.13, demandCharge: 15 },
 };
 
@@ -197,11 +239,32 @@ export default function CarWashEnergy() {
   const [inputs, setInputs] = useState<CarWashInputs>({
     numberOfBays: 4,
     carsPerDay: 150,
-    state: 'California',
+    state: 'Michigan',
+    zipCode: '',
     includesVacuums: true,
     includesDryers: true,
     currentMonthlyBill: 5000,
   });
+  
+  // Utility rate lookup by ZIP code
+  const { 
+    rate: utilityRate, 
+    demandCharge: utilityDemandCharge,
+    utilityName,
+    state: detectedState,
+    hasTOU,
+    savingsScore,
+    savingsRating,
+    savingsReasons,
+    loading: ratesLoading 
+  } = useUtilityRates(inputs.zipCode);
+  
+  // Update state when ZIP code lookup returns
+  useEffect(() => {
+    if (detectedState && inputs.zipCode.length >= 5) {
+      setInputs(prev => ({ ...prev, state: detectedState }));
+    }
+  }, [detectedState, inputs.zipCode]);
   
   // Update defaults when limits load from database
   useEffect(() => {
@@ -289,18 +352,22 @@ export default function CarWashEnergy() {
     
     try {
       const { peakKW, dailyKWh } = calculateCarWashPower(inputs);
+      
+      // Use ZIP-based utility rates if available, fallback to state rates
       const stateData = STATE_RATES[inputs.state] || STATE_RATES['Other'];
+      const effectiveRate = utilityRate ?? stateData.rate;
+      const effectiveDemandCharge = utilityDemandCharge ?? stateData.demandCharge;
       
       // Size battery: cover peak demand for 2-4 hours
       const storageSizeMW = peakKW / 1000; // Convert kW to MW
       const durationHours = 2; // 2 hour duration for peak shaving
       
-      // Use unified calculator
+      // Use unified calculator with ZIP-based rates
       const result = await calculateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW), // Min 100 kW
         durationHours,
         location: inputs.state,
-        electricityRate: stateData.rate,
+        electricityRate: effectiveRate,
         useCase: 'car-wash',
       });
       
@@ -611,21 +678,85 @@ export default function CarWashEnergy() {
                   </div>
                 </div>
                 
-                {/* State */}
+                {/* ZIP Code & Location */}
                 <div>
                   <label className="block text-sm font-medium text-cyan-200 mb-2">
-                    State
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    ZIP Code
                   </label>
-                  <select
-                    value={inputs.state}
-                    onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                  >
-                    {Object.keys(STATE_RATES).map((state) => (
-                      <option key={state} value={state} className="bg-slate-800">{state}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={inputs.zipCode}
+                      onChange={(e) => {
+                        const zip = e.target.value.replace(/\D/g, '').substring(0, 5);
+                        setInputs({ ...inputs, zipCode: zip });
+                      }}
+                      placeholder="Enter ZIP code (e.g., 48226)"
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      maxLength={5}
+                    />
+                    {ratesLoading && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400 animate-spin" />
+                    )}
+                  </div>
+                  
+                  {/* Auto-detected utility info */}
+                  {inputs.zipCode.length >= 5 && utilityName && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl border border-cyan-400/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-cyan-200 text-sm font-medium">Detected Utility</span>
+                        {savingsRating && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                            savingsRating === 'excellent' ? 'bg-green-500/30 text-green-300' :
+                            savingsRating === 'good' ? 'bg-cyan-500/30 text-cyan-300' :
+                            savingsRating === 'fair' ? 'bg-amber-500/30 text-amber-300' :
+                            'bg-gray-500/30 text-gray-300'
+                          }`}>
+                            {savingsRating.toUpperCase()} BESS FIT
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-white font-bold">{utilityName}</p>
+                      <p className="text-cyan-300 text-sm">{detectedState}</p>
+                      {utilityRate && (
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-white/5 rounded-lg p-2">
+                            <span className="text-cyan-400">Rate:</span>
+                            <span className="text-white ml-1">${utilityRate.toFixed(3)}/kWh</span>
+                          </div>
+                          {utilityDemandCharge && (
+                            <div className="bg-white/5 rounded-lg p-2">
+                              <span className="text-cyan-400">Demand:</span>
+                              <span className="text-white ml-1">${utilityDemandCharge}/kW</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {hasTOU && (
+                        <p className="text-amber-300 text-xs mt-2">⚡ Time-of-Use rates available - great for battery arbitrage!</p>
+                      )}
+                    </div>
+                  )}
                 </div>
+                
+                {/* State - Falls back to dropdown if no ZIP */}
+                {!inputs.zipCode && (
+                  <div>
+                    <label className="block text-sm font-medium text-cyan-200 mb-2">
+                      State
+                    </label>
+                    <select
+                      value={inputs.state}
+                      onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    >
+                      {Object.keys(STATE_RATES).map((state) => (
+                        <option key={state} value={state} className="bg-slate-800">{state}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 
                 {/* Equipment Toggles */}
                 <div className="grid grid-cols-2 gap-4">

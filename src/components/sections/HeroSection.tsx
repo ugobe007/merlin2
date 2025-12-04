@@ -333,23 +333,23 @@ export default function HeroSection({
                 <span>→</span>
               </button>
 
-              {/* Trust signals - bold yellow with glow effect */}
+              {/* Trust signals - bright yellow matching headline */}
               <div className="flex flex-wrap gap-8 text-base font-bold mb-8">
                 <span 
-                  className="text-amber-400 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(251,191,36,0.6), 0 0 20px rgba(251,191,36,0.4)' }}
+                  className="text-yellow-300 drop-shadow-lg"
+                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
                 >
                   ✓ No signup required
                 </span>
                 <span 
-                  className="text-amber-400 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(251,191,36,0.6), 0 0 20px rgba(251,191,36,0.4)' }}
+                  className="text-yellow-300 drop-shadow-lg"
+                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
                 >
                   ✓ 30% Federal Tax Credit
                 </span>
                 <span 
-                  className="text-amber-400 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(251,191,36,0.6), 0 0 20px rgba(251,191,36,0.4)' }}
+                  className="text-yellow-300 drop-shadow-lg"
+                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
                 >
                   ✓ Instant results
                 </span>
@@ -445,14 +445,6 @@ export default function HeroSection({
               </div>
             </div>
           </div>
-          
-          {/* Scroll indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:left-16 lg:translate-x-0 flex flex-col items-center gap-2 text-purple-400/50 z-20">
-            <span className="text-xs uppercase tracking-widest">Scroll to explore</span>
-            <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
         </div>
         </div>
       </section>
@@ -463,7 +455,7 @@ export default function HeroSection({
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #1e1b4b 0%, #312e81 30%, #3730a3 60%, #4338ca 100%)'
+            background: 'linear-gradient(180deg, #4c1d95 0%, #6b21a8 30%, #7c3aed 60%, #8b5cf6 100%)'
           }}
         />
         
@@ -517,7 +509,7 @@ export default function HeroSection({
                 <div className="group relative">
                   <div 
                     onClick={() => setActiveInfoPopup(activeInfoPopup === 'facility' ? null : 'facility')}
-                    className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
+                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
                     style={{ boxShadow: '0 0 30px rgba(139,92,246,0.15)' }}
                   >
                     <div className="flex items-start gap-4">
@@ -534,7 +526,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for Facility */}
                   {activeInfoPopup === 'facility' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-purple-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-purple-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">How Facility Analysis Works</h5>
                       <p className="text-purple-200 text-sm mb-3">Merlin uses industry-specific power profiles from ASHRAE, CBECS, and Energy Star databases to understand your energy needs:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -552,7 +544,7 @@ export default function HeroSection({
                 <div className="group relative">
                   <div 
                     onClick={() => setActiveInfoPopup(activeInfoPopup === 'location' ? null : 'location')}
-                    className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
+                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
                     style={{ boxShadow: '0 0 30px rgba(6,182,212,0.15)' }}
                   >
                     <div className="flex items-start gap-4">
@@ -567,7 +559,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for Location */}
                   {activeInfoPopup === 'location' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-cyan-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-cyan-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">How Location & Utility Works</h5>
                       <p className="text-purple-200 text-sm mb-3">Your location directly impacts savings potential and ROI:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -585,7 +577,7 @@ export default function HeroSection({
                 <div className="group relative">
                   <div 
                     onClick={() => setActiveInfoPopup(activeInfoPopup === 'goals' ? null : 'goals')}
-                    className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
+                    className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
                     style={{ boxShadow: '0 0 30px rgba(16,185,129,0.15)' }}
                   >
                     <div className="flex items-start gap-4">
@@ -600,7 +592,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for Goals */}
                   {activeInfoPopup === 'goals' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">How Goal Optimization Works</h5>
                       <p className="text-purple-200 text-sm mb-3">Different goals require different system configurations:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -667,13 +659,13 @@ export default function HeroSection({
                   </div>
                   
                   {/* Data flow labels around Merlin */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-slate-900/90 px-4 py-1.5 rounded-full border border-purple-500/30 shadow-lg">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-purple-500/30 shadow-lg">
                     <span className="text-purple-300 text-sm font-medium">30+ Industry Configs</span>
                   </div>
-                  <div className="absolute top-1/2 -left-28 -translate-y-1/2 bg-slate-900/90 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg hidden xl:block">
+                  <div className="absolute top-1/2 -left-28 -translate-y-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg hidden xl:block">
                     <span className="text-cyan-300 text-sm font-medium">NREL ATB 2024</span>
                   </div>
-                  <div className="absolute top-1/2 -right-28 -translate-y-1/2 bg-slate-900/90 px-4 py-1.5 rounded-full border border-amber-500/30 shadow-lg hidden xl:block">
+                  <div className="absolute top-1/2 -right-28 -translate-y-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-amber-500/30 shadow-lg hidden xl:block">
                     <span className="text-amber-300 text-sm font-medium">Real-time Pricing</span>
                   </div>
                 </div>
@@ -700,7 +692,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for System Size */}
                   {activeInfoPopup === 'system' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">Perfect System Sizing</h5>
                       <p className="text-purple-200 text-sm mb-3">Merlin calculates your optimal BESS size based on your actual load profile:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -732,7 +724,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for Add-ons */}
                   {activeInfoPopup === 'addons' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">Smart Add-on Recommendations</h5>
                       <p className="text-purple-200 text-sm mb-3">Merlin suggests complementary systems to maximize value:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -765,7 +757,7 @@ export default function HeroSection({
                   </div>
                   {/* Popup for Financial */}
                   {activeInfoPopup === 'financial' && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">Bank-Ready Financial Analysis</h5>
                       <p className="text-purple-200 text-sm mb-3">Professional-grade financials you can take to investors:</p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
@@ -787,7 +779,7 @@ export default function HeroSection({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {/* No Guesswork - with visual diagram */}
             <div 
-              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 text-center hover:border-purple-400/40 transition-all hover:-translate-y-1"
+              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 text-center hover:border-purple-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
               {/* Animated Icon Container */}
@@ -813,14 +805,14 @@ export default function HeroSection({
                 Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what you need.
               </p>
               {/* Visual detail - mini formula */}
-              <div className="text-xs text-purple-400/60 font-mono bg-slate-800/50 rounded-lg py-2 px-3 inline-block">
+              <div className="text-xs text-purple-400/60 font-mono bg-purple-900/50 rounded-lg py-2 px-3 inline-block">
                 Peak kW × Duration = Optimal Size
               </div>
             </div>
 
             {/* No Vendor Calls - with phone/time visual */}
             <div 
-              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1"
+              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
               {/* Animated Icon Container */}
@@ -863,7 +855,7 @@ export default function HeroSection({
 
             {/* Maximum Savings - with chart animation */}
             <div 
-              className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 text-center hover:border-emerald-400/40 transition-all hover:-translate-y-1"
+              className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 text-center hover:border-emerald-400/40 transition-all hover:-translate-y-1"
               style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
             >
               {/* Animated Chart Visual */}
@@ -900,7 +892,7 @@ export default function HeroSection({
 
           {/* Stats Bar - Enhanced with animated counters and icons */}
           <div 
-            className="relative bg-gradient-to-r from-slate-800/60 via-purple-900/40 to-slate-800/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16 overflow-hidden"
+            className="relative bg-gradient-to-r from-purple-900/60 via-purple-900/40 to-purple-900/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16 overflow-hidden"
             style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
           >
             {/* Animated background shimmer */}
@@ -1213,7 +1205,7 @@ export default function HeroSection({
               <div className="relative mb-8">
                 {/* Connection Line - Animated */}
                 <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0 hidden md:block">
-                  <div className="absolute inset-0 bg-slate-800 rounded-full" />
+                  <div className="absolute inset-0 bg-purple-900 rounded-full" />
                   <div 
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-amber-500 to-emerald-500 rounded-full"
                     style={{
@@ -1240,21 +1232,21 @@ export default function HeroSection({
                     
                     {/* Animated Input Items */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.2s both' }}>
+                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.2s both' }}>
                         <span className="text-lg">🏢</span>
                         <div>
                           <div className="text-xs text-purple-300">Industry</div>
                           <div className="text-sm text-white font-medium">Hotel • 350 rooms</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.4s both' }}>
+                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.4s both' }}>
                         <span className="text-lg">📍</span>
                         <div>
                           <div className="text-xs text-purple-300">Location</div>
                           <div className="text-sm text-white font-medium">California • $0.24/kWh</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.6s both' }}>
+                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.6s both' }}>
                         <span className="text-lg">🎯</span>
                         <div>
                           <div className="text-xs text-purple-300">Goals</div>
@@ -1296,15 +1288,15 @@ export default function HeroSection({
                     
                     {/* Processing Indicators */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 bg-slate-900/40 rounded-lg">
+                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
                         <div className="w-4 h-4 bg-emerald-400 rounded-full animate-pulse" />
                         <span className="text-xs text-white">Industry power profile matched</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-slate-900/40 rounded-lg">
+                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
                         <div className="w-4 h-4 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
                         <span className="text-xs text-white">NREL ATB 2024 pricing applied</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-slate-900/40 rounded-lg">
+                      <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
                         <div className="w-4 h-4 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
                         <span className="text-xs text-white">Optimal configuration found!</span>
                       </div>
@@ -1339,7 +1331,7 @@ export default function HeroSection({
                     
                     {/* BIG SAVINGS NUMBERS - Animated counter effect */}
                     <div className="space-y-3 relative z-10">
-                      <div className="text-center p-3 bg-slate-900/50 rounded-xl">
+                      <div className="text-center p-3 bg-purple-950/50 rounded-xl">
                         <div 
                           className="text-3xl md:text-4xl font-black text-amber-400"
                           style={{ textShadow: '0 0 20px rgba(251,191,36,0.5)' }}
@@ -1350,11 +1342,11 @@ export default function HeroSection({
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="text-center p-2 bg-slate-900/50 rounded-lg">
+                        <div className="text-center p-2 bg-purple-950/50 rounded-lg">
                           <div className="text-xl font-bold text-purple-300">2.1 yrs</div>
                           <div className="text-xs text-purple-300/60">Payback</div>
                         </div>
-                        <div className="text-center p-2 bg-slate-900/50 rounded-lg">
+                        <div className="text-center p-2 bg-purple-950/50 rounded-lg">
                           <div className="text-xl font-bold text-cyan-400">485%</div>
                           <div className="text-xs text-cyan-300/60">25-yr ROI</div>
                         </div>
@@ -1370,7 +1362,7 @@ export default function HeroSection({
               </div>
               
               {/* System Configuration Preview */}
-              <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-purple-500/20">
+              <div className="bg-purple-900/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-purple-500/20">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div className="text-center">

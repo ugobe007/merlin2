@@ -17,7 +17,7 @@ import {
   X, ArrowLeft, ArrowRight, Check, Zap, Battery, Sun, 
   Droplets, Wind, Gauge, DollarSign, Calendar, Download,
   CheckCircle, AlertCircle, Info, Sparkles, Car, TrendingDown, Phone,
-  FileText, FileSpreadsheet, File
+  FileText, FileSpreadsheet, File, Building, BarChart3
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
@@ -136,9 +136,564 @@ const EQUIPMENT_POWER = {
     reverseOsmosis: 2.5, // 2-5 HP
     wheelBlaster: 1.5, // per unit
   },
+  
+  // Automation systems power by level
+  // Legacy = older electromechanical, Standard = current PLC-based, Modern = AI/vision
+  automation: {
+    legacy: {
+      plcController: 0.5,
+      sensorBasic: 0.2,
+      relayLogic: 0.3,
+    },
+    standard: {
+      plcController: 0.8,
+      sensorArray: 0.5,
+      hmiDisplay: 0.3,
+      networkSwitch: 0.2,
+    },
+    modern: {
+      plcController: 1.2,
+      visionSystem: 1.2, // Per camera
+      aiProcessor: 2.0,
+      sensorArray: 0.5,
+      edgeComputing: 1.5,
+    },
+  },
 };
 
-// Wash type configurations
+// ============================================
+// CAR WASH BRAND PROFILES
+// ============================================
+// Top 20 car wash chains with their typical equipment and power profiles
+// Source: DRB Top 50 Car Washes (2024), industry research, company specs
+
+const CAR_WASH_BRANDS = {
+  // ========== TOP 10 BRANDS ==========
+  'mister-car-wash': {
+    name: 'Mister Car Wash',
+    rank: 1,
+    description: 'Largest US car wash chain',
+    headquarters: 'Tucson, AZ',
+    siteCount: 522,
+    logo: '🚗',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 8,
+      hasWindBlade: true,
+      highPressurePumps: 3,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 140, max: 180 },
+    avgDemandKW: { min: 90, max: 120 },
+    notes: 'Full-tunnel express exterior focus',
+  },
+  'whistle-express': {
+    name: 'Whistle Express Car Wash',
+    rank: 2,
+    description: 'Rapid growth express chain',
+    headquarters: 'Charlotte, NC',
+    siteCount: 545,
+    logo: '🎵',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 120, max: 160 },
+    avgDemandKW: { min: 80, max: 110 },
+    notes: 'Southeast US focused, rapid expansion',
+  },
+  'club-car-wash': {
+    name: 'Club Car Wash / EWC',
+    rank: 3,
+    description: 'Membership-focused express',
+    headquarters: 'Columbia, MO',
+    siteCount: 385,
+    logo: '🏆',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'Strong membership model',
+  },
+  'tidal-wave': {
+    name: 'Tidal Wave Auto Spa',
+    rank: 4,
+    description: 'Premium express experience',
+    headquarters: 'Thomaston, GA',
+    siteCount: 311,
+    logo: '🌊',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'modern',
+    defaultEquipment: {
+      standardBlowers: 8,
+      hasWindBlade: true,
+      hasHighPerformanceDryer: true,
+      highPressurePumps: 3,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 160, max: 200 },
+    avgDemandKW: { min: 100, max: 140 },
+    notes: 'Premium equipment, modern automation',
+  },
+  'quick-quack': {
+    name: 'Quick Quack Car Wash',
+    rank: 5,
+    description: 'Fun branding, fast service',
+    headquarters: 'Sacramento, CA',
+    siteCount: 340,
+    logo: '🦆',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'California-based, eco-focused',
+  },
+  'zips': {
+    name: 'Zips Car Wash',
+    rank: 6,
+    description: 'Value-focused express',
+    headquarters: 'Plano, TX',
+    siteCount: 295,
+    logo: '⚡',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 6,
+      hasWindBlade: false,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 110, max: 150 },
+    avgDemandKW: { min: 70, max: 100 },
+    notes: 'Efficient operations, value pricing',
+  },
+  'tommys-express': {
+    name: "Tommy's Express Car Wash",
+    rank: 7,
+    description: 'High-tech express tunnel',
+    headquarters: 'Holland, MI',
+    siteCount: 259,
+    logo: '🔴',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'modern',
+    defaultEquipment: {
+      standardBlowers: 8,
+      hasWindBlade: true,
+      hasHighPerformanceDryer: true,
+      highPressurePumps: 3,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 150, max: 190 },
+    avgDemandKW: { min: 95, max: 130 },
+    notes: 'Modern equipment, 3-min wash',
+  },
+  'spotless-brands': {
+    name: 'Spotless Brands',
+    rank: 8,
+    description: 'Multi-brand portfolio',
+    headquarters: 'Oakbrook Terrace, IL',
+    siteCount: 205,
+    logo: '✨',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'Operates multiple brands',
+  },
+  'go-car-wash': {
+    name: 'GO Car Wash',
+    rank: 9,
+    description: 'Growing express chain',
+    headquarters: 'Denver, CO',
+    siteCount: 154,
+    logo: '🟢',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 6,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 120, max: 160 },
+    avgDemandKW: { min: 80, max: 110 },
+    notes: 'Rapid expansion in western US',
+  },
+  'mammoth-holdings': {
+    name: 'Mammoth Holdings',
+    rank: 10,
+    description: 'Multi-state operator',
+    headquarters: 'Dallas, TX',
+    siteCount: 152,
+    logo: '🦣',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'Texas-based expansion',
+  },
+  // ========== BRANDS 11-20 ==========
+  'whitewater-express': {
+    name: 'Whitewater Express Car Wash',
+    rank: 11,
+    description: 'Houston-based express',
+    headquarters: 'Houston, TX',
+    siteCount: 130,
+    logo: '💧',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 125, max: 165 },
+    avgDemandKW: { min: 80, max: 110 },
+    notes: 'Texas Gulf Coast focus',
+  },
+  'modwash': {
+    name: 'ModWash Car Wash',
+    rank: 12,
+    description: 'Modern express concept',
+    headquarters: 'Chattanooga, TN',
+    siteCount: 122,
+    logo: '🔷',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'modern',
+    defaultEquipment: {
+      standardBlowers: 8,
+      hasWindBlade: true,
+      hasHighPerformanceDryer: true,
+      highPressurePumps: 3,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 145, max: 185 },
+    avgDemandKW: { min: 95, max: 125 },
+    notes: 'Modern equipment, tech-forward',
+  },
+  'super-star': {
+    name: 'Super Star Car Wash',
+    rank: 13,
+    description: 'Arizona market leader',
+    headquarters: 'Phoenix, AZ',
+    siteCount: 113,
+    logo: '⭐',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'Southwest US focus',
+  },
+  'autobell': {
+    name: 'Autobell Car Wash',
+    rank: 14,
+    description: 'Full-service tradition',
+    headquarters: 'Charlotte, NC',
+    siteCount: 90,
+    logo: '🔔',
+    typicalWashType: 'full-service',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 8,
+      hasWindBlade: true,
+      highPressurePumps: 3,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+      hasVacuumStations: true,
+    },
+    peakDemandKW: { min: 160, max: 220 },
+    avgDemandKW: { min: 100, max: 150 },
+    notes: 'Full-service with interior cleaning',
+  },
+  'luv-car-wash': {
+    name: 'LUV Car Wash',
+    rank: 15,
+    description: 'Arizona express chain',
+    headquarters: 'Gilbert, AZ',
+    siteCount: 74,
+    logo: '💜',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 6,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 115, max: 155 },
+    avgDemandKW: { min: 75, max: 105 },
+    notes: 'Growing Arizona presence',
+  },
+  'true-blue-wash': {
+    name: 'True Blue Wash (Circle K)',
+    rank: 16,
+    description: 'C-store chain car wash',
+    headquarters: 'Tempe, AZ',
+    siteCount: 68,
+    logo: '🔵',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 5,
+      hasWindBlade: false,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 100, max: 140 },
+    avgDemandKW: { min: 65, max: 95 },
+    notes: 'Owned by Circle K convenience stores',
+  },
+  'caseys-express': {
+    name: "Casey's Express Wash",
+    rank: 17,
+    description: 'Midwest c-store chain',
+    headquarters: 'Ankeny, IA',
+    siteCount: 66,
+    logo: '🌽',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 5,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: false,
+    },
+    peakDemandKW: { min: 105, max: 145 },
+    avgDemandKW: { min: 70, max: 100 },
+    notes: 'Co-located with convenience stores',
+  },
+  'caliber-car-wash': {
+    name: 'Caliber Car Wash',
+    rank: 18,
+    description: 'Atlanta-based express',
+    headquarters: 'Atlanta, GA',
+    siteCount: 64,
+    logo: '🎯',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'modern',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 135, max: 175 },
+    avgDemandKW: { min: 85, max: 120 },
+    notes: 'Southeast expansion',
+  },
+  'blue-wave-xpress': {
+    name: 'Blue Wave Xpress',
+    rank: 19,
+    description: 'California express chain',
+    headquarters: 'San Rafael, CA',
+    siteCount: 63,
+    logo: '🌀',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'Northern California focus',
+  },
+  'el-car-wash': {
+    name: 'El Car Wash',
+    rank: 20,
+    description: 'South Florida express',
+    headquarters: 'Miami, FL',
+    siteCount: 62,
+    logo: '☀️',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: {
+      standardBlowers: 7,
+      hasWindBlade: true,
+      highPressurePumps: 2,
+      hasWaterReclaim: true,
+      hasReverseOsmosis: true,
+    },
+    peakDemandKW: { min: 130, max: 170 },
+    avgDemandKW: { min: 85, max: 115 },
+    notes: 'South Florida market leader',
+  },
+  // ========== NON-BRANDED OPTION ==========
+  'non-branded': {
+    name: 'Non-Branded Automated',
+    rank: null,
+    description: 'Independent automated car wash',
+    headquarters: null,
+    siteCount: null,
+    logo: '🏢',
+    typicalWashType: 'express-exterior',
+    automationLevel: 'standard',
+    defaultEquipment: null, // Use manual entry
+    peakDemandKW: null, // Calculate from equipment
+    avgDemandKW: null,
+    notes: 'Configure your equipment profile',
+    allowBrandSubmission: true, // Flag to show brand submission form
+  },
+};
+
+// ============================================
+// CONCIERGE SERVICE TIERS
+// ============================================
+const CONCIERGE_TIERS = {
+  'standard': {
+    name: 'Standard',
+    description: 'Self-service with AI recommendations',
+    icon: '🤖',
+    features: [
+      'AI-powered equipment recommendations',
+      'Industry benchmarking data',
+      'Automated quote generation',
+      'Email support',
+    ],
+    price: 'Free',
+    badge: null as string | null,
+  },
+  'pro': {
+    name: 'Concierge Pro',
+    description: 'White-glove service for PE firms & multi-site operators',
+    icon: '👔',
+    features: [
+      'Dedicated energy analyst',
+      'Custom equipment recommendations',
+      'Site audit coordination',
+      'Multi-site portfolio management',
+      'Quarterly performance reviews',
+      'Priority phone support',
+      'Custom integrations',
+    ],
+    price: 'Contact Sales',
+    badge: 'PE Firms' as string | null,
+  },
+};
+
+// ============================================
+// PERFORMANCE METRICS CONFIG
+// ============================================
+// Data layer for tracking energy performance
+// Key insight: Data = Energy - better data drives better savings
+const PERFORMANCE_METRICS = {
+  energyPerCar: {
+    name: 'Energy per Car',
+    unit: 'kWh/car',
+    description: 'Energy consumed per vehicle washed',
+    benchmark: { excellent: 0.5, good: 0.65, average: 0.8 },
+  },
+  peakReduction: {
+    name: 'Peak Demand Reduction',
+    unit: '%',
+    description: 'Reduction in peak demand with BESS',
+    benchmark: { excellent: 40, good: 30, average: 20 },
+  },
+  monthlyEnergySavings: {
+    name: 'Monthly Energy Savings',
+    unit: '$',
+    description: 'Monthly cost savings from energy optimization',
+    benchmark: null, // Varies by site
+  },
+  equipmentUtilization: {
+    name: 'Equipment Utilization',
+    unit: '%',
+    description: 'Percentage of time equipment is actively washing',
+    benchmark: { excellent: 70, good: 55, average: 40 },
+  },
+  waterRecoveryRate: {
+    name: 'Water Recovery Rate',
+    unit: '%',
+    description: 'Percentage of water recycled',
+    benchmark: { excellent: 85, good: 70, average: 50 },
+  },
+  carsPerKWh: {
+    name: 'Throughput Efficiency',
+    unit: 'cars/kWh',
+    description: 'Number of cars washed per kWh',
+    benchmark: { excellent: 2.0, good: 1.5, average: 1.2 },
+  },
+};
+
+// Automation level configurations
+const AUTOMATION_LEVELS = {
+  'legacy': {
+    name: 'Legacy',
+    description: 'Older electromechanical systems (pre-2010)',
+    powerMultiplier: 0.85, // Less efficient, but simpler
+    additionalKW: 2, // Basic controls
+  },
+  'standard': {
+    name: 'Standard',
+    description: 'Current PLC-based automation (2010-2020)',
+    powerMultiplier: 1.0,
+    additionalKW: 4, // PLC + sensors + HMI
+  },
+  'modern': {
+    name: 'Modern/AI',
+    description: 'AI vision systems, real-time adaptation (2020+)',
+    powerMultiplier: 1.08, // Slightly more for AI processing
+    additionalKW: 8, // Vision + AI + edge computing
+  },
+};
+
+// Wash type configurations (REMOVED robotic-automated - redundant)
 const WASH_TYPES = {
   'express-exterior': {
     name: 'Express Exterior Tunnel',
@@ -180,16 +735,56 @@ const WASH_TYPES = {
 
 // State electricity rates
 const STATE_RATES: Record<string, { rate: number; demandCharge: number; peakRate: number }> = {
-  'California': { rate: 0.22, demandCharge: 25, peakRate: 0.35 },
-  'Texas': { rate: 0.12, demandCharge: 15, peakRate: 0.18 },
-  'Florida': { rate: 0.14, demandCharge: 12, peakRate: 0.20 },
-  'New York': { rate: 0.20, demandCharge: 22, peakRate: 0.32 },
+  'Alabama': { rate: 0.13, demandCharge: 12, peakRate: 0.19 },
+  'Alaska': { rate: 0.22, demandCharge: 15, peakRate: 0.30 },
   'Arizona': { rate: 0.13, demandCharge: 18, peakRate: 0.22 },
-  'Nevada': { rate: 0.11, demandCharge: 16, peakRate: 0.18 },
+  'Arkansas': { rate: 0.10, demandCharge: 11, peakRate: 0.15 },
+  'California': { rate: 0.22, demandCharge: 25, peakRate: 0.35 },
   'Colorado': { rate: 0.12, demandCharge: 14, peakRate: 0.19 },
-  'Washington': { rate: 0.10, demandCharge: 10, peakRate: 0.14 },
-  'Oregon': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Connecticut': { rate: 0.21, demandCharge: 20, peakRate: 0.32 },
+  'Delaware': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'Florida': { rate: 0.14, demandCharge: 12, peakRate: 0.20 },
   'Georgia': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'Hawaii': { rate: 0.33, demandCharge: 30, peakRate: 0.45 },
+  'Idaho': { rate: 0.10, demandCharge: 10, peakRate: 0.14 },
+  'Illinois': { rate: 0.13, demandCharge: 14, peakRate: 0.20 },
+  'Indiana': { rate: 0.12, demandCharge: 12, peakRate: 0.18 },
+  'Iowa': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Kansas': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'Kentucky': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Louisiana': { rate: 0.10, demandCharge: 12, peakRate: 0.15 },
+  'Maine': { rate: 0.17, demandCharge: 15, peakRate: 0.25 },
+  'Maryland': { rate: 0.14, demandCharge: 15, peakRate: 0.21 },
+  'Massachusetts': { rate: 0.22, demandCharge: 22, peakRate: 0.34 },
+  'Michigan': { rate: 0.16, demandCharge: 16, peakRate: 0.24 },
+  'Minnesota': { rate: 0.13, demandCharge: 13, peakRate: 0.19 },
+  'Mississippi': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Missouri': { rate: 0.11, demandCharge: 12, peakRate: 0.17 },
+  'Montana': { rate: 0.11, demandCharge: 10, peakRate: 0.16 },
+  'Nebraska': { rate: 0.10, demandCharge: 11, peakRate: 0.15 },
+  'Nevada': { rate: 0.11, demandCharge: 16, peakRate: 0.18 },
+  'New Hampshire': { rate: 0.19, demandCharge: 18, peakRate: 0.28 },
+  'New Jersey': { rate: 0.16, demandCharge: 17, peakRate: 0.24 },
+  'New Mexico': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'New York': { rate: 0.20, demandCharge: 22, peakRate: 0.32 },
+  'North Carolina': { rate: 0.11, demandCharge: 12, peakRate: 0.17 },
+  'North Dakota': { rate: 0.10, demandCharge: 10, peakRate: 0.14 },
+  'Ohio': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'Oklahoma': { rate: 0.10, demandCharge: 11, peakRate: 0.15 },
+  'Oregon': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Pennsylvania': { rate: 0.14, demandCharge: 14, peakRate: 0.21 },
+  'Rhode Island': { rate: 0.21, demandCharge: 20, peakRate: 0.32 },
+  'South Carolina': { rate: 0.12, demandCharge: 12, peakRate: 0.18 },
+  'South Dakota': { rate: 0.11, demandCharge: 10, peakRate: 0.16 },
+  'Tennessee': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Texas': { rate: 0.12, demandCharge: 15, peakRate: 0.18 },
+  'Utah': { rate: 0.10, demandCharge: 12, peakRate: 0.15 },
+  'Vermont': { rate: 0.18, demandCharge: 16, peakRate: 0.26 },
+  'Virginia': { rate: 0.12, demandCharge: 13, peakRate: 0.18 },
+  'Washington': { rate: 0.10, demandCharge: 10, peakRate: 0.14 },
+  'West Virginia': { rate: 0.11, demandCharge: 11, peakRate: 0.16 },
+  'Wisconsin': { rate: 0.13, demandCharge: 13, peakRate: 0.19 },
+  'Wyoming': { rate: 0.10, demandCharge: 10, peakRate: 0.14 },
   'Other': { rate: 0.13, demandCharge: 15, peakRate: 0.20 },
 };
 
@@ -220,7 +815,7 @@ export default function CarWashWizard({
   
   // Merge initial inputs with defaults (updated from database when available)
   const mergedInputs = {
-    numberOfBays: initialInputs.numberOfBays ?? limits?.numberOfBays?.default ?? 4,
+    numberOfBays: initialInputs.numberOfBays ?? limits?.numberOfBays?.default ?? 1,
     carsPerDay: initialInputs.carsPerDay ?? limits?.carsPerDay?.default ?? 150,
     state: initialInputs.state ?? 'California',
     monthlyBill: initialInputs.monthlyBill ?? limits?.currentMonthlyBill?.default ?? 5000,
@@ -235,6 +830,35 @@ export default function CarWashWizard({
   const [currentStep, setCurrentStep] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
+  
+  // Local state for editable inputs
+  const [numberOfBays, setNumberOfBays] = useState(
+    initialInputs.numberOfBays ?? 1
+  );
+  const [carsPerDay, setCarsPerDay] = useState(
+    initialInputs.carsPerDay ?? 150
+  );
+  
+  // Step 0: Brand Selection (NEW - concierge experience)
+  const [selectedBrand, setSelectedBrand] = useState<keyof typeof CAR_WASH_BRANDS>('non-branded');
+  const [automationLevel, setAutomationLevel] = useState<keyof typeof AUTOMATION_LEVELS>('standard');
+  
+  // Brand Submission for non-branded
+  const [brandSubmission, setBrandSubmission] = useState({
+    brandName: '',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    zipCode: '',
+    streetAddress: '', // Optional
+    numberOfSites: 1,
+  });
+  
+  // Concierge Tier Selection
+  const [conciergeTier, setConciergeTier] = useState<keyof typeof CONCIERGE_TIERS>('standard');
+  
+  // Performance Metrics (data layer)
+  const [trackPerformance, setTrackPerformance] = useState(true);
   
   // Step 1: Wash Type
   const [washType, setWashType] = useState<keyof typeof WASH_TYPES>('express-exterior');
@@ -261,9 +885,9 @@ export default function CarWashWizard({
     hasWindBlade: mergedInputs.includesDryers,
     hasHighPerformanceDryer: false,
     
-    // Vacuum
-    vacuumStations: mergedInputs.includesVacuums ? mergedInputs.numberOfBays * 2 : 0,
-    hasCentralVacuum: mergedInputs.includesVacuums && mergedInputs.numberOfBays >= 4,
+    // Vacuum - uses local numberOfBays state
+    vacuumStations: mergedInputs.includesVacuums ? numberOfBays * 2 : 0,
+    hasCentralVacuum: mergedInputs.includesVacuums && numberOfBays >= 4,
     
     // Chemical
     chemicalStations: 4,
@@ -278,6 +902,32 @@ export default function CarWashWizard({
     airCompressorHP: 10,
   });
   
+  // Update equipment when numberOfBays changes
+  useEffect(() => {
+    setEquipment(prev => ({
+      ...prev,
+      vacuumStations: mergedInputs.includesVacuums ? numberOfBays * 2 : 0,
+      hasCentralVacuum: mergedInputs.includesVacuums && numberOfBays >= 4,
+    }));
+  }, [numberOfBays, mergedInputs.includesVacuums]);
+  
+  // Auto-populate equipment when brand is selected
+  useEffect(() => {
+    const brand = CAR_WASH_BRANDS[selectedBrand];
+    if (brand && brand.defaultEquipment) {
+      setEquipment(prev => ({
+        ...prev,
+        ...brand.defaultEquipment,
+      }));
+      if (brand.automationLevel) {
+        setAutomationLevel(brand.automationLevel as keyof typeof AUTOMATION_LEVELS);
+      }
+      if (brand.typicalWashType) {
+        setWashType(brand.typicalWashType as keyof typeof WASH_TYPES);
+      }
+    }
+  }, [selectedBrand]);
+  
   // Step 3: Operations
   const [operations, setOperations] = useState({
     hoursPerDay: 12,
@@ -290,10 +940,12 @@ export default function CarWashWizard({
   
   // Step 4: Energy Goals
   const [energyGoals, setEnergyGoals] = useState({
-    primaryGoal: 'demand-reduction' as 'demand-reduction' | 'backup-power' | 'solar-storage' | 'all',
+    primaryGoal: 'demand-reduction' as 'demand-reduction' | 'backup-power' | 'solar-storage' | 'solar-generator' | 'all',
     targetSavingsPercent: 40,
     interestInSolar: true,
     solarRoofArea: 5000, // sq ft available
+    includeGenerator: false, // Natural gas generator for backup/peak shaving
+    generatorSizeKW: 0, // Auto-calculated based on peak power if enabled
     budgetRange: 'flexible' as 'tight' | 'moderate' | 'flexible',
     financingPreference: 'loan' as 'cash' | 'loan' | 'ppa' | 'lease',
   });
@@ -312,7 +964,7 @@ export default function CarWashWizard({
   useEffect(() => {
     const calc = calculateEquipmentPower();
     setCalculatedPower(calc);
-  }, [equipment, operations, washType, initialInputs]);
+  }, [equipment, operations, washType, automationLevel, initialInputs]);
   
   function calculateEquipmentPower() {
     let peakKW = 0;
@@ -385,6 +1037,13 @@ export default function CarWashWizard({
     peakKW += EQUIPMENT_POWER.facility.security;
     peakKW += EQUIPMENT_POWER.facility.gates;
     
+    // Automation Systems (based on level)
+    const autoLevel = AUTOMATION_LEVELS[automationLevel];
+    peakKW += autoLevel.additionalKW;
+    
+    // Apply automation efficiency multiplier
+    peakKW *= autoLevel.powerMultiplier;
+    
     // Load diversity factor (not all equipment runs simultaneously)
     const diversityFactor = 0.7; // 70% typical
     const avgKW = peakKW * diversityFactor;
@@ -428,13 +1087,49 @@ export default function CarWashWizard({
       
       const stateData = STATE_RATES[mergedInputs.state] || STATE_RATES['Other'];
       
+      // Only include solar when user explicitly selects solar-related goals
+      // The solar slider is only visible/adjustable when primaryGoal is 'solar-storage', 'solar-generator', or 'all'
+      const includeSolar = energyGoals.primaryGoal === 'solar-storage' || 
+        energyGoals.primaryGoal === 'solar-generator' || 
+        energyGoals.primaryGoal === 'all';
+      const solarMW = includeSolar ? (energyGoals.solarRoofArea * 0.015 / 1000) : 0; // ~15W/sqft
+      
+      console.log('🌞 Solar calculation:', {
+        primaryGoal: energyGoals.primaryGoal,
+        includeSolar,
+        solarRoofArea: energyGoals.solarRoofArea,
+        solarMW,
+        solarKW: solarMW * 1000,
+      });
+      
+      // Include natural gas generator when user selects backup-power, solar-generator, or all goals
+      // Generator is sized to cover peak demand for extended outages
+      const includeGenerator = energyGoals.includeGenerator || 
+        energyGoals.primaryGoal === 'backup-power' || 
+        energyGoals.primaryGoal === 'solar-generator' || 
+        energyGoals.primaryGoal === 'all';
+      const generatorMW = includeGenerator 
+        ? (energyGoals.generatorSizeKW > 0 
+            ? energyGoals.generatorSizeKW / 1000 
+            : calculatedPower.peakDemandKW * 0.8 / 1000) // Default: 80% of peak for backup
+        : 0;
+      
+      console.log('⚡ Generator calculation:', {
+        primaryGoal: energyGoals.primaryGoal,
+        includeGenerator,
+        generatorSizeKW: energyGoals.generatorSizeKW,
+        generatorMW,
+        generatorKW: generatorMW * 1000,
+      });
+      
       const result = await calculateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: mergedInputs.state,
         electricityRate: stateData.rate,
         useCase: 'car-wash',
-        solarMW: energyGoals.interestInSolar ? (energyGoals.solarRoofArea * 0.015 / 1000) : 0, // ~15W/sqft
+        solarMW,
+        generatorMW,
       });
       
       setQuoteResult(result);
@@ -494,7 +1189,7 @@ export default function CarWashWizard({
   <h1>Car Wash Energy Storage Quote</h1>
   
   <p><strong>${mergedInputs.businessName || 'Car Wash Business'}</strong><br>
-  ${mergedInputs.numberOfBays} Wash Bays • ${mergedInputs.carsPerDay} cars/day • ${mergedInputs.state}</p>
+  ${numberOfBays} Wash Bays • ${mergedInputs.carsPerDay} cars/day • ${mergedInputs.state}</p>
   
   <div class="summary-box">
     <div style="font-size: 14px; color: #059669; margin-bottom: 5px;">&#36; ESTIMATED ANNUAL SAVINGS</div>
@@ -724,7 +1419,7 @@ export default function CarWashWizard({
               ]}),
               new TableRow({ children: [
                 new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Facility Size', bold: true, size: BODY_SIZE, color: DARK_GRAY, font: 'Helvetica' })] })], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${mergedInputs.numberOfBays} wash bays`, size: BODY_SIZE, color: DARK_GRAY, font: 'Helvetica' })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${numberOfBays} wash bays`, size: BODY_SIZE, color: DARK_GRAY, font: 'Helvetica' })] })] }),
               ]}),
               new TableRow({ children: [
                 new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Daily Volume', bold: true, size: BODY_SIZE, color: DARK_GRAY, font: 'Helvetica' })] })], shading: { fill: 'F3F4F6' } }),
@@ -1013,7 +1708,7 @@ export default function CarWashWizard({
       ['BUSINESS INFORMATION'],
       ['Business Name', mergedInputs.businessName || 'Car Wash Business'],
       ['Location', mergedInputs.state],
-      ['Wash Bays', mergedInputs.numberOfBays],
+      ['Wash Bays', numberOfBays],
       ['Daily Volume', `${mergedInputs.carsPerDay} cars/day`],
       [''],
       ['SYSTEM SPECIFICATIONS'],
@@ -1070,9 +1765,18 @@ export default function CarWashWizard({
   }
 
   // Run quote calculation when reaching final step
+  // Always recalculate when entering step 4 to pick up any changes from previous steps
   useEffect(() => {
-    if (currentStep === WIZARD_STEPS.length - 1 && !quoteResult) {
+    if (currentStep === WIZARD_STEPS.length - 1) {
       generateQuote();
+    }
+  }, [currentStep]);
+  
+  // Clear quote result when user navigates back from final step
+  // This ensures slider changes in step 3 will trigger a fresh calculation
+  useEffect(() => {
+    if (currentStep < WIZARD_STEPS.length - 1 && quoteResult) {
+      setQuoteResult(null);
     }
   }, [currentStep]);
   
@@ -1137,58 +1841,346 @@ export default function CarWashWizard({
         </div>
         
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          {/* Step 0: Wash Type */}
+        <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
+          {/* Step 0: Brand & Wash Type Selection */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">What type of car wash do you operate?</h3>
-                <p className="text-cyan-200/70 text-sm">This helps us calculate your typical power consumption.</p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                {Object.entries(WASH_TYPES).map(([key, type]) => (
-                  <button
-                    key={key}
-                    onClick={() => setWashType(key as keyof typeof WASH_TYPES)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      washType === key 
-                        ? 'border-purple-500 bg-purple-500/20' 
-                        : 'border-white/10 hover:border-white/30 bg-white/5'
-                    }`}
-                  >
-                    <p className="font-bold text-white">{type.name}</p>
-                    <p className="text-sm text-cyan-200/70 mt-1">{type.description}</p>
-                    <div className="flex gap-4 mt-3 text-xs">
-                      <span className="text-emerald-400">{type.carsPerHour} cars/hr</span>
-                      <span className="text-purple-400">{type.peakDemandKW.min}-{type.peakDemandKW.max} kW peak</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="bg-white/5 rounded-xl p-4 border border-cyan-500/20">
-                <label className="block text-sm text-cyan-200 mb-2">Number of Wash Bays / Tunnel Length</label>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <span className="text-3xl font-bold text-white">{mergedInputs.numberOfBays}</span>
-                    <span className="text-cyan-300 ml-2">bays</span>
-                  </div>
-                  {washType !== 'self-service' && (
-                    <div className="flex-1">
-                      <input
-                        type="range"
-                        min={limits?.tunnelLength?.min ?? 60}
-                        max={limits?.tunnelLength?.max ?? 300}
-                        step={limits?.tunnelLength?.step ?? 10}
-                        value={tunnelLength}
-                        onChange={(e) => setTunnelLength(parseInt(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                      <p className="text-sm text-center text-purple-300">{tunnelLength} {limits?.tunnelLength?.unit || 'ft'} tunnel</p>
-                    </div>
-                  )}
+              {/* Concierge Tier Selection */}
+              <div className="bg-gradient-to-r from-purple-500/10 to-amber-500/10 rounded-xl p-4 border border-purple-400/20">
+                <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  Choose Your Experience
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {Object.entries(CONCIERGE_TIERS).map(([key, tier]) => (
+                    <button
+                      key={key}
+                      onClick={() => setConciergeTier(key as keyof typeof CONCIERGE_TIERS)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all relative ${
+                        conciergeTier === key 
+                          ? key === 'pro' ? 'border-amber-500 bg-amber-500/20' : 'border-purple-500 bg-purple-500/20'
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      {tier.badge && (
+                        <span className="absolute top-2 right-2 text-xs bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full">
+                          {tier.badge}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{tier.icon}</span>
+                        <div>
+                          <p className="font-bold text-white">{tier.name}</p>
+                          <p className="text-xs text-cyan-200/70">{tier.description}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-1 mt-3">
+                        {tier.features.slice(0, 4).map((feature, i) => (
+                          <li key={i} className="text-xs text-cyan-200/60 flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-400" /> {feature}
+                          </li>
+                        ))}
+                        {tier.features.length > 4 && (
+                          <li className="text-xs text-purple-300">+ {tier.features.length - 4} more features</li>
+                        )}
+                      </ul>
+                      <p className="text-sm font-bold text-white mt-3">{tier.price}</p>
+                    </button>
+                  ))}
                 </div>
+              </div>
+
+              {/* Brand Selection - Concierge Experience */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Select Your Car Wash Brand</h3>
+                <p className="text-cyan-200/70 text-sm">
+                  Choose from the Top 20 car wash brands for pre-configured power profiles, or select "Non-Branded" for independent washes.
+                </p>
+              </div>
+              
+              {/* Top 10 Brands */}
+              <div>
+                <p className="text-xs text-purple-300 mb-2 font-medium">🏆 Top 10 Brands (by location count)</p>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {Object.entries(CAR_WASH_BRANDS)
+                    .filter(([_, brand]) => brand.rank && brand.rank <= 10)
+                    .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
+                    .map(([key, brand]) => (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
+                      className={`p-2 rounded-xl border-2 text-center transition-all ${
+                        selectedBrand === key 
+                          ? 'border-purple-500 bg-purple-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <div className="text-xl mb-0.5">{brand.logo || '🚗'}</div>
+                      <p className="font-bold text-white text-xs truncate">{brand.name}</p>
+                      <p className="text-[10px] text-cyan-200/60">{brand.siteCount}+ sites</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Brands 11-20 */}
+              <div>
+                <p className="text-xs text-cyan-300 mb-2 font-medium">📈 Growing Brands (11-20)</p>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {Object.entries(CAR_WASH_BRANDS)
+                    .filter(([_, brand]) => brand.rank && brand.rank > 10 && brand.rank <= 20)
+                    .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
+                    .map(([key, brand]) => (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
+                      className={`p-2 rounded-xl border-2 text-center transition-all ${
+                        selectedBrand === key 
+                          ? 'border-cyan-500 bg-cyan-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <div className="text-xl mb-0.5">{brand.logo || '🚗'}</div>
+                      <p className="font-bold text-white text-xs truncate">{brand.name}</p>
+                      <p className="text-[10px] text-cyan-200/60">{brand.siteCount}+ sites</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Non-Branded Option */}
+              <div>
+                <button
+                  onClick={() => setSelectedBrand('non-branded')}
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                    selectedBrand === 'non-branded' 
+                      ? 'border-emerald-500 bg-emerald-500/20' 
+                      : 'border-white/10 hover:border-white/30 bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🏢</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-white">Non-Branded Automated Car Wash</p>
+                      <p className="text-xs text-cyan-200/70">Independent or regional car wash - configure your own equipment profile</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-emerald-400">Submit your brand</p>
+                      <p className="text-xs text-cyan-200/60">Help us add it!</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+              
+              {/* Brand Submission Form (for non-branded) */}
+              {selectedBrand === 'non-branded' && (
+                <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-xl p-4 border border-emerald-400/30">
+                  <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
+                    <Building className="w-5 h-5 text-emerald-400" />
+                    Submit Your Brand (Optional)
+                  </h4>
+                  <p className="text-xs text-cyan-200/70 mb-4">Help us add your brand to our database for better recommendations.</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">Brand / Business Name</label>
+                      <input
+                        type="text"
+                        value={brandSubmission.brandName}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, brandName: e.target.value})}
+                        placeholder="Your Car Wash Name"
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">Number of Sites</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={brandSubmission.numberOfSites}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, numberOfSites: parseInt(e.target.value) || 1})}
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">ZIP Code *</label>
+                      <input
+                        type="text"
+                        value={brandSubmission.zipCode}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, zipCode: e.target.value})}
+                        placeholder="12345"
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">Street Address (Optional)</label>
+                      <input
+                        type="text"
+                        value={brandSubmission.streetAddress}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, streetAddress: e.target.value})}
+                        placeholder="123 Main St"
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">Contact Email</label>
+                      <input
+                        type="email"
+                        value={brandSubmission.contactEmail}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, contactEmail: e.target.value})}
+                        placeholder="you@example.com"
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cyan-200 mb-1">Contact Phone (Optional)</label>
+                      <input
+                        type="tel"
+                        value={brandSubmission.contactPhone}
+                        onChange={(e) => setBrandSubmission({...brandSubmission, contactPhone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Brand Info Banner (for branded selections) */}
+              {selectedBrand !== 'non-branded' && (
+                <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl p-4 border border-purple-400/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-purple-200">Selected Brand #{CAR_WASH_BRANDS[selectedBrand].rank}</p>
+                      <p className="text-xl font-bold text-white flex items-center gap-2">
+                        <span className="text-2xl">{CAR_WASH_BRANDS[selectedBrand].logo}</span>
+                        {CAR_WASH_BRANDS[selectedBrand].name}
+                      </p>
+                      <p className="text-xs text-cyan-200/70 mt-1">
+                        {CAR_WASH_BRANDS[selectedBrand].headquarters} • {CAR_WASH_BRANDS[selectedBrand].siteCount}+ locations
+                      </p>
+                      <p className="text-xs text-cyan-200/60 mt-1">{CAR_WASH_BRANDS[selectedBrand].notes}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-cyan-200">Typical Peak Demand</p>
+                      <p className="text-xl font-bold text-cyan-400">
+                        {CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.min}-{CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.max} kW
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Wash Type Selection */}
+              <div>
+                <h4 className="text-md font-bold text-white mb-2">Wash Type</h4>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {Object.entries(WASH_TYPES).map(([key, type]) => (
+                    <button
+                      key={key}
+                      onClick={() => setWashType(key as keyof typeof WASH_TYPES)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        washType === key 
+                          ? 'border-cyan-500 bg-cyan-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <p className="font-bold text-white text-sm">{type.name}</p>
+                      <p className="text-xs text-cyan-200/70">{type.description}</p>
+                      <div className="flex gap-3 mt-2 text-xs">
+                        <span className="text-emerald-400">{type.carsPerHour} cars/hr</span>
+                        <span className="text-purple-400">{type.peakDemandKW.min}-{type.peakDemandKW.max} kW</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Automation Level */}
+              <div>
+                <h4 className="text-md font-bold text-white mb-2">Automation Level</h4>
+                <p className="text-xs text-cyan-200/70 mb-3">What generation of automation does your equipment use?</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(AUTOMATION_LEVELS).map(([key, level]) => (
+                    <button
+                      key={key}
+                      onClick={() => setAutomationLevel(key as keyof typeof AUTOMATION_LEVELS)}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        automationLevel === key 
+                          ? 'border-amber-500 bg-amber-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <p className="font-bold text-white text-sm">{level.name}</p>
+                      <p className="text-xs text-cyan-200/70 mt-1">{level.description}</p>
+                      <p className="text-xs text-amber-400 mt-1">+{level.additionalKW} kW controls</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Bays OR Tunnel Length - Context-Specific */}
+              <div className="bg-white/5 rounded-xl p-4 border border-cyan-500/20">
+                {/* For Self-Service and In-Bay: Show NUMBER OF BAYS */}
+                {(washType === 'self-service' || washType === 'in-bay-automatic') && (
+                  <>
+                    <label className="block text-sm text-cyan-200 mb-2">
+                      Number of {washType === 'self-service' ? 'Self-Service' : 'In-Bay'} Wash Bays
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl font-bold text-white">{numberOfBays}</span>
+                      <span className="text-cyan-300 text-lg">bays</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={washType === 'self-service' ? 20 : 8}
+                      step={1}
+                      value={numberOfBays}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value);
+                        console.log('🔧 Bays slider changed:', newValue);
+                        setNumberOfBays(newValue);
+                      }}
+                      className="w-full accent-cyan-500 mt-3"
+                    />
+                    <div className="flex justify-between text-xs text-cyan-300/50 mt-1">
+                      <span>1 bay</span>
+                      <span>{washType === 'self-service' ? '20' : '8'} bays</span>
+                    </div>
+                    <p className="text-xs text-cyan-200/60 mt-2">
+                      💡 Peak demand: ~{WASH_TYPES[washType].peakDemandKW.min * numberOfBays}-{WASH_TYPES[washType].peakDemandKW.max * numberOfBays} kW total
+                    </p>
+                  </>
+                )}
+                
+                {/* For Tunnel Types: Show TUNNEL LENGTH */}
+                {(washType === 'express-exterior' || washType === 'full-service') && (
+                  <>
+                    <label className="block text-sm text-cyan-200 mb-2">
+                      Tunnel Length ({washType === 'express-exterior' ? 'Express Exterior' : 'Full-Service'})
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl font-bold text-white">{tunnelLength}</span>
+                      <span className="text-purple-300 text-lg">feet</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={limits?.tunnelLength?.min ?? 60}
+                      max={limits?.tunnelLength?.max ?? 300}
+                      step={limits?.tunnelLength?.step ?? 10}
+                      value={tunnelLength}
+                      onChange={(e) => setTunnelLength(parseInt(e.target.value))}
+                      className="w-full accent-purple-500 mt-3"
+                    />
+                    <div className="flex justify-between text-xs text-purple-300/50 mt-1">
+                      <span>{limits?.tunnelLength?.min ?? 60} ft (small)</span>
+                      <span>{limits?.tunnelLength?.max ?? 300} ft (large)</span>
+                    </div>
+                    <p className="text-xs text-cyan-200/60 mt-2">
+                      💡 Typical throughput: {WASH_TYPES[washType].carsPerHour} cars/hour • Peak demand: {WASH_TYPES[washType].peakDemandKW.min}-{WASH_TYPES[washType].peakDemandKW.max} kW
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -1357,6 +2349,25 @@ export default function CarWashWizard({
                   </div>
                 </div>
               </div>
+              
+              {/* Automation Level Power Impact Note */}
+              {automationLevel && automationLevel !== 'standard' && (
+                <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-400/20">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <span className="text-purple-300 font-medium">
+                      {AUTOMATION_LEVELS[automationLevel].name} Automation
+                    </span>
+                    <span className="text-xs bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">
+                      {AUTOMATION_LEVELS[automationLevel].powerMultiplier > 1 ? '+' : ''}
+                      {((AUTOMATION_LEVELS[automationLevel].powerMultiplier - 1) * 100).toFixed(0)}% power
+                    </span>
+                  </div>
+                  <p className="text-xs text-cyan-200/70 mt-2">
+                    {AUTOMATION_LEVELS[automationLevel].description}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           
@@ -1490,6 +2501,7 @@ export default function CarWashWizard({
                       { id: 'demand-reduction', label: 'Reduce Demand Charges', desc: 'Cut peak demand by 30-50%', icon: TrendingDown },
                       { id: 'backup-power', label: 'Backup Power', desc: 'Keep washing during outages', icon: Battery },
                       { id: 'solar-storage', label: 'Solar + Storage', desc: 'Generate & store your own power', icon: Sun },
+                      { id: 'solar-generator', label: 'Solar + Nat Gas Generator', desc: 'Solar + backup generator for extended outages', icon: Zap },
                       { id: 'all', label: 'All of the Above', desc: 'Maximum savings & resilience', icon: Sparkles },
                     ].map((goal) => {
                       const Icon = goal.icon;
@@ -1535,7 +2547,7 @@ export default function CarWashWizard({
                   </div>
                 </div>
                 
-                {(energyGoals.primaryGoal === 'solar-storage' || energyGoals.primaryGoal === 'all') && (
+                {(energyGoals.primaryGoal === 'solar-storage' || energyGoals.primaryGoal === 'solar-generator' || energyGoals.primaryGoal === 'all') && (
                   <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
                     <div className="flex items-center gap-2 mb-3">
                       <Sun className="w-5 h-5 text-amber-400" />
@@ -1558,6 +2570,60 @@ export default function CarWashWizard({
                           (~{Math.round(energyGoals.solarRoofArea * 0.015)} kW solar)
                         </span>
                       </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Natural Gas Generator Options */}
+                {(energyGoals.primaryGoal === 'backup-power' || energyGoals.primaryGoal === 'solar-generator' || energyGoals.primaryGoal === 'all') && (
+                  <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="w-5 h-5 text-red-400" />
+                      <h4 className="font-bold text-red-300">Natural Gas Generator</h4>
+                      <span className="text-xs bg-red-500/20 px-2 py-0.5 rounded text-red-300">Extended Backup</span>
+                    </div>
+                    <p className="text-xs text-cyan-200/70 mb-3">
+                      A natural gas generator provides backup power during extended outages beyond battery capacity. 
+                      Automatically sized based on your peak demand.
+                    </p>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={energyGoals.includeGenerator}
+                          onChange={(e) => setEnergyGoals({
+                            ...energyGoals, 
+                            includeGenerator: e.target.checked,
+                            generatorSizeKW: e.target.checked ? Math.round(calculatedPower.peakDemandKW * 0.8) : 0
+                          })}
+                          className="accent-red-500"
+                        />
+                        <span className="text-white text-sm">Include Natural Gas Generator</span>
+                      </label>
+                      
+                      {energyGoals.includeGenerator && (
+                        <div>
+                          <label className="block text-sm text-red-200 mb-2">
+                            Generator Size: <span className="text-red-400 font-bold">{energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)} kW</span>
+                          </label>
+                          <input
+                            type="range"
+                            min={Math.round(calculatedPower.peakDemandKW * 0.5)}
+                            max={Math.round(calculatedPower.peakDemandKW * 1.2)}
+                            step={10}
+                            value={energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)}
+                            onChange={(e) => setEnergyGoals({...energyGoals, generatorSizeKW: parseInt(e.target.value)})}
+                            className="w-full accent-red-500"
+                          />
+                          <div className="flex justify-between text-xs text-red-200/50">
+                            <span>50% peak ({Math.round(calculatedPower.peakDemandKW * 0.5)} kW)</span>
+                            <span>120% peak ({Math.round(calculatedPower.peakDemandKW * 1.2)} kW)</span>
+                          </div>
+                          <p className="text-xs text-cyan-200/50 mt-2">
+                            Recommended: 80% of peak demand ({Math.round(calculatedPower.peakDemandKW * 0.8)} kW) provides backup for all critical loads
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1602,7 +2668,7 @@ export default function CarWashWizard({
                 <>
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-white mb-2">Your Custom Car Wash Quote</h3>
-                    <p className="text-cyan-200/70">{mergedInputs.businessName || 'Your Car Wash'} • {mergedInputs.numberOfBays} Bays • {mergedInputs.state}</p>
+                    <p className="text-cyan-200/70">{mergedInputs.businessName || 'Your Car Wash'} • {numberOfBays} Bays • {mergedInputs.state}</p>
                   </div>
                   
                   {/* Main Savings Card */}
@@ -1920,6 +2986,79 @@ export default function CarWashWizard({
                       </button>
                     </div>
                   </div>
+                  
+                  {/* Performance Metrics Panel - Data Layer */}
+                  {trackPerformance && (
+                    <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-400/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5 text-purple-400" />
+                          <h4 className="font-bold text-white">Performance Metrics</h4>
+                          <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Data Layer</span>
+                        </div>
+                        <span className="text-xs text-cyan-200/50">PE Firm Ready</span>
+                      </div>
+                      <p className="text-xs text-cyan-200/70 mb-4">
+                        Track these KPIs to demonstrate ROI to investors and optimize energy efficiency.
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {/* Energy per Car */}
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-cyan-200/70">Energy per Car</p>
+                          <p className="text-xl font-bold text-emerald-400">
+                            {(calculatedPower.dailyKWh / carsPerDay).toFixed(2)} kWh
+                          </p>
+                          <p className="text-[10px] text-cyan-200/50">Benchmark: 0.5-0.8 kWh</p>
+                        </div>
+                        {/* Peak Reduction */}
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-cyan-200/70">Peak Reduction</p>
+                          <p className="text-xl font-bold text-purple-400">
+                            {energyGoals.targetSavingsPercent}%
+                          </p>
+                          <p className="text-[10px] text-cyan-200/50">Benchmark: 30-40%</p>
+                        </div>
+                        {/* Monthly Savings */}
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-cyan-200/70">Monthly Savings</p>
+                          <p className="text-xl font-bold text-amber-400">
+                            ${Math.round(quoteResult.financials.annualSavings / 12).toLocaleString()}
+                          </p>
+                          <p className="text-[10px] text-cyan-200/50">From BESS optimization</p>
+                        </div>
+                        {/* Equipment Utilization */}
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-cyan-200/70">Est. Utilization</p>
+                          <p className="text-xl font-bold text-cyan-400">
+                            {Math.round((operations.hoursPerDay * operations.daysPerWeek / 168) * 100 * 0.7)}%
+                          </p>
+                          <p className="text-[10px] text-cyan-200/50">Benchmark: 55-70%</p>
+                        </div>
+                        {/* Throughput */}
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-cyan-200/70">Daily Throughput</p>
+                          <p className="text-xl font-bold text-emerald-400">
+                            {carsPerDay} cars
+                          </p>
+                          <p className="text-[10px] text-cyan-200/50">{Math.round(carsPerDay / numberOfBays)} cars/bay</p>
+                        </div>
+                        {/* Water Recovery */}
+                        {equipment.hasWaterReclaim && (
+                          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                            <p className="text-xs text-cyan-200/70">Water Recovery</p>
+                            <p className="text-xl font-bold text-blue-400">~70%</p>
+                            <p className="text-[10px] text-cyan-200/50">Reclaim system active</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-white/10 text-xs text-cyan-200/50 flex items-center justify-between">
+                        <span>📊 Data = Energy efficiency = Better returns</span>
+                        {conciergeTier === 'pro' && (
+                          <span className="text-amber-400">👔 Quarterly reviews included with Pro</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   
                   {/* CTA */}
                   <div className="flex flex-col sm:flex-row gap-3">
