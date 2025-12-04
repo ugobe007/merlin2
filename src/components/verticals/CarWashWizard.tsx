@@ -575,11 +575,11 @@ const CAR_WASH_BRANDS = {
     avgDemandKW: { min: 85, max: 115 },
     notes: 'South Florida market leader',
   },
-  // ========== NON-BRANDED OPTION ==========
-  'non-branded': {
-    name: 'Non-Branded Automated',
+  // ========== INDEPENDENT OPTION ==========
+  'independent': {
+    name: 'Independent Car Wash',
     rank: null,
-    description: 'Independent automated car wash',
+    description: 'Independent or regional car wash business',
     headquarters: null,
     siteCount: null,
     logo: '🏢',
@@ -841,10 +841,12 @@ export default function CarWashWizard({
   );
   
   // Step 0: Brand Selection (NEW - concierge experience)
-  const [selectedBrand, setSelectedBrand] = useState<keyof typeof CAR_WASH_BRANDS>('non-branded');
+  const [selectedBrand, setSelectedBrand] = useState<keyof typeof CAR_WASH_BRANDS>('independent');
   const [automationLevel, setAutomationLevel] = useState<keyof typeof AUTOMATION_LEVELS>('standard');
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+  const [userRole, setUserRole] = useState('owner');
   
-  // Brand Submission for non-branded
+  // Brand Submission for independent washes
   const [brandSubmission, setBrandSubmission] = useState({
     brandName: '',
     contactName: '',
@@ -1891,99 +1893,175 @@ export default function CarWashWizard({
                 </div>
               </div>
 
-              {/* Brand Selection - Concierge Experience */}
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Select Your Car Wash Brand</h3>
-                <p className="text-cyan-200/70 text-sm">
-                  Choose from the Top 20 car wash brands for pre-configured power profiles, or select "Non-Branded" for independent washes.
-                </p>
-              </div>
-              
-              {/* Top 10 Brands */}
-              <div>
-                <p className="text-xs text-purple-300 mb-2 font-medium">🏆 Top 10 Brands (by location count)</p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {Object.entries(CAR_WASH_BRANDS)
-                    .filter(([_, brand]) => brand.rank && brand.rank <= 10)
-                    .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
-                    .map(([key, brand]) => (
+              {/* User Role Selection */}
+              <div className="mb-6">
+                <h4 className="text-md font-bold text-white mb-3">I am a...</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { key: 'owner', icon: '🏢', name: 'Owner/Operator', desc: 'I own or operate a car wash' },
+                    { key: 'investor', icon: '💼', name: 'Investor / PE', desc: 'Evaluating investments' },
+                    { key: 'developer', icon: '🏗️', name: 'Site Developer', desc: 'Planning new locations' },
+                    { key: 'explorer', icon: '🔍', name: 'Just Exploring', desc: 'Curious about the numbers' },
+                  ].map((role) => (
                     <button
-                      key={key}
-                      onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
-                      className={`p-2 rounded-xl border-2 text-center transition-all ${
-                        selectedBrand === key 
-                          ? 'border-purple-500 bg-purple-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <div className="text-xl mb-0.5">{brand.logo || '🚗'}</div>
-                      <p className="font-bold text-white text-xs truncate">{brand.name}</p>
-                      <p className="text-[10px] text-cyan-200/60">{brand.siteCount}+ sites</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Brands 11-20 */}
-              <div>
-                <p className="text-xs text-cyan-300 mb-2 font-medium">📈 Growing Brands (11-20)</p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {Object.entries(CAR_WASH_BRANDS)
-                    .filter(([_, brand]) => brand.rank && brand.rank > 10 && brand.rank <= 20)
-                    .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
-                    .map(([key, brand]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
-                      className={`p-2 rounded-xl border-2 text-center transition-all ${
-                        selectedBrand === key 
+                      key={role.key}
+                      onClick={() => setUserRole(role.key)}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        userRole === role.key 
                           ? 'border-cyan-500 bg-cyan-500/20' 
                           : 'border-white/10 hover:border-white/30 bg-white/5'
                       }`}
                     >
-                      <div className="text-xl mb-0.5">{brand.logo || '🚗'}</div>
-                      <p className="font-bold text-white text-xs truncate">{brand.name}</p>
-                      <p className="text-[10px] text-cyan-200/60">{brand.siteCount}+ sites</p>
+                      <span className="text-2xl">{role.icon}</span>
+                      <p className="font-bold text-white text-sm mt-1">{role.name}</p>
+                      <p className="text-xs text-cyan-200/60">{role.desc}</p>
                     </button>
                   ))}
                 </div>
               </div>
-              
-              {/* Non-Branded Option */}
+
+              {/* Brand Selection with Autocomplete */}
               <div>
-                <button
-                  onClick={() => setSelectedBrand('non-branded')}
-                  className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                    selectedBrand === 'non-branded' 
-                      ? 'border-emerald-500 bg-emerald-500/20' 
-                      : 'border-white/10 hover:border-white/30 bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🏢</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-white">Non-Branded Automated Car Wash</p>
-                      <p className="text-xs text-cyan-200/70">Independent or regional car wash - configure your own equipment profile</p>
+                <h3 className="text-lg font-bold text-white mb-2">Car Wash Brand</h3>
+                <p className="text-cyan-200/70 text-sm mb-3">
+                  Start typing to search 20+ brands, or continue with "Independent Car Wash"
+                </p>
+                
+                {/* Search Input */}
+                <div className="relative mb-4">
+                  <input
+                    type="text"
+                    value={brandSearchQuery}
+                    onChange={(e) => setBrandSearchQuery(e.target.value)}
+                    placeholder="🔍 Search brands (e.g., Mister, Tommy's, Zips...)"
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 text-white border border-white/20 focus:border-cyan-400/50 focus:outline-none placeholder-white/40"
+                  />
+                  {brandSearchQuery && (
+                    <button 
+                      onClick={() => setBrandSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* Search Results Dropdown */}
+                  {brandSearchQuery.length >= 2 && (
+                    <div className="absolute z-10 w-full mt-1 bg-gray-900/95 border border-white/20 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                      {Object.entries(CAR_WASH_BRANDS)
+                        .filter(([key, brand]) => 
+                          key !== 'independent' && 
+                          (brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
+                           brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase()))
+                        )
+                        .slice(0, 8)
+                        .map(([key, brand]) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS);
+                              setBrandSearchQuery('');
+                            }}
+                            className="w-full p-3 text-left hover:bg-white/10 flex items-center gap-3 border-b border-white/10 last:border-0"
+                          >
+                            <span className="text-xl">{brand.logo}</span>
+                            <div className="flex-1">
+                              <p className="font-bold text-white text-sm">{brand.name}</p>
+                              <p className="text-xs text-cyan-200/60">{brand.siteCount}+ locations</p>
+                            </div>
+                            {brand.rank && brand.rank <= 10 && (
+                              <span className="text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">
+                                Top {brand.rank}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      {Object.entries(CAR_WASH_BRANDS)
+                        .filter(([key, brand]) => 
+                          key !== 'independent' && 
+                          (brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
+                           brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase()))
+                        ).length === 0 && (
+                          <div className="p-3 text-center text-cyan-200/60 text-sm">
+                            No brands found. Try "Independent Car Wash" below.
+                          </div>
+                        )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-emerald-400">Submit your brand</p>
-                      <p className="text-xs text-cyan-200/60">Help us add it!</p>
+                  )}
+                </div>
+                
+                {/* Quick Selection Buttons */}
+                <div className="grid md:grid-cols-2 gap-3">
+                  {/* Independent Car Wash - Primary Default */}
+                  <button
+                    onClick={() => setSelectedBrand('independent')}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      selectedBrand === 'independent' 
+                        ? 'border-emerald-500 bg-emerald-500/20' 
+                        : 'border-white/10 hover:border-white/30 bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">🏢</span>
+                      <div>
+                        <p className="font-bold text-white">Independent Car Wash</p>
+                        <p className="text-xs text-cyan-200/70">Single location or regional chain</p>
+                        <p className="text-xs text-emerald-400 mt-1">✓ Configure your own equipment</p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  
+                  {/* Show Selected Brand if not independent */}
+                  {selectedBrand !== 'independent' ? (
+                    <button
+                      onClick={() => setSelectedBrand(selectedBrand)}
+                      className="p-4 rounded-xl border-2 border-purple-500 bg-purple-500/20 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{CAR_WASH_BRANDS[selectedBrand].logo}</span>
+                        <div>
+                          <p className="font-bold text-white">{CAR_WASH_BRANDS[selectedBrand].name}</p>
+                          <p className="text-xs text-cyan-200/70">{CAR_WASH_BRANDS[selectedBrand].siteCount}+ locations</p>
+                          <p className="text-xs text-purple-300 mt-1">
+                            Typical: {CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.min}-{CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.max} kW peak
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    /* Popular Brands Quick Pick */
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                      <p className="text-xs text-cyan-200/60 mb-2">🏆 Popular brands:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(CAR_WASH_BRANDS)
+                          .filter(([_, brand]) => brand.rank && brand.rank <= 5)
+                          .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
+                          .map(([key, brand]) => (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
+                              className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded-full text-white/80 transition-all"
+                            >
+                              {brand.logo} {brand.name.split(' ')[0]}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              {/* Brand Submission Form (for non-branded) */}
-              {selectedBrand === 'non-branded' && (
+              {/* Brand Submission Form (for independent) */}
+              {selectedBrand === 'independent' && (
                 <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-xl p-4 border border-emerald-400/30">
                   <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
                     <Building className="w-5 h-5 text-emerald-400" />
-                    Submit Your Brand (Optional)
+                    Your Car Wash Details (Optional)
                   </h4>
-                  <p className="text-xs text-cyan-200/70 mb-4">Help us add your brand to our database for better recommendations.</p>
+                  <p className="text-xs text-cyan-200/70 mb-4">Help us improve recommendations for independent operators.</p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Brand / Business Name</label>
+                      <label className="block text-xs text-cyan-200 mb-1">Business Name</label>
                       <input
                         type="text"
                         value={brandSubmission.brandName}
@@ -2003,22 +2081,12 @@ export default function CarWashWizard({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-cyan-200 mb-1">ZIP Code *</label>
+                      <label className="block text-xs text-cyan-200 mb-1">ZIP Code</label>
                       <input
                         type="text"
                         value={brandSubmission.zipCode}
                         onChange={(e) => setBrandSubmission({...brandSubmission, zipCode: e.target.value})}
                         placeholder="12345"
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Street Address (Optional)</label>
-                      <input
-                        type="text"
-                        value={brandSubmission.streetAddress}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, streetAddress: e.target.value})}
-                        placeholder="123 Main St"
                         className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
                       />
                     </div>
@@ -2032,22 +2100,12 @@ export default function CarWashWizard({
                         className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Contact Phone (Optional)</label>
-                      <input
-                        type="tel"
-                        value={brandSubmission.contactPhone}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, contactPhone: e.target.value})}
-                        placeholder="(555) 123-4567"
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
-                    </div>
                   </div>
                 </div>
               )}
               
               {/* Brand Info Banner (for branded selections) */}
-              {selectedBrand !== 'non-branded' && (
+              {selectedBrand !== 'independent' && (
                 <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl p-4 border border-purple-400/30">
                   <div className="flex items-center justify-between">
                     <div>
