@@ -24,6 +24,7 @@ import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigServi
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
+import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
 
 // ============================================
 // TYPES
@@ -2680,24 +2681,33 @@ export default function CarWashWizard({
                     <p className="text-cyan-200/70 mt-2">per year</p>
                   </div>
                   
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white/10 rounded-xl p-4 text-center border border-cyan-500/20">
-                      <p className="text-2xl font-bold text-cyan-400">{quoteResult.financials.paybackYears.toFixed(1)}</p>
-                      <p className="text-xs text-cyan-200/70">Year Payback</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center border border-purple-500/20">
-                      <p className="text-2xl font-bold text-purple-400">{Math.round(quoteResult.financials.roi25Year)}%</p>
-                      <p className="text-xs text-purple-200/70">25-Year ROI</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center border border-emerald-500/20">
-                      <p className="text-2xl font-bold text-emerald-400">{Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100)} kW</p>
-                      <p className="text-xs text-emerald-200/70">Battery Size</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-4 text-center border border-amber-500/20">
-                      <p className="text-2xl font-bold text-amber-400">${Math.round(quoteResult.costs.netCost).toLocaleString()}</p>
-                      <p className="text-xs text-amber-200/70">Net Cost (after ITC)</p>
-                    </div>
+                  {/* Key Metrics Dashboard */}
+                  <KeyMetricsDashboard
+                    input={{
+                      vertical: 'car-wash',
+                      systemSizeKW: Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100),
+                      systemSizeKWh: Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000),
+                      annualSavings: quoteResult.financials.annualSavings,
+                      paybackYears: quoteResult.financials.paybackYears,
+                      roi10Year: quoteResult.financials.roi10Year,
+                      roi25Year: quoteResult.financials.roi25Year,
+                      netCost: quoteResult.costs.netCost,
+                      peakDemandReduction: Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100),
+                      state: mergedInputs.state,
+                      annualKWhDisplaced: Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365),
+                    }}
+                    layout="grid"
+                    maxMetrics={6}
+                    showCO2Details={true}
+                  />
+                  
+                  {/* CO2 Badge */}
+                  <div className="flex justify-center">
+                    <CO2Badge
+                      annualSavingsKWh={Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365)}
+                      state={mergedInputs.state}
+                      systemType="bess"
+                    />
                   </div>
                   
                   {/* ═══════════════════════════════════════════════════════════════
