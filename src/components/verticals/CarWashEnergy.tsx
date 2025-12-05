@@ -23,6 +23,13 @@ import merlinImage from '@/assets/images/new_Merlin.png';
 import carWashImage from '@/assets/images/car_wash_1.jpg';
 import carWashTunnel from '@/assets/images/car_wash_tunnel.jpg';
 import carWashRobot from '@/assets/images/car_wash_robot.jpg';
+import carWashPitStop from '@/assets/images/Car_Wash_PitStop.jpg';
+import carWashPitStop1 from '@/assets/images/Car_Wash_PitStop1.jpg';
+import carWashPitStop2 from '@/assets/images/Car_Wash_PitStop2.jpg';
+import carWashPitStop3 from '@/assets/images/Car_Wash_PitStop3.jpg';
+import carWashPitStop4 from '@/assets/images/Car_Wash_PitStop4.jpg';
+import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
+import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
 import CarWashWizard, { type CarWashWizardInputs } from './CarWashWizard';
 
 // ============================================
@@ -157,6 +164,13 @@ function calculateCarWashPower(inputs: CarWashInputs): { peakKW: number; dailyKW
 // ============================================
 
 const CAROUSEL_IMAGES = [
+  { src: carWashPitStop, alt: 'PitStop Car Wash', caption: 'Professional Service', subcaption: 'Industry-leading results' },
+  { src: carWashPitStop1, alt: 'PitStop Express Bay', caption: 'Express Tunnel', subcaption: 'High-volume efficiency' },
+  { src: carWashPitStop2, alt: 'PitStop Premium Service', caption: 'Premium Detailing', subcaption: 'Superior customer experience' },
+  { src: carWashPitStop3, alt: 'PitStop Wash System', caption: 'Advanced Equipment', subcaption: 'Energy-intensive operations' },
+  { src: carWashPitStop4, alt: 'PitStop Operations', caption: 'Streamlined Process', subcaption: 'Optimized for savings' },
+  { src: carWashPitStop5, alt: 'PitStop Full Service', caption: 'Full Service Wash', subcaption: 'Complete car care' },
+  { src: carWashPreen, alt: 'Preen Car Wash', caption: 'Modern Facility', subcaption: 'Next-gen technology' },
   { src: carWashTunnel, alt: 'Modern Car Wash Tunnel', caption: 'High-Tech Equipment', subcaption: 'Energy-intensive operations' },
   { src: carWashRobot, alt: 'Car Being Washed', caption: 'Premium Service', subcaption: 'Consistent quality results' },
   { src: carWashImage, alt: 'Car Wash Interior', caption: 'Efficient Operations', subcaption: 'Optimized for savings' },
@@ -236,10 +250,11 @@ export default function CarWashEnergy() {
   const { limits, loading: limitsLoading } = useCarWashLimits();
   
   // Calculator inputs (defaults updated from database)
+  // NOTE: Default to California - user can change via ZIP lookup or state selection
   const [inputs, setInputs] = useState<CarWashInputs>({
     numberOfBays: 4,
     carsPerDay: 150,
-    state: 'Michigan',
+    state: 'California',
     zipCode: '',
     includesVacuums: true,
     includesDryers: true,
@@ -312,7 +327,7 @@ export default function CarWashEnergy() {
   
   // Quick Estimate Modal - Progressive Disclosure (Option A)
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
-  const [quickBays, setQuickBays] = useState(4);
+  const [quickBays, setQuickBays] = useState(1);
   const [quickWashType, setQuickWashType] = useState<'express' | 'fullservice' | 'selfservice' | 'inbay'>('express');
   const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
   
@@ -888,45 +903,49 @@ export default function CarWashEnergy() {
       </section>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          HOW IT WORKS
+          HOW IT WORKS - HIGH CONTRAST DESIGN
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            How Battery Storage <span className="text-cyan-300">Saves You Money</span>
+      <section className="py-20 relative">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" />
+        
+        <div className="max-w-6xl mx-auto px-6 relative">
+          <h2 className="text-4xl font-black text-white text-center mb-4">
+            How Battery Storage <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Saves You Money</span>
           </h2>
+          <p className="text-center text-gray-400 mb-12 text-lg">Three powerful ways BESS transforms your energy costs</p>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <TrendingDown className="w-8 h-8 text-white" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Step 1 - Cut Peak Demand */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-8 border-2 border-blue-500/40 text-center shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all hover:scale-[1.02] hover:border-blue-400/60">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/30">
+                <TrendingDown className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Cut Peak Demand</h3>
-              <p className="text-cyan-200/70">
-                Battery stores cheap energy and releases it during expensive peak hours, reducing demand charges by up to 50%
+              <h3 className="text-2xl font-black text-white mb-3">Cut Peak Demand</h3>
+              <p className="text-gray-300 text-base leading-relaxed">
+                Battery stores cheap energy and releases it during expensive peak hours, <span className="text-cyan-400 font-bold">reducing demand charges by up to 50%</span>
               </p>
             </div>
             
-            {/* Step 2 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
+            {/* Step 2 - Backup Power */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-8 border-2 border-emerald-500/40 text-center shadow-xl shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:border-emerald-400/60">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/30">
+                <Shield className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Backup Power</h3>
-              <p className="text-cyan-200/70">
-                Keep washing cars during outages. Battery provides instant backup so you never lose a customer
+              <h3 className="text-2xl font-black text-white mb-3">Backup Power</h3>
+              <p className="text-gray-300 text-base leading-relaxed">
+                Keep washing cars during outages. Battery provides <span className="text-emerald-400 font-bold">instant backup so you never lose a customer</span>
               </p>
             </div>
             
-            {/* Step 3 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Sun className="w-8 h-8 text-white" />
+            {/* Step 3 - Solar Ready */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-8 border-2 border-amber-500/40 text-center shadow-xl shadow-amber-500/10 hover:shadow-amber-500/20 transition-all hover:scale-[1.02] hover:border-amber-400/60">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/30">
+                <Sun className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Solar Ready</h3>
-              <p className="text-cyan-200/70">
-                Add solar panels later to generate your own power. Battery stores excess for use anytime
+              <h3 className="text-2xl font-black text-white mb-3">Solar Ready</h3>
+              <p className="text-gray-300 text-base leading-relaxed">
+                Add solar panels later to generate your own power. <span className="text-amber-400 font-bold">Battery stores excess for use anytime</span>
               </p>
             </div>
           </div>
@@ -934,70 +953,79 @@ export default function CarWashEnergy() {
       </section>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          SOCIAL PROOF
+          SOCIAL PROOF - HIGH CONTRAST DESIGN
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 bg-white/5">
+      <section className="py-20 bg-gradient-to-b from-slate-900/50 via-purple-950/20 to-slate-900/50">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-4">
-            Car Washes <span className="text-cyan-300">Saving Big</span>
+          <h2 className="text-4xl font-black text-white text-center mb-4">
+            Car Washes <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Saving Big</span>
           </h2>
-          <p className="text-center text-cyan-200/50 text-sm mb-12">
+          <p className="text-center text-gray-400 text-lg mb-12">
             Example savings scenarios based on typical installations
           </p>
           
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Example 1 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+            {/* Example 1 - Phoenix */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-6 border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-cyan-500/30">
                   4
                 </div>
                 <div>
-                  <p className="font-bold text-white">4-Bay Tunnel Wash</p>
-                  <p className="text-sm text-cyan-200/70">Phoenix, AZ</p>
+                  <p className="font-black text-white text-lg">4-Bay Tunnel Wash</p>
+                  <p className="text-cyan-400 font-medium">Phoenix, AZ</p>
                 </div>
               </div>
-              <div className="bg-emerald-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-emerald-400">$38,000</p>
-                <p className="text-sm text-cyan-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 rounded-2xl p-5 text-center mb-4 border-2 border-emerald-500/30">
+                <p className="text-4xl font-black text-emerald-400">$38,000</p>
+                <p className="text-gray-300 font-medium mt-1">Annual Savings</p>
               </div>
-              <p className="text-sm text-cyan-200/60">200 kW system • 3.1 year payback</p>
+              <div className="flex justify-between text-sm bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                <span className="text-gray-400">200 kW system</span>
+                <span className="text-cyan-400 font-bold">3.1 yr payback</span>
+              </div>
             </div>
             
-            {/* Example 2 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold">
+            {/* Example 2 - Los Angeles */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-500/30">
                   8
                 </div>
                 <div>
-                  <p className="font-bold text-white">8-Bay Express Wash</p>
-                  <p className="text-sm text-cyan-200/70">Los Angeles, CA</p>
+                  <p className="font-black text-white text-lg">8-Bay Express Wash</p>
+                  <p className="text-emerald-400 font-medium">Los Angeles, CA</p>
                 </div>
               </div>
-              <div className="bg-emerald-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-emerald-400">$67,000</p>
-                <p className="text-sm text-cyan-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 rounded-2xl p-5 text-center mb-4 border-2 border-emerald-500/30">
+                <p className="text-4xl font-black text-emerald-400">$67,000</p>
+                <p className="text-gray-300 font-medium mt-1">Annual Savings</p>
               </div>
-              <p className="text-sm text-cyan-200/60">400 kW system • 2.8 year payback</p>
+              <div className="flex justify-between text-sm bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                <span className="text-gray-400">400 kW system</span>
+                <span className="text-emerald-400 font-bold">2.8 yr payback</span>
+              </div>
             </div>
             
-            {/* Example 3 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+            {/* Example 3 - Miami */}
+            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-purple-500/30">
                   12
                 </div>
                 <div>
-                  <p className="font-bold text-white">12-Bay Full Service</p>
-                  <p className="text-sm text-cyan-200/70">Miami, FL</p>
+                  <p className="font-black text-white text-lg">12-Bay Full Service</p>
+                  <p className="text-purple-400 font-medium">Miami, FL</p>
                 </div>
               </div>
-              <div className="bg-emerald-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-emerald-400">$89,000</p>
-                <p className="text-sm text-cyan-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 rounded-2xl p-5 text-center mb-4 border-2 border-emerald-500/30">
+                <p className="text-4xl font-black text-emerald-400">$89,000</p>
+                <p className="text-gray-300 font-medium mt-1">Annual Savings</p>
               </div>
-              <p className="text-sm text-cyan-200/60">600 kW system • 3.4 year payback</p>
+              <div className="flex justify-between text-sm bg-gray-800/50 rounded-xl p-3 border border-gray-700">
+                <span className="text-gray-400">600 kW system</span>
+                <span className="text-purple-400 font-bold">3.4 yr payback</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1183,44 +1211,47 @@ export default function CarWashEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           QUICK ESTIMATE MODAL - Progressive Disclosure (Option A)
           Shows instant value with minimal input, then offers detailed wizard
+          HIGH CONTRAST DESIGN - Matching CarWashWizard styling
           ═══════════════════════════════════════════════════════════════════════ */}
       {showQuickEstimate && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
           onClick={() => setShowQuickEstimate(false)}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
           
-          {/* Modal */}
+          {/* Modal - DEEP PURPLE GRADIENT theme */}
           <div 
-            className="relative bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-800 rounded-3xl shadow-2xl shadow-cyan-500/20 max-w-lg w-full overflow-hidden border border-cyan-400/40"
+            className="relative bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 rounded-3xl shadow-2xl shadow-purple-500/40 max-w-lg w-full max-h-[90vh] overflow-y-auto border-2 border-purple-500/50"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
+            {/* Close button - PURPLE THEME */}
             <button
               onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+              className="absolute top-4 right-4 p-2 bg-purple-900/80 hover:bg-red-500/30 rounded-xl text-purple-300 hover:text-white transition-all z-10 border border-purple-700 hover:border-red-500/50"
             >
               <X className="w-6 h-6" />
             </button>
             
-            {/* Header with Merlin */}
+            {/* Header with Merlin - PURPLE THEME */}
             <div className="relative px-8 pt-8 pb-4">
               <div className="flex items-center gap-4 mb-4">
-                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div className="p-2 bg-purple-500/20 rounded-2xl border-2 border-purple-500/40 shadow-lg shadow-purple-500/20">
+                  <img src={merlinImage} alt="Merlin" className="w-14 h-14" />
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
-                  <p className="text-cyan-300 text-sm">Answer 2 questions, get instant results</p>
+                  <h2 className="text-2xl font-black text-white">Quick Savings Estimate</h2>
+                  <p className="text-cyan-400 text-sm font-medium">Answer 2 questions, get instant results</p>
                 </div>
               </div>
             </div>
             
-            {/* Questions */}
+            {/* Questions - HIGH CONTRAST */}
             <div className="px-8 pb-6 space-y-6">
-              {/* Question 1: Wash Type */}
-              <div>
-                <label className="block text-cyan-200 font-medium mb-3">What type of car wash?</label>
+              {/* Question 1: Wash Type - HIGH CONTRAST CARDS */}
+              <div className="bg-gradient-to-br from-slate-800/80 to-gray-800/80 rounded-2xl p-5 border-2 border-gray-700">
+                <label className="block text-white font-bold text-lg mb-4">What type of car wash?</label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { id: 'express', label: 'Express Tunnel', desc: '30-60 cars/hr' },
@@ -1231,23 +1262,23 @@ export default function CarWashEnergy() {
                     <button
                       key={type.id}
                       onClick={() => setQuickWashType(type.id as typeof quickWashType)}
-                      className={`p-3 rounded-xl text-left transition-all ${
+                      className={`p-4 rounded-xl text-left transition-all ${
                         quickWashType === type.id
-                          ? 'bg-gradient-to-r from-cyan-500/30 to-emerald-500/30 border-2 border-cyan-400'
-                          : 'bg-white/5 border border-white/10 hover:border-cyan-400/50'
+                          ? 'bg-gradient-to-br from-cyan-600/40 to-emerald-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20'
+                          : 'bg-gray-800/60 border-2 border-gray-700 hover:border-cyan-500/50 hover:bg-gray-700/60'
                       }`}
                     >
-                      <p className="font-semibold text-white text-sm">{type.label}</p>
-                      <p className="text-cyan-300/70 text-xs">{type.desc}</p>
+                      <p className={`font-bold text-base ${quickWashType === type.id ? 'text-white' : 'text-gray-200'}`}>{type.label}</p>
+                      <p className={`text-sm mt-1 ${quickWashType === type.id ? 'text-cyan-300' : 'text-gray-400'}`}>{type.desc}</p>
                     </button>
                   ))}
                 </div>
               </div>
               
-              {/* Question 2: Number of Bays */}
-              <div>
-                <label className="block text-cyan-200 font-medium mb-3">
-                  How many {quickWashType === 'express' || quickWashType === 'fullservice' ? 'tunnel bays' : 'wash bays'}?
+              {/* Question 2: Number of Bays - HIGH CONTRAST PROMINENT */}
+              <div className="bg-gradient-to-br from-cyan-600/20 to-emerald-600/20 rounded-2xl p-5 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/10">
+                <label className="block text-white font-black text-xl mb-4">
+                  🏢 How many {quickWashType === 'express' || quickWashType === 'fullservice' ? 'tunnel bays' : 'wash bays'}?
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -1256,45 +1287,46 @@ export default function CarWashEnergy() {
                     max={quickWashType === 'selfservice' ? 20 : 8}
                     value={quickBays}
                     onChange={(e) => setQuickBays(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    className="flex-1 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                   />
-                  <div className="w-16 text-center">
-                    <span className="text-3xl font-black text-cyan-400">{quickBays}</span>
-                    <span className="text-cyan-300 text-sm ml-1">bays</span>
+                  <div className="bg-gray-800/80 rounded-xl px-5 py-3 text-center min-w-[100px] border-2 border-cyan-500/40">
+                    <span className="text-5xl font-black text-cyan-400">{quickBays}</span>
+                    <span className="text-cyan-300 text-base ml-2 font-medium">bays</span>
                   </div>
                 </div>
+                <p className="text-sm text-gray-400 mt-3 text-center font-medium">Slide to adjust • More bays = more savings</p>
               </div>
             </div>
             
-            {/* Results - Always visible, updates in real-time */}
-            <div className="bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-purple-500/20 px-8 py-6 border-t border-cyan-500/20">
-              <div className="text-center mb-4">
-                <p className="text-cyan-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
-                <p className="text-5xl font-black text-white">
+            {/* Results - HIGH CONTRAST Always visible */}
+            <div className="bg-gradient-to-br from-emerald-600/20 via-cyan-600/20 to-blue-600/20 px-8 py-8 border-t-2 border-cyan-500/30">
+              <div className="text-center mb-6">
+                <p className="text-cyan-300 text-base font-bold mb-2">Your Estimated Annual Savings</p>
+                <p className="text-6xl font-black text-white drop-shadow-lg">
                   ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
                 </p>
-                <p className="text-emerald-400 text-sm mt-1">
+                <p className="text-emerald-400 text-lg font-bold mt-2">
                   {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
                 </p>
               </div>
               
-              {/* What's included */}
-              <div className="grid grid-cols-3 gap-2 mb-6">
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Peak Shaving</p>
+              {/* What's included - HIGH CONTRAST */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-amber-500/30">
+                  <Zap className="w-6 h-6 text-amber-400 mx-auto mb-2" />
+                  <p className="text-sm text-white font-medium">Peak Shaving</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Demand Cut</p>
+                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-emerald-500/30">
+                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                  <p className="text-sm text-white font-medium">Demand Cut</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Shield className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Backup Power</p>
+                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-purple-500/30">
+                  <Shield className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                  <p className="text-sm text-white font-medium">Backup Power</p>
                 </div>
               </div>
               
-              {/* CTAs */}
+              {/* CTAs - HIGH CONTRAST */}
               <div className="space-y-3">
                 <button
                   onClick={() => {
@@ -1302,10 +1334,10 @@ export default function CarWashEnergy() {
                     setInputs(prev => ({ ...prev, numberOfBays: quickBays }));
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-6 py-5 rounded-xl font-black text-xl shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-3 border-2 border-emerald-400/50"
                 >
                   Get Detailed Quote
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-6 h-6" />
                 </button>
                 <button
                   onClick={() => {
@@ -1313,14 +1345,14 @@ export default function CarWashEnergy() {
                     // Scroll to calculator section
                     document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                  className="w-full bg-gray-800/60 hover:bg-gray-700/80 text-white px-6 py-4 rounded-xl font-bold transition-all text-base border-2 border-gray-700 hover:border-cyan-500/50"
                 >
                   Or try our simple calculator below
                 </button>
               </div>
               
               {/* Trust signal */}
-              <p className="text-center text-cyan-300/50 text-xs mt-4">
+              <p className="text-center text-gray-400 text-sm mt-4 font-medium">
                 2 minute detailed quote • No commitment required
               </p>
             </div>

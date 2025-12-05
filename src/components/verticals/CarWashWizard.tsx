@@ -12,12 +12,12 @@
  * - useCarWashLimits() from uiConfigService (DATABASE-DRIVEN LIMITS)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { 
   X, ArrowLeft, ArrowRight, Check, Zap, Battery, Sun, 
   Droplets, Wind, Gauge, DollarSign, Calendar, Download,
   CheckCircle, AlertCircle, Info, Sparkles, Car, TrendingDown, Phone,
-  FileText, FileSpreadsheet, File, Building, BarChart3
+  FileText, FileSpreadsheet, File, Building, BarChart3, MapPin, Target, Leaf, Clock
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
@@ -25,6 +25,8 @@ import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Width
 import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
+import { WizardPowerProfile, WizardStepHelp, COMMON_STEP_HELP, type StepHelpContent } from '@/components/wizard/shared';
+import { PowerGaugeWidget, type PowerGaugeData } from '@/components/wizard/widgets';
 
 // ============================================
 // TYPES
@@ -734,6 +736,56 @@ const WASH_TYPES = {
   },
 };
 
+// Simplified wash type categories for Step 0
+const SIMPLIFIED_WASH_TYPES = {
+  'automated-tunnel': {
+    name: 'Automated Tunnel',
+    description: 'Express exterior or full-service tunnel wash',
+    icon: '🚗',
+    peakDemandKW: { min: 120, max: 250 },
+    avgMonthlyKWh: { min: 25000, max: 60000 },
+    typicalBill: { min: 3500, max: 12000 },
+    detailedTypes: ['express-exterior', 'full-service'],
+  },
+  'self-service-bay': {
+    name: 'Self-Service Bay',
+    description: 'Customer-operated wash bays with coin/card payment',
+    icon: '🧽',
+    peakDemandKW: { min: 8, max: 60 }, // scales with bays
+    avgMonthlyKWh: { min: 2000, max: 15000 },
+    typicalBill: { min: 500, max: 3000 },
+    detailedTypes: ['self-service', 'in-bay-automatic'],
+  },
+};
+
+// Energy goals for Step 0
+const ENERGY_GOALS_OPTIONS = {
+  'solar-bess': {
+    name: 'Solar + Battery',
+    description: 'Maximum savings with solar generation and battery storage',
+    icon: Sun,
+    color: 'amber',
+    targetReduction: 50,
+    features: ['Solar panels on roof/carport', 'Battery stores excess solar', 'Lowest long-term cost'],
+  },
+  'bess-only': {
+    name: 'Battery Only',
+    description: 'Peak shaving and demand charge reduction without solar',
+    icon: Battery,
+    color: 'cyan',
+    targetReduction: 35,
+    features: ['No roof modifications', 'Immediate demand savings', 'Faster installation'],
+  },
+  'hybrid-generator': {
+    name: 'Hybrid + Generator',
+    description: 'Battery plus natural gas generator for backup and peak shaving',
+    icon: Zap,
+    color: 'purple',
+    targetReduction: 45,
+    features: ['Mainspring linear generator', 'Fuel flexibility', 'Grid independence'],
+  },
+};
+
 // State electricity rates
 const STATE_RATES: Record<string, { rate: number; demandCharge: number; peakRate: number }> = {
   'Alabama': { rate: 0.13, demandCharge: 12, peakRate: 0.19 },
@@ -790,16 +842,324 @@ const STATE_RATES: Record<string, { rate: number; demandCharge: number; peakRate
 };
 
 // ============================================
+// ZIP CODE TO STATE MAPPING
+// ============================================
+// First 3 digits of ZIP code → State
+const ZIP_TO_STATE: Record<string, string> = {
+  // Alabama (350-369)
+  '350': 'Alabama', '351': 'Alabama', '352': 'Alabama', '354': 'Alabama', '355': 'Alabama', 
+  '356': 'Alabama', '357': 'Alabama', '358': 'Alabama', '359': 'Alabama', '360': 'Alabama',
+  '361': 'Alabama', '362': 'Alabama', '363': 'Alabama', '364': 'Alabama', '365': 'Alabama', '366': 'Alabama', '367': 'Alabama', '368': 'Alabama', '369': 'Alabama',
+  // Alaska (995-999)
+  '995': 'Alaska', '996': 'Alaska', '997': 'Alaska', '998': 'Alaska', '999': 'Alaska',
+  // Arizona (850-865)
+  '850': 'Arizona', '851': 'Arizona', '852': 'Arizona', '853': 'Arizona', '855': 'Arizona', 
+  '856': 'Arizona', '857': 'Arizona', '859': 'Arizona', '860': 'Arizona', '863': 'Arizona', '864': 'Arizona', '865': 'Arizona',
+  // Arkansas (716-729)
+  '716': 'Arkansas', '717': 'Arkansas', '718': 'Arkansas', '719': 'Arkansas', '720': 'Arkansas',
+  '721': 'Arkansas', '722': 'Arkansas', '723': 'Arkansas', '724': 'Arkansas', '725': 'Arkansas',
+  '726': 'Arkansas', '727': 'Arkansas', '728': 'Arkansas', '729': 'Arkansas',
+  // California (900-961)
+  '900': 'California', '901': 'California', '902': 'California', '903': 'California', '904': 'California',
+  '905': 'California', '906': 'California', '907': 'California', '908': 'California', '910': 'California',
+  '911': 'California', '912': 'California', '913': 'California', '914': 'California', '915': 'California',
+  '916': 'California', '917': 'California', '918': 'California', '919': 'California', '920': 'California',
+  '921': 'California', '922': 'California', '923': 'California', '924': 'California', '925': 'California',
+  '926': 'California', '927': 'California', '928': 'California', '930': 'California', '931': 'California',
+  '932': 'California', '933': 'California', '934': 'California', '935': 'California', '936': 'California',
+  '937': 'California', '938': 'California', '939': 'California', '940': 'California', '941': 'California',
+  '942': 'California', '943': 'California', '944': 'California', '945': 'California', '946': 'California',
+  '947': 'California', '948': 'California', '949': 'California', '950': 'California', '951': 'California',
+  '952': 'California', '953': 'California', '954': 'California', '955': 'California', '956': 'California',
+  '957': 'California', '958': 'California', '959': 'California', '960': 'California', '961': 'California',
+  // Colorado (800-816)
+  '800': 'Colorado', '801': 'Colorado', '802': 'Colorado', '803': 'Colorado', '804': 'Colorado',
+  '805': 'Colorado', '806': 'Colorado', '807': 'Colorado', '808': 'Colorado', '809': 'Colorado',
+  '810': 'Colorado', '811': 'Colorado', '812': 'Colorado', '813': 'Colorado', '814': 'Colorado',
+  '815': 'Colorado', '816': 'Colorado',
+  // Connecticut (060-069)
+  '060': 'Connecticut', '061': 'Connecticut', '062': 'Connecticut', '063': 'Connecticut', '064': 'Connecticut',
+  '065': 'Connecticut', '066': 'Connecticut', '067': 'Connecticut', '068': 'Connecticut', '069': 'Connecticut',
+  // Delaware (197-199)
+  '197': 'Delaware', '198': 'Delaware', '199': 'Delaware',
+  // Florida (320-349)
+  '320': 'Florida', '321': 'Florida', '322': 'Florida', '323': 'Florida', '324': 'Florida',
+  '325': 'Florida', '326': 'Florida', '327': 'Florida', '328': 'Florida', '329': 'Florida',
+  '330': 'Florida', '331': 'Florida', '332': 'Florida', '333': 'Florida', '334': 'Florida',
+  '335': 'Florida', '336': 'Florida', '337': 'Florida', '338': 'Florida', '339': 'Florida',
+  '340': 'Florida', '341': 'Florida', '342': 'Florida', '344': 'Florida', '346': 'Florida', '347': 'Florida', '349': 'Florida',
+  // Georgia (300-319, 398-399)
+  '300': 'Georgia', '301': 'Georgia', '302': 'Georgia', '303': 'Georgia', '304': 'Georgia',
+  '305': 'Georgia', '306': 'Georgia', '307': 'Georgia', '308': 'Georgia', '309': 'Georgia',
+  '310': 'Georgia', '311': 'Georgia', '312': 'Georgia', '313': 'Georgia', '314': 'Georgia',
+  '315': 'Georgia', '316': 'Georgia', '317': 'Georgia', '318': 'Georgia', '319': 'Georgia', '398': 'Georgia', '399': 'Georgia',
+  // Hawaii (967-968)
+  '967': 'Hawaii', '968': 'Hawaii',
+  // Idaho (832-838)
+  '832': 'Idaho', '833': 'Idaho', '834': 'Idaho', '835': 'Idaho', '836': 'Idaho', '837': 'Idaho', '838': 'Idaho',
+  // Illinois (600-629)
+  '600': 'Illinois', '601': 'Illinois', '602': 'Illinois', '603': 'Illinois', '604': 'Illinois',
+  '605': 'Illinois', '606': 'Illinois', '607': 'Illinois', '608': 'Illinois', '609': 'Illinois',
+  '610': 'Illinois', '611': 'Illinois', '612': 'Illinois', '613': 'Illinois', '614': 'Illinois',
+  '615': 'Illinois', '616': 'Illinois', '617': 'Illinois', '618': 'Illinois', '619': 'Illinois',
+  '620': 'Illinois', '622': 'Illinois', '623': 'Illinois', '624': 'Illinois', '625': 'Illinois',
+  '626': 'Illinois', '627': 'Illinois', '628': 'Illinois', '629': 'Illinois',
+  // Indiana (460-479)
+  '460': 'Indiana', '461': 'Indiana', '462': 'Indiana', '463': 'Indiana', '464': 'Indiana',
+  '465': 'Indiana', '466': 'Indiana', '467': 'Indiana', '468': 'Indiana', '469': 'Indiana',
+  '470': 'Indiana', '471': 'Indiana', '472': 'Indiana', '473': 'Indiana', '474': 'Indiana',
+  '475': 'Indiana', '476': 'Indiana', '477': 'Indiana', '478': 'Indiana', '479': 'Indiana',
+  // Iowa (500-528)
+  '500': 'Iowa', '501': 'Iowa', '502': 'Iowa', '503': 'Iowa', '504': 'Iowa',
+  '505': 'Iowa', '506': 'Iowa', '507': 'Iowa', '508': 'Iowa', '509': 'Iowa',
+  '510': 'Iowa', '511': 'Iowa', '512': 'Iowa', '513': 'Iowa', '514': 'Iowa',
+  '515': 'Iowa', '516': 'Iowa', '520': 'Iowa', '521': 'Iowa', '522': 'Iowa',
+  '523': 'Iowa', '524': 'Iowa', '525': 'Iowa', '526': 'Iowa', '527': 'Iowa', '528': 'Iowa',
+  // Kansas (660-679)
+  '660': 'Kansas', '661': 'Kansas', '662': 'Kansas', '664': 'Kansas', '665': 'Kansas',
+  '666': 'Kansas', '667': 'Kansas', '668': 'Kansas', '669': 'Kansas', '670': 'Kansas',
+  '671': 'Kansas', '672': 'Kansas', '673': 'Kansas', '674': 'Kansas', '675': 'Kansas',
+  '676': 'Kansas', '677': 'Kansas', '678': 'Kansas', '679': 'Kansas',
+  // Kentucky (400-427)
+  '400': 'Kentucky', '401': 'Kentucky', '402': 'Kentucky', '403': 'Kentucky', '404': 'Kentucky',
+  '405': 'Kentucky', '406': 'Kentucky', '407': 'Kentucky', '408': 'Kentucky', '409': 'Kentucky',
+  '410': 'Kentucky', '411': 'Kentucky', '412': 'Kentucky', '413': 'Kentucky', '414': 'Kentucky',
+  '415': 'Kentucky', '416': 'Kentucky', '417': 'Kentucky', '418': 'Kentucky', '420': 'Kentucky',
+  '421': 'Kentucky', '422': 'Kentucky', '423': 'Kentucky', '424': 'Kentucky', '425': 'Kentucky',
+  '426': 'Kentucky', '427': 'Kentucky',
+  // Louisiana (700-714)
+  '700': 'Louisiana', '701': 'Louisiana', '703': 'Louisiana', '704': 'Louisiana', '705': 'Louisiana',
+  '706': 'Louisiana', '707': 'Louisiana', '708': 'Louisiana', '710': 'Louisiana', '711': 'Louisiana',
+  '712': 'Louisiana', '713': 'Louisiana', '714': 'Louisiana',
+  // Maine (039-049)
+  '039': 'Maine', '040': 'Maine', '041': 'Maine', '042': 'Maine', '043': 'Maine',
+  '044': 'Maine', '045': 'Maine', '046': 'Maine', '047': 'Maine', '048': 'Maine', '049': 'Maine',
+  // Maryland (206-219)
+  '206': 'Maryland', '207': 'Maryland', '208': 'Maryland', '209': 'Maryland', '210': 'Maryland',
+  '211': 'Maryland', '212': 'Maryland', '214': 'Maryland', '215': 'Maryland', '216': 'Maryland',
+  '217': 'Maryland', '218': 'Maryland', '219': 'Maryland',
+  // Massachusetts (010-027)
+  '010': 'Massachusetts', '011': 'Massachusetts', '012': 'Massachusetts', '013': 'Massachusetts', '014': 'Massachusetts',
+  '015': 'Massachusetts', '016': 'Massachusetts', '017': 'Massachusetts', '018': 'Massachusetts', '019': 'Massachusetts',
+  '020': 'Massachusetts', '021': 'Massachusetts', '022': 'Massachusetts', '023': 'Massachusetts', '024': 'Massachusetts',
+  '025': 'Massachusetts', '026': 'Massachusetts', '027': 'Massachusetts',
+  // Michigan (480-499)
+  '480': 'Michigan', '481': 'Michigan', '482': 'Michigan', '483': 'Michigan', '484': 'Michigan',
+  '485': 'Michigan', '486': 'Michigan', '487': 'Michigan', '488': 'Michigan', '489': 'Michigan',
+  '490': 'Michigan', '491': 'Michigan', '492': 'Michigan', '493': 'Michigan', '494': 'Michigan',
+  '495': 'Michigan', '496': 'Michigan', '497': 'Michigan', '498': 'Michigan', '499': 'Michigan',
+  // Minnesota (550-567)
+  '550': 'Minnesota', '551': 'Minnesota', '553': 'Minnesota', '554': 'Minnesota', '555': 'Minnesota',
+  '556': 'Minnesota', '557': 'Minnesota', '558': 'Minnesota', '559': 'Minnesota', '560': 'Minnesota',
+  '561': 'Minnesota', '562': 'Minnesota', '563': 'Minnesota', '564': 'Minnesota', '565': 'Minnesota',
+  '566': 'Minnesota', '567': 'Minnesota',
+  // Mississippi (386-397)
+  '386': 'Mississippi', '387': 'Mississippi', '388': 'Mississippi', '389': 'Mississippi', '390': 'Mississippi',
+  '391': 'Mississippi', '392': 'Mississippi', '393': 'Mississippi', '394': 'Mississippi', '395': 'Mississippi',
+  '396': 'Mississippi', '397': 'Mississippi',
+  // Missouri (630-658)
+  '630': 'Missouri', '631': 'Missouri', '633': 'Missouri', '634': 'Missouri', '635': 'Missouri',
+  '636': 'Missouri', '637': 'Missouri', '638': 'Missouri', '639': 'Missouri', '640': 'Missouri',
+  '641': 'Missouri', '644': 'Missouri', '645': 'Missouri', '646': 'Missouri', '647': 'Missouri',
+  '648': 'Missouri', '649': 'Missouri', '650': 'Missouri', '651': 'Missouri', '652': 'Missouri',
+  '653': 'Missouri', '654': 'Missouri', '655': 'Missouri', '656': 'Missouri', '657': 'Missouri', '658': 'Missouri',
+  // Montana (590-599)
+  '590': 'Montana', '591': 'Montana', '592': 'Montana', '593': 'Montana', '594': 'Montana',
+  '595': 'Montana', '596': 'Montana', '597': 'Montana', '598': 'Montana', '599': 'Montana',
+  // Nebraska (680-693)
+  '680': 'Nebraska', '681': 'Nebraska', '683': 'Nebraska', '684': 'Nebraska', '685': 'Nebraska',
+  '686': 'Nebraska', '687': 'Nebraska', '688': 'Nebraska', '689': 'Nebraska', '690': 'Nebraska',
+  '691': 'Nebraska', '692': 'Nebraska', '693': 'Nebraska',
+  // Nevada (889-898)
+  '889': 'Nevada', '890': 'Nevada', '891': 'Nevada', '893': 'Nevada', '894': 'Nevada',
+  '895': 'Nevada', '897': 'Nevada', '898': 'Nevada',
+  // New Hampshire (030-038)
+  '030': 'New Hampshire', '031': 'New Hampshire', '032': 'New Hampshire', '033': 'New Hampshire', '034': 'New Hampshire',
+  '035': 'New Hampshire', '036': 'New Hampshire', '037': 'New Hampshire', '038': 'New Hampshire',
+  // New Jersey (070-089)
+  '070': 'New Jersey', '071': 'New Jersey', '072': 'New Jersey', '073': 'New Jersey', '074': 'New Jersey',
+  '075': 'New Jersey', '076': 'New Jersey', '077': 'New Jersey', '078': 'New Jersey', '079': 'New Jersey',
+  '080': 'New Jersey', '081': 'New Jersey', '082': 'New Jersey', '083': 'New Jersey', '084': 'New Jersey',
+  '085': 'New Jersey', '086': 'New Jersey', '087': 'New Jersey', '088': 'New Jersey', '089': 'New Jersey',
+  // New Mexico (870-884)
+  '870': 'New Mexico', '871': 'New Mexico', '873': 'New Mexico', '874': 'New Mexico', '875': 'New Mexico',
+  '877': 'New Mexico', '878': 'New Mexico', '879': 'New Mexico', '880': 'New Mexico', '881': 'New Mexico',
+  '882': 'New Mexico', '883': 'New Mexico', '884': 'New Mexico',
+  // New York (100-149)
+  '100': 'New York', '101': 'New York', '102': 'New York', '103': 'New York', '104': 'New York',
+  '105': 'New York', '106': 'New York', '107': 'New York', '108': 'New York', '109': 'New York',
+  '110': 'New York', '111': 'New York', '112': 'New York', '113': 'New York', '114': 'New York',
+  '115': 'New York', '116': 'New York', '117': 'New York', '118': 'New York', '119': 'New York',
+  '120': 'New York', '121': 'New York', '122': 'New York', '123': 'New York', '124': 'New York',
+  '125': 'New York', '126': 'New York', '127': 'New York', '128': 'New York', '129': 'New York',
+  '130': 'New York', '131': 'New York', '132': 'New York', '133': 'New York', '134': 'New York',
+  '135': 'New York', '136': 'New York', '137': 'New York', '138': 'New York', '139': 'New York',
+  '140': 'New York', '141': 'New York', '142': 'New York', '143': 'New York', '144': 'New York',
+  '145': 'New York', '146': 'New York', '147': 'New York', '148': 'New York', '149': 'New York',
+  // North Carolina (270-289)
+  '270': 'North Carolina', '271': 'North Carolina', '272': 'North Carolina', '273': 'North Carolina', '274': 'North Carolina',
+  '275': 'North Carolina', '276': 'North Carolina', '277': 'North Carolina', '278': 'North Carolina', '279': 'North Carolina',
+  '280': 'North Carolina', '281': 'North Carolina', '282': 'North Carolina', '283': 'North Carolina', '284': 'North Carolina',
+  '285': 'North Carolina', '286': 'North Carolina', '287': 'North Carolina', '288': 'North Carolina', '289': 'North Carolina',
+  // North Dakota (580-588)
+  '580': 'North Dakota', '581': 'North Dakota', '582': 'North Dakota', '583': 'North Dakota', '584': 'North Dakota',
+  '585': 'North Dakota', '586': 'North Dakota', '587': 'North Dakota', '588': 'North Dakota',
+  // Ohio (430-458)
+  '430': 'Ohio', '431': 'Ohio', '432': 'Ohio', '433': 'Ohio', '434': 'Ohio',
+  '435': 'Ohio', '436': 'Ohio', '437': 'Ohio', '438': 'Ohio', '439': 'Ohio',
+  '440': 'Ohio', '441': 'Ohio', '442': 'Ohio', '443': 'Ohio', '444': 'Ohio',
+  '445': 'Ohio', '446': 'Ohio', '447': 'Ohio', '448': 'Ohio', '449': 'Ohio',
+  '450': 'Ohio', '451': 'Ohio', '452': 'Ohio', '453': 'Ohio', '454': 'Ohio',
+  '455': 'Ohio', '456': 'Ohio', '457': 'Ohio', '458': 'Ohio',
+  // Oklahoma (730-749)
+  '730': 'Oklahoma', '731': 'Oklahoma', '734': 'Oklahoma', '735': 'Oklahoma', '736': 'Oklahoma',
+  '737': 'Oklahoma', '738': 'Oklahoma', '739': 'Oklahoma', '740': 'Oklahoma', '741': 'Oklahoma',
+  '743': 'Oklahoma', '744': 'Oklahoma', '745': 'Oklahoma', '746': 'Oklahoma', '747': 'Oklahoma',
+  '748': 'Oklahoma', '749': 'Oklahoma',
+  // Oregon (970-979)
+  '970': 'Oregon', '971': 'Oregon', '972': 'Oregon', '973': 'Oregon', '974': 'Oregon',
+  '975': 'Oregon', '976': 'Oregon', '977': 'Oregon', '978': 'Oregon', '979': 'Oregon',
+  // Pennsylvania (150-196)
+  '150': 'Pennsylvania', '151': 'Pennsylvania', '152': 'Pennsylvania', '153': 'Pennsylvania', '154': 'Pennsylvania',
+  '155': 'Pennsylvania', '156': 'Pennsylvania', '157': 'Pennsylvania', '158': 'Pennsylvania', '159': 'Pennsylvania',
+  '160': 'Pennsylvania', '161': 'Pennsylvania', '162': 'Pennsylvania', '163': 'Pennsylvania', '164': 'Pennsylvania',
+  '165': 'Pennsylvania', '166': 'Pennsylvania', '167': 'Pennsylvania', '168': 'Pennsylvania', '169': 'Pennsylvania',
+  '170': 'Pennsylvania', '171': 'Pennsylvania', '172': 'Pennsylvania', '173': 'Pennsylvania', '174': 'Pennsylvania',
+  '175': 'Pennsylvania', '176': 'Pennsylvania', '177': 'Pennsylvania', '178': 'Pennsylvania', '179': 'Pennsylvania',
+  '180': 'Pennsylvania', '181': 'Pennsylvania', '182': 'Pennsylvania', '183': 'Pennsylvania', '184': 'Pennsylvania',
+  '185': 'Pennsylvania', '186': 'Pennsylvania', '187': 'Pennsylvania', '188': 'Pennsylvania', '189': 'Pennsylvania',
+  '190': 'Pennsylvania', '191': 'Pennsylvania', '192': 'Pennsylvania', '193': 'Pennsylvania', '194': 'Pennsylvania',
+  '195': 'Pennsylvania', '196': 'Pennsylvania',
+  // Rhode Island (028-029)
+  '028': 'Rhode Island', '029': 'Rhode Island',
+  // South Carolina (290-299)
+  '290': 'South Carolina', '291': 'South Carolina', '292': 'South Carolina', '293': 'South Carolina', '294': 'South Carolina',
+  '295': 'South Carolina', '296': 'South Carolina', '297': 'South Carolina', '298': 'South Carolina', '299': 'South Carolina',
+  // South Dakota (570-577)
+  '570': 'South Dakota', '571': 'South Dakota', '572': 'South Dakota', '573': 'South Dakota', '574': 'South Dakota',
+  '575': 'South Dakota', '576': 'South Dakota', '577': 'South Dakota',
+  // Tennessee (370-385)
+  '370': 'Tennessee', '371': 'Tennessee', '372': 'Tennessee', '373': 'Tennessee', '374': 'Tennessee',
+  '376': 'Tennessee', '377': 'Tennessee', '378': 'Tennessee', '379': 'Tennessee', '380': 'Tennessee',
+  '381': 'Tennessee', '382': 'Tennessee', '383': 'Tennessee', '384': 'Tennessee', '385': 'Tennessee',
+  // Texas (750-799, 885)
+  '750': 'Texas', '751': 'Texas', '752': 'Texas', '753': 'Texas', '754': 'Texas',
+  '755': 'Texas', '756': 'Texas', '757': 'Texas', '758': 'Texas', '759': 'Texas',
+  '760': 'Texas', '761': 'Texas', '762': 'Texas', '763': 'Texas', '764': 'Texas',
+  '765': 'Texas', '766': 'Texas', '767': 'Texas', '768': 'Texas', '769': 'Texas',
+  '770': 'Texas', '772': 'Texas', '773': 'Texas', '774': 'Texas', '775': 'Texas',
+  '776': 'Texas', '777': 'Texas', '778': 'Texas', '779': 'Texas', '780': 'Texas',
+  '781': 'Texas', '782': 'Texas', '783': 'Texas', '784': 'Texas', '785': 'Texas',
+  '786': 'Texas', '787': 'Texas', '788': 'Texas', '789': 'Texas', '790': 'Texas',
+  '791': 'Texas', '792': 'Texas', '793': 'Texas', '794': 'Texas', '795': 'Texas',
+  '796': 'Texas', '797': 'Texas', '798': 'Texas', '799': 'Texas', '885': 'Texas',
+  // Utah (840-847)
+  '840': 'Utah', '841': 'Utah', '842': 'Utah', '843': 'Utah', '844': 'Utah',
+  '845': 'Utah', '846': 'Utah', '847': 'Utah',
+  // Vermont (050-059)
+  '050': 'Vermont', '051': 'Vermont', '052': 'Vermont', '053': 'Vermont', '054': 'Vermont',
+  '055': 'Vermont', '056': 'Vermont', '057': 'Vermont', '058': 'Vermont', '059': 'Vermont',
+  // Virginia (220-246)
+  '220': 'Virginia', '221': 'Virginia', '222': 'Virginia', '223': 'Virginia', '224': 'Virginia',
+  '225': 'Virginia', '226': 'Virginia', '227': 'Virginia', '228': 'Virginia', '229': 'Virginia',
+  '230': 'Virginia', '231': 'Virginia', '232': 'Virginia', '233': 'Virginia', '234': 'Virginia',
+  '235': 'Virginia', '236': 'Virginia', '237': 'Virginia', '238': 'Virginia', '239': 'Virginia',
+  '240': 'Virginia', '241': 'Virginia', '242': 'Virginia', '243': 'Virginia', '244': 'Virginia',
+  '245': 'Virginia', '246': 'Virginia',
+  // Washington (980-994)
+  '980': 'Washington', '981': 'Washington', '982': 'Washington', '983': 'Washington', '984': 'Washington',
+  '985': 'Washington', '986': 'Washington', '988': 'Washington', '989': 'Washington', '990': 'Washington',
+  '991': 'Washington', '992': 'Washington', '993': 'Washington', '994': 'Washington',
+  // West Virginia (247-268)
+  '247': 'West Virginia', '248': 'West Virginia', '249': 'West Virginia', '250': 'West Virginia', '251': 'West Virginia',
+  '252': 'West Virginia', '253': 'West Virginia', '254': 'West Virginia', '255': 'West Virginia', '256': 'West Virginia',
+  '257': 'West Virginia', '258': 'West Virginia', '259': 'West Virginia', '260': 'West Virginia', '261': 'West Virginia',
+  '262': 'West Virginia', '263': 'West Virginia', '264': 'West Virginia', '265': 'West Virginia', '266': 'West Virginia', '267': 'West Virginia', '268': 'West Virginia',
+  // Wisconsin (530-549)
+  '530': 'Wisconsin', '531': 'Wisconsin', '532': 'Wisconsin', '534': 'Wisconsin', '535': 'Wisconsin',
+  '537': 'Wisconsin', '538': 'Wisconsin', '539': 'Wisconsin', '540': 'Wisconsin', '541': 'Wisconsin',
+  '542': 'Wisconsin', '543': 'Wisconsin', '544': 'Wisconsin', '545': 'Wisconsin', '546': 'Wisconsin',
+  '547': 'Wisconsin', '548': 'Wisconsin', '549': 'Wisconsin',
+  // Wyoming (820-831)
+  '820': 'Wyoming', '821': 'Wyoming', '822': 'Wyoming', '823': 'Wyoming', '824': 'Wyoming',
+  '825': 'Wyoming', '826': 'Wyoming', '827': 'Wyoming', '828': 'Wyoming', '829': 'Wyoming',
+  '830': 'Wyoming', '831': 'Wyoming',
+  // DC (200-205)
+  '200': 'Other', '201': 'Other', '202': 'Other', '203': 'Other', '204': 'Other', '205': 'Other',
+};
+
+/**
+ * Get state from ZIP code prefix (first 3 digits)
+ */
+function getStateFromZip(zip: string): string | null {
+  if (!zip || zip.length < 3) return null;
+  const prefix = zip.substring(0, 3);
+  return ZIP_TO_STATE[prefix] || null;
+}
+
+// ============================================
 // WIZARD STEPS
 // ============================================
 
 const WIZARD_STEPS = [
-  { id: 'wash-type', title: 'Wash Type', icon: Car },
+  { id: 'basics', title: 'Location & Goals', icon: MapPin },
+  { id: 'details', title: 'Your Details', icon: Building },
   { id: 'equipment', title: 'Equipment', icon: Gauge },
-  { id: 'operations', title: 'Operations', icon: Calendar },
-  { id: 'energy-goals', title: 'Energy Goals', icon: Zap },
+  { id: 'energy-profile', title: 'Energy Profile', icon: Zap },
   { id: 'review', title: 'Your Quote', icon: DollarSign },
 ];
+
+// ============================================
+// STEP HELP CONTENT - Car Wash Specific
+// ============================================
+
+const CAR_WASH_STEP_HELP: Record<string, StepHelpContent> = {
+  'basics': {
+    stepId: 'basics',
+    title: 'Location & Energy Goals',
+    description: 'Your location determines utility rates and solar potential. Your goals shape the BESS recommendation.',
+    tips: [
+      { type: 'tip', text: 'States like California, Hawaii, and New York have highest electricity costs - BESS ROI is best there.' },
+      { type: 'info', text: 'Selecting "Solar + BESS" can reduce energy costs by 50-70% for car washes.' },
+    ],
+  },
+  'details': {
+    stepId: 'details',
+    title: 'Your Car Wash Details',
+    description: 'Tell us about your operation so we can pre-fill equipment and calculate accurate savings.',
+    tips: [
+      { type: 'tip', text: 'Brand selection pre-fills typical equipment specs - you can customize in the next step.' },
+      { type: 'info', text: 'Express tunnels typically use 120-180 kW peak. Full-service can reach 150-250 kW.' },
+    ],
+  },
+  'equipment': {
+    stepId: 'equipment',
+    title: 'Your Equipment Profile',
+    description: 'Tell us what equipment you have installed. Drying systems typically account for 30-40% of total energy use.',
+    tips: [
+      { type: 'warning', text: 'Drying blowers are the biggest energy consumers - each 10HP blower uses ~7.5 kW.' },
+      { type: 'tip', text: 'Central vacuum systems (30+ kW) vs standalone stations (3.6 kW each) - know what you have!' },
+    ],
+  },
+  'energy-profile': {
+    stepId: 'energy-profile',
+    title: 'Your Energy Profile',
+    description: 'Review your calculated power requirements and monthly costs. This drives your BESS sizing.',
+    tips: [
+      { type: 'tip', text: 'Peak hours (usually 10 AM - 2 PM) have highest demand - this is where BESS saves the most.' },
+      { type: 'success', text: 'Demand charge reduction often provides the fastest ROI - typically 30-50% of your bill.' },
+    ],
+  },
+  'review': {
+    stepId: 'review',
+    title: 'Your Custom Quote',
+    description: 'Review your personalized BESS quote with equipment costs, financial projections, and ROI analysis.',
+    tips: [
+      { type: 'success', text: 'The 30% Federal ITC significantly reduces your net cost - factor this into your ROI.' },
+      { type: 'tip', text: 'Download your quote to share with partners, banks, or other stakeholders.' },
+    ],
+  },
+};
 
 // ============================================
 // MAIN COMPONENT
@@ -828,9 +1188,19 @@ export default function CarWashWizard({
     phone: initialInputs.phone ?? '',
   };
   
-  const [currentStep, setCurrentStep] = useState(0);
+  // Use transition for smoother step changes
+  const [isPending, startTransition] = useTransition();
+  
+  const [currentStep, setCurrentStepRaw] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
+  
+  // Wrapper for step changes to make them non-blocking
+  const setCurrentStep = (step: number) => {
+    startTransition(() => {
+      setCurrentStepRaw(step);
+    });
+  };
   
   // Local state for editable inputs
   const [numberOfBays, setNumberOfBays] = useState(
@@ -866,6 +1236,22 @@ export default function CarWashWizard({
   // Step 1: Wash Type
   const [washType, setWashType] = useState<keyof typeof WASH_TYPES>('express-exterior');
   const [tunnelLength, setTunnelLength] = useState(120); // feet
+  
+  // Step 0: Simplified selections (NEW)
+  const [simplifiedWashType, setSimplifiedWashType] = useState<keyof typeof SIMPLIFIED_WASH_TYPES>('automated-tunnel');
+  const [selectedEnergyGoal, setSelectedEnergyGoal] = useState<keyof typeof ENERGY_GOALS_OPTIONS>('solar-bess');
+  const [targetReductionPercent, setTargetReductionPercent] = useState(40);
+  const [selectedState, setSelectedState] = useState(initialInputs.state ?? 'California');
+  const [zipCode, setZipCode] = useState('');
+  
+  // Sync simplifiedWashType to detailed washType
+  useEffect(() => {
+    if (simplifiedWashType === 'automated-tunnel') {
+      setWashType('express-exterior');
+    } else {
+      setWashType('self-service');
+    }
+  }, [simplifiedWashType]);
   
   // Step 2: Equipment (pre-populated from landing page)
   const [equipment, setEquipment] = useState({
@@ -1841,100 +2227,394 @@ export default function CarWashWizard({
               );
             })}
           </div>
+          
+          {/* Power Profile - Shows real-time power metrics */}
+          {calculatedPower.peakDemandKW > 0 && (
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex-1">
+                <WizardPowerProfile
+                  data={{
+                    peakDemandKW: calculatedPower.peakDemandKW,
+                    totalStorageKWh: calculatedPower.peakDemandKW * (energyGoals.targetSavingsPercent / 100) * Math.min(operations.peakHoursEnd - operations.peakHoursStart, 4),
+                    durationHours: Math.min(operations.peakHoursEnd - operations.peakHoursStart, 4),
+                    monthlyUsageKWh: calculatedPower.monthlyKWh,
+                    solarKW: energyGoals.interestInSolar ? energyGoals.solarRoofArea * 0.015 : 0,
+                    generatorKW: energyGoals.includeGenerator ? (energyGoals.generatorSizeKW || calculatedPower.peakDemandKW * 0.8) : 0,
+                  }}
+                  compact={true}
+                  colorScheme="cyan"
+                />
+              </div>
+              {/* Power Gauge Widget - Inline in header */}
+              <PowerGaugeWidget
+                data={{
+                  bessKW: Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100),
+                  bessKWh: Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100 * 2),
+                  peakDemandKW: calculatedPower.peakDemandKW,
+                  solarKW: energyGoals.interestInSolar ? Math.round(energyGoals.solarRoofArea * 0.015) : 0,
+                  generatorKW: energyGoals.includeGenerator ? (energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)) : 0,
+                  powerGapKW: Math.max(0, calculatedPower.peakDemandKW - (
+                    Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100) +
+                    (energyGoals.interestInSolar ? Math.round(energyGoals.solarRoofArea * 0.015) : 0) +
+                    (energyGoals.includeGenerator ? (energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)) : 0)
+                  )),
+                  isGapMet: (
+                    Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100) +
+                    (energyGoals.interestInSolar ? Math.round(energyGoals.solarRoofArea * 0.015) : 0) +
+                    (energyGoals.includeGenerator ? (energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)) : 0)
+                  ) >= calculatedPower.peakDemandKW * 0.9,
+                }}
+                position="inline"
+              />
+            </div>
+          )}
         </div>
         
         {/* Content */}
-        <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
-          {/* Step 0: Brand & Wash Type Selection */}
+        <div className={`p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)] transition-opacity duration-150 ${isPending ? 'opacity-60' : 'opacity-100'}`}>
+          {/* Loading indicator during step transition */}
+          {isPending && (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+            </div>
+          )}
+          
+          {/* Step 0: Location & Energy Goals (SIMPLIFIED) */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              {/* Concierge Tier Selection */}
-              <div className="bg-gradient-to-r from-purple-500/10 to-amber-500/10 rounded-xl p-4 border border-purple-400/20">
-                <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                  Choose Your Experience
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={CAR_WASH_STEP_HELP['basics']} 
+                colorScheme="cyan"
+              />
+              
+              {/* Location Section - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                <h4 className="text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-xl">
+                    <MapPin className="w-7 h-7 text-blue-400" />
+                  </div>
+                  Your Location
                 </h4>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {Object.entries(CONCIERGE_TIERS).map(([key, tier]) => (
-                    <button
-                      key={key}
-                      onClick={() => setConciergeTier(key as keyof typeof CONCIERGE_TIERS)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all relative ${
-                        conciergeTier === key 
-                          ? key === 'pro' ? 'border-amber-500 bg-amber-500/20' : 'border-purple-500 bg-purple-500/20'
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      {tier.badge && (
-                        <span className="absolute top-2 right-2 text-xs bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full">
-                          {tier.badge}
-                        </span>
-                      )}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">{tier.icon}</span>
-                        <div>
-                          <p className="font-bold text-white">{tier.name}</p>
-                          <p className="text-xs text-cyan-200/70">{tier.description}</p>
-                        </div>
-                      </div>
-                      <ul className="space-y-1 mt-3">
-                        {tier.features.slice(0, 4).map((feature, i) => (
-                          <li key={i} className="text-xs text-cyan-200/60 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-400" /> {feature}
-                          </li>
-                        ))}
-                        {tier.features.length > 4 && (
-                          <li className="text-xs text-purple-300">+ {tier.features.length - 4} more features</li>
-                        )}
-                      </ul>
-                      <p className="text-sm font-bold text-white mt-3">{tier.price}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* User Role Selection */}
-              <div className="mb-6">
-                <h4 className="text-md font-bold text-white mb-3">I am a...</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { key: 'owner', icon: '🏢', name: 'Owner/Operator', desc: 'I own or operate a car wash' },
-                    { key: 'investor', icon: '💼', name: 'Investor / PE', desc: 'Evaluating investments' },
-                    { key: 'developer', icon: '🏗️', name: 'Site Developer', desc: 'Planning new locations' },
-                    { key: 'explorer', icon: '🔍', name: 'Just Exploring', desc: 'Curious about the numbers' },
-                  ].map((role) => (
-                    <button
-                      key={role.key}
-                      onClick={() => setUserRole(role.key)}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        userRole === role.key 
-                          ? 'border-cyan-500 bg-cyan-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <span className="text-2xl">{role.icon}</span>
-                      <p className="font-bold text-white text-sm mt-1">{role.name}</p>
-                      <p className="text-xs text-cyan-200/60">{role.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Brand Selection with Autocomplete */}
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Car Wash Brand</h3>
-                <p className="text-cyan-200/70 text-sm mb-3">
-                  Start typing to search 20+ brands, or continue with "Independent Car Wash"
+                <p className="text-base text-gray-300 mb-6">
+                  Location determines utility rates, solar potential, and available incentives.
                 </p>
                 
-                {/* Search Input */}
-                <div className="relative mb-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* State Selection */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">State</label>
+                    <select
+                      value={selectedState}
+                      onChange={(e) => setSelectedState(e.target.value)}
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+                    >
+                      {Object.keys(STATE_RATES).map(state => (
+                        <option key={state} value={state} className="bg-gray-900">{state}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* ZIP Code */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">ZIP Code (auto-detects state)</label>
+                    <input
+                      type="text"
+                      value={zipCode}
+                      onChange={(e) => {
+                        const newZip = e.target.value.replace(/\D/g, ''); // Only digits
+                        setZipCode(newZip);
+                        // Auto-select state when 3+ digits entered
+                        if (newZip.length >= 3) {
+                          const detectedState = getStateFromZip(newZip);
+                          if (detectedState && STATE_RATES[detectedState]) {
+                            setSelectedState(detectedState);
+                          }
+                        }
+                      }}
+                      placeholder="e.g., 90210"
+                      maxLength={5}
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 placeholder-gray-500"
+                    />
+                    {zipCode.length >= 3 && getStateFromZip(zipCode) && (
+                      <p className="text-sm font-bold text-emerald-400 mt-2">✓ Detected: {getStateFromZip(zipCode)}</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Utility Rate Preview */}
+                {selectedState && STATE_RATES[selectedState] && (
+                  <div className="mt-6 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-4 border-2 border-cyan-500/30">
+                    <p className="text-sm font-bold text-gray-300 mb-3">Estimated utility rates for {selectedState}:</p>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="bg-gray-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-black text-cyan-400">${STATE_RATES[selectedState].rate.toFixed(2)}</p>
+                        <p className="text-sm text-gray-400 font-medium">per kWh</p>
+                      </div>
+                      <div className="bg-gray-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-black text-purple-400">${STATE_RATES[selectedState].demandCharge}</p>
+                        <p className="text-sm text-gray-400 font-medium">per kW demand</p>
+                      </div>
+                      <div className="bg-gray-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-black text-amber-400">${STATE_RATES[selectedState].peakRate.toFixed(2)}</p>
+                        <p className="text-sm text-gray-400 font-medium">peak rate</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Simplified Wash Type Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
+                <h4 className="text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-xl">
+                    <Car className="w-7 h-7 text-purple-400" />
+                  </div>
+                  Wash Type
+                </h4>
+                <p className="text-base text-gray-300 mb-6">
+                  What type of car wash do you operate?
+                </p>
+                
+                <div className="grid md:grid-cols-2 gap-5">
+                  {Object.entries(SIMPLIFIED_WASH_TYPES).map(([key, type]) => (
+                    <button
+                      key={key}
+                      onClick={() => setSimplifiedWashType(key as keyof typeof SIMPLIFIED_WASH_TYPES)}
+                      className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                        simplifiedWashType === key 
+                          ? 'border-purple-400 bg-gradient-to-br from-purple-900/40 to-fuchsia-900/40 ring-4 ring-purple-400/30 shadow-lg shadow-purple-500/20' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-5xl">{type.icon}</span>
+                        <div>
+                          <p className="text-xl font-black text-white">{type.name}</p>
+                          <p className="text-sm text-gray-300">{type.description}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="bg-gray-900/50 rounded-xl p-3 text-center border border-purple-500/30">
+                          <p className="text-xl font-black text-purple-400">{type.peakDemandKW.min}-{type.peakDemandKW.max} kW</p>
+                          <p className="text-sm text-gray-400 font-medium">Peak Power</p>
+                        </div>
+                        <div className="bg-gray-900/50 rounded-xl p-3 text-center border border-emerald-500/30">
+                          <p className="text-xl font-black text-emerald-400">${type.typicalBill.min.toLocaleString()}-${type.typicalBill.max.toLocaleString()}</p>
+                          <p className="text-sm text-gray-400 font-medium">Monthly Bill</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Energy Goals Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <h4 className="text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <div className="p-2 bg-emerald-500/20 rounded-xl">
+                    <Target className="w-7 h-7 text-emerald-400" />
+                  </div>
+                  Your Energy Goals
+                </h4>
+                <p className="text-base text-gray-300 mb-6">
+                  What are you trying to achieve? This helps us recommend the right solution.
+                </p>
+                
+                <div className="grid md:grid-cols-3 gap-5">
+                  {/* Solar + Battery */}
+                  <button
+                    onClick={() => {
+                      setSelectedEnergyGoal('solar-bess');
+                      setTargetReductionPercent(50);
+                      setEnergyGoals(prev => ({
+                        ...prev,
+                        interestInSolar: true,
+                        includeGenerator: false,
+                        targetSavingsPercent: 50,
+                      }));
+                    }}
+                    className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                      selectedEnergyGoal === 'solar-bess' 
+                        ? 'border-amber-400 bg-gradient-to-br from-amber-900/40 to-orange-900/40 ring-4 ring-amber-400/30 shadow-lg shadow-amber-500/20' 
+                        : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Sun className="w-8 h-8 text-amber-400" />
+                      <p className="text-xl font-black text-white">Solar + Battery</p>
+                    </div>
+                    <p className="text-sm text-gray-300 mb-4">Maximum savings with solar generation and battery storage</p>
+                    <ul className="space-y-2 mb-4">
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Solar panels on roof/carport
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Battery stores excess solar
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Lowest long-term cost
+                      </li>
+                    </ul>
+                    <div className="bg-amber-950/50 rounded-xl p-3 text-center border border-amber-500/30">
+                      <p className="text-3xl font-black text-amber-400">50%</p>
+                      <p className="text-sm text-amber-200/80 font-medium">Target Savings</p>
+                    </div>
+                  </button>
+                  
+                  {/* Battery Only */}
+                  <button
+                    onClick={() => {
+                      setSelectedEnergyGoal('bess-only');
+                      setTargetReductionPercent(35);
+                      setEnergyGoals(prev => ({
+                        ...prev,
+                        interestInSolar: false,
+                        includeGenerator: false,
+                        targetSavingsPercent: 35,
+                      }));
+                    }}
+                    className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                      selectedEnergyGoal === 'bess-only' 
+                        ? 'border-cyan-400 bg-gradient-to-br from-cyan-900/40 to-blue-900/40 ring-4 ring-cyan-400/30 shadow-lg shadow-cyan-500/20' 
+                        : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Battery className="w-8 h-8 text-cyan-400" />
+                      <p className="text-xl font-black text-white">Battery Only</p>
+                    </div>
+                    <p className="text-sm text-gray-300 mb-4">Peak shaving and demand charge reduction without solar</p>
+                    <ul className="space-y-2 mb-4">
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> No roof modifications
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Immediate demand savings
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Faster installation
+                      </li>
+                    </ul>
+                    <div className="bg-cyan-950/50 rounded-xl p-3 text-center border border-cyan-500/30">
+                      <p className="text-3xl font-black text-cyan-400">35%</p>
+                      <p className="text-sm text-cyan-200/80 font-medium">Target Savings</p>
+                    </div>
+                  </button>
+                  
+                  {/* Hybrid + Generator */}
+                  <button
+                    onClick={() => {
+                      setSelectedEnergyGoal('hybrid-generator');
+                      setTargetReductionPercent(45);
+                      setEnergyGoals(prev => ({
+                        ...prev,
+                        interestInSolar: true,
+                        includeGenerator: true,
+                        targetSavingsPercent: 45,
+                      }));
+                    }}
+                    className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                      selectedEnergyGoal === 'hybrid-generator' 
+                        ? 'border-purple-400 bg-gradient-to-br from-purple-900/40 to-fuchsia-900/40 ring-4 ring-purple-400/30 shadow-lg shadow-purple-500/20' 
+                        : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Zap className="w-8 h-8 text-purple-400" />
+                      <p className="text-xl font-black text-white">Hybrid + Generator</p>
+                    </div>
+                    <p className="text-sm text-gray-300 mb-4">Battery plus natural gas generator for backup and peak shaving</p>
+                    <ul className="space-y-2 mb-4">
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Mainspring linear generator
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Fuel flexibility
+                      </li>
+                      <li className="text-sm text-emerald-400 flex items-center gap-2 font-medium">
+                        <Check className="w-4 h-4" /> Grid independence
+                      </li>
+                    </ul>
+                    <div className="bg-purple-950/50 rounded-xl p-3 text-center border border-purple-500/30">
+                      <p className="text-3xl font-black text-purple-400">45%</p>
+                      <p className="text-sm text-purple-200/80 font-medium">Target Savings</p>
+                    </div>
+                  </button>
+                </div>
+                
+                {/* Target Reduction Slider - HIGH CONTRAST */}
+                <div className="mt-6 bg-gradient-to-r from-slate-800 to-gray-800 rounded-xl p-5 border-2 border-emerald-500/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-lg font-bold text-white">Target Energy Cost Reduction</label>
+                    <span className="text-4xl font-black text-emerald-400">{targetReductionPercent}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={20}
+                    max={70}
+                    step={5}
+                    value={targetReductionPercent}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      setTargetReductionPercent(value);
+                      setEnergyGoals(prev => ({ ...prev, targetSavingsPercent: value }));
+                    }}
+                    className="w-full h-3 accent-emerald-500 cursor-pointer"
+                    style={{ background: 'linear-gradient(to right, #10b981 0%, #10b981 ' + ((targetReductionPercent - 20) / 50 * 100) + '%, rgba(255,255,255,0.2) ' + ((targetReductionPercent - 20) / 50 * 100) + '%, rgba(255,255,255,0.2) 100%)' }}
+                  />
+                  <div className="flex justify-between text-sm text-gray-400 mt-2 font-medium">
+                    <span>Conservative (20%)</span>
+                    <span>Aggressive (70%)</span>
+                  </div>
+                  <p className="text-sm text-gray-300 mt-3 bg-emerald-900/30 p-2 rounded-lg">
+                    💡 Most car washes achieve 30-50% reduction with BESS. Solar+BESS can reach 50-70%.
+                  </p>
+                </div>
+                
+                {/* Auto-Advance Button */}
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setCurrentStep(1)}
+                    className="px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-500 hover:via-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-cyan-500/30 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
+                  >
+                    Continue to Your Details
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 1: Your Details (Brand, Contact) */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={CAR_WASH_STEP_HELP['details']} 
+                colorScheme="cyan"
+              />
+              
+              {/* Brand Selection with Typeahead - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
+                <h4 className="text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-xl">
+                    <Building className="w-7 h-7 text-purple-400" />
+                  </div>
+                  Car Wash Brand
+                </h4>
+                <p className="text-base text-gray-300 mb-6">
+                  Select your brand to pre-fill typical equipment specs, or choose "Independent" to customize.
+                </p>
+                
+                {/* Search Input with Typeahead */}
+                <div className="relative mb-5">
                   <input
                     type="text"
                     value={brandSearchQuery}
                     onChange={(e) => setBrandSearchQuery(e.target.value)}
                     placeholder="🔍 Search brands (e.g., Mister, Tommy's, Zips...)"
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 text-white border border-white/20 focus:border-cyan-400/50 focus:outline-none placeholder-white/40"
+                    className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/30 placeholder-gray-500"
                   />
                   {brandSearchQuery && (
                     <button 
@@ -1990,49 +2670,44 @@ export default function CarWashWizard({
                   )}
                 </div>
                 
-                {/* Quick Selection Buttons */}
-                <div className="grid md:grid-cols-2 gap-3">
-                  {/* Independent Car Wash - Primary Default */}
+                {/* Quick Selection Cards */}
+                <div className="grid md:grid-cols-2 gap-4 mb-5">
+                  {/* Independent */}
                   <button
                     onClick={() => setSelectedBrand('independent')}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
                       selectedBrand === 'independent' 
-                        ? 'border-emerald-500 bg-emerald-500/20' 
-                        : 'border-white/10 hover:border-white/30 bg-white/5'
+                        ? 'border-emerald-400 bg-gradient-to-br from-emerald-900/40 to-teal-900/40 ring-4 ring-emerald-400/30 shadow-lg shadow-emerald-500/20' 
+                        : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl">🏢</span>
+                      <span className="text-4xl">🏢</span>
                       <div>
-                        <p className="font-bold text-white">Independent Car Wash</p>
-                        <p className="text-xs text-cyan-200/70">Single location or regional chain</p>
-                        <p className="text-xs text-emerald-400 mt-1">✓ Configure your own equipment</p>
+                        <p className="text-xl font-black text-white">Independent Car Wash</p>
+                        <p className="text-sm text-gray-300">Single location or regional chain</p>
                       </div>
                     </div>
                   </button>
                   
                   {/* Show Selected Brand if not independent */}
                   {selectedBrand !== 'independent' ? (
-                    <button
-                      onClick={() => setSelectedBrand(selectedBrand)}
-                      className="p-4 rounded-xl border-2 border-purple-500 bg-purple-500/20 text-left"
-                    >
+                    <div className="p-5 rounded-2xl border-3 border-purple-400 bg-gradient-to-br from-purple-900/40 to-fuchsia-900/40 shadow-lg shadow-purple-500/20">
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl">{CAR_WASH_BRANDS[selectedBrand].logo}</span>
+                        <span className="text-4xl">{CAR_WASH_BRANDS[selectedBrand].logo}</span>
                         <div>
-                          <p className="font-bold text-white">{CAR_WASH_BRANDS[selectedBrand].name}</p>
-                          <p className="text-xs text-cyan-200/70">{CAR_WASH_BRANDS[selectedBrand].siteCount}+ locations</p>
-                          <p className="text-xs text-purple-300 mt-1">
-                            Typical: {CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.min}-{CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.max} kW peak
+                          <p className="text-xl font-black text-white">{CAR_WASH_BRANDS[selectedBrand].name}</p>
+                          <p className="text-sm text-gray-300">{CAR_WASH_BRANDS[selectedBrand].siteCount}+ locations</p>
+                          <p className="text-sm font-bold text-purple-400">
+                            {CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.min}-{CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.max} kW typical
                           </p>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ) : (
-                    /* Popular Brands Quick Pick */
-                    <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-                      <p className="text-xs text-cyan-200/60 mb-2">🏆 Popular brands:</p>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="p-5 rounded-2xl border-2 border-gray-600 bg-gradient-to-br from-gray-800/60 to-gray-700/40">
+                      <p className="text-sm font-bold text-gray-300 mb-3">🏆 Top 5 Brands:</p>
+                      <div className="flex flex-wrap gap-2">
                         {Object.entries(CAR_WASH_BRANDS)
                           .filter(([_, brand]) => brand.rank && brand.rank <= 5)
                           .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
@@ -2040,7 +2715,7 @@ export default function CarWashWizard({
                             <button
                               key={key}
                               onClick={() => setSelectedBrand(key as keyof typeof CAR_WASH_BRANDS)}
-                              className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded-full text-white/80 transition-all"
+                              className="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-full text-white font-medium border border-gray-500"
                             >
                               {brand.logo} {brand.name.split(' ')[0]}
                             </button>
@@ -2051,143 +2726,104 @@ export default function CarWashWizard({
                 </div>
               </div>
               
-              {/* Brand Submission Form (for independent) */}
-              {selectedBrand === 'independent' && (
-                <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-xl p-4 border border-emerald-400/30">
-                  <h4 className="text-md font-bold text-white mb-3 flex items-center gap-2">
-                    <Building className="w-5 h-5 text-emerald-400" />
-                    Your Car Wash Details (Optional)
+              {/* Detailed Wash Type (if tunnel) - HIGH CONTRAST */}
+              {simplifiedWashType === 'automated-tunnel' && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                  <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-xl">
+                      <Car className="w-6 h-6 text-blue-400" />
+                    </div>
+                    Tunnel Type
                   </h4>
-                  <p className="text-xs text-cyan-200/70 mb-4">Help us improve recommendations for independent operators.</p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Business Name</label>
-                      <input
-                        type="text"
-                        value={brandSubmission.brandName}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, brandName: e.target.value})}
-                        placeholder="Your Car Wash Name"
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
+                    <button
+                      onClick={() => setWashType('express-exterior')}
+                      className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                        washType === 'express-exterior' 
+                          ? 'border-blue-400 bg-gradient-to-br from-blue-900/40 to-cyan-900/40 ring-4 ring-blue-400/30' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                      }`}
+                    >
+                      <p className="text-lg font-black text-white">Express Exterior</p>
+                      <p className="text-sm text-gray-300">High-throughput exterior only</p>
+                      <p className="text-base font-bold text-blue-400 mt-2">120-180 kW typical</p>
+                    </button>
+                    <button
+                      onClick={() => setWashType('full-service')}
+                      className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                        washType === 'full-service' 
+                          ? 'border-blue-400 bg-gradient-to-br from-blue-900/40 to-cyan-900/40 ring-4 ring-blue-400/30' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                      }`}
+                    >
+                      <p className="text-lg font-black text-white">Full-Service</p>
+                      <p className="text-sm text-gray-300">Complete wash with interior</p>
+                      <p className="text-base font-bold text-blue-400 mt-2">150-250 kW typical</p>
+                    </button>
+                  </div>
+                  
+                  {/* Tunnel Length */}
+                  <div className="mt-5 bg-gray-800/60 rounded-xl p-5 border-2 border-purple-500/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-base font-bold text-gray-300">Tunnel Length</label>
+                      <span className="text-3xl font-black text-purple-400">{tunnelLength} ft</span>
                     </div>
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Number of Sites</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={brandSubmission.numberOfSites}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, numberOfSites: parseInt(e.target.value) || 1})}
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">ZIP Code</label>
-                      <input
-                        type="text"
-                        value={brandSubmission.zipCode}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, zipCode: e.target.value})}
-                        placeholder="12345"
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-cyan-200 mb-1">Contact Email</label>
-                      <input
-                        type="email"
-                        value={brandSubmission.contactEmail}
-                        onChange={(e) => setBrandSubmission({...brandSubmission, contactEmail: e.target.value})}
-                        placeholder="you@example.com"
-                        className="w-full bg-white/10 rounded-lg px-3 py-2 text-white text-sm border border-white/10 focus:border-emerald-400/50"
-                      />
+                    <input
+                      type="range"
+                      min={50}
+                      max={200}
+                      step={10}
+                      value={tunnelLength}
+                      onChange={(e) => setTunnelLength(parseInt(e.target.value))}
+                      className="w-full accent-purple-500 h-3"
+                    />
+                    <div className="flex justify-between text-sm text-gray-400 mt-2">
+                      <span>50 ft (compact)</span>
+                      <span>200 ft (express)</span>
                     </div>
                   </div>
                 </div>
               )}
               
-              {/* Brand Info Banner (for branded selections) */}
-              {selectedBrand !== 'independent' && (
-                <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl p-4 border border-purple-400/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-purple-200">Selected Brand #{CAR_WASH_BRANDS[selectedBrand].rank}</p>
-                      <p className="text-xl font-bold text-white flex items-center gap-2">
-                        <span className="text-2xl">{CAR_WASH_BRANDS[selectedBrand].logo}</span>
-                        {CAR_WASH_BRANDS[selectedBrand].name}
-                      </p>
-                      <p className="text-xs text-cyan-200/70 mt-1">
-                        {CAR_WASH_BRANDS[selectedBrand].headquarters} • {CAR_WASH_BRANDS[selectedBrand].siteCount}+ locations
-                      </p>
-                      <p className="text-xs text-cyan-200/60 mt-1">{CAR_WASH_BRANDS[selectedBrand].notes}</p>
+              {/* Bays (if self-service) - HIGH CONTRAST */}
+              {simplifiedWashType === 'self-service-bay' && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                  <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-xl">
+                      <Car className="w-6 h-6 text-blue-400" />
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-cyan-200">Typical Peak Demand</p>
-                      <p className="text-xl font-bold text-cyan-400">
-                        {CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.min}-{CAR_WASH_BRANDS[selectedBrand].peakDemandKW?.max} kW
-                      </p>
-                    </div>
+                    Bay Configuration
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 mb-5">
+                    <button
+                      onClick={() => setWashType('self-service')}
+                      className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                        washType === 'self-service' 
+                          ? 'border-blue-400 bg-gradient-to-br from-blue-900/40 to-cyan-900/40 ring-4 ring-blue-400/30' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                      }`}
+                    >
+                      <p className="text-lg font-black text-white">Self-Service Bays</p>
+                      <p className="text-sm text-gray-300">Customer-operated</p>
+                    </button>
+                    <button
+                      onClick={() => setWashType('in-bay-automatic')}
+                      className={`p-5 rounded-2xl border-3 text-left transition-all transform hover:scale-[1.02] ${
+                        washType === 'in-bay-automatic' 
+                          ? 'border-blue-400 bg-gradient-to-br from-blue-900/40 to-cyan-900/40 ring-4 ring-blue-400/30' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gradient-to-br from-gray-800/60 to-gray-700/40'
+                      }`}
+                    >
+                      <p className="text-lg font-black text-white">In-Bay Automatic</p>
+                      <p className="text-sm text-gray-300">Rollover system</p>
+                    </button>
                   </div>
-                </div>
-              )}
-              
-              {/* Wash Type Selection */}
-              <div>
-                <h4 className="text-md font-bold text-white mb-2">Wash Type</h4>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {Object.entries(WASH_TYPES).map(([key, type]) => (
-                    <button
-                      key={key}
-                      onClick={() => setWashType(key as keyof typeof WASH_TYPES)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        washType === key 
-                          ? 'border-cyan-500 bg-cyan-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <p className="font-bold text-white text-sm">{type.name}</p>
-                      <p className="text-xs text-cyan-200/70">{type.description}</p>
-                      <div className="flex gap-3 mt-2 text-xs">
-                        <span className="text-emerald-400">{type.carsPerHour} cars/hr</span>
-                        <span className="text-purple-400">{type.peakDemandKW.min}-{type.peakDemandKW.max} kW</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Automation Level */}
-              <div>
-                <h4 className="text-md font-bold text-white mb-2">Automation Level</h4>
-                <p className="text-xs text-cyan-200/70 mb-3">What generation of automation does your equipment use?</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {Object.entries(AUTOMATION_LEVELS).map(([key, level]) => (
-                    <button
-                      key={key}
-                      onClick={() => setAutomationLevel(key as keyof typeof AUTOMATION_LEVELS)}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        automationLevel === key 
-                          ? 'border-amber-500 bg-amber-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <p className="font-bold text-white text-sm">{level.name}</p>
-                      <p className="text-xs text-cyan-200/70 mt-1">{level.description}</p>
-                      <p className="text-xs text-amber-400 mt-1">+{level.additionalKW} kW controls</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Bays OR Tunnel Length - Context-Specific */}
-              <div className="bg-white/5 rounded-xl p-4 border border-cyan-500/20">
-                {/* For Self-Service and In-Bay: Show NUMBER OF BAYS */}
-                {(washType === 'self-service' || washType === 'in-bay-automatic') && (
-                  <>
-                    <label className="block text-sm text-cyan-200 mb-2">
-                      Number of {washType === 'self-service' ? 'Self-Service' : 'In-Bay'} Wash Bays
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl font-bold text-white">{numberOfBays}</span>
-                      <span className="text-cyan-300 text-lg">bays</span>
+                  
+                  {/* Number of Bays */}
+                  <div className="bg-gray-800/60 rounded-xl p-5 border-2 border-cyan-500/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-base font-bold text-gray-300">Number of Bays</label>
+                      <span className="text-3xl font-black text-cyan-400">{numberOfBays}</span>
                     </div>
                     <input
                       type="range"
@@ -2195,210 +2831,144 @@ export default function CarWashWizard({
                       max={washType === 'self-service' ? 20 : 8}
                       step={1}
                       value={numberOfBays}
-                      onChange={(e) => {
-                        const newValue = parseInt(e.target.value);
-                        console.log('🔧 Bays slider changed:', newValue);
-                        setNumberOfBays(newValue);
-                      }}
-                      className="w-full accent-cyan-500 mt-3"
+                      onChange={(e) => setNumberOfBays(parseInt(e.target.value))}
+                      className="w-full accent-cyan-500 h-3"
                     />
-                    <div className="flex justify-between text-xs text-cyan-300/50 mt-1">
-                      <span>1 bay</span>
-                      <span>{washType === 'self-service' ? '20' : '8'} bays</span>
-                    </div>
-                    <p className="text-xs text-cyan-200/60 mt-2">
-                      💡 Peak demand: ~{WASH_TYPES[washType].peakDemandKW.min * numberOfBays}-{WASH_TYPES[washType].peakDemandKW.max * numberOfBays} kW total
+                    <p className="text-sm font-medium text-gray-400 mt-3">
+                      Est. Peak: <span className="font-bold text-cyan-400">{WASH_TYPES[washType].peakDemandKW.min * numberOfBays}-{WASH_TYPES[washType].peakDemandKW.max * numberOfBays} kW</span>
                     </p>
-                  </>
-                )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Contact Information - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <h4 className="text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <div className="p-2 bg-emerald-500/20 rounded-xl">
+                    <Phone className="w-7 h-7 text-emerald-400" />
+                  </div>
+                  Contact Information
+                </h4>
+                <p className="text-base text-gray-300 mb-6">
+                  Optional - for saving your quote and receiving follow-up.
+                </p>
                 
-                {/* For Tunnel Types: Show TUNNEL LENGTH */}
-                {(washType === 'express-exterior' || washType === 'full-service') && (
-                  <>
-                    <label className="block text-sm text-cyan-200 mb-2">
-                      Tunnel Length ({washType === 'express-exterior' ? 'Express Exterior' : 'Full-Service'})
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl font-bold text-white">{tunnelLength}</span>
-                      <span className="text-purple-300 text-lg">feet</span>
-                    </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Business Name</label>
                     <input
-                      type="range"
-                      min={limits?.tunnelLength?.min ?? 60}
-                      max={limits?.tunnelLength?.max ?? 300}
-                      step={limits?.tunnelLength?.step ?? 10}
-                      value={tunnelLength}
-                      onChange={(e) => setTunnelLength(parseInt(e.target.value))}
-                      className="w-full accent-purple-500 mt-3"
+                      type="text"
+                      value={brandSubmission.brandName}
+                      onChange={(e) => setBrandSubmission({...brandSubmission, brandName: e.target.value})}
+                      placeholder="Your Car Wash Name"
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder-gray-500"
                     />
-                    <div className="flex justify-between text-xs text-purple-300/50 mt-1">
-                      <span>{limits?.tunnelLength?.min ?? 60} ft (small)</span>
-                      <span>{limits?.tunnelLength?.max ?? 300} ft (large)</span>
-                    </div>
-                    <p className="text-xs text-cyan-200/60 mt-2">
-                      💡 Typical throughput: {WASH_TYPES[washType].carsPerHour} cars/hour • Peak demand: {WASH_TYPES[washType].peakDemandKW.min}-{WASH_TYPES[washType].peakDemandKW.max} kW
-                    </p>
-                  </>
-                )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Contact Name</label>
+                    <input
+                      type="text"
+                      value={brandSubmission.contactName}
+                      onChange={(e) => setBrandSubmission({...brandSubmission, contactName: e.target.value})}
+                      placeholder="Your Name"
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={brandSubmission.contactEmail}
+                      onChange={(e) => setBrandSubmission({...brandSubmission, contactEmail: e.target.value})}
+                      placeholder="you@example.com"
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={brandSubmission.contactPhone}
+                      onChange={(e) => setBrandSubmission({...brandSubmission, contactPhone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                      className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-medium border-2 border-gray-600 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Continue Button for Step 1 */}
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-500 hover:via-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-cyan-500/30 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
+                >
+                  Continue to Equipment
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               </div>
             </div>
           )}
           
-          {/* Step 1: Equipment */}
-          {currentStep === 1 && (
+          {/* Step 2: Equipment */}
+          {currentStep === 2 && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Tell us about your equipment</h3>
-                <p className="text-cyan-200/70 text-sm">Check all equipment currently installed. Drying systems typically account for 30-40% of energy use.</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={CAR_WASH_STEP_HELP['equipment']} 
+                colorScheme="cyan"
+              />
               
-              {/* Power Summary */}
-              <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl p-4 border border-purple-400/30">
+              {/* Power Summary - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-purple-200">Estimated Peak Demand</p>
-                    <p className="text-3xl font-bold text-white">{calculatedPower.peakDemandKW} kW</p>
+                    <p className="text-base font-bold text-purple-300 mb-1">Estimated Peak Demand</p>
+                    <p className="text-4xl font-black text-white">{calculatedPower.peakDemandKW} <span className="text-xl text-gray-400">kW</span></p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-cyan-200">Monthly Usage</p>
-                    <p className="text-2xl font-bold text-cyan-400">{calculatedPower.monthlyKWh.toLocaleString()} kWh</p>
+                    <p className="text-base font-bold text-cyan-300 mb-1">Monthly Usage</p>
+                    <p className="text-4xl font-black text-cyan-400">{calculatedPower.monthlyKWh.toLocaleString()} <span className="text-xl text-gray-400">kWh</span></p>
                   </div>
                 </div>
               </div>
               
-              {/* Equipment Categories */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Drying - Highlight as biggest consumer */}
-                <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Wind className="w-5 h-5 text-amber-400" />
-                    <h4 className="font-bold text-amber-300">Drying Systems</h4>
-                    <span className="text-xs bg-amber-500/20 px-2 py-0.5 rounded text-amber-300">30-40% of usage</span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">{limits?.standardBlowers?.label || 'Standard Blowers'} ({limits?.standardBlowers?.powerKW ?? 7.5} kW each)</span>
-                      <input
-                        type="number"
-                        min={limits?.standardBlowers?.min ?? 0}
-                        max={limits?.standardBlowers?.max ?? 20}
-                        value={equipment.standardBlowers}
-                        onChange={(e) => setEquipment({...equipment, standardBlowers: parseInt(e.target.value) || 0})}
-                        className="w-16 bg-white/10 rounded px-2 py-1 text-white text-center"
-                      />
+              {/* Equipment Categories - Reordered: Water → Pressure → Drying → Vacuum - HIGH CONTRAST */}
+              <div className="grid md:grid-cols-2 gap-5">
+                {/* 1. Water Systems - First because it's the start of the wash */}
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-5 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-emerald-500/20 rounded-xl">
+                      <Droplets className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={equipment.hasWindBlade}
-                        onChange={(e) => setEquipment({...equipment, hasWindBlade: e.target.checked})}
-                        className="accent-amber-500"
-                      />
-                      <span className="text-white text-sm">Wind Blade (15 kW)</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={equipment.hasHighPerformanceDryer}
-                        onChange={(e) => setEquipment({...equipment, hasHighPerformanceDryer: e.target.checked})}
-                        className="accent-amber-500"
-                      />
-                      <span className="text-white text-sm">High-Performance Dryer (33.5 kW)</span>
-                    </label>
+                    <h4 className="text-lg font-black text-emerald-300">Water Systems</h4>
+                    <span className="text-sm bg-emerald-500/30 px-3 py-1 rounded-full text-emerald-200 font-bold">Step 1</span>
                   </div>
-                </div>
-                
-                {/* Vacuum */}
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Gauge className="w-5 h-5 text-cyan-400" />
-                    <h4 className="font-bold text-white">Vacuum Systems</h4>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">{limits?.vacuumStations?.label || 'Vacuum Stations'} ({limits?.vacuumStations?.powerKW ?? 3} kW each)</span>
-                      <input
-                        type="number"
-                        min={limits?.vacuumStations?.min ?? 0}
-                        max={limits?.vacuumStations?.max ?? 40}
-                        value={equipment.vacuumStations}
-                        onChange={(e) => setEquipment({...equipment, vacuumStations: parseInt(e.target.value) || 0})}
-                        className="w-16 bg-white/10 rounded px-2 py-1 text-white text-center"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={equipment.hasCentralVacuum}
-                        onChange={(e) => setEquipment({...equipment, hasCentralVacuum: e.target.checked})}
-                        className="accent-cyan-500"
-                      />
-                      <span className="text-white text-sm">Central Vacuum System (30 kW)</span>
-                    </label>
-                  </div>
-                </div>
-                
-                {/* High Pressure */}
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Droplets className="w-5 h-5 text-blue-400" />
-                    <h4 className="font-bold text-white">High-Pressure Systems</h4>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">{limits?.highPressurePumps?.label || 'HP Pump Stations'} ({limits?.highPressurePumps?.powerKW ?? 11} kW each)</span>
-                      <input
-                        type="number"
-                        min={limits?.highPressurePumps?.min ?? 0}
-                        max={limits?.highPressurePumps?.max ?? 8}
-                        value={equipment.highPressurePumps}
-                        onChange={(e) => setEquipment({...equipment, highPressurePumps: parseInt(e.target.value) || 0})}
-                        className="w-16 bg-white/10 rounded px-2 py-1 text-white text-center"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={equipment.hasUndercarriage}
-                        onChange={(e) => setEquipment({...equipment, hasUndercarriage: e.target.checked})}
-                        className="accent-blue-500"
-                      />
-                      <span className="text-white text-sm">Undercarriage Wash</span>
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Water Systems */}
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Droplets className="w-5 h-5 text-emerald-400" />
-                    <h4 className="font-bold text-white">Water Systems</h4>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-2">
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
                       <input
                         type="checkbox"
                         checked={equipment.hasWaterReclaim}
                         onChange={(e) => setEquipment({...equipment, hasWaterReclaim: e.target.checked})}
-                        className="accent-emerald-500"
+                        className="accent-emerald-500 w-5 h-5"
                       />
-                      <span className="text-white text-sm">Water Reclamation System</span>
+                      <span className="text-white font-medium">Water Reclamation System</span>
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
                       <input
                         type="checkbox"
                         checked={equipment.hasReverseOsmosis}
                         onChange={(e) => setEquipment({...equipment, hasReverseOsmosis: e.target.checked})}
-                        className="accent-emerald-500"
+                        className="accent-emerald-500 w-5 h-5"
                       />
-                      <span className="text-white text-sm">Reverse Osmosis (Spot-Free)</span>
+                      <span className="text-white font-medium">Reverse Osmosis (Spot-Free)</span>
                     </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-sm">Water Heating:</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl">
+                      <span className="text-white font-medium">Water Heating:</span>
                       <select
                         value={equipment.waterHeatingType}
                         onChange={(e) => setEquipment({...equipment, waterHeatingType: e.target.value as any})}
-                        className="bg-white/10 rounded px-2 py-1 text-white text-sm"
+                        className="bg-gray-700 rounded-lg px-3 py-2 text-white font-medium border border-gray-600"
                       >
                         <option value="gas">Natural Gas</option>
                         <option value="electric">Electric (25 kW)</option>
@@ -2407,309 +2977,387 @@ export default function CarWashWizard({
                     </div>
                   </div>
                 </div>
+                
+                {/* 2. High Pressure - Second because pressure washing comes next */}
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-5 border-2 border-blue-500/40 shadow-lg shadow-blue-500/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-blue-500/20 rounded-xl">
+                      <Droplets className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <h4 className="text-lg font-black text-blue-300">High-Pressure Systems</h4>
+                    <span className="text-sm bg-blue-500/30 px-3 py-1 rounded-full text-blue-200 font-bold">Step 2</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
+                      <span className="text-white font-medium">{limits?.highPressurePumps?.label || 'HP Pump Stations'} ({limits?.highPressurePumps?.powerKW ?? 11} kW each)</span>
+                      <input
+                        type="number"
+                        min={limits?.highPressurePumps?.min ?? 0}
+                        max={limits?.highPressurePumps?.max ?? 8}
+                        value={equipment.highPressurePumps}
+                        onChange={(e) => setEquipment({...equipment, highPressurePumps: parseInt(e.target.value) || 0})}
+                        className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-blue-400"
+                      />
+                    </div>
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={equipment.hasUndercarriage}
+                        onChange={(e) => setEquipment({...equipment, hasUndercarriage: e.target.checked})}
+                        className="accent-blue-500 w-5 h-5"
+                      />
+                      <span className="text-white font-medium">Undercarriage Wash</span>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* 3. Drying - Third, after washing is complete */}
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-5 border-2 border-amber-500/40 shadow-lg shadow-amber-500/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-amber-500/20 rounded-xl">
+                      <Wind className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <h4 className="text-lg font-black text-amber-300">Drying Systems</h4>
+                    <span className="text-sm bg-amber-500/30 px-3 py-1 rounded-full text-amber-200 font-bold">30-40% of usage</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
+                      <span className="text-white font-medium">{limits?.standardBlowers?.label || 'Standard Blowers'} ({limits?.standardBlowers?.powerKW ?? 7.5} kW each)</span>
+                      <input
+                        type="number"
+                        min={limits?.standardBlowers?.min ?? 0}
+                        max={limits?.standardBlowers?.max ?? 20}
+                        value={equipment.standardBlowers}
+                        onChange={(e) => setEquipment({...equipment, standardBlowers: parseInt(e.target.value) || 0})}
+                        className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-amber-400"
+                      />
+                    </div>
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={equipment.hasWindBlade}
+                        onChange={(e) => setEquipment({...equipment, hasWindBlade: e.target.checked})}
+                        className="accent-amber-500 w-5 h-5"
+                      />
+                      <span className="text-white font-medium">Wind Blade (15 kW)</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={equipment.hasHighPerformanceDryer}
+                        onChange={(e) => setEquipment({...equipment, hasHighPerformanceDryer: e.target.checked})}
+                        className="accent-amber-500 w-5 h-5"
+                      />
+                      <span className="text-white font-medium">High-Performance Dryer (33.5 kW)</span>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* 4. Vacuum - Last, after the car exits */}
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-5 border-2 border-cyan-500/40 shadow-lg shadow-cyan-500/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-cyan-500/20 rounded-xl">
+                      <Gauge className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <h4 className="text-lg font-black text-cyan-300">Vacuum Systems</h4>
+                    <span className="text-sm bg-cyan-500/30 px-3 py-1 rounded-full text-cyan-200 font-bold">Post-Wash</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
+                      <span className="text-white font-medium">{limits?.vacuumStations?.label || 'Vacuum Stations'} ({limits?.vacuumStations?.powerKW ?? 3} kW each)</span>
+                      <input
+                        type="number"
+                        min={limits?.vacuumStations?.min ?? 0}
+                        max={limits?.vacuumStations?.max ?? 40}
+                        value={equipment.vacuumStations}
+                        onChange={(e) => setEquipment({...equipment, vacuumStations: parseInt(e.target.value) || 0})}
+                        className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-cyan-400"
+                      />
+                    </div>
+                    <label className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={equipment.hasCentralVacuum}
+                        onChange={(e) => setEquipment({...equipment, hasCentralVacuum: e.target.checked})}
+                        className="accent-cyan-500 w-5 h-5"
+                      />
+                      <span className="text-white font-medium">Central Vacuum System (30 kW)</span>
+                    </label>
+                  </div>
+                </div>
               </div>
               
-              {/* Automation Level Power Impact Note */}
+              {/* Automation Level Power Impact Note - HIGH CONTRAST */}
               {automationLevel && automationLevel !== 'standard' && (
-                <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-400/20">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-400" />
-                    <span className="text-purple-300 font-medium">
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-5 border-2 border-purple-500/40 shadow-lg shadow-purple-500/10">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/20 rounded-xl">
+                      <Sparkles className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <span className="text-lg font-black text-purple-300">
                       {AUTOMATION_LEVELS[automationLevel].name} Automation
                     </span>
-                    <span className="text-xs bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">
+                    <span className="text-sm bg-purple-500/30 px-3 py-1 rounded-full text-purple-200 font-bold">
                       {AUTOMATION_LEVELS[automationLevel].powerMultiplier > 1 ? '+' : ''}
                       {((AUTOMATION_LEVELS[automationLevel].powerMultiplier - 1) * 100).toFixed(0)}% power
                     </span>
                   </div>
-                  <p className="text-xs text-cyan-200/70 mt-2">
+                  <p className="text-base text-gray-300 mt-3">
                     {AUTOMATION_LEVELS[automationLevel].description}
                   </p>
                 </div>
               )}
-            </div>
-          )}
-          
-          {/* Step 2: Operations */}
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Tell us about your operations</h3>
-                <p className="text-cyan-200/70 text-sm">This helps optimize battery sizing for your peak hours.</p>
-              </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-cyan-200 mb-2">Hours Open Per Day</label>
-                    <input
-                      type="range"
-                      min="6"
-                      max="24"
-                      value={operations.hoursPerDay}
-                      onChange={(e) => setOperations({...operations, hoursPerDay: parseInt(e.target.value)})}
-                      className="w-full accent-purple-500"
-                    />
-                    <p className="text-center text-white font-bold">{operations.hoursPerDay} hours/day</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-cyan-200 mb-2">Days Open Per Week</label>
-                    <div className="flex gap-2">
-                      {[5, 6, 7].map((d) => (
-                        <button
-                          key={d}
-                          onClick={() => setOperations({...operations, daysPerWeek: d})}
-                          className={`flex-1 py-2 rounded-lg font-bold transition-all ${
-                            operations.daysPerWeek === d 
-                              ? 'bg-purple-500 text-white' 
-                              : 'bg-white/10 text-white/70 hover:bg-white/20'
-                          }`}
-                        >
-                          {d} days
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-cyan-200 mb-2">Peak Hours (Busiest Time)</label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={operations.peakHoursStart}
-                        onChange={(e) => setOperations({...operations, peakHoursStart: parseInt(e.target.value)})}
-                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-white"
-                      >
-                        {Array.from({length: 12}, (_, i) => i + 6).map((h) => (
-                          <option key={h} value={h}>{h > 12 ? h - 12 : h} {h >= 12 ? 'PM' : 'AM'}</option>
-                        ))}
-                      </select>
-                      <span className="text-white">to</span>
-                      <select
-                        value={operations.peakHoursEnd}
-                        onChange={(e) => setOperations({...operations, peakHoursEnd: parseInt(e.target.value)})}
-                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-white"
-                      >
-                        {Array.from({length: 12}, (_, i) => i + 12).map((h) => (
-                          <option key={h} value={h}>{h > 12 ? h - 12 : h} PM</option>
-                        ))}
-                      </select>
-                    </div>
-                    <p className="text-sm text-purple-300 mt-1">
-                      {operations.peakHoursEnd - operations.peakHoursStart} hours of peak demand
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-cyan-200 mb-2">Seasonal Variation</label>
-                    <div className="flex gap-2">
-                      {(['low', 'moderate', 'high'] as const).map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => setOperations({...operations, seasonalVariation: s})}
-                          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                            operations.seasonalVariation === s 
-                              ? 'bg-cyan-500 text-white' 
-                              : 'bg-white/10 text-white/70 hover:bg-white/20'
-                          }`}
-                        >
-                          {s.charAt(0).toUpperCase() + s.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Operations Summary */}
-              <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl p-4 border border-cyan-400/30">
-                <h4 className="font-bold text-white mb-2">Estimated Monthly Energy Profile</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-cyan-400">{calculatedPower.monthlyKWh.toLocaleString()}</p>
-                    <p className="text-xs text-cyan-200/70">kWh/month</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-400">${calculatedPower.demandCharges.toLocaleString()}</p>
-                    <p className="text-xs text-purple-200/70">Demand Charges</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-emerald-400">${calculatedPower.energyCharges.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-200/70">Energy Charges</p>
-                  </div>
-                </div>
+              {/* Continue Button for Step 2 */}
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-500 hover:via-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-cyan-500/30 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
+                >
+                  Continue to Energy Profile
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               </div>
             </div>
           )}
           
-          {/* Step 3: Energy Goals */}
+          {/* Step 3: Energy Profile (was Operations) */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">What are your energy goals?</h3>
-                <p className="text-cyan-200/70 text-sm">This helps us optimize your system for maximum savings.</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={CAR_WASH_STEP_HELP['energy-profile']} 
+                colorScheme="cyan"
+              />
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-cyan-200 mb-3">Primary Goal</label>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {[
-                      { id: 'demand-reduction', label: 'Reduce Demand Charges', desc: 'Cut peak demand by 30-50%', icon: TrendingDown },
-                      { id: 'backup-power', label: 'Backup Power', desc: 'Keep washing during outages', icon: Battery },
-                      { id: 'solar-storage', label: 'Solar + Storage', desc: 'Generate & store your own power', icon: Sun },
-                      { id: 'solar-generator', label: 'Solar + Nat Gas Generator', desc: 'Solar + backup generator for extended outages', icon: Zap },
-                      { id: 'all', label: 'All of the Above', desc: 'Maximum savings & resilience', icon: Sparkles },
-                    ].map((goal) => {
-                      const Icon = goal.icon;
-                      return (
-                        <button
-                          key={goal.id}
-                          onClick={() => setEnergyGoals({...energyGoals, primaryGoal: goal.id as any})}
-                          className={`p-4 rounded-xl border-2 text-left transition-all ${
-                            energyGoals.primaryGoal === goal.id 
-                              ? 'border-purple-500 bg-purple-500/20' 
-                              : 'border-white/10 hover:border-white/30 bg-white/5'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="w-6 h-6 text-purple-400" />
-                            <div>
-                              <p className="font-bold text-white">{goal.label}</p>
-                              <p className="text-xs text-cyan-200/70">{goal.desc}</p>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
+              {/* Operations Settings - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
+                <h4 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-xl">
+                    <Clock className="w-7 h-7 text-purple-400" />
                   </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-cyan-200 mb-2">
-                    {limits?.targetSavingsPercent?.label || 'Target Demand Reduction'}: <span className="text-purple-400 font-bold">{energyGoals.targetSavingsPercent}%</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={limits?.targetSavingsPercent?.min ?? 10}
-                    max={limits?.targetSavingsPercent?.max ?? 80}
-                    step={limits?.targetSavingsPercent?.step ?? 5}
-                    value={energyGoals.targetSavingsPercent}
-                    onChange={(e) => setEnergyGoals({...energyGoals, targetSavingsPercent: parseInt(e.target.value)})}
-                    className="w-full accent-purple-500"
-                  />
-                  <div className="flex justify-between text-xs text-cyan-200/50">
-                    <span>Conservative ({limits?.targetSavingsPercent?.min ?? 10}%)</span>
-                    <span>Aggressive ({limits?.targetSavingsPercent?.max ?? 80}%)</span>
-                  </div>
-                </div>
-                
-                {(energyGoals.primaryGoal === 'solar-storage' || energyGoals.primaryGoal === 'solar-generator' || energyGoals.primaryGoal === 'all') && (
-                  <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sun className="w-5 h-5 text-amber-400" />
-                      <h4 className="font-bold text-amber-300">Solar Options</h4>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-amber-200 mb-2">{limits?.solarRoofArea?.label || 'Available Roof Area for Solar'}</label>
+                  Operating Hours
+                </h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-5">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <label className="block text-base font-bold text-gray-300 mb-3">Hours Open Per Day</label>
                       <input
                         type="range"
-                        min={limits?.solarRoofArea?.min ?? 0}
-                        max={limits?.solarRoofArea?.max ?? 50000}
-                        step={limits?.solarRoofArea?.step ?? 500}
-                        value={energyGoals.solarRoofArea}
-                        onChange={(e) => setEnergyGoals({...energyGoals, solarRoofArea: parseInt(e.target.value)})}
-                        className="w-full accent-amber-500"
+                        min="6"
+                        max="24"
+                        value={operations.hoursPerDay}
+                        onChange={(e) => setOperations({...operations, hoursPerDay: parseInt(e.target.value)})}
+                        className="w-full accent-purple-500 h-3"
                       />
-                      <p className="text-center text-white font-bold">
-                        {energyGoals.solarRoofArea.toLocaleString()} {limits?.solarRoofArea?.unit || 'sq ft'} 
-                        <span className="text-amber-400 ml-2">
-                          (~{Math.round(energyGoals.solarRoofArea * 0.015)} kW solar)
-                        </span>
+                      <p className="text-center text-3xl font-black text-white mt-3">{operations.hoursPerDay} <span className="text-lg text-gray-400">hours/day</span></p>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <label className="block text-base font-bold text-gray-300 mb-3">Days Open Per Week</label>
+                      <div className="flex gap-3">
+                        {[5, 6, 7].map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => setOperations({...operations, daysPerWeek: d})}
+                            className={`flex-1 py-3 rounded-xl font-black text-lg transition-all transform hover:scale-[1.02] ${
+                              operations.daysPerWeek === d 
+                                ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white ring-4 ring-purple-400/30' 
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-2 border-gray-600'
+                            }`}
+                          >
+                            {d} days
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-5">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <label className="block text-base font-bold text-gray-300 mb-3">Peak Hours (Busiest Time)</label>
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={operations.peakHoursStart}
+                          onChange={(e) => setOperations({...operations, peakHoursStart: parseInt(e.target.value)})}
+                          className="flex-1 bg-gray-700 rounded-xl px-4 py-3 text-white font-bold text-lg border-2 border-gray-600 focus:border-purple-400"
+                        >
+                          {Array.from({length: 12}, (_, i) => i + 6).map((h) => (
+                            <option key={h} value={h}>{h > 12 ? h - 12 : h} {h >= 12 ? 'PM' : 'AM'}</option>
+                          ))}
+                        </select>
+                        <span className="text-white font-bold text-lg">to</span>
+                        <select
+                          value={operations.peakHoursEnd}
+                          onChange={(e) => setOperations({...operations, peakHoursEnd: parseInt(e.target.value)})}
+                          className="flex-1 bg-gray-700 rounded-xl px-4 py-3 text-white font-bold text-lg border-2 border-gray-600 focus:border-purple-400"
+                        >
+                          {Array.from({length: 12}, (_, i) => i + 12).map((h) => (
+                            <option key={h} value={h}>{h > 12 ? h - 12 : h} PM</option>
+                          ))}
+                        </select>
+                      </div>
+                      <p className="text-base font-bold text-purple-400 mt-3">
+                        {operations.peakHoursEnd - operations.peakHoursStart} hours of peak demand
                       </p>
                     </div>
-                  </div>
-                )}
-                
-                {/* Natural Gas Generator Options */}
-                {(energyGoals.primaryGoal === 'backup-power' || energyGoals.primaryGoal === 'solar-generator' || energyGoals.primaryGoal === 'all') && (
-                  <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="w-5 h-5 text-red-400" />
-                      <h4 className="font-bold text-red-300">Natural Gas Generator</h4>
-                      <span className="text-xs bg-red-500/20 px-2 py-0.5 rounded text-red-300">Extended Backup</span>
+                    
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <label className="block text-base font-bold text-gray-300 mb-3">Seasonal Variation</label>
+                      <div className="flex gap-3">
+                        {(['low', 'moderate', 'high'] as const).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setOperations({...operations, seasonalVariation: s})}
+                            className={`flex-1 py-3 rounded-xl text-base font-black transition-all transform hover:scale-[1.02] ${
+                              operations.seasonalVariation === s 
+                                ? 'bg-gradient-to-br from-cyan-600 to-cyan-700 text-white ring-4 ring-cyan-400/30' 
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-2 border-gray-600'
+                            }`}
+                          >
+                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-xs text-cyan-200/70 mb-3">
-                      A natural gas generator provides backup power during extended outages beyond battery capacity. 
-                      Automatically sized based on your peak demand.
-                    </p>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={energyGoals.includeGenerator}
-                          onChange={(e) => setEnergyGoals({
-                            ...energyGoals, 
-                            includeGenerator: e.target.checked,
-                            generatorSizeKW: e.target.checked ? Math.round(calculatedPower.peakDemandKW * 0.8) : 0
-                          })}
-                          className="accent-red-500"
-                        />
-                        <span className="text-white text-sm">Include Natural Gas Generator</span>
-                      </label>
-                      
-                      {energyGoals.includeGenerator && (
-                        <div>
-                          <label className="block text-sm text-red-200 mb-2">
-                            Generator Size: <span className="text-red-400 font-bold">{energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)} kW</span>
-                          </label>
-                          <input
-                            type="range"
-                            min={Math.round(calculatedPower.peakDemandKW * 0.5)}
-                            max={Math.round(calculatedPower.peakDemandKW * 1.2)}
-                            step={10}
-                            value={energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)}
-                            onChange={(e) => setEnergyGoals({...energyGoals, generatorSizeKW: parseInt(e.target.value)})}
-                            className="w-full accent-red-500"
-                          />
-                          <div className="flex justify-between text-xs text-red-200/50">
-                            <span>50% peak ({Math.round(calculatedPower.peakDemandKW * 0.5)} kW)</span>
-                            <span>120% peak ({Math.round(calculatedPower.peakDemandKW * 1.2)} kW)</span>
-                          </div>
-                          <p className="text-xs text-cyan-200/50 mt-2">
-                            Recommended: 80% of peak demand ({Math.round(calculatedPower.peakDemandKW * 0.8)} kW) provides backup for all critical loads
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm text-cyan-200 mb-2">Financing Preference</label>
-                  <div className="flex gap-2">
-                    {[
-                      { id: 'cash', label: 'Cash Purchase' },
-                      { id: 'loan', label: 'Loan/Finance' },
-                      { id: 'ppa', label: 'PPA' },
-                      { id: 'lease', label: 'Lease' },
-                    ].map((f) => (
-                      <button
-                        key={f.id}
-                        onClick={() => setEnergyGoals({...energyGoals, financingPreference: f.id as any})}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          energyGoals.financingPreference === f.id 
-                            ? 'bg-emerald-500 text-white' 
-                            : 'bg-white/10 text-white/70 hover:bg-white/20'
-                        }`}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
                   </div>
                 </div>
+              </div>
+              
+              {/* Operations Summary - Combined Energy Cost - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10">
+                <h4 className="text-2xl font-black text-white mb-4 flex items-center gap-3">
+                  <div className="p-2 bg-cyan-500/20 rounded-xl">
+                    <DollarSign className="w-7 h-7 text-cyan-400" />
+                  </div>
+                  Your Current Energy Costs
+                </h4>
+                <div className="text-center mb-5">
+                  <p className="text-6xl font-black text-white">
+                    ${(calculatedPower.demandCharges + calculatedPower.energyCharges).toLocaleString()}
+                  </p>
+                  <p className="text-lg text-gray-300 mt-2">Estimated Monthly Electric Bill</p>
+                </div>
+                <div className="grid grid-cols-2 gap-5 text-center border-t-2 border-gray-700 pt-5">
+                  <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-xl p-4 border border-purple-500/30">
+                    <p className="text-3xl font-black text-purple-400">${calculatedPower.demandCharges.toLocaleString()}</p>
+                    <p className="text-base text-gray-300 font-medium">Demand Charges ({Math.round(calculatedPower.demandCharges / (calculatedPower.demandCharges + calculatedPower.energyCharges) * 100) || 0}%)</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/20 rounded-xl p-4 border border-emerald-500/30">
+                    <p className="text-3xl font-black text-emerald-400">${calculatedPower.energyCharges.toLocaleString()}</p>
+                    <p className="text-base text-gray-300 font-medium">Energy Charges ({Math.round(calculatedPower.energyCharges / (calculatedPower.demandCharges + calculatedPower.energyCharges) * 100) || 0}%)</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400 mt-4 text-center">
+                  Based on {calculatedPower.monthlyKWh.toLocaleString()} kWh/month × {STATE_RATES[selectedState]?.rate || 0.13}/kWh + {calculatedPower.peakDemandKW} kW × ${STATE_RATES[selectedState]?.demandCharge || 15}/kW
+                </p>
+              </div>
+              
+              {/* Solar Options (if selected in Step 0) - HIGH CONTRAST */}
+              {(selectedEnergyGoal === 'solar-bess' || selectedEnergyGoal === 'hybrid-generator') && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-amber-500/40 shadow-xl shadow-amber-500/10">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-amber-500/20 rounded-xl">
+                      <Sun className="w-7 h-7 text-amber-400" />
+                    </div>
+                    <h4 className="text-2xl font-black text-amber-300">Solar Configuration</h4>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-5">
+                    <label className="block text-base font-bold text-gray-300 mb-3">Available Roof/Carport Area for Solar</label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={50000}
+                      step={500}
+                      value={energyGoals.solarRoofArea}
+                      onChange={(e) => setEnergyGoals({...energyGoals, solarRoofArea: parseInt(e.target.value)})}
+                      className="w-full accent-amber-500 h-3"
+                    />
+                    <div className="flex justify-between mt-4">
+                      <span className="text-2xl font-black text-white">{energyGoals.solarRoofArea.toLocaleString()} <span className="text-lg text-gray-400">sq ft</span></span>
+                      <span className="text-2xl font-black text-amber-400">~{Math.round(energyGoals.solarRoofArea * 0.015)} <span className="text-lg text-gray-400">kW solar</span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Generator Options (if selected in Step 0) - HIGH CONTRAST */}
+              {selectedEnergyGoal === 'hybrid-generator' && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-orange-500/40 shadow-xl shadow-orange-500/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-orange-500/20 rounded-xl">
+                      <Zap className="w-7 h-7 text-orange-400" />
+                    </div>
+                    <h4 className="text-2xl font-black text-orange-300">Generator Configuration</h4>
+                    <span className="text-sm bg-orange-500/30 px-3 py-1 rounded-full text-orange-200 font-bold">Mainspring Linear Generator</span>
+                  </div>
+                  <p className="text-base text-gray-300 mb-5">
+                    Natural gas generator for extended backup and peak shaving. Auto-sized based on your peak demand.
+                  </p>
+                  <div className="bg-gray-800/50 rounded-xl p-5">
+                    <label className="block text-base font-bold text-gray-300 mb-3">
+                      Generator Size: <span className="text-orange-400 font-black text-2xl">{energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)} kW</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={Math.max(25, Math.round(calculatedPower.peakDemandKW * 0.5))}
+                      max={Math.max(100, Math.round(calculatedPower.peakDemandKW * 1.2))}
+                      step={10}
+                      value={energyGoals.generatorSizeKW || Math.round(calculatedPower.peakDemandKW * 0.8)}
+                      onChange={(e) => setEnergyGoals({...energyGoals, includeGenerator: true, generatorSizeKW: parseInt(e.target.value)})}
+                      className="w-full accent-orange-500 h-3"
+                    />
+                    <p className="text-sm text-gray-400 mt-3">
+                      Recommended: 80% of peak demand ({Math.round(calculatedPower.peakDemandKW * 0.8)} kW)
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Financing Preference - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <h4 className="text-2xl font-black text-white mb-5 flex items-center gap-3">
+                  <div className="p-2 bg-emerald-500/20 rounded-xl">
+                    <DollarSign className="w-7 h-7 text-emerald-400" />
+                  </div>
+                  Financing Preference
+                </h4>
+                <div className="grid grid-cols-4 gap-4">
+                  {[
+                    { id: 'cash', label: 'Cash', desc: 'Full purchase' },
+                    { id: 'loan', label: 'Loan', desc: '7yr @ 7% APR' },
+                    { id: 'ppa', label: 'PPA', desc: '$0.08/kWh' },
+                    { id: 'lease', label: 'Lease', desc: '10yr term' },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setEnergyGoals({...energyGoals, financingPreference: f.id as any})}
+                      className={`p-5 rounded-2xl text-center transition-all transform hover:scale-[1.02] ${
+                        energyGoals.financingPreference === f.id 
+                          ? 'bg-gradient-to-br from-emerald-900/40 to-teal-900/40 border-3 border-emerald-400 ring-4 ring-emerald-400/30' 
+                          : 'bg-gray-800/50 border-2 border-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      <p className="text-lg font-black text-white">{f.label}</p>
+                      <p className="text-sm text-gray-400 font-medium">{f.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Generate Quote Button */}
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => {
+                    generateQuote();
+                    setCurrentStep(4);
+                  }}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-500 hover:via-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-cyan-500/30 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Generate Your Quote
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               </div>
             </div>
           )}
@@ -2717,6 +3365,24 @@ export default function CarWashWizard({
           {/* Step 4: Review Quote */}
           {currentStep === 4 && (
             <div className="space-y-6">
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={CAR_WASH_STEP_HELP['review']} 
+                colorScheme="emerald"
+              />
+              
+              {/* Recalculate Button - Always visible */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => generateQuote()}
+                  disabled={isCalculating}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 rounded-lg text-purple-300 text-sm transition-all disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {isCalculating ? 'Recalculating...' : 'Recalculate Quote'}
+                </button>
+              </div>
+              
               {isCalculating ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mb-4" />
@@ -2737,6 +3403,272 @@ export default function CarWashWizard({
                       ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}
                     </p>
                     <p className="text-cyan-200/70 mt-2">per year</p>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      QUOTE NAMEPLATE - Professional Header
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-5 border border-white/20 shadow-lg">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-xs text-cyan-400 uppercase tracking-widest font-bold">Merlin BESS Quote</p>
+                        <h3 className="text-xl font-bold text-white mt-1">
+                          {brandSubmission.brandName || CAR_WASH_BRANDS[selectedBrand]?.name || 'Car Wash'} Energy Storage Project
+                        </h3>
+                        <p className="text-sm text-cyan-200/70 mt-1">
+                          {selectedState}{zipCode ? `, ${zipCode}` : ''} • {WASH_TYPES[washType]?.name || 'Automated Tunnel'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-cyan-200/50">Quote Date</p>
+                        <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
+                        <p className="text-xs text-cyan-200/50 mt-2">Quote ID</p>
+                        <p className="text-cyan-400 font-mono text-sm">CW-{Math.random().toString(36).substr(2, 8).toUpperCase()}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Nameplate Key Specs */}
+                    <div className="grid grid-cols-4 gap-3 border-t border-white/10 pt-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-cyan-400">
+                          {Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100)} kW
+                        </p>
+                        <p className="text-xs text-white/60">BESS Power</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-purple-400">
+                          {quoteResult.equipment.batteries.unitEnergyMWh >= 1 
+                            ? `${quoteResult.equipment.batteries.unitEnergyMWh.toFixed(1)} MWh` 
+                            : `${Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000)} kWh`}
+                        </p>
+                        <p className="text-xs text-white/60">Storage</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-amber-400">
+                          {energyGoals.interestInSolar ? `${Math.round(energyGoals.solarRoofArea * 0.015)} kW` : '—'}
+                        </p>
+                        <p className="text-xs text-white/60">Solar</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-emerald-400">
+                          {quoteResult.financials.paybackYears.toFixed(1)} yr
+                        </p>
+                        <p className="text-xs text-white/60">Payback</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      SAVINGS BREAKDOWN - Line Items (HIGH CONTRAST)
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl">
+                        <TrendingDown className="w-7 h-7 text-emerald-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Savings Breakdown</h4>
+                    </div>
+                    
+                    {/* Savings Sources - LARGER AND BOLDER */}
+                    <div className="space-y-5 mb-6">
+                      {/* Demand Charge Reduction */}
+                      <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/20 rounded-xl p-4 border border-purple-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
+                            <span className="text-lg font-bold text-white">Demand Charge Reduction</span>
+                          </div>
+                          <span className="text-2xl font-black text-purple-400">
+                            ${Math.round(quoteResult.financials.annualSavings * 0.55).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-purple-600 to-purple-400 h-4 rounded-full shadow-lg shadow-purple-500/30" style={{ width: '55%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~55% of total • Peak shaving during {operations.peakHoursStart > 12 ? operations.peakHoursStart - 12 : operations.peakHoursStart}{operations.peakHoursStart >= 12 ? 'PM' : 'AM'}-{operations.peakHoursEnd > 12 ? operations.peakHoursEnd - 12 : operations.peakHoursEnd}PM</p>
+                      </div>
+                      
+                      {/* Energy Arbitrage */}
+                      <div className="bg-gradient-to-r from-cyan-900/30 to-cyan-800/20 rounded-xl p-4 border border-cyan-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-cyan-500 rounded-full shadow-lg shadow-cyan-500/50"></div>
+                            <span className="text-lg font-bold text-white">Energy Arbitrage (TOU)</span>
+                          </div>
+                          <span className="text-2xl font-black text-cyan-400">
+                            ${Math.round(quoteResult.financials.annualSavings * 0.25).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-4 rounded-full shadow-lg shadow-cyan-500/30" style={{ width: '25%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~25% of total • Charge off-peak, discharge on-peak</p>
+                      </div>
+                      
+                      {/* Solar Savings (if applicable) */}
+                      {energyGoals.interestInSolar && (
+                        <div className="bg-gradient-to-r from-amber-900/30 to-orange-800/20 rounded-xl p-4 border border-amber-500/30">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-4 h-4 bg-amber-500 rounded-full shadow-lg shadow-amber-500/50"></div>
+                              <span className="text-lg font-bold text-white">Solar Generation Offset</span>
+                            </div>
+                            <span className="text-2xl font-black text-amber-400">
+                              ${Math.round(quoteResult.financials.annualSavings * 0.15).toLocaleString()}/yr
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                            <div className="bg-gradient-to-r from-amber-600 to-amber-400 h-4 rounded-full shadow-lg shadow-amber-500/30" style={{ width: '15%' }}></div>
+                          </div>
+                          <p className="text-sm text-gray-400 mt-2 font-medium">~15% of total • {Math.round(energyGoals.solarRoofArea * 0.015 * 1500)} kWh/yr estimated</p>
+                        </div>
+                      )}
+                      
+                      {/* Avoided Demand Spikes */}
+                      <div className="bg-gradient-to-r from-emerald-900/30 to-green-800/20 rounded-xl p-4 border border-emerald-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/50"></div>
+                            <span className="text-lg font-bold text-white">Avoided Demand Spikes</span>
+                          </div>
+                          <span className="text-2xl font-black text-emerald-400">
+                            ${Math.round(quoteResult.financials.annualSavings * (energyGoals.interestInSolar ? 0.05 : 0.20)).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-4 rounded-full shadow-lg shadow-emerald-500/30" style={{ width: energyGoals.interestInSolar ? '5%' : '20%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~{energyGoals.interestInSolar ? '5' : '20'}% of total • Smoothing inrush current spikes</p>
+                      </div>
+                    </div>
+                    
+                    {/* Total Savings Summary - PROMINENT */}
+                    <div className="bg-gradient-to-r from-emerald-800/40 to-green-700/30 rounded-xl p-5 border-2 border-emerald-400/50 flex justify-between items-center">
+                      <span className="text-xl font-black text-white">Total Annual Savings</span>
+                      <span className="text-4xl font-black text-emerald-400">
+                        ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}/yr
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      ROI & PAYBACK VISUALIZATION - HIGH CONTRAST
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-blue-500/20 rounded-xl">
+                        <BarChart3 className="w-7 h-7 text-blue-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Return on Investment</h4>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-3 gap-5 mb-5">
+                      {/* Payback Period */}
+                      <div className="bg-gradient-to-br from-emerald-900/30 to-green-800/20 rounded-xl p-5 text-center border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10">
+                        <p className="text-5xl font-black text-emerald-400">{quoteResult.financials.paybackYears.toFixed(1)}</p>
+                        <p className="text-base font-bold text-white mt-2">Years to Payback</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">After 30% ITC</p>
+                      </div>
+                      
+                      {/* 10-Year ROI */}
+                      <div className="bg-gradient-to-br from-blue-900/30 to-cyan-800/20 rounded-xl p-5 text-center border-2 border-blue-500/40 shadow-lg shadow-blue-500/10">
+                        <p className="text-5xl font-black text-blue-400">{Math.round(quoteResult.financials.roi10Year)}%</p>
+                        <p className="text-base font-bold text-white mt-2">10-Year ROI</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">${Math.round(quoteResult.financials.annualSavings * 10).toLocaleString()} total</p>
+                      </div>
+                      
+                      {/* 25-Year ROI */}
+                      <div className="bg-gradient-to-br from-purple-900/30 to-fuchsia-800/20 rounded-xl p-5 text-center border-2 border-purple-500/40 shadow-lg shadow-purple-500/10">
+                        <p className="text-5xl font-black text-purple-400">{Math.round(quoteResult.financials.roi25Year)}%</p>
+                        <p className="text-base font-bold text-white mt-2">25-Year ROI</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">${Math.round(quoteResult.financials.annualSavings * 25).toLocaleString()} total</p>
+                      </div>
+                    </div>
+                    
+                    {/* Payback Timeline Visual */}
+                    <div className="bg-gray-800/50 rounded-xl p-5">
+                      <p className="text-base font-bold text-gray-300 mb-3">Investment Recovery Timeline</p>
+                      <div className="relative h-10 bg-gray-700 rounded-full overflow-hidden">
+                        {/* Payback marker */}
+                        <div 
+                          className="absolute top-0 h-full bg-gradient-to-r from-red-500 to-emerald-500 opacity-80"
+                          style={{ width: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                        {/* Break-even line */}
+                        <div 
+                          className="absolute top-0 h-full w-1 bg-white z-10"
+                          style={{ left: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                        {/* Profit zone */}
+                        <div 
+                          className="absolute top-0 right-0 h-full bg-emerald-500/30"
+                          style={{ left: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-cyan-200/60 mt-1">
+                        <span>Year 0</span>
+                        <span className="text-emerald-400 font-bold">← Break-even: Year {quoteResult.financials.paybackYears.toFixed(1)}</span>
+                        <span>Year 10</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      ENVIRONMENTAL IMPACT - HIGH CONTRAST
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-green-500/40 shadow-xl shadow-green-500/10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-green-500/20 rounded-xl">
+                        <Leaf className="w-7 h-7 text-green-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Environmental Impact</h4>
+                      <span className="text-sm bg-green-500/30 px-3 py-1 rounded-full text-green-200 font-bold">Annual</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                      {/* CO2 Avoided */}
+                      <div className="bg-gradient-to-br from-green-900/30 to-emerald-800/20 rounded-xl p-4 text-center border-2 border-green-500/30 shadow-lg shadow-green-500/10">
+                        <p className="text-4xl font-black text-green-400">
+                          {Math.round((quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365 * 0.5) / 1000 * 0.417)}
+                        </p>
+                        <p className="text-sm text-white font-bold mt-2">Metric Tons CO₂</p>
+                        <p className="text-xs text-gray-400">Avoided annually</p>
+                      </div>
+                      
+                      {/* Trees Equivalent */}
+                      <div className="bg-gradient-to-br from-emerald-900/30 to-teal-800/20 rounded-xl p-4 text-center border-2 border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                        <p className="text-4xl font-black text-emerald-400">
+                          {Math.round((quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365 * 0.5) / 1000 * 0.417 * 24)}
+                        </p>
+                        <p className="text-sm text-white font-bold mt-2">Trees Planted</p>
+                        <p className="text-xs text-gray-400">Equivalent/year</p>
+                      </div>
+                      
+                      {/* Miles Not Driven */}
+                      <div className="bg-gradient-to-br from-cyan-900/30 to-blue-800/20 rounded-xl p-4 text-center border-2 border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                        <p className="text-4xl font-black text-cyan-400">
+                          {Math.round((quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365 * 0.5) / 1000 * 0.417 * 2481).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-white font-bold mt-2">Miles Not Driven</p>
+                        <p className="text-xs text-gray-400">Gas car equivalent</p>
+                      </div>
+                      
+                      {/* Homes Powered */}
+                      <div className="bg-gradient-to-br from-amber-900/30 to-orange-800/20 rounded-xl p-4 text-center border-2 border-amber-500/30 shadow-lg shadow-amber-500/10">
+                        <p className="text-4xl font-black text-amber-400">
+                          {Math.round((quoteResult.equipment.batteries.unitEnergyMWh * 1000 * 365 * 0.5) / 10000 * 10) / 10}
+                        </p>
+                        <p className="text-sm text-white font-bold mt-2">Homes Powered</p>
+                        <p className="text-xs text-gray-400">For a year (equiv.)</p>
+                      </div>
+                    </div>
+                    
+                    {/* ESG Callout */}
+                    <div className="mt-5 bg-gradient-to-r from-green-800/30 to-emerald-700/20 rounded-xl p-4 border-2 border-green-400/30">
+                      <p className="text-base text-green-200">
+                        🌱 <span className="font-black">ESG Impact:</span> This BESS installation supports sustainability goals and can contribute to LEED certification, corporate carbon neutrality commitments, and green marketing initiatives.
+                      </p>
+                    </div>
                   </div>
                   
                   {/* Key Metrics Dashboard */}
@@ -2769,199 +3701,209 @@ export default function CarWashWizard({
                   </div>
                   
                   {/* ═══════════════════════════════════════════════════════════════
-                      EQUIPMENT BREAKDOWN - DETAILED
+                      EQUIPMENT BREAKDOWN - DETAILED - HIGH CONTRAST
                       ═══════════════════════════════════════════════════════════════ */}
                   
                   {/* Battery Energy Storage System */}
-                  <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-400/30">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Battery className="w-5 h-5 text-purple-400" />
-                      <h4 className="font-bold text-white">Battery Energy Storage System (BESS)</h4>
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2 bg-purple-500/20 rounded-xl">
+                        <Battery className="w-7 h-7 text-purple-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Battery Energy Storage System (BESS)</h4>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Power Rating:</span>
-                          <span className="text-white font-medium">{Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100)} kW</span>
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Power Rating:</span>
+                          <span className="text-xl font-black text-purple-400">{Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100)} kW</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Energy Capacity:</span>
-                          <span className="text-white font-medium">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Energy Capacity:</span>
+                          <span className="text-xl font-black text-cyan-400">
                             {quoteResult.equipment.batteries.unitEnergyMWh >= 1 
                               ? `${quoteResult.equipment.batteries.unitEnergyMWh.toFixed(2)} MWh` 
                               : `${Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000)} kWh`}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Runtime at Peak:</span>
-                          <span className="text-white font-medium">{(operations.peakHoursEnd - operations.peakHoursStart).toFixed(0)} hours</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Runtime at Peak:</span>
+                          <span className="text-lg font-bold text-white">{(operations.peakHoursEnd - operations.peakHoursStart).toFixed(0)} hours</span>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Battery Type:</span>
-                          <span className="text-white font-medium">{quoteResult.equipment.batteries.model}</span>
+                      <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Battery Type:</span>
+                          <span className="text-lg font-bold text-white">{quoteResult.equipment.batteries.model}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Manufacturer:</span>
-                          <span className="text-white font-medium">{quoteResult.equipment.batteries.manufacturer}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Manufacturer:</span>
+                          <span className="text-lg font-bold text-white">{quoteResult.equipment.batteries.manufacturer}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-cyan-200/70">Battery Cost:</span>
-                          <span className="text-purple-400 font-bold">${Math.round(quoteResult.equipment.batteries.totalCost).toLocaleString()}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Battery Cost:</span>
+                          <span className="text-2xl font-black text-purple-400">${Math.round(quoteResult.equipment.batteries.totalCost).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-white/10 text-xs text-cyan-200/50">
-                      Pricing: ${quoteResult.equipment.batteries.pricePerKWh}/kWh • Source: {quoteResult.equipment.batteries.marketIntelligence?.dataSource || 'NREL ATB 2024'}
+                    <div className="mt-5 pt-4 border-t-2 border-gray-700 text-sm text-gray-400">
+                      <span className="font-bold text-purple-400">${quoteResult.equipment.batteries.pricePerKWh}/kWh</span> • Source: {quoteResult.equipment.batteries.marketIntelligence?.dataSource || 'NREL ATB 2024'}
                     </div>
                   </div>
 
-                  {/* Solar (if requested) */}
+                  {/* Solar (if requested) - HIGH CONTRAST */}
                   {quoteResult.equipment.solar && (
-                    <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 rounded-xl p-4 border border-amber-400/30">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Sun className="w-5 h-5 text-amber-400" />
-                        <h4 className="font-bold text-white">Solar Power System</h4>
+                    <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-amber-500/40 shadow-xl shadow-amber-500/10">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-amber-500/20 rounded-xl">
+                          <Sun className="w-7 h-7 text-amber-400" />
+                        </div>
+                        <h4 className="text-xl font-black text-white">Solar Power System</h4>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">System Size:</span>
-                            <span className="text-white font-medium">
+                      <div className="grid md:grid-cols-2 gap-5">
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">System Size:</span>
+                            <span className="text-xl font-black text-amber-400">
                               {quoteResult.equipment.solar.totalMW >= 1 
                                 ? `${quoteResult.equipment.solar.totalMW.toFixed(2)} MW` 
                                 : `${Math.round(quoteResult.equipment.solar.totalMW * 1000)} kW`}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Solar Panels:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.solar.panelQuantity.toLocaleString()} panels</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Solar Panels:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.solar.panelQuantity.toLocaleString()} panels</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Est. Annual Generation:</span>
-                            <span className="text-white font-medium">{Math.round(quoteResult.equipment.solar.totalMW * 1500).toLocaleString()} MWh/yr</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Est. Annual Generation:</span>
+                            <span className="text-lg font-bold text-yellow-400">{Math.round(quoteResult.equipment.solar.totalMW * 1500).toLocaleString()} MWh/yr</span>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Roof Space Needed:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.solar.spaceRequirements.rooftopAreaSqFt.toLocaleString()} sq ft</span>
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Roof Space Needed:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.solar.spaceRequirements.rooftopAreaSqFt.toLocaleString()} sq ft</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Price Category:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.solar.priceCategory}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Price Category:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.solar.priceCategory}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Solar Cost:</span>
-                            <span className="text-amber-400 font-bold">${Math.round(quoteResult.equipment.solar.totalCost).toLocaleString()}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Solar Cost:</span>
+                            <span className="text-2xl font-black text-amber-400">${Math.round(quoteResult.equipment.solar.totalCost).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-white/10 text-xs text-cyan-200/50">
-                        ${quoteResult.equipment.solar.costPerWatt.toFixed(2)}/W installed • Includes panels, inverters & racking
+                      <div className="mt-5 pt-4 border-t-2 border-gray-700 text-sm text-gray-400">
+                        <span className="font-bold text-amber-400">${quoteResult.equipment.solar.costPerWatt.toFixed(2)}/W</span> installed • Includes panels, inverters & racking
                       </div>
                     </div>
                   )}
 
-                  {/* Generator (if off-grid or requested) */}
+                  {/* Generator (if off-grid or requested) - HIGH CONTRAST */}
                   {quoteResult.equipment.generators && (
-                    <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-xl p-4 border border-red-400/30">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Zap className="w-5 h-5 text-red-400" />
-                        <h4 className="font-bold text-white">Backup Generator System</h4>
+                    <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-orange-500/40 shadow-xl shadow-orange-500/10">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-orange-500/20 rounded-xl">
+                          <Zap className="w-7 h-7 text-orange-400" />
+                        </div>
+                        <h4 className="text-xl font-black text-white">Backup Generator System</h4>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Generator Power:</span>
-                            <span className="text-white font-medium">{(quoteResult.equipment.generators.unitPowerMW * quoteResult.equipment.generators.quantity * 1000).toFixed(0)} kW</span>
+                      <div className="grid md:grid-cols-2 gap-5">
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Generator Power:</span>
+                            <span className="text-xl font-black text-orange-400">{(quoteResult.equipment.generators.unitPowerMW * quoteResult.equipment.generators.quantity * 1000).toFixed(0)} kW</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Units:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.generators.quantity}x {quoteResult.equipment.generators.unitPowerMW} MW</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Units:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.generators.quantity}x {quoteResult.equipment.generators.unitPowerMW} MW</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Fuel Type:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.generators.fuelType}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Fuel Type:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.generators.fuelType}</span>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Runtime:</span>
-                            <span className="text-white font-medium">24+ hours (with fuel)</span>
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Runtime:</span>
+                            <span className="text-lg font-bold text-white">24+ hours (with fuel)</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Manufacturer:</span>
-                            <span className="text-white font-medium">{quoteResult.equipment.generators.manufacturer}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Manufacturer:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.generators.manufacturer}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-cyan-200/70">Generator Cost:</span>
-                            <span className="text-red-400 font-bold">${Math.round(quoteResult.equipment.generators.totalCost).toLocaleString()}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Generator Cost:</span>
+                            <span className="text-2xl font-black text-orange-400">${Math.round(quoteResult.equipment.generators.totalCost).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-white/10 text-xs text-cyan-200/50">
-                        ${quoteResult.equipment.generators.costPerKW}/kW • Includes automatic transfer switch (ATS)
+                      <div className="mt-5 pt-4 border-t-2 border-gray-700 text-sm text-gray-400">
+                        <span className="font-bold text-orange-400">${quoteResult.equipment.generators.costPerKW}/kW</span> • Includes automatic transfer switch (ATS)
                       </div>
                     </div>
                   )}
 
-                  {/* Power Electronics */}
-                  <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl p-4 border border-blue-400/30">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Gauge className="w-5 h-5 text-blue-400" />
-                      <h4 className="font-bold text-white">Power Electronics & Switchgear</h4>
+                  {/* Power Electronics - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2 bg-blue-500/20 rounded-xl">
+                        <Gauge className="w-7 h-7 text-blue-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Power Electronics & Switchgear</h4>
                     </div>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-4">
                       {/* Inverters */}
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-blue-300 font-medium">Bi-Directional Inverter</span>
-                          <span className="text-white font-bold">${Math.round(quoteResult.equipment.inverters.totalCost).toLocaleString()}</span>
+                      <div className="bg-gradient-to-br from-blue-900/30 to-indigo-800/20 rounded-xl p-4 border border-blue-500/30">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-lg font-bold text-blue-300">Bi-Directional Inverter</span>
+                          <span className="text-2xl font-black text-blue-400">${Math.round(quoteResult.equipment.inverters.totalCost).toLocaleString()}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-cyan-200/70">
-                          <span>{quoteResult.equipment.inverters.quantity}x {quoteResult.equipment.inverters.unitPowerMW} MW units</span>
-                          <span className="text-right">{quoteResult.equipment.inverters.manufacturer} {quoteResult.equipment.inverters.model}</span>
+                        <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                          <span className="font-medium">{quoteResult.equipment.inverters.quantity}x {quoteResult.equipment.inverters.unitPowerMW} MW units</span>
+                          <span className="text-right font-medium">{quoteResult.equipment.inverters.manufacturer} {quoteResult.equipment.inverters.model}</span>
                         </div>
                       </div>
                       
                       {/* Transformer */}
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-blue-300 font-medium">Step-Up Transformer</span>
-                          <span className="text-white font-bold">${Math.round(quoteResult.equipment.transformers.totalCost).toLocaleString()}</span>
+                      <div className="bg-gradient-to-br from-indigo-900/30 to-purple-800/20 rounded-xl p-4 border border-indigo-500/30">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-lg font-bold text-indigo-300">Step-Up Transformer</span>
+                          <span className="text-2xl font-black text-indigo-400">${Math.round(quoteResult.equipment.transformers.totalCost).toLocaleString()}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-cyan-200/70">
-                          <span>{quoteResult.equipment.transformers.quantity}x {quoteResult.equipment.transformers.unitPowerMVA} MVA</span>
-                          <span className="text-right">{quoteResult.equipment.transformers.voltage}</span>
+                        <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                          <span className="font-medium">{quoteResult.equipment.transformers.quantity}x {quoteResult.equipment.transformers.unitPowerMVA} MVA</span>
+                          <span className="text-right font-medium">{quoteResult.equipment.transformers.voltage}</span>
                         </div>
                       </div>
                       
                       {/* Switchgear */}
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-blue-300 font-medium">Medium Voltage Switchgear</span>
-                          <span className="text-white font-bold">${Math.round(quoteResult.equipment.switchgear.totalCost).toLocaleString()}</span>
+                      <div className="bg-gradient-to-br from-purple-900/30 to-pink-800/20 rounded-xl p-4 border border-purple-500/30">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-lg font-bold text-purple-300">Medium Voltage Switchgear</span>
+                          <span className="text-2xl font-black text-purple-400">${Math.round(quoteResult.equipment.switchgear.totalCost).toLocaleString()}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-cyan-200/70">
-                          <span>{quoteResult.equipment.switchgear.quantity}x {quoteResult.equipment.switchgear.type}</span>
-                          <span className="text-right">{quoteResult.equipment.switchgear.voltage} rated</span>
+                        <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                          <span className="font-medium">{quoteResult.equipment.switchgear.quantity}x {quoteResult.equipment.switchgear.type}</span>
+                          <span className="text-right font-medium">{quoteResult.equipment.switchgear.voltage} rated</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Installation & Turnkey Costs */}
-                  <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 rounded-xl p-4 border border-emerald-400/30">
-                    <div className="flex items-center gap-2 mb-4">
-                      <CheckCircle className="w-5 h-5 text-emerald-400" />
-                      <h4 className="font-bold text-white">Turnkey Installation Package</h4>
+                  {/* Installation & Turnkey Costs - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl">
+                        <CheckCircle className="w-7 h-7 text-emerald-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Turnkey Installation Package</h4>
                     </div>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-cyan-200/70">Balance of System (BOS)</span>
-                        <span className="text-white font-medium">${Math.round(quoteResult.equipment.installation.bos).toLocaleString()}</span>
+                    <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                      <div className="flex justify-between items-center py-3 border-b-2 border-gray-700">
+                        <span className="text-gray-300 font-medium">Balance of System (BOS)</span>
+                        <span className="text-xl font-bold text-white">${Math.round(quoteResult.equipment.installation.bos).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-white/10">
                         <span className="text-cyan-200/70">EPC (Engineering, Procurement, Construction)</span>
@@ -2981,76 +3923,92 @@ export default function CarWashWizard({
                     </div>
                   </div>
 
-                  {/* Cost Summary */}
-                  <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border border-white/20">
-                    <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-emerald-400" />
-                      Investment Summary
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-cyan-200/70">Total Equipment Cost</span>
-                        <span className="text-white font-medium">${Math.round(quoteResult.costs.equipmentCost).toLocaleString()}</span>
+                  {/* Cost Summary - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-3 bg-emerald-500/20 rounded-xl">
+                        <DollarSign className="w-7 h-7 text-emerald-400" />
                       </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-cyan-200/70">Total Installation Cost</span>
-                        <span className="text-white font-medium">${Math.round(quoteResult.costs.installationCost).toLocaleString()}</span>
+                      <h4 className="text-xl font-black text-white">Investment Summary</h4>
+                    </div>
+                    <div className="space-y-3 bg-gray-800/50 rounded-xl p-4">
+                      <div className="flex justify-between py-3 border-b-2 border-gray-700">
+                        <span className="text-gray-300 font-medium">Total Equipment Cost</span>
+                        <span className="text-xl font-bold text-white">${Math.round(quoteResult.costs.equipmentCost).toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-white/10 text-lg">
-                        <span className="text-white font-medium">Total Project Cost</span>
-                        <span className="text-white font-bold">${Math.round(quoteResult.costs.totalProjectCost).toLocaleString()}</span>
+                      <div className="flex justify-between py-3 border-b-2 border-gray-700">
+                        <span className="text-gray-300 font-medium">Total Installation Cost</span>
+                        <span className="text-xl font-bold text-white">${Math.round(quoteResult.costs.installationCost).toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-emerald-300">Federal Tax Credit (30% ITC)</span>
-                        <span className="text-emerald-400 font-bold">-${Math.round(quoteResult.costs.taxCredit).toLocaleString()}</span>
+                      <div className="flex justify-between py-3 border-b-2 border-gray-700">
+                        <span className="text-white font-bold text-lg">Total Project Cost</span>
+                        <span className="text-2xl font-black text-white">${Math.round(quoteResult.costs.totalProjectCost).toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between py-3 text-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-lg px-3 -mx-1">
-                        <span className="text-emerald-300 font-bold">Net Cost After Incentives</span>
-                        <span className="text-emerald-400 font-black">${Math.round(quoteResult.costs.netCost).toLocaleString()}</span>
+                      <div className="flex justify-between py-3 border-b-2 border-gray-700">
+                        <span className="text-emerald-300 font-medium">Federal Tax Credit (30% ITC)</span>
+                        <span className="text-xl font-bold text-emerald-400">-${Math.round(quoteResult.costs.taxCredit).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between py-4 bg-gradient-to-r from-emerald-600/30 to-cyan-600/30 rounded-xl px-4 -mx-1 border-2 border-emerald-500/50">
+                        <span className="text-emerald-200 font-bold text-lg">Net Cost After Incentives</span>
+                        <span className="text-3xl font-black text-emerald-400">${Math.round(quoteResult.costs.netCost).toLocaleString()}</span>
                       </div>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <p className="text-xs text-cyan-200/50">Financing Option</p>
-                        <p className="text-white font-bold">{energyGoals.financingPreference.toUpperCase()}</p>
+                    <div className="mt-5 pt-4 border-t-2 border-gray-700 grid grid-cols-2 gap-4 text-center">
+                      <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                        <p className="text-sm text-gray-400 font-medium mb-1">Financing Option</p>
+                        <p className="text-xl font-black text-white">{energyGoals.financingPreference.toUpperCase()}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-cyan-200/50">Est. Monthly Payment</p>
-                        <p className="text-white font-bold">
-                          ${Math.round(quoteResult.costs.netCost / (energyGoals.financingPreference === 'cash' ? 1 : 84)).toLocaleString()}
-                          {energyGoals.financingPreference !== 'cash' && <span className="text-xs text-cyan-200/50">/mo (7yr)</span>}
+                      <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                        <p className="text-sm text-gray-400 font-medium mb-1">Est. Monthly Payment</p>
+                        <p className="text-xl font-black text-white">
+                          {energyGoals.financingPreference === 'cash' ? (
+                            'N/A'
+                          ) : energyGoals.financingPreference === 'loan' ? (
+                            // 7-year loan at 7% APR: PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
+                            `$${Math.round((quoteResult.costs.netCost * (0.07/12) * Math.pow(1 + 0.07/12, 84)) / (Math.pow(1 + 0.07/12, 84) - 1)).toLocaleString()}/mo`
+                          ) : energyGoals.financingPreference === 'ppa' ? (
+                            // PPA: $0.08/kWh estimated rate
+                            `$0.08/kWh`
+                          ) : (
+                            // Lease: 10-year term with 1% monthly factor
+                            `$${Math.round(quoteResult.costs.netCost * 0.01).toLocaleString()}/mo`
+                          )}
+                          {energyGoals.financingPreference === 'loan' && <span className="text-sm text-gray-400 font-medium"> (7yr @ 7%)</span>}
+                          {energyGoals.financingPreference === 'lease' && <span className="text-sm text-gray-400 font-medium"> (10yr lease)</span>}
                         </p>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Download Options */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <h4 className="font-bold text-white mb-3 flex items-center gap-2">
-                      <Download className="w-5 h-5 text-cyan-400" />
-                      Download Your Quote
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
+                  {/* Download Options - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-3 bg-cyan-500/20 rounded-xl">
+                        <Download className="w-7 h-7 text-cyan-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Download Your Quote</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
                       <button
                         onClick={downloadWord}
-                        className="flex flex-col items-center gap-2 bg-gradient-to-br from-blue-600/30 to-purple-600/30 hover:from-blue-500/40 hover:to-purple-500/40 border border-blue-400/40 text-white py-4 rounded-xl font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20"
+                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-blue-600/30 to-purple-600/30 hover:from-blue-500/50 hover:to-purple-500/50 border-2 border-blue-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30"
                       >
-                        <FileText className="w-8 h-8 text-blue-400" />
-                        <span className="text-sm">Word (.docx)</span>
+                        <FileText className="w-10 h-10 text-blue-400" />
+                        <span className="text-base font-bold">Word (.docx)</span>
                       </button>
                       <button
                         onClick={downloadExcel}
-                        className="flex flex-col items-center gap-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 text-white py-4 rounded-xl font-medium transition-all hover:scale-105"
+                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-emerald-600/30 to-green-600/30 hover:from-emerald-500/50 hover:to-green-500/50 border-2 border-emerald-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/30"
                       >
-                        <FileSpreadsheet className="w-8 h-8 text-emerald-400" />
-                        <span className="text-sm">Excel (.csv)</span>
+                        <FileSpreadsheet className="w-10 h-10 text-emerald-400" />
+                        <span className="text-base font-bold">Excel (.csv)</span>
                       </button>
                       <button
                         onClick={downloadPDF}
-                        className="flex flex-col items-center gap-2 bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 text-white py-4 rounded-xl font-medium transition-all hover:scale-105"
+                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-red-600/30 to-orange-600/30 hover:from-red-500/50 hover:to-orange-500/50 border-2 border-red-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-red-500/30"
                       >
-                        <File className="w-8 h-8 text-red-400" />
-                        <span className="text-sm">PDF (Print)</span>
+                        <File className="w-10 h-10 text-red-400" />
+                        <span className="text-base font-bold">PDF (Print)</span>
                       </button>
                     </div>
                   </div>
@@ -3151,7 +4109,7 @@ export default function CarWashWizard({
           )}
         </div>
         
-        {/* Footer Navigation */}
+        {/* Footer Navigation - Back only (Continue is inline in each step) */}
         <div className="border-t border-white/10 px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => currentStep === 0 ? onClose() : setCurrentStep(currentStep - 1)}
@@ -3161,18 +4119,14 @@ export default function CarWashWizard({
             {currentStep === 0 ? 'Cancel' : 'Back'}
           </button>
           
-          {currentStep < WIZARD_STEPS.length - 1 && (
-            <button
-              onClick={() => setCurrentStep(currentStep + 1)}
-              disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-500 hover:via-purple-500 hover:to-indigo-500 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-lg font-bold transition-all shadow-lg hover:shadow-purple-500/30"
-            >
-              Continue
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
+          {/* Step indicator */}
+          <span className="text-sm text-cyan-300/60">
+            Step {currentStep + 1} of {WIZARD_STEPS.length}
+          </span>
         </div>
       </div>
+      
+      {/* Power Gauge Widget - Moved to header area, rendered inline */}
     </div>
   );
 }

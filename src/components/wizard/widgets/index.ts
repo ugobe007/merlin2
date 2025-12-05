@@ -9,3 +9,6 @@ export type { PowerMeterProps } from './PowerMeterWidget';
 
 export { PowerStatusWidget } from './PowerStatusWidget';
 export type { PowerStatusProps } from './PowerStatusWidget';
+
+export { PowerGaugeWidget } from './PowerGaugeWidget';
+export type { PowerGaugeData } from './PowerGaugeWidget';

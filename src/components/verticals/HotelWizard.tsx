@@ -14,12 +14,16 @@ import {
   X, ArrowLeft, ArrowRight, Check, Zap, Battery, Sun, 
   Gauge, DollarSign, Calendar, Download, CheckCircle, AlertCircle, 
   Sparkles, TrendingDown, Phone, FileText, FileSpreadsheet, File, 
-  Building2, Waves, Coffee, Dumbbell, Car, Thermometer, Wind
+  Building2, Waves, Coffee, Dumbbell, Car, Thermometer, Wind, Users, Target,
+  MapPin, Settings
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
+import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
+import { WizardPowerProfile, WizardStepHelp, type StepHelpContent } from '@/components/wizard/shared';
+import { PowerGaugeWidget } from '@/components/wizard/widgets';
 
 // ============================================
 // TYPES
@@ -78,16 +82,107 @@ const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
 };
 
 // ============================================
+// CONCIERGE SERVICE TIERS
+// ============================================
+const CONCIERGE_TIERS = {
+  'standard': {
+    name: 'Standard',
+    description: 'Self-service with AI recommendations',
+    icon: '🤖',
+    features: [
+      'AI-powered equipment recommendations',
+      'Industry benchmarking data',
+      'Automated quote generation',
+      'Email support',
+    ],
+    price: 'Free',
+    badge: null as string | null,
+  },
+  'pro': {
+    name: 'Concierge Pro',
+    description: 'White-glove service for hotel groups & REITs',
+    icon: '👔',
+    features: [
+      'Dedicated energy analyst',
+      'Custom equipment recommendations',
+      'Site audit coordination',
+      'Multi-property portfolio management',
+      'Quarterly performance reviews',
+      'Priority phone support',
+      'Custom integrations',
+    ],
+    price: 'Contact Sales',
+    badge: 'Hotel Groups' as string | null,
+  },
+};
+
+// ============================================
 // WIZARD STEPS
 // ============================================
 
 const WIZARD_STEPS = [
-  { id: 'hotel-type', title: 'Hotel Type', icon: Building2 },
-  { id: 'amenities', title: 'Amenities', icon: Waves },
-  { id: 'operations', title: 'Operations', icon: Calendar },
-  { id: 'energy-goals', title: 'Energy Goals', icon: Zap },
-  { id: 'review', title: 'Your Quote', icon: DollarSign },
+  { id: 'who', title: 'Who Are You?', icon: Users },
+  { id: 'what', title: 'Your Hotel', icon: Building2 },
+  { id: 'how', title: 'Operations', icon: Settings },
+  { id: 'goals', title: 'Your Goals', icon: Target },
+  { id: 'quote', title: 'Your Quote', icon: DollarSign },
 ];
+
+// ============================================
+// STEP HELP CONTENT - Hotel Specific
+// ============================================
+
+const HOTEL_STEP_HELP: Record<string, StepHelpContent> = {
+  'who': {
+    stepId: 'who',
+    title: 'Tell Us About You',
+    description: 'Your role helps us customize the analysis for your specific decision-making needs.',
+    tips: [
+      { type: 'tip', text: 'Property owners see ROI analysis. Brand managers see portfolio-level insights.' },
+      { type: 'info', text: 'Location determines utility rates - this significantly affects savings.' },
+    ],
+  },
+  'what': {
+    stepId: 'what',
+    title: 'Your Hotel Profile',
+    description: 'Hotel class and size determine baseline energy consumption and peak demand.',
+    tips: [
+      { type: 'tip', text: 'Luxury hotels use 3x more energy per room than economy properties.' },
+      { type: 'info', text: 'Amenities like pools, spas, and restaurants significantly increase energy use.' },
+    ],
+  },
+  'how': {
+    stepId: 'how',
+    title: 'Operating Profile',
+    description: 'Occupancy patterns and seasonal variation help us size the battery optimally.',
+    tips: [
+      { type: 'tip', text: 'Hotels with high peak/off-peak variation benefit most from battery storage.' },
+      { type: 'info', text: 'Conference facilities can add 50-100 kW during events.' },
+    ],
+  },
+  'goals': {
+    stepId: 'goals',
+    title: 'Your Energy Goals',
+    description: 'What matters most? Cost savings, sustainability, or backup power for guests?',
+    tips: [
+      { type: 'tip', text: 'Demand charge reduction typically provides 30-50% of total savings.' },
+      { type: 'success', text: 'LEED and sustainability certifications attract eco-conscious travelers.' },
+    ],
+    links: [
+      { label: 'Hotel Energy Efficiency Guide', url: '/docs/hotel-energy' },
+      { label: 'ENERGY STAR for Hotels', url: 'https://www.energystar.gov/buildings/resources_audience/hospitality' },
+    ],
+  },
+  'quote': {
+    stepId: 'quote',
+    title: 'Your Custom Quote',
+    description: 'Review your hotel BESS quote with costs, savings projections, and environmental impact.',
+    tips: [
+      { type: 'success', text: '30% Federal ITC makes battery storage more affordable than ever.' },
+      { type: 'tip', text: 'Share this quote with your ownership group or brand energy team.' },
+    ],
+  },
+};
 
 // ============================================
 // MAIN COMPONENT
@@ -113,7 +208,16 @@ export default function HotelWizard({
   const [isCalculating, setIsCalculating] = useState(false);
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
   
-  // Step 1: Hotel Type
+  // Step 0: WHO ARE YOU?
+  const [userRole, setUserRole] = useState('owner');
+  
+  // Power Mode - reveals advanced options for power users
+  const [powerMode, setPowerMode] = useState(false);
+  
+  // Concierge - optional help, not a tier selection
+  const [showConciergeHelp, setShowConciergeHelp] = useState(false);
+  
+  // Step 1: YOUR HOTEL (Type, Size, Amenities)
   const [hotelDetails, setHotelDetails] = useState({
     numberOfRooms: mergedInputs.numberOfRooms,
     hotelClass: mergedInputs.hotelClass as keyof typeof HOTEL_CLASS_PROFILES,
@@ -122,7 +226,7 @@ export default function HotelWizard({
     hvacType: 'ptac' as 'ptac' | 'central' | 'vrf' | 'chiller',
   });
   
-  // Step 2: Amenities
+  // Step 1 continued: Amenities
   const [amenities, setAmenities] = useState({
     pool: true,
     restaurant: true,
@@ -133,7 +237,7 @@ export default function HotelWizard({
     conferenceCenter: false,
   });
   
-  // Step 3: Operations
+  // Step 2: OPERATIONS
   const [operations, setOperations] = useState({
     avgOccupancy: 70,
     peakHoursStart: 6, // 6 AM (morning + evening peaks)
@@ -143,7 +247,7 @@ export default function HotelWizard({
     generatorKW: 200,
   });
   
-  // Step 4: Energy Goals
+  // Step 3: YOUR GOALS
   const [energyGoals, setEnergyGoals] = useState({
     primaryGoal: 'cost-savings' as 'cost-savings' | 'backup-power' | 'sustainability' | 'all',
     targetSavingsPercent: 35,
@@ -468,9 +572,24 @@ export default function HotelWizard({
                 <p className="text-sm text-indigo-300/70">Step {currentStep + 1} of {WIZARD_STEPS.length}</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-white/70" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Power Mode Toggle */}
+              <button
+                onClick={() => setPowerMode(!powerMode)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  powerMode 
+                    ? 'bg-amber-500/30 border border-amber-400/50 text-amber-300' 
+                    : 'bg-white/10 border border-white/20 text-white/70 hover:border-amber-400/30 hover:text-amber-300'
+                }`}
+                title="Show advanced options"
+              >
+                <Zap className="w-4 h-4" />
+                <span className="hidden sm:inline">Power Mode</span>
+              </button>
+              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-white/70" />
+              </button>
+            </div>
           </div>
           
           {/* Progress Steps */}
@@ -502,32 +621,92 @@ export default function HotelWizard({
               );
             })}
           </div>
+          
+          {/* Power Profile - Shows real-time power metrics */}
+          {calculatedPower.totalPeakKW > 0 && (
+            <WizardPowerProfile
+              data={{
+                peakDemandKW: calculatedPower.totalPeakKW,
+                totalStorageKWh: calculatedPower.totalPeakKW * (energyGoals.targetSavingsPercent / 100) * 4,
+                durationHours: 4,
+                monthlyUsageKWh: calculatedPower.dailyKWh * 30,
+                solarKW: energyGoals.interestInSolar ? Math.round(energyGoals.roofArea * 0.015) : 0,
+              }}
+              compact={true}
+              colorScheme="purple"
+              className="mt-4"
+            />
+          )}
         </div>
         
         {/* Content */}
         <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
-          {/* Step 0: Hotel Type */}
+          {/* Step 0: WHO ARE YOU? - Simple and Clean */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Tell us about your hotel</h3>
-                <p className="text-indigo-200/70 text-sm">This helps calculate your energy profile.</p>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={HOTEL_STEP_HELP['who']} 
+                colorScheme="purple"
+              />
+
+              {/* User Role Selection */}
+              <div className="mb-6">
+                <h4 className="text-md font-bold text-white mb-3">I am a...</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { key: 'owner', icon: '🏨', name: 'Owner/Operator', desc: 'I own or manage a hotel' },
+                    { key: 'investor', icon: '💼', name: 'Investor / REIT', desc: 'Evaluating investments' },
+                    { key: 'developer', icon: '🏗️', name: 'Developer', desc: 'Planning new properties' },
+                    { key: 'explorer', icon: '🔍', name: 'Just Exploring', desc: 'Curious about the numbers' },
+                  ].map((role) => (
+                    <button
+                      key={role.key}
+                      onClick={() => setUserRole(role.key)}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        userRole === role.key 
+                          ? 'border-indigo-500 bg-indigo-500/20' 
+                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                      }`}
+                    >
+                      <span className="text-2xl">{role.icon}</span>
+                      <p className="font-bold text-white text-sm mt-1">{role.name}</p>
+                      <p className="text-xs text-indigo-200/60">{role.desc}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
               
-              {/* Number of Rooms */}
+              {/* Location Selection */}
               <div>
-                <label className="block text-sm text-indigo-200 mb-2">Number of Rooms</label>
-                <input
-                  type="range"
-                  min={25}
-                  max={500}
-                  step={25}
-                  value={hotelDetails.numberOfRooms}
-                  onChange={(e) => setHotelDetails({...hotelDetails, numberOfRooms: parseInt(e.target.value)})}
-                  className="w-full accent-indigo-500"
-                />
-                <p className="text-center text-white font-bold text-lg">{hotelDetails.numberOfRooms} rooms</p>
+                <label className="block text-sm text-indigo-200 mb-2">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  Hotel Location (State)
+                </label>
+                <select
+                  value={hotelDetails.state}
+                  onChange={(e) => setHotelDetails({...hotelDetails, state: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                >
+                  {Object.keys(STATE_RATES).map((state) => (
+                    <option key={state} value={state} className="bg-slate-800">{state}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-indigo-200/50 mt-2">
+                  💡 Electricity rate: ${STATE_RATES[hotelDetails.state as keyof typeof STATE_RATES]?.rate.toFixed(2)}/kWh • Demand charge: ${STATE_RATES[hotelDetails.state as keyof typeof STATE_RATES]?.demandCharge}/kW
+                </p>
               </div>
+            </div>
+          )}
+          
+          {/* Step 1: YOUR HOTEL (Type, Size, Amenities) */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={HOTEL_STEP_HELP['what']} 
+                colorScheme="purple"
+              />
               
               {/* Hotel Class */}
               <div>
@@ -550,18 +729,19 @@ export default function HotelWizard({
                 </div>
               </div>
               
-              {/* State */}
+              {/* Number of Rooms */}
               <div>
-                <label className="block text-sm text-indigo-200 mb-2">Location (State)</label>
-                <select
-                  value={hotelDetails.state}
-                  onChange={(e) => setHotelDetails({...hotelDetails, state: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                >
-                  {Object.keys(STATE_RATES).map((state) => (
-                    <option key={state} value={state} className="bg-slate-800">{state}</option>
-                  ))}
-                </select>
+                <label className="block text-sm text-indigo-200 mb-2">Number of Rooms</label>
+                <input
+                  type="range"
+                  min={25}
+                  max={500}
+                  step={25}
+                  value={hotelDetails.numberOfRooms}
+                  onChange={(e) => setHotelDetails({...hotelDetails, numberOfRooms: parseInt(e.target.value)})}
+                  className="w-full accent-indigo-500"
+                />
+                <p className="text-center text-white font-bold text-lg">{hotelDetails.numberOfRooms} rooms</p>
               </div>
               
               {/* Building Age */}
@@ -588,16 +768,6 @@ export default function HotelWizard({
                   ))}
                 </div>
               </div>
-            </div>
-          )}
-          
-          {/* Step 1: Amenities */}
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Select your amenities</h3>
-                <p className="text-indigo-200/70 text-sm">These significantly impact your energy profile.</p>
-              </div>
               
               {/* Power Summary */}
               <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-4 border border-indigo-400/30">
@@ -618,34 +788,37 @@ export default function HotelWizard({
               </div>
               
               {/* Amenity Selection */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {Object.entries(AMENITY_SPECS).map(([key, spec]) => {
-                  const Icon = spec.icon;
-                  const isEnabled = amenities[key as keyof typeof amenities];
-                  
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setAmenities({...amenities, [key]: !isEnabled})}
-                      className={`p-4 rounded-xl text-left transition-all flex items-center gap-4 ${
-                        isEnabled
-                          ? 'bg-indigo-500/30 border-2 border-indigo-400'
-                          : 'bg-white/5 border-2 border-transparent hover:border-white/20'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isEnabled ? 'bg-indigo-500' : 'bg-white/10'}`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-white">{spec.name}</p>
-                        <p className="text-xs text-indigo-200/60">+{spec.peakKW} kW peak</p>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isEnabled ? 'border-indigo-400 bg-indigo-500' : 'border-white/30'}`}>
-                        {isEnabled && <Check className="w-4 h-4 text-white" />}
-                      </div>
-                    </button>
-                  );
-                })}
+              <div>
+                <label className="block text-sm text-indigo-200 mb-3">Select Your Amenities</label>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {Object.entries(AMENITY_SPECS).map(([key, spec]) => {
+                    const Icon = spec.icon;
+                    const isEnabled = amenities[key as keyof typeof amenities];
+                    
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setAmenities({...amenities, [key]: !isEnabled})}
+                        className={`p-4 rounded-xl text-left transition-all flex items-center gap-4 ${
+                          isEnabled
+                            ? 'bg-indigo-500/30 border-2 border-indigo-400'
+                            : 'bg-white/5 border-2 border-transparent hover:border-white/20'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isEnabled ? 'bg-indigo-500' : 'bg-white/10'}`}>
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-white">{spec.name}</p>
+                          <p className="text-xs text-indigo-200/60">+{spec.peakKW} kW peak</p>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isEnabled ? 'border-indigo-400 bg-indigo-500' : 'border-white/30'}`}>
+                          {isEnabled && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -653,10 +826,11 @@ export default function HotelWizard({
           {/* Step 2: Operations */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Operations Profile</h3>
-                <p className="text-indigo-200/70 text-sm">Help us understand your usage patterns.</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={HOTEL_STEP_HELP['how']} 
+                colorScheme="purple"
+              />
               
               {/* Occupancy */}
               <div>
@@ -749,6 +923,10 @@ export default function HotelWizard({
           {/* Step 3: Energy Goals */}
           {currentStep === 3 && (
             <div className="space-y-6">
+              <WizardStepHelp
+                content={HOTEL_STEP_HELP['goals']}
+                colorScheme="indigo"
+              />
               <div>
                 <h3 className="text-lg font-bold text-white mb-2">Energy Goals</h3>
                 <p className="text-indigo-200/70 text-sm">What matters most to your hotel?</p>
@@ -838,6 +1016,10 @@ export default function HotelWizard({
           {/* Step 4: Review Quote */}
           {currentStep === 4 && (
             <div className="space-y-6">
+              <WizardStepHelp
+                content={HOTEL_STEP_HELP['quote']}
+                colorScheme="indigo"
+              />
               {isCalculating ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full mb-4" />
@@ -955,18 +1137,105 @@ export default function HotelWizard({
             {currentStep === 0 ? 'Cancel' : 'Back'}
           </button>
           
-          {currentStep < WIZARD_STEPS.length - 1 && (
+          <div className="flex items-center gap-3">
+            {/* Concierge Help Button */}
             <button
-              onClick={() => setCurrentStep(currentStep + 1)}
-              disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-lg font-bold transition-all"
+              onClick={() => setShowConciergeHelp(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 text-purple-300 rounded-lg text-sm transition-all"
+              title="Need help? Talk to our concierge"
             >
-              Continue
-              <ArrowRight className="w-4 h-4" />
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Need Help?</span>
             </button>
-          )}
+            
+            {currentStep < WIZARD_STEPS.length - 1 && (
+              <button
+                onClick={() => setCurrentStep(currentStep + 1)}
+                disabled={!canProceed()}
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-lg font-bold transition-all"
+              >
+                Continue
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
+        
+        {/* Concierge Help Modal */}
+        {showConciergeHelp && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 p-6">
+            <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 rounded-2xl p-6 max-w-md border border-purple-400/30 shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple-500/30 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Merlin Concierge</h3>
+                  <p className="text-purple-200/70 text-sm">We're here to help</p>
+                </div>
+              </div>
+              <p className="text-white/80 text-sm mb-4">
+                Need guidance? Our energy experts can help you:
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center gap-2 text-sm text-purple-200">
+                  <Check className="w-4 h-4 text-emerald-400" /> Understand your hotel's energy profile
+                </li>
+                <li className="flex items-center gap-2 text-sm text-purple-200">
+                  <Check className="w-4 h-4 text-emerald-400" /> Size your battery system correctly
+                </li>
+                <li className="flex items-center gap-2 text-sm text-purple-200">
+                  <Check className="w-4 h-4 text-emerald-400" /> Navigate financing & incentives
+                </li>
+                <li className="flex items-center gap-2 text-sm text-purple-200">
+                  <Check className="w-4 h-4 text-emerald-400" /> Connect with vetted installers
+                </li>
+              </ul>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConciergeHelp(false)}
+                  className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                >
+                  Continue on my own
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConciergeHelp(false);
+                    onRequestConsultation?.();
+                  }}
+                  className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg font-medium transition-colors"
+                >
+                  Talk to Expert
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      
+      {/* Floating Power Gauge Widget - Always visible in bottom right */}
+      {calculatedPower.totalPeakKW > 0 && (
+        <PowerGaugeWidget
+          data={{
+            bessKW: Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100),
+            bessKWh: Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100 * 4), // 4hr duration for hotels
+            peakDemandKW: calculatedPower.totalPeakKW,
+            solarKW: energyGoals.interestInSolar ? Math.round(energyGoals.roofArea * 0.015) : 0,
+            generatorKW: operations.hasBackupGenerator ? operations.generatorKW : 0,
+            powerGapKW: Math.max(0, calculatedPower.totalPeakKW - (
+              Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100) +
+              (energyGoals.interestInSolar ? Math.round(energyGoals.roofArea * 0.015) : 0) +
+              (operations.hasBackupGenerator ? operations.generatorKW : 0)
+            )),
+            isGapMet: (
+              Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100) +
+              (energyGoals.interestInSolar ? Math.round(energyGoals.roofArea * 0.015) : 0) +
+              (operations.hasBackupGenerator ? operations.generatorKW : 0)
+            ) >= calculatedPower.totalPeakKW * 0.9,
+          }}
+          position="fixed"
+        />
+      )}
     </div>
   );
 }

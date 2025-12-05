@@ -103,8 +103,12 @@ export function calculateMarketAlignedBESSPricing(
   const energyCapacityMWh = systemSizeMW * durationHours;
   
   // NREL ATB 2024 baseline costs (moderate scenario)
-  const batteryCostPerKWh = 120; // $/kWh - pack cost
-  const pcsCostPerKW = 150; // $/kW - power conversion
+  // ✅ Updated Dec 2025 based on professional quote benchmarks:
+  // - UK EV Hub: $120/kWh battery, $120/kW PCS
+  // - Hampton Heights: $190/kWh installed
+  // - Tribal Microgrid: $140/kWh turnkey
+  const batteryCostPerKWh = 140; // $/kWh - pack cost (avg of $120-190 range)
+  const pcsCostPerKW = 120; // $/kW - power conversion (validated from UK EV Hub quote)
   const bosCostPerKW = 28.8; // $/kW - balance of system (12%)
   const epcCostPerKW = 36; // $/kW - installation/EPC (15%)
   
