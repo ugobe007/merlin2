@@ -249,7 +249,7 @@ export default function EVChargingEnergy() {
   // Quick Estimate Modal - Progressive Disclosure
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
   const [quickChargerType, setQuickChargerType] = useState<'level2' | 'dcfc' | 'hpc' | 'mixed'>('dcfc');
-  const [quickPorts, setQuickPorts] = useState(4);
+  const [quickPorts, setQuickPorts] = useState(1);
   const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
   
   // Quick estimate calculation
@@ -1006,13 +1006,14 @@ export default function EVChargingEnergy() {
           ═══════════════════════════════════════════════════════════════════════ */}
       {showQuickEstimate && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
           onClick={() => setShowQuickEstimate(false)}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           
+          {/* Modal - Floating with responsive sizing */}
           <div 
-            className="relative bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl shadow-2xl shadow-emerald-500/20 max-w-lg w-full overflow-hidden border border-emerald-400/40"
+            className="relative bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl shadow-2xl shadow-emerald-500/20 max-w-lg w-full max-h-[90vh] overflow-y-auto border border-emerald-400/40"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -1059,23 +1060,33 @@ export default function EVChargingEnergy() {
                 </div>
               </div>
               
-              {/* Question 2: Number of Ports */}
-              <div>
-                <label className="block text-emerald-200 font-medium mb-3">How many charging ports?</label>
+              {/* Question 2: Number of Ports - Prominent styling */}
+              <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl p-4 border-2 border-emerald-400/50">
+                <label className="block text-white font-bold text-lg mb-3">
+                  ⚡ How many charging ports?
+                </label>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
                     min={1}
-                    max={quickChargerType === 'level2' ? 20 : 12}
-                    value={quickPorts}
+                    max={quickChargerType === 'level2' ? 200 : quickChargerType === 'hpc' ? 50 : 100}
+                    value={Math.min(quickPorts, quickChargerType === 'level2' ? 200 : quickChargerType === 'hpc' ? 50 : 100)}
                     onChange={(e) => setQuickPorts(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="flex-1 h-3 bg-white/30 rounded-lg appearance-none cursor-pointer accent-emerald-400"
                   />
-                  <div className="w-20 text-center">
-                    <span className="text-3xl font-black text-emerald-400">{quickPorts}</span>
+                  <div className="bg-white/10 rounded-xl px-3 py-2 text-center min-w-[100px]">
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={quickPorts}
+                      onChange={(e) => setQuickPorts(Math.min(500, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-16 bg-transparent text-4xl font-black text-emerald-400 text-right outline-none"
+                    />
                     <span className="text-emerald-300 text-sm ml-1">ports</span>
                   </div>
                 </div>
+                <p className="text-xs text-emerald-200/70 mt-2 text-center">Large stations? Type up to 500 • More ports = more savings</p>
               </div>
             </div>
             

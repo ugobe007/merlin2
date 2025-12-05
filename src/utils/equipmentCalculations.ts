@@ -196,68 +196,158 @@ export const calculateEquipmentBreakdown = async (
   }
   
   // Database-driven pricing with validated fallbacks
+  // Benchmarks from professional quotes (Oct 2025):
+  // - PCS/Inverter: $120/kW (UK EV Hub quote, Hampton Heights)
+  // - Transformer: $80/kVA for utility, $50/kVA for commercial
+  // - Switchgear: $50/kW utility, $30/kW commercial
   const inverterPerKW = powerElectronicsConfig?.inverterPerKW || 120; // $120/kW from database
   const transformerPerKVA = powerElectronicsConfig?.transformerPerKVA || 80; // $80/kVA from database
   const switchgearPerKW = powerElectronicsConfig?.switchgearPerKW || 50; // $50/kW from database
   
-  // Inverter Calculations - Select appropriate inverter type based on grid connection
+  // ============================================
+  // INVERTER CALCULATIONS - SCALE TO SYSTEM SIZE
+  // ============================================
+  // ✅ FIX: Small systems should NOT use 2.5 MW inverters
+  // Commercial systems use modular inverters sized to actual power requirements
+  
   let inverterUnitPowerMW: number;
   let inverterUnitCost: number;
   let inverterManufacturer: string;
   let inverterModel: string;
+  let inverterQuantity: number;
+  let inverterTotalCost: number;
   
-  if (gridConnection === 'off-grid') {
-    // Off-grid systems need hybrid inverters with grid-forming capability
-    // Premium of 20% over standard inverters for grid-forming controls
-    inverterUnitPowerMW = 2.5; // 2.5MW hybrid grid-forming inverters
-    inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW * 1.20; // 20% premium for off-grid
-    inverterManufacturer = "SMA Solar";
-    inverterModel = "Sunny Central Storage"; // Hybrid inverter with grid-forming capability
+  if (isSmallSystem) {
+    // ✅ For C&I systems < 1 MW: Use appropriately-sized commercial inverters
+    // Price based on actual kW needed, not fixed 2.5 MW units
+    const storageSizeKW = storageSizeMW * 1000;
+    const offGridPremium = gridConnection === 'off-grid' ? 1.20 : 1.0;
+    
+    inverterUnitPowerMW = storageSizeMW; // Size to match system
+    inverterQuantity = 1; // Single modular inverter system
+    inverterTotalCost = storageSizeKW * inverterPerKW * offGridPremium;
+    inverterUnitCost = inverterTotalCost;
+    inverterManufacturer = gridConnection === 'off-grid' ? "Dynapower" : "SMA Solar";
+    inverterModel = gridConnection === 'off-grid' 
+      ? `MPS-${Math.ceil(storageSizeKW / 25) * 25}` // Dynapower modular PCS
+      : `Sunny Tripower ${Math.ceil(storageSizeKW / 10) * 10}`;
+    
+    if (import.meta.env.DEV) {
+      console.log(`⚡ [Small System Inverter] ${storageSizeKW} kW @ $${inverterPerKW}/kW = $${inverterTotalCost.toLocaleString()}`);
+    }
   } else {
-    // On-grid systems can use standard bi-directional grid-tie inverters
-    inverterUnitPowerMW = 2.5; // 2.5MW bi-directional inverters
-    inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW; // Database-driven pricing
-    inverterManufacturer = "SMA Solar";
-    inverterModel = "MVPS 2500"; // Bi-directional grid-tie inverter
+    // For utility-scale systems (≥ 1 MW): Use standard 2.5 MW inverter units
+    if (gridConnection === 'off-grid') {
+      inverterUnitPowerMW = 2.5;
+      inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW * 1.20; // 20% premium for grid-forming
+      inverterManufacturer = "SMA Solar";
+      inverterModel = "Sunny Central Storage";
+    } else {
+      inverterUnitPowerMW = 2.5;
+      inverterUnitCost = inverterUnitPowerMW * 1000 * inverterPerKW;
+      inverterManufacturer = "SMA Solar";
+      inverterModel = "MVPS 2500";
+    }
+    inverterQuantity = Math.ceil(storageSizeMW / inverterUnitPowerMW);
+    inverterTotalCost = inverterQuantity * inverterUnitCost;
   }
-  
-  const inverterQuantity = Math.ceil(storageSizeMW / inverterUnitPowerMW);
   
   const inverters = {
     quantity: inverterQuantity,
     unitPowerMW: inverterUnitPowerMW,
     unitCost: inverterUnitCost,
-    totalCost: inverterQuantity * inverterUnitCost,
+    totalCost: inverterTotalCost,
     manufacturer: inverterManufacturer,
     model: inverterModel,
     priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
-  // Transformer Calculations - Database-driven pricing
-  const transformerUnitMVA = Math.max(5, Math.ceil(storageSizeMW / 5) * 5); // Round up to 5MVA increments
-  const transformerUnitCost = transformerUnitMVA * 1000 * transformerPerKVA; // Convert MVA to kVA and apply rate
-  const transformerQuantity = Math.ceil(storageSizeMW / transformerUnitMVA);
+  // ============================================
+  // TRANSFORMER CALCULATIONS - SCALE TO SYSTEM SIZE
+  // ============================================
+  // ✅ FIX: Small systems don't need 5 MVA transformers
+  // Commercial systems use appropriately-sized transformers
+  
+  let transformerUnitMVA: number;
+  let transformerUnitCost: number;
+  let transformerQuantity: number;
+  let transformerTotalCost: number;
+  let transformerVoltage: string;
+  
+  if (isSmallSystem) {
+    // For C&I systems < 1 MW: Size transformer to actual MVA needed
+    // Add 25% margin for power factor and future expansion
+    const requiredMVA = storageSizeMW * 1.25;
+    transformerUnitMVA = Math.max(0.1, Math.ceil(requiredMVA * 10) / 10); // Round to 0.1 MVA
+    // Commercial transformers are slightly cheaper per kVA at smaller sizes
+    const commercialTransformerPerKVA = transformerPerKVA * 0.85; // 15% less than utility
+    transformerUnitCost = transformerUnitMVA * 1000 * commercialTransformerPerKVA;
+    transformerQuantity = 1;
+    transformerTotalCost = transformerUnitCost;
+    transformerVoltage = "480V/208V"; // Commercial voltage levels
+    
+    if (import.meta.env.DEV) {
+      console.log(`🔌 [Small System Transformer] ${transformerUnitMVA} MVA @ $${commercialTransformerPerKVA}/kVA = $${transformerTotalCost.toLocaleString()}`);
+    }
+  } else {
+    // For utility-scale: Use standard 5 MVA increments
+    transformerUnitMVA = Math.max(5, Math.ceil(storageSizeMW / 5) * 5);
+    transformerUnitCost = transformerUnitMVA * 1000 * transformerPerKVA;
+    transformerQuantity = Math.ceil(storageSizeMW / transformerUnitMVA);
+    transformerTotalCost = transformerQuantity * transformerUnitCost;
+    transformerVoltage = `${transformerUnitMVA >= 10 ? '35kV' : '13.8kV'}/480V`;
+  }
   
   const transformers = {
     quantity: transformerQuantity,
     unitPowerMVA: transformerUnitMVA,
     unitCost: transformerUnitCost,
-    totalCost: transformerQuantity * transformerUnitCost,
-    voltage: `${transformerUnitMVA >= 10 ? '35kV' : '13.8kV'}/480V`,
-    manufacturer: "ABB",
+    totalCost: transformerTotalCost,
+    voltage: transformerVoltage,
+    manufacturer: isSmallSystem ? "Eaton/Square D" : "ABB",
     priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
-  // Switchgear Calculations - Database-driven pricing
-  const switchgearQuantity = Math.ceil(storageSizeMW / 5); // One switchgear per 5MW
-  const switchgearUnitCost = (storageSizeMW / switchgearQuantity) * 1000 * switchgearPerKW; // Per unit based on MW coverage
+  // ============================================
+  // SWITCHGEAR CALCULATIONS - SCALE TO SYSTEM SIZE
+  // ============================================
+  // ✅ FIX: Small systems use simpler, cheaper switchgear
+  
+  let switchgearQuantity: number;
+  let switchgearUnitCost: number;
+  let switchgearTotalCost: number;
+  let switchgearType: string;
+  let switchgearVoltage: string;
+  
+  if (isSmallSystem) {
+    // For C&I systems < 1 MW: Use low-voltage distribution panels
+    // Simpler protection schemes, no MV switchgear needed
+    const storageSizeKW = storageSizeMW * 1000;
+    const commercialSwitchgearPerKW = switchgearPerKW * 0.6; // 40% less than utility MV gear
+    switchgearQuantity = 1;
+    switchgearUnitCost = storageSizeKW * commercialSwitchgearPerKW;
+    switchgearTotalCost = switchgearUnitCost;
+    switchgearType = "Low Voltage Distribution Panel";
+    switchgearVoltage = "480V";
+    
+    if (import.meta.env.DEV) {
+      console.log(`🔧 [Small System Switchgear] ${storageSizeKW} kW @ $${commercialSwitchgearPerKW}/kW = $${switchgearTotalCost.toLocaleString()}`);
+    }
+  } else {
+    // For utility-scale: One MV switchgear per 5 MW
+    switchgearQuantity = Math.ceil(storageSizeMW / 5);
+    switchgearUnitCost = (storageSizeMW / switchgearQuantity) * 1000 * switchgearPerKW;
+    switchgearTotalCost = switchgearQuantity * switchgearUnitCost;
+    switchgearType = "Medium Voltage Switchgear";
+    switchgearVoltage = transformerUnitMVA >= 10 ? "35kV" : "13.8kV";
+  }
   
   const switchgear = {
     quantity: switchgearQuantity,
     unitCost: switchgearUnitCost,
-    totalCost: switchgearQuantity * switchgearUnitCost,
-    type: "Medium Voltage Switchgear",
-    voltage: transformerUnitMVA >= 10 ? "35kV" : "13.8kV",
+    totalCost: switchgearTotalCost,
+    type: switchgearType,
+    voltage: switchgearVoltage,
     priceSource: powerElectronicsConfig ? 'database' : 'fallback'
   };
 
@@ -271,7 +361,9 @@ export const calculateEquipmentBreakdown = async (
   if (gridConnection === 'off-grid' && generatorMW === 0) {
     // Size generator to handle critical loads (minimum 50% of battery power capacity)
     // This ensures system can maintain operations during battery depletion
-    effectiveGeneratorMW = Math.max(storageSizeMW * 0.5, 2); // At least 2MW for substantial off-grid systems
+    // ✅ FIX: For small systems, don't require 2 MW minimum
+    const minGeneratorMW = isSmallSystem ? storageSizeMW * 0.5 : Math.max(storageSizeMW * 0.5, 2);
+    effectiveGeneratorMW = minGeneratorMW;
   } else if (gridConnection === 'off-grid' && generatorMW > 0) {
     effectiveGeneratorMW = generatorMW;
   } else if (generatorMW > 0) {
@@ -527,7 +619,15 @@ export const calculateEquipmentBreakdown = async (
     };
   }
 
-  // Installation Costs
+  // ============================================
+  // INSTALLATION COSTS - INDUSTRY STANDARD BREAKDOWN
+  // ============================================
+  // Based on professional quotes (Oct 2025):
+  // - Logistics: 8% of equipment
+  // - Import duty/tariffs: 2% of equipment (China-sourced)
+  // - EPC/Integration: 25% of equipment (includes install, commissioning, tie-in)
+  // - Contingency: 5% of total (optional, for permitting & unexpected)
+  
   const equipmentCost = 
     batteries.totalCost + 
     inverters.totalCost + 
@@ -538,30 +638,49 @@ export const calculateEquipmentBreakdown = async (
     (wind?.totalCost || 0) +
     (evChargers?.totalChargingCost || 0);
 
-  // Installation Costs - Using database config (balance_of_plant_2025)
-  // Get BOP config from database
-  let bopPercentage = 0.12; // Default 12% BOP
-  let epcPercentage = 0.08; // Default 8% EPC  
-  let contingencyPercentage = 0.05; // Default 5% contingency
+  // Installation Costs - Using industry-standard percentages from professional quotes
+  // Get config from database if available
+  let logisticsPercentage = 0.08; // 8% logistics (shipping, handling, delivery)
+  let importDutyPercentage = 0.02; // 2% import duty (for China-sourced equipment)
+  let epcPercentage = 0.25; // 25% EPC (engineering, procurement, construction, commissioning)
+  let contingencyPercentage = 0.05; // 5% contingency (permitting, unexpected costs)
   
   try {
     const bopConfig = await import('../services/useCaseService').then(m => 
       m.useCaseService.getPricingConfig('balance_of_plant_2025')
     );
     if (bopConfig) {
-      bopPercentage = bopConfig.bopPercentage || 0.12;
-      epcPercentage = bopConfig.epcPercentage || 0.08;
+      logisticsPercentage = bopConfig.logisticsPercentage || 0.08;
+      importDutyPercentage = bopConfig.importDutyPercentage || 0.02;
+      epcPercentage = bopConfig.epcPercentage || 0.25;
       contingencyPercentage = bopConfig.contingencyPercentage || 0.05;
     }
   } catch (error) {
-    console.log('Using fallback BOP values');
+    console.log('Using fallback installation cost values');
   }
   
+  // Calculate installation breakdown
+  const logistics = equipmentCost * logisticsPercentage;
+  const importDuty = equipmentCost * importDutyPercentage;
+  const epc = equipmentCost * epcPercentage;
+  const contingency = equipmentCost * contingencyPercentage;
+  
+  // BOS (Balance of System) = Logistics + Import Duty + EPC
+  // This matches professional quote structure
+  const totalInstallation = logistics + importDuty + epc + contingency;
+  
   const installation = {
-    bos: equipmentCost * bopPercentage,
-    epc: equipmentCost * epcPercentage,
-    contingency: equipmentCost * contingencyPercentage,
-    totalInstallation: equipmentCost * (bopPercentage + epcPercentage + contingencyPercentage)
+    bos: logistics + importDuty, // Logistics & duties
+    epc: epc, // EPC/Integration
+    contingency: contingency,
+    totalInstallation: totalInstallation,
+    // Detailed breakdown for professional quotes
+    breakdown: {
+      logistics: logistics,
+      importDuty: importDuty,
+      epcIntegration: epc,
+      contingencyPermitting: contingency
+    }
   };
 
   const totals = {
@@ -569,6 +688,17 @@ export const calculateEquipmentBreakdown = async (
     installationCost: installation.totalInstallation,
     totalProjectCost: equipmentCost + installation.totalInstallation
   };
+
+  if (import.meta.env.DEV) {
+    console.log(`📦 [Installation Breakdown]`, {
+      equipment: `$${equipmentCost.toLocaleString()}`,
+      logistics: `$${logistics.toLocaleString()} (8%)`,
+      importDuty: `$${importDuty.toLocaleString()} (2%)`,
+      epc: `$${epc.toLocaleString()} (25%)`,
+      contingency: `$${contingency.toLocaleString()} (5%)`,
+      total: `$${(equipmentCost + totalInstallation).toLocaleString()}`
+    });
+  }
 
   return {
     batteries,

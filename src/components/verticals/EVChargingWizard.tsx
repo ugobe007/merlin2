@@ -33,9 +33,10 @@ import {
   Sparkles, Car, TrendingDown, Phone, FileText, FileSpreadsheet, File, Bolt,
   BarChart3, Network, Building, Globe, Hotel, Hospital, GraduationCap, 
   Plane, ShoppingBag, Warehouse, Coffee, Settings, ChevronDown, ChevronUp,
-  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target
+  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target, Lightbulb
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { PowerGaugeWidget } from '@/components/wizard/widgets';
 import { 
   EV_CHARGER_SPECS, 
   GRID_SERVICES, 
@@ -53,6 +54,8 @@ import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
 import { quickCO2Estimate, calculateEVChargingCO2Impact } from '@/services/environmentalMetricsService';
+import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
+import { WizardPowerProfile, WizardStepHelp, type StepHelpContent } from '@/components/wizard/shared';
 
 // ============================================
 // CONCIERGE SERVICE TIERS
@@ -88,57 +91,102 @@ const STATION_TYPES = {
     icon: Car,
     description: 'Fast charging for road trippers',
     examples: 'I-95 corridor, rest stops, truck stops',
-    defaultChargers: { level2: 4, dcfc: 8, hpc: 4 },
+    defaultChargers: { level1: 0, level2: 4, dcfc: 8, hpc: 4 },
     avgDwellTime: '15-45 minutes',
     recommendation: 'Focus on DCFC & HPC - drivers want to charge fast and go!',
     gridServicesNote: 'High peak demand = big savings with BESS',
     peakDemandProfile: 'high',
+    stepExplanation: 'Highway stations need high-power chargers. Drivers stop briefly, so DCFC (50-150 kW) and HPC (250-350 kW) are essential for fast turnarounds.',
   },
   urban: {
     name: 'Urban Charging Hub',
     icon: Building,
     description: 'City center fast charging',
     examples: 'Downtown parking, city lots, public stations',
-    defaultChargers: { level2: 8, dcfc: 12, hpc: 0 },
+    defaultChargers: { level1: 0, level2: 8, dcfc: 12, hpc: 0 },
     avgDwellTime: '30-90 minutes',
     recommendation: 'Mix of DCFC for quick stops + Level 2 for longer visits',
     gridServicesNote: 'Prime location for grid services revenue',
     peakDemandProfile: 'medium',
+    stepExplanation: 'Urban hubs serve varied needs - quick top-ups during errands (DCFC) and longer charges while dining/shopping (Level 2).',
   },
   destination: {
     name: 'Destination Charging',
     icon: ParkingCircle,
     description: 'Where EVs park for hours',
     examples: 'Parking garages, park & ride, long-term lots',
-    defaultChargers: { level2: 20, dcfc: 4, hpc: 0 },
+    defaultChargers: { level1: 8, level2: 20, dcfc: 4, hpc: 0 },
     avgDwellTime: '2-8 hours',
-    recommendation: 'Heavy on Level 2 - customers have time to charge',
+    recommendation: 'Heavy on Level 1 & 2 - customers have time to charge',
     gridServicesNote: 'Great for demand response programs',
     peakDemandProfile: 'low',
+    stepExplanation: 'Destination charging is about convenience, not speed. Level 1 (1.9 kW) for all-day parking, Level 2 (7-22 kW) for 2-4 hour visits.',
   },
   fleet: {
     name: 'Fleet Depot',
     icon: Warehouse,
     description: 'Commercial fleet charging',
     examples: 'Delivery hubs, bus depots, taxi/rideshare lots',
-    defaultChargers: { level2: 16, dcfc: 8, hpc: 0 },
+    defaultChargers: { level1: 0, level2: 16, dcfc: 8, hpc: 0 },
     avgDwellTime: 'Overnight + quick top-ups',
     recommendation: 'Level 2 for overnight, DCFC for midday top-ups',
     gridServicesNote: 'V2G potential with predictable schedules',
     peakDemandProfile: 'scheduled',
+    stepExplanation: 'Fleet depots charge overnight with Level 2 (cheapest power) and use DCFC for midday opportunity charging between routes.',
   },
   retail: {
     name: 'Retail Co-Location',
     icon: ShoppingBag,
     description: 'Standalone station near retail',
     examples: 'Standalone lots near malls, big box stores',
-    defaultChargers: { level2: 4, dcfc: 8, hpc: 2 },
+    defaultChargers: { level1: 0, level2: 4, dcfc: 8, hpc: 2 },
     avgDwellTime: '20-60 minutes',
     recommendation: 'Fast chargers to match shopping duration',
     gridServicesNote: 'Revenue from charging + grid services',
     peakDemandProfile: 'medium',
+    stepExplanation: 'Retail stations match shopping time - most visits are 20-60 minutes, ideal for DCFC. A few HPC for premium "grab and go" service.',
   },
 } as const;
+
+// Power Profile explanation helper
+const POWER_PROFILE_EXPLANATIONS = {
+  level1: {
+    name: 'Level 1',
+    power: '1.9 kW',
+    icon: '🔌',
+    description: 'Standard 120V outlet - overnight charging',
+    bestFor: 'All-day parking: airports, park & ride, workplaces',
+    chargeTime: '~5 miles/hour of charging',
+    costPerUnit: '$1,500-2,500',
+  },
+  level2: {
+    name: 'Level 2',
+    power: '7-22 kW',
+    icon: '⚡',
+    description: '240V AC charging - standard public charger',
+    bestFor: 'Destination charging: hotels, restaurants, parking',
+    chargeTime: '~25-30 miles/hour of charging',
+    costPerUnit: '$6,000-12,000',
+  },
+  dcfc: {
+    name: 'DC Fast Charging',
+    power: '50-150 kW',
+    icon: '🔋',
+    description: 'DC power direct to battery - rapid charging',
+    bestFor: 'Quick stops: gas stations, highway, retail',
+    chargeTime: '~150-200 miles in 30 min',
+    costPerUnit: '$50,000-100,000',
+  },
+  hpc: {
+    name: 'High Power Charging',
+    power: '250-350 kW',
+    icon: '⚡⚡',
+    description: 'Ultra-fast DC - premium highway charging',
+    bestFor: 'Highway corridors, fleet fast-turnaround',
+    chargeTime: '~200+ miles in 15 min',
+    costPerUnit: '$150,000-250,000',
+  },
+};
 
 // User roles - Who is using this wizard?
 const USER_ROLES = {
@@ -263,6 +311,66 @@ const WIZARD_STEPS = [
 ];
 
 // ============================================
+// STEP HELP CONTENT - EV Charging Specific
+// ============================================
+
+const EV_CHARGING_STEP_HELP: Record<string, StepHelpContent> = {
+  'who': {
+    stepId: 'who',
+    title: 'Tell Us About You',
+    description: 'Your role and goals help us tailor recommendations to your specific needs.',
+    tips: [
+      { type: 'tip', text: 'Operators get detailed operational metrics. Investors see ROI-focused analysis.' },
+      { type: 'info', text: 'Station type affects charger mix recommendations and BESS sizing.' },
+    ],
+  },
+  'what': {
+    stepId: 'what',
+    title: 'Configure Your Station',
+    description: 'Choose your charger types and quantities. Mix charger power levels based on expected dwell times.',
+    tips: [
+      { type: 'warning', text: 'NO "Level 3" - the industry uses DCFC (50-150 kW) and HPC (250-350 kW).' },
+      { type: 'tip', text: 'Level 2 (7-22 kW) for destination/workplace. DCFC/HPC for highway/quick stops.' },
+      { type: 'info', text: 'BESS helps manage peak demand and can provide grid services revenue.' },
+    ],
+    links: [
+      { label: 'EV Charger Types Explained', url: '/docs/ev-charger-types' },
+    ],
+  },
+  'how': {
+    stepId: 'how',
+    title: 'Operating Model',
+    description: 'Your operating hours and expected utilization affect energy costs and BESS sizing.',
+    tips: [
+      { type: 'tip', text: '24/7 highway stations have different profiles than 9-5 workplace chargers.' },
+      { type: 'info', text: 'Higher utilization = more revenue but also higher demand charges.' },
+    ],
+  },
+  'goals': {
+    stepId: 'goals',
+    title: 'Your Business Goals',
+    description: 'What matters most to you? This shapes our recommendations for BESS and solar.',
+    tips: [
+      { type: 'tip', text: 'Demand charge management often provides the fastest ROI for EV charging.' },
+      { type: 'success', text: 'Grid services (frequency regulation, demand response) can generate $5-15K/MW annually.' },
+    ],
+    links: [
+      { label: 'Grid Services Revenue Guide', url: '/docs/grid-services' },
+      { label: 'V2G Explained', url: '/docs/v2g' },
+    ],
+  },
+  'quote': {
+    stepId: 'quote',
+    title: 'Your Custom Quote',
+    description: 'Review your EV charging hub quote with BESS, solar, and financial projections.',
+    tips: [
+      { type: 'success', text: '30% Federal ITC applies to battery storage - significantly improves ROI.' },
+      { type: 'tip', text: 'Download and share with investors, partners, or financing providers.' },
+    ],
+  },
+};
+
+// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -306,13 +414,27 @@ export default function EVChargingWizard({
   const [wantsBatteryStorage, setWantsBatteryStorage] = useState(true);
   const [wantsSolarCanopy, setWantsSolarCanopy] = useState(true);
   const [wantsGridServices, setWantsGridServices] = useState(false); // Default off - it's advanced
+  const [wantsPowerGenerator, setWantsPowerGenerator] = useState(false); // Backup power generator
   
-  // Advanced customization (hidden by default)
+  // Charger configuration - user can always adjust via sliders
   const [customChargers, setCustomChargers] = useState({
+    level1: 0,
     level2: 0,
     dcfc: 0,
     hpc: 0,
   });
+  
+  // Initialize customChargers when station type or scale changes
+  useEffect(() => {
+    const station = STATION_TYPES[stationType];
+    const scaleConfig = SCALE_OPTIONS[scale];
+    setCustomChargers({
+      level1: Math.round(station.defaultChargers.level1 * scaleConfig.multiplier),
+      level2: Math.max(2, Math.round(station.defaultChargers.level2 * scaleConfig.multiplier)),
+      dcfc: Math.round(station.defaultChargers.dcfc * scaleConfig.multiplier),
+      hpc: Math.round(station.defaultChargers.hpc * scaleConfig.multiplier),
+    });
+  }, [stationType, scale]);
   
   // ============================================
   // SMART RECOMMENDATION ENGINE
@@ -324,20 +446,23 @@ export default function EVChargingWizard({
     const scaleConfig = SCALE_OPTIONS[scale];
     
     // Calculate charger counts based on station defaults * scale multiplier
+    const level1Count = Math.round(station.defaultChargers.level1 * scaleConfig.multiplier);
     const level2Count = Math.round(station.defaultChargers.level2 * scaleConfig.multiplier);
     const dcfcCount = Math.round(station.defaultChargers.dcfc * scaleConfig.multiplier);
     const hpcCount = Math.round(station.defaultChargers.hpc * scaleConfig.multiplier);
     
-    // Use custom values if user has modified them
-    const finalLevel2 = showAdvanced && customChargers.level2 > 0 ? customChargers.level2 : Math.max(2, level2Count);
-    const finalDCFC = showAdvanced && customChargers.dcfc > 0 ? customChargers.dcfc : dcfcCount;
-    const finalHPC = showAdvanced && customChargers.hpc > 0 ? customChargers.hpc : hpcCount;
+    // Use customChargers directly - they're always initialized and updated by sliders
+    const finalLevel1 = customChargers.level1 || level1Count;
+    const finalLevel2 = customChargers.level2 || Math.max(2, level2Count);
+    const finalDCFC = customChargers.dcfc;
+    const finalHPC = customChargers.hpc;
     
-    // Calculate power requirements
+    // Calculate power requirements (using industry-standard values)
+    const level1Power = finalLevel1 * 1.9; // Level 1 is 1.9 kW (120V/16A)
     const level2Power = finalLevel2 * 11; // Average Level 2 is 11kW
     const dcfcPower = finalDCFC * 150; // Average DCFC is 150kW
     const hpcPower = finalHPC * 350; // HPC is 350kW
-    const totalPowerKW = level2Power + dcfcPower + hpcPower;
+    const totalPowerKW = level1Power + level2Power + dcfcPower + hpcPower;
     const peakDemandKW = Math.round(totalPowerKW * 0.7); // 70% concurrency
     
     // Get state electricity rates
@@ -351,22 +476,67 @@ export default function EVChargingWizard({
     const monthlyEnergyCharges = monthlyKWh * stateData.rate;
     const monthlyElectricityCost = monthlyDemandCharges + monthlyEnergyCharges;
     
-    // Recommended BESS size (cover 50% of peak demand)
-    const bessKW = wantsBatteryStorage ? Math.round(peakDemandKW * 0.5) : 0;
+    // ============================================
+    // GOAL-BASED RECOMMENDATIONS
+    // Goals directly affect BESS sizing and savings!
+    // ============================================
+    
+    // Base BESS sizing (varies by goals)
+    let bessMultiplier = 0.5; // Default: cover 50% of peak
+    let solarMultiplier = 0.3; // Default: 30% of load
+    let additionalSavingsMultiplier = 1.0;
+    
+    // Adjust based on goals
+    if (wantsBatteryStorage) {
+      bessMultiplier = 0.5;
+      if (wantsGridServices) {
+        // Grid services require larger battery for frequency regulation
+        bessMultiplier = 0.7; // 70% of peak for grid services participation
+        additionalSavingsMultiplier = 1.2; // +20% savings from grid services
+      }
+    }
+    
+    if (wantsSolarCanopy) {
+      solarMultiplier = 0.4; // Increase solar to 40% when user wants it
+      if (wantsBatteryStorage) {
+        // Solar + Storage synergy - can store solar for peak shaving
+        additionalSavingsMultiplier *= 1.15; // +15% from solar+storage synergy
+      }
+    }
+    
+    if (wantsPowerGenerator) {
+      // Backup power affects sizing but mainly provides resilience
+      bessMultiplier = Math.max(bessMultiplier, 0.4); // At least 40% for backup
+    }
+    
+    const bessKW = wantsBatteryStorage ? Math.round(peakDemandKW * bessMultiplier) : 0;
     const bessKWh = bessKW * 2; // 2-hour duration
     
     // Solar canopy estimate (if wanted)
-    const solarKW = wantsSolarCanopy ? Math.round(totalPowerKW * 0.3) : 0; // 30% of load
+    const solarKW = wantsSolarCanopy ? Math.round(totalPowerKW * solarMultiplier) : 0;
     
-    // Savings from BESS (demand charge reduction)
-    const demandChargeSavings = wantsBatteryStorage ? monthlyDemandCharges * 0.4 : 0; // 40% reduction
-    const solarSavings = wantsSolarCanopy ? solarKW * 150 : 0; // ~$150/kW/year
-    const gridServicesSavings = wantsGridServices ? bessKW * 100 : 0; // ~$100/kW/year
+    // Generator size for backup (if wanted)
+    const generatorKW = wantsPowerGenerator ? Math.round(peakDemandKW * 0.3) : 0; // 30% of peak for backup
     
+    // ============================================
+    // SAVINGS CALCULATIONS (Goal-Connected!)
+    // ============================================
+    
+    // Demand charge savings from BESS (peak shaving)
+    const demandChargeSavings = wantsBatteryStorage ? monthlyDemandCharges * 0.4 * additionalSavingsMultiplier : 0;
+    
+    // Solar savings (energy offset)
+    const solarSavings = wantsSolarCanopy ? solarKW * 150 * additionalSavingsMultiplier : 0; // ~$150/kW/year
+    
+    // Grid services revenue (only if enabled)
+    const gridServicesSavings = wantsGridServices && wantsBatteryStorage ? bessKW * 120 : 0; // ~$120/kW/year
+    
+    // Total annual savings
     const annualSavings = (demandChargeSavings * 12) + solarSavings + gridServicesSavings;
     
     return {
       chargers: {
+        level1: finalLevel1,
         level2: finalLevel2,
         dcfc: finalDCFC,
         hpc: finalHPC,
@@ -381,6 +551,7 @@ export default function EVChargingWizard({
         bessKW,
         bessKWh,
         solarKW,
+        generatorKW,
       },
       savings: {
         monthly: Math.round(annualSavings / 12),
@@ -392,6 +563,7 @@ export default function EVChargingWizard({
       stationInsight: station.recommendation,
       gridServicesNote: station.gridServicesNote,
       dwellTime: station.avgDwellTime,
+      stepExplanation: station.stepExplanation,
     };
   };
   
@@ -442,206 +614,93 @@ export default function EVChargingWizard({
   // canProceed validation
   const canProceed = () => {
     switch (currentStep) {
-      case 0: return true; // Business type
-      case 1: return true; // Scale & location
-      case 2: return true; // Recommendation (can always proceed)
-      case 3: return quoteResult !== null; // Quote loaded
+      case 0: return true; // Who you are
+      case 1: return true; // Station type & scale
+      case 2: return true; // Charger configuration
+      case 3: return true; // Goals - always allow proceeding to quote
+      case 4: return quoteResult !== null; // Quote loaded (final step)
       default: return true;
     }
   };
   
-  // Download functions
+  // Download functions - Using professional quoteExport utilities
+  
+  // Build standard QuoteData from wizard state
+  const buildQuoteData = () => {
+    if (!quoteResult) return null;
+    return {
+      storageSizeMW: recommendation.recommendation.bessKW / 1000,
+      durationHours: recommendation.recommendation.bessKWh / recommendation.recommendation.bessKW || 4,
+      solarMW: wantsSolarCanopy ? recommendation.recommendation.solarKW / 1000 : 0,
+      windMW: 0,
+      generatorMW: wantsPowerGenerator ? (recommendation.chargers.peakDemandKW * 0.5) / 1000 : 0,
+      location: state || 'United States',
+      industryTemplate: 'ev-charging',
+      gridConnection: 'grid-tied',
+      totalProjectCost: quoteResult.costs.totalProjectCost,
+      annualSavings: quoteResult.financials.annualSavings,
+      paybackYears: quoteResult.financials.paybackYears,
+      taxCredit: quoteResult.costs.taxCredit,
+      netCost: quoteResult.costs.netCost,
+      installationOption: 'epc',
+      shippingOption: 'standard',
+      financingOption: 'cash',
+      // Extra EV-specific data for enhanced exports
+      businessName: businessName || STATION_TYPES[stationType].name,
+      stationType: STATION_TYPES[stationType].name,
+      scale: SCALE_OPTIONS[scale].name,
+      chargers: {
+        level1: recommendation.chargers.level1 || 0,
+        level2: recommendation.chargers.level2,
+        dcfc: recommendation.chargers.dcfc,
+        hpc: recommendation.chargers.hpc || 0,
+      },
+      peakDemandKW: calculatedPower.peakDemandKW,
+      totalConnectedKW: calculatedPower.totalConnectedKW,
+    };
+  };
+
+  // Build equipment breakdown from quote result
+  const buildEquipmentBreakdown = () => {
+    if (!quoteResult) return null;
+    return {
+      batteries: quoteResult.equipment.batteries,
+      inverters: quoteResult.equipment.inverters,
+      transformers: quoteResult.equipment.transformers,
+      installation: quoteResult.equipment.installation,
+      // Add EV-specific equipment
+      evChargers: {
+        level1: { count: recommendation.chargers.level1 || 0, unitCost: 500, totalCost: (recommendation.chargers.level1 || 0) * 500 },
+        level2: { count: recommendation.chargers.level2, unitCost: 6000, totalCost: recommendation.chargers.level2 * 6000 },
+        dcfc: { count: recommendation.chargers.dcfc, unitCost: 35000, totalCost: recommendation.chargers.dcfc * 35000 },
+        hpc: { count: recommendation.chargers.hpc || 0, unitCost: 150000, totalCost: (recommendation.chargers.hpc || 0) * 150000 },
+      }
+    };
+  };
+  
   function downloadQuote() {
-    if (!quoteResult) return;
+    const quoteData = buildQuoteData();
+    const equipment = buildEquipmentBreakdown();
+    if (!quoteData || !equipment) return;
     
-    const formatCurrency = (n: number) => `$${Math.round(n).toLocaleString()}`;
-    const batteryKW = recommendation.recommendation.bessKW;
-    
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>EV Charging Station Quote - ${mergedInputs.businessName || 'Your Station'}</title>
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1e293b; }
-    h1 { color: #10b981; border-bottom: 3px solid #10b981; padding-bottom: 10px; }
-    h2 { color: #059669; margin-top: 30px; }
-    .summary-box { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
-    .savings { font-size: 48px; font-weight: bold; color: #059669; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; }
-    .card h4 { margin: 0 0 10px 0; color: #475569; font-size: 14px; }
-    .card .value { font-size: 24px; font-weight: bold; color: #1e293b; }
-    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f1f5f9; }
-    .total-row { background: #ecfdf5; font-weight: bold; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <h1>⚡ EV Charging Station Battery Storage Quote</h1>
-  
-  <p><strong>${mergedInputs.businessName || 'EV Charging Station'}</strong><br>
-  ${calculatedPower.totalConnectedKW} kW Total Connected Load • ${mergedInputs.state}</p>
-  
-  <div class="summary-box">
-    <div style="font-size: 14px; color: #059669;">ESTIMATED ANNUAL SAVINGS</div>
-    <div class="savings">${formatCurrency(quoteResult.financials.annualSavings)}</div>
-    <div style="color: #64748b;">per year</div>
-  </div>
-  
-  <div class="grid">
-    <div class="card"><h4>Payback Period</h4><div class="value">${quoteResult.financials.paybackYears.toFixed(1)} years</div></div>
-    <div class="card"><h4>25-Year ROI</h4><div class="value">${Math.round(quoteResult.financials.roi25Year)}%</div></div>
-    <div class="card"><h4>Net Cost (after ITC)</h4><div class="value">${formatCurrency(quoteResult.costs.netCost)}</div></div>
-    <div class="card"><h4>Battery Size</h4><div class="value">${batteryKW} kW</div></div>
-  </div>
-  
-  <h2>System Details</h2>
-  <table>
-    <tr><td>Battery System</td><td>${formatCurrency(quoteResult.equipment.batteries.totalCost)}</td></tr>
-    <tr><td>Inverters</td><td>${formatCurrency(quoteResult.equipment.inverters.totalCost)}</td></tr>
-    <tr><td>Transformers</td><td>${formatCurrency(quoteResult.equipment.transformers.totalCost)}</td></tr>
-    <tr><td>Installation</td><td>${formatCurrency(quoteResult.equipment.installation.totalInstallation)}</td></tr>
-    <tr class="total-row"><td>Total Project Cost</td><td>${formatCurrency(quoteResult.costs.totalProjectCost)}</td></tr>
-    <tr style="color: #059669;"><td>Federal Tax Credit (30%)</td><td>-${formatCurrency(quoteResult.costs.taxCredit)}</td></tr>
-    <tr class="total-row"><td><strong>Net Cost</strong></td><td><strong>${formatCurrency(quoteResult.costs.netCost)}</strong></td></tr>
-  </table>
-  
-  <div class="footer">
-    <p>Generated by Merlin Energy • ${new Date().toLocaleString()}</p>
-  </div>
-</body>
-</html>`;
-    
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `EVCharging_Quote_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
+    generatePDF(quoteData, equipment);
     onComplete?.({ inputs: mergedInputs, recommendation, calculatedPower, quoteResult });
   }
 
-  async function downloadWord() {
-    if (!quoteResult) return;
+  function downloadWord() {
+    const quoteData = buildQuoteData();
+    const equipment = buildEquipmentBreakdown();
+    if (!quoteData || !equipment) return;
     
-    const formatCurrency = (n: number) => `$${Math.round(n).toLocaleString()}`;
-    const batteryKW = recommendation.recommendation.bessKW;
-    
-    const doc = new Document({
-      sections: [{
-        children: [
-          new Paragraph({
-            children: [new TextRun({ text: '⚡ MERLIN ENERGY', bold: true, size: 48, color: '10B981' })],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: 'EV CHARGING STATION BATTERY STORAGE QUOTE', bold: true, size: 32, color: '059669' })],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `Station: ${mergedInputs.businessName || 'EV Charging Station'}`, size: 24 })],
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `Location: ${mergedInputs.state}`, size: 24 })],
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `Connected Load: ${calculatedPower.totalConnectedKW} kW`, size: 24 })],
-            spacing: { after: 300 },
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: 'ANNUAL SAVINGS', bold: true, size: 28, color: '059669' })],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: formatCurrency(quoteResult.financials.annualSavings), bold: true, size: 72, color: '10B981' })],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: [
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Payback Period')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${quoteResult.financials.paybackYears.toFixed(1)} years`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('25-Year ROI')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${Math.round(quoteResult.financials.roi25Year)}%`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Battery Size')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${batteryKW} kW`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Total Project Cost')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(formatCurrency(quoteResult.costs.totalProjectCost))] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Federal Tax Credit (30%)')], shading: { fill: 'ECFDF5' } }),
-                new TableCell({ children: [new Paragraph(`-${formatCurrency(quoteResult.costs.taxCredit)}`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Net Cost', bold: true })] })], shading: { fill: 'D1FAE5' } }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(quoteResult.costs.netCost), bold: true, color: '059669' })] })] }),
-              ]}),
-            ],
-          }),
-        ],
-      }],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `EVCharging_Quote_${new Date().toISOString().split('T')[0]}.docx`);
+    generateWord(quoteData, equipment);
   }
 
   function downloadExcel() {
-    if (!quoteResult) return;
+    const quoteData = buildQuoteData();
+    const equipment = buildEquipmentBreakdown();
+    if (!quoteData || !equipment) return;
     
-    const batteryKW = recommendation.recommendation.bessKW;
-    
-    const csvRows = [
-      ['MERLIN ENERGY - EV Charging Station Quote'],
-      [''],
-      ['Quote Date', new Date().toLocaleDateString()],
-      [''],
-      ['STATION INFORMATION'],
-      ['Station Name', businessName || STATION_TYPES[stationType].name],
-      ['Station Type', STATION_TYPES[stationType].name],
-      ['Scale', SCALE_OPTIONS[scale].name],
-      ['Location', state],
-      [''],
-      ['CHARGING SETUP'],
-      ['Level 2 Chargers', recommendation.chargers.level2],
-      ['Fast Chargers (DCFC)', recommendation.chargers.dcfc],
-      ['Total Connected Load (kW)', calculatedPower.totalConnectedKW],
-      ['Peak Demand (kW)', calculatedPower.peakDemandKW],
-      [''],
-      ['BATTERY SYSTEM'],
-      ['Battery Size (kW)', batteryKW],
-      ['Battery Capacity (kWh)', recommendation.recommendation.bessKWh],
-      ['Solar (kW)', wantsSolarCanopy ? recommendation.recommendation.solarKW : 0],
-      [''],
-      ['FINANCIALS'],
-      ['Total Project Cost', Math.round(quoteResult.costs.totalProjectCost)],
-      ['Federal Tax Credit', -Math.round(quoteResult.costs.taxCredit)],
-      ['Net Cost', Math.round(quoteResult.costs.netCost)],
-      ['Annual Savings', Math.round(quoteResult.financials.annualSavings)],
-      ['Payback (years)', quoteResult.financials.paybackYears.toFixed(1)],
-      ['25-Year ROI (%)', Math.round(quoteResult.financials.roi25Year)],
-    ];
-    
-    const csvContent = csvRows.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, `EVCharging_Quote_${new Date().toISOString().split('T')[0]}.csv`);
+    generateExcel(quoteData, equipment);
   }
   
   return (
@@ -691,6 +750,21 @@ export default function EVChargingWizard({
               );
             })}
           </div>
+          
+          {/* Power Profile - Shows real-time power metrics */}
+          {calculatedPower.peakDemandKW > 0 && (
+            <WizardPowerProfile
+              data={{
+                peakDemandKW: calculatedPower.peakDemandKW,
+                totalStorageKWh: recommendation.recommendation.bessKWh,
+                durationHours: recommendation.recommendation.bessKWh / (recommendation.recommendation.bessKW || 1),
+                solarKW: recommendation.recommendation.solarKW,
+              }}
+              compact={true}
+              colorScheme="emerald"
+              className="mt-4"
+            />
+          )}
         </div>
         
         {/* Content - User-Friendly Steps */}
@@ -704,10 +778,11 @@ export default function EVChargingWizard({
               ================================================ */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">Let's start with you</h3>
-                <p className="text-emerald-200/70">Tell us about yourself and your location</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={EV_CHARGING_STEP_HELP['who']} 
+                colorScheme="emerald"
+              />
               
               {/* User Role Selection */}
               <div>
@@ -806,10 +881,11 @@ export default function EVChargingWizard({
               ================================================ */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">What type of charging station?</h3>
-                <p className="text-emerald-200/70">Select your station type for optimized recommendations</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={EV_CHARGING_STEP_HELP['what']} 
+                colorScheme="emerald"
+              />
               
               {/* Station Type Selection */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -868,6 +944,11 @@ export default function EVChargingWizard({
                     <p className="text-white font-medium">{STATION_TYPES[stationType].name}</p>
                     <p className="text-sm text-emerald-200/70 mt-1">{STATION_TYPES[stationType].recommendation}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
+                      {STATION_TYPES[stationType].defaultChargers.level1 > 0 && (
+                        <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-300">
+                          L1: {STATION_TYPES[stationType].defaultChargers.level1}
+                        </span>
+                      )}
                       <span className="text-xs bg-white/10 px-2 py-1 rounded text-cyan-300">
                         L2: {STATION_TYPES[stationType].defaultChargers.level2}
                       </span>
@@ -894,102 +975,303 @@ export default function EVChargingWizard({
               - Current setup preview
               - Peak demand
               - Monthly costs
+              - POWER PROFILE WIDGET (Dynamic!)
               ================================================ */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">Your charging infrastructure</h3>
-                <p className="text-emerald-200/70">Based on your {STATION_TYPES[stationType].name.toLowerCase()} station</p>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={EV_CHARGING_STEP_HELP['how']} 
+                colorScheme="emerald"
+              />
+              
+              {/* ✅ STEP EXPLANATION - What user needs to do */}
+              <div className="bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl p-4 border border-blue-400/30">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center flex-shrink-0">
+                    <Lightbulb className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white">📋 What to do in this step:</p>
+                    <p className="text-blue-200/80 text-sm mt-1">{STATION_TYPES[stationType].stepExplanation}</p>
+                    <p className="text-blue-200/60 text-xs mt-2 italic">
+                      💡 Tip: Use the sliders to see how your Power Profile changes in real-time!
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              {/* Charger Configuration */}
-              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-                  <Car className="w-5 h-5 text-emerald-400" />
-                  Recommended Charger Mix
+              {/* ============================================
+                  ⚡ POWER PROFILE WIDGET - Dynamic Visualization
+                  Shows user exactly what energy they need!
+                  ============================================ */}
+              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border-2 border-emerald-500/30 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <Gauge className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-lg">⚡ Your Power Profile</h4>
+                    <p className="text-emerald-200/70 text-sm">Real-time energy requirements based on your configuration</p>
+                  </div>
+                </div>
+                
+                {/* Power Bars - Visual breakdown */}
+                <div className="space-y-3 mb-4">
+                  {/* Level 1 Power */}
+                  {(customChargers.level1 > 0 || stationType === 'destination') && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 w-16">L1</span>
+                      <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-gray-400 to-gray-500 transition-all duration-500"
+                          style={{ width: `${Math.min(100, (customChargers.level1 * 1.9 / recommendation.chargers.totalPowerKW) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-300 w-20 text-right">{(customChargers.level1 * 1.9).toFixed(1)} kW</span>
+                    </div>
+                  )}
+                  
+                  {/* Level 2 Power */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-cyan-400 w-16">L2</span>
+                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-500"
+                        style={{ width: `${Math.min(100, ((customChargers.level2 || 0) * 11 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-cyan-300 w-20 text-right">{((customChargers.level2 || 0) * 11).toLocaleString()} kW</span>
+                  </div>
+                  
+                  {/* DCFC Power */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-amber-400 w-16">DCFC</span>
+                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
+                        style={{ width: `${Math.min(100, ((customChargers.dcfc || 0) * 150 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-amber-300 w-20 text-right">{((customChargers.dcfc || 0) * 150).toLocaleString()} kW</span>
+                  </div>
+                  
+                  {/* HPC Power */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-purple-400 w-16">HPC</span>
+                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-500"
+                        style={{ width: `${Math.min(100, ((customChargers.hpc || 0) * 350 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-purple-300 w-20 text-right">{((customChargers.hpc || 0) * 350).toLocaleString()} kW</span>
+                  </div>
+                </div>
+                
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
+                  <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-emerald-400">{recommendation.chargers.totalPowerKW.toLocaleString()}</p>
+                    <p className="text-xs text-emerald-200/70">Total kW Connected</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-amber-400">{recommendation.chargers.peakDemandKW.toLocaleString()}</p>
+                    <p className="text-xs text-amber-200/70">Peak Demand (70%)</p>
+                  </div>
+                  <div className="text-center p-3 bg-red-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-red-400">${recommendation.costs.monthlyDemandCharges.toLocaleString()}</p>
+                    <p className="text-xs text-red-200/70">Monthly Demand $</p>
+                  </div>
+                </div>
+                
+                {/* What this means */}
+                <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                  <p className="text-xs text-white/70">
+                    <span className="font-bold text-emerald-400">📊 What this means:</span> Your {(customChargers.level1 || 0) + (customChargers.level2 || 0) + (customChargers.dcfc || 0) + (customChargers.hpc || 0)} chargers will draw up to {recommendation.chargers.peakDemandKW.toLocaleString()} kW during peak times. 
+                    Without battery storage, you'll pay <span className="text-red-400 font-bold">${recommendation.costs.monthlyDemandCharges.toLocaleString()}/month</span> in demand charges alone!
+                  </p>
+                </div>
+              </div>
+              
+              {/* Interactive Charger Configuration with Sliders */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-emerald-400" />
+                  Configure Charger Counts
                 </h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-cyan-500/10 rounded-lg border border-cyan-400/20">
-                    <p className="text-3xl font-bold text-cyan-400">{recommendation.chargers.level2}</p>
-                    <p className="text-sm text-white">Level 2</p>
-                    <p className="text-xs text-cyan-200/60">7-22 kW each</p>
+                
+                {/* Level 1 Chargers - NEW! */}
+                {(stationType === 'destination' || customChargers.level1 > 0) && (
+                  <div className="bg-gradient-to-r from-gray-500/10 to-gray-500/5 rounded-xl p-4 border border-gray-400/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                        <span className="font-medium text-white">Level 1 Chargers</span>
+                        <span className="text-xs text-gray-300/60 bg-gray-500/20 px-2 py-0.5 rounded">1.9 kW each</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={customChargers.level1}
+                          onChange={(e) => setCustomChargers({...customChargers, level1: Math.min(100, parseInt(e.target.value) || 0)})}
+                          className="w-20 bg-white/10 rounded px-2 py-1 text-right text-gray-300 font-bold text-xl border border-gray-400/30"
+                        />
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={50}
+                      value={Math.min(50, customChargers.level1)}
+                      onChange={(e) => setCustomChargers({...customChargers, level1: parseInt(e.target.value)})}
+                      className="w-full h-3 bg-gray-900/30 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #9ca3af 0%, #9ca3af ${(Math.min(50, customChargers.level1) / 50) * 100}%, rgba(156, 163, 175, 0.2) ${(Math.min(50, customChargers.level1) / 50) * 100}%, rgba(156, 163, 175, 0.2) 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>0</span>
+                      <span>🔌 Best for all-day parking (airports, workplaces)</span>
+                      <span>50</span>
+                    </div>
                   </div>
-                  <div className="text-center p-3 bg-amber-500/10 rounded-lg border border-amber-400/20">
-                    <p className="text-3xl font-bold text-amber-400">{recommendation.chargers.dcfc}</p>
-                    <p className="text-sm text-white">DCFC</p>
-                    <p className="text-xs text-amber-200/60">50-150 kW each</p>
-                  </div>
-                  <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-400/20">
-                    <p className="text-3xl font-bold text-purple-400">{recommendation.chargers.hpc}</p>
-                    <p className="text-sm text-white">HPC</p>
-                    <p className="text-xs text-purple-200/60">250-350 kW each</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Power & Cost Preview */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <p className="text-sm text-emerald-200 mb-1">Total Connected Load</p>
-                  <p className="text-3xl font-bold text-white">{recommendation.chargers.totalPowerKW.toLocaleString()} kW</p>
-                  <p className="text-xs text-white/50 mt-1">Peak demand: {recommendation.chargers.peakDemandKW.toLocaleString()} kW</p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <p className="text-sm text-emerald-200 mb-1">Est. Monthly Electric Bill</p>
-                  <p className="text-3xl font-bold text-white">${recommendation.costs.monthlyElectricity.toLocaleString()}</p>
-                  <p className="text-xs text-white/50 mt-1">Without battery storage</p>
-                </div>
-              </div>
-              
-              {/* Customize Chargers (Optional) */}
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-                {showAdvanced ? 'Hide' : 'Customize'} charger counts
-                {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              
-              {showAdvanced && (
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-xs text-emerald-200">Level 2 Chargers</label>
+                )}
+                
+                {/* Add Level 1 button if not showing */}
+                {stationType !== 'destination' && customChargers.level1 === 0 && (
+                  <button
+                    onClick={() => setCustomChargers({...customChargers, level1: 4})}
+                    className="w-full p-3 border-2 border-dashed border-gray-500/30 rounded-xl text-gray-400 hover:border-gray-400/50 hover:text-gray-300 transition-all text-sm"
+                  >
+                    + Add Level 1 Chargers (overnight/all-day parking)
+                  </button>
+                )}
+                
+                {/* Level 2 Chargers */}
+                <div className="bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 rounded-xl p-4 border border-cyan-400/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+                      <span className="font-medium text-white">Level 2 Chargers</span>
+                      <span className="text-xs text-cyan-200/60 bg-cyan-500/20 px-2 py-0.5 rounded">7-22 kW each</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <input
                         type="number"
                         min={0}
-                        max={50}
+                        max={500}
                         value={customChargers.level2 || recommendation.chargers.level2}
-                        onChange={(e) => setCustomChargers({...customChargers, level2: parseInt(e.target.value) || 0})}
-                        className="w-full bg-white/10 rounded px-3 py-2 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-emerald-200">DCFC</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={20}
-                        value={customChargers.dcfc || recommendation.chargers.dcfc}
-                        onChange={(e) => setCustomChargers({...customChargers, dcfc: parseInt(e.target.value) || 0})}
-                        className="w-full bg-white/10 rounded px-3 py-2 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-emerald-200">HPC</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={10}
-                        value={customChargers.hpc || recommendation.chargers.hpc}
-                        onChange={(e) => setCustomChargers({...customChargers, hpc: parseInt(e.target.value) || 0})}
-                        className="w-full bg-white/10 rounded px-3 py-2 text-white mt-1"
+                        onChange={(e) => setCustomChargers({...customChargers, level2: Math.min(500, parseInt(e.target.value) || 0)})}
+                        className="w-20 bg-white/10 rounded px-2 py-1 text-right text-cyan-400 font-bold text-xl border border-cyan-400/30"
                       />
                     </div>
                   </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={200}
+                    value={Math.min(200, customChargers.level2 || recommendation.chargers.level2)}
+                    onChange={(e) => setCustomChargers({...customChargers, level2: parseInt(e.target.value)})}
+                    className="w-full h-3 bg-cyan-900/30 rounded-lg appearance-none cursor-pointer slider-cyan"
+                    style={{
+                      background: `linear-gradient(to right, #22d3ee 0%, #22d3ee ${(Math.min(200, customChargers.level2 || recommendation.chargers.level2) / 200) * 100}%, rgba(6, 182, 212, 0.2) ${(Math.min(200, customChargers.level2 || recommendation.chargers.level2) / 200) * 100}%, rgba(6, 182, 212, 0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-cyan-200/50 mt-1">
+                    <span>0</span>
+                    <span>⚡ Best for 2-4 hour visits (hotels, restaurants)</span>
+                    <span>200</span>
+                  </div>
                 </div>
-              )}
+                
+                {/* DCFC Chargers */}
+                <div className="bg-gradient-to-r from-amber-500/10 to-amber-500/5 rounded-xl p-4 border border-amber-400/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                      <span className="font-medium text-white">DC Fast Chargers</span>
+                      <span className="text-xs text-amber-200/60 bg-amber-500/20 px-2 py-0.5 rounded">50-150 kW each</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={300}
+                        value={customChargers.dcfc || recommendation.chargers.dcfc}
+                        onChange={(e) => setCustomChargers({...customChargers, dcfc: Math.min(300, parseInt(e.target.value) || 0)})}
+                        className="w-20 bg-white/10 rounded px-2 py-1 text-right text-amber-400 font-bold text-xl border border-amber-400/30"
+                      />
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.min(100, customChargers.dcfc || recommendation.chargers.dcfc)}
+                    onChange={(e) => setCustomChargers({...customChargers, dcfc: parseInt(e.target.value)})}
+                    className="w-full h-3 bg-amber-900/30 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${(Math.min(100, customChargers.dcfc || recommendation.chargers.dcfc) / 100) * 100}%, rgba(245, 158, 11, 0.2) ${(Math.min(100, customChargers.dcfc || recommendation.chargers.dcfc) / 100) * 100}%, rgba(245, 158, 11, 0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-amber-200/50 mt-1">
+                    <span>0</span>
+                    <span>🔋 Best for quick stops (20-45 min)</span>
+                    <span>100</span>
+                  </div>
+                </div>
+                
+                {/* HPC Chargers */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-purple-500/5 rounded-xl p-4 border border-purple-400/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-400"></div>
+                      <span className="font-medium text-white">High-Power Chargers</span>
+                      <span className="text-xs text-purple-200/60 bg-purple-500/20 px-2 py-0.5 rounded">250-350 kW each</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={customChargers.hpc || recommendation.chargers.hpc}
+                        onChange={(e) => setCustomChargers({...customChargers, hpc: Math.min(100, parseInt(e.target.value) || 0)})}
+                        className="w-20 bg-white/10 rounded px-2 py-1 text-right text-purple-400 font-bold text-xl border border-purple-400/30"
+                      />
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={50}
+                    value={Math.min(50, customChargers.hpc || recommendation.chargers.hpc)}
+                    onChange={(e) => setCustomChargers({...customChargers, hpc: parseInt(e.target.value)})}
+                    className="w-full h-3 bg-purple-900/30 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #a855f7 0%, #a855f7 ${(Math.min(50, customChargers.hpc || recommendation.chargers.hpc) / 50) * 100}%, rgba(168, 85, 247, 0.2) ${(Math.min(50, customChargers.hpc || recommendation.chargers.hpc) / 50) * 100}%, rgba(168, 85, 247, 0.2) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-purple-200/50 mt-1">
+                    <span>0</span>
+                    <span>⚡⚡ Premium highway charging (10-15 min)</span>
+                    <span>50</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Pro tip / Next Step Preview */}
+              <div className="flex items-start gap-3 bg-emerald-500/10 rounded-lg p-3 border border-emerald-400/20">
+                <Lightbulb className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-emerald-200/80">{recommendation.stationInsight}</p>
+                  <p className="text-xs text-emerald-200/60 mt-2">
+                    <span className="font-bold">Next step:</span> Choose your goals (peak shaving, solar, backup power) to see how battery storage can reduce your ${recommendation.costs.monthlyDemandCharges.toLocaleString()}/month demand charges!
+                  </p>
+                </div>
+              </div>
             </div>
           )}
           
@@ -997,26 +1279,111 @@ export default function EVChargingWizard({
               STEP 3: WHAT DO YOU WANT?
               - Goals (Cost savings, Backup, Sustainability)
               - Add-ons (Battery, Solar, Grid Services)
+              - DYNAMIC Power Profile Impact!
               ================================================ */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">What are your goals?</h3>
-                <p className="text-emerald-200/70">Select the options that matter most to you</p>
-              </div>
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={EV_CHARGING_STEP_HELP['goals']} 
+                colorScheme="emerald"
+              />
               
-              {/* Savings Preview */}
-              <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl p-5 border border-emerald-400/30 text-center">
-                <p className="text-sm text-emerald-200 mb-1">Potential Annual Savings</p>
-                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">
-                  ${recommendation.savings.annual.toLocaleString()}
-                </p>
-                <p className="text-xs text-emerald-200/60 mt-1">With battery storage + solar</p>
+              {/* ============================================
+                  ⚡ LIVE POWER PROFILE - Shows Impact of Goals
+                  ============================================ */}
+              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border-2 border-emerald-500/30 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-lg">⚡ Your Energy Solution</h4>
+                    <p className="text-emerald-200/70 text-sm">Based on your charger configuration + selected goals</p>
+                  </div>
+                </div>
+                
+                {/* Visual Power Stack */}
+                <div className="space-y-3 mb-4">
+                  {/* Your Demand */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-red-400 w-20">Your Demand</span>
+                    <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-red-500 to-red-400 w-full flex items-center justify-center">
+                        <span className="text-xs text-white font-bold">{recommendation.chargers.peakDemandKW.toLocaleString()} kW peak</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Battery Storage (if enabled) */}
+                  {wantsBatteryStorage && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-emerald-400 w-20">🔋 Battery</span>
+                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-center transition-all duration-500"
+                          style={{ width: `${Math.min(100, (recommendation.recommendation.bessKW / recommendation.chargers.peakDemandKW) * 100)}%` }}
+                        >
+                          <span className="text-xs text-white font-bold">{recommendation.recommendation.bessKW} kW / {recommendation.recommendation.bessKWh} kWh</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Solar (if enabled) */}
+                  {wantsSolarCanopy && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-amber-400 w-20">☀️ Solar</span>
+                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center transition-all duration-500"
+                          style={{ width: `${Math.min(100, (recommendation.recommendation.solarKW / recommendation.chargers.peakDemandKW) * 100)}%` }}
+                        >
+                          <span className="text-xs text-white font-bold">{recommendation.recommendation.solarKW} kW solar canopy</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Generator (if enabled) */}
+                  {wantsPowerGenerator && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-orange-400 w-20">⚡ Backup</span>
+                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-center transition-all duration-500"
+                          style={{ width: `${Math.min(100, ((recommendation.recommendation.generatorKW || 0) / recommendation.chargers.peakDemandKW) * 100)}%` }}
+                        >
+                          <span className="text-xs text-white font-bold">{recommendation.recommendation.generatorKW || 0} kW generator</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Savings Impact - Dynamic! */}
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
+                  <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-emerald-400">${Math.round(recommendation.savings.annual / 12).toLocaleString()}</p>
+                    <p className="text-xs text-emerald-200/70">Monthly Savings</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-amber-400">${recommendation.savings.annual.toLocaleString()}</p>
+                    <p className="text-xs text-amber-200/70">Annual Savings</p>
+                  </div>
+                  <div className="text-center p-3 bg-blue-500/10 rounded-lg">
+                    <p className="text-2xl font-bold text-blue-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
+                    <p className="text-xs text-blue-200/70">Demand Reduction</p>
+                  </div>
+                </div>
               </div>
               
               {/* Energy Options */}
               <div className="space-y-3">
-                <h4 className="font-medium text-white">Energy Solutions</h4>
+                <h4 className="font-medium text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-emerald-400" />
+                  Energy Solutions
+                </h4>
                 
                 {/* Battery Storage */}
                 <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
@@ -1097,6 +1464,34 @@ export default function EVChargingWizard({
                     )}
                   </div>
                 </div>
+                
+                {/* Power Generator */}
+                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  wantsPowerGenerator ? 'bg-orange-500/10 border-orange-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
+                }`} onClick={() => setWantsPowerGenerator(!wantsPowerGenerator)}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={wantsPowerGenerator}
+                      onChange={(e) => setWantsPowerGenerator(e.target.checked)}
+                      className="w-5 h-5 accent-orange-500"
+                    />
+                    <Zap className="w-5 h-5 text-orange-400" />
+                    <div className="flex-1">
+                      <p className="font-medium text-white">
+                        Backup Power Generator
+                        <span className="ml-2 text-xs bg-orange-500/30 text-orange-300 px-2 py-0.5 rounded-full">Resilience</span>
+                      </p>
+                      <p className="text-sm text-orange-200/70">Keep charging during grid outages</p>
+                    </div>
+                    {wantsPowerGenerator && (
+                      <div className="text-right">
+                        <p className="font-bold text-orange-400">{Math.round(recommendation.chargers.peakDemandKW * 0.5)} kW</p>
+                        <p className="text-xs text-orange-200/60">Natural gas/diesel</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {/* Grid Services Explanation */}
@@ -1119,6 +1514,12 @@ export default function EVChargingWizard({
               ================================================ */}
           {currentStep === 4 && (
             <div className="space-y-6">
+              {/* Step Help */}
+              <WizardStepHelp 
+                content={EV_CHARGING_STEP_HELP['quote']} 
+                colorScheme="emerald"
+              />
+              
               {isCalculating ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mb-4" />
@@ -1134,6 +1535,92 @@ export default function EVChargingWizard({
                     <p className="text-emerald-200/70">
                       {STATION_TYPES[stationType].name} • {SCALE_OPTIONS[scale].description} • {state}
                     </p>
+                  </div>
+                  
+                  {/* ✨ WHAT YOU NEED - Configuration Summary */}
+                  <div className="bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-cyan-400/30">
+                    <h4 className="font-bold text-white mb-3 flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-cyan-400" />
+                      What You Need - Your Configuration
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {/* Chargers */}
+                      <div className="bg-white/5 rounded-lg p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Bolt className="w-4 h-4 text-yellow-400" />
+                          <span className="text-xs text-white/60 uppercase">Chargers</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">
+                          {(recommendation.chargers.level1 || 0) + recommendation.chargers.level2 + recommendation.chargers.dcfc + (recommendation.chargers.hpc || 0)}
+                        </p>
+                        <p className="text-xs text-cyan-200/70">
+                          {recommendation.chargers.level1 > 0 && `${recommendation.chargers.level1} L1 • `}
+                          {recommendation.chargers.level2} L2 • {recommendation.chargers.dcfc} DCFC
+                          {recommendation.chargers.hpc > 0 && ` • ${recommendation.chargers.hpc} HPC`}
+                        </p>
+                      </div>
+                      
+                      {/* Peak Demand */}
+                      <div className="bg-white/5 rounded-lg p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Gauge className="w-4 h-4 text-red-400" />
+                          <span className="text-xs text-white/60 uppercase">Peak Demand</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">{Math.round(recommendation.chargers.peakDemandKW)} kW</p>
+                        <p className="text-xs text-red-200/70">Maximum draw</p>
+                      </div>
+                      
+                      {/* Battery System */}
+                      {wantsBatteryStorage && (
+                        <div className="bg-white/5 rounded-lg p-3 text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Battery className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs text-white/60 uppercase">Battery</span>
+                          </div>
+                          <p className="text-xl font-bold text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
+                          <p className="text-xs text-emerald-200/70">{recommendation.recommendation.bessKWh} kWh capacity</p>
+                        </div>
+                      )}
+                      
+                      {/* Solar Canopy */}
+                      {wantsSolarCanopy && (
+                        <div className="bg-white/5 rounded-lg p-3 text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Sun className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs text-white/60 uppercase">Solar</span>
+                          </div>
+                          <p className="text-xl font-bold text-amber-400">{recommendation.recommendation.solarKW} kW</p>
+                          <p className="text-xs text-amber-200/70">Canopy array</p>
+                        </div>
+                      )}
+                      
+                      {/* Demand Reduction */}
+                      <div className="bg-white/5 rounded-lg p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <TrendingDown className="w-4 h-4 text-purple-400" />
+                          <span className="text-xs text-white/60 uppercase">Peak Shaving</span>
+                        </div>
+                        <p className="text-xl font-bold text-purple-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
+                        <p className="text-xs text-purple-200/70">Demand reduction</p>
+                      </div>
+                    </div>
+                    
+                    {/* Quick Summary */}
+                    <div className="mt-3 pt-3 border-t border-white/10 text-sm text-white/70">
+                      <p className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <span>
+                          Your {STATION_TYPES[stationType].name.toLowerCase()} will handle 
+                          {' '}<strong className="text-white">{Math.round(recommendation.chargers.peakDemandKW / 50)} fast-charge sessions/hour</strong>
+                          {wantsBatteryStorage && (
+                            <span> with <strong className="text-emerald-400">40% lower demand charges</strong></span>
+                          )}
+                          {wantsSolarCanopy && (
+                            <span> and <strong className="text-amber-400">solar-powered savings</strong></span>
+                          )}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                   
                   {/* Main Savings Card */}
@@ -1332,6 +1819,31 @@ export default function EVChargingWizard({
           )}
         </div>
       </div>
+      
+      {/* Floating Power Gauge Widget - Always visible in bottom right */}
+      {calculatedPower.peakDemandKW > 0 && (
+        <PowerGaugeWidget
+          data={{
+            bessKW: recommendation.recommendation.bessKW,
+            bessKWh: recommendation.recommendation.bessKWh,
+            peakDemandKW: calculatedPower.peakDemandKW,
+            solarKW: recommendation.recommendation.solarKW,
+            evChargersKW: calculatedPower.totalConnectedKW,
+            generatorKW: recommendation.recommendation.generatorKW,
+            powerGapKW: Math.max(0, calculatedPower.peakDemandKW - (
+              recommendation.recommendation.bessKW +
+              recommendation.recommendation.solarKW +
+              recommendation.recommendation.generatorKW
+            )),
+            isGapMet: (
+              recommendation.recommendation.bessKW +
+              recommendation.recommendation.solarKW +
+              recommendation.recommendation.generatorKW
+            ) >= calculatedPower.peakDemandKW * 0.9,
+          }}
+          position="fixed"
+        />
+      )}
     </div>
   );
 }

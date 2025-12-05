@@ -30,9 +30,9 @@ function App() {
   const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
   const [activeVertical, setActiveVertical] = useState<string | null>(
     verticalParam || 
-    (pathname === '/carwashenergy' ? 'carwash' : 
-     pathname === '/evchargingenergy' ? 'evcharging' :
-     pathname === '/hotelenergy' ? 'hotel' : null)
+    (pathname === '/carwashenergy' || pathname === '/car-wash' ? 'carwash' : 
+     pathname === '/evchargingenergy' || pathname === '/ev-charging' ? 'evcharging' :
+     pathname === '/hotelenergy' || pathname === '/hotel' ? 'hotel' : null)
   );
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
