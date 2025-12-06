@@ -20,6 +20,8 @@ export type {
   QuoteResult,
   QuickEstimate,
   PowerResult,
+  ValidationResult,
+  VersionedQuoteResult,
   HotelPowerSimpleInput,
   HotelPowerSimpleResult,
   CarWashPowerSimpleInput,
