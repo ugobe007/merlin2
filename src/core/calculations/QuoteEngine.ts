@@ -4,6 +4,10 @@
  * 
  * This is THE entry point for all quote calculations in Merlin.
  * 
+ * VERSION HISTORY:
+ * - 2.0.0 (Dec 6, 2025): Added caching, versioning, enhanced validation
+ * - 1.0.0 (Dec 6, 2025): Initial SSOT orchestrator
+ * 
  * ARCHITECTURE:
  * ┌─────────────────────────────────────────────────────────────────┐
  * │                         QuoteEngine                             │
@@ -48,7 +52,7 @@
  * - All power calculations go through useCasePowerCalculations.ts
  * - No component should bypass this engine for quotes
  * 
- * @version 1.0.0
+ * @version 2.0.0
  * @date December 6, 2025
  */
 
@@ -146,6 +150,39 @@ export type PowerResult =
   | PowerCalculationResult;
 
 // ============================================================================
+// VALIDATION TYPES
+// ============================================================================
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// ============================================================================
+// EXTENDED QUOTE RESULT WITH VERSIONING
+// ============================================================================
+
+export interface VersionedQuoteResult extends QuoteResult {
+  metadata: QuoteResult['metadata'] & {
+    engineVersion: string;
+    cacheHit: boolean;
+  };
+}
+
+// ============================================================================
+// CACHE CONFIGURATION
+// ============================================================================
+
+interface CacheEntry {
+  result: QuoteResult;
+  timestamp: number;
+}
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache TTL
+const MAX_CACHE_SIZE = 100; // Maximum cache entries
+
+// ============================================================================
 // QUOTE ENGINE CLASS - THE FACADE
 // ============================================================================
 
@@ -164,6 +201,102 @@ export type PowerResult =
 export class QuoteEngine {
   
   // ==========================================================================
+  // VERSIONING
+  // ==========================================================================
+  
+  /**
+   * Engine version - bump when calculation logic changes.
+   * Used for tracking historical quotes and debugging.
+   */
+  static readonly VERSION = '2.0.0';
+  
+  /**
+   * Version changelog for documentation.
+   */
+  static readonly VERSION_HISTORY = {
+    '2.0.0': 'Added caching, versioning, enhanced validation (Dec 6, 2025)',
+    '1.0.0': 'Initial SSOT orchestrator (Dec 6, 2025)',
+  };
+  
+  // ==========================================================================
+  // CACHING
+  // ==========================================================================
+  
+  /**
+   * Quote result cache for expensive calculations.
+   * Key: JSON-serialized input params
+   * Value: Cached result with timestamp
+   */
+  private static quoteCache = new Map<string, CacheEntry>();
+  
+  /**
+   * Generate a cache key from input parameters.
+   */
+  private static getCacheKey(input: QuoteInput): string {
+    // Only cache on stable parameters (exclude timestamps, random values)
+    const stableInput = {
+      storageSizeMW: input.storageSizeMW,
+      durationHours: input.durationHours,
+      solarMW: input.solarMW || 0,
+      windMW: input.windMW || 0,
+      generatorMW: input.generatorMW || 0,
+      generatorFuelType: input.generatorFuelType || 'diesel',
+      fuelCellMW: input.fuelCellMW || 0,
+      fuelCellType: input.fuelCellType || 'hydrogen',
+      location: input.location || 'California',
+      electricityRate: input.electricityRate || 0.15,
+      gridConnection: input.gridConnection || 'on-grid',
+      useCase: input.useCase || 'general',
+    };
+    return JSON.stringify(stableInput);
+  }
+  
+  /**
+   * Check if a cache entry is still valid.
+   */
+  private static isCacheValid(entry: CacheEntry): boolean {
+    return Date.now() - entry.timestamp < CACHE_TTL_MS;
+  }
+  
+  /**
+   * Clean up expired cache entries.
+   */
+  private static cleanCache(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.quoteCache.entries()) {
+      if (now - entry.timestamp >= CACHE_TTL_MS) {
+        this.quoteCache.delete(key);
+      }
+    }
+    
+    // Enforce max size (LRU-style: delete oldest)
+    if (this.quoteCache.size > MAX_CACHE_SIZE) {
+      const entriesToDelete = this.quoteCache.size - MAX_CACHE_SIZE;
+      const keys = Array.from(this.quoteCache.keys()).slice(0, entriesToDelete);
+      keys.forEach(key => this.quoteCache.delete(key));
+    }
+  }
+  
+  /**
+   * Clear the quote cache (useful for testing or after pricing updates).
+   */
+  static clearCache(): void {
+    this.quoteCache.clear();
+    console.log('🧹 [QuoteEngine] Cache cleared');
+  }
+  
+  /**
+   * Get cache statistics for monitoring.
+   */
+  static getCacheStats(): { size: number; maxSize: number; ttlMs: number } {
+    return {
+      size: this.quoteCache.size,
+      maxSize: MAX_CACHE_SIZE,
+      ttlMs: CACHE_TTL_MS,
+    };
+  }
+  
+  // ==========================================================================
   // QUOTE GENERATION
   // ==========================================================================
   
@@ -172,7 +305,13 @@ export class QuoteEngine {
    * 
    * THIS IS THE PRIMARY METHOD FOR GENERATING QUOTES.
    * 
+   * Features:
+   * - Caching: Results cached for 5 minutes to improve performance
+   * - Versioning: Each result includes engine version for tracking
+   * - Validation: Input validated before calculation
+   * 
    * @param input - Quote input parameters
+   * @param options - Optional configuration
    * @returns Complete quote with costs, equipment, and financials
    * 
    * @example
@@ -187,15 +326,70 @@ export class QuoteEngine {
    *   generatorFuelType: 'diesel'
    * });
    */
-  static async generateQuote(input: QuoteInput): Promise<QuoteResult> {
+  static async generateQuote(
+    input: QuoteInput,
+    options: { skipCache?: boolean; skipValidation?: boolean } = {}
+  ): Promise<VersionedQuoteResult> {
+    const { skipCache = false, skipValidation = false } = options;
+    
+    // Validate input unless explicitly skipped
+    if (!skipValidation) {
+      const validation = this.validateInput(input);
+      if (!validation.valid) {
+        throw new Error(`Invalid quote input: ${validation.errors.join(', ')}`);
+      }
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️ [QuoteEngine] Validation warnings:', validation.warnings);
+      }
+    }
+    
+    // Check cache first (unless skipped)
+    const cacheKey = this.getCacheKey(input);
+    if (!skipCache) {
+      const cached = this.quoteCache.get(cacheKey);
+      if (cached && this.isCacheValid(cached)) {
+        console.log('✅ [QuoteEngine] Cache hit');
+        return {
+          ...cached.result,
+          metadata: {
+            ...cached.result.metadata,
+            engineVersion: this.VERSION,
+            cacheHit: true,
+          },
+        };
+      }
+    }
+    
     console.log('🔮 [QuoteEngine] Generating quote:', {
       storageSizeMW: input.storageSizeMW,
       durationHours: input.durationHours,
       useCase: input.useCase,
-      location: input.location
+      location: input.location,
+      version: this.VERSION,
     });
     
-    return calculateQuote(input);
+    // Generate fresh quote
+    const result = await calculateQuote(input);
+    
+    // Cache the result
+    this.quoteCache.set(cacheKey, {
+      result,
+      timestamp: Date.now(),
+    });
+    
+    // Clean up old entries periodically
+    if (Math.random() < 0.1) { // 10% chance to trigger cleanup
+      this.cleanCache();
+    }
+    
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        engineVersion: this.VERSION,
+        cacheHit: false,
+      },
+    };
   }
   
   /**
@@ -394,48 +588,136 @@ export class QuoteEngine {
   }
   
   /**
-   * Validate quote input parameters.
+   * Validate quote input parameters with comprehensive checks.
    * 
    * @param input - Quote input to validate
-   * @returns Validation result with errors if any
+   * @returns Validation result with errors and warnings
+   * 
+   * @example
+   * const validation = QuoteEngine.validateInput({ storageSizeMW: 0.5 });
+   * if (!validation.valid) {
+   *   console.error('Errors:', validation.errors);
+   * }
+   * if (validation.warnings.length > 0) {
+   *   console.warn('Warnings:', validation.warnings);
+   * }
    */
-  static validateInput(input: Partial<QuoteInput>): { 
-    valid: boolean; 
-    errors: string[] 
-  } {
+  static validateInput(input: Partial<QuoteInput>): ValidationResult {
     const errors: string[] = [];
+    const warnings: string[] = [];
     
-    if (!input.storageSizeMW || input.storageSizeMW <= 0) {
-      errors.push('storageSizeMW must be a positive number');
+    // ==========================================================================
+    // REQUIRED FIELD VALIDATION (ERRORS)
+    // ==========================================================================
+    
+    // Storage size validation
+    if (input.storageSizeMW === undefined || input.storageSizeMW === null) {
+      errors.push('storageSizeMW is required');
+    } else if (input.storageSizeMW <= 0) {
+      errors.push('storageSizeMW must be positive');
+    } else if (input.storageSizeMW > 1000) {
+      errors.push('storageSizeMW exceeds maximum (1000 MW)');
     }
     
-    if (!input.durationHours || input.durationHours <= 0) {
-      errors.push('durationHours must be a positive number');
+    // Duration validation
+    if (input.durationHours === undefined || input.durationHours === null) {
+      errors.push('durationHours is required');
+    } else if (input.durationHours <= 0) {
+      errors.push('durationHours must be positive');
+    } else if (input.durationHours > 24) {
+      errors.push('durationHours exceeds maximum (24 hours)');
     }
     
-    if (input.durationHours && (input.durationHours < 1 || input.durationHours > 12)) {
-      errors.push('durationHours should be between 1 and 12 hours');
-    }
+    // ==========================================================================
+    // OPTIONAL FIELD VALIDATION (ERRORS FOR INVALID VALUES)
+    // ==========================================================================
     
-    if (input.electricityRate && input.electricityRate < 0) {
+    // Electricity rate
+    if (input.electricityRate !== undefined && input.electricityRate < 0) {
       errors.push('electricityRate cannot be negative');
     }
     
-    if (input.solarMW && input.solarMW < 0) {
+    // Renewables/generators (must be non-negative)
+    if (input.solarMW !== undefined && input.solarMW < 0) {
       errors.push('solarMW cannot be negative');
     }
     
-    if (input.windMW && input.windMW < 0) {
+    if (input.windMW !== undefined && input.windMW < 0) {
       errors.push('windMW cannot be negative');
     }
     
-    if (input.generatorMW && input.generatorMW < 0) {
+    if (input.generatorMW !== undefined && input.generatorMW < 0) {
       errors.push('generatorMW cannot be negative');
+    }
+    
+    if (input.fuelCellMW !== undefined && input.fuelCellMW < 0) {
+      errors.push('fuelCellMW cannot be negative');
+    }
+    
+    // Grid connection type
+    if (input.gridConnection && !['on-grid', 'off-grid', 'limited'].includes(input.gridConnection)) {
+      errors.push('gridConnection must be "on-grid", "off-grid", or "limited"');
+    }
+    
+    // Generator fuel type
+    if (input.generatorFuelType && !['diesel', 'natural-gas', 'dual-fuel'].includes(input.generatorFuelType)) {
+      errors.push('generatorFuelType must be "diesel", "natural-gas", or "dual-fuel"');
+    }
+    
+    // Fuel cell type
+    if (input.fuelCellType && !['hydrogen', 'natural-gas-fc', 'solid-oxide'].includes(input.fuelCellType)) {
+      errors.push('fuelCellType must be "hydrogen", "natural-gas-fc", or "solid-oxide"');
+    }
+    
+    // ==========================================================================
+    // WARNINGS (NON-BLOCKING)
+    // ==========================================================================
+    
+    // Duration outside typical range
+    if (input.durationHours && (input.durationHours < 1 || input.durationHours > 12)) {
+      warnings.push(`durationHours (${input.durationHours}h) is outside typical range (1-12h)`);
+    }
+    
+    // Very small systems
+    if (input.storageSizeMW && input.storageSizeMW < 0.01) {
+      warnings.push(`storageSizeMW (${input.storageSizeMW} MW = ${input.storageSizeMW * 1000} kW) is very small`);
+    }
+    
+    // Very large systems
+    if (input.storageSizeMW && input.storageSizeMW > 100) {
+      warnings.push(`storageSizeMW (${input.storageSizeMW} MW) is utility-scale - verify inputs`);
+    }
+    
+    // High electricity rate
+    if (input.electricityRate && input.electricityRate > 0.50) {
+      warnings.push(`electricityRate ($${input.electricityRate}/kWh) is unusually high`);
+    }
+    
+    // Low electricity rate
+    if (input.electricityRate && input.electricityRate < 0.05) {
+      warnings.push(`electricityRate ($${input.electricityRate}/kWh) is unusually low`);
+    }
+    
+    // Solar larger than storage
+    if (input.solarMW && input.storageSizeMW && input.solarMW > input.storageSizeMW * 3) {
+      warnings.push(`solarMW (${input.solarMW} MW) is large relative to storage (${input.storageSizeMW} MW)`);
+    }
+    
+    // Generator larger than storage
+    if (input.generatorMW && input.storageSizeMW && input.generatorMW > input.storageSizeMW * 2) {
+      warnings.push(`generatorMW (${input.generatorMW} MW) is large relative to storage (${input.storageSizeMW} MW)`);
+    }
+    
+    // Off-grid without generator or renewables
+    if (input.gridConnection === 'off-grid' && 
+        !input.solarMW && !input.windMW && !input.generatorMW && !input.fuelCellMW) {
+      warnings.push('Off-grid system has no generation source (solar, wind, generator, or fuel cell)');
     }
     
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      warnings,
     };
   }
 }
