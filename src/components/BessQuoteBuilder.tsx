@@ -1,3 +1,14 @@
+/**
+ * @deprecated This component is deprecated. Use QuoteEngine.generateQuote() instead.
+ * Scheduled for removal in v3.0.0
+ * 
+ * Migration guide:
+ * - For hotel quotes: Use HotelWizard or QuoteEngine.generateQuote({ useCase: 'hotel', ... })
+ * - For car wash quotes: Use CarWashWizard or QuoteEngine.generateQuote({ useCase: 'car-wash', ... })
+ * - For EV quotes: Use EVChargingWizard or QuoteEngine.generateQuote({ useCase: 'ev-charging', ... })
+ * - For generic quotes: Use StreamlinedWizard or QuoteEngine.generateQuote({ ... })
+ * - For advanced configuration: Use AdvancedQuoteBuilder
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { buildModalManagerProps } from '../utils/modalProps';
 import { useBessQuoteBuilder } from '../hooks/useBessQuoteBuilder';
@@ -31,6 +42,14 @@ console.log('🔍 [TRACE] BessQuoteBuilder.tsx loaded');
 
 export default function BessQuoteBuilder() {
   console.log('🔍 [TRACE] BessQuoteBuilder component rendering');
+  
+  // ⚠️ DEPRECATION WARNING
+  useEffect(() => {
+    console.warn(
+      '⚠️ DEPRECATED: BessQuoteBuilder is deprecated and will be removed in v3.0.0. ' +
+      'Please migrate to QuoteEngine.generateQuote() or use AdvancedQuoteBuilder.'
+    );
+  }, []);
   
   // Local state to track if wizard should start in advanced mode
   const [startWizardInAdvancedMode, setStartWizardInAdvancedMode] = useState(false);
