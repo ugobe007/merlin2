@@ -140,15 +140,17 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   
   const systemCategory = getSystemCategory(storageSizeMW);
   
-  console.log(`📊 [UnifiedQuoteCalculator] Calculating quote:`, {
-    storageSizeMW,
-    durationHours,
-    systemCategory,
-    location,
-    electricityRate,
-    generatorFuelType: generatorMW > 0 ? generatorFuelType : 'none',
-    fuelCellType: fuelCellMW > 0 ? fuelCellType : 'none'
-  });
+  if (import.meta.env.DEV) {
+    console.log(`📊 [UnifiedQuoteCalculator] Calculating quote:`, {
+      storageSizeMW,
+      durationHours,
+      systemCategory,
+      location,
+      electricityRate,
+      generatorFuelType: generatorMW > 0 ? generatorFuelType : 'none',
+      fuelCellType: fuelCellMW > 0 ? fuelCellType : 'none'
+    });
+  }
   
   // Build equipment options (NEW - Dec 2025)
   const equipmentOptions: EquipmentBreakdownOptions = {
@@ -177,12 +179,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   const taxCredit = totalProjectCost * 0.30; // 30% ITC
   const netCost = totalProjectCost - taxCredit;
   
-  console.log(`💰 [UnifiedQuoteCalculator] Equipment costs:`, {
-    equipmentCost,
-    installationCost,
-    totalProjectCost,
-    netCost
-  });
+  if (import.meta.env.DEV) {
+    console.log(`💰 [UnifiedQuoteCalculator] Equipment costs:`, {
+      equipmentCost,
+      installationCost,
+      totalProjectCost,
+      netCost
+    });
+  }
   
   // Step 3: Calculate financial metrics using centralized service
   const financials = await calculateFinancialMetrics({
@@ -203,12 +207,14 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     ? netCost / financials.annualSavings 
     : 999;
   
-  console.log(`📈 [UnifiedQuoteCalculator] Financial metrics:`, {
-    annualSavings: financials.annualSavings,
-    paybackYears: actualPayback,
-    npv: financials.npv,
-    irr: financials.irr
-  });
+  if (import.meta.env.DEV) {
+    console.log(`📈 [UnifiedQuoteCalculator] Financial metrics:`, {
+      annualSavings: financials.annualSavings,
+      paybackYears: actualPayback,
+      npv: financials.npv,
+      irr: financials.irr
+    });
+  }
   
   return {
     equipment,

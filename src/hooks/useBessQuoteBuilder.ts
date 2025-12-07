@@ -254,8 +254,6 @@ export interface BessQuoteBuilderHandlers {
 }
 
 export function useBessQuoteBuilder() {
-  console.log('🏗️ useBessQuoteBuilder hook initializing');
-  
   // View state
   const [viewMode, setViewMode] = useState<'app' | 'public-profile'>('app');
   const [publicProfileSlug, setPublicProfileSlug] = useState<string | null>(null);
@@ -285,13 +283,7 @@ export function useBessQuoteBuilder() {
   const [isFirstTimeProfile, setIsFirstTimeProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showBESSAnalytics, _setShowBESSAnalytics] = useState(false);
-  
-  // Wrapper to log BESS Analytics state changes
-  const setShowBESSAnalytics = (show: boolean) => {
-    console.log('⚡ setShowBESSAnalytics called with:', show);
-    _setShowBESSAnalytics(show);
-  };
+  const [showBESSAnalytics, setShowBESSAnalytics] = useState(false);
   const [showFinancing, setShowFinancing] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -393,12 +385,7 @@ export function useBessQuoteBuilder() {
   };
 
   const handleAdvancedQuoteBuilder = () => {
-    console.log('🔥 Advanced Tools button clicked!');
-    console.log('Current isLoggedIn:', isLoggedIn);
-    console.log('Current showAdvancedQuoteBuilder:', showAdvancedQuoteBuilder);
-    
     setShowAdvancedQuoteBuilder(true);
-    console.log('🚀 Set showAdvancedQuoteBuilder to true');
   };
 
   const handleLayoutPreference = (preference: 'beginner' | 'advanced') => {
@@ -729,7 +716,6 @@ export function useBessQuoteBuilder() {
     try {
       // Note: This function would need to import the required services
       // For now, we'll provide a placeholder that would need to be implemented
-      console.log('Export calculations functionality would need additional imports');
       alert('✅ Export functionality available - requires import configuration');
     } catch (error) {
       console.error('Error exporting calculations:', error);
@@ -770,7 +756,6 @@ export function useBessQuoteBuilder() {
     try {
       // Note: This function would need to import WordExportService
       // For now, we'll provide a placeholder that would need to be implemented
-      console.log('Word export functionality would need additional imports');
       alert('✅ Word export functionality available - requires import configuration');
     } catch (error) {
       console.error('Error exporting to Word:', error);

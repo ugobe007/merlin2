@@ -1225,8 +1225,7 @@ export default function HotelEnergy() {
             state: inputs.state,
           }}
           onClose={() => setShowWizard(false)}
-          onComplete={(quote) => {
-            console.log('Wizard completed with quote:', quote);
+          onComplete={() => {
             setShowWizard(false);
           }}
           onRequestConsultation={() => {

@@ -354,8 +354,6 @@ export default function BessQuoteBuilder() {
     }
   );
 
-  console.log('🔥 After building modalManagerProps, showBESSAnalytics in props:', modalManagerProps.showBESSAnalytics);
-
   return (
     <>
     <div 

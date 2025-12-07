@@ -1440,14 +1440,6 @@ export default function CarWashWizard({
         energyGoals.primaryGoal === 'all';
       const solarMW = includeSolar ? (energyGoals.solarRoofArea * 0.015 / 1000) : 0; // ~15W/sqft
       
-      console.log('🌞 Solar calculation:', {
-        primaryGoal: energyGoals.primaryGoal,
-        includeSolar,
-        solarRoofArea: energyGoals.solarRoofArea,
-        solarMW,
-        solarKW: solarMW * 1000,
-      });
-      
       // Include natural gas generator when user selects backup-power, solar-generator, or all goals
       // Generator is sized to cover peak demand for extended outages
       const includeGenerator = energyGoals.includeGenerator || 
@@ -1459,14 +1451,6 @@ export default function CarWashWizard({
             ? energyGoals.generatorSizeKW / 1000 
             : calculatedPower.peakDemandKW * 0.8 / 1000) // Default: 80% of peak for backup
         : 0;
-      
-      console.log('⚡ Generator calculation:', {
-        primaryGoal: energyGoals.primaryGoal,
-        includeGenerator,
-        generatorSizeKW: energyGoals.generatorSizeKW,
-        generatorMW,
-        generatorKW: generatorMW * 1000,
-      });
       
       // Map grid connection status for SSOT compliance
       const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
