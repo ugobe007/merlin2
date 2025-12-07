@@ -19,7 +19,8 @@ import {
   CheckCircle, AlertCircle, Info, Sparkles, Car, TrendingDown, Phone,
   FileText, FileSpreadsheet, File, Building, BarChart3, MapPin, Target, Leaf, Clock
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
 import { 
   calculateCarWashEquipmentPower,
@@ -1471,7 +1472,7 @@ export default function CarWashWizard({
       const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
                                  gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid';
       
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: mergedInputs.state,
