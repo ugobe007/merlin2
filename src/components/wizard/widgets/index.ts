@@ -12,3 +12,6 @@ export type { PowerStatusProps } from './PowerStatusWidget';
 
 export { PowerGaugeWidget } from './PowerGaugeWidget';
 export type { PowerGaugeData } from './PowerGaugeWidget';
+
+export { PowerDashboardWidget } from './PowerDashboardWidget';
+export type { PowerDashboardData, PowerDashboardWidgetProps } from './PowerDashboardWidget';
