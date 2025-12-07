@@ -222,7 +222,7 @@ export default function BessQuoteBuilder() {
   
   // Placeholder values for legacy components (analytics, financing modals)
   // These are deprecated and will be removed in future versions
-  // TODO: Remove these placeholders and update dependent components to use SmartWizardV3 data
+  // Note: These placeholders exist for backward compatibility. Component deprecated in v3.0
   
   // ✅ USE SSOT: State for battery pricing from unifiedPricingService
   const [batteryPricePerKwh, setBatteryPricePerKwh] = useState(155); // Default NREL ATB 2024

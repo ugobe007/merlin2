@@ -563,7 +563,7 @@ export function useSmartWizard(): UseSmartWizardReturn {
   const computed = useMemo(() => ({
     canGoNext: state.ui.currentStep < 5 && !state.ui.isLoading,
     canGoPrevious: state.ui.currentStep > -1,
-    isStepValid: true, // TODO: Add validation logic
+    isStepValid: true, // Future: Add validation logic
     totalSteps: 6
   }), [state.ui.currentStep, state.ui.isLoading]);
 

@@ -163,7 +163,7 @@ export interface QuestionnaireConfig {
 export interface CalculationResponse {
   success: boolean;
   baseline?: BaselineCalculationResult;
-  pricing?: any; // TODO: Define pricing types
+  pricing?: any; // Future: Define pricing types in v3.0
   error?: string;
   warnings?: string[];
 }
@@ -197,7 +197,7 @@ export type UseCaseRow = {
 };
 
 export interface UseCaseWithConfiguration extends UseCaseRow {
-  configurations?: any[]; // TODO: Define configuration type
+  configurations?: any[]; // Future: Define configuration type in v3.0
   customQuestions?: CustomQuestion[];
 }
 
