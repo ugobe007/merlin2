@@ -188,8 +188,10 @@ export function calculateOfficePower(sqFt: number): PowerCalculationResult {
 }
 
 /**
- * Calculate power requirement for Hotel
+ * Calculate power requirement for Hotel (Simple version)
  * Source: CBECS 2018, hospitality industry benchmarks
+ * 
+ * For detailed calculations with amenities, use calculateHotelPowerDetailed()
  * 
  * @param roomCount - Number of hotel rooms
  * @returns Power in MW
@@ -209,6 +211,624 @@ export function calculateHotelPower(roomCount: number): PowerCalculationResult {
     inputs: { roomCount, kWPerRoom }
   };
 }
+
+// ============================================
+// HOTEL CLASS PROFILES - Energy consumption by hotel tier
+// Source: CBECS 2018, hospitality energy audits
+// ============================================
+export const HOTEL_CLASS_PROFILES = {
+  economy: { kWhPerRoom: 25, peakKWPerRoom: 1.5, name: 'Economy/Budget', hvacTons: 0.5 },
+  midscale: { kWhPerRoom: 35, peakKWPerRoom: 2.0, name: 'Midscale', hvacTons: 0.75 },
+  upscale: { kWhPerRoom: 50, peakKWPerRoom: 2.5, name: 'Upscale', hvacTons: 1.0 },
+  luxury: { kWhPerRoom: 75, peakKWPerRoom: 3.5, name: 'Luxury/Resort', hvacTons: 1.5 },
+} as const;
+
+export type HotelClass = keyof typeof HOTEL_CLASS_PROFILES;
+
+// ============================================
+// HOTEL AMENITY SPECIFICATIONS - Peak power and daily usage
+// Source: ASHRAE HVAC Applications Handbook, hospitality audits
+// ============================================
+export const HOTEL_AMENITY_SPECS = {
+  pool: { name: 'Pool & Hot Tub', peakKW: 50, dailyKWh: 300 },
+  restaurant: { name: 'Restaurant/Kitchen', peakKW: 75, dailyKWh: 400 },
+  spa: { name: 'Spa/Sauna/Steam', peakKW: 40, dailyKWh: 200 },
+  fitnessCenter: { name: 'Fitness Center', peakKW: 15, dailyKWh: 100 },
+  evCharging: { name: 'EV Charging', peakKW: 60, dailyKWh: 200 }, // Default, overridden by config
+  laundry: { name: 'On-Site Laundry', peakKW: 40, dailyKWh: 250 },
+  conferenceCenter: { name: 'Conference/Meeting Rooms', peakKW: 30, dailyKWh: 150 },
+} as const;
+
+export type HotelAmenity = keyof typeof HOTEL_AMENITY_SPECS;
+
+// ============================================
+// BUILDING AGE EFFICIENCY FACTORS
+// Older buildings typically have higher energy consumption
+// ============================================
+export const BUILDING_AGE_FACTORS = {
+  new: 0.85,      // Built in last 5 years, efficient systems
+  modern: 1.0,    // 5-15 years old, baseline
+  older: 1.15,    // 15-30 years old, some efficiency loss
+  historic: 1.3,  // 30+ years, significant efficiency loss
+} as const;
+
+export type BuildingAge = keyof typeof BUILDING_AGE_FACTORS;
+
+// ============================================
+// SEASONALITY FACTORS - Annual energy swing by hotel type
+// ============================================
+export const SEASONALITY_FACTORS = {
+  low: 0.05,      // ±5% swing (airport hotels, highway motels)
+  moderate: 0.15, // ±15% swing (business hotels)
+  high: 0.30,     // ±30% swing (beach resorts, ski lodges)
+} as const;
+
+export type Seasonality = keyof typeof SEASONALITY_FACTORS;
+
+/**
+ * Detailed Hotel Power Calculation Input
+ * Used by HotelWizard for comprehensive power analysis
+ */
+export interface HotelPowerInput {
+  rooms: number;
+  hotelClass: HotelClass;
+  buildingAge: BuildingAge;
+  avgOccupancy: number; // 0-100 percent
+  amenities: Partial<Record<HotelAmenity, boolean>>;
+  evChargingConfig?: {
+    numLevel1Ports: number;
+    numLevel2Ports: number;
+    level2Power: number; // kW per port (typically 7.2 or 11)
+    numDCFCPorts: number;
+    dcfcPower: number; // kW per port (typically 50-150)
+  };
+  operations: {
+    seasonality: Seasonality;
+    peakHoursStart: number; // Hour of day (0-23)
+    peakHoursEnd: number;
+  };
+  electricityRate?: number; // $/kWh for savings calculations
+  demandCharge?: number; // $/kW for demand charge calculations
+}
+
+/**
+ * Detailed Hotel Power Calculation Result
+ * Includes seasonality, arbitrage, and financial metrics
+ */
+export interface HotelPowerResult extends PowerCalculationResult {
+  // Power breakdown
+  basePeakKW: number;
+  amenityPeakKW: number;
+  totalPeakKW: number;
+  
+  // Energy metrics
+  dailyKWh: number;
+  monthlyKWh: number;
+  
+  // Financial (if rates provided)
+  monthlyDemandCharges: number;
+  monthlyEnergyCharges: number;
+  totalMonthlyCharges: number;
+  
+  // Seasonality
+  seasonalMultiplier: number;
+  peakSeasonMonthlyKWh: number;
+  offSeasonMonthlyKWh: number;
+  
+  // Peak hours arbitrage
+  peakHoursDuration: number;
+  peakEnergyKWh: number;
+  offPeakEnergyKWh: number;
+  arbitrageSavingsPotential: number; // Monthly $ if rates provided
+}
+
+/**
+ * DETAILED HOTEL POWER CALCULATION
+ * Migrated from HotelWizard.tsx for SSOT compliance
+ * 
+ * This function provides comprehensive hotel power analysis including:
+ * - Room-based load by hotel class
+ * - Building age efficiency factors
+ * - Amenity loads (pool, restaurant, spa, etc.)
+ * - EV charging with configurable ports
+ * - Seasonality impact
+ * - Peak hours arbitrage potential
+ * 
+ * @param input - Detailed hotel configuration
+ * @returns Comprehensive power calculation with financial metrics
+ */
+export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerResult {
+  const classProfile = HOTEL_CLASS_PROFILES[input.hotelClass];
+  const ageFactor = BUILDING_AGE_FACTORS[input.buildingAge];
+  const occupancyFactor = input.avgOccupancy / 100;
+  
+  // ════════════════════════════════════════════════════════════════
+  // BASE LOAD FROM ROOMS
+  // ════════════════════════════════════════════════════════════════
+  let basePeakKW = input.rooms * classProfile.peakKWPerRoom * occupancyFactor;
+  let dailyKWh = input.rooms * classProfile.kWhPerRoom * occupancyFactor;
+  
+  // Apply building age efficiency factor
+  basePeakKW *= ageFactor;
+  dailyKWh *= ageFactor;
+  
+  // ════════════════════════════════════════════════════════════════
+  // AMENITY LOADS
+  // ════════════════════════════════════════════════════════════════
+  let amenityPeakKW = 0;
+  
+  Object.entries(input.amenities).forEach(([key, enabled]) => {
+    if (enabled && key !== 'evCharging') {
+      const spec = HOTEL_AMENITY_SPECS[key as HotelAmenity];
+      if (spec) {
+        amenityPeakKW += spec.peakKW;
+        dailyKWh += spec.dailyKWh;
+      }
+    }
+  });
+  
+  // ════════════════════════════════════════════════════════════════
+  // EV CHARGING - Dynamic configuration
+  // ════════════════════════════════════════════════════════════════
+  if (input.amenities.evCharging && input.evChargingConfig) {
+    const config = input.evChargingConfig;
+    const level1kW = 1.4; // Standard Level 1
+    
+    const evPeakKW = 
+      (config.numLevel1Ports * level1kW) +
+      (config.numLevel2Ports * config.level2Power) + 
+      (config.numDCFCPorts * config.dcfcPower);
+    
+    // Daily usage assumptions:
+    // L1: 8 hours/day (overnight charging)
+    // L2: 4 hours/day (guest charging)
+    // DCFC: 2 hours/day (quick top-ups)
+    const evDailyKWh = 
+      (config.numLevel1Ports * level1kW * 8) +
+      (config.numLevel2Ports * config.level2Power * 4) + 
+      (config.numDCFCPorts * config.dcfcPower * 2);
+    
+    amenityPeakKW += evPeakKW;
+    dailyKWh += evDailyKWh;
+  } else if (input.amenities.evCharging) {
+    // Use default amenity spec if no detailed config
+    amenityPeakKW += HOTEL_AMENITY_SPECS.evCharging.peakKW;
+    dailyKWh += HOTEL_AMENITY_SPECS.evCharging.dailyKWh;
+  }
+  
+  // ════════════════════════════════════════════════════════════════
+  // SEASONALITY IMPACT
+  // ════════════════════════════════════════════════════════════════
+  const seasonalSwing = SEASONALITY_FACTORS[input.operations.seasonality];
+  const seasonalMultiplier = 1 + seasonalSwing;
+  
+  // Weighted annual average:
+  // Peak season: 4 months, Shoulder: 4 months, Off season: 4 months
+  const peakSeasonDailyKWh = dailyKWh * (1 + seasonalSwing);
+  const offSeasonDailyKWh = dailyKWh * (1 - seasonalSwing);
+  const weightedDailyKWh = (peakSeasonDailyKWh * 4 + dailyKWh * 4 + offSeasonDailyKWh * 4) / 12;
+  
+  // ════════════════════════════════════════════════════════════════
+  // TOTAL PEAK WITH DIVERSITY FACTOR
+  // Not all equipment runs at peak simultaneously (75% factor)
+  // ════════════════════════════════════════════════════════════════
+  const totalPeakKW = Math.round((basePeakKW + amenityPeakKW) * 0.75);
+  
+  // ════════════════════════════════════════════════════════════════
+  // PEAK HOURS ANALYSIS - BESS discharge opportunity
+  // ════════════════════════════════════════════════════════════════
+  const peakHoursDuration = input.operations.peakHoursEnd - input.operations.peakHoursStart;
+  
+  // Hotels use ~65% of daily energy during peak hours
+  const peakHoursLoadFactor = 0.65;
+  const peakEnergyKWh = Math.round(weightedDailyKWh * peakHoursLoadFactor);
+  const offPeakEnergyKWh = Math.round(weightedDailyKWh * (1 - peakHoursLoadFactor));
+  
+  // ════════════════════════════════════════════════════════════════
+  // MONTHLY CALCULATIONS
+  // ════════════════════════════════════════════════════════════════
+  const monthlyKWh = Math.round(weightedDailyKWh * 30);
+  const peakSeasonMonthlyKWh = Math.round(peakSeasonDailyKWh * 30);
+  const offSeasonMonthlyKWh = Math.round(offSeasonDailyKWh * 30);
+  
+  // ════════════════════════════════════════════════════════════════
+  // FINANCIAL CALCULATIONS (if rates provided)
+  // ════════════════════════════════════════════════════════════════
+  const electricityRate = input.electricityRate || 0.12; // Default $0.12/kWh
+  const demandCharge = input.demandCharge || 15; // Default $15/kW
+  
+  const monthlyDemandCharges = Math.round(totalPeakKW * demandCharge);
+  const monthlyEnergyCharges = Math.round(monthlyKWh * electricityRate);
+  const totalMonthlyCharges = monthlyDemandCharges + monthlyEnergyCharges;
+  
+  // ════════════════════════════════════════════════════════════════
+  // ARBITRAGE SAVINGS POTENTIAL
+  // TOU rate differential: peak ~1.5x, off-peak ~0.6x
+  // ════════════════════════════════════════════════════════════════
+  const peakRate = electricityRate * 1.5;
+  const offPeakRate = electricityRate * 0.6;
+  const rateDifferential = peakRate - offPeakRate;
+  
+  // BESS can shift ~80% of peak energy to off-peak charging
+  const shiftableEnergyKWh = peakEnergyKWh * 0.8;
+  const dailyArbitrageSavings = shiftableEnergyKWh * rateDifferential;
+  const monthlyArbitrageSavings = Math.round(dailyArbitrageSavings * 30);
+  
+  // ════════════════════════════════════════════════════════════════
+  // RETURN COMPREHENSIVE RESULT
+  // ════════════════════════════════════════════════════════════════
+  const powerMW = totalPeakKW / 1000;
+  
+  return {
+    // PowerCalculationResult base fields
+    powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
+    durationHrs: 4, // Standard hotel backup duration
+    description: `Hotel: ${input.rooms} rooms (${classProfile.name}) × ${classProfile.peakKWPerRoom} kW/room = ${totalPeakKW} kW peak`,
+    calculationMethod: 'CBECS hospitality with amenities, seasonality, and arbitrage analysis',
+    inputs: {
+      rooms: input.rooms,
+      hotelClass: input.hotelClass,
+      buildingAge: input.buildingAge,
+      avgOccupancy: input.avgOccupancy,
+      amenities: input.amenities,
+    },
+    
+    // Power breakdown
+    basePeakKW: Math.round(basePeakKW),
+    amenityPeakKW: Math.round(amenityPeakKW),
+    totalPeakKW,
+    
+    // Energy metrics
+    dailyKWh: Math.round(weightedDailyKWh),
+    monthlyKWh,
+    
+    // Financial
+    monthlyDemandCharges,
+    monthlyEnergyCharges,
+    totalMonthlyCharges,
+    
+    // Seasonality
+    seasonalMultiplier,
+    peakSeasonMonthlyKWh,
+    offSeasonMonthlyKWh,
+    
+    // Peak hours arbitrage
+    peakHoursDuration,
+    peakEnergyKWh,
+    offPeakEnergyKWh,
+    arbitrageSavingsPotential: monthlyArbitrageSavings,
+  };
+}
+
+
+// ============================================================================
+// CAR WASH POWER CALCULATIONS - SINGLE SOURCE OF TRUTH
+// ============================================================================
+// Source: Industry specifications document (Nov 2025)
+// Migrated from CarWashWizard.tsx for SSOT compliance (Dec 2025)
+
+/**
+ * Car wash equipment power specifications
+ * All values in kW unless otherwise noted
+ */
+export const CAR_WASH_EQUIPMENT_POWER = {
+  // Conveyor Systems (4-8 kW total)
+  conveyor: {
+    primary: 5, // 5 HP = 3.7 kW average
+    rollerCallUp: 0.5,
+    controls: 0.5,
+  },
+  
+  // Washing Equipment (20-35 kW total)
+  washing: {
+    topBrush: 4, // 3.7-4.5 kW per unit
+    wrapAroundBrush: 3.7, // per unit, 2-4 typical
+    mitterCurtain: 1, // 0.75-1 kW per unit
+    wheelBrush: 0.6, // 0.5-0.75 kW per unit
+  },
+  
+  // High-Pressure Systems (15-25 kW total)
+  highPressure: {
+    pumpStation: 11, // 15 HP = 11 kW
+    undercarriageWash: 2.5, // 2-5 HP
+  },
+  
+  // Chemical Application (3-8 kW total)
+  chemical: {
+    pumpStation: 1.5, // per station, 2-4 typical
+    foamGenerator: 0.5,
+    tireShine: 0.3,
+  },
+  
+  // Drying Systems (30-90 kW total) - LARGEST CONSUMER
+  drying: {
+    standardBlower: 7.5, // 10 HP = 7.5 kW per unit, 4-8 typical
+    highPerformance: 33.5, // 45 HP large dryer
+    windBlade: 15, // 20 HP
+    sideMounted: 9, // 10-15 HP per side
+  },
+  
+  // Vacuum Systems (15-60 kW depending on config)
+  vacuum: {
+    standAlone3Motor: 3.6, // 4.8 HP total
+    centralSystem: 30, // 10-75 HP turbine
+    detailing: 4.5, // 4-8 HP
+  },
+  
+  // Water Heating (electric components only)
+  waterHeating: {
+    controls: 1,
+    recircPump: 0.75,
+    tankless: 25, // 9-47 kW if electric
+  },
+  
+  // Air Compression (4-12 kW)
+  airCompression: {
+    compressor: 7.5, // 5-15 HP
+    dryer: 0.75,
+  },
+  
+  // Water Reclamation (3-10 kW)
+  waterReclaim: {
+    reclaimPump: 4, // 3-7.5 HP
+    filtration: 1.5,
+  },
+  
+  // HVAC & Facility (5-20 kW)
+  facility: {
+    lighting: 6, // 2-12 kW tunnel
+    controls: 0.5,
+    pos: 0.5,
+    security: 0.3,
+    gates: 0.75,
+  },
+  
+  // Specialty (5-15 kW)
+  specialty: {
+    reverseOsmosis: 2.5, // 2-5 HP
+    wheelBlaster: 1.5, // per unit
+  },
+} as const;
+
+/**
+ * Automation level configurations with power impact
+ */
+export const CAR_WASH_AUTOMATION_LEVELS = {
+  legacy: {
+    name: 'Legacy',
+    description: 'Older electromechanical systems (pre-2010)',
+    powerMultiplier: 0.85, // Less efficient, but simpler
+    additionalKW: 2, // Basic controls
+  },
+  standard: {
+    name: 'Standard',
+    description: 'Current PLC-based automation (2010-2020)',
+    powerMultiplier: 1.0,
+    additionalKW: 4, // PLC + sensors + HMI
+  },
+  modern: {
+    name: 'Modern/AI',
+    description: 'AI vision systems, real-time adaptation (2020+)',
+    powerMultiplier: 1.08, // Slightly more for AI processing
+    additionalKW: 8, // Vision + AI + edge computing
+  },
+} as const;
+
+export type CarWashAutomationLevel = keyof typeof CAR_WASH_AUTOMATION_LEVELS;
+
+/**
+ * Car wash equipment configuration for power calculations
+ */
+export interface CarWashEquipmentConfig {
+  // Conveyor
+  hasConveyor: boolean;
+  conveyorHP: number;
+  
+  // Washing
+  topBrushes: number;
+  wrapAroundBrushes: number;
+  mitterCurtains: number;
+  wheelBrushes: number;
+  
+  // High Pressure
+  highPressurePumps: number;
+  hasUndercarriage: boolean;
+  
+  // Drying
+  standardBlowers: number;
+  hasWindBlade: boolean;
+  hasHighPerformanceDryer: boolean;
+  
+  // Vacuum
+  hasCentralVacuum: boolean;
+  vacuumStations: number;
+  
+  // Chemical
+  chemicalStations: number;
+  hasTireShine: boolean;
+  
+  // Water
+  hasWaterReclaim: boolean;
+  hasReverseOsmosis: boolean;
+  waterHeatingType: 'electric' | 'gas' | 'none';
+  
+  // Air Compression
+  airCompressorHP: number;
+}
+
+/**
+ * Car wash operations configuration
+ */
+export interface CarWashOperationsConfig {
+  hoursPerDay: number;
+  daysPerWeek: number;
+  peakHoursStart: number;
+  peakHoursEnd: number;
+}
+
+/**
+ * Complete car wash power calculation input
+ */
+export interface CarWashPowerInput {
+  equipment: CarWashEquipmentConfig;
+  operations: CarWashOperationsConfig;
+  automationLevel: CarWashAutomationLevel;
+  electricityRate?: number;
+  demandCharge?: number;
+}
+
+/**
+ * Car wash power calculation result
+ */
+export interface CarWashPowerResult extends PowerCalculationResult {
+  peakDemandKW: number;
+  avgDemandKW: number;
+  dailyKWh: number;
+  monthlyKWh: number;
+  demandCharges: number;
+  energyCharges: number;
+}
+
+/**
+ * DETAILED CAR WASH EQUIPMENT POWER CALCULATION
+ * Migrated from CarWashWizard.tsx for SSOT compliance
+ * 
+ * Calculates power requirements based on detailed equipment configuration:
+ * - Conveyor systems
+ * - Washing equipment (brushes, curtains)
+ * - High-pressure systems
+ * - Drying systems (largest consumer, 30-40% of total)
+ * - Vacuum systems
+ * - Chemical application
+ * - Water treatment
+ * - Facility loads
+ * 
+ * @param input - Complete car wash configuration
+ * @returns Detailed power analysis with financial metrics
+ */
+export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWashPowerResult {
+  const { equipment, operations, automationLevel } = input;
+  const EQUIPMENT_POWER = CAR_WASH_EQUIPMENT_POWER;
+  
+  let peakKW = 0;
+  
+  // Conveyor
+  if (equipment.hasConveyor) {
+    peakKW += equipment.conveyorHP * 0.746; // HP to kW
+    peakKW += EQUIPMENT_POWER.conveyor.rollerCallUp;
+    peakKW += EQUIPMENT_POWER.conveyor.controls;
+  }
+  
+  // Washing Equipment
+  peakKW += equipment.topBrushes * EQUIPMENT_POWER.washing.topBrush;
+  peakKW += equipment.wrapAroundBrushes * EQUIPMENT_POWER.washing.wrapAroundBrush;
+  peakKW += equipment.mitterCurtains * EQUIPMENT_POWER.washing.mitterCurtain;
+  peakKW += equipment.wheelBrushes * EQUIPMENT_POWER.washing.wheelBrush;
+  
+  // High Pressure
+  peakKW += equipment.highPressurePumps * EQUIPMENT_POWER.highPressure.pumpStation;
+  if (equipment.hasUndercarriage) {
+    peakKW += EQUIPMENT_POWER.highPressure.undercarriageWash;
+  }
+  
+  // Drying - LARGEST CONSUMER (30-40% of total)
+  peakKW += equipment.standardBlowers * EQUIPMENT_POWER.drying.standardBlower;
+  if (equipment.hasWindBlade) {
+    peakKW += EQUIPMENT_POWER.drying.windBlade;
+  }
+  if (equipment.hasHighPerformanceDryer) {
+    peakKW += EQUIPMENT_POWER.drying.highPerformance;
+  }
+  
+  // Vacuum - Central system and standalone stations can coexist
+  if (equipment.hasCentralVacuum) {
+    peakKW += EQUIPMENT_POWER.vacuum.centralSystem;
+  }
+  // Standalone vacuum stations (in parking lot / self-serve bays)
+  peakKW += equipment.vacuumStations * EQUIPMENT_POWER.vacuum.standAlone3Motor;
+  
+  // Chemical
+  peakKW += equipment.chemicalStations * EQUIPMENT_POWER.chemical.pumpStation;
+  peakKW += EQUIPMENT_POWER.chemical.foamGenerator;
+  if (equipment.hasTireShine) {
+    peakKW += EQUIPMENT_POWER.chemical.tireShine;
+  }
+  
+  // Water
+  if (equipment.hasWaterReclaim) {
+    peakKW += EQUIPMENT_POWER.waterReclaim.reclaimPump;
+    peakKW += EQUIPMENT_POWER.waterReclaim.filtration;
+  }
+  if (equipment.hasReverseOsmosis) {
+    peakKW += EQUIPMENT_POWER.specialty.reverseOsmosis;
+  }
+  if (equipment.waterHeatingType === 'electric') {
+    peakKW += EQUIPMENT_POWER.waterHeating.tankless;
+  } else if (equipment.waterHeatingType === 'gas') {
+    peakKW += EQUIPMENT_POWER.waterHeating.controls;
+    peakKW += EQUIPMENT_POWER.waterHeating.recircPump;
+  }
+  // 'none' = no water heating power consumption
+  
+  // Air Compression
+  peakKW += equipment.airCompressorHP * 0.746;
+  peakKW += EQUIPMENT_POWER.airCompression.dryer;
+  
+  // Facility
+  peakKW += EQUIPMENT_POWER.facility.lighting;
+  peakKW += EQUIPMENT_POWER.facility.controls;
+  peakKW += EQUIPMENT_POWER.facility.pos;
+  peakKW += EQUIPMENT_POWER.facility.security;
+  peakKW += EQUIPMENT_POWER.facility.gates;
+  
+  // Automation Systems (based on level)
+  const autoLevel = CAR_WASH_AUTOMATION_LEVELS[automationLevel];
+  peakKW += autoLevel.additionalKW;
+  
+  // Apply automation efficiency multiplier
+  peakKW *= autoLevel.powerMultiplier;
+  
+  // Load diversity factor (not all equipment runs simultaneously)
+  const diversityFactor = 0.7; // 70% typical
+  const avgKW = peakKW * diversityFactor;
+  
+  // Daily energy
+  const peakHours = operations.peakHoursEnd - operations.peakHoursStart;
+  const offPeakHours = operations.hoursPerDay - peakHours;
+  const dailyKWh = (peakKW * peakHours * 0.85) + (avgKW * offPeakHours * 0.6);
+  
+  // Monthly
+  const monthlyKWh = dailyKWh * operations.daysPerWeek * 4.33;
+  
+  // Costs (if rates provided)
+  const demandCharges = input.demandCharge ? Math.round(peakKW * input.demandCharge) : 0;
+  const energyCharges = input.electricityRate ? Math.round(monthlyKWh * input.electricityRate) : 0;
+  
+  const powerMW = peakKW / 1000;
+  
+  return {
+    // Base PowerCalculationResult
+    powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
+    durationHrs: Math.max(2, peakHours), // Duration based on peak hours
+    description: `Car wash: ${Math.round(peakKW)} kW peak demand, ${Math.round(avgKW)} kW average`,
+    calculationMethod: 'Equipment-based calculation with load diversity',
+    inputs: {
+      automationLevel,
+      hasConveyor: equipment.hasConveyor,
+      standardBlowers: equipment.standardBlowers,
+      hasCentralVacuum: equipment.hasCentralVacuum,
+    },
+    
+    // Extended CarWashPowerResult
+    peakDemandKW: Math.round(peakKW),
+    avgDemandKW: Math.round(avgKW),
+    dailyKWh: Math.round(dailyKWh),
+    monthlyKWh: Math.round(monthlyKWh),
+    demandCharges,
+    energyCharges,
+  };
+}
+
 
 /**
  * Calculate power requirement for Hospital
@@ -981,4 +1601,181 @@ export function calculateUseCasePower(
         inputs: { genericSqFt, genericWattsPerSqFt }
       };
   }
+}
+
+// =============================================================================
+// SIMPLE LANDING PAGE CALCULATORS
+// These are simplified versions for landing page quick estimates
+// =============================================================================
+
+/**
+ * Hotel class profiles for simplified landing page calculator
+ * SSOT for HotelEnergy.tsx landing page
+ */
+export const HOTEL_CLASS_PROFILES_SIMPLE = {
+  economy: { peakKWPerRoom: 1.5, name: 'Economy/Budget' },
+  midscale: { peakKWPerRoom: 2.5, name: 'Midscale/Select Service' },
+  upscale: { peakKWPerRoom: 4.0, name: 'Upscale/Full Service' },
+  luxury: { peakKWPerRoom: 6.0, name: 'Luxury/Resort' },
+} as const;
+
+/**
+ * Hotel amenity power additions for simplified landing page calculator
+ */
+export const HOTEL_AMENITY_POWER_SIMPLE = {
+  pool: 25, // kW - pool heating, pumps, lighting
+  restaurant: 50, // kW - commercial kitchen, HVAC
+  spa: 40, // kW - saunas, hot tubs, equipment
+  fitness: 15, // kW - equipment, ventilation
+  evCharging: 30, // kW - 2-4 Level 2 chargers
+} as const;
+
+export type HotelClassSimple = keyof typeof HOTEL_CLASS_PROFILES_SIMPLE;
+export type HotelAmenitySimple = keyof typeof HOTEL_AMENITY_POWER_SIMPLE;
+
+export interface HotelPowerSimpleInput {
+  rooms: number;
+  hotelClass: HotelClassSimple;
+  amenities: HotelAmenitySimple[];
+  electricityRate: number;
+}
+
+export interface HotelPowerSimpleResult {
+  peakKW: number;
+  monthlyDemandCost: number;
+  annualEnergyCost: number;
+  bessRecommendedKW: number;
+  bessRecommendedKWh: number;
+  potentialSavings: number;
+}
+
+/**
+ * Simple hotel power calculator for landing page
+ * Matches HotelEnergy.tsx embedded logic - now SSOT
+ */
+export function calculateHotelPowerSimple(input: HotelPowerSimpleInput): HotelPowerSimpleResult {
+  const { rooms, hotelClass, amenities, electricityRate } = input;
+  
+  const classProfile = HOTEL_CLASS_PROFILES_SIMPLE[hotelClass];
+  const basePeakKW = rooms * classProfile.peakKWPerRoom;
+  
+  // Add amenity power
+  const amenityKW = amenities.reduce((total, amenity) => {
+    return total + (HOTEL_AMENITY_POWER_SIMPLE[amenity] || 0);
+  }, 0);
+  
+  // Apply diversity factor (0.75) - not all loads peak simultaneously
+  const peakKW = Math.round((basePeakKW + amenityKW) * 0.75);
+  
+  // Demand charge calculation (assume $15/kW typical)
+  const demandCharge = 15;
+  const monthlyDemandCost = peakKW * demandCharge;
+  
+  // Annual energy (assume 40% capacity factor for hotels, 8760 hours/year)
+  const annualKWh = peakKW * 8760 * 0.4;
+  const annualEnergyCost = annualKWh * electricityRate;
+  
+  // BESS sizing: 50% peak shaving capability, 4-hour duration
+  const bessRecommendedKW = Math.round(peakKW * 0.5);
+  const bessRecommendedKWh = bessRecommendedKW * 4;
+  
+  // Potential savings: 30% demand charge reduction + 10% energy arbitrage
+  const potentialSavings = Math.round(
+    (monthlyDemandCost * 12 * 0.3) + (annualEnergyCost * 0.1)
+  );
+  
+  return {
+    peakKW,
+    monthlyDemandCost,
+    annualEnergyCost: Math.round(annualEnergyCost),
+    bessRecommendedKW,
+    bessRecommendedKWh,
+    potentialSavings,
+  };
+}
+
+/**
+ * Car wash power profiles for simplified landing page calculator
+ * SSOT for CarWashEnergy.tsx landing page
+ */
+export const CAR_WASH_POWER_PROFILES_SIMPLE = {
+  selfService: { bayPower: 5, name: 'Self-Service Bay' },
+  automatic: { bayPower: 25, name: 'Automatic/In-Bay' },
+  tunnel: { bayPower: 75, name: 'Express Tunnel' },
+  fullService: { bayPower: 100, name: 'Full-Service Tunnel' },
+} as const;
+
+export type CarWashTypeSimple = keyof typeof CAR_WASH_POWER_PROFILES_SIMPLE;
+
+export interface CarWashPowerSimpleInput {
+  bays: number;
+  washType: CarWashTypeSimple;
+  hasVacuums: boolean;
+  hasDryers: boolean;
+  carsPerDay: number;
+  electricityRate: number;
+}
+
+export interface CarWashPowerSimpleResult {
+  peakKW: number;
+  monthlyDemandCost: number;
+  annualEnergyCost: number;
+  bessRecommendedKW: number;
+  bessRecommendedKWh: number;
+  potentialSavings: number;
+}
+
+/**
+ * Simple car wash power calculator for landing page
+ * Matches CarWashEnergy.tsx embedded logic - now SSOT
+ */
+export function calculateCarWashPowerSimple(input: CarWashPowerSimpleInput): CarWashPowerSimpleResult {
+  const { bays, washType, hasVacuums, hasDryers, carsPerDay, electricityRate } = input;
+  
+  const profile = CAR_WASH_POWER_PROFILES_SIMPLE[washType];
+  let peakKW = bays * profile.bayPower;
+  
+  // Add vacuum islands (6 kW each, assume 1 per 2 bays)
+  if (hasVacuums) {
+    peakKW += Math.ceil(bays / 2) * 6;
+  }
+  
+  // Add dryer systems (15 kW per bay for tunnel types)
+  if (hasDryers && (washType === 'tunnel' || washType === 'fullService')) {
+    peakKW += bays * 15;
+  }
+  
+  // Apply utilization factor based on cars/day
+  // Higher volume = higher peak utilization
+  const peakHours = 5; // Typical peak operating hours
+  const utilizationFactor = Math.min(0.9, 0.5 + (carsPerDay / 500) * 0.4);
+  peakKW = Math.round(peakKW * utilizationFactor);
+  
+  // Demand charge calculation (assume $15/kW typical)
+  const demandCharge = 15;
+  const monthlyDemandCost = peakKW * demandCharge;
+  
+  // Annual energy calculation
+  // kWh per car varies by type: self-service ~2, automatic ~8, tunnel ~15, full ~25
+  const kWhPerCar = { selfService: 2, automatic: 8, tunnel: 15, fullService: 25 }[washType];
+  const annualKWh = carsPerDay * 365 * kWhPerCar;
+  const annualEnergyCost = annualKWh * electricityRate;
+  
+  // BESS sizing: 60% peak shaving (car washes have spiky loads), 2-hour duration
+  const bessRecommendedKW = Math.round(peakKW * 0.6);
+  const bessRecommendedKWh = bessRecommendedKW * 2;
+  
+  // Potential savings: 40% demand charge reduction (high spikes), 5% energy
+  const potentialSavings = Math.round(
+    (monthlyDemandCost * 12 * 0.4) + (annualEnergyCost * 0.05)
+  );
+  
+  return {
+    peakKW,
+    monthlyDemandCost,
+    annualEnergyCost: Math.round(annualEnergyCost),
+    bessRecommendedKW,
+    bessRecommendedKWh,
+    potentialSavings,
+  };
 }

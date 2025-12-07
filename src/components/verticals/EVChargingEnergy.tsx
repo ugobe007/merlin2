@@ -20,6 +20,10 @@ import {
   Gauge, Clock, MapPin
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { 
+  calculateEVChargingPowerSimple,
+  EV_CHARGER_SPECS_SIMPLE 
+} from '@/services/evChargingCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.png';
@@ -48,42 +52,26 @@ interface LeadInfo {
 }
 
 // ============================================
-// CONSTANTS
+// CONSTANTS (UI display only - calculations use SSOT)
 // ============================================
 
-// EV Charger power specifications (SAE J1772 / CCS standards)
-const EV_CHARGER_SPECS = {
+// EV Charger descriptions for UI display (power values from SSOT)
+const EV_CHARGER_DISPLAY = {
   level2: {
     name: 'Level 2',
-    powerKW: 7.2, // 7.2 kW typical (some go to 19 kW)
     description: 'Destination charging',
-  },
-  dcfc50: {
-    name: 'DC Fast 50kW',
-    powerKW: 50,
-    description: 'Quick charge stops',
   },
   dcfc150: {
     name: 'DC Fast 150kW',
-    powerKW: 150,
     description: 'Highway stations',
   },
   hpc250: {
     name: 'HPC 250kW',
-    powerKW: 250,
     description: 'Ultra-fast charging',
-  },
-  hpc350: {
-    name: 'HPC 350kW',
-    powerKW: 350,
-    description: 'Premium highway',
   },
 };
 
-// Concurrency factor - not all chargers run at once
-const CONCURRENCY_FACTOR = 0.7;
-
-// State electricity rates
+// State electricity rates (for UI and calculation)
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
   'California': { rate: 0.22, demandCharge: 28 },
   'Texas': { rate: 0.12, demandCharge: 18 },
@@ -173,31 +161,32 @@ function ImageCarousel() {
 }
 
 // ============================================
-// CALCULATOR LOGIC
+// CALCULATOR LOGIC (uses SSOT from evChargingCalculations)
 // ============================================
 
 function calculateEVChargingPower(inputs: EVChargingInputs): { peakKW: number; dailyKWh: number; demandChargeImpact: number } {
   const { level2Ports, dcfcPorts, hpcPorts, utilizationPercent, state } = inputs;
   
-  // Calculate total connected load
-  const level2Power = level2Ports * EV_CHARGER_SPECS.level2.powerKW;
-  const dcfcPower = dcfcPorts * EV_CHARGER_SPECS.dcfc150.powerKW; // Assume 150kW DCFC
-  const hpcPower = hpcPorts * EV_CHARGER_SPECS.hpc250.powerKW; // Assume 250kW HPC
-  
-  const totalConnectedKW = level2Power + dcfcPower + hpcPower;
-  
-  // Peak demand with concurrency
-  const peakKW = Math.round(totalConnectedKW * CONCURRENCY_FACTOR);
-  
-  // Daily energy based on utilization (assume 12 peak hours)
-  const utilizationFactor = utilizationPercent / 100;
-  const dailyKWh = Math.round(totalConnectedKW * utilizationFactor * 12);
-  
-  // Demand charge impact
   const stateData = STATE_RATES[state] || STATE_RATES['Other'];
-  const demandChargeImpact = peakKW * stateData.demandCharge;
   
-  return { peakKW, dailyKWh, demandChargeImpact };
+  // Call SSOT calculator
+  const result = calculateEVChargingPowerSimple({
+    level2Count: level2Ports,
+    dcfcCount: dcfcPorts,
+    hpcCount: hpcPorts,
+    electricityRate: stateData.rate,
+    demandCharge: stateData.demandCharge,
+  });
+  
+  // Calculate dailyKWh based on utilization (assume 12 peak hours)
+  const utilizationFactor = utilizationPercent / 100;
+  const dailyKWh = Math.round(result.connectedKW * utilizationFactor * 12);
+  
+  return { 
+    peakKW: result.peakKW, 
+    dailyKWh, 
+    demandChargeImpact: result.demandChargeImpact 
+  };
 }
 
 // ============================================
@@ -338,34 +327,34 @@ export default function EVChargingEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           HEADER
           ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="bg-gradient-to-r from-slate-900/90 via-emerald-900/30 to-slate-800/90 backdrop-blur-md border-b border-emerald-500/20 sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-slate-900 via-emerald-900/50 to-slate-900 backdrop-blur-xl border-b-2 border-emerald-500/40 sticky top-0 z-40 shadow-lg shadow-emerald-500/10">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           {/* Back to Merlin Button */}
           <a 
             href="/"
-            className="flex items-center gap-2 text-purple-300 hover:text-white transition-colors group mr-4"
+            className="flex items-center gap-2 text-emerald-300 hover:text-white transition-colors group mr-4 bg-slate-800/50 hover:bg-slate-700/50 px-3 py-2 rounded-xl border border-emerald-500/30 hover:border-emerald-400/50"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
-            <span className="hidden sm:inline text-sm font-medium">Back to Merlin</span>
+            <img src={merlinImage} alt="Merlin" className="w-7 h-7" />
+            <span className="hidden sm:inline text-sm font-semibold">Merlin</span>
           </a>
           
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/40 border-2 border-emerald-400/50">
               <Bolt className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">EV<span className="text-emerald-400">ChargingPower</span></h1>
-              <p className="text-xs text-emerald-300/70">Battery Storage for EV Stations</p>
+              <h1 className="text-xl font-black text-white tracking-tight">EV<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">ChargingPower</span></h1>
+              <p className="text-xs text-emerald-300 font-medium">⚡ Battery Storage for EV Stations</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#calculator" className="hidden md:block text-emerald-300 hover:text-white text-sm font-medium transition-colors">
+            <a href="#calculator" className="hidden md:block text-emerald-200 hover:text-white text-sm font-semibold transition-colors hover:bg-emerald-500/20 px-4 py-2 rounded-lg">
               Calculator
             </a>
-            <a href="tel:+18005551234" className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 px-4 py-2 rounded-full transition-all shadow-lg shadow-emerald-500/20">
+            <a href="tel:+18005551234" className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-500/30 border-2 border-emerald-300/50 hover:scale-105">
               <Phone className="w-4 h-4 text-white" />
-              <span className="text-white font-semibold text-sm">Get Quote</span>
+              <span className="text-white font-bold text-sm">Get Quote</span>
             </a>
           </div>
         </div>
@@ -523,25 +512,29 @@ export default function EVChargingEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           CALCULATOR SECTION
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="calculator" className="py-16 bg-white/5 backdrop-blur-sm">
+      <section id="calculator" className="py-16 bg-gradient-to-b from-black/30 via-emerald-900/20 to-black/30 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-400/40 mb-4">
+              <Bolt className="w-5 h-5 text-emerald-400" />
+              <span className="text-emerald-200 text-sm font-bold">⚡ EV STATION CALCULATOR</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
               Calculate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-400 to-cyan-300">Savings</span>
             </h2>
-            <p className="text-emerald-200/70 max-w-2xl mx-auto">
+            <p className="text-emerald-200 max-w-2xl mx-auto font-medium">
               Enter your charging station details and see how much you could save with battery storage
             </p>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Input Form */}
-            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-3xl p-8 border border-emerald-500/30 shadow-2xl shadow-emerald-500/10">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                  <Calculator className="w-5 h-5 text-white" />
+            <div className="bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-8 border-3 border-emerald-500/50 shadow-2xl shadow-emerald-500/20">
+              <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/40 border-2 border-emerald-400/50">
+                  <Calculator className="w-6 h-6 text-white" />
                 </div>
-                Your Charging Station
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">Your Charging Station</span>
               </h3>
               
               <div className="space-y-6">
@@ -644,27 +637,30 @@ export default function EVChargingEnergy() {
               </div>
               
               {/* Power Summary */}
-              <div className="mt-6 bg-white/10 rounded-xl p-4 border border-emerald-400/20">
+              <div className="mt-6 bg-gradient-to-r from-emerald-600/20 via-teal-600/20 to-cyan-600/20 rounded-2xl p-5 border-2 border-emerald-400/40">
                 <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-emerald-400">{peakKW} kW</p>
-                    <p className="text-xs text-emerald-200/70">Peak Demand</p>
+                  <div className="bg-emerald-500/20 rounded-xl p-3 border border-emerald-400/30">
+                    <p className="text-3xl font-black text-emerald-400">{peakKW} kW</p>
+                    <p className="text-xs text-emerald-200 font-semibold">⚡ Peak Demand</p>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-red-400">${demandChargeImpact.toLocaleString()}</p>
-                    <p className="text-xs text-red-200/70">Monthly Demand Charges</p>
+                  <div className="bg-red-500/20 rounded-xl p-3 border border-red-400/30">
+                    <p className="text-3xl font-black text-red-400">${demandChargeImpact.toLocaleString()}</p>
+                    <p className="text-xs text-red-200 font-semibold">💰 Monthly Charges</p>
                   </div>
                 </div>
               </div>
             </div>
             
             {/* Results Card */}
-            <div className="relative bg-gradient-to-br from-slate-900/95 via-emerald-900/30 to-slate-900/95 backdrop-blur-xl rounded-3xl p-8 border-2 border-emerald-400/40 shadow-2xl">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <TrendingDown className="w-5 h-5 text-white" />
+            <div className="relative bg-gradient-to-br from-slate-900 via-emerald-900/50 to-teal-900/40 backdrop-blur-xl rounded-3xl p-8 border-3 border-emerald-400/60 shadow-2xl shadow-emerald-500/30">
+              {/* Static decorations */}
+              <div className="absolute top-3 right-3 text-2xl">⚡</div>
+              <div className="absolute top-3 left-3 text-xl animate-bounce">💰</div>
+              <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/50 border-2 border-emerald-300/50">
+                  <TrendingDown className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-white">Your Estimated Savings</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Your Estimated Savings</span>
               </h3>
               
               {isCalculating ? (
@@ -749,39 +745,45 @@ export default function EVChargingEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           HOW IT WORKS
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16">
+      <section className="py-16 bg-gradient-to-b from-transparent via-emerald-900/20 to-transparent">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            How Battery Storage <span className="text-emerald-300">Saves You Money</span>
-          </h2>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-teal-500/20 px-4 py-2 rounded-full border border-teal-400/40 mb-4">
+              <Battery className="w-5 h-5 text-teal-400" />
+              <span className="text-teal-200 text-sm font-bold">🔋 HOW IT WORKS</span>
+            </div>
+            <h2 className="text-3xl font-black text-white">
+              How Battery Storage <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Saves You Money</span>
+            </h2>
+          </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-emerald-500/40 text-center hover:scale-105 transition-transform hover:border-emerald-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/40 border-2 border-emerald-300/40">
                 <TrendingDown className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Peak Shaving</h3>
-              <p className="text-emerald-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Peak Shaving</h3>
+              <p className="text-emerald-200 font-medium">
                 Battery absorbs peak demand spikes from DCFC chargers, reducing demand charges by 40-60%
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-teal-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-teal-500/40 text-center hover:scale-105 transition-transform hover:border-teal-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-500/40 border-2 border-teal-300/40">
                 <Gauge className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Grid Capacity</h3>
-              <p className="text-emerald-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Grid Capacity</h3>
+              <p className="text-teal-200 font-medium">
                 Add more chargers without expensive utility upgrades. Battery provides the extra capacity
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-cyan-500/40 text-center hover:scale-105 transition-transform hover:border-cyan-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/40 border-2 border-cyan-300/40">
                 <Sun className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Solar Ready</h3>
-              <p className="text-emerald-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Solar Ready</h3>
+              <p className="text-cyan-200 font-medium">
                 Add solar canopies for shade + free power. Battery stores excess for nighttime charging
               </p>
             </div>
@@ -792,14 +794,20 @@ export default function EVChargingEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           CASE STUDIES
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 bg-white/5">
+      <section className="py-16 bg-gradient-to-b from-black/30 via-emerald-900/20 to-black/30">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-4">
-            EV Stations <span className="text-emerald-300">Saving Big</span>
-          </h2>
-          <p className="text-center text-emerald-200/50 text-sm mb-12">
-            Example savings scenarios based on typical installations
-          </p>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-400/40 mb-4">
+              <Bolt className="w-5 h-5 text-emerald-400" />
+              <span className="text-emerald-200 text-sm font-bold">🏆 SUCCESS STORIES</span>
+            </div>
+            <h2 className="text-3xl font-black text-white">
+              EV Stations <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Saving Big</span>
+            </h2>
+            <p className="text-emerald-200 text-sm mt-2 font-medium">
+              Example savings scenarios based on typical installations
+            </p>
+          </div>
           
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -907,16 +915,19 @@ export default function EVChargingEnergy() {
           LEAD CAPTURE MODAL
           ═══════════════════════════════════════════════════════════════════════ */}
       {showLeadForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 max-w-md w-full border border-emerald-500/30 shadow-2xl relative">
-            <button onClick={() => setShowLeadForm(false)} className="absolute top-4 right-4 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-emerald-900/50 to-slate-900 rounded-3xl p-8 max-w-md w-full border-3 border-emerald-400/60 shadow-2xl shadow-emerald-500/30 relative">
+            {/* Decorative corners */}
+            <div className="absolute top-2 left-2 text-2xl">⚡</div>
+            <div className="absolute top-2 right-12 text-xl">🔋</div>
+            <button onClick={() => setShowLeadForm(false)} className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-emerald-500/30 rounded-xl transition-all border border-transparent hover:border-emerald-400/50">
+              <X className="w-6 h-6" />
             </button>
             
             {!leadSubmitted ? (
               <>
-                <h3 className="text-2xl font-bold text-white mb-2">Get Your Free Custom Quote</h3>
-                <p className="text-emerald-200/70 mb-6">Our team will analyze your station and send a detailed savings report</p>
+                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 mb-2">Get Your Free Custom Quote</h3>
+                <p className="text-emerald-200 mb-6 font-medium">Our team will analyze your station and send a detailed savings report</p>
                 
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
                   <div>
@@ -969,26 +980,26 @@ export default function EVChargingEnergy() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl transition-all hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2 border-2 border-emerald-300/50"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
+                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span className="animate-pulse">Processing...</span>
                       </>
                     ) : (
-                      'Get My Free Quote'
+                      <><Sparkles className="w-5 h-5" /> Get My Free Quote <ArrowRight className="w-5 h-5" /></>
                     )}
                   </button>
                 </form>
               </>
             ) : (
               <div className="text-center py-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-white" />
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/40 animate-pulse">
+                  <CheckCircle className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
-                <p className="text-emerald-200/70 mb-6">We'll send your detailed quote to {leadInfo.email} within 24 hours.</p>
+                <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300 mb-3">🎉 Thank You!</h3>
+                <p className="text-emerald-200 mb-6 font-medium">We'll send your detailed quote to <span className="text-emerald-300 font-bold">{leadInfo.email}</span> within 24 hours.</p>
                 <button
                   onClick={() => { setShowLeadForm(false); setLeadSubmitted(false); }}
                   className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all"
@@ -1009,26 +1020,31 @@ export default function EVChargingEnergy() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
           onClick={() => setShowQuickEstimate(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
           
           {/* Modal - Floating with responsive sizing */}
           <div 
-            className="relative bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl shadow-2xl shadow-emerald-500/20 max-w-lg w-full max-h-[90vh] overflow-y-auto border border-emerald-400/40"
+            className="relative bg-gradient-to-br from-slate-900 via-emerald-900/70 to-teal-900/80 rounded-3xl shadow-2xl shadow-emerald-500/40 max-w-lg w-full max-h-[90vh] overflow-y-auto border-3 border-emerald-400/60"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Decorative elements */}
+            <div className="absolute top-3 left-3 text-2xl animate-pulse">⚡</div>
             <button
               onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+              className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-emerald-500/30 rounded-xl transition-all border border-transparent hover:border-emerald-400/50 z-10"
             >
               <X className="w-6 h-6" />
             </button>
             
-            <div className="relative px-8 pt-8 pb-4">
+            <div className="relative px-8 pt-8 pb-4 bg-gradient-to-b from-emerald-600/20 to-transparent">
               <div className="flex items-center gap-4 mb-4">
-                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div className="relative">
+                  <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1"><Bolt className="w-3 h-3 text-white" /></div>
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
-                  <p className="text-emerald-300 text-sm">Answer 2 questions, get instant results</p>
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Quick Savings Estimate</h2>
+                  <p className="text-emerald-200 text-sm font-medium">⏱️ Answer 2 questions, get instant results</p>
                 </div>
               </div>
             </div>
@@ -1090,29 +1106,29 @@ export default function EVChargingEnergy() {
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 px-8 py-6 border-t border-emerald-500/20">
-              <div className="text-center mb-4">
-                <p className="text-emerald-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
-                <p className="text-5xl font-black text-white">
+            <div className="bg-gradient-to-r from-emerald-600/30 via-teal-600/30 to-cyan-600/30 px-8 py-6 border-t-2 border-emerald-400/40">
+              <div className="text-center mb-5 bg-slate-900/50 rounded-2xl p-5 border-2 border-emerald-400/40">
+                <p className="text-emerald-200 text-sm font-bold mb-2 tracking-wide">💰 YOUR ESTIMATED ANNUAL SAVINGS</p>
+                <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 drop-shadow-lg">
                   ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
                 </p>
-                <p className="text-teal-400 text-sm mt-1">
-                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
+                <p className="text-teal-300 text-sm mt-2 font-semibold">
+                  {quickEstimateResult && <><span className="text-cyan-400">⚡</span> ~{quickEstimateResult.payback} year payback</>}
                 </p>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 mb-6">
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Peak Shaving</p>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="text-center p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 hover:scale-105 transition-transform">
+                  <Zap className="w-6 h-6 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Peak Shaving</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">50%+ Cut</p>
+                <div className="text-center p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/40 hover:scale-105 transition-transform">
+                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">50%+ Cut</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Battery className="w-5 h-5 text-teal-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">More Capacity</p>
+                <div className="text-center p-3 bg-teal-500/20 rounded-xl border border-teal-400/40 hover:scale-105 transition-transform">
+                  <Battery className="w-6 h-6 text-teal-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">More Capacity</p>
                 </div>
               </div>
               
@@ -1132,8 +1148,9 @@ export default function EVChargingEnergy() {
                     }
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-white px-6 py-5 rounded-xl font-black text-lg shadow-xl shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300/50 hover:scale-[1.02] animate-pulse hover:animate-none"
                 >
+                  <Sparkles className="w-5 h-5" />
                   Get Detailed Quote
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -1142,14 +1159,14 @@ export default function EVChargingEnergy() {
                     setShowQuickEstimate(false);
                     document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                  className="w-full bg-slate-800/60 hover:bg-slate-700/60 border-2 border-emerald-400/40 hover:border-emerald-300/60 text-emerald-100 px-6 py-3 rounded-xl font-semibold transition-all text-sm"
                 >
                   Or try our simple calculator below
                 </button>
               </div>
               
-              <p className="text-center text-emerald-300/50 text-xs mt-4">
-                2 minute detailed quote • No commitment required
+              <p className="text-center text-emerald-200 text-xs mt-4 font-medium">
+                ✓ 2 minute detailed quote • ✓ No commitment required
               </p>
             </div>
           </div>

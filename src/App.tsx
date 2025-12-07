@@ -22,17 +22,22 @@ function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const adminParam = urlParams.get('admin');
   const verticalParam = urlParams.get('vertical');
+  const advancedParam = urlParams.get('advanced');
   
   // Check for path-based routing (e.g., /carwashenergy)
   const pathname = window.location.pathname;
   
   const [showAdmin, setShowAdmin] = useState(adminParam === 'true');
   const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
+  
+  // If advanced=true is set, don't activate vertical (let BessQuoteBuilder handle it)
   const [activeVertical, setActiveVertical] = useState<string | null>(
-    verticalParam || 
-    (pathname === '/carwashenergy' || pathname === '/car-wash' ? 'carwash' : 
-     pathname === '/evchargingenergy' || pathname === '/ev-charging' ? 'evcharging' :
-     pathname === '/hotelenergy' || pathname === '/hotel' ? 'hotel' : null)
+    advancedParam === 'true' ? null : (
+      verticalParam || 
+      (pathname === '/carwashenergy' || pathname === '/car-wash' ? 'carwash' : 
+       pathname === '/evchargingenergy' || pathname === '/ev-charging' ? 'evcharging' :
+       pathname === '/hotelenergy' || pathname === '/hotel' ? 'hotel' : null)
+    )
   );
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access

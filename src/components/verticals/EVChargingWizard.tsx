@@ -30,10 +30,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, ArrowLeft, ArrowRight, Check, Zap, Battery, Sun, 
   Gauge, DollarSign, Calendar, Download, CheckCircle, AlertCircle, 
-  Sparkles, Car, TrendingDown, Phone, FileText, FileSpreadsheet, File, Bolt,
+  Sparkles, Car, TrendingDown, TrendingUp, Phone, FileText, FileSpreadsheet, File, Bolt,
   BarChart3, Network, Building, Globe, Hotel, Hospital, GraduationCap, 
   Plane, ShoppingBag, Warehouse, Coffee, Settings, ChevronDown, ChevronUp,
-  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target, Lightbulb
+  Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target, Lightbulb,
+  ShoppingCart, Activity, Receipt, Info
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { PowerGaugeWidget } from '@/components/wizard/widgets';
@@ -47,7 +48,13 @@ import {
   calculateEVHubBESSSize,
   calculateGridServicesRevenue,
   calculateV2GPotential,
+  calculateEVStationRecommendation,
+  EV_STATION_TYPES,
+  EV_SCALE_OPTIONS,
   type EVChargerConfig,
+  type EVStationType,
+  type EVScaleOption,
+  type EVStationRecommendationInput,
 } from '@/services/evChargingCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -396,8 +403,25 @@ export default function EVChargingWizard({
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   
+  // Equipment Cart - shopping cart showing selections vs needs (like Amazon)
+  const [showEquipmentCart, setShowEquipmentCart] = useState(false);
+  
+  // Energy Metrics Dashboard - shows energy costs and charges
+  const [showEnergyMetrics, setShowEnergyMetrics] = useState(false);
+  
   // Concierge Tier Selection
   const [conciergeTier, setConciergeTier] = useState<keyof typeof CONCIERGE_TIERS>('standard');
+  
+  // Quote Mode: 'select' = mode chooser, 'pro' = direct input, 'guided' = step-by-step
+  const [quoteMode, setQuoteMode] = useState<'select' | 'pro' | 'guided'>('select');
+  
+  // Grid Connection Status - key question for accurate calculations
+  const [gridConnection, setGridConnection] = useState({
+    status: 'grid-tied' as 'grid-tied' | 'off-grid' | 'grid-backup-only',
+    gridReliability: 'reliable' as 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable',
+    gridCostConcern: false, // True if grid is too expensive
+    wantGridIndependence: false, // True if they want to reduce grid dependency
+  });
   
   // User Role Selection
   const [userRole, setUserRole] = useState<keyof typeof USER_ROLES>('operator');
@@ -437,129 +461,65 @@ export default function EVChargingWizard({
   }, [stationType, scale]);
   
   // ============================================
-  // SMART RECOMMENDATION ENGINE
+  // SMART RECOMMENDATION ENGINE - Uses SSOT
   // ============================================
   
-  // Auto-calculate recommended setup based on station type and scale
+  // Map local station type to SSOT station type
+  const mapStationType = (localType: keyof typeof STATION_TYPES): EVStationType => {
+    // Direct mapping - local types match SSOT types
+    const mapping: Record<keyof typeof STATION_TYPES, EVStationType> = {
+      highway: 'highway',
+      urban: 'urban',
+      destination: 'destination',
+      fleet: 'fleet',
+      retail: 'retail',
+    };
+    return mapping[localType];
+  };
+  
+  // Map local scale to SSOT scale
+  const mapScale = (localScale: keyof typeof SCALE_OPTIONS): EVScaleOption => {
+    // Direct mapping - local scales match SSOT scales
+    const mapping: Record<keyof typeof SCALE_OPTIONS, EVScaleOption> = {
+      starter: 'starter',
+      growing: 'growing',
+      established: 'established',
+      enterprise: 'enterprise',
+    };
+    return mapping[localScale];
+  };
+  
+  // Get recommendation using SSOT
   const getSmartRecommendation = () => {
-    const station = STATION_TYPES[stationType];
-    const scaleConfig = SCALE_OPTIONS[scale];
-    
-    // Calculate charger counts based on station defaults * scale multiplier
-    const level1Count = Math.round(station.defaultChargers.level1 * scaleConfig.multiplier);
-    const level2Count = Math.round(station.defaultChargers.level2 * scaleConfig.multiplier);
-    const dcfcCount = Math.round(station.defaultChargers.dcfc * scaleConfig.multiplier);
-    const hpcCount = Math.round(station.defaultChargers.hpc * scaleConfig.multiplier);
-    
-    // Use customChargers directly - they're always initialized and updated by sliders
-    const finalLevel1 = customChargers.level1 || level1Count;
-    const finalLevel2 = customChargers.level2 || Math.max(2, level2Count);
-    const finalDCFC = customChargers.dcfc;
-    const finalHPC = customChargers.hpc;
-    
-    // Calculate power requirements (using industry-standard values)
-    const level1Power = finalLevel1 * 1.9; // Level 1 is 1.9 kW (120V/16A)
-    const level2Power = finalLevel2 * 11; // Average Level 2 is 11kW
-    const dcfcPower = finalDCFC * 150; // Average DCFC is 150kW
-    const hpcPower = finalHPC * 350; // HPC is 350kW
-    const totalPowerKW = level1Power + level2Power + dcfcPower + hpcPower;
-    const peakDemandKW = Math.round(totalPowerKW * 0.7); // 70% concurrency
-    
-    // Get state electricity rates
     const stateData = STATE_RATES[state] || STATE_RATES['Other'];
+    const station = STATION_TYPES[stationType];
     
-    // Calculate monthly costs WITHOUT battery
-    const peakHours = 12; // Typical peak window
-    const dailyKWh = peakDemandKW * 0.4 * peakHours; // 40% avg utilization
-    const monthlyKWh = dailyKWh * 30;
-    const monthlyDemandCharges = peakDemandKW * stateData.demandCharge;
-    const monthlyEnergyCharges = monthlyKWh * stateData.rate;
-    const monthlyElectricityCost = monthlyDemandCharges + monthlyEnergyCharges;
+    // Build input for SSOT function
+    const input: EVStationRecommendationInput = {
+      stationType: mapStationType(stationType),
+      scale: mapScale(scale),
+      customChargers: {
+        level1: customChargers.level1,
+        level2: customChargers.level2,
+        dcfc: customChargers.dcfc,
+        hpc: customChargers.hpc,
+      },
+      goals: {
+        wantsBatteryStorage,
+        wantsSolarCanopy,
+        wantsGridServices,
+        wantsPowerGenerator,
+      },
+      electricityRate: stateData.rate,
+      demandCharge: stateData.demandCharge,
+    };
     
-    // ============================================
-    // GOAL-BASED RECOMMENDATIONS
-    // Goals directly affect BESS sizing and savings!
-    // ============================================
+    // Get recommendation from SSOT
+    const ssotResult = calculateEVStationRecommendation(input);
     
-    // Base BESS sizing (varies by goals)
-    let bessMultiplier = 0.5; // Default: cover 50% of peak
-    let solarMultiplier = 0.3; // Default: 30% of load
-    let additionalSavingsMultiplier = 1.0;
-    
-    // Adjust based on goals
-    if (wantsBatteryStorage) {
-      bessMultiplier = 0.5;
-      if (wantsGridServices) {
-        // Grid services require larger battery for frequency regulation
-        bessMultiplier = 0.7; // 70% of peak for grid services participation
-        additionalSavingsMultiplier = 1.2; // +20% savings from grid services
-      }
-    }
-    
-    if (wantsSolarCanopy) {
-      solarMultiplier = 0.4; // Increase solar to 40% when user wants it
-      if (wantsBatteryStorage) {
-        // Solar + Storage synergy - can store solar for peak shaving
-        additionalSavingsMultiplier *= 1.15; // +15% from solar+storage synergy
-      }
-    }
-    
-    if (wantsPowerGenerator) {
-      // Backup power affects sizing but mainly provides resilience
-      bessMultiplier = Math.max(bessMultiplier, 0.4); // At least 40% for backup
-    }
-    
-    const bessKW = wantsBatteryStorage ? Math.round(peakDemandKW * bessMultiplier) : 0;
-    const bessKWh = bessKW * 2; // 2-hour duration
-    
-    // Solar canopy estimate (if wanted)
-    const solarKW = wantsSolarCanopy ? Math.round(totalPowerKW * solarMultiplier) : 0;
-    
-    // Generator size for backup (if wanted)
-    const generatorKW = wantsPowerGenerator ? Math.round(peakDemandKW * 0.3) : 0; // 30% of peak for backup
-    
-    // ============================================
-    // SAVINGS CALCULATIONS (Goal-Connected!)
-    // ============================================
-    
-    // Demand charge savings from BESS (peak shaving)
-    const demandChargeSavings = wantsBatteryStorage ? monthlyDemandCharges * 0.4 * additionalSavingsMultiplier : 0;
-    
-    // Solar savings (energy offset)
-    const solarSavings = wantsSolarCanopy ? solarKW * 150 * additionalSavingsMultiplier : 0; // ~$150/kW/year
-    
-    // Grid services revenue (only if enabled)
-    const gridServicesSavings = wantsGridServices && wantsBatteryStorage ? bessKW * 120 : 0; // ~$120/kW/year
-    
-    // Total annual savings
-    const annualSavings = (demandChargeSavings * 12) + solarSavings + gridServicesSavings;
-    
+    // Override station-specific text from local constants (they have more UI details)
     return {
-      chargers: {
-        level1: finalLevel1,
-        level2: finalLevel2,
-        dcfc: finalDCFC,
-        hpc: finalHPC,
-        totalPowerKW,
-        peakDemandKW,
-      },
-      costs: {
-        monthlyElectricity: monthlyElectricityCost,
-        monthlyDemandCharges,
-      },
-      recommendation: {
-        bessKW,
-        bessKWh,
-        solarKW,
-        generatorKW,
-      },
-      savings: {
-        monthly: Math.round(annualSavings / 12),
-        annual: Math.round(annualSavings),
-        demandChargeReduction: Math.round(demandChargeSavings * 12),
-        solarOffset: Math.round(solarSavings),
-        gridServices: Math.round(gridServicesSavings),
-      },
+      ...ssotResult,
       stationInsight: station.recommendation,
       gridServicesNote: station.gridServicesNote,
       dwellTime: station.avgDwellTime,
@@ -587,6 +547,13 @@ export default function EVChargingWizard({
       
       const stateData = STATE_RATES[state] || STATE_RATES['Other'];
       
+      // Calculate generator MW if user wants backup power
+      const generatorMW = wantsPowerGenerator ? (recommendation.chargers.peakDemandKW * 0.3 / 1000) : 0;
+      
+      // Map grid connection status for SSOT compliance
+      const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
+                                 gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid';
+      
       const result = await calculateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
@@ -594,6 +561,9 @@ export default function EVChargingWizard({
         electricityRate: stateData.rate,
         useCase: 'ev-charging',
         solarMW: wantsSolarCanopy ? (recommendation.recommendation.solarKW / 1000) : 0,
+        generatorMW,
+        generatorFuelType: 'natural-gas', // EV charging stations prefer natural gas (cleaner, quieter)
+        gridConnection: gridConnectionType,
       });
       
       setQuoteResult(result);
@@ -704,25 +674,36 @@ export default function EVChargingWizard({
   }
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-emerald-400/40 shadow-2xl shadow-emerald-500/20">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-900/50 via-teal-900/30 to-emerald-900/50 px-6 py-4 border-b border-emerald-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md overflow-hidden p-4">
+      <div className="bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-950 rounded-3xl w-full max-w-4xl border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/30 flex flex-col" style={{ maxHeight: 'calc(100vh - 32px)', height: 'auto' }}>
+        {/* Header - HIGH CONTRAST */}
+        <div className="bg-gradient-to-r from-slate-900 via-emerald-900/40 to-slate-900 px-6 py-5 border-b-2 border-emerald-500/30">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-emerald-500/20 rounded-xl border border-emerald-400/30">
+                <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
+              </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Build Your EV Charging Quote</h2>
-                <p className="text-sm text-emerald-300/70">Step {currentStep + 1} of {WIZARD_STEPS.length}</p>
+                <h2 className="text-2xl font-black text-white">
+                  {quoteMode === 'select' ? 'EV Charging Hub Quote Builder' : 
+                   quoteMode === 'pro' ? 'Pro Mode: Direct Input' : 
+                   `Build Your EV Charging Quote`}
+                </h2>
+                <p className="text-sm text-emerald-300 font-medium">
+                  {quoteMode === 'select' ? 'Choose how you want to build your quote' :
+                   quoteMode === 'pro' ? 'Enter your specifications directly' :
+                   `Step ${currentStep + 1} of ${WIZARD_STEPS.length}`}
+                </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-white/70" />
+            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors border border-gray-600 hover:border-gray-500">
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
           
-          {/* Progress Steps */}
-          <div className="flex items-center gap-2 mt-4">
+          {/* Progress Steps - HIGH CONTRAST - Only show in guided mode */}
+          {quoteMode === 'guided' && (
+          <div className="flex items-center gap-2 mt-5">
             {WIZARD_STEPS.map((step, index) => {
               const Icon = step.icon;
               const isActive = index === currentStep;
@@ -732,43 +713,455 @@ export default function EVChargingWizard({
                 <div key={step.id} className="flex items-center flex-1">
                   <button
                     onClick={() => index < currentStep && setCurrentStep(index)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border-2 ${
                       isActive 
-                        ? 'bg-emerald-500 text-white' 
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-500/30' 
                         : isComplete 
-                          ? 'bg-emerald-500/20 text-emerald-400 cursor-pointer hover:bg-emerald-500/30'
-                          : 'bg-white/5 text-white/40'
+                          ? 'bg-emerald-500/20 text-emerald-300 cursor-pointer hover:bg-emerald-500/30 border-emerald-500/50'
+                          : 'bg-gray-800/50 text-gray-400 border-gray-700'
                     }`}
                   >
                     {isComplete ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                    <span className="text-xs font-medium hidden sm:inline">{step.title}</span>
+                    <span className="text-xs font-bold hidden sm:inline">{step.title}</span>
                   </button>
                   {index < WIZARD_STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-2 ${isComplete ? 'bg-emerald-500/50' : 'bg-white/10'}`} />
+                    <div className={`flex-1 h-1 mx-2 rounded ${isComplete ? 'bg-emerald-500' : 'bg-gray-700'}`} />
                   )}
                 </div>
               );
             })}
           </div>
+          )}
           
-          {/* Power Profile - Shows real-time power metrics */}
-          {calculatedPower.peakDemandKW > 0 && (
-            <WizardPowerProfile
-              data={{
-                peakDemandKW: calculatedPower.peakDemandKW,
-                totalStorageKWh: recommendation.recommendation.bessKWh,
-                durationHours: recommendation.recommendation.bessKWh / (recommendation.recommendation.bessKW || 1),
-                solarKW: recommendation.recommendation.solarKW,
-              }}
-              compact={true}
-              colorScheme="emerald"
-              className="mt-4"
-            />
+          {/* ═══════════════════════════════════════════════════════════════
+              EQUIPMENT CART + ENERGY METRICS - Two separate buttons
+              ═══════════════════════════════════════════════════════════════ */}
+          {quoteMode === 'guided' && calculatedPower.peakDemandKW > 0 && (
+            <div className="mt-3 space-y-2">
+              {/* Two Button Row */}
+              <div className="flex gap-2">
+                {/* ENERGY METRICS Button */}
+                <button
+                  onClick={() => setShowEnergyMetrics(!showEnergyMetrics)}
+                  className={`flex-1 flex items-center justify-between gap-2 bg-gray-800/60 hover:bg-gray-800/80 rounded-xl px-3 py-2 border transition-all ${
+                    showEnergyMetrics ? 'border-emerald-400/60 shadow-lg shadow-emerald-500/20' : 'border-gray-700/50 hover:border-emerald-400/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-bold text-white">${(recommendation.costs.monthlyElectricity).toLocaleString()}/mo</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-emerald-600/40 px-2 py-1 rounded-lg border border-emerald-400/50">
+                    <span className="text-xs font-bold text-emerald-200">Energy</span>
+                    <div className={`transition-transform ${showEnergyMetrics ? 'rotate-180' : ''}`}>
+                      <ArrowRight className="w-3 h-3 text-emerald-300 rotate-90" />
+                    </div>
+                  </div>
+                </button>
+                
+                {/* EQUIPMENT CART Button - Like Amazon shopping cart */}
+                <button
+                  onClick={() => setShowEquipmentCart(!showEquipmentCart)}
+                  className={`flex-1 flex items-center justify-between gap-2 bg-gray-800/60 hover:bg-gray-800/80 rounded-xl px-3 py-2 border transition-all ${
+                    showEquipmentCart ? 'border-teal-400/60 shadow-lg shadow-teal-500/20' : 'border-gray-700/50 hover:border-teal-400/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4 text-teal-400" />
+                    <span className="text-sm font-bold text-white">{recommendation.recommendation.bessKW} kW</span>
+                    <span className="text-xs text-gray-400">BESS</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-teal-600/40 px-2 py-1 rounded-lg border border-teal-400/50">
+                    <span className="text-xs font-bold text-teal-200">Cart</span>
+                    <div className={`transition-transform ${showEquipmentCart ? 'rotate-180' : ''}`}>
+                      <ArrowRight className="w-3 h-3 text-teal-300 rotate-90" />
+                    </div>
+                  </div>
+                </button>
+              </div>
+              
+              {/* ENERGY METRICS Popup */}
+              {showEnergyMetrics && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/30 p-5 z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl">
+                        <Activity className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-white">Energy Metrics</h3>
+                        <p className="text-xs text-gray-400">Your electricity costs and usage</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowEnergyMetrics(false)} className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
+                      <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                    </button>
+                  </div>
+                  
+                  {/* Energy Metrics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 rounded-xl p-4 border border-emerald-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap className="w-5 h-5 text-emerald-400" />
+                        <span className="text-sm text-emerald-300 font-medium">Total Connected</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">{calculatedPower.totalConnectedKW.toLocaleString()} <span className="text-sm text-emerald-300">kW</span></p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/30 rounded-xl p-4 border border-amber-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-5 h-5 text-amber-400" />
+                        <span className="text-sm text-amber-300 font-medium">Peak Demand</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">{calculatedPower.peakDemandKW.toLocaleString()} <span className="text-sm text-amber-300">kW</span></p>
+                      <p className="text-xs text-gray-500">70% concurrency factor</p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-red-900/40 to-orange-900/30 rounded-xl p-4 border border-red-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DollarSign className="w-5 h-5 text-red-400" />
+                        <span className="text-sm text-red-300 font-medium">Demand Charges</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">${calculatedPower.monthlyDemandCharges.toLocaleString()}<span className="text-sm text-red-300">/mo</span></p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-purple-900/40 to-indigo-900/30 rounded-xl p-4 border border-purple-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Receipt className="w-5 h-5 text-purple-400" />
+                        <span className="text-sm text-purple-300 font-medium">Energy Charges</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">${calculatedPower.monthlyEnergyCharges.toLocaleString()}<span className="text-sm text-purple-300">/mo</span></p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-rose-900/40 to-pink-900/30 rounded-xl p-4 border border-rose-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Receipt className="w-5 h-5 text-rose-400" />
+                        <span className="text-sm text-rose-300 font-medium">Total Monthly</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">${recommendation.costs.monthlyElectricity.toLocaleString()}<span className="text-sm text-rose-300">/mo</span></p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/30 rounded-xl p-4 border border-cyan-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Battery className="w-5 h-5 text-cyan-400" />
+                        <span className="text-sm text-cyan-300 font-medium">BESS Savings</span>
+                      </div>
+                      <p className="text-2xl font-black text-emerald-400">+${recommendation.savings.monthly.toLocaleString()}<span className="text-sm text-cyan-300">/mo</span></p>
+                    </div>
+                  </div>
+                  
+                  {/* State Rates */}
+                  <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+                    <h4 className="text-sm font-bold text-white mb-2">📍 {state} Electricity Rates</h4>
+                    <div className="flex gap-6 text-sm">
+                      <span className="text-emerald-300">Energy: <span className="text-white font-bold">${(STATE_RATES[state]?.rate || 0.14).toFixed(2)}/kWh</span></span>
+                      <span className="text-amber-300">Demand: <span className="text-white font-bold">${STATE_RATES[state]?.demandCharge || 18}/kW</span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* EQUIPMENT CART Popup - Shopping Cart Style */}
+              {showEquipmentCart && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl border-2 border-teal-500/50 shadow-2xl shadow-teal-500/30 p-5 z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-teal-500/20 rounded-xl">
+                        <ShoppingCart className="w-6 h-6 text-teal-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-white">Equipment Cart</h3>
+                        <p className="text-xs text-gray-400">Your selections vs what you need</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowEquipmentCart(false)} className="p-2 hover:bg-gray-800 rounded-xl transition-colors">
+                      <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                    </button>
+                  </div>
+                  
+                  {/* Shopping Cart Grid */}
+                  <div className="space-y-4">
+                    {/* Target (What You Need) */}
+                    <div className="bg-gray-800/40 rounded-xl p-4 border border-amber-500/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target className="w-5 h-5 text-amber-400" />
+                        <span className="text-sm font-bold text-amber-300">WHAT YOU NEED (Based on your station)</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-1">Peak Demand</p>
+                          <p className="text-xl font-black text-white">{calculatedPower.peakDemandKW} kW</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-1">Recommended BESS</p>
+                          <p className="text-xl font-black text-amber-400">{Math.round(calculatedPower.peakDemandKW * 0.5)} kW</p>
+                          <p className="text-xs text-gray-500">50% coverage</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-1">Storage Capacity</p>
+                          <p className="text-xl font-black text-amber-400">{Math.round(calculatedPower.peakDemandKW * 0.5 * 2)} kWh</p>
+                          <p className="text-xs text-gray-500">2-hour duration</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Selected (What's in Your Cart) */}
+                    <div className="bg-gray-800/40 rounded-xl p-4 border border-emerald-500/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-400" />
+                        <span className="text-sm font-bold text-emerald-300">YOUR SELECTIONS (In Cart)</span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* EV Chargers */}
+                        <div className="text-center p-3 bg-cyan-900/20 rounded-lg border border-cyan-500/30">
+                          <Car className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
+                          <p className="text-xs text-gray-500 mb-1">EV Chargers</p>
+                          <p className="text-xl font-black text-cyan-400">{customChargers.level1 + customChargers.level2 + customChargers.dcfc + customChargers.hpc}</p>
+                          <p className="text-xs text-cyan-300">{calculatedPower.totalConnectedKW} kW total</p>
+                        </div>
+                        
+                        {/* BESS */}
+                        {wantsBatteryStorage && (
+                          <div className="text-center p-3 bg-emerald-900/20 rounded-lg border border-emerald-500/30">
+                            <Battery className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
+                            <p className="text-xs text-gray-500 mb-1">BESS Power</p>
+                            <p className="text-xl font-black text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
+                            <p className="text-xs text-emerald-300">{recommendation.recommendation.bessKWh} kWh</p>
+                          </div>
+                        )}
+                        
+                        {/* Solar */}
+                        {wantsSolarCanopy && (
+                          <div className="text-center p-3 bg-amber-900/20 rounded-lg border border-amber-500/30">
+                            <Sun className="w-6 h-6 text-amber-400 mx-auto mb-1" />
+                            <p className="text-xs text-gray-500 mb-1">Solar Canopy</p>
+                            <p className="text-xl font-black text-amber-400">{recommendation.recommendation.solarKW} kW</p>
+                            <p className="text-xs text-amber-300">{(recommendation.recommendation.solarKW / 1000).toFixed(2)} MW</p>
+                          </div>
+                        )}
+                        
+                        {/* Generator */}
+                        {wantsPowerGenerator && (
+                          <div className="text-center p-3 bg-orange-900/20 rounded-lg border border-orange-500/30">
+                            <Zap className="w-6 h-6 text-orange-400 mx-auto mb-1" />
+                            <p className="text-xs text-gray-500 mb-1">Generator</p>
+                            <p className="text-xl font-black text-orange-400">{recommendation.recommendation.generatorKW} kW</p>
+                            <p className="text-xs text-orange-300">Backup power</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Coverage Progress Bar */}
+                    <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-white">Peak Demand Coverage</span>
+                        <span className={`text-sm font-bold ${
+                          (recommendation.recommendation.bessKW + recommendation.recommendation.solarKW + recommendation.recommendation.generatorKW) >= calculatedPower.peakDemandKW * 0.5
+                            ? 'text-emerald-400' : 'text-amber-400'
+                        }`}>
+                          {Math.round((
+                            (recommendation.recommendation.bessKW + recommendation.recommendation.solarKW + recommendation.recommendation.generatorKW) / calculatedPower.peakDemandKW
+                          ) * 100)}% of {calculatedPower.peakDemandKW} kW
+                        </span>
+                      </div>
+                      <div className="h-4 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            (recommendation.recommendation.bessKW + recommendation.recommendation.solarKW + recommendation.recommendation.generatorKW) >= calculatedPower.peakDemandKW * 0.5
+                              ? 'bg-gradient-to-r from-emerald-600 to-teal-500' 
+                              : 'bg-gradient-to-r from-amber-600 to-orange-500'
+                          }`}
+                          style={{ 
+                            width: `${Math.min(100, Math.round((
+                              (recommendation.recommendation.bessKW + recommendation.recommendation.solarKW + recommendation.recommendation.generatorKW) / calculatedPower.peakDemandKW
+                            ) * 100))}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                        {wantsBatteryStorage && <span>BESS: {recommendation.recommendation.bessKW} kW</span>}
+                        {wantsSolarCanopy && <span>Solar: {recommendation.recommendation.solarKW} kW</span>}
+                        {wantsPowerGenerator && <span>Generator: {recommendation.recommendation.generatorKW} kW</span>}
+                      </div>
+                    </div>
+                    
+                    {/* Charger Breakdown */}
+                    <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+                      <h4 className="text-sm font-bold text-white mb-3">⚡ EV Charger Breakdown</h4>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div className={`p-2 rounded-lg ${customChargers.level1 > 0 ? 'bg-gray-600/30' : 'bg-gray-800/30'}`}>
+                          <p className="text-xs text-gray-400">Level 1</p>
+                          <p className="text-lg font-bold text-gray-300">{customChargers.level1}</p>
+                          <p className="text-xs text-gray-500">1.9kW ea</p>
+                        </div>
+                        <div className={`p-2 rounded-lg ${customChargers.level2 > 0 ? 'bg-cyan-600/30' : 'bg-gray-800/30'}`}>
+                          <p className="text-xs text-cyan-300">Level 2</p>
+                          <p className="text-lg font-bold text-cyan-400">{customChargers.level2}</p>
+                          <p className="text-xs text-gray-500">11kW ea</p>
+                        </div>
+                        <div className={`p-2 rounded-lg ${customChargers.dcfc > 0 ? 'bg-amber-600/30' : 'bg-gray-800/30'}`}>
+                          <p className="text-xs text-amber-300">DCFC</p>
+                          <p className="text-lg font-bold text-amber-400">{customChargers.dcfc}</p>
+                          <p className="text-xs text-gray-500">150kW ea</p>
+                        </div>
+                        <div className={`p-2 rounded-lg ${customChargers.hpc > 0 ? 'bg-purple-600/30' : 'bg-gray-800/30'}`}>
+                          <p className="text-xs text-purple-300">HPC</p>
+                          <p className="text-lg font-bold text-purple-400">{customChargers.hpc}</p>
+                          <p className="text-xs text-gray-500">350kW ea</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
         
-        {/* Content - User-Friendly Steps */}
-        <div className="p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)]">
+        {/* Content - Scrollable with dynamic height */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-6 pb-8" style={{ minHeight: 0 }}>
+          
+          {/* ════════════════════════════════════════════════════════════════
+              MODE SELECTOR - First screen: How do you want to build your quote?
+              ════════════════════════════════════════════════════════════════ */}
+          {quoteMode === 'select' && (
+            <div className="space-y-6">
+              {/* Welcome Header */}
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-black text-white mb-3">How would you like to build your quote?</h3>
+                <p className="text-gray-400 text-lg">Choose the path that fits your needs</p>
+              </div>
+              
+              {/* Two Path Options */}
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                {/* PRO MODE - I Have Specs */}
+                <button
+                  onClick={() => setQuoteMode('pro')}
+                  className="group relative bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-amber-900/30 rounded-3xl p-8 border-2 border-amber-500/40 hover:border-amber-400 transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-amber-500/20 text-left"
+                >
+                  <div className="absolute top-4 right-4 bg-amber-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-amber-300">PRO</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+                    <FileText className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-black text-white mb-3">I Have My Specs</h4>
+                  <p className="text-amber-200/80 mb-4">
+                    Enter your power requirements directly. Perfect for site developers with utility data or engineering specs.
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-400">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Direct input: chargers, kW, BESS size</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Advanced financial modeling</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Skip the guided questions</span>
+                    </li>
+                  </ul>
+                  <div className="mt-6 flex items-center gap-2 text-amber-400 font-bold group-hover:translate-x-2 transition-transform">
+                    <span>Enter Specs Directly</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </button>
+                
+                {/* GUIDED MODE - Build My Specs */}
+                <button
+                  onClick={() => setQuoteMode('guided')}
+                  className="group relative bg-gradient-to-br from-emerald-900/30 via-teal-900/20 to-emerald-900/30 rounded-3xl p-8 border-2 border-emerald-500/40 hover:border-emerald-400 transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 text-left"
+                >
+                  <div className="absolute top-4 right-4 bg-emerald-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-emerald-300">GUIDED</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-black text-white mb-3">Help Me Build My Specs</h4>
+                  <p className="text-emerald-200/80 mb-4">
+                    Answer simple questions about your station and we'll calculate the optimal charger mix and BESS sizing.
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-400">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-400" />
+                      <span>Step-by-step guided experience</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-400" />
+                      <span>Smart charger recommendations</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-400" />
+                      <span>Perfect for first-timers</span>
+                    </li>
+                  </ul>
+                  <div className="mt-6 flex items-center gap-2 text-emerald-400 font-bold group-hover:translate-x-2 transition-transform">
+                    <span>Start Guided Wizard</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </button>
+              </div>
+              
+              {/* Helper Text */}
+              <div className="text-center mt-8">
+                <p className="text-gray-500 text-sm">
+                  💡 Not sure? The <span className="text-emerald-400 font-medium">Guided Wizard</span> will help you discover what you need.
+                  <br/>
+                  Already have a site plan or utility data? Try <span className="text-amber-400 font-medium">Pro Mode</span> for faster quotes.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* ════════════════════════════════════════════════════════════════
+              PRO MODE - Redirect to Advanced Builder
+              ════════════════════════════════════════════════════════════════ */}
+          {quoteMode === 'pro' && (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8">
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-6 mx-auto shadow-2xl shadow-amber-500/40">
+                  <FileText className="w-12 h-12 text-white" />
+                </div>
+                <div className="inline-flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-full mb-4">
+                  <span className="text-amber-300 font-bold">PRO MODE</span>
+                </div>
+                <h3 className="text-3xl font-black text-white mb-3">Advanced Quote Builder</h3>
+                <p className="text-gray-400 text-lg max-w-md mx-auto">
+                  You'll be taken to our full-featured quote builder where you can enter exact specifications.
+                </p>
+              </div>
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setQuoteMode('select')}
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.location.href = '/quote-builder?vertical=ev-charging';
+                  }}
+                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                >
+                  Open Advanced Builder
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* ════════════════════════════════════════════════════════════════
+              GUIDED MODE - Step-by-Step Wizard
+              ════════════════════════════════════════════════════════════════ */}
           
           {/* ================================================
               STEP 0: WHO ARE YOU?
@@ -776,7 +1169,7 @@ export default function EVChargingWizard({
               - Location (State) ← CRITICAL: Determines pricing
               - [Optional] Concierge Tier
               ================================================ */}
-          {currentStep === 0 && (
+          {quoteMode === 'guided' && currentStep === 0 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -784,92 +1177,106 @@ export default function EVChargingWizard({
                 colorScheme="emerald"
               />
               
-              {/* User Role Selection */}
-              <div>
-                <label className="block text-sm text-emerald-200 mb-3">I am a...</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* User Role Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <label className="block text-lg font-bold text-white mb-4">👤 I am a...</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(USER_ROLES).map(([key, role]) => (
                     <button
                       key={key}
                       onClick={() => setUserRole(key as keyof typeof USER_ROLES)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      className={`p-5 rounded-xl border-2 text-center transition-all transform hover:scale-[1.02] ${
                         userRole === key 
-                          ? 'border-emerald-500 bg-emerald-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                          ? 'border-emerald-400 bg-gradient-to-br from-emerald-600/30 to-teal-600/30 shadow-lg shadow-emerald-500/20' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gray-800/60'
                       }`}
                     >
-                      <span className="text-2xl">{role.icon}</span>
-                      <p className="font-bold text-white text-sm mt-2">{role.name}</p>
-                      <p className="text-xs text-emerald-200/60 mt-1">{role.description}</p>
+                      <span className="text-3xl">{role.icon}</span>
+                      <p className="font-bold text-white text-base mt-3">{role.name}</p>
+                      <p className="text-sm text-gray-400 mt-1">{role.description}</p>
                     </button>
                   ))}
                 </div>
               </div>
               
-              {/* Location Selection */}
-              <div>
-                <label className="block text-sm text-emerald-200 mb-2">Where is your charging station located?</label>
+              {/* Location Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-teal-500/40 shadow-xl shadow-teal-500/10">
+                <label className="block text-lg font-bold text-white mb-3">📍 Where is your charging station?</label>
                 <select
                   value={state}
                   onChange={(e) => setState(e.target.value)}
-                  className="w-full bg-white/10 rounded-lg px-4 py-3 text-white border border-white/10 focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-gray-800 rounded-xl px-4 py-4 text-white text-lg border-2 border-gray-600 focus:border-emerald-500 focus:outline-none"
                 >
                   {Object.keys(STATE_RATES).map((st) => (
                     <option key={st} value={st} className="bg-gray-800">{st}</option>
                   ))}
                 </select>
-                <div className="mt-3 p-3 bg-emerald-500/10 rounded-lg border border-emerald-400/20">
-                  <p className="text-sm text-emerald-200">
-                    <span className="font-medium">📍 {state}</span> electricity rates:
+                <div className="mt-4 p-4 bg-emerald-600/20 rounded-xl border-2 border-emerald-500/40">
+                  <p className="text-base text-white font-bold mb-2">
+                    📍 {state} Electricity Rates
                   </p>
-                  <div className="flex gap-4 mt-1 text-xs text-white/70">
-                    <span>Energy: ${(STATE_RATES[state]?.rate || 0.14).toFixed(2)}/kWh</span>
-                    <span>Demand: ${STATE_RATES[state]?.demandCharge || 18}/kW</span>
+                  <div className="flex gap-6 text-sm">
+                    <span className="text-emerald-300 font-medium">Energy: <span className="text-white font-bold">${(STATE_RATES[state]?.rate || 0.14).toFixed(2)}/kWh</span></span>
+                    <span className="text-emerald-300 font-medium">Demand: <span className="text-white font-bold">${STATE_RATES[state]?.demandCharge || 18}/kW</span></span>
                   </div>
                 </div>
               </div>
               
-              {/* Concierge Tier (Optional) */}
-              <div>
-                <label className="block text-sm text-emerald-200 mb-3">Choose your experience</label>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Concierge Tier - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10">
+                <label className="block text-lg font-bold text-white mb-4">✨ Choose your experience</label>
+                <div className="grid grid-cols-2 gap-4">
                   {Object.entries(CONCIERGE_TIERS).map(([key, tier]) => (
                     <button
                       key={key}
                       onClick={() => setConciergeTier(key as keyof typeof CONCIERGE_TIERS)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all relative ${
+                      className={`p-5 rounded-xl border-2 text-left transition-all relative transform hover:scale-[1.02] ${
                         conciergeTier === key 
                           ? key === 'pro' 
-                            ? 'border-amber-500 bg-amber-500/20' 
-                            : 'border-emerald-500 bg-emerald-500/20'
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                            ? 'border-amber-400 bg-gradient-to-br from-amber-600/30 to-orange-600/30 shadow-lg shadow-amber-500/20' 
+                            : 'border-emerald-400 bg-gradient-to-br from-emerald-600/30 to-teal-600/30 shadow-lg shadow-emerald-500/20'
+                          : 'border-gray-600 hover:border-gray-500 bg-gray-800/60'
                       }`}
                     >
                       {'badge' in tier && (
-                        <span className="absolute -top-2 -right-2 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="absolute -top-3 -right-3 bg-amber-500 text-black text-sm font-black px-3 py-1 rounded-full shadow-lg">
                           {tier.badge}
                         </span>
                       )}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{tier.icon}</span>
-                        <span className="font-bold text-white">{tier.name}</span>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl">{tier.icon}</span>
+                        <span className="font-black text-white text-lg">{tier.name}</span>
                       </div>
-                      <p className="text-xs text-emerald-200/60">{tier.description}</p>
+                      <p className="text-sm text-gray-300">{tier.description}</p>
                     </button>
                   ))}
                 </div>
               </div>
               
-              {/* Station Name (Optional) */}
-              <div>
-                <label className="block text-sm text-emerald-200 mb-2">Station name (optional)</label>
+              {/* Station Name - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-gray-600 shadow-xl">
+                <label className="block text-lg font-bold text-white mb-3">🏢 Station name (optional)</label>
                 <input
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="e.g., Highway 101 Charging Hub"
-                  className="w-full bg-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 border border-white/10 focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-gray-800 rounded-xl px-4 py-4 text-white text-lg placeholder-gray-500 border-2 border-gray-600 focus:border-emerald-500 focus:outline-none"
                 />
+              </div>
+              
+              {/* PROMINENT NEXT BUTTON - Step 0 */}
+              <div className="mt-8 pt-6 border-t-2 border-emerald-500/30">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50 animate-pulse hover:animate-none"
+                >
+                  <span>⚡ Continue to Station Type</span>
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+                <p className="text-center text-emerald-300 text-sm mt-3 font-medium">
+                  Step 1 of 5 • Takes about 2 minutes
+                </p>
               </div>
             </div>
           )}
@@ -879,7 +1286,7 @@ export default function EVChargingWizard({
               - Station Type (Highway / Urban / Destination / Fleet / Retail)
               - Scale (size/charger counts)
               ================================================ */}
-          {currentStep === 1 && (
+          {quoteMode === 'guided' && currentStep === 1 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -887,85 +1294,106 @@ export default function EVChargingWizard({
                 colorScheme="emerald"
               />
               
-              {/* Station Type Selection */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(STATION_TYPES).map(([key, station]) => {
-                  const Icon = station.icon;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setStationType(key as keyof typeof STATION_TYPES)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        stationType === key 
-                          ? 'border-emerald-500 bg-emerald-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <Icon className={`w-6 h-6 ${stationType === key ? 'text-emerald-400' : 'text-white/60'}`} />
-                        <div>
-                          <p className="font-bold text-white">{station.name}</p>
-                          <p className="text-xs text-emerald-200/60">{station.description}</p>
+              {/* Station Type Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <label className="block text-lg font-bold text-white mb-4">🚗 What type of station?</label>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(STATION_TYPES).map(([key, station]) => {
+                    const Icon = station.icon;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setStationType(key as keyof typeof STATION_TYPES)}
+                        className={`p-5 rounded-xl border-2 text-left transition-all transform hover:scale-[1.02] ${
+                          stationType === key 
+                            ? 'border-emerald-400 bg-gradient-to-br from-emerald-600/30 to-teal-600/30 shadow-lg shadow-emerald-500/20' 
+                            : 'border-gray-600 hover:border-gray-500 bg-gray-800/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stationType === key ? 'bg-emerald-500' : 'bg-gray-700'}`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-base">{station.name}</p>
+                            <p className="text-sm text-gray-400">{station.description}</p>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-xs text-white/50 mt-1">{station.examples}</p>
-                    </button>
-                  );
-                })}
+                        <p className="text-xs text-gray-500">{station.examples}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               
-              {/* Scale Selection */}
-              <div>
-                <label className="block text-sm text-emerald-200 mb-3">How big is your station?</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Scale Selection - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-teal-500/40 shadow-xl shadow-teal-500/10">
+                <label className="block text-lg font-bold text-white mb-4">📏 How big is your station?</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(SCALE_OPTIONS).map(([key, option]) => (
                     <button
                       key={key}
                       onClick={() => setScale(key as keyof typeof SCALE_OPTIONS)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      className={`p-5 rounded-xl border-2 text-center transition-all transform hover:scale-[1.02] ${
                         scale === key 
-                          ? 'border-emerald-500 bg-emerald-500/20' 
-                          : 'border-white/10 hover:border-white/30 bg-white/5'
+                          ? 'border-teal-400 bg-gradient-to-br from-teal-600/30 to-cyan-600/30 shadow-lg shadow-teal-500/20' 
+                          : 'border-gray-600 hover:border-gray-500 bg-gray-800/60'
                       }`}
                     >
-                      <span className="text-2xl">{option.icon}</span>
-                      <p className="font-bold text-white mt-1 text-sm">{option.name}</p>
-                      <p className="text-xs text-emerald-200/70">{option.description}</p>
+                      <span className="text-3xl">{option.icon}</span>
+                      <p className="font-bold text-white mt-2">{option.name}</p>
+                      <p className="text-sm text-gray-400 mt-1">{option.description}</p>
                     </button>
                   ))}
                 </div>
               </div>
               
-              {/* Station Type Info */}
-              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-400/20">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5" />
+              {/* Station Type Info - HIGH CONTRAST */}
+              <div className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 rounded-2xl p-5 border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/10">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-6 h-6 text-emerald-400" />
+                  </div>
                   <div>
-                    <p className="text-white font-medium">{STATION_TYPES[stationType].name}</p>
-                    <p className="text-sm text-emerald-200/70 mt-1">{STATION_TYPES[stationType].recommendation}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <p className="text-white font-bold text-lg">{STATION_TYPES[stationType].name}</p>
+                    <p className="text-emerald-100 mt-2">{STATION_TYPES[stationType].recommendation}</p>
+                    <div className="flex flex-wrap gap-3 mt-4">
                       {STATION_TYPES[stationType].defaultChargers.level1 > 0 && (
-                        <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-300">
+                        <span className="text-sm bg-gray-800 px-3 py-1.5 rounded-lg text-gray-300 font-medium border border-gray-600">
                           L1: {STATION_TYPES[stationType].defaultChargers.level1}
                         </span>
                       )}
-                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-cyan-300">
+                      <span className="text-sm bg-cyan-600/30 px-3 py-1.5 rounded-lg text-cyan-300 font-bold border border-cyan-500/50">
                         L2: {STATION_TYPES[stationType].defaultChargers.level2}
                       </span>
-                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-amber-300">
+                      <span className="text-sm bg-amber-600/30 px-3 py-1.5 rounded-lg text-amber-300 font-bold border border-amber-500/50">
                         DCFC: {STATION_TYPES[stationType].defaultChargers.dcfc}
                       </span>
                       {STATION_TYPES[stationType].defaultChargers.hpc > 0 && (
-                        <span className="text-xs bg-white/10 px-2 py-1 rounded text-purple-300">
+                        <span className="text-sm bg-purple-600/30 px-3 py-1.5 rounded-lg text-purple-300 font-bold border border-purple-500/50">
                           HPC: {STATION_TYPES[stationType].defaultChargers.hpc}
                         </span>
                       )}
-                      <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">
+                      <span className="text-sm bg-gray-800 px-3 py-1.5 rounded-lg text-white font-medium border border-gray-600">
                         ⏱️ {STATION_TYPES[stationType].avgDwellTime}
                       </span>
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              {/* PROMINENT NEXT BUTTON - Step 1 */}
+              <div className="mt-8 pt-6 border-t-2 border-emerald-500/30">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50"
+                >
+                  <span>⚙️ Continue to Charger Config</span>
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+                <p className="text-center text-emerald-300 text-sm mt-3 font-medium">
+                  Step 2 of 5 • Configure your chargers
+                </p>
               </div>
             </div>
           )}
@@ -977,7 +1405,7 @@ export default function EVChargingWizard({
               - Monthly costs
               - POWER PROFILE WIDGET (Dynamic!)
               ================================================ */}
-          {currentStep === 2 && (
+          {quoteMode === 'guided' && currentStep === 2 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -985,119 +1413,120 @@ export default function EVChargingWizard({
                 colorScheme="emerald"
               />
               
-              {/* ✅ STEP EXPLANATION - What user needs to do */}
-              <div className="bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl p-4 border border-blue-400/30">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center flex-shrink-0">
-                    <Lightbulb className="w-5 h-5 text-blue-400" />
+              {/* ✅ STEP EXPLANATION - HIGH CONTRAST */}
+              <div className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 rounded-2xl p-5 border-2 border-blue-400/50 shadow-lg shadow-blue-500/10">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/30 flex items-center justify-center flex-shrink-0 border border-blue-400/50">
+                    <Lightbulb className="w-6 h-6 text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">📋 What to do in this step:</p>
-                    <p className="text-blue-200/80 text-sm mt-1">{STATION_TYPES[stationType].stepExplanation}</p>
-                    <p className="text-blue-200/60 text-xs mt-2 italic">
-                      💡 Tip: Use the sliders to see how your Power Profile changes in real-time!
+                    <p className="font-black text-white text-lg">📋 What to do in this step:</p>
+                    <p className="text-blue-100 mt-2">{STATION_TYPES[stationType].stepExplanation}</p>
+                    <p className="text-blue-200 text-sm mt-3">
+                      💡 <strong>Tip:</strong> Use the sliders to see how your Power Profile changes in real-time!
                     </p>
                   </div>
                 </div>
               </div>
               
               {/* ============================================
-                  ⚡ POWER PROFILE WIDGET - Dynamic Visualization
-                  Shows user exactly what energy they need!
+                  ⚡ POWER PROFILE WIDGET - HIGH CONTRAST
                   ============================================ */}
-              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border-2 border-emerald-500/30 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                    <Gauge className="w-6 h-6 text-white" />
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30">
+                    <Gauge className="w-7 h-7 text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-lg">⚡ Your Power Profile</h4>
-                    <p className="text-emerald-200/70 text-sm">Real-time energy requirements based on your configuration</p>
+                    <p className="text-emerald-200 text-sm font-medium">Real-time energy requirements based on your configuration</p>
                   </div>
                 </div>
                 
                 {/* Power Bars - Visual breakdown */}
-                <div className="space-y-3 mb-4">
+                <div className="space-y-4 mb-5">
                   {/* Level 1 Power */}
                   {(customChargers.level1 > 0 || stationType === 'destination') && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-16">L1</span>
-                      <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-gray-300 w-16">L1</span>
+                      <div className="flex-1 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                         <div 
                           className="h-full bg-gradient-to-r from-gray-400 to-gray-500 transition-all duration-500"
                           style={{ width: `${Math.min(100, (customChargers.level1 * 1.9 / recommendation.chargers.totalPowerKW) * 100)}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-300 w-20 text-right">{(customChargers.level1 * 1.9).toFixed(1)} kW</span>
+                      <span className="text-sm font-bold text-gray-200 w-24 text-right">{(customChargers.level1 * 1.9).toFixed(1)} kW</span>
                     </div>
                   )}
                   
                   {/* Level 2 Power */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-cyan-400 w-16">L2</span>
-                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-cyan-400 w-16">L2</span>
+                    <div className="flex-1 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                       <div 
                         className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-500"
                         style={{ width: `${Math.min(100, ((customChargers.level2 || 0) * 11 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs text-cyan-300 w-20 text-right">{((customChargers.level2 || 0) * 11).toLocaleString()} kW</span>
+                    <span className="text-sm font-bold text-cyan-300 w-24 text-right">{((customChargers.level2 || 0) * 11).toLocaleString()} kW</span>
                   </div>
                   
                   {/* DCFC Power */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-amber-400 w-16">DCFC</span>
-                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-amber-400 w-16">DCFC</span>
+                    <div className="flex-1 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                       <div 
                         className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
                         style={{ width: `${Math.min(100, ((customChargers.dcfc || 0) * 150 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs text-amber-300 w-20 text-right">{((customChargers.dcfc || 0) * 150).toLocaleString()} kW</span>
+                    <span className="text-sm font-bold text-amber-300 w-24 text-right">{((customChargers.dcfc || 0) * 150).toLocaleString()} kW</span>
                   </div>
                   
                   {/* HPC Power */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-purple-400 w-16">HPC</span>
-                    <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-purple-400 w-16">HPC</span>
+                    <div className="flex-1 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                       <div 
                         className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-500"
                         style={{ width: `${Math.min(100, ((customChargers.hpc || 0) * 350 / Math.max(1, recommendation.chargers.totalPowerKW)) * 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs text-purple-300 w-20 text-right">{((customChargers.hpc || 0) * 350).toLocaleString()} kW</span>
+                    <span className="text-sm font-bold text-purple-300 w-24 text-right">{((customChargers.hpc || 0) * 350).toLocaleString()} kW</span>
                   </div>
                 </div>
                 
-                {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
-                  <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-emerald-400">{recommendation.chargers.totalPowerKW.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-200/70">Total kW Connected</p>
+                {/* Summary Stats - HIGH CONTRAST */}
+                <div className="grid grid-cols-3 gap-4 pt-5 border-t-2 border-gray-700">
+                  <div className="text-center p-4 bg-emerald-600/20 rounded-xl border-2 border-emerald-500/40">
+                    <p className="text-3xl font-black text-emerald-400">{recommendation.chargers.totalPowerKW.toLocaleString()}</p>
+                    <p className="text-sm text-emerald-200 font-medium">Total kW Connected</p>
                   </div>
-                  <div className="text-center p-3 bg-amber-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-amber-400">{recommendation.chargers.peakDemandKW.toLocaleString()}</p>
-                    <p className="text-xs text-amber-200/70">Peak Demand (70%)</p>
+                  <div className="text-center p-4 bg-amber-600/20 rounded-xl border-2 border-amber-500/40">
+                    <p className="text-3xl font-black text-amber-400">{recommendation.chargers.peakDemandKW.toLocaleString()}</p>
+                    <p className="text-sm text-amber-200 font-medium">Peak Demand (70%)</p>
                   </div>
-                  <div className="text-center p-3 bg-red-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-red-400">${recommendation.costs.monthlyDemandCharges.toLocaleString()}</p>
-                    <p className="text-xs text-red-200/70">Monthly Demand $</p>
+                  <div className="text-center p-4 bg-red-600/20 rounded-xl border-2 border-red-500/40">
+                    <p className="text-3xl font-black text-red-400">${recommendation.costs.monthlyDemandCharges.toLocaleString()}</p>
+                    <p className="text-sm text-red-200 font-medium">Monthly Demand $</p>
                   </div>
                 </div>
                 
-                {/* What this means */}
-                <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                  <p className="text-xs text-white/70">
-                    <span className="font-bold text-emerald-400">📊 What this means:</span> Your {(customChargers.level1 || 0) + (customChargers.level2 || 0) + (customChargers.dcfc || 0) + (customChargers.hpc || 0)} chargers will draw up to {recommendation.chargers.peakDemandKW.toLocaleString()} kW during peak times. 
-                    Without battery storage, you'll pay <span className="text-red-400 font-bold">${recommendation.costs.monthlyDemandCharges.toLocaleString()}/month</span> in demand charges alone!
+                {/* What this means - HIGH CONTRAST */}
+                <div className="mt-5 p-4 bg-gray-800/80 rounded-xl border-2 border-gray-600">
+                  <p className="text-white">
+                    <span className="font-black text-emerald-400">📊 What this means:</span> Your {(customChargers.level1 || 0) + (customChargers.level2 || 0) + (customChargers.dcfc || 0) + (customChargers.hpc || 0)} chargers will draw up to <span className="font-bold">{recommendation.chargers.peakDemandKW.toLocaleString()} kW</span> during peak times. 
+                    Without battery storage, you'll pay <span className="text-red-400 font-black">${recommendation.costs.monthlyDemandCharges.toLocaleString()}/month</span> in demand charges alone!
                   </p>
                 </div>
               </div>
               
-              {/* Interactive Charger Configuration with Sliders */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-white flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-emerald-400" />
+              {/* Interactive Charger Configuration - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-teal-500/40 shadow-xl shadow-teal-500/10">
+                <h4 className="font-black text-xl text-white flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-lg bg-teal-500/30 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-teal-400" />
+                  </div>
                   Configure Charger Counts
                 </h4>
                 
@@ -1124,18 +1553,18 @@ export default function EVChargingWizard({
                     <input
                       type="range"
                       min={0}
-                      max={50}
-                      value={Math.min(50, customChargers.level1)}
+                      max={100}
+                      value={Math.min(100, customChargers.level1)}
                       onChange={(e) => setCustomChargers({...customChargers, level1: parseInt(e.target.value)})}
                       className="w-full h-3 bg-gray-900/30 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #9ca3af 0%, #9ca3af ${(Math.min(50, customChargers.level1) / 50) * 100}%, rgba(156, 163, 175, 0.2) ${(Math.min(50, customChargers.level1) / 50) * 100}%, rgba(156, 163, 175, 0.2) 100%)`
+                        background: `linear-gradient(to right, #9ca3af 0%, #9ca3af ${(Math.min(100, customChargers.level1) / 100) * 100}%, rgba(156, 163, 175, 0.2) ${(Math.min(100, customChargers.level1) / 100) * 100}%, rgba(156, 163, 175, 0.2) 100%)`
                       }}
                     />
                     <div className="flex justify-between text-xs text-gray-400 mt-1">
                       <span>0</span>
                       <span>🔌 Best for all-day parking (airports, workplaces)</span>
-                      <span>50</span>
+                      <span>100</span>
                     </div>
                   </div>
                 )}
@@ -1246,18 +1675,18 @@ export default function EVChargingWizard({
                   <input
                     type="range"
                     min={0}
-                    max={50}
-                    value={Math.min(50, customChargers.hpc || recommendation.chargers.hpc)}
+                    max={100}
+                    value={Math.min(100, customChargers.hpc || recommendation.chargers.hpc)}
                     onChange={(e) => setCustomChargers({...customChargers, hpc: parseInt(e.target.value)})}
                     className="w-full h-3 bg-purple-900/30 rounded-lg appearance-none cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, #a855f7 0%, #a855f7 ${(Math.min(50, customChargers.hpc || recommendation.chargers.hpc) / 50) * 100}%, rgba(168, 85, 247, 0.2) ${(Math.min(50, customChargers.hpc || recommendation.chargers.hpc) / 50) * 100}%, rgba(168, 85, 247, 0.2) 100%)`
+                      background: `linear-gradient(to right, #a855f7 0%, #a855f7 ${(Math.min(100, customChargers.hpc || recommendation.chargers.hpc) / 100) * 100}%, rgba(168, 85, 247, 0.2) ${(Math.min(100, customChargers.hpc || recommendation.chargers.hpc) / 100) * 100}%, rgba(168, 85, 247, 0.2) 100%)`
                     }}
                   />
                   <div className="flex justify-between text-xs text-purple-200/50 mt-1">
                     <span>0</span>
                     <span>⚡⚡ Premium highway charging (10-15 min)</span>
-                    <span>50</span>
+                    <span>100</span>
                   </div>
                 </div>
               </div>
@@ -1272,6 +1701,20 @@ export default function EVChargingWizard({
                   </p>
                 </div>
               </div>
+              
+              {/* PROMINENT NEXT BUTTON - Step 2 */}
+              <div className="mt-8 pt-6 border-t-2 border-emerald-500/30">
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50"
+                >
+                  <span>🎯 Continue to Your Goals</span>
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+                <p className="text-center text-emerald-300 text-sm mt-3 font-medium">
+                  Step 3 of 5 • Set your savings targets
+                </p>
+              </div>
             </div>
           )}
           
@@ -1281,7 +1724,7 @@ export default function EVChargingWizard({
               - Add-ons (Battery, Solar, Grid Services)
               - DYNAMIC Power Profile Impact!
               ================================================ */}
-          {currentStep === 3 && (
+          {quoteMode === 'guided' && currentStep === 3 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -1290,41 +1733,41 @@ export default function EVChargingWizard({
               />
               
               {/* ============================================
-                  ⚡ LIVE POWER PROFILE - Shows Impact of Goals
+                  ⚡ LIVE POWER PROFILE - HIGH CONTRAST
                   ============================================ */}
-              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border-2 border-emerald-500/30 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-white" />
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30">
+                    <BarChart3 className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-lg">⚡ Your Energy Solution</h4>
-                    <p className="text-emerald-200/70 text-sm">Based on your charger configuration + selected goals</p>
+                    <h4 className="font-black text-white text-xl">⚡ Your Energy Solution</h4>
+                    <p className="text-emerald-200 font-medium">Based on your charger configuration + selected goals</p>
                   </div>
                 </div>
                 
                 {/* Visual Power Stack */}
-                <div className="space-y-3 mb-4">
+                <div className="space-y-4 mb-5">
                   {/* Your Demand */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-red-400 w-20">Your Demand</span>
-                    <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-red-400 w-24">Your Demand</span>
+                    <div className="flex-1 h-7 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                       <div className="h-full bg-gradient-to-r from-red-500 to-red-400 w-full flex items-center justify-center">
-                        <span className="text-xs text-white font-bold">{recommendation.chargers.peakDemandKW.toLocaleString()} kW peak</span>
+                        <span className="text-sm text-white font-bold">{recommendation.chargers.peakDemandKW.toLocaleString()} kW peak</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Battery Storage (if enabled) */}
                   {wantsBatteryStorage && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-emerald-400 w-20">🔋 Battery</span>
-                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-emerald-400 w-24">🔋 Battery</span>
+                      <div className="flex-1 h-7 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                         <div 
                           className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-center transition-all duration-500"
                           style={{ width: `${Math.min(100, (recommendation.recommendation.bessKW / recommendation.chargers.peakDemandKW) * 100)}%` }}
                         >
-                          <span className="text-xs text-white font-bold">{recommendation.recommendation.bessKW} kW / {recommendation.recommendation.bessKWh} kWh</span>
+                          <span className="text-sm text-white font-bold">{recommendation.recommendation.bessKW} kW / {recommendation.recommendation.bessKWh} kWh</span>
                         </div>
                       </div>
                     </div>
@@ -1332,14 +1775,14 @@ export default function EVChargingWizard({
                   
                   {/* Solar (if enabled) */}
                   {wantsSolarCanopy && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-amber-400 w-20">☀️ Solar</span>
-                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-amber-400 w-24">☀️ Solar</span>
+                      <div className="flex-1 h-7 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                         <div 
                           className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center transition-all duration-500"
                           style={{ width: `${Math.min(100, (recommendation.recommendation.solarKW / recommendation.chargers.peakDemandKW) * 100)}%` }}
                         >
-                          <span className="text-xs text-white font-bold">{recommendation.recommendation.solarKW} kW solar canopy</span>
+                          <span className="text-sm text-white font-bold">{recommendation.recommendation.solarKW} kW solar canopy</span>
                         </div>
                       </div>
                     </div>
@@ -1347,97 +1790,105 @@ export default function EVChargingWizard({
                   
                   {/* Generator (if enabled) */}
                   {wantsPowerGenerator && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-orange-400 w-20">⚡ Backup</span>
-                      <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-orange-400 w-24">⚡ Backup</span>
+                      <div className="flex-1 h-7 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
                         <div 
                           className="h-full bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-center transition-all duration-500"
                           style={{ width: `${Math.min(100, ((recommendation.recommendation.generatorKW || 0) / recommendation.chargers.peakDemandKW) * 100)}%` }}
                         >
-                          <span className="text-xs text-white font-bold">{recommendation.recommendation.generatorKW || 0} kW generator</span>
+                          <span className="text-sm text-white font-bold">{recommendation.recommendation.generatorKW || 0} kW generator</span>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                {/* Savings Impact - Dynamic! */}
-                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
-                  <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-emerald-400">${Math.round(recommendation.savings.annual / 12).toLocaleString()}</p>
-                    <p className="text-xs text-emerald-200/70">Monthly Savings</p>
+                {/* Savings Impact - HIGH CONTRAST */}
+                <div className="grid grid-cols-3 gap-4 pt-5 border-t-2 border-gray-700">
+                  <div className="text-center p-4 bg-emerald-600/20 rounded-xl border-2 border-emerald-500/40">
+                    <p className="text-3xl font-black text-emerald-400">${Math.round(recommendation.savings.annual / 12).toLocaleString()}</p>
+                    <p className="text-sm text-emerald-200 font-medium">Monthly Savings</p>
                   </div>
-                  <div className="text-center p-3 bg-amber-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-amber-400">${recommendation.savings.annual.toLocaleString()}</p>
-                    <p className="text-xs text-amber-200/70">Annual Savings</p>
+                  <div className="text-center p-4 bg-amber-600/20 rounded-xl border-2 border-amber-500/40">
+                    <p className="text-3xl font-black text-amber-400">${recommendation.savings.annual.toLocaleString()}</p>
+                    <p className="text-sm text-amber-200 font-medium">Annual Savings</p>
                   </div>
-                  <div className="text-center p-3 bg-blue-500/10 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
-                    <p className="text-xs text-blue-200/70">Demand Reduction</p>
+                  <div className="text-center p-4 bg-blue-600/20 rounded-xl border-2 border-blue-500/40">
+                    <p className="text-3xl font-black text-blue-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
+                    <p className="text-sm text-blue-200 font-medium">Demand Reduction</p>
                   </div>
                 </div>
               </div>
               
-              {/* Energy Options */}
-              <div className="space-y-3">
-                <h4 className="font-medium text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-emerald-400" />
+              {/* Energy Options - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-teal-500/40 shadow-xl shadow-teal-500/10">
+                <h4 className="font-black text-xl text-white flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-lg bg-teal-500/30 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-teal-400" />
+                  </div>
                   Energy Solutions
                 </h4>
                 
-                {/* Battery Storage */}
-                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
-                  wantsBatteryStorage ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
-                }`} onClick={() => setWantsBatteryStorage(!wantsBatteryStorage)}>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={wantsBatteryStorage}
-                      onChange={(e) => setWantsBatteryStorage(e.target.checked)}
-                      className="w-5 h-5 accent-emerald-500"
-                    />
-                    <Battery className="w-5 h-5 text-emerald-400" />
-                    <div className="flex-1">
-                      <p className="font-medium text-white">Battery Storage (BESS)</p>
-                      <p className="text-sm text-emerald-200/70">Reduce demand charges by up to 40%</p>
-                    </div>
-                    {wantsBatteryStorage && (
-                      <div className="text-right">
-                        <p className="font-bold text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
-                        <p className="text-xs text-emerald-200/60">{recommendation.recommendation.bessKWh} kWh</p>
+                <div className="space-y-4">
+                  {/* Battery Storage */}
+                  <div className={`rounded-xl p-5 border-2 cursor-pointer transition-all transform hover:scale-[1.01] ${
+                    wantsBatteryStorage ? 'bg-emerald-600/20 border-emerald-400 shadow-lg shadow-emerald-500/20' : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
+                  }`} onClick={() => setWantsBatteryStorage(!wantsBatteryStorage)}>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="checkbox"
+                        checked={wantsBatteryStorage}
+                        onChange={(e) => setWantsBatteryStorage(e.target.checked)}
+                        className="w-6 h-6 accent-emerald-500 rounded"
+                      />
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${wantsBatteryStorage ? 'bg-emerald-500' : 'bg-gray-700'}`}>
+                        <Battery className="w-6 h-6 text-white" />
                       </div>
-                    )}
+                      <div className="flex-1">
+                        <p className="font-bold text-white text-lg">Battery Storage (BESS)</p>
+                        <p className="text-gray-400">Reduce demand charges by up to 40%</p>
+                      </div>
+                      {wantsBatteryStorage && (
+                        <div className="text-right">
+                          <p className="font-black text-emerald-400 text-xl">{recommendation.recommendation.bessKW} kW</p>
+                          <p className="text-emerald-200">{recommendation.recommendation.bessKWh} kWh</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                {/* Solar Canopy */}
-                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
-                  wantsSolarCanopy ? 'bg-amber-500/10 border-amber-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
-                }`} onClick={() => setWantsSolarCanopy(!wantsSolarCanopy)}>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={wantsSolarCanopy}
-                      onChange={(e) => setWantsSolarCanopy(e.target.checked)}
-                      className="w-5 h-5 accent-amber-500"
-                    />
-                    <Sun className="w-5 h-5 text-amber-400" />
-                    <div className="flex-1">
-                      <p className="font-medium text-white">Solar Canopy</p>
-                      <p className="text-sm text-amber-200/70">Shade for vehicles + free electricity</p>
-                    </div>
-                    {wantsSolarCanopy && (
-                      <div className="text-right">
-                        <p className="font-bold text-amber-400">{recommendation.recommendation.solarKW} kW</p>
-                        <p className="text-xs text-amber-200/60">~${recommendation.savings.solarOffset.toLocaleString()}/yr</p>
+                  
+                  {/* Solar Canopy */}
+                  <div className={`rounded-xl p-5 border-2 cursor-pointer transition-all transform hover:scale-[1.01] ${
+                    wantsSolarCanopy ? 'bg-amber-600/20 border-amber-400 shadow-lg shadow-amber-500/20' : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
+                  }`} onClick={() => setWantsSolarCanopy(!wantsSolarCanopy)}>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="checkbox"
+                        checked={wantsSolarCanopy}
+                        onChange={(e) => setWantsSolarCanopy(e.target.checked)}
+                        className="w-6 h-6 accent-amber-500 rounded"
+                      />
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${wantsSolarCanopy ? 'bg-amber-500' : 'bg-gray-700'}`}>
+                        <Sun className="w-6 h-6 text-white" />
                       </div>
-                    )}
+                      <div className="flex-1">
+                        <p className="font-bold text-white text-lg">Solar Canopy</p>
+                        <p className="text-gray-400">Shade for vehicles + free electricity</p>
+                      </div>
+                      {wantsSolarCanopy && (
+                        <div className="text-right">
+                          <p className="font-black text-amber-400 text-xl">{recommendation.recommendation.solarKW} kW</p>
+                          <p className="text-amber-200">~${recommendation.savings.solarOffset.toLocaleString()}/yr</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
                 {/* Grid Services */}
-                <div className={`rounded-xl p-4 border cursor-pointer transition-all ${
-                  wantsGridServices ? 'bg-purple-500/10 border-purple-400/30' : 'bg-white/5 border-white/10 hover:border-white/20'
+                <div className={`rounded-xl p-5 border-2 cursor-pointer transition-all transform hover:scale-[1.01] mt-4 ${
+                  wantsGridServices ? 'bg-purple-600/20 border-purple-400 shadow-lg shadow-purple-500/20' : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
                 }`} onClick={() => wantsBatteryStorage && setWantsGridServices(!wantsGridServices)}>
                   <div className="flex items-center gap-3">
                     <input
@@ -1494,6 +1945,58 @@ export default function EVChargingWizard({
                 </div>
               </div>
               
+              {/* Grid Connection Status - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-gray-500/40 shadow-xl shadow-gray-500/10">
+                <h4 className="font-black text-xl text-white flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-lg bg-gray-500/30 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-gray-400" />
+                  </div>
+                  Grid Connection Status
+                </h4>
+                <p className="text-sm text-gray-300 mb-4">
+                  How is your charging station connected to the power grid?
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'grid-tied' as const, label: 'Grid-Tied', desc: 'Connected to utility', icon: '🔌' },
+                    { id: 'grid-backup-only' as const, label: 'Limited Grid', desc: 'Unreliable connection', icon: '⚡' },
+                    { id: 'off-grid' as const, label: 'Off-Grid', desc: 'No utility', icon: '🏝️' },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => setGridConnection(prev => ({ ...prev, status: option.id }))}
+                      className={`p-4 rounded-xl text-center transition-all transform hover:scale-[1.02] ${
+                        gridConnection.status === option.id 
+                          ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border-2 border-purple-400 ring-4 ring-purple-400/30' 
+                          : 'bg-gray-800/50 border-2 border-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-2xl mb-2">{option.icon}</div>
+                      <p className="text-sm font-black text-white">{option.label}</p>
+                      <p className="text-xs text-gray-400">{option.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Contextual info based on selection */}
+                {gridConnection.status !== 'grid-tied' && (
+                  <div className={`mt-4 p-3 rounded-lg text-xs ${
+                    gridConnection.status === 'off-grid'
+                      ? 'bg-amber-500/20 border border-amber-400/30 text-amber-200'
+                      : 'bg-blue-500/20 border border-blue-400/30 text-blue-200'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Info className="w-4 h-4 flex-shrink-0" />
+                      <span>
+                        {gridConnection.status === 'off-grid'
+                          ? 'Off-grid EV charging requires larger battery + generator for 24/7 operation.'
+                          : 'Limited grid means we\'ll size your system for greater self-reliance.'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               {/* Grid Services Explanation */}
               {wantsBatteryStorage && (
                 <div className="bg-white/5 rounded-lg p-3 text-xs text-white/60">
@@ -1503,6 +2006,20 @@ export default function EVChargingWizard({
                   </p>
                 </div>
               )}
+              
+              {/* PROMINENT NEXT BUTTON - Step 3 */}
+              <div className="mt-8 pt-6 border-t-2 border-emerald-500/30">
+                <button
+                  onClick={() => setCurrentStep(4)}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50 animate-pulse hover:animate-none"
+                >
+                  <span>📊 Generate My Quote</span>
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+                <p className="text-center text-emerald-300 text-sm mt-3 font-medium">
+                  Step 4 of 5 • See your savings!
+                </p>
+              </div>
             </div>
           )}
           
@@ -1512,7 +2029,7 @@ export default function EVChargingWizard({
               - Key metrics
               - Export & Contact
               ================================================ */}
-          {currentStep === 4 && (
+          {quoteMode === 'guided' && currentStep === 4 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -1523,37 +2040,103 @@ export default function EVChargingWizard({
               {isCalculating ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mb-4" />
-                  <p className="text-white font-bold">Calculating your personalized quote...</p>
-                  <p className="text-emerald-200/70 text-sm">Just a moment...</p>
+                  <p className="text-white font-bold text-lg">Calculating your personalized quote...</p>
+                  <p className="text-emerald-200 text-sm">Just a moment...</p>
                 </div>
               ) : quoteResult ? (
                 <>
-                  <div className="text-center mb-4">
-                    <h3 className="text-2xl font-bold text-white mb-1">
+                  {/* Quote Header - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10 text-center">
+                    <h3 className="text-3xl font-black text-white mb-2">
                       {businessName ? `${businessName} - ` : ''}Your EV Charging Quote
                     </h3>
-                    <p className="text-emerald-200/70">
+                    <p className="text-gray-300 text-lg">
                       {STATION_TYPES[stationType].name} • {SCALE_OPTIONS[scale].description} • {state}
                     </p>
                   </div>
                   
-                  {/* ✨ WHAT YOU NEED - Configuration Summary */}
-                  <div className="bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-cyan-400/30">
-                    <h4 className="font-bold text-white mb-3 flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-cyan-400" />
+                  {/* Main Savings Card - ULTRA HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-emerald-600/40 via-teal-600/30 to-cyan-600/40 rounded-2xl p-8 border-4 border-emerald-400 text-center shadow-2xl shadow-emerald-500/30">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <Trophy className="w-8 h-8 text-amber-400" />
+                      <p className="text-emerald-200 uppercase tracking-widest text-lg font-black">Annual Savings</p>
+                    </div>
+                    <p className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200 drop-shadow-lg">
+                      ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}
+                    </p>
+                    <p className="text-emerald-100 mt-3 text-lg">That's <strong>${Math.round(quoteResult.financials.annualSavings / 12).toLocaleString()}/month</strong> back in your pocket</p>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      QUOTE NAMEPLATE - Professional Header
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-5 border border-white/20 shadow-lg">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Merlin EV Charging Quote</p>
+                        <h3 className="text-xl font-bold text-white mt-1">
+                          {businessName || 'EV Charging'} Energy Storage Project
+                        </h3>
+                        <p className="text-sm text-emerald-200/70 mt-1">
+                          {state} • {STATION_TYPES[stationType].name} • {SCALE_OPTIONS[scale].description}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-emerald-200/50">Quote Date</p>
+                        <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
+                        <p className="text-xs text-emerald-200/50 mt-2">Quote ID</p>
+                        <p className="text-emerald-400 font-mono text-sm">EV-{Math.random().toString(36).substr(2, 8).toUpperCase()}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Nameplate Key Specs */}
+                    <div className="grid grid-cols-4 gap-3 border-t border-white/10 pt-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-emerald-400">
+                          {recommendation.recommendation.bessKW} kW
+                        </p>
+                        <p className="text-xs text-white/60">BESS Power</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-teal-400">
+                          {recommendation.recommendation.bessKWh} kWh
+                        </p>
+                        <p className="text-xs text-white/60">Storage</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-amber-400">
+                          {wantsSolarCanopy ? `${recommendation.recommendation.solarKW} kW` : '—'}
+                        </p>
+                        <p className="text-xs text-white/60">Solar</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-cyan-400">
+                          {quoteResult.financials.paybackYears.toFixed(1)} yr
+                        </p>
+                        <p className="text-xs text-white/60">Payback</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ✨ WHAT YOU NEED - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10">
+                    <h4 className="font-black text-xl text-white mb-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500/30 flex items-center justify-center">
+                        <Lightbulb className="w-5 h-5 text-cyan-400" />
+                      </div>
                       What You Need - Your Configuration
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {/* Chargers */}
-                      <div className="bg-white/5 rounded-lg p-3 text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <Bolt className="w-4 h-4 text-yellow-400" />
-                          <span className="text-xs text-white/60 uppercase">Chargers</span>
+                      <div className="bg-gray-800/80 rounded-xl p-4 text-center border-2 border-yellow-500/40">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Bolt className="w-5 h-5 text-yellow-400" />
+                          <span className="text-sm text-white font-bold uppercase">Chargers</span>
                         </div>
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-3xl font-black text-white">
                           {(recommendation.chargers.level1 || 0) + recommendation.chargers.level2 + recommendation.chargers.dcfc + (recommendation.chargers.hpc || 0)}
                         </p>
-                        <p className="text-xs text-cyan-200/70">
+                        <p className="text-sm text-gray-400 mt-1">
                           {recommendation.chargers.level1 > 0 && `${recommendation.chargers.level1} L1 • `}
                           {recommendation.chargers.level2} L2 • {recommendation.chargers.dcfc} DCFC
                           {recommendation.chargers.hpc > 0 && ` • ${recommendation.chargers.hpc} HPC`}
@@ -1561,57 +2144,57 @@ export default function EVChargingWizard({
                       </div>
                       
                       {/* Peak Demand */}
-                      <div className="bg-white/5 rounded-lg p-3 text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <Gauge className="w-4 h-4 text-red-400" />
-                          <span className="text-xs text-white/60 uppercase">Peak Demand</span>
+                      <div className="bg-gray-800/80 rounded-xl p-4 text-center border-2 border-red-500/40">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Gauge className="w-5 h-5 text-red-400" />
+                          <span className="text-sm text-white font-bold uppercase">Peak Demand</span>
                         </div>
-                        <p className="text-xl font-bold text-white">{Math.round(recommendation.chargers.peakDemandKW)} kW</p>
-                        <p className="text-xs text-red-200/70">Maximum draw</p>
+                        <p className="text-3xl font-black text-red-400">{Math.round(recommendation.chargers.peakDemandKW)} kW</p>
+                        <p className="text-sm text-red-200">Maximum draw</p>
                       </div>
                       
                       {/* Battery System */}
                       {wantsBatteryStorage && (
-                        <div className="bg-white/5 rounded-lg p-3 text-center">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <Battery className="w-4 h-4 text-emerald-400" />
-                            <span className="text-xs text-white/60 uppercase">Battery</span>
+                        <div className="bg-gray-800/80 rounded-xl p-4 text-center border-2 border-emerald-500/40">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <Battery className="w-5 h-5 text-emerald-400" />
+                            <span className="text-sm text-white font-bold uppercase">Battery</span>
                           </div>
-                          <p className="text-xl font-bold text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
-                          <p className="text-xs text-emerald-200/70">{recommendation.recommendation.bessKWh} kWh capacity</p>
+                          <p className="text-3xl font-black text-emerald-400">{recommendation.recommendation.bessKW} kW</p>
+                          <p className="text-sm text-emerald-200">{recommendation.recommendation.bessKWh} kWh capacity</p>
                         </div>
                       )}
                       
                       {/* Solar Canopy */}
                       {wantsSolarCanopy && (
-                        <div className="bg-white/5 rounded-lg p-3 text-center">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <Sun className="w-4 h-4 text-amber-400" />
-                            <span className="text-xs text-white/60 uppercase">Solar</span>
+                        <div className="bg-gray-800/80 rounded-xl p-4 text-center border-2 border-amber-500/40">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <Sun className="w-5 h-5 text-amber-400" />
+                            <span className="text-sm text-white font-bold uppercase">Solar</span>
                           </div>
-                          <p className="text-xl font-bold text-amber-400">{recommendation.recommendation.solarKW} kW</p>
-                          <p className="text-xs text-amber-200/70">Canopy array</p>
+                          <p className="text-3xl font-black text-amber-400">{recommendation.recommendation.solarKW} kW</p>
+                          <p className="text-sm text-amber-200">Canopy array</p>
                         </div>
                       )}
                       
                       {/* Demand Reduction */}
-                      <div className="bg-white/5 rounded-lg p-3 text-center">
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <TrendingDown className="w-4 h-4 text-purple-400" />
-                          <span className="text-xs text-white/60 uppercase">Peak Shaving</span>
+                      <div className="bg-gray-800/80 rounded-xl p-4 text-center border-2 border-purple-500/40">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <TrendingDown className="w-5 h-5 text-purple-400" />
+                          <span className="text-sm text-white font-bold uppercase">Peak Shaving</span>
                         </div>
-                        <p className="text-xl font-bold text-purple-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
-                        <p className="text-xs text-purple-200/70">Demand reduction</p>
+                        <p className="text-3xl font-black text-purple-400">{wantsBatteryStorage ? '40%' : '0%'}</p>
+                        <p className="text-sm text-purple-200">Demand reduction</p>
                       </div>
                     </div>
                     
                     {/* Quick Summary */}
-                    <div className="mt-3 pt-3 border-t border-white/10 text-sm text-white/70">
-                      <p className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div className="mt-4 pt-4 border-t-2 border-gray-700 text-white">
+                      <p className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                         <span>
                           Your {STATION_TYPES[stationType].name.toLowerCase()} will handle 
-                          {' '}<strong className="text-white">{Math.round(recommendation.chargers.peakDemandKW / 50)} fast-charge sessions/hour</strong>
+                          {' '}<strong className="text-emerald-400">{Math.round(recommendation.chargers.peakDemandKW / 50)} fast-charge sessions/hour</strong>
                           {wantsBatteryStorage && (
                             <span> with <strong className="text-emerald-400">40% lower demand charges</strong></span>
                           )}
@@ -1623,16 +2206,16 @@ export default function EVChargingWizard({
                     </div>
                   </div>
                   
-                  {/* Main Savings Card */}
-                  <div className="bg-gradient-to-br from-emerald-500/30 via-teal-500/20 to-cyan-500/30 rounded-2xl p-6 border-2 border-emerald-400/50 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Trophy className="w-6 h-6 text-amber-400" />
-                      <p className="text-emerald-200 uppercase tracking-widest text-sm font-bold">Annual Savings</p>
+                  {/* Main Savings Card - ULTRA HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-emerald-600/40 via-teal-600/30 to-cyan-600/40 rounded-2xl p-8 border-4 border-emerald-400 text-center shadow-2xl shadow-emerald-500/30">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <Trophy className="w-8 h-8 text-amber-400" />
+                      <p className="text-emerald-200 uppercase tracking-widest text-lg font-black">Annual Savings</p>
                     </div>
-                    <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">
+                    <p className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200 drop-shadow-lg">
                       ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}
                     </p>
-                    <p className="text-emerald-200/70 mt-2">That's ${Math.round(quoteResult.financials.annualSavings / 12).toLocaleString()}/month back in your pocket</p>
+                    <p className="text-emerald-100 mt-3 text-lg">That's <strong>${Math.round(quoteResult.financials.annualSavings / 12).toLocaleString()}/month</strong> back in your pocket</p>
                   </div>
                   
                   {/* Key Metrics Dashboard */}
@@ -1665,20 +2248,261 @@ export default function EVChargingWizard({
                     />
                   </div>
                   
-                  {/* Investment Summary */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <h4 className="font-bold text-white mb-3 flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-emerald-400" />
+                  {/* ═══════════════════════════════════════════════════════════════
+                      SAVINGS BREAKDOWN - Line Items (HIGH CONTRAST)
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl">
+                        <TrendingDown className="w-7 h-7 text-emerald-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Savings Breakdown</h4>
+                    </div>
+                    
+                    <div className="space-y-5 mb-6">
+                      {/* Demand Charge Reduction */}
+                      <div className="bg-gradient-to-r from-emerald-900/30 to-emerald-800/20 rounded-xl p-4 border border-emerald-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/50"></div>
+                            <span className="text-lg font-bold text-white">Demand Charge Reduction</span>
+                          </div>
+                          <span className="text-2xl font-black text-emerald-400">
+                            ${Math.round(quoteResult.financials.annualSavings * 0.55).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-4 rounded-full shadow-lg shadow-emerald-500/30" style={{ width: '55%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~55% of total • Peak shaving during high-demand charging periods</p>
+                      </div>
+                      
+                      {/* Energy Arbitrage */}
+                      <div className="bg-gradient-to-r from-teal-900/30 to-teal-800/20 rounded-xl p-4 border border-teal-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-teal-500 rounded-full shadow-lg shadow-teal-500/50"></div>
+                            <span className="text-lg font-bold text-white">Energy Arbitrage (TOU)</span>
+                          </div>
+                          <span className="text-2xl font-black text-teal-400">
+                            ${Math.round(quoteResult.financials.annualSavings * 0.25).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-teal-600 to-teal-400 h-4 rounded-full shadow-lg shadow-teal-500/30" style={{ width: '25%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~25% of total • Charge off-peak, discharge on-peak</p>
+                      </div>
+                      
+                      {/* Solar Savings (if applicable) */}
+                      {wantsSolarCanopy && (
+                        <div className="bg-gradient-to-r from-amber-900/30 to-orange-800/20 rounded-xl p-4 border border-amber-500/30">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-4 h-4 bg-amber-500 rounded-full shadow-lg shadow-amber-500/50"></div>
+                              <span className="text-lg font-bold text-white">Solar Canopy Generation</span>
+                            </div>
+                            <span className="text-2xl font-black text-amber-400">
+                              ${Math.round(quoteResult.financials.annualSavings * 0.15).toLocaleString()}/yr
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                            <div className="bg-gradient-to-r from-amber-600 to-amber-400 h-4 rounded-full shadow-lg shadow-amber-500/30" style={{ width: '15%' }}></div>
+                          </div>
+                          <p className="text-sm text-gray-400 mt-2 font-medium">~15% of total • Clean energy from solar canopy</p>
+                        </div>
+                      )}
+                      
+                      {/* Grid Services */}
+                      <div className="bg-gradient-to-r from-cyan-900/30 to-cyan-800/20 rounded-xl p-4 border border-cyan-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-cyan-500 rounded-full shadow-lg shadow-cyan-500/50"></div>
+                            <span className="text-lg font-bold text-white">Grid Services / Avoided Spikes</span>
+                          </div>
+                          <span className="text-2xl font-black text-cyan-400">
+                            ${Math.round(quoteResult.financials.annualSavings * (wantsSolarCanopy ? 0.05 : 0.20)).toLocaleString()}/yr
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                          <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-4 rounded-full shadow-lg shadow-cyan-500/30" style={{ width: wantsSolarCanopy ? '5%' : '20%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-2 font-medium">~{wantsSolarCanopy ? '5' : '20'}% of total • Smoothing fast-charger demand spikes</p>
+                      </div>
+                    </div>
+                    
+                    {/* Total Savings Summary */}
+                    <div className="bg-gradient-to-r from-emerald-800/40 to-green-700/30 rounded-xl p-5 border-2 border-emerald-400/50 flex justify-between items-center">
+                      <span className="text-xl font-black text-white">Total Annual Savings</span>
+                      <span className="text-4xl font-black text-emerald-400">
+                        ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}/yr
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      ROI & PAYBACK VISUALIZATION - HIGH CONTRAST
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-blue-500/20 rounded-xl">
+                        <BarChart3 className="w-7 h-7 text-blue-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">Return on Investment</h4>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-3 gap-5 mb-5">
+                      {/* Payback Period */}
+                      <div className="bg-gradient-to-br from-emerald-900/30 to-green-800/20 rounded-xl p-5 text-center border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10">
+                        <p className="text-5xl font-black text-emerald-400">{quoteResult.financials.paybackYears.toFixed(1)}</p>
+                        <p className="text-base font-bold text-white mt-2">Years to Payback</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">After 30% ITC</p>
+                      </div>
+                      
+                      {/* 10-Year ROI */}
+                      <div className="bg-gradient-to-br from-blue-900/30 to-cyan-800/20 rounded-xl p-5 text-center border-2 border-blue-500/40 shadow-lg shadow-blue-500/10">
+                        <p className="text-5xl font-black text-blue-400">{Math.round(quoteResult.financials.roi10Year)}%</p>
+                        <p className="text-base font-bold text-white mt-2">10-Year ROI</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">${Math.round(quoteResult.financials.annualSavings * 10).toLocaleString()} total</p>
+                      </div>
+                      
+                      {/* 25-Year ROI */}
+                      <div className="bg-gradient-to-br from-purple-900/30 to-fuchsia-800/20 rounded-xl p-5 text-center border-2 border-purple-500/40 shadow-lg shadow-purple-500/10">
+                        <p className="text-5xl font-black text-purple-400">{Math.round(quoteResult.financials.roi25Year)}%</p>
+                        <p className="text-base font-bold text-white mt-2">25-Year ROI</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">${Math.round(quoteResult.financials.annualSavings * 25).toLocaleString()} total</p>
+                      </div>
+                    </div>
+                    
+                    {/* Payback Timeline Visual */}
+                    <div className="bg-gray-800/50 rounded-xl p-5">
+                      <p className="text-base font-bold text-gray-300 mb-3">Investment Recovery Timeline</p>
+                      <div className="relative h-10 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 h-full bg-gradient-to-r from-red-500 to-emerald-500 opacity-80"
+                          style={{ width: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                        <div 
+                          className="absolute top-0 h-full w-1 bg-white z-10"
+                          style={{ left: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                        <div 
+                          className="absolute top-0 right-0 h-full bg-emerald-500/30"
+                          style={{ left: `${Math.min((quoteResult.financials.paybackYears / 10) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-emerald-200/60 mt-1">
+                        <span>Year 0</span>
+                        <span className="text-emerald-400 font-bold">← Break-even: Year {quoteResult.financials.paybackYears.toFixed(1)}</span>
+                        <span>Year 10</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      BESS EQUIPMENT BREAKDOWN
+                      ═══════════════════════════════════════════════════════════════ */}
+                  {wantsBatteryStorage && (
+                    <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-emerald-500/20 rounded-xl">
+                          <Battery className="w-7 h-7 text-emerald-400" />
+                        </div>
+                        <h4 className="text-xl font-black text-white">Battery Energy Storage System (BESS)</h4>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-5">
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Power Rating:</span>
+                            <span className="text-xl font-black text-emerald-400">{recommendation.recommendation.bessKW} kW</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Energy Capacity:</span>
+                            <span className="text-xl font-black text-teal-400">{recommendation.recommendation.bessKWh} kWh</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Runtime at Peak:</span>
+                            <span className="text-lg font-bold text-white">4 hours</span>
+                          </div>
+                        </div>
+                        <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Battery Type:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.batteries?.model || 'LFP'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Manufacturer:</span>
+                            <span className="text-lg font-bold text-white">{quoteResult.equipment.batteries?.manufacturer || 'Tesla / BYD'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">Warranty:</span>
+                            <span className="text-lg font-bold text-emerald-400">10 Years</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* ═══════════════════════════════════════════════════════════════
+                      EV CHARGER EQUIPMENT BREAKDOWN
+                      ═══════════════════════════════════════════════════════════════ */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-yellow-500/40 shadow-xl shadow-yellow-500/10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2 bg-yellow-500/20 rounded-xl">
+                        <Bolt className="w-7 h-7 text-yellow-400" />
+                      </div>
+                      <h4 className="text-xl font-black text-white">EV Charging Equipment</h4>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Level 2 Chargers:</span>
+                          <span className="text-xl font-black text-blue-400">{recommendation.chargers.level2} units</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">DCFC (50-150 kW):</span>
+                          <span className="text-xl font-black text-orange-400">{recommendation.chargers.dcfc} units</span>
+                        </div>
+                        {recommendation.chargers.hpc > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 font-medium">HPC (250+ kW):</span>
+                            <span className="text-xl font-black text-red-400">{recommendation.chargers.hpc} units</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-4 bg-gray-800/50 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Total Chargers:</span>
+                          <span className="text-lg font-bold text-white">{recommendation.chargers.level2 + recommendation.chargers.dcfc + (recommendation.chargers.hpc || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Peak Demand:</span>
+                          <span className="text-xl font-black text-red-400">{Math.round(recommendation.chargers.peakDemandKW)} kW</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">Concurrent Sessions:</span>
+                          <span className="text-lg font-bold text-emerald-400">{Math.round(recommendation.chargers.peakDemandKW / 50)}/hr</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Investment Summary - HIGH CONTRAST */}
+                  <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-teal-500/40 shadow-xl shadow-teal-500/10">
+                    <h4 className="font-black text-xl text-white mb-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-teal-500/30 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-teal-400" />
+                      </div>
                       Investment Summary
                     </h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-3 text-lg">
                       <div className="flex justify-between">
-                        <span className="text-emerald-200/70">Equipment (Battery + Chargers)</span>
-                        <span className="text-white">${Math.round(quoteResult.costs.equipmentCost).toLocaleString()}</span>
+                        <span className="text-gray-300">Equipment (Battery + Chargers)</span>
+                        <span className="text-white font-bold">${Math.round(quoteResult.costs.equipmentCost).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-emerald-200/70">Installation</span>
-                        <span className="text-white">${Math.round(quoteResult.costs.installationCost).toLocaleString()}</span>
+                        <span className="text-gray-300">Installation</span>
+                        <span className="text-white font-bold">${Math.round(quoteResult.costs.installationCost).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between py-2 border-t border-white/10">
                         <span className="text-white font-medium">Total Project Cost</span>
@@ -1771,18 +2595,18 @@ export default function EVChargingWizard({
                       </ul>
                       <button
                         onClick={onRequestConsultation}
-                        className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-500 hover:via-orange-500 hover:to-amber-500 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-500 hover:via-orange-500 hover:to-amber-500 text-white py-5 rounded-xl font-black text-xl shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-amber-400/50"
                       >
-                        <Phone className="w-5 h-5" />
+                        <Phone className="w-6 h-6" />
                         Schedule VIP Consultation
                       </button>
                     </div>
                   ) : onRequestConsultation && (
                     <button
                       onClick={onRequestConsultation}
-                      className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105 flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-xl font-black text-xl shadow-2xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-400/50"
                     >
-                      <Phone className="w-5 h-5" />
+                      <Phone className="w-6 h-6" />
                       Talk to an Expert - Free Consultation
                     </button>
                   )}
@@ -1797,13 +2621,13 @@ export default function EVChargingWizard({
           )}
         </div>
         
-        {/* Footer Navigation */}
-        <div className="border-t border-white/10 px-6 py-4 flex items-center justify-between">
+        {/* Footer Navigation - HIGH CONTRAST */}
+        <div className="border-t-2 border-emerald-500/30 bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 px-6 py-5 flex items-center justify-between">
           <button
             onClick={() => currentStep === 0 ? onClose() : setCurrentStep(currentStep - 1)}
-            className="flex items-center gap-2 px-4 py-2 text-white/70 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-5 py-3 text-white hover:text-emerald-300 transition-colors font-medium border-2 border-gray-700 hover:border-emerald-500/50 rounded-xl bg-gray-800/50"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             {currentStep === 0 ? 'Cancel' : 'Back'}
           </button>
           
@@ -1811,10 +2635,10 @@ export default function EVChargingWizard({
             <button
               onClick={() => setCurrentStep(currentStep + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-lg font-bold transition-all"
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-black text-lg transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 border-2 border-emerald-400/50 disabled:border-gray-600"
             >
               Continue
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5" />
             </button>
           )}
         </div>

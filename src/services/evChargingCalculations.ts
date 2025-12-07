@@ -640,6 +640,278 @@ export function calculateGridServicesRevenue(
 }
 
 // ============================================================================
+// SMART RECOMMENDATION ENGINE - For EVChargingWizard
+// ============================================================================
+// Migrated from EVChargingWizard.tsx for SSOT compliance (Dec 2025)
+
+/**
+ * EV Station types with their characteristics
+ */
+export const EV_STATION_TYPES = {
+  highway: {
+    name: 'Highway Charging Station',
+    description: 'High-speed charging for travelers',
+    avgDwellTime: '15-30 min',
+    defaultChargers: { level1: 0, level2: 4, dcfc: 6, hpc: 4 },
+    recommendation: 'Focus on DCFC/HPC for quick turnaround',
+    gridServicesNote: 'Excellent for frequency regulation due to consistent throughput',
+    stepExplanation: 'Highway stations prioritize fast charging - most customers want to charge and go.',
+  },
+  urban: {
+    name: 'Urban Charging Hub',
+    description: 'City center charging with mixed speeds',
+    avgDwellTime: '1-4 hours',
+    defaultChargers: { level1: 0, level2: 12, dcfc: 4, hpc: 2 },
+    recommendation: 'Mix of L2 for local users, DCFC/HPC for through traffic',
+    gridServicesNote: 'Good for demand response - predictable daily patterns',
+    stepExplanation: 'Urban hubs serve commuters, shoppers, and rideshare - diverse charging needs.',
+  },
+  destination: {
+    name: 'Destination Charging',
+    description: 'Retail, dining, entertainment venues',
+    avgDwellTime: '2-6 hours',
+    defaultChargers: { level1: 2, level2: 16, dcfc: 2, hpc: 0 },
+    recommendation: 'Primarily L2 - customers are staying anyway',
+    gridServicesNote: 'Ideal for arbitrage - charge during off-peak, discharge during peak',
+    stepExplanation: 'Destination chargers work while you shop/dine - time is not a constraint.',
+  },
+  fleet: {
+    name: 'Fleet Depot',
+    description: 'Overnight fleet vehicle charging',
+    avgDwellTime: '8-12 hours',
+    defaultChargers: { level1: 8, level2: 24, dcfc: 4, hpc: 0 },
+    recommendation: 'Maximize L2 for overnight, DCFC for mid-day top-ups',
+    gridServicesNote: 'Perfect for V2G - predictable schedules, large batteries',
+    stepExplanation: 'Fleet depots optimize for overnight charging at lowest rates.',
+  },
+  retail: {
+    name: 'Retail Co-Located',
+    description: 'Charging at gas stations, convenience stores',
+    avgDwellTime: '20-45 min',
+    defaultChargers: { level1: 0, level2: 4, dcfc: 4, hpc: 2 },
+    recommendation: 'DCFC-heavy for convenience store dwell time',
+    gridServicesNote: 'Good baseline load for peak shaving programs',
+    stepExplanation: 'Retail locations balance speed with customer experience.',
+  },
+} as const;
+
+export type EVStationType = keyof typeof EV_STATION_TYPES;
+
+/**
+ * Scale multipliers for station sizing
+ * Keys match EVChargingWizard.tsx SCALE_OPTIONS
+ */
+export const EV_SCALE_OPTIONS = {
+  starter: { name: 'Getting Started', multiplier: 0.5, description: '2-4 chargers' },
+  growing: { name: 'Growing', multiplier: 1.0, description: '5-10 chargers' },
+  established: { name: 'Established', multiplier: 2.0, description: '11-20 chargers' },
+  enterprise: { name: 'Enterprise', multiplier: 3.0, description: '20+ chargers' },
+} as const;
+
+export type EVScaleOption = keyof typeof EV_SCALE_OPTIONS;
+
+/**
+ * Input for EV station smart recommendation
+ */
+export interface EVStationRecommendationInput {
+  stationType: EVStationType;
+  scale: EVScaleOption;
+  customChargers?: {
+    level1: number;
+    level2: number;
+    dcfc: number;
+    hpc: number;
+  };
+  goals: {
+    wantsBatteryStorage: boolean;
+    wantsSolarCanopy: boolean;
+    wantsGridServices: boolean;
+    wantsPowerGenerator: boolean;
+  };
+  electricityRate?: number;
+  demandCharge?: number;
+}
+
+/**
+ * EV station recommendation result
+ */
+export interface EVStationRecommendationResult {
+  chargers: {
+    level1: number;
+    level2: number;
+    dcfc: number;
+    hpc: number;
+    totalPowerKW: number;
+    peakDemandKW: number;
+  };
+  costs: {
+    monthlyElectricity: number;
+    monthlyDemandCharges: number;
+  };
+  recommendation: {
+    bessKW: number;
+    bessKWh: number;
+    solarKW: number;
+    generatorKW: number;
+  };
+  savings: {
+    monthly: number;
+    annual: number;
+    demandChargeReduction: number;
+    solarOffset: number;
+    gridServices: number;
+  };
+  stationInsight: string;
+  gridServicesNote: string;
+  dwellTime: string;
+  stepExplanation: string;
+}
+
+/**
+ * SMART RECOMMENDATION ENGINE FOR EV CHARGING STATIONS
+ * Migrated from EVChargingWizard.tsx for SSOT compliance
+ * 
+ * Auto-calculates optimal BESS + solar sizing based on:
+ * - Station type (highway, urban, destination, fleet, retail)
+ * - Scale (small to enterprise)
+ * - User goals (storage, solar, grid services, backup)
+ * 
+ * Goal-based multipliers affect final sizing and savings calculations.
+ * 
+ * @param input - Station configuration and goals
+ * @returns Complete recommendation with chargers, BESS, solar, and savings
+ */
+export function calculateEVStationRecommendation(input: EVStationRecommendationInput): EVStationRecommendationResult {
+  const { stationType, scale, customChargers, goals } = input;
+  const { wantsBatteryStorage, wantsSolarCanopy, wantsGridServices, wantsPowerGenerator } = goals;
+  
+  const station = EV_STATION_TYPES[stationType];
+  const scaleConfig = EV_SCALE_OPTIONS[scale];
+  
+  // Calculate charger counts based on station defaults * scale multiplier
+  const level1Count = Math.round(station.defaultChargers.level1 * scaleConfig.multiplier);
+  const level2Count = Math.round(station.defaultChargers.level2 * scaleConfig.multiplier);
+  const dcfcCount = Math.round(station.defaultChargers.dcfc * scaleConfig.multiplier);
+  const hpcCount = Math.round(station.defaultChargers.hpc * scaleConfig.multiplier);
+  
+  // Use customChargers if provided, otherwise use calculated defaults
+  const finalLevel1 = customChargers?.level1 ?? level1Count;
+  const finalLevel2 = customChargers?.level2 ?? Math.max(2, level2Count);
+  const finalDCFC = customChargers?.dcfc ?? dcfcCount;
+  const finalHPC = customChargers?.hpc ?? hpcCount;
+  
+  // Calculate power requirements (using industry-standard values)
+  const level1Power = finalLevel1 * 1.9; // Level 1 is 1.9 kW (120V/16A)
+  const level2Power = finalLevel2 * 11; // Average Level 2 is 11kW
+  const dcfcPower = finalDCFC * 150; // Average DCFC is 150kW
+  const hpcPower = finalHPC * 350; // HPC is 350kW
+  const totalPowerKW = level1Power + level2Power + dcfcPower + hpcPower;
+  const peakDemandKW = Math.round(totalPowerKW * 0.7); // 70% concurrency
+  
+  // Get electricity rates (use provided or defaults)
+  const electricityRate = input.electricityRate ?? 0.13;
+  const demandCharge = input.demandCharge ?? 15;
+  
+  // Calculate monthly costs WITHOUT battery
+  const peakHours = 12; // Typical peak window
+  const dailyKWh = peakDemandKW * 0.4 * peakHours; // 40% avg utilization
+  const monthlyKWh = dailyKWh * 30;
+  const monthlyDemandCharges = peakDemandKW * demandCharge;
+  const monthlyEnergyCharges = monthlyKWh * electricityRate;
+  const monthlyElectricityCost = monthlyDemandCharges + monthlyEnergyCharges;
+  
+  // ============================================
+  // GOAL-BASED RECOMMENDATIONS
+  // Goals directly affect BESS sizing and savings!
+  // ============================================
+  
+  // Base BESS sizing (varies by goals)
+  let bessMultiplier = 0.5; // Default: cover 50% of peak
+  let solarMultiplier = 0.3; // Default: 30% of load
+  let additionalSavingsMultiplier = 1.0;
+  
+  // Adjust based on goals
+  if (wantsBatteryStorage) {
+    bessMultiplier = 0.5;
+    if (wantsGridServices) {
+      // Grid services require larger battery for frequency regulation
+      bessMultiplier = 0.7; // 70% of peak for grid services participation
+      additionalSavingsMultiplier = 1.2; // +20% savings from grid services
+    }
+  }
+  
+  if (wantsSolarCanopy) {
+    solarMultiplier = 0.4; // Increase solar to 40% when user wants it
+    if (wantsBatteryStorage) {
+      // Solar + Storage synergy - can store solar for peak shaving
+      additionalSavingsMultiplier *= 1.15; // +15% from solar+storage synergy
+    }
+  }
+  
+  if (wantsPowerGenerator) {
+    // Backup power affects sizing but mainly provides resilience
+    bessMultiplier = Math.max(bessMultiplier, 0.4); // At least 40% for backup
+  }
+  
+  const bessKW = wantsBatteryStorage ? Math.round(peakDemandKW * bessMultiplier) : 0;
+  const bessKWh = bessKW * 2; // 2-hour duration
+  
+  // Solar canopy estimate (if wanted)
+  const solarKW = wantsSolarCanopy ? Math.round(totalPowerKW * solarMultiplier) : 0;
+  
+  // Generator size for backup (if wanted)
+  const generatorKW = wantsPowerGenerator ? Math.round(peakDemandKW * 0.3) : 0; // 30% of peak for backup
+  
+  // ============================================
+  // SAVINGS CALCULATIONS (Goal-Connected!)
+  // ============================================
+  
+  // Demand charge savings from BESS (peak shaving)
+  const demandChargeSavings = wantsBatteryStorage ? monthlyDemandCharges * 0.4 * additionalSavingsMultiplier : 0;
+  
+  // Solar savings (energy offset)
+  const solarSavings = wantsSolarCanopy ? solarKW * 150 * additionalSavingsMultiplier : 0; // ~$150/kW/year
+  
+  // Grid services revenue (only if enabled)
+  const gridServicesSavings = wantsGridServices && wantsBatteryStorage ? bessKW * 120 : 0; // ~$120/kW/year
+  
+  // Total annual savings
+  const annualSavings = (demandChargeSavings * 12) + solarSavings + gridServicesSavings;
+  
+  return {
+    chargers: {
+      level1: finalLevel1,
+      level2: finalLevel2,
+      dcfc: finalDCFC,
+      hpc: finalHPC,
+      totalPowerKW,
+      peakDemandKW,
+    },
+    costs: {
+      monthlyElectricity: monthlyElectricityCost,
+      monthlyDemandCharges,
+    },
+    recommendation: {
+      bessKW,
+      bessKWh,
+      solarKW,
+      generatorKW,
+    },
+    savings: {
+      monthly: Math.round(annualSavings / 12),
+      annual: Math.round(annualSavings),
+      demandChargeReduction: Math.round(demandChargeSavings * 12),
+      solarOffset: Math.round(solarSavings),
+      gridServices: Math.round(gridServicesSavings),
+    },
+    stationInsight: station.recommendation,
+    gridServicesNote: station.gridServicesNote,
+    dwellTime: station.avgDwellTime,
+    stepExplanation: station.stepExplanation,
+  };
+}
+
+// ============================================================================
 // V2G (VEHICLE-TO-GRID) CALCULATIONS
 // ============================================================================
 
@@ -886,5 +1158,89 @@ export function validateWestLondonCalculation(): void {
   console.log(`  Installation: $${costs.installationCostUSD.toLocaleString()}`);
   console.log(`  Total: $${costs.totalCostUSD.toLocaleString()}`);
   console.log('='.repeat(60));
+}
+
+// =============================================================================
+// SIMPLE LANDING PAGE CALCULATOR
+// Simplified version for EVChargingEnergy.tsx landing page quick estimates
+// =============================================================================
+
+/**
+ * EV charger specs for simplified landing page calculator
+ * SSOT for EVChargingEnergy.tsx landing page
+ */
+export const EV_CHARGER_SPECS_SIMPLE = {
+  level2: { kw: 7.2, name: 'Level 2 (7.2 kW)' },
+  dcfc: { kw: 150, name: 'DC Fast Charger (150 kW)' },
+  hpc: { kw: 250, name: 'High Power Charger (250 kW)' },
+} as const;
+
+export interface EVChargingPowerSimpleInput {
+  level2Count: number;
+  dcfcCount: number;
+  hpcCount: number;
+  electricityRate: number;
+  demandCharge?: number; // Optional, defaults to $15/kW
+}
+
+export interface EVChargingPowerSimpleResult {
+  peakKW: number;
+  connectedKW: number; // Total nameplate capacity
+  monthlyDemandCost: number;
+  annualEnergyCost: number;
+  bessRecommendedKW: number;
+  bessRecommendedKWh: number;
+  potentialSavings: number;
+  demandChargeImpact: number;
+}
+
+/**
+ * Simple EV charging power calculator for landing page
+ * Matches EVChargingEnergy.tsx embedded logic - now SSOT
+ */
+export function calculateEVChargingPowerSimple(input: EVChargingPowerSimpleInput): EVChargingPowerSimpleResult {
+  const { level2Count, dcfcCount, hpcCount, electricityRate, demandCharge = 15 } = input;
+  
+  // Calculate connected (nameplate) capacity
+  const level2KW = level2Count * EV_CHARGER_SPECS_SIMPLE.level2.kw;
+  const dcfcKW = dcfcCount * EV_CHARGER_SPECS_SIMPLE.dcfc.kw;
+  const hpcKW = hpcCount * EV_CHARGER_SPECS_SIMPLE.hpc.kw;
+  const connectedKW = level2KW + dcfcKW + hpcKW;
+  
+  // Apply concurrency factor (0.7) - not all chargers active simultaneously
+  const concurrencyFactor = 0.7;
+  const peakKW = Math.round(connectedKW * concurrencyFactor);
+  
+  // Demand charge impact
+  const monthlyDemandCost = peakKW * demandCharge;
+  const demandChargeImpact = monthlyDemandCost * 12;
+  
+  // Annual energy calculation
+  // Assume average utilization: L2=4hrs/day, DCFC=6hrs/day, HPC=8hrs/day
+  const level2AnnualKWh = level2Count * EV_CHARGER_SPECS_SIMPLE.level2.kw * 4 * 365;
+  const dcfcAnnualKWh = dcfcCount * EV_CHARGER_SPECS_SIMPLE.dcfc.kw * 6 * 365 * 0.5; // 50% avg power
+  const hpcAnnualKWh = hpcCount * EV_CHARGER_SPECS_SIMPLE.hpc.kw * 8 * 365 * 0.5; // 50% avg power
+  const annualKWh = level2AnnualKWh + dcfcAnnualKWh + hpcAnnualKWh;
+  const annualEnergyCost = annualKWh * electricityRate;
+  
+  // BESS sizing: 70% peak shaving (EV has very spiky loads), 2-hour duration
+  const bessRecommendedKW = Math.round(peakKW * 0.7);
+  const bessRecommendedKWh = bessRecommendedKW * 2;
+  
+  // Potential savings: 50% demand charge reduction (very spiky), 10% energy arbitrage
+  const potentialSavings = Math.round(
+    (monthlyDemandCost * 12 * 0.5) + (annualEnergyCost * 0.1)
+  );
+  
+  return {
+    peakKW,
+    connectedKW,
+    monthlyDemandCost,
+    annualEnergyCost: Math.round(annualEnergyCost),
+    bessRecommendedKW,
+    bessRecommendedKWh,
+    potentialSavings,
+    demandChargeImpact,
+  };
 }
 

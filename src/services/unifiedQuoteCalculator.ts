@@ -31,6 +31,9 @@ import { getBatteryPricing } from './unifiedPricingService';
 // INTERFACES
 // ============================================
 
+// Import types from equipmentCalculations for consistency
+import type { GeneratorFuelType, FuelCellType, EquipmentBreakdownOptions } from '@/utils/equipmentCalculations';
+
 export interface QuoteInput {
   // System sizing
   storageSizeMW: number;
@@ -40,6 +43,13 @@ export interface QuoteInput {
   solarMW?: number;
   windMW?: number;
   generatorMW?: number;
+  
+  // Generator fuel type (NEW - Dec 2025)
+  generatorFuelType?: GeneratorFuelType;
+  
+  // Fuel cell configuration (NEW - Dec 2025)
+  fuelCellMW?: number;
+  fuelCellType?: FuelCellType;
   
   // Location & rates
   location?: string;
@@ -113,6 +123,9 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     solarMW = 0,
     windMW = 0,
     generatorMW = 0,
+    generatorFuelType = 'diesel',  // NEW: Default to diesel
+    fuelCellMW = 0,                 // NEW: Default to 0 (no fuel cell)
+    fuelCellType = 'hydrogen',      // NEW: Default to hydrogen PEM
     location = 'California',
     electricityRate = 0.15,
     gridConnection = 'on-grid',
@@ -132,8 +145,17 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     durationHours,
     systemCategory,
     location,
-    electricityRate
+    electricityRate,
+    generatorFuelType: generatorMW > 0 ? generatorFuelType : 'none',
+    fuelCellType: fuelCellMW > 0 ? fuelCellType : 'none'
   });
+  
+  // Build equipment options (NEW - Dec 2025)
+  const equipmentOptions: EquipmentBreakdownOptions = {
+    generatorFuelType,
+    fuelCellMW,
+    fuelCellType
+  };
   
   // Step 1: Get equipment breakdown (uses proper small-system pricing)
   const equipment = await calculateEquipmentBreakdown(
@@ -144,7 +166,8 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     generatorMW,
     industryData ? { selectedIndustry: useCase, useCaseData: industryData } : undefined,
     gridConnection,
-    location
+    location,
+    equipmentOptions  // NEW: Pass extended options
   );
   
   // Step 2: Extract costs from equipment breakdown
@@ -246,5 +269,5 @@ export async function estimatePayback(
 }
 
 // Re-export types for convenience
-export type { EquipmentBreakdown } from '@/utils/equipmentCalculations';
+export type { EquipmentBreakdown, GeneratorFuelType, FuelCellType, EquipmentBreakdownOptions } from '@/utils/equipmentCalculations';
 export type { FinancialCalculationResult } from './centralizedCalculations';

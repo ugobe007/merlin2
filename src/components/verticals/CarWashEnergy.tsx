@@ -16,6 +16,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, Mail, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, FileText, MapPin, Loader2 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { 
+  calculateCarWashPowerSimple,
+  CAR_WASH_POWER_PROFILES_SIMPLE,
+  type CarWashTypeSimple 
+} from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
 import { useUtilityRates } from '@/hooks/useUtilityRates';
@@ -55,25 +60,13 @@ interface LeadInfo {
 }
 
 // ============================================
-// CONSTANTS
+// CONSTANTS (UI display - calculations use SSOT)
 // ============================================
-
-// Average power consumption by car wash type
-// Source: Industry data + ASHRAE Commercial Building Energy Consumption Survey
-const CAR_WASH_POWER_PROFILES = {
-  // Per bay power in kW
-  bayPowerKW: 15, // Tunnel/conveyor systems average 10-20 kW per bay
-  vacuumStationKW: 3, // Per vacuum station
-  dryerKW: 50, // High-velocity dryers are big loads
-  lightingKW: 5, // Per bay
-  waterHeatingKW: 20, // Water heating for wash quality
-  compressorKW: 10, // Air compressors
-};
 
 // Peak demand typically 4-6 hours during busy periods
 const PEAK_HOURS = 5;
 
-// State electricity rates (simplified - will use database in production)
+// State electricity rates (for UI and calculation)
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
   'Alabama': { rate: 0.13, demandCharge: 12 },
   'Alaska': { rate: 0.22, demandCharge: 15 },
@@ -129,34 +122,28 @@ const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
 };
 
 // ============================================
-// CALCULATOR LOGIC
+// CALCULATOR LOGIC (uses SSOT from useCasePowerCalculations)
 // ============================================
 
 function calculateCarWashPower(inputs: CarWashInputs): { peakKW: number; dailyKWh: number } {
-  const { numberOfBays, carsPerDay, includesVacuums, includesDryers } = inputs;
+  const { numberOfBays, carsPerDay, state, includesVacuums, includesDryers } = inputs;
   
-  // Base power per bay
-  let peakKW = numberOfBays * CAR_WASH_POWER_PROFILES.bayPowerKW;
-  peakKW += numberOfBays * CAR_WASH_POWER_PROFILES.lightingKW;
-  peakKW += CAR_WASH_POWER_PROFILES.waterHeatingKW;
-  peakKW += CAR_WASH_POWER_PROFILES.compressorKW;
+  const stateData = STATE_RATES[state] || STATE_RATES['Other'];
   
-  // Optional equipment
-  if (includesVacuums) {
-    peakKW += numberOfBays * 2 * CAR_WASH_POWER_PROFILES.vacuumStationKW; // 2 vacuums per bay
-  }
-  if (includesDryers) {
-    peakKW += numberOfBays * CAR_WASH_POWER_PROFILES.dryerKW;
-  }
+  // Call SSOT calculator - map to 'tunnel' type which is closest to typical landing page scenario
+  const result = calculateCarWashPowerSimple({
+    bays: numberOfBays,
+    washType: 'tunnel' as CarWashTypeSimple, // Default to tunnel for landing page
+    hasVacuums: includesVacuums,
+    hasDryers: includesDryers,
+    carsPerDay,
+    electricityRate: stateData.rate,
+  });
   
-  // Scale by utilization (more cars = longer peak periods)
-  const utilizationFactor = Math.min(1.2, 0.5 + (carsPerDay / 200) * 0.7);
-  peakKW *= utilizationFactor;
+  // Calculate dailyKWh from peak hours operation
+  const dailyKWh = (result.peakKW * PEAK_HOURS) + (result.peakKW * 0.3 * (12 - PEAK_HOURS));
   
-  // Daily energy: peak hours at full load + reduced load rest of day
-  const dailyKWh = (peakKW * PEAK_HOURS) + (peakKW * 0.3 * (12 - PEAK_HOURS));
-  
-  return { peakKW: Math.round(peakKW), dailyKWh: Math.round(dailyKWh) };
+  return { peakKW: result.peakKW, dailyKWh: Math.round(dailyKWh) };
 }
 
 // ============================================
