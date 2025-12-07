@@ -17,7 +17,8 @@ import {
   Building2, Waves, Coffee, Dumbbell, Car, Thermometer, Wind, Users, Target,
   MapPin, Settings, Upload, Clock, Activity, Receipt, ShoppingCart
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
   calculateHotelPowerDetailed, 
   type HotelPowerInput,
@@ -383,7 +384,7 @@ export default function HotelWizard({
       const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
                                  gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid';
       
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: hotelDetails.state,
