@@ -123,6 +123,35 @@ INSERT INTO pricing_configurations (
   'high'
 );
 
+-- Fuel Cell Pricing Configuration (NEW - Dec 2025)
+-- Sources: NREL, DOE Hydrogen Program, Bloom Energy quotes
+INSERT INTO pricing_configurations (
+  config_key,
+  config_category,
+  config_data,
+  description,
+  version,
+  is_active,
+  data_source,
+  confidence_level
+) VALUES (
+  'fuel_cell_default',
+  'fuel_cell',
+  '{
+    "hydrogen_per_kw": 3000,
+    "natural_gas_fc_per_kw": 2500,
+    "solid_oxide_per_kw": 4000,
+    "installation_multiplier": 1.25,
+    "vendor_notes": "Bloom Energy, FuelCell Energy, Plug Power pricing",
+    "notes": "Hydrogen PEM cells most common; solid oxide for high efficiency applications"
+  }'::jsonb,
+  'Fuel cell system pricing by technology type',
+  '1.0.0',
+  true,
+  'NREL, DOE Hydrogen Program, Bloom Energy',
+  'high'
+);
+
 -- EV Charging Configuration
 INSERT INTO pricing_configurations (
   config_key,

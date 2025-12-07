@@ -29,3 +29,11 @@ export type {
   WizardStepHelpProps 
 } from './WizardStepHelp';
 export { COMMON_STEP_HELP } from './WizardStepHelp';
+
+// Mode Selector Component (Pro vs Guided)
+export { default as WizardModeSelector, WizardModeSelector as ModeSelector } from './WizardModeSelector';
+export type { 
+  WizardMode, 
+  VerticalType, 
+  WizardModeSelectorProps 
+} from './WizardModeSelector';

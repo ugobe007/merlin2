@@ -20,6 +20,13 @@ import {
   Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { 
+  calculateHotelPowerSimple, 
+  HOTEL_CLASS_PROFILES_SIMPLE, 
+  HOTEL_AMENITY_POWER_SIMPLE,
+  type HotelClassSimple,
+  type HotelAmenitySimple
+} from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import hotelImage from '@/assets/images/hotel_1.avif';
@@ -32,7 +39,7 @@ import HotelWizard, { type HotelWizardInputs } from './HotelWizard';
 
 interface HotelInputs {
   numberOfRooms: number;
-  hotelClass: 'economy' | 'midscale' | 'upscale' | 'luxury';
+  hotelClass: HotelClassSimple;
   hasPool: boolean;
   hasRestaurant: boolean;
   hasSpa: boolean;
@@ -51,27 +58,27 @@ interface LeadInfo {
 }
 
 // ============================================
-// CONSTANTS
+// CONSTANTS (UI display only - calculations use SSOT)
 // ============================================
 
-// Hotel power consumption per room by class (kW per room at peak)
-const HOTEL_CLASS_PROFILES = {
-  economy: { kWhPerRoom: 25, peakKWPerRoom: 1.5, name: 'Economy/Budget', description: 'Basic amenities' },
-  midscale: { kWhPerRoom: 35, peakKWPerRoom: 2.0, name: 'Midscale', description: 'Standard amenities + breakfast' },
-  upscale: { kWhPerRoom: 50, peakKWPerRoom: 2.5, name: 'Upscale', description: 'Full-service hotel' },
-  luxury: { kWhPerRoom: 75, peakKWPerRoom: 3.5, name: 'Luxury/Resort', description: 'Premium experience' },
+// Hotel class descriptions for UI display
+const HOTEL_CLASS_DISPLAY = {
+  economy: { name: 'Economy/Budget', description: 'Basic amenities' },
+  midscale: { name: 'Midscale', description: 'Standard amenities + breakfast' },
+  upscale: { name: 'Upscale', description: 'Full-service hotel' },
+  luxury: { name: 'Luxury/Resort', description: 'Premium experience' },
 };
 
-// Amenity power consumption
-const AMENITY_POWER = {
-  pool: { peakKW: 50, dailyKWh: 300, name: 'Pool & Hot Tub' },
-  restaurant: { peakKW: 75, dailyKWh: 400, name: 'Restaurant/Kitchen' },
-  spa: { peakKW: 40, dailyKWh: 200, name: 'Spa/Sauna' },
-  fitnessCenter: { peakKW: 15, dailyKWh: 100, name: 'Fitness Center' },
-  evCharging: { peakKW: 60, dailyKWh: 200, name: 'EV Charging (8 L2)' },
+// Amenity names for UI display (values from SSOT)
+const AMENITY_DISPLAY = {
+  pool: { name: 'Pool & Hot Tub' },
+  restaurant: { name: 'Restaurant/Kitchen' },
+  spa: { name: 'Spa/Sauna' },
+  fitness: { name: 'Fitness Center' },
+  evCharging: { name: 'EV Charging (8 L2)' },
 };
 
-// State electricity rates
+// State electricity rates (for UI and calculation)
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
   'California': { rate: 0.20, demandCharge: 22 },
   'Florida': { rate: 0.13, demandCharge: 14 },
@@ -161,47 +168,42 @@ function ImageCarousel() {
 }
 
 // ============================================
-// CALCULATOR LOGIC
+// CALCULATOR LOGIC (uses SSOT from useCasePowerCalculations)
 // ============================================
 
 function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: number; demandChargeImpact: number } {
   const { numberOfRooms, hotelClass, hasPool, hasRestaurant, hasSpa, hasFitnessCenter, hasEVCharging, state } = inputs;
   
-  const classProfile = HOTEL_CLASS_PROFILES[hotelClass];
-  
-  // Base power from rooms
-  let peakKW = numberOfRooms * classProfile.peakKWPerRoom;
-  let dailyKWh = numberOfRooms * classProfile.kWhPerRoom;
-  
-  // Add amenities
-  if (hasPool) {
-    peakKW += AMENITY_POWER.pool.peakKW;
-    dailyKWh += AMENITY_POWER.pool.dailyKWh;
-  }
-  if (hasRestaurant) {
-    peakKW += AMENITY_POWER.restaurant.peakKW;
-    dailyKWh += AMENITY_POWER.restaurant.dailyKWh;
-  }
-  if (hasSpa) {
-    peakKW += AMENITY_POWER.spa.peakKW;
-    dailyKWh += AMENITY_POWER.spa.dailyKWh;
-  }
-  if (hasFitnessCenter) {
-    peakKW += AMENITY_POWER.fitnessCenter.peakKW;
-    dailyKWh += AMENITY_POWER.fitnessCenter.dailyKWh;
-  }
-  if (hasEVCharging) {
-    peakKW += AMENITY_POWER.evCharging.peakKW;
-    dailyKWh += AMENITY_POWER.evCharging.dailyKWh;
-  }
-  
-  // Load diversity (not all loads run simultaneously)
-  peakKW = Math.round(peakKW * 0.75);
+  // Map local amenity booleans to SSOT amenity keys
+  const amenities: HotelAmenitySimple[] = [];
+  if (hasPool) amenities.push('pool');
+  if (hasRestaurant) amenities.push('restaurant');
+  if (hasSpa) amenities.push('spa');
+  if (hasFitnessCenter) amenities.push('fitness');
+  if (hasEVCharging) amenities.push('evCharging');
   
   const stateData = STATE_RATES[state] || STATE_RATES['Other'];
-  const demandChargeImpact = peakKW * stateData.demandCharge;
   
-  return { peakKW, dailyKWh: Math.round(dailyKWh), demandChargeImpact: Math.round(demandChargeImpact) };
+  // Call SSOT calculator
+  const result = calculateHotelPowerSimple({
+    rooms: numberOfRooms,
+    hotelClass,
+    amenities,
+    electricityRate: stateData.rate,
+  });
+  
+  // Calculate dailyKWh from SSOT annualEnergyCost / electricityRate / 365
+  // Or use a simpler estimate based on peak with 40% capacity factor
+  const dailyKWh = Math.round(result.peakKW * 24 * 0.4);
+  
+  // Demand charge impact using state-specific rates
+  const demandChargeImpact = result.peakKW * stateData.demandCharge;
+  
+  return { 
+    peakKW: result.peakKW, 
+    dailyKWh, 
+    demandChargeImpact: Math.round(demandChargeImpact) 
+  };
 }
 
 // ============================================
@@ -345,34 +347,34 @@ export default function HotelEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           HEADER
           ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="bg-gradient-to-r from-slate-900/90 via-indigo-900/30 to-slate-800/90 backdrop-blur-md border-b border-indigo-500/20 sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-slate-900 via-indigo-900/50 to-slate-900 backdrop-blur-xl border-b-2 border-indigo-500/40 sticky top-0 z-40 shadow-lg shadow-indigo-500/10">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           {/* Back to Merlin Button */}
           <a 
             href="/"
-            className="flex items-center gap-2 text-purple-300 hover:text-white transition-colors group mr-4"
+            className="flex items-center gap-2 text-indigo-300 hover:text-white transition-colors group mr-4 bg-slate-800/50 hover:bg-slate-700/50 px-3 py-2 rounded-xl border border-indigo-500/30 hover:border-indigo-400/50"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
-            <span className="hidden sm:inline text-sm font-medium">Back to Merlin</span>
+            <img src={merlinImage} alt="Merlin" className="w-7 h-7" />
+            <span className="hidden sm:inline text-sm font-semibold">Merlin</span>
           </a>
           
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-400/50">
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Hotel<span className="text-indigo-400">EnergyPartners</span></h1>
-              <p className="text-xs text-indigo-300/70">Battery Storage for Hospitality</p>
+              <h1 className="text-xl font-black text-white tracking-tight">Hotel<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">EnergyPartners</span></h1>
+              <p className="text-xs text-indigo-300 font-medium">🏨 Battery Storage for Hospitality</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#calculator" className="hidden md:block text-indigo-300 hover:text-white text-sm font-medium transition-colors">
+            <a href="#calculator" className="hidden md:block text-indigo-200 hover:text-white text-sm font-semibold transition-colors hover:bg-indigo-500/20 px-4 py-2 rounded-lg">
               Calculator
             </a>
-            <a href="tel:+18005551234" className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 px-4 py-2 rounded-full transition-all shadow-lg shadow-indigo-500/20">
+            <a href="tel:+18005551234" className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 px-5 py-2.5 rounded-full transition-all shadow-lg shadow-indigo-500/30 border-2 border-indigo-300/50 hover:scale-105">
               <Phone className="w-4 h-4 text-white" />
-              <span className="text-white font-semibold text-sm">Get Quote</span>
+              <span className="text-white font-bold text-sm">Get Quote</span>
             </a>
           </div>
         </div>
@@ -526,25 +528,35 @@ export default function HotelEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           CALCULATOR SECTION
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section id="calculator" className="py-16 bg-white/5 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="calculator" className="py-16 bg-gradient-to-b from-black/30 via-indigo-900/20 to-black/30 backdrop-blur-sm relative overflow-hidden">
+        {/* Decorative floating elements */}
+        <div className="absolute top-8 left-8 text-5xl animate-bounce" style={{ animationDuration: '3s' }}>🏨</div>
+        <div className="absolute top-12 right-12 text-4xl animate-pulse" style={{ animationDuration: '2s' }}>💰</div>
+        <div className="absolute bottom-8 right-8 text-3xl animate-bounce" style={{ animationDuration: '4s' }}>⚡</div>
+        
+        <div className="max-w-6xl mx-auto px-6 relative">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Calculate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300">Savings</span>
+            {/* Badge - larger with pulse animation */}
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30 px-6 py-3 rounded-full border-2 border-indigo-400/50 mb-6 shadow-lg shadow-indigo-500/20 animate-pulse" style={{ animationDuration: '3s' }}>
+              <Calculator className="w-6 h-6 text-indigo-400" />
+              <span className="text-indigo-100 text-base font-black tracking-wide">🏨 HOTEL SAVINGS CALCULATOR 💰</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+              Calculate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300 animate-pulse" style={{ animationDuration: '2s' }}>Savings</span>
             </h2>
-            <p className="text-indigo-200/70 max-w-2xl mx-auto">
-              Enter your hotel details and see how much you could save with battery storage
+            <p className="text-indigo-200 max-w-2xl mx-auto font-bold text-lg">
+              👇 Enter your hotel details and see <span className="text-indigo-100">instant savings estimates</span> 👇
             </p>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Input Form */}
-            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-3xl p-8 border border-indigo-500/30 shadow-2xl shadow-indigo-500/10">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
-                  <Calculator className="w-5 h-5 text-white" />
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-8 border-3 border-indigo-500/50 shadow-2xl shadow-indigo-500/20">
+              <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-400/50">
+                  <Calculator className="w-6 h-6 text-white" />
                 </div>
-                Your Hotel Details
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Your Hotel Details</span>
               </h3>
               
               <div className="space-y-6">
@@ -575,10 +587,10 @@ export default function HotelEnergy() {
                     Hotel Class
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(HOTEL_CLASS_PROFILES).map(([key, profile]) => (
+                    {Object.entries(HOTEL_CLASS_DISPLAY).map(([key, profile]) => (
                       <button
                         key={key}
-                        onClick={() => setInputs({ ...inputs, hotelClass: key as any })}
+                        onClick={() => setInputs({ ...inputs, hotelClass: key as HotelClassSimple })}
                         className={`p-3 rounded-xl text-left transition-all ${
                           inputs.hotelClass === key
                             ? 'bg-indigo-500/30 border-2 border-indigo-400'
@@ -644,15 +656,15 @@ export default function HotelEnergy() {
               </div>
               
               {/* Power Summary */}
-              <div className="mt-6 bg-white/10 rounded-xl p-4 border border-indigo-400/20">
+              <div className="mt-6 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl p-5 border-2 border-indigo-400/40">
                 <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-indigo-400">{peakKW} kW</p>
-                    <p className="text-xs text-indigo-200/70">Peak Demand</p>
+                  <div className="bg-indigo-500/20 rounded-xl p-3 border border-indigo-400/30">
+                    <p className="text-3xl font-black text-indigo-400">{peakKW} kW</p>
+                    <p className="text-xs text-indigo-200 font-semibold">⚡ Peak Demand</p>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-pink-400">${demandChargeImpact.toLocaleString()}</p>
-                    <p className="text-xs text-pink-200/70">Monthly Demand Charges</p>
+                  <div className="bg-pink-500/20 rounded-xl p-3 border border-pink-400/30">
+                    <p className="text-3xl font-black text-pink-400">${demandChargeImpact.toLocaleString()}</p>
+                    <p className="text-xs text-pink-200 font-semibold">💰 Monthly Charges</p>
                   </div>
                 </div>
               </div>
@@ -661,16 +673,16 @@ export default function HotelEnergy() {
             {/* Results - ATTENTION GRABBING */}
             <div className="relative">
               {/* Clean card with pulsing border */}
-              <div className="relative bg-gradient-to-br from-slate-900/95 via-indigo-900/40 to-slate-900/95 backdrop-blur-xl rounded-3xl p-8 border-2 border-indigo-400/50 shadow-xl animate-pulse" style={{ animationDuration: '3s' }}>
+              <div className="relative bg-gradient-to-br from-slate-900 via-indigo-900/50 to-purple-900/40 backdrop-blur-xl rounded-3xl p-8 border-3 border-indigo-400/60 shadow-2xl shadow-indigo-500/30" style={{ animation: 'pulse 3s infinite' }}>
                 {/* Static decorations */}
                 <div className="absolute top-3 right-3 text-2xl">🏨</div>
-                <div className="absolute top-3 left-3 text-xl">💰</div>
+                <div className="absolute top-3 left-3 text-xl animate-bounce">💰</div>
                 
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/50 border-2 border-indigo-300/50">
                     <TrendingDown className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-200">Your Estimated Savings</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Your Estimated Savings</span>
                 </h3>
               
               {isCalculating ? (
@@ -755,39 +767,45 @@ export default function HotelEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           HOW IT WORKS
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16">
+      <section className="py-16 bg-gradient-to-b from-transparent via-indigo-900/20 to-transparent">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            How Battery Storage <span className="text-indigo-300">Benefits Hotels</span>
-          </h2>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-full border border-purple-400/40 mb-4">
+              <Battery className="w-5 h-5 text-purple-400" />
+              <span className="text-purple-200 text-sm font-bold">🔋 HOW IT WORKS</span>
+            </div>
+            <h2 className="text-3xl font-black text-white">
+              How Battery Storage <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Benefits Hotels</span>
+            </h2>
+          </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/40 text-center hover:scale-105 transition-transform hover:border-indigo-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/40 border-2 border-indigo-300/40">
                 <TrendingDown className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Cut Demand Charges</h3>
-              <p className="text-indigo-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Cut Demand Charges</h3>
+              <p className="text-indigo-200 font-medium">
                 Battery absorbs HVAC and kitchen peaks, reducing demand charges by 30-40%
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-purple-500/40 text-center hover:scale-105 transition-transform hover:border-purple-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/40 border-2 border-purple-300/40">
                 <Shield className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Backup Power</h3>
-              <p className="text-indigo-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Backup Power</h3>
+              <p className="text-purple-200 font-medium">
                 Keep critical systems running during outages. Never compromise guest experience
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900 via-pink-900/30 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-2 border-pink-500/40 text-center hover:scale-105 transition-transform hover:border-pink-400/60 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-500/40 border-2 border-pink-300/40">
                 <Sun className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Sustainability</h3>
-              <p className="text-indigo-200/70">
+              <h3 className="text-xl font-black text-white mb-2">Sustainability</h3>
+              <p className="text-pink-200 font-medium">
                 Meet ESG goals and guest expectations. Add solar to go even greener
               </p>
             </div>
@@ -798,65 +816,79 @@ export default function HotelEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           CASE STUDIES
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 bg-white/5">
+      <section className="py-16 bg-gradient-to-b from-black/30 via-indigo-900/20 to-black/30">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white text-center mb-4">
-            Hotels <span className="text-indigo-300">Saving Big</span>
-          </h2>
-          <p className="text-center text-indigo-200/50 text-sm mb-12">
-            Example savings scenarios based on typical installations
-          </p>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-indigo-500/20 px-4 py-2 rounded-full border border-indigo-400/40 mb-4">
+              <Building2 className="w-5 h-5 text-indigo-400" />
+              <span className="text-indigo-200 text-sm font-bold">🏆 SUCCESS STORIES</span>
+            </div>
+            <h2 className="text-3xl font-black text-white">
+              Hotels <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Saving Big</span>
+            </h2>
+            <p className="text-indigo-200 text-sm mt-2 font-medium">
+              Example savings scenarios based on typical installations
+            </p>
+          </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 - Midscale */}
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-indigo-500/50 hover:scale-105 hover:border-indigo-400/70 transition-all shadow-2xl shadow-indigo-500/20 group">
+              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">⭐</div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-300/40">
+                  <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white">Midscale Hotel</p>
-                  <p className="text-sm text-indigo-200/70">120 rooms • Orlando, FL</p>
+                  <p className="font-black text-white text-lg">Midscale Hotel</p>
+                  <p className="text-sm text-indigo-200/80 font-medium">120 rooms • Orlando, FL</p>
                 </div>
               </div>
-              <div className="bg-indigo-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-indigo-400">$38,000</p>
-                <p className="text-sm text-indigo-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-indigo-500/30 to-purple-500/20 rounded-2xl p-5 text-center mb-4 border border-indigo-400/40">
+                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">$38,000</p>
+                <p className="text-sm text-indigo-200/80 font-semibold">💰 Annual Savings</p>
               </div>
-              <p className="text-sm text-indigo-200/60">150 kW battery • 4.2 year payback</p>
+              <p className="text-sm text-indigo-200/70 font-semibold text-center">🔋 150 kW battery • ⏱️ 4.2 year payback</p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
+            {/* Card 2 - Upscale (Featured) */}
+            <div className="bg-gradient-to-br from-slate-900 via-purple-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-purple-400/60 hover:scale-105 hover:border-purple-400/80 transition-all shadow-2xl shadow-purple-500/30 relative group">
+              {/* Featured badge */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 px-4 py-1 rounded-full text-xs font-black text-white shadow-lg border border-purple-300/50">🏆 TOP PERFORMER</div>
+              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">✨</div>
+              <div className="flex items-center gap-3 mb-5 mt-2">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-300/40">
+                  <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white">Upscale Resort</p>
-                  <p className="text-sm text-indigo-200/70">250 rooms • San Diego, CA</p>
+                  <p className="font-black text-white text-lg">Upscale Resort</p>
+                  <p className="text-sm text-purple-200/80 font-medium">250 rooms • San Diego, CA</p>
                 </div>
               </div>
-              <div className="bg-indigo-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-indigo-400">$72,000</p>
-                <p className="text-sm text-indigo-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-purple-500/30 to-pink-500/20 rounded-2xl p-5 text-center mb-4 border border-purple-400/40">
+                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">$72,000</p>
+                <p className="text-sm text-purple-200/80 font-semibold">💰 Annual Savings</p>
               </div>
-              <p className="text-sm text-indigo-200/60">300 kW battery • 3.8 year payback</p>
+              <p className="text-sm text-purple-200/70 font-semibold text-center">🔋 300 kW battery • ⏱️ 3.8 year payback</p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-600 rounded-full flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
+            {/* Card 3 - Boutique */}
+            <div className="bg-gradient-to-br from-slate-900 via-pink-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-pink-500/50 hover:scale-105 hover:border-pink-400/70 transition-all shadow-2xl shadow-pink-500/20 relative group">
+              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">💎</div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/40 border-2 border-pink-300/40">
+                  <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white">Boutique Hotel</p>
-                  <p className="text-sm text-indigo-200/70">75 rooms • Miami, FL</p>
+                  <p className="font-black text-white text-lg">Boutique Hotel</p>
+                  <p className="text-sm text-pink-200/80 font-medium">75 rooms • Miami, FL</p>
                 </div>
               </div>
-              <div className="bg-indigo-500/20 rounded-xl p-4 text-center mb-4">
-                <p className="text-3xl font-bold text-indigo-400">$28,000</p>
-                <p className="text-sm text-indigo-200/70">Annual Savings</p>
+              <div className="bg-gradient-to-br from-pink-500/30 to-rose-500/20 rounded-2xl p-5 text-center mb-4 border border-pink-400/40">
+                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-rose-300">$28,000</p>
+                <p className="text-sm text-pink-200/80 font-semibold">💰 Annual Savings</p>
               </div>
-              <p className="text-sm text-indigo-200/60">100 kW battery • 4.5 year payback</p>
+              <p className="text-sm text-pink-200/70 font-semibold text-center">🔋 100 kW battery • ⏱️ 4.5 year payback</p>
             </div>
           </div>
         </div>
@@ -865,22 +897,47 @@ export default function HotelEnergy() {
       {/* ═══════════════════════════════════════════════════════════════════════
           FINAL CTA
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Improve Your Bottom Line?
+      <section className="py-24 relative overflow-hidden">
+        {/* Decorative floating elements */}
+        <div className="absolute top-12 left-12 text-6xl animate-bounce" style={{ animationDuration: '3s' }}>🏨</div>
+        <div className="absolute bottom-12 right-12 text-5xl animate-pulse" style={{ animationDuration: '2s' }}>💰</div>
+        <div className="absolute top-20 right-24 text-4xl animate-bounce" style={{ animationDuration: '4s' }}>⚡</div>
+        <div className="absolute bottom-20 left-24 text-4xl animate-pulse" style={{ animationDuration: '3s' }}>🔋</div>
+        
+        {/* Gradient background glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/30 via-purple-900/40 to-pink-900/30 blur-3xl" />
+        
+        <div className="max-w-4xl mx-auto px-6 text-center relative">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30 px-5 py-2 rounded-full border-2 border-purple-400/50 mb-6 shadow-lg shadow-purple-500/20">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="text-purple-100 font-black tracking-wide">🚀 LIMITED TIME OFFER</span>
+          </div>
+          
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+            Ready to Improve Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Bottom Line?</span>
           </h2>
-          <p className="text-xl text-indigo-200/70 mb-8">
-            Get a free, no-obligation quote in under 5 minutes
+          <p className="text-xl text-indigo-200 mb-8 font-bold">
+            ✅ Free consultation • ✅ No obligation • ✅ Takes 2 minutes
           </p>
+          
+          {/* Big CTA Button with pulse */}
           <button
             onClick={() => setShowWizard(true)}
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white px-12 py-5 rounded-full font-bold text-xl shadow-xl hover:shadow-2xl hover:shadow-indigo-500/40 transition-all hover:scale-105 border border-indigo-400/30"
+            className="inline-flex items-center gap-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white px-14 py-6 rounded-2xl font-black text-2xl shadow-2xl hover:shadow-purple-500/50 transition-all hover:scale-105 border-3 border-purple-300/50 animate-pulse group"
+            style={{ animationDuration: '2s' }}
           >
-            <Sparkles className="w-6 h-6" />
+            <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
             Start My Free Quote
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-7 h-7 group-hover:translate-x-2 transition-transform" />
           </button>
+          
+          {/* Trust indicators */}
+          <div className="mt-8 flex items-center justify-center gap-8 text-indigo-200/60 text-sm font-medium">
+            <span>🔒 Secure</span>
+            <span>⚡ Instant Results</span>
+            <span>💼 Professional</span>
+          </div>
         </div>
       </section>
       
@@ -913,16 +970,22 @@ export default function HotelEnergy() {
           LEAD CAPTURE MODAL
           ═══════════════════════════════════════════════════════════════════════ */}
       {showLeadForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 max-w-md w-full border border-indigo-500/30 shadow-2xl relative">
-            <button onClick={() => setShowLeadForm(false)} className="absolute top-4 right-4 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-hidden">
+          <div 
+            className="bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 rounded-3xl p-8 max-w-md w-full border-3 border-indigo-400/60 shadow-2xl shadow-indigo-500/30 relative overflow-y-auto"
+            style={{ maxHeight: 'calc(100vh - 16px)' }}
+          >
+            {/* Decorative corners */}
+            <div className="absolute top-2 left-2 text-2xl">🏨</div>
+            <div className="absolute top-2 right-12 text-xl">✨</div>
+            <button onClick={() => setShowLeadForm(false)} className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-indigo-500/30 rounded-xl transition-all border border-transparent hover:border-indigo-400/50">
+              <X className="w-6 h-6" />
             </button>
             
             {!leadSubmitted ? (
               <>
-                <h3 className="text-2xl font-bold text-white mb-2">Get Your Free Custom Quote</h3>
-                <p className="text-indigo-200/70 mb-6">Our hospitality energy experts will analyze your hotel</p>
+                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 mb-2">Get Your Free Custom Quote</h3>
+                <p className="text-indigo-200 mb-6 font-medium">Our hospitality energy experts will analyze your hotel</p>
                 
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
                   <div>
@@ -975,26 +1038,26 @@ export default function HotelEnergy() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl transition-all hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2 border-2 border-indigo-300/50"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
+                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span className="animate-pulse">Processing...</span>
                       </>
                     ) : (
-                      'Get My Free Quote'
+                      <><Sparkles className="w-5 h-5" /> Get My Free Quote <ArrowRight className="w-5 h-5" /></>
                     )}
                   </button>
                 </form>
               </>
             ) : (
               <div className="text-center py-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-white" />
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-purple-500/40 animate-pulse">
+                  <CheckCircle className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
-                <p className="text-indigo-200/70 mb-6">We'll send your detailed quote to {leadInfo.email} within 24 hours.</p>
+                <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-pink-300 mb-3">🎉 Thank You!</h3>
+                <p className="text-indigo-200 mb-6 font-medium">We'll send your detailed quote to <span className="text-indigo-300 font-bold">{leadInfo.email}</span> within 24 hours.</p>
                 <button
                   onClick={() => { setShowLeadForm(false); setLeadSubmitted(false); }}
                   className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all"
@@ -1012,28 +1075,34 @@ export default function HotelEnergy() {
           ═══════════════════════════════════════════════════════════════════════ */}
       {showQuickEstimate && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden"
           onClick={() => setShowQuickEstimate(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
           
           <div 
-            className="relative bg-gradient-to-br from-indigo-900 via-purple-800 to-violet-900 rounded-3xl shadow-2xl shadow-indigo-500/20 max-w-lg w-full overflow-hidden border border-indigo-400/40"
+            className="relative bg-gradient-to-br from-slate-900 via-indigo-900/70 to-purple-900/80 rounded-3xl shadow-2xl shadow-indigo-500/40 max-w-lg w-full overflow-y-auto border-3 border-indigo-400/60"
+            style={{ maxHeight: 'calc(100vh - 16px)' }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Decorative elements */}
+            <div className="absolute top-3 left-3 text-2xl animate-pulse">⚡</div>
             <button
               onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+              className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-indigo-500/30 rounded-xl transition-all border border-transparent hover:border-indigo-400/50 z-10"
             >
               <X className="w-6 h-6" />
             </button>
             
-            <div className="relative px-8 pt-8 pb-4">
+            <div className="relative px-8 pt-8 pb-4 bg-gradient-to-b from-indigo-600/20 to-transparent">
               <div className="flex items-center gap-4 mb-4">
-                <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                <div className="relative">
+                  <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
+                  <div className="absolute -bottom-1 -right-1 bg-indigo-500 rounded-full p-1"><Sparkles className="w-3 h-3 text-white" /></div>
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Quick Savings Estimate</h2>
-                  <p className="text-indigo-300 text-sm">Answer 2 questions, get instant results</p>
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Quick Savings Estimate</h2>
+                  <p className="text-indigo-200 text-sm font-medium">⏱️ Answer 2 questions, get instant results</p>
                 </div>
               </div>
             </div>
@@ -1086,29 +1155,29 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 px-8 py-6 border-t border-indigo-500/20">
-              <div className="text-center mb-4">
-                <p className="text-indigo-300 text-sm font-medium mb-1">Your Estimated Annual Savings</p>
-                <p className="text-5xl font-black text-white">
+            <div className="bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 px-8 py-6 border-t-2 border-indigo-400/40">
+              <div className="text-center mb-5 bg-slate-900/50 rounded-2xl p-5 border-2 border-indigo-400/40">
+                <p className="text-indigo-200 text-sm font-bold mb-2 tracking-wide">💰 YOUR ESTIMATED ANNUAL SAVINGS</p>
+                <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 drop-shadow-lg">
                   ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
                 </p>
-                <p className="text-purple-400 text-sm mt-1">
-                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
+                <p className="text-purple-300 text-sm mt-2 font-semibold">
+                  {quickEstimateResult && <><span className="text-pink-400">⚡</span> ~{quickEstimateResult.payback} year payback</>}
                 </p>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 mb-6">
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Battery className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Backup Power</p>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="text-center p-3 bg-indigo-500/20 rounded-xl border border-indigo-400/40 hover:scale-105 transition-transform">
+                  <Battery className="w-6 h-6 text-indigo-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Backup Power</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <TrendingDown className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Demand Cut</p>
+                <div className="text-center p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/40 hover:scale-105 transition-transform">
+                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Demand Cut</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <Sun className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                  <p className="text-xs text-white/70">Green Creds</p>
+                <div className="text-center p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 hover:scale-105 transition-transform">
+                  <Sun className="w-6 h-6 text-amber-400 mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Green Creds</p>
                 </div>
               </div>
               
@@ -1119,8 +1188,9 @@ export default function HotelEnergy() {
                     setInputs(prev => ({ ...prev, numberOfRooms: quickRooms, hotelClass: quickClass }));
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white px-6 py-5 rounded-xl font-black text-lg shadow-xl shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 border-2 border-indigo-300/50 hover:scale-[1.02] animate-pulse hover:animate-none"
                 >
+                  <Sparkles className="w-5 h-5" />
                   Get Detailed Quote
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -1129,14 +1199,14 @@ export default function HotelEnergy() {
                     setShowQuickEstimate(false);
                     document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all text-sm"
+                  className="w-full bg-slate-800/60 hover:bg-slate-700/60 border-2 border-indigo-400/40 hover:border-indigo-300/60 text-indigo-100 px-6 py-3 rounded-xl font-semibold transition-all text-sm"
                 >
                   Or try our simple calculator below
                 </button>
               </div>
               
-              <p className="text-center text-indigo-300/50 text-xs mt-4">
-                2 minute detailed quote • No commitment required
+              <p className="text-center text-indigo-200 text-xs mt-4 font-medium">
+                ✓ 2 minute detailed quote • ✓ No commitment required
               </p>
             </div>
           </div>

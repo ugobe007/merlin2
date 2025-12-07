@@ -90,17 +90,18 @@ const MiniGauge: React.FC<MiniGaugeProps> = ({ percentage, isGapMet, onClick }) 
   return (
     <button
       onClick={onClick}
-      className="relative w-14 h-14 rounded-full bg-slate-900 shadow-lg hover:shadow-xl 
+      className="relative w-16 h-16 rounded-full bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl hover:shadow-xl 
                  transition-all duration-300 hover:scale-110 cursor-pointer
-                 border-2 border-slate-700 hover:border-slate-500
+                 border-3 border-slate-600 hover:border-slate-400
                  flex items-center justify-center group"
+      style={{ borderWidth: '3px' }}
       title="Click to view Power Profile"
     >
-      {/* Outer glow ring */}
+      {/* Outer glow ring - HIGH CONTRAST */}
       <div 
         className="absolute inset-0 rounded-full animate-pulse"
         style={{ 
-          boxShadow: `0 0 15px ${needleColor}40`,
+          boxShadow: `0 0 25px ${needleColor}60, 0 0 50px ${needleColor}30`,
           backgroundColor: bgRingColor 
         }}
       />
@@ -156,23 +157,23 @@ const MiniGauge: React.FC<MiniGaugeProps> = ({ percentage, isGapMet, onClick }) 
         <circle cx="50" cy="55" r="3" fill="white" />
       </svg>
       
-      {/* Status indicator dot */}
+      {/* Status indicator dot - LARGER */}
       <div 
-        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-900
-                    ${isGapMet ? 'bg-green-500' : 'bg-red-500'} 
+        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-slate-800
+                    ${isGapMet ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'} 
                     flex items-center justify-center`}
       >
         {isGapMet ? (
-          <CheckCircle className="w-3 h-3 text-white" />
+          <CheckCircle className="w-3.5 h-3.5 text-white" />
         ) : (
-          <AlertTriangle className="w-2.5 h-2.5 text-white" />
+          <AlertTriangle className="w-3 h-3 text-white" />
         )}
       </div>
       
-      {/* Hover tooltip */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100
-                      transition-opacity bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-        Power Profile
+      {/* Hover tooltip - HIGH CONTRAST */}
+      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100
+                      transition-opacity bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg">
+        ⚡ Power Profile
       </div>
     </button>
   );
@@ -209,45 +210,46 @@ const PowerProfilePopup: React.FC<PowerProfilePopupProps> = ({ isOpen, onClose, 
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/70 backdrop-blur-md z-[200] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700 overflow-hidden"
+        className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl shadow-2xl max-w-md w-full border-2 border-purple-500/50 overflow-hidden"
+        style={{ boxShadow: '0 0 60px rgba(147, 51, 234, 0.3)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 p-4">
+        {/* Header - HIGH CONTRAST */}
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 p-5 border-b-2 border-purple-400/30">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <Zap className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-4">
+              <div className="bg-white/30 p-3 rounded-xl border border-white/20">
+                <Zap className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Power Profile</h2>
-                <p className="text-sm text-white/80">Your Energy Configuration</p>
+                <h2 className="text-2xl font-black text-white">⚡ Power Profile</h2>
+                <p className="text-base text-white/90 font-medium">Your Energy Configuration</p>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+              className="text-white hover:text-white hover:bg-white/20 rounded-xl p-2 transition-colors border border-white/20"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        {/* Power Metrics Grid */}
-        <div className="p-4 space-y-3">
+        {/* Power Metrics Grid - HIGH CONTRAST */}
+        <div className="p-5 space-y-4">
           {/* BESS */}
-          <div className="bg-slate-800 rounded-xl p-3 border border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="bg-cyan-500/20 p-2 rounded-lg">
-                <Battery className="w-5 h-5 text-cyan-400" />
+          <div className="bg-gradient-to-r from-cyan-600/20 to-cyan-500/10 rounded-xl p-4 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/10">
+            <div className="flex items-center gap-4">
+              <div className="bg-cyan-500 p-3 rounded-xl shadow-lg shadow-cyan-500/30">
+                <Battery className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-slate-400 uppercase tracking-wider">BESS</p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-sm text-cyan-300 uppercase tracking-wider font-bold">🔋 BESS</p>
+                <p className="text-2xl font-black text-white">
                   {formatKW(data.bessKW)} / {formatKWh(data.bessKWh)}
                 </p>
               </div>
@@ -255,119 +257,127 @@ const PowerProfilePopup: React.FC<PowerProfilePopupProps> = ({ isOpen, onClose, 
           </div>
 
           {/* Peak Demand */}
-          <div className="bg-slate-800 rounded-xl p-3 border border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="bg-orange-500/20 p-2 rounded-lg">
-                <Zap className="w-5 h-5 text-orange-400" />
+          <div className="bg-gradient-to-r from-orange-600/20 to-orange-500/10 rounded-xl p-4 border-2 border-orange-500/50 shadow-lg shadow-orange-500/10">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-500 p-3 rounded-xl shadow-lg shadow-orange-500/30">
+                <Zap className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-slate-400 uppercase tracking-wider">Peak Demand</p>
-                <p className="text-lg font-bold text-white">{formatKW(data.peakDemandKW)}</p>
+                <p className="text-sm text-orange-300 uppercase tracking-wider font-bold">⚡ Peak Demand</p>
+                <p className="text-2xl font-black text-white">{formatKW(data.peakDemandKW)}</p>
               </div>
             </div>
           </div>
 
-          {/* Optional Sources - Only show if > 0 */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Optional Sources - HIGH CONTRAST */}
+          <div className="grid grid-cols-2 gap-4">
             {(data.solarKW ?? 0) > 0 && (
-              <div className="bg-slate-800 rounded-xl p-3 border border-yellow-500/30">
-                <div className="flex items-center gap-2">
-                  <Sun className="w-4 h-4 text-yellow-400" />
+              <div className="bg-gradient-to-br from-yellow-600/20 to-amber-600/10 rounded-xl p-4 border-2 border-yellow-500/50 shadow-lg shadow-yellow-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="bg-yellow-500 p-2 rounded-lg shadow-lg shadow-yellow-500/30">
+                    <Sun className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs text-slate-400">Solar</p>
-                    <p className="text-sm font-bold text-white">{formatKW(data.solarKW!)}</p>
+                    <p className="text-sm text-yellow-300 font-bold">☀️ Solar</p>
+                    <p className="text-xl font-black text-white">{formatKW(data.solarKW!)}</p>
                   </div>
                 </div>
               </div>
             )}
             
             {(data.windKW ?? 0) > 0 && (
-              <div className="bg-slate-800 rounded-xl p-3 border border-sky-500/30">
-                <div className="flex items-center gap-2">
-                  <Wind className="w-4 h-4 text-sky-400" />
+              <div className="bg-gradient-to-br from-sky-600/20 to-blue-600/10 rounded-xl p-4 border-2 border-sky-500/50 shadow-lg shadow-sky-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="bg-sky-500 p-2 rounded-lg shadow-lg shadow-sky-500/30">
+                    <Wind className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs text-slate-400">Wind</p>
-                    <p className="text-sm font-bold text-white">{formatKW(data.windKW!)}</p>
+                    <p className="text-sm text-sky-300 font-bold">💨 Wind</p>
+                    <p className="text-xl font-black text-white">{formatKW(data.windKW!)}</p>
                   </div>
                 </div>
               </div>
             )}
             
             {(data.evChargersKW ?? 0) > 0 && (
-              <div className="bg-slate-800 rounded-xl p-3 border border-green-500/30">
-                <div className="flex items-center gap-2">
-                  <Car className="w-4 h-4 text-green-400" />
+              <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/10 rounded-xl p-4 border-2 border-green-500/50 shadow-lg shadow-green-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-500 p-2 rounded-lg shadow-lg shadow-green-500/30">
+                    <Car className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs text-slate-400">EV Chargers</p>
-                    <p className="text-sm font-bold text-white">{formatKW(data.evChargersKW!)}</p>
+                    <p className="text-sm text-green-300 font-bold">🚗 EV Chargers</p>
+                    <p className="text-xl font-black text-white">{formatKW(data.evChargersKW!)}</p>
                   </div>
                 </div>
               </div>
             )}
             
             {(data.generatorKW ?? 0) > 0 && (
-              <div className="bg-slate-800 rounded-xl p-3 border border-red-500/30">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-red-400" />
+              <div className="bg-gradient-to-br from-red-600/20 to-orange-600/10 rounded-xl p-4 border-2 border-red-500/50 shadow-lg shadow-red-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-500 p-2 rounded-lg shadow-lg shadow-red-500/30">
+                    <Flame className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs text-slate-400">Generator</p>
-                    <p className="text-sm font-bold text-white">{formatKW(data.generatorKW!)}</p>
+                    <p className="text-sm text-red-300 font-bold">🔥 Generator</p>
+                    <p className="text-xl font-black text-white">{formatKW(data.generatorKW!)}</p>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Power GAP - The Key Metric */}
-          <div className={`rounded-xl p-4 border-2 ${
+          {/* Power GAP - HIGH CONTRAST */}
+          <div className={`rounded-2xl p-5 border-3 ${
             data.isGapMet 
-              ? 'bg-green-500/10 border-green-500' 
-              : 'bg-red-500/10 border-red-500'
-          }`}>
+              ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/20 border-green-400 shadow-xl shadow-green-500/20' 
+              : 'bg-gradient-to-r from-red-600/30 to-orange-600/20 border-red-400 shadow-xl shadow-red-500/20'
+          }`} style={{ borderWidth: '3px' }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${
-                  data.isGapMet ? 'bg-green-500/20' : 'bg-red-500/20'
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl shadow-lg ${
+                  data.isGapMet ? 'bg-green-500 shadow-green-500/40' : 'bg-red-500 shadow-red-500/40'
                 }`}>
                   {data.isGapMet ? (
-                    <CheckCircle className="w-6 h-6 text-green-400" />
+                    <CheckCircle className="w-7 h-7 text-white" />
                   ) : (
-                    <AlertTriangle className="w-6 h-6 text-red-400" />
+                    <AlertTriangle className="w-7 h-7 text-white" />
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-wider">Power GAP</p>
-                  <p className={`text-xl font-bold ${
+                  <p className="text-sm text-slate-300 uppercase tracking-wider font-bold">⚡ Power GAP</p>
+                  <p className={`text-3xl font-black ${
                     data.isGapMet ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {data.isGapMet ? 'COMPLETE' : formatKW(Math.abs(data.powerGapKW))}
+                    {data.isGapMet ? '✅ COMPLETE' : formatKW(Math.abs(data.powerGapKW))}
                   </p>
                 </div>
               </div>
               
               {data.isGapMet && (
-                <div className="bg-green-500 rounded-full p-1">
-                  <CheckCircle className="w-6 h-6 text-white" />
+                <div className="bg-green-500 rounded-full p-2 shadow-lg shadow-green-500/50">
+                  <CheckCircle className="w-7 h-7 text-white" />
                 </div>
               )}
             </div>
             
             {!data.isGapMet && (
-              <p className="mt-2 text-sm text-red-300">
-                Add {formatKW(Math.abs(data.powerGapKW))} more generation to meet requirements
+              <p className="mt-3 text-base text-red-200 font-medium">
+                ⚠️ Add {formatKW(Math.abs(data.powerGapKW))} more generation to meet requirements
               </p>
             )}
           </div>
 
-          {/* Progress Bar */}
-          <div className="bg-slate-800 rounded-xl p-3">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-slate-400">Configuration Progress</span>
-              <span className={`font-bold ${data.isGapMet ? 'text-green-400' : 'text-yellow-400'}`}>
+          {/* Progress Bar - HIGH CONTRAST */}
+          <div className="bg-gradient-to-r from-slate-800 to-gray-800 rounded-xl p-4 border-2 border-gray-600">
+            <div className="flex items-center justify-between text-base mb-3">
+              <span className="text-gray-300 font-bold">📊 Configuration Progress</span>
+              <span className={`font-black text-xl ${data.isGapMet ? 'text-green-400' : 'text-yellow-400'}`}>
                 {Math.round(percentageMet)}%
               </span>
             </div>
-            <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden border border-gray-600">
               <div 
                 className={`h-full rounded-full transition-all duration-500 ${
                   data.isGapMet 
@@ -380,11 +390,11 @@ const PowerProfilePopup: React.FC<PowerProfilePopupProps> = ({ isOpen, onClose, 
           </div>
         </div>
 
-        {/* Footer with tip */}
-        <div className="bg-slate-800/50 p-3 border-t border-slate-700">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <Info className="w-4 h-4" />
-            <span>Complete the Power GAP to unlock your optimized quote</span>
+        {/* Footer with tip - HIGH CONTRAST */}
+        <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 p-4 border-t-2 border-purple-500/30">
+          <div className="flex items-center gap-3 text-base text-purple-200">
+            <Info className="w-5 h-5 text-purple-400" />
+            <span className="font-medium">💡 Complete the Power GAP to unlock your optimized quote</span>
           </div>
         </div>
       </div>

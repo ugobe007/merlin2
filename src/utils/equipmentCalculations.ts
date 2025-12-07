@@ -3,6 +3,12 @@
 
 import { calculateMarketAlignedBESSPricing, getMarketIntelligenceRecommendations } from '../services/marketIntelligence';
 
+// Generator fuel type options - matches database config keys
+export type GeneratorFuelType = 'diesel' | 'natural-gas' | 'dual-fuel';
+
+// Fuel cell technology type options - matches database config keys
+export type FuelCellType = 'hydrogen' | 'natural-gas-fc' | 'solid-oxide';
+
 export interface EquipmentBreakdown {
   batteries: {
     quantity: number;
@@ -51,6 +57,15 @@ export interface EquipmentBreakdown {
     totalCost: number;
     costPerKW: number;
     fuelType: string;
+    manufacturer: string;
+  };
+  fuelCells?: {
+    quantity: number;
+    unitPowerMW: number;
+    unitCost: number;
+    totalCost: number;
+    costPerKW: number;
+    fuelCellType: string;
     manufacturer: string;
   };
   solar?: {
@@ -106,6 +121,13 @@ export interface EquipmentBreakdown {
   };
 }
 
+// Extended options for equipment breakdown (NEW - Dec 2025)
+export interface EquipmentBreakdownOptions {
+  generatorFuelType?: GeneratorFuelType;
+  fuelCellMW?: number;
+  fuelCellType?: FuelCellType;
+}
+
 export const calculateEquipmentBreakdown = async (
   storageSizeMW: number,
   durationHours: number,
@@ -114,8 +136,14 @@ export const calculateEquipmentBreakdown = async (
   generatorMW: number = 0,
   industryData?: any,
   gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid',
-  location: string = 'California'
+  location: string = 'California',
+  options?: EquipmentBreakdownOptions  // NEW: Extended options for fuel type, fuel cells
 ): Promise<EquipmentBreakdown> => {
+  
+  // Extract options with defaults
+  const generatorFuelType = options?.generatorFuelType || 'diesel';
+  const fuelCellMW = options?.fuelCellMW || 0;
+  const fuelCellType = options?.fuelCellType || 'hydrogen';
   
   const totalEnergyMWh = storageSizeMW * durationHours;
   const totalEnergyKWh = totalEnergyMWh * 1000;
@@ -373,18 +401,32 @@ export const calculateEquipmentBreakdown = async (
   if (effectiveGeneratorMW > 0) {
     const generatorUnitMW = 2; // 2MW generators
     
-    // Fetch generator pricing from database
+    // Fetch generator pricing from database - NOW SUPPORTS FUEL TYPE SELECTION
     let costPerKW = 800; // Fallback: $800/kW for diesel generators
-    let fuelType = "Diesel";
+    let fuelTypeLabel = "Diesel";
     let manufacturer = "Caterpillar/Eaton";
     
     try {
       const { useCaseService } = await import('../services/useCaseService');
       const generatorConfig = await useCaseService.getPricingConfig('generator_default');
       if (generatorConfig) {
-        costPerKW = generatorConfig.diesel_per_kw || 800;
-        fuelType = "Diesel";
-        manufacturer = "Caterpillar/Cummins/Eaton";
+        // ✅ FIX: Use pricing based on requested fuel type
+        switch (generatorFuelType) {
+          case 'natural-gas':
+            costPerKW = generatorConfig.natural_gas_per_kw || 700;
+            fuelTypeLabel = "Natural Gas";
+            manufacturer = "Caterpillar/Waukesha/Jenbacher";
+            break;
+          case 'dual-fuel':
+            costPerKW = generatorConfig.dual_fuel_per_kw || 900;
+            fuelTypeLabel = "Dual Fuel";
+            manufacturer = "Caterpillar/Cummins";
+            break;
+          default:
+            costPerKW = generatorConfig.diesel_per_kw || 800;
+            fuelTypeLabel = "Diesel";
+            manufacturer = "Caterpillar/Cummins/Eaton";
+        }
       }
     } catch (error) {
       console.warn('Using fallback generator pricing:', error);
@@ -399,7 +441,7 @@ export const calculateEquipmentBreakdown = async (
       unitCost: generatorUnitCost,
       totalCost: generatorQuantity * generatorUnitCost,
       costPerKW: costPerKW,
-      fuelType: fuelType,
+      fuelType: fuelTypeLabel,
       manufacturer: manufacturer
     };
   }
@@ -560,6 +602,66 @@ export const calculateEquipmentBreakdown = async (
     };
   }
 
+  // ============================================
+  // FUEL CELL CALCULATIONS (NEW - Dec 2025)
+  // ============================================
+  // Sources: NREL, DOE Hydrogen Program, Bloom Energy quotes
+  // Technology types: PEM Hydrogen, Natural Gas SOFC, Solid Oxide
+  let fuelCells = undefined;
+  if (fuelCellMW > 0) {
+    const fuelCellUnitMW = 0.25; // 250kW modular units typical (Bloom Energy, FuelCell Energy)
+    
+    // Fetch fuel cell pricing from database
+    let costPerKW = 3000; // Fallback: $3,000/kW for hydrogen PEM
+    let fuelCellTypeLabel = "Hydrogen PEM";
+    let manufacturer = "Bloom Energy/Plug Power";
+    let installationMultiplier = 1.25; // Fuel cells have higher installation costs
+    
+    try {
+      const { useCaseService } = await import('../services/useCaseService');
+      const fuelCellConfig = await useCaseService.getPricingConfig('fuel_cell_default');
+      if (fuelCellConfig) {
+        // Use pricing based on requested fuel cell type
+        switch (fuelCellType) {
+          case 'natural-gas-fc':
+            costPerKW = fuelCellConfig.natural_gas_fc_per_kw || 2500;
+            fuelCellTypeLabel = "Natural Gas SOFC";
+            manufacturer = "Bloom Energy/FuelCell Energy";
+            break;
+          case 'solid-oxide':
+            costPerKW = fuelCellConfig.solid_oxide_per_kw || 4000;
+            fuelCellTypeLabel = "Solid Oxide (High Efficiency)";
+            manufacturer = "Bloom Energy";
+            break;
+          default:
+            costPerKW = fuelCellConfig.hydrogen_per_kw || 3000;
+            fuelCellTypeLabel = "Hydrogen PEM";
+            manufacturer = "Plug Power/Ballard";
+        }
+        installationMultiplier = fuelCellConfig.installation_multiplier || 1.25;
+      }
+    } catch (error) {
+      console.warn('Using fallback fuel cell pricing:', error);
+    }
+    
+    const fuelCellQuantity = Math.ceil(fuelCellMW / fuelCellUnitMW);
+    const fuelCellUnitCost = fuelCellUnitMW * 1000 * costPerKW * installationMultiplier;
+    
+    fuelCells = {
+      quantity: fuelCellQuantity,
+      unitPowerMW: fuelCellUnitMW,
+      unitCost: fuelCellUnitCost,
+      totalCost: fuelCellQuantity * fuelCellUnitCost,
+      costPerKW: costPerKW,
+      fuelCellType: fuelCellTypeLabel,
+      manufacturer: manufacturer
+    };
+    
+    if (import.meta.env.DEV) {
+      console.log(`⚡ [Fuel Cell] ${fuelCellMW} MW ${fuelCellTypeLabel} @ $${costPerKW}/kW = $${(fuelCellQuantity * fuelCellUnitCost).toLocaleString()}`);
+    }
+  }
+
   // EV Charger Calculations (if EV charging industry)
   let evChargers = undefined;
   if (industryData?.selectedIndustry === 'ev-charging' && industryData?.useCaseData) {
@@ -634,6 +736,7 @@ export const calculateEquipmentBreakdown = async (
     transformers.totalCost + 
     switchgear.totalCost +
     (generators?.totalCost || 0) +
+    (fuelCells?.totalCost || 0) +  // NEW: Fuel cells
     (solar?.totalCost || 0) +
     (wind?.totalCost || 0) +
     (evChargers?.totalChargingCost || 0);
@@ -706,6 +809,7 @@ export const calculateEquipmentBreakdown = async (
     transformers,
     switchgear,
     generators,
+    fuelCells,  // NEW: Fuel cells
     solar,
     wind,
     evChargers,

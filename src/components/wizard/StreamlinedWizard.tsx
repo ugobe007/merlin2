@@ -91,6 +91,9 @@ interface WizardState {
   generatorFuel: 'diesel' | 'natural-gas' | 'propane';
   generatorType: 'traditional' | 'linear'; // Traditional (Cummins/Cat) vs Linear (Mainspring)
   
+  // Grid connection status (for SSOT compliance)
+  gridConnection: 'on-grid' | 'off-grid' | 'limited';
+  
   // Section 5: Configuration
   batteryKW: number;
   batteryKWh: number;
@@ -250,6 +253,7 @@ export default function StreamlinedWizard({
     generatorKW: 0,
     generatorFuel: 'natural-gas',
     generatorType: 'traditional',
+    gridConnection: 'on-grid',
     batteryKW: 0,
     batteryKWh: 0,
     solarKW: 0,
@@ -1619,6 +1623,78 @@ export default function StreamlinedWizard({
                 )}
               </div>
               
+              {/* Grid Connection Status */}
+              <div className="rounded-2xl p-6 border-2 bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200 mb-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 rounded-xl bg-gray-100">
+                    <Zap className="w-6 h-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-800">Grid Connection Status</h4>
+                    <p className="text-sm text-gray-500">How is your facility connected to the power grid?</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { 
+                      id: 'on-grid' as const, 
+                      label: 'Grid-Tied', 
+                      description: 'Connected to utility grid',
+                      icon: '🔌'
+                    },
+                    { 
+                      id: 'limited' as const, 
+                      label: 'Limited Grid', 
+                      description: 'Unreliable grid connection',
+                      icon: '⚡'
+                    },
+                    { 
+                      id: 'off-grid' as const, 
+                      label: 'Off-Grid', 
+                      description: 'No utility connection',
+                      icon: '🏝️'
+                    },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => setWizardState(prev => ({ ...prev, gridConnection: option.id }))}
+                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                        wizardState.gridConnection === option.id
+                          ? 'border-purple-400 bg-purple-50 shadow-lg shadow-purple-500/20'
+                          : 'border-gray-200 bg-white hover:border-purple-400/50'
+                      }`}
+                    >
+                      <div className="text-2xl mb-2">{option.icon}</div>
+                      <div className={`font-bold text-sm ${
+                        wizardState.gridConnection === option.id ? 'text-purple-700' : 'text-gray-700'
+                      }`}>
+                        {option.label}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">{option.description}</div>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Contextual info based on selection */}
+                {wizardState.gridConnection !== 'on-grid' && (
+                  <div className={`mt-4 p-3 rounded-lg text-sm ${
+                    wizardState.gridConnection === 'off-grid'
+                      ? 'bg-amber-50 border border-amber-200 text-amber-700'
+                      : 'bg-blue-50 border border-blue-200 text-blue-700'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Info className="w-4 h-4 flex-shrink-0" />
+                      <span>
+                        {wizardState.gridConnection === 'off-grid'
+                          ? 'Off-grid systems require larger battery capacity and backup generation for reliability.'
+                          : 'Limited grid connection means we\'ll size your system for greater self-reliance.'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               {/* Continue button */}
               <button
                 onClick={() => {
@@ -2164,6 +2240,10 @@ export default function StreamlinedWizard({
                       electricityRate: wizardState.electricityRate,
                       useCase: wizardState.selectedIndustry,
                       solarMW: wizardState.solarKW / 1000,
+                      windMW: wizardState.windTurbineKW / 1000,
+                      generatorMW: wizardState.generatorKW / 1000,
+                      generatorFuelType: wizardState.generatorFuel === 'propane' ? 'diesel' : wizardState.generatorFuel,
+                      gridConnection: wizardState.gridConnection,
                     });
                     
                     setWizardState(prev => ({ ...prev, quoteResult: result, isCalculating: false }));
@@ -2383,6 +2463,7 @@ export default function StreamlinedWizard({
                           generatorKW: 0,
                           generatorFuel: 'natural-gas',
                           generatorType: 'traditional',
+                          gridConnection: 'on-grid',
                           batteryKW: 0,
                           batteryKWh: 0,
                           solarKW: 0,

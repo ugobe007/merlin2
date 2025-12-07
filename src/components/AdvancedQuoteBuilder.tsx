@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle } from 'lucide-react';
 import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
 import { generateProfessionalModel, type ProfessionalModelResult } from '@/services/professionalFinancialModel';
-import { calculateQuote } from '@/services/unifiedQuoteCalculator';
-import { getBatteryPricing, getSolarPricing, getWindPricing, getGeneratorPricing } from '@/services/unifiedPricingService';
+import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { type FinancialCalculationResult } from '@/services/centralizedCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '../assets/images/new_Merlin.png';
@@ -81,6 +81,15 @@ export default function AdvancedQuoteBuilder({
   const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  
+  // ✅ SSOT: Financial metrics from centralizedCalculations (database-driven)
+  const [financialMetrics, setFinancialMetrics] = useState<FinancialCalculationResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  
+  // Derived values from SSOT (with fallbacks during loading)
+  const localSystemCost = financialMetrics?.totalProjectCost ?? systemCost;
+  const estimatedAnnualSavings = financialMetrics?.annualSavings ?? 0;
+  const paybackYears = financialMetrics?.paybackYears ?? 0;
   
   // NEW: Professional Financial Model state
   const [professionalModel, setProfessionalModel] = useState<ProfessionalModelResult | null>(null);
@@ -162,50 +171,97 @@ export default function AdvancedQuoteBuilder({
   const numberOfInverters = numberOfInvertersInput || Math.ceil(totalKW / inverterRating);
   const requiredTransformerKVA = totalKW * 1.25; // 25% safety factor
   
-  // Calculate system cost based on storage size and NREL ATB 2024 pricing
+  // ✅ SSOT: Use unifiedQuoteCalculator.calculateQuote() - THE TRUE SINGLE ENTRY POINT
+  // This properly combines:
+  // 1. equipmentCalculations.ts → Equipment costs (batteries, solar, wind, generators, EV)
+  // 2. centralizedCalculations.ts → Financial metrics (ROI, NPV, payback)
   useEffect(() => {
-    const calculateCosts = async () => {
-      const effectiveBatteryKwh = storageSizeMWh * 1000;
-      
-      // ✅ USE SSOT: Get battery pricing from unifiedPricingService (NREL ATB 2024)
-      const batteryPricing = await getBatteryPricing(storageSizeMW, durationHours, 'United States');
-      const pricePerKwh = batteryPricing.pricePerKWh; // Tiered by system size automatically
-      
-      // Calculate base BESS cost
-      const bessCapEx = effectiveBatteryKwh * pricePerKwh;
-      
-      // Add BOS and EPC costs (using typical values)
-      const bosMultiplier = 1.15; // 15% BOS costs
-      const epcMultiplier = 1.10; // 10% EPC costs
-      
-      // ✅ USE SSOT: Get renewable pricing from unifiedPricingService
-      const solarPricing = await getSolarPricing();
-      const windPricing = await getWindPricing();
-      const generatorPricing = await getGeneratorPricing();
-      
-      const solarCost = solarPVIncluded ? solarCapacityKW * solarPricing.pricePerWatt * 1000 : 0; // $/W → $/kW
-      const windCost = windTurbineIncluded ? windCapacityKW * windPricing.pricePerKW : 0;
-      const fuelCellCost = fuelCellIncluded ? fuelCellCapacityKW * 3000 : 0; // Industry: $3,000/kW hydrogen
-      const dieselCost = dieselGenIncluded ? dieselGenCapacityKW * generatorPricing.pricePerKW : 0;
-      const natGasCost = naturalGasGenIncluded ? naturalGasCapacityKW * 700 : 0; // Industry: $700/kW nat gas
-      
-      const calculatedSystemCost = (bessCapEx * bosMultiplier * epcMultiplier) + 
-        solarCost + windCost + fuelCellCost + dieselCost + natGasCost;
-      
-      onSystemCostChange(calculatedSystemCost);
+    const calculateFromSSoT = async () => {
+      setIsCalculating(true);
+      try {
+        console.log('📊 Calling unifiedQuoteCalculator SSOT...');
+        
+        // Calculate solar/wind/generator MW from kW if included
+        const solarMWFromConfig = solarPVIncluded ? solarCapacityKW / 1000 : 0;
+        const windMWFromConfig = windTurbineIncluded ? windCapacityKW / 1000 : 0;
+        const generatorMWFromConfig = (dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0) + 
+                                      (naturalGasGenIncluded ? naturalGasCapacityKW / 1000 : 0);
+        
+        // Calculate fuel cell MW from kW if included (NEW - Dec 2025)
+        const fuelCellMWFromConfig = fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0;
+        
+        // Determine generator fuel type (diesel takes precedence if both are included)
+        const generatorFuelTypeForQuote = dieselGenIncluded ? 'diesel' as const : 
+                                          naturalGasGenIncluded ? 'natural-gas' as const : 
+                                          'diesel' as const;
+        
+        // Map fuelType state to FuelCellType for SSOT
+        const fuelCellTypeForQuote = fuelType === 'natural-gas' ? 'natural-gas-fc' as const :
+                                      fuelType === 'solid-oxide' ? 'solid-oxide' as const :
+                                      'hydrogen' as const;
+        
+        // Map gridConnection to valid type (hybrid → limited for quote calculator)
+        const mappedGridConnection = gridConnection === 'hybrid' ? 'limited' : 
+                                     (gridConnection === 'ac-coupled' || gridConnection === 'dc-coupled') ? 'on-grid' :
+                                     gridConnection as 'on-grid' | 'off-grid' | 'limited';
+        
+        // ✅ SINGLE SOURCE OF TRUTH: calculateQuote() orchestrates ALL calculations
+        const quoteResult = await calculateQuote({
+          storageSizeMW,
+          durationHours,
+          solarMW: solarMWFromConfig,
+          windMW: windMWFromConfig,
+          generatorMW: generatorMWFromConfig,
+          generatorFuelType: generatorFuelTypeForQuote,  // NEW: Pass fuel type to SSOT
+          fuelCellMW: fuelCellMWFromConfig,               // NEW: Pass fuel cell MW to SSOT
+          fuelCellType: fuelCellTypeForQuote,             // NEW: Pass fuel cell type to SSOT
+          location: location || 'United States',
+          electricityRate: utilityRate,
+          gridConnection: mappedGridConnection,
+          useCase: useCase,
+        });
+        
+        console.log('✅ SSOT Quote Result:', {
+          totalProjectCost: quoteResult.costs.totalProjectCost,
+          netCost: quoteResult.costs.netCost,
+          annualSavings: quoteResult.financials.annualSavings,
+          paybackYears: quoteResult.financials.paybackYears,
+          equipment: {
+            batteryCost: quoteResult.equipment.batteries.totalCost,
+            solarCost: quoteResult.equipment.solar?.totalCost || 0,
+            windCost: quoteResult.equipment.wind?.totalCost || 0,
+            generatorCost: quoteResult.equipment.generators?.totalCost || 0,
+          }
+        });
+        
+        // Map QuoteResult to FinancialCalculationResult for compatibility
+        setFinancialMetrics({
+          ...quoteResult.financials,
+          equipmentCost: quoteResult.costs.equipmentCost,
+          installationCost: quoteResult.costs.installationCost,
+          shippingCost: 0, // Not in QuoteResult.costs - included in equipment already
+          tariffCost: 0,   // Not in QuoteResult.costs - included in equipment already
+          totalProjectCost: quoteResult.costs.totalProjectCost,
+          taxCredit: quoteResult.costs.taxCredit,
+          netCost: quoteResult.costs.netCost,
+        } as FinancialCalculationResult);
+        
+        // Notify parent component
+        onSystemCostChange(quoteResult.costs.totalProjectCost);
+        
+      } catch (error) {
+        console.error('❌ Error calculating from SSOT:', error);
+      } finally {
+        setIsCalculating(false);
+      }
     };
     
-    calculateCosts();
-  }, [storageSizeMW, durationHours, storageSizeMWh, solarPVIncluded, solarCapacityKW, 
-      windTurbineIncluded, windCapacityKW, fuelCellIncluded, fuelCellCapacityKW,
-      dieselGenIncluded, dieselGenCapacityKW, naturalGasGenIncluded, naturalGasCapacityKW, onSystemCostChange]);
-  
-  useEffect(() => {
-    if (show) {
-      setViewMode('landing');
-      window.scrollTo(0, 0);
-    }
-  }, [show]);
+    calculateFromSSoT();
+  }, [storageSizeMW, durationHours, solarPVIncluded, solarCapacityKW, 
+      windTurbineIncluded, windCapacityKW, dieselGenIncluded, dieselGenCapacityKW,
+      naturalGasGenIncluded, naturalGasCapacityKW,
+      fuelCellIncluded, fuelCellCapacityKW, fuelType,  // NEW: Fuel cell dependencies
+      location, utilityRate, gridConnection, useCase, onSystemCostChange]);
 
   // Sync Interactive Dashboard renewable values to Custom Configuration form
   useEffect(() => {
@@ -238,6 +294,7 @@ export default function AdvancedQuoteBuilder({
     if (show) {
       console.log('🎭 Modal opened, setting viewMode to:', initialView);
       setViewMode(initialView);
+      window.scrollTo(0, 0);
     }
   }, [show, initialView]);
 
@@ -366,7 +423,11 @@ export default function AdvancedQuoteBuilder({
           durationHours,
           solarMW: solarPVIncluded ? solarCapacityKW / 1000 : 0,
           windMW: windTurbineIncluded ? windCapacityKW / 1000 : 0,
-          generatorMW: dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0,
+          generatorMW: (dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0) + 
+                       (naturalGasGenIncluded ? naturalGasCapacityKW / 1000 : 0),
+          generatorFuelType: dieselGenIncluded ? 'diesel' : naturalGasGenIncluded ? 'natural-gas' : 'diesel',
+          fuelCellMW: fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0,
+          fuelCellType: fuelType === 'natural-gas' ? 'natural-gas-fc' : fuelType === 'solid-oxide' ? 'solid-oxide' : 'hydrogen',
           location: location || 'California',
           electricityRate: utilityRate,
           gridConnection: gridConnection === 'off-grid' ? 'off-grid' : gridConnection === 'ac-coupled' ? 'on-grid' : 'limited',
@@ -1046,463 +1107,471 @@ export default function AdvancedQuoteBuilder({
           </>
         )}
 
-        {/* CUSTOM CONFIGURATION VIEW - REDESIGNED TO MATCH SMART WIZARD */}
+        {/* ════════════════════════════════════════════════════════════════════════════
+            CUSTOM CONFIGURATION VIEW - REDESIGNED WITH TAB NAVIGATION & LIVE FINANCIALS
+            ════════════════════════════════════════════════════════════════════════════ */}
         {viewMode === 'custom-config' && (
-          <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 relative overflow-hidden">
-            {/* Animated background orbs - matching Smart Wizard */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 relative overflow-hidden">
+            {/* Subtle animated background */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
               <div className="absolute top-20 left-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
               <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-full blur-2xl animate-pulse delay-500"></div>
             </div>
 
-            {/* Enhanced header for config view - matching Smart Wizard style */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-800/90 via-indigo-700/90 to-blue-700/90 border-b-4 border-purple-400/50 shadow-2xl backdrop-blur-xl">
-              <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            {/* ═══ STICKY HEADER WITH TAB NAVIGATION ═══ */}
+            <div className="sticky top-0 z-20 bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 border-b-2 border-purple-500/30 shadow-2xl backdrop-blur-xl">
+              {/* Top Bar - Title & Actions */}
+              <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setViewMode('landing')}
-                    className="p-3 hover:bg-white/20 rounded-xl transition-all text-white hover:shadow-lg hover:scale-105 active:scale-95 border-2 border-white/20 hover:border-white/40"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-white"
                     aria-label="Back"
                   >
-                    <ArrowLeft className="w-6 h-6" />
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                      <span className="text-4xl">🧙‍♂️</span>
-                      Custom Configuration
-                      <span className="text-yellow-300 animate-pulse">✨</span>
-                    </h1>
-                    <p className="text-purple-200 text-sm font-medium">Professional BESS configuration with Merlin's guidance</p>
+                  <div className="flex items-center gap-2">
+                    <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
+                    <div>
+                      <h1 className="text-xl font-bold text-white">System Configuration</h1>
+                      <p className="text-xs text-purple-300">Pro Mode • Direct Input</p>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Live Power Level Badge */}
-                <div className="hidden md:flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-xs text-purple-200 font-medium">Your Power Level</p>
-                    <p className="text-2xl font-bold text-white">
-                      {(() => {
-                        const totalKWh = storageSizeMW * durationHours * 1000;
-                        if (totalKWh >= 10000) return '🧙‍♂️ Grand Wizard';
-                        if (totalKWh >= 5000) return '👑 Archmage';
-                        if (totalKWh >= 3500) return '🌟 Sorcerer';
-                        if (totalKWh >= 2000) return '⚡ Enchanter';
-                        if (totalKWh >= 1000) return '🔮 Conjurer';
-                        if (totalKWh >= 500) return '✨ Adept';
-                        return '🪄 Apprentice';
-                      })()}
-                    </p>
-                  </div>
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-3xl shadow-lg border-2 border-amber-300">
-                    {(() => {
-                      const totalKWh = storageSizeMW * durationHours * 1000;
-                      if (totalKWh >= 10000) return '🧙‍♂️';
-                      if (totalKWh >= 5000) return '👑';
-                      if (totalKWh >= 3500) return '🌟';
-                      if (totalKWh >= 2000) return '⚡';
-                      if (totalKWh >= 1000) return '🔮';
-                      if (totalKWh >= 500) return '✨';
-                      return '🪄';
-                    })()}
-                  </div>
+                {/* Quick Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setViewMode('professional-model')}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm font-medium transition-all border border-amber-500/40"
+                  >
+                    <Landmark className="w-4 h-4" />
+                    <span className="hidden sm:inline">Bank Model</span>
+                  </button>
+                  <button
+                    onClick={() => setShowQuotePreview(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-sm font-medium transition-all border border-emerald-500/40"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export</span>
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-white"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                
-                <button
-                  onClick={onClose}
-                  className="p-3 hover:bg-white/20 rounded-xl transition-all text-white hover:rotate-90 duration-300 border-2 border-white/20 hover:border-white/40"
-                  aria-label="Close"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+              </div>
+              
+              {/* Tab Navigation */}
+              <div className="max-w-7xl mx-auto px-4 pb-2">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                  {[
+                    { id: 'system', label: 'System', icon: <Battery className="w-4 h-4" /> },
+                    { id: 'application', label: 'Application', icon: <Building2 className="w-4 h-4" /> },
+                    { id: 'financial', label: 'Financial', icon: <DollarSign className="w-4 h-4" /> },
+                    { id: 'electrical', label: 'Electrical', icon: <Zap className="w-4 h-4" /> },
+                    { id: 'renewables', label: 'Renewables', icon: <Sparkles className="w-4 h-4" /> },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        const section = document.querySelector(`[data-section="${tab.id}"]`);
+                        section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all whitespace-nowrap"
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Configuration Form - Redesigned with Smart Wizard styling */}
-            <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
-              <div className="space-y-6">
-                
-                {/* Live System Summary Card - NEW */}
-                <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-blue-600/30 backdrop-blur-xl border-2 border-purple-400/50 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Power</p>
-                        <p className="text-3xl font-bold text-white">{storageSizeMW.toFixed(1)} <span className="text-lg text-purple-200">MW</span></p>
-                      </div>
-                      <div className="text-2xl text-purple-300">×</div>
-                      <div className="text-center">
-                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Duration</p>
-                        <p className="text-3xl font-bold text-white">{durationHours} <span className="text-lg text-purple-200">hrs</span></p>
-                      </div>
-                      <div className="text-2xl text-purple-300">=</div>
-                      <div className="text-center">
-                        <p className="text-purple-200 text-xs font-medium uppercase tracking-wider">Energy</p>
-                        <p className="text-3xl font-bold text-green-400">{storageSizeMWh.toFixed(1)} <span className="text-lg text-green-300">MWh</span></p>
+            {/* ═══ LIVE FINANCIAL DASHBOARD BAR - Always Visible ═══ */}
+            <div className="sticky top-[100px] z-10 bg-gradient-to-r from-slate-800/95 via-gray-800/95 to-slate-800/95 border-b border-gray-700/50 backdrop-blur-md shadow-lg">
+              <div className="max-w-7xl mx-auto px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  {/* Left: System Size */}
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <Battery className="w-5 h-5 text-purple-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Power</p>
+                        <p className="text-lg font-bold text-white">{storageSizeMW.toFixed(1)} <span className="text-sm text-purple-300">MW</span></p>
                       </div>
                     </div>
-                    <div className="text-center px-6 py-3 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-2 border-amber-400/50 rounded-xl">
-                      <p className="text-amber-200 text-xs font-medium uppercase tracking-wider">Est. Cost</p>
-                      <p className="text-2xl font-bold text-amber-300">${(systemCost / 1000000).toFixed(2)}M</p>
+                    <div className="text-gray-600">×</div>
+                    <div>
+                      <p className="text-xs text-gray-500">Duration</p>
+                      <p className="text-lg font-bold text-white">{durationHours} <span className="text-sm text-indigo-300">hrs</span></p>
+                    </div>
+                    <div className="text-gray-600">=</div>
+                    <div>
+                      <p className="text-xs text-gray-500">Capacity</p>
+                      <p className="text-lg font-bold text-emerald-400">{storageSizeMWh.toFixed(1)} <span className="text-sm text-emerald-300">MWh</span></p>
+                    </div>
+                  </div>
+                  
+                  {/* Center: Key Metrics - ALL from SSOT */}
+                  <div className="flex items-center gap-4">
+                    <div className="px-4 py-2 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                      <p className="text-xs text-amber-300">Est. Cost</p>
+                      <p className="text-lg font-bold text-amber-400">
+                        {isCalculating ? '...' : `$${(localSystemCost / 1000000).toFixed(2)}M`}
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                      <p className="text-xs text-emerald-300">Payback</p>
+                      <p className="text-lg font-bold text-emerald-400">
+                        {isCalculating ? '...' : `${paybackYears.toFixed(1)} yrs`}
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
+                      <p className="text-xs text-cyan-300">$/kWh</p>
+                      <p className="text-lg font-bold text-cyan-400">
+                        {isCalculating ? '...' : `$${(localSystemCost / (storageSizeMWh * 1000)).toFixed(0)}`}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Right: Generate Quote Button */}
+                  <button
+                    onClick={() => setShowQuotePreview(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Generate Quote
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ═══ MAIN CONFIGURATION FORM ═══ */}
+            <div className="max-w-7xl mx-auto px-4 py-6 relative z-0">
+              <div className="space-y-6">
+                
+                {/* ────────────────────────────────────────────────
+                    SECTION: SYSTEM CONFIGURATION
+                    ──────────────────────────────────────────────── */}
+                <div data-section="system" className="scroll-mt-48 bg-gradient-to-br from-slate-800/80 via-gray-800/60 to-slate-800/80 backdrop-blur-md border border-purple-500/30 rounded-2xl overflow-hidden">
+                  {/* Section Header */}
+                  <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 px-6 py-4 border-b border-purple-500/20">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-purple-500/20 rounded-xl">
+                        <Battery className="w-5 h-5 text-purple-400" />
+                      </div>
+                      System Configuration
+                      <span className="text-xs font-normal text-purple-300 ml-auto">Core BESS Parameters</span>
+                    </h3>
+                  </div>
+                  
+                  {/* Section Content */}
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Power Capacity - Full Width Slider */}
+                      <div className="lg:col-span-2 bg-gray-900/50 rounded-xl p-5 border border-gray-700/50">
+                        <label className="block text-sm font-bold mb-3 text-purple-200">
+                          Power Capacity (MW)
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="10"
+                            step="0.1"
+                            value={storageSizeMW}
+                            onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
+                            className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                          />
+                          <input
+                            type="number"
+                            value={storageSizeMW}
+                            onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
+                            step="0.1"
+                            min="0.1"
+                            max="50"
+                            className="w-24 px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                          <span className="text-gray-400 w-10">MW</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Max discharge power • {(storageSizeMW * 1000).toFixed(0)} kW
+                        </p>
+                      </div>
+
+                      {/* Duration - Full Width Slider */}
+                      <div className="lg:col-span-2 bg-gray-900/50 rounded-xl p-5 border border-gray-700/50">
+                        <label className="block text-sm font-bold mb-3 text-indigo-200">
+                          Duration (Hours)
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="12"
+                            step="0.5"
+                            value={durationHours}
+                            onChange={(e) => onDurationChange(parseFloat(e.target.value))}
+                            className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                          />
+                          <input
+                            type="number"
+                            value={durationHours}
+                            onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
+                            step="0.5"
+                            min="0.5"
+                            max="24"
+                            className="w-24 px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg text-center font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                          <span className="text-gray-400 w-10">hrs</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Discharge time at full power
+                        </p>
+                      </div>
+
+                      {/* Battery Chemistry */}
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">
+                          Battery Chemistry
+                        </label>
+                        <select
+                          value={chemistry}
+                          onChange={(e) => setChemistry(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="lfp">LiFePO4 (LFP) - Long life, safe</option>
+                          <option value="nmc">NMC - High energy density</option>
+                          <option value="lto">LTO - Ultra-long life</option>
+                          <option value="sodium-ion">Sodium-Ion - Low cost</option>
+                        </select>
+                      </div>
+
+                      {/* Installation Type */}
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">
+                          Installation Type
+                        </label>
+                        <select
+                          value={installationType}
+                          onChange={(e) => setInstallationType(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="outdoor">Outdoor (Containerized)</option>
+                          <option value="indoor">Indoor (Room/Vault)</option>
+                          <option value="rooftop">Rooftop</option>
+                        </select>
+                      </div>
+
+                      {/* Grid Connection */}
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">
+                          Grid Connection
+                        </label>
+                        <select
+                          value={gridConnection}
+                          onChange={(e) => setGridConnection(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="ac-coupled">AC-Coupled (Grid-tied)</option>
+                          <option value="dc-coupled">DC-Coupled (with Solar)</option>
+                          <option value="hybrid">Hybrid (AC+DC)</option>
+                          <option value="off-grid">Off-Grid/Island Mode</option>
+                        </select>
+                      </div>
+
+                      {/* Inverter Efficiency */}
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">
+                          Inverter Efficiency (%)
+                        </label>
+                        <input
+                          type="number"
+                          value={inverterEfficiency}
+                          onChange={(e) => setInverterEfficiency(parseFloat(e.target.value) || 90)}
+                          min="85"
+                          max="99"
+                          step="0.5"
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Project Information Section - Enhanced */}
-                <div className="bg-white/10 backdrop-blur-xl border-2 border-blue-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-blue-400/50">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <FileText className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-white">Project Information</span>
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Project Name
-                      </label>
-                      <input
-                        type="text"
-                        value={projectName}
-                        onChange={(e) => setProjectName(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm placeholder-purple-300/50"
-                        placeholder="e.g., Downtown Office Building BESS"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Location
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                          <MapPin className="w-5 h-5 text-white" />
-                        </div>
+
+                {/* ────────────────────────────────────────────────
+                    SECTION: APPLICATION & USE CASE
+                    ──────────────────────────────────────────────── */}
+                <div data-section="application" className="scroll-mt-48 bg-gradient-to-br from-slate-800/80 via-gray-800/60 to-slate-800/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 px-6 py-4 border-b border-emerald-500/20">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl">
+                        <Building2 className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      Application & Use Case
+                      <span className="text-xs font-normal text-emerald-300 ml-auto">How you'll use the system</span>
+                    </h3>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Application Type</label>
+                        <select
+                          value={applicationType}
+                          onChange={(e) => setApplicationType(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="residential">Residential</option>
+                          <option value="commercial">Commercial & Industrial</option>
+                          <option value="utility">Utility Scale</option>
+                          <option value="microgrid">Microgrid</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Primary Use Case</label>
+                        <select
+                          value={useCase}
+                          onChange={(e) => setUseCase(e.target.value)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="peak-shaving">Peak Shaving / Demand Reduction</option>
+                          <option value="arbitrage">Energy Arbitrage / TOU</option>
+                          <option value="backup">Backup Power / UPS</option>
+                          <option value="solar-shifting">Solar + Storage</option>
+                          <option value="frequency-regulation">Frequency Regulation</option>
+                          <option value="renewable-smoothing">Renewable Smoothing</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Project Name</label>
+                        <input
+                          type="text"
+                          value={projectName}
+                          onChange={(e) => setProjectName(e.target.value)}
+                          placeholder="e.g., Downtown Hotel BESS"
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 placeholder-gray-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Location</label>
                         <input
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm placeholder-purple-300/50"
-                          placeholder="City, State/Country"
+                          placeholder="City, State"
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 placeholder-gray-500"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Enhanced System Configuration Section - Matching Smart Wizard */}
-                <div className="bg-white/10 backdrop-blur-xl border-2 border-indigo-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-indigo-400/50 relative overflow-hidden">
-                  {/* Animated sparkles */}
-                  <div className="absolute top-4 right-4 text-2xl animate-spin" style={{ animationDuration: '3s' }}>⚡</div>
-                  <div className="absolute bottom-4 left-4 text-2xl animate-bounce" style={{ animationDuration: '2s' }}>🔋</div>
+                {/* ────────────────────────────────────────────────
+                    SECTION: FINANCIAL PARAMETERS
+                    ──────────────────────────────────────────────── */}
+                <div data-section="financial" className="scroll-mt-48 bg-gradient-to-br from-slate-800/80 via-gray-800/60 to-slate-800/80 backdrop-blur-md border border-cyan-500/30 rounded-2xl overflow-hidden">
+                  <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 px-6 py-4 border-b border-cyan-500/20">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-cyan-500/20 rounded-xl">
+                        <DollarSign className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      Financial Parameters
+                      <span className="text-xs font-normal text-cyan-300 ml-auto">Rates & costs for ROI calculation</span>
+                    </h3>
+                  </div>
                   
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Battery className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-white">System Configuration</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Power Capacity */}
-                    <div className="md:col-span-2">
-                      <label className="block text-lg font-bold mb-4 text-purple-200">
-                        Power Capacity (MW)
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="10"
-                          step="0.1"
-                          value={storageSizeMW}
-                          onChange={(e) => onStorageSizeChange(parseFloat(e.target.value))}
-                          className="flex-1 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Utility Rate ($/kWh)</label>
                         <input
                           type="number"
-                          value={storageSizeMW}
-                          onChange={(e) => onStorageSizeChange(parseFloat(e.target.value) || 0.1)}
-                          step="0.1"
-                          min="0.1"
-                          max="50"
-                          className="w-28 px-3 py-3 bg-white/10 border-2 border-purple-400/30 text-white rounded-xl text-center text-lg font-bold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                          value={utilityRate}
+                          onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
+                          step="0.01"
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-cyan-500"
                         />
-                        <span className="text-purple-200 w-12 text-lg font-bold">MW</span>
                       </div>
-                      <p className="text-sm text-purple-300 mt-2 font-medium">
-                        Maximum discharge power output • {(storageSizeMW * 1000).toFixed(0)} kW
-                      </p>
-                    </div>
 
-                    {/* Duration */}
-                    <div className="md:col-span-2">
-                      <label className="block text-lg font-bold mb-4 text-purple-200">
-                        Duration (Hours)
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="12"
-                          step="0.5"
-                          value={durationHours}
-                          onChange={(e) => onDurationChange(parseFloat(e.target.value))}
-                          className="flex-1 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                        />
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Demand Charge ($/kW)</label>
                         <input
                           type="number"
-                          value={durationHours}
-                          onChange={(e) => onDurationChange(parseFloat(e.target.value) || 0.5)}
-                          step="0.5"
-                          min="0.5"
-                          max="24"
-                          className="w-28 px-3 py-3 bg-white/10 border-2 border-purple-400/30 text-white rounded-xl text-center text-lg font-bold focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                          value={demandCharge}
+                          onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-cyan-500"
                         />
-                        <span className="text-purple-200 w-12 text-lg font-bold">hrs</span>
                       </div>
-                      <p className="text-sm text-purple-300 mt-2 font-medium">
-                        How long the system can discharge at full power
-                      </p>
-                    </div>
 
-                    {/* Battery Chemistry */}
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Battery Chemistry
-                      </label>
-                      <select
-                        value={chemistry}
-                        onChange={(e) => setChemistry(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
-                      >
-                        <option value="lfp" className="bg-gray-800 text-white">LiFePO4 (LFP) - Long life, safe</option>
-                        <option value="nmc" className="bg-gray-800 text-white">NMC - High energy density</option>
-                        <option value="lto" className="bg-gray-800 text-white">LTO - Ultra-long life, fast charge</option>
-                        <option value="sodium-ion" className="bg-gray-800 text-white">Sodium-Ion - Low cost</option>
-                      </select>
-                    </div>
-
-                    {/* Installation Type */}
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Installation Type
-                      </label>
-                      <select
-                        value={installationType}
-                        onChange={(e) => setInstallationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
-                      >
-                        <option value="outdoor" className="bg-gray-800 text-white">Outdoor (Containerized)</option>
-                        <option value="indoor" className="bg-gray-800 text-white">Indoor (Room/Vault)</option>
-                        <option value="rooftop" className="bg-gray-800 text-white">Rooftop</option>
-                      </select>
-                    </div>
-
-                    {/* Grid Connection */}
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Grid Connection
-                      </label>
-                      <select
-                        value={gridConnection}
-                        onChange={(e) => setGridConnection(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
-                      >
-                        <option value="ac-coupled" className="bg-gray-800 text-white">AC-Coupled (Grid-tied)</option>
-                        <option value="dc-coupled" className="bg-gray-800 text-white">DC-Coupled (with Solar)</option>
-                        <option value="hybrid" className="bg-gray-800 text-white">Hybrid (AC+DC)</option>
-                        <option value="off-grid" className="bg-gray-800 text-white">Off-Grid/Island Mode</option>
-                      </select>
-                    </div>
-
-                    {/* Inverter Efficiency */}
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-purple-200">
-                        Inverter Efficiency (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={inverterEfficiency}
-                        onChange={(e) => setInverterEfficiency(parseFloat(e.target.value) || 90)}
-                        min="85"
-                        max="99"
-                        step="0.5"
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-purple-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 hover:border-purple-400/50 transition-all shadow-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhanced Application & Use Case Section - Dark Theme */}
-                <div className="bg-white/10 backdrop-blur-xl border-2 border-emerald-400/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-emerald-400/50 relative overflow-hidden">
-                  {/* Animated icons */}
-                  <div className="absolute top-4 right-4 text-2xl animate-pulse">🏢</div>
-                  <div className="absolute bottom-4 left-4 text-2xl" style={{ animation: 'bounce 2s infinite' }}>💡</div>
-                  
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Building2 className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-white">Application & Use Case</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-emerald-200">
-                        Application Type
-                      </label>
-                      <select
-                        value={applicationType}
-                        onChange={(e) => setApplicationType(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
-                      >
-                        <option value="residential" className="bg-gray-800 text-white">Residential</option>
-                        <option value="commercial" className="bg-gray-800 text-white">Commercial & Industrial</option>
-                        <option value="utility" className="bg-gray-800 text-white">Utility Scale</option>
-                        <option value="microgrid" className="bg-gray-800 text-white">Microgrid</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-emerald-200">
-                        Primary Use Case
-                      </label>
-                      <select
-                        value={useCase}
-                        onChange={(e) => setUseCase(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
-                      >
-                        <option value="peak-shaving" className="bg-gray-800 text-white">Peak Shaving / Demand Charge Reduction</option>
-                        <option value="arbitrage" className="bg-gray-800 text-white">Energy Arbitrage / Time-of-Use</option>
-                        <option value="backup" className="bg-gray-800 text-white">Backup Power / UPS</option>
-                        <option value="solar-shifting" className="bg-gray-800 text-white">Solar + Storage / Self-Consumption</option>
-                        <option value="frequency-regulation" className="bg-gray-800 text-white">Frequency Regulation</option>
-                        <option value="renewable-smoothing" className="bg-gray-800 text-white">Renewable Smoothing</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-emerald-200">
-                        Expected Cycles per Year
-                      </label>
-                      <input
-                        type="number"
-                        value={cyclesPerYear}
-                        onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
-                        min="1"
-                        max="1000"
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
-                      />
-                      <p className="text-xs text-emerald-300 mt-1 font-medium">
-                        1 cycle = full charge + discharge
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-emerald-200">
-                        Round-Trip Efficiency (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={roundTripEfficiency}
-                        onChange={(e) => setRoundTripEfficiency(parseFloat(e.target.value) || 85)}
-                        min="75"
-                        max="98"
-                        step="0.5"
-                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-white rounded-xl font-medium focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400/50 transition-all shadow-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhanced Financial Parameters Section - Dark Theme */}
-                <div data-section="financial" className="bg-white/10 backdrop-blur-xl border-2 border-cyan-400/30 rounded-2xl p-6 shadow-2xl scroll-mt-24 hover:border-cyan-400/50 transition-all">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <DollarSign className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-white">Financial Parameters</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-bold mb-2 text-cyan-200">
-                        Estimated System Cost (USD)
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <span className="text-cyan-200 text-lg font-bold">$</span>
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Cycles/Year</label>
                         <input
                           type="number"
-                          value={systemCost}
-                          onChange={(e) => onSystemCostChange(parseFloat(e.target.value) || 0)}
-                          step="10000"
-                          min="0"
-                          className="flex-1 px-4 py-3 bg-white/10 border-2 border-cyan-400/30 text-white rounded-xl text-lg font-medium focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all"
-                          placeholder="Enter system cost"
+                          value={cyclesPerYear}
+                          onChange={(e) => setCyclesPerYear(parseFloat(e.target.value) || 1)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-cyan-500"
                         />
                       </div>
-                      <p className="text-sm text-cyan-300 mt-2 font-medium">
-                        Total installed cost including equipment, installation, soft costs, and contingency
-                      </p>
-                    </div>
 
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-cyan-200">
-                        Utility Rate ($/kWh)
-                      </label>
-                      <input
-                        type="number"
-                        value={utilityRate}
-                        onChange={(e) => setUtilityRate(parseFloat(e.target.value) || 0)}
-                        step="0.01"
-                        min="0"
-                        className="w-full px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="e.g., 0.12"
-                      />
+                      <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-300">Warranty (Years)</label>
+                        <input
+                          type="number"
+                          value={warrantyYears}
+                          onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 10)}
+                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-xl focus:ring-2 focus:ring-cyan-500"
+                        />
+                      </div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-bold mb-2 text-slate-900">
-                        Demand Charge ($/kW/month)
-                      </label>
-                      <input
-                        type="number"
-                        value={demandCharge}
-                        onChange={(e) => setDemandCharge(parseFloat(e.target.value) || 0)}
-                        step="1"
-                        min="0"
-                        className="w-full px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="e.g., 15"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold mb-2 flex items-center gap-2 text-slate-900">
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        Warranty Period (Years)
-                      </label>
-                      <input
-                        type="number"
-                        value={warrantyYears}
-                        onChange={(e) => setWarrantyYears(parseFloat(e.target.value) || 1)}
-                        min="1"
-                        max="25"
-                        className="w-full px-4 py-3 bg-white border-2 border-blue-300 text-slate-900 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                    
+                    {/* Advanced Financials Link */}
+                    <div className="mt-6 p-4 bg-gradient-to-r from-amber-900/30 to-orange-900/20 rounded-xl border border-amber-500/40">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Landmark className="w-6 h-6 text-amber-400" />
+                          <div>
+                            <p className="text-sm font-bold text-amber-200">Need Bank-Ready Financials?</p>
+                            <p className="text-xs text-amber-300/70">3-Statement Model, DSCR, IRR, MACRS, Revenue Stacking</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setViewMode('professional-model')}
+                          className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm font-bold transition-all border border-amber-500/50"
+                        >
+                          Open Pro Model
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Electrical Specifications Section - INTERACTIVE WITH INPUTS */}
-                <div data-section="electrical" className="bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 border-2 border-purple-800 rounded-2xl p-8 shadow-2xl scroll-mt-24">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Zap className="w-7 h-7 text-purple-200" />
-                    <span className="bg-gradient-to-r from-purple-200 via-indigo-200 to-blue-200 bg-clip-text text-transparent drop-shadow-lg">Electrical Specifications & PCS Configuration</span>
-                  </h3>
+                {/* ────────────────────────────────────────────────
+                    SECTION: ELECTRICAL SPECIFICATIONS
+                    ──────────────────────────────────────────────── */}
+                <div data-section="electrical" className="scroll-mt-48 bg-gradient-to-br from-slate-800/80 via-gray-800/60 to-slate-800/80 backdrop-blur-md border border-purple-500/30 rounded-2xl overflow-hidden">
+                  <div className="bg-gradient-to-r from-purple-900/50 to-violet-900/50 px-6 py-4 border-b border-purple-500/20">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-purple-500/20 rounded-xl">
+                        <Zap className="w-5 h-5 text-purple-400" />
+                      </div>
+                      Electrical Specifications
+                      <span className="text-xs font-normal text-purple-300 ml-auto">PCS, Inverters, Transformers</span>
+                    </h3>
+                  </div>
                   
+                  <div className="p-6">
                   {/* Power Conversion System (PCS) Configuration */}
-                  <div className="bg-gradient-to-br from-slate-50 to-purple-50 border-2 border-purple-400 rounded-xl p-6 mb-6 shadow-lg">
-                    <h4 className="text-lg font-bold mb-4 text-purple-900">Power Conversion System (PCS)</h4>
+                  <div className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-6 mb-6">
+                    <h4 className="text-lg font-bold mb-4 text-purple-200">Power Conversion System (PCS)</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* PCS Quoting Option */}
@@ -2168,10 +2237,10 @@ export default function AdvancedQuoteBuilder({
                     <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
                       <p className="text-sm text-slate-700 mb-1 font-medium">Total Cost</p>
                       <p className="text-3xl font-bold text-green-700">
-                        ${(systemCost / 1000000).toFixed(2)}M
+                        ${(localSystemCost / 1000000).toFixed(2)}M
                       </p>
                       <p className="text-sm text-slate-700 font-bold">
-                        ${(systemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
+                        ${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW
                       </p>
                     </div>
                     <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4">
@@ -2202,7 +2271,7 @@ export default function AdvancedQuoteBuilder({
                         storageSizeMW,
                         durationHours,
                         storageSizeMWh,
-                        systemCost,
+                        systemCost: localSystemCost,
                         applicationType,
                         useCase,
                         chemistry,
@@ -2252,9 +2321,8 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
           </div>
+        </div>
         )}
-
-      </div>
       
       {/* Quote Preview Modal */}
       {showQuotePreview && (
@@ -2553,16 +2621,16 @@ export default function AdvancedQuoteBuilder({
                       <div className="flex justify-between items-center text-lg">
                         <span className="font-semibold text-gray-700">Total System Cost:</span>
                         <span className="text-2xl font-bold text-blue-600">
-                          ${(systemCost / 1000000).toFixed(2)}M
+                          ${(localSystemCost / 1000000).toFixed(2)}M
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-600">
                         <span>Cost per kW:</span>
-                        <span className="font-semibold">${(systemCost / (storageSizeMW * 1000)).toFixed(0)}/kW</span>
+                        <span className="font-semibold">${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}/kW</span>
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-600">
                         <span>Cost per kWh:</span>
-                        <span className="font-semibold">${(systemCost / (storageSizeMWh * 1000)).toFixed(0)}/kWh</span>
+                        <span className="font-semibold">${(localSystemCost / (storageSizeMWh * 1000)).toFixed(0)}/kWh</span>
                       </div>
                     </div>
                   </div>
@@ -2773,17 +2841,17 @@ export default function AdvancedQuoteBuilder({
                     </div>
                     <div className="grid grid-cols-12 border-x border-b border-gray-400 bg-yellow-50">
                       <div className="col-span-6 font-bold p-2 border-r border-gray-400">Total System Cost</div>
-                      <div className="col-span-3 font-bold p-2 border-r border-gray-400 text-right text-green-700">${(systemCost / 1000000).toFixed(2)}M</div>
+                      <div className="col-span-3 font-bold p-2 border-r border-gray-400 text-right text-green-700">${(localSystemCost / 1000000).toFixed(2)}M</div>
                       <div className="col-span-3 p-2 text-center">USD</div>
                     </div>
                     <div className="grid grid-cols-12 border-x border-b border-gray-400">
                       <div className="col-span-6 p-2 border-r border-gray-400">Cost per kW</div>
-                      <div className="col-span-3 p-2 border-r border-gray-400 text-right">${(systemCost / (storageSizeMW * 1000)).toFixed(0)}</div>
+                      <div className="col-span-3 p-2 border-r border-gray-400 text-right">${(localSystemCost / (storageSizeMW * 1000)).toFixed(0)}</div>
                       <div className="col-span-3 p-2 text-center">$/kW</div>
                     </div>
                     <div className="grid grid-cols-12 border-x border-b border-gray-400">
                       <div className="col-span-6 p-2 border-r border-gray-400">Cost per kWh</div>
-                      <div className="col-span-3 p-2 border-r border-gray-400 text-right">${(systemCost / (storageSizeMWh * 1000)).toFixed(0)}</div>
+                      <div className="col-span-3 p-2 border-r border-gray-400 text-right">${(localSystemCost / (storageSizeMWh * 1000)).toFixed(0)}</div>
                       <div className="col-span-3 p-2 text-center">$/kWh</div>
                     </div>
                     <div className="grid grid-cols-12 border-x border-b border-gray-400">
@@ -3388,6 +3456,7 @@ export default function AdvancedQuoteBuilder({
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

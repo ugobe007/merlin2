@@ -21,6 +21,11 @@ import {
 } from 'lucide-react';
 import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
+import { 
+  calculateCarWashEquipmentPower,
+  type CarWashPowerInput,
+  type CarWashAutomationLevel,
+} from '@/services/useCasePowerCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -1230,6 +1235,17 @@ export default function CarWashWizard({
   // Concierge Tier Selection
   const [conciergeTier, setConciergeTier] = useState<keyof typeof CONCIERGE_TIERS>('standard');
   
+  // Quote Mode: 'select' = mode chooser, 'pro' = direct input, 'guided' = step-by-step
+  const [quoteMode, setQuoteMode] = useState<'select' | 'pro' | 'guided'>('select');
+  
+  // Grid Connection Status - key question for accurate calculations
+  const [gridConnection, setGridConnection] = useState({
+    status: 'grid-tied' as 'grid-tied' | 'off-grid' | 'grid-backup-only',
+    gridReliability: 'reliable' as 'reliable' | 'occasional-outages' | 'frequent-outages' | 'unreliable',
+    gridCostConcern: false, // True if grid is too expensive
+    wantGridIndependence: false, // True if they want to reduce grid dependency
+  });
+  
   // Performance Metrics (data layer)
   const [trackPerformance, setTrackPerformance] = useState(true);
   
@@ -1349,116 +1365,56 @@ export default function CarWashWizard({
     energyCharges: 0,
   });
   
-  // Calculate power based on equipment selections
-  useEffect(() => {
-    const calc = calculateEquipmentPower();
-    setCalculatedPower(calc);
-  }, [equipment, operations, washType, automationLevel, initialInputs]);
+  // Memoize brand entries to prevent re-computation on every render
+  const brandEntries = useMemo(() => Object.entries(CAR_WASH_BRANDS), []);
+  const filteredBrands = useMemo(() => 
+    brandEntries.filter(([key]) => key !== 'independent'),
+    [brandEntries]
+  );
   
-  function calculateEquipmentPower() {
-    let peakKW = 0;
-    
-    // Conveyor
-    if (equipment.hasConveyor) {
-      peakKW += equipment.conveyorHP * 0.746; // HP to kW
-      peakKW += EQUIPMENT_POWER.conveyor.rollerCallUp;
-      peakKW += EQUIPMENT_POWER.conveyor.controls;
-    }
-    
-    // Washing Equipment
-    peakKW += equipment.topBrushes * EQUIPMENT_POWER.washing.topBrush;
-    peakKW += equipment.wrapAroundBrushes * EQUIPMENT_POWER.washing.wrapAroundBrush;
-    peakKW += equipment.mitterCurtains * EQUIPMENT_POWER.washing.mitterCurtain;
-    peakKW += equipment.wheelBrushes * EQUIPMENT_POWER.washing.wheelBrush;
-    
-    // High Pressure
-    peakKW += equipment.highPressurePumps * EQUIPMENT_POWER.highPressure.pumpStation;
-    if (equipment.hasUndercarriage) {
-      peakKW += EQUIPMENT_POWER.highPressure.undercarriageWash;
-    }
-    
-    // Drying - LARGEST CONSUMER (30-40% of total)
-    peakKW += equipment.standardBlowers * EQUIPMENT_POWER.drying.standardBlower;
-    if (equipment.hasWindBlade) {
-      peakKW += EQUIPMENT_POWER.drying.windBlade;
-    }
-    if (equipment.hasHighPerformanceDryer) {
-      peakKW += EQUIPMENT_POWER.drying.highPerformance;
-    }
-    
-    // Vacuum - Central system and standalone stations can coexist
-    if (equipment.hasCentralVacuum) {
-      peakKW += EQUIPMENT_POWER.vacuum.centralSystem;
-    }
-    // Standalone vacuum stations (in parking lot / self-serve bays)
-    peakKW += equipment.vacuumStations * EQUIPMENT_POWER.vacuum.standAlone3Motor;
-    
-    // Chemical
-    peakKW += equipment.chemicalStations * EQUIPMENT_POWER.chemical.pumpStation;
-    peakKW += EQUIPMENT_POWER.chemical.foamGenerator;
-    if (equipment.hasTireShine) {
-      peakKW += EQUIPMENT_POWER.chemical.tireShine;
-    }
-    
-    // Water
-    if (equipment.hasWaterReclaim) {
-      peakKW += EQUIPMENT_POWER.waterReclaim.reclaimPump;
-      peakKW += EQUIPMENT_POWER.waterReclaim.filtration;
-    }
-    if (equipment.hasReverseOsmosis) {
-      peakKW += EQUIPMENT_POWER.specialty.reverseOsmosis;
-    }
-    if (equipment.waterHeatingType === 'electric') {
-      peakKW += EQUIPMENT_POWER.waterHeating.tankless;
-    } else {
-      peakKW += EQUIPMENT_POWER.waterHeating.controls;
-      peakKW += EQUIPMENT_POWER.waterHeating.recircPump;
-    }
-    
-    // Air Compression
-    peakKW += equipment.airCompressorHP * 0.746;
-    peakKW += EQUIPMENT_POWER.airCompression.dryer;
-    
-    // Facility
-    peakKW += EQUIPMENT_POWER.facility.lighting;
-    peakKW += EQUIPMENT_POWER.facility.controls;
-    peakKW += EQUIPMENT_POWER.facility.pos;
-    peakKW += EQUIPMENT_POWER.facility.security;
-    peakKW += EQUIPMENT_POWER.facility.gates;
-    
-    // Automation Systems (based on level)
-    const autoLevel = AUTOMATION_LEVELS[automationLevel];
-    peakKW += autoLevel.additionalKW;
-    
-    // Apply automation efficiency multiplier
-    peakKW *= autoLevel.powerMultiplier;
-    
-    // Load diversity factor (not all equipment runs simultaneously)
-    const diversityFactor = 0.7; // 70% typical
-    const avgKW = peakKW * diversityFactor;
-    
-    // Daily energy
-    const peakHours = operations.peakHoursEnd - operations.peakHoursStart;
-    const offPeakHours = operations.hoursPerDay - peakHours;
-    const dailyKWh = (peakKW * peakHours * 0.85) + (avgKW * offPeakHours * 0.6);
-    
-    // Monthly
-    const monthlyKWh = dailyKWh * operations.daysPerWeek * 4.33;
-    
-    // Costs
+  // Calculate power using SSOT
+  useEffect(() => {
+    // Get state-specific rates
     const stateData = STATE_RATES[mergedInputs.state] || STATE_RATES['Other'];
-    const demandCharges = peakKW * stateData.demandCharge;
-    const energyCharges = monthlyKWh * stateData.rate;
     
-    return {
-      peakDemandKW: Math.round(peakKW),
-      avgDemandKW: Math.round(avgKW),
-      dailyKWh: Math.round(dailyKWh),
-      monthlyKWh: Math.round(monthlyKWh),
-      demandCharges: Math.round(demandCharges),
-      energyCharges: Math.round(energyCharges),
+    // Build input for SSOT function
+    const input: CarWashPowerInput = {
+      equipment: {
+        hasConveyor: equipment.hasConveyor,
+        conveyorHP: equipment.conveyorHP,
+        topBrushes: equipment.topBrushes,
+        wrapAroundBrushes: equipment.wrapAroundBrushes,
+        mitterCurtains: equipment.mitterCurtains,
+        wheelBrushes: equipment.wheelBrushes,
+        highPressurePumps: equipment.highPressurePumps,
+        hasUndercarriage: equipment.hasUndercarriage,
+        standardBlowers: equipment.standardBlowers,
+        hasWindBlade: equipment.hasWindBlade,
+        hasHighPerformanceDryer: equipment.hasHighPerformanceDryer,
+        hasCentralVacuum: equipment.hasCentralVacuum,
+        vacuumStations: equipment.vacuumStations,
+        chemicalStations: equipment.chemicalStations,
+        hasTireShine: equipment.hasTireShine,
+        hasWaterReclaim: equipment.hasWaterReclaim,
+        hasReverseOsmosis: equipment.hasReverseOsmosis,
+        waterHeatingType: equipment.waterHeatingType,
+        airCompressorHP: equipment.airCompressorHP,
+      },
+      operations: {
+        hoursPerDay: operations.hoursPerDay,
+        daysPerWeek: operations.daysPerWeek,
+        peakHoursStart: operations.peakHoursStart,
+        peakHoursEnd: operations.peakHoursEnd,
+      },
+      automationLevel: automationLevel as CarWashAutomationLevel,
+      electricityRate: stateData.rate,
+      demandCharge: stateData.demandCharge,
     };
-  }
+    
+    // Call SSOT function
+    const calc = calculateCarWashEquipmentPower(input);
+    setCalculatedPower(calc);
+  }, [equipment, operations, washType, automationLevel, initialInputs, mergedInputs.state]);
   
   // Generate final quote
   async function generateQuote() {
@@ -1511,6 +1467,10 @@ export default function CarWashWizard({
         generatorKW: generatorMW * 1000,
       });
       
+      // Map grid connection status for SSOT compliance
+      const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
+                                 gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid';
+      
       const result = await calculateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
@@ -1519,6 +1479,8 @@ export default function CarWashWizard({
         useCase: 'car-wash',
         solarMW,
         generatorMW,
+        generatorFuelType: 'natural-gas', // Car washes typically use natural gas generators (cleaner)
+        gridConnection: gridConnectionType,
       });
       
       setQuoteResult(result);
@@ -2181,16 +2143,24 @@ export default function CarWashWizard({
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-blue-900 via-cyan-800 to-teal-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-cyan-400/40 shadow-2xl shadow-cyan-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md overflow-hidden p-4">
+      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 rounded-3xl w-full max-w-4xl border-2 border-cyan-500/50 shadow-2xl shadow-cyan-500/30 flex flex-col" style={{ maxHeight: 'calc(100vh - 32px)', height: 'auto' }}>
         {/* Header */}
         <div className="bg-gradient-to-r from-cyan-800/80 via-teal-700/60 to-cyan-800/80 px-6 py-4 border-b border-cyan-400/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
               <div>
-                <h2 className="text-xl font-bold text-white">Build Your Car Wash Quote</h2>
-                <p className="text-sm text-cyan-300/70">Step {currentStep + 1} of {WIZARD_STEPS.length}</p>
+                <h2 className="text-xl font-bold text-white">
+                  {quoteMode === 'select' ? 'Car Wash Energy Quote Builder' : 
+                   quoteMode === 'pro' ? 'Pro Mode: Direct Input' : 
+                   `Build Your Car Wash Quote`}
+                </h2>
+                <p className="text-sm text-cyan-300/70">
+                  {quoteMode === 'select' ? 'Choose how you want to build your quote' :
+                   quoteMode === 'pro' ? 'Enter your specifications directly' :
+                   `Step ${currentStep + 1} of ${WIZARD_STEPS.length}`}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
@@ -2198,7 +2168,8 @@ export default function CarWashWizard({
             </button>
           </div>
           
-          {/* Progress Steps */}
+          {/* Progress Steps - Only show in guided mode */}
+          {quoteMode === 'guided' && (
           <div className="flex items-center gap-2 mt-4">
             {WIZARD_STEPS.map((step, index) => {
               const Icon = step.icon;
@@ -2227,9 +2198,10 @@ export default function CarWashWizard({
               );
             })}
           </div>
+          )}
           
           {/* Power Profile - Shows real-time power metrics */}
-          {calculatedPower.peakDemandKW > 0 && (
+          {quoteMode === 'guided' && calculatedPower.peakDemandKW > 0 && (
             <div className="mt-4 flex items-center gap-4">
               <div className="flex-1">
                 <WizardPowerProfile
@@ -2270,8 +2242,8 @@ export default function CarWashWizard({
           )}
         </div>
         
-        {/* Content */}
-        <div className={`p-6 pb-8 overflow-y-auto max-h-[calc(90vh-220px)] transition-opacity duration-150 ${isPending ? 'opacity-60' : 'opacity-100'}`}>
+        {/* Content - Scrollable with dynamic height */}
+        <div className={`flex-1 overflow-y-auto overscroll-contain p-6 pb-8 transition-opacity duration-150 ${isPending ? 'opacity-60' : 'opacity-100'}`} style={{ minHeight: 0 }}>
           {/* Loading indicator during step transition */}
           {isPending && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-10">
@@ -2279,8 +2251,147 @@ export default function CarWashWizard({
             </div>
           )}
           
+          {/* ════════════════════════════════════════════════════════════════
+              MODE SELECTOR - First screen: How do you want to build your quote?
+              ════════════════════════════════════════════════════════════════ */}
+          {quoteMode === 'select' && (
+            <div className="space-y-6">
+              {/* Welcome Header */}
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-black text-white mb-3">How would you like to build your quote?</h3>
+                <p className="text-gray-400 text-lg">Choose the path that fits your needs</p>
+              </div>
+              
+              {/* Two Path Options */}
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                {/* PRO MODE - I Have Specs */}
+                <button
+                  onClick={() => setQuoteMode('pro')}
+                  className="group relative bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-amber-900/30 rounded-3xl p-8 border-2 border-amber-500/40 hover:border-amber-400 transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-amber-500/20 text-left"
+                >
+                  <div className="absolute top-4 right-4 bg-amber-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-amber-300">PRO</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+                    <FileText className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-black text-white mb-3">I Have My Specs</h4>
+                  <p className="text-amber-200/80 mb-4">
+                    Enter your power requirements directly. Perfect for professionals with site surveys, utility data, or engineering specs.
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-400">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Direct input: kW, kWh, solar, rates</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Upload utility bills for auto-populate</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-400" />
+                      <span>Skip the guided questions</span>
+                    </li>
+                  </ul>
+                  <div className="mt-6 flex items-center gap-2 text-amber-400 font-bold group-hover:translate-x-2 transition-transform">
+                    <span>Enter Specs Directly</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </button>
+                
+                {/* GUIDED MODE - Build My Specs */}
+                <button
+                  onClick={() => setQuoteMode('guided')}
+                  className="group relative bg-gradient-to-br from-cyan-900/30 via-teal-900/20 to-cyan-900/30 rounded-3xl p-8 border-2 border-cyan-500/40 hover:border-cyan-400 transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/20 text-left"
+                >
+                  <div className="absolute top-4 right-4 bg-cyan-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-cyan-300">GUIDED</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-black text-white mb-3">Help Me Build My Specs</h4>
+                  <p className="text-cyan-200/80 mb-4">
+                    Answer simple questions about your car wash and we'll calculate your power requirements automatically.
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-400">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-cyan-400" />
+                      <span>Step-by-step guided experience</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-cyan-400" />
+                      <span>Smart equipment recommendations</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-cyan-400" />
+                      <span>Perfect for first-timers</span>
+                    </li>
+                  </ul>
+                  <div className="mt-6 flex items-center gap-2 text-cyan-400 font-bold group-hover:translate-x-2 transition-transform">
+                    <span>Start Guided Wizard</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </button>
+              </div>
+              
+              {/* Helper Text */}
+              <div className="text-center mt-8">
+                <p className="text-gray-500 text-sm">
+                  💡 Not sure? The <span className="text-cyan-400 font-medium">Guided Wizard</span> will help you discover what you need.
+                  <br/>
+                  Already have a site survey or utility data? Try <span className="text-amber-400 font-medium">Pro Mode</span> for faster quotes.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* ════════════════════════════════════════════════════════════════
+              PRO MODE - Redirect to Advanced Builder
+              ════════════════════════════════════════════════════════════════ */}
+          {quoteMode === 'pro' && (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8">
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-6 mx-auto shadow-2xl shadow-amber-500/40">
+                  <FileText className="w-12 h-12 text-white" />
+                </div>
+                <div className="inline-flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-full mb-4">
+                  <span className="text-amber-300 font-bold">PRO MODE</span>
+                </div>
+                <h3 className="text-3xl font-black text-white mb-3">Advanced Quote Builder</h3>
+                <p className="text-gray-400 text-lg max-w-md mx-auto">
+                  You'll be taken to our full-featured quote builder where you can enter exact specifications.
+                </p>
+              </div>
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setQuoteMode('select')}
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.location.href = '/quote-builder?vertical=car-wash';
+                  }}
+                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                >
+                  Open Advanced Builder
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* ════════════════════════════════════════════════════════════════
+              GUIDED MODE - Step-by-Step Wizard
+              ════════════════════════════════════════════════════════════════ */}
+          
           {/* Step 0: Location & Energy Goals (SIMPLIFIED) */}
-          {currentStep === 0 && (
+          {quoteMode === 'guided' && currentStep === 0 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -2587,7 +2698,7 @@ export default function CarWashWizard({
           )}
           
           {/* Step 1: Your Details (Brand, Contact) */}
-          {currentStep === 1 && (
+          {quoteMode === 'guided' && currentStep === 1 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -2628,11 +2739,10 @@ export default function CarWashWizard({
                   {/* Search Results Dropdown */}
                   {brandSearchQuery.length >= 2 && (
                     <div className="absolute z-10 w-full mt-1 bg-gray-900/95 border border-white/20 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                      {Object.entries(CAR_WASH_BRANDS)
+                      {filteredBrands
                         .filter(([key, brand]) => 
-                          key !== 'independent' && 
-                          (brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
-                           brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase()))
+                          brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
+                          brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase())
                         )
                         .slice(0, 8)
                         .map(([key, brand]) => (
@@ -2656,11 +2766,10 @@ export default function CarWashWizard({
                             )}
                           </button>
                         ))}
-                      {Object.entries(CAR_WASH_BRANDS)
+                      {filteredBrands
                         .filter(([key, brand]) => 
-                          key !== 'independent' && 
-                          (brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
-                           brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase()))
+                          brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
+                          brand.description?.toLowerCase().includes(brandSearchQuery.toLowerCase())
                         ).length === 0 && (
                           <div className="p-3 text-center text-cyan-200/60 text-sm">
                             No brands found. Try "Independent Car Wash" below.
@@ -2708,7 +2817,7 @@ export default function CarWashWizard({
                     <div className="p-5 rounded-2xl border-2 border-gray-600 bg-gradient-to-br from-gray-800/60 to-gray-700/40">
                       <p className="text-sm font-bold text-gray-300 mb-3">🏆 Top 5 Brands:</p>
                       <div className="flex flex-wrap gap-2">
-                        {Object.entries(CAR_WASH_BRANDS)
+                        {filteredBrands
                           .filter(([_, brand]) => brand.rank && brand.rank <= 5)
                           .sort((a, b) => (a[1].rank || 99) - (b[1].rank || 99))
                           .map(([key, brand]) => (
@@ -2911,7 +3020,7 @@ export default function CarWashWizard({
           )}
           
           {/* Step 2: Equipment */}
-          {currentStep === 2 && (
+          {quoteMode === 'guided' && currentStep === 2 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -3122,7 +3231,7 @@ export default function CarWashWizard({
           )}
           
           {/* Step 3: Energy Profile (was Operations) */}
-          {currentStep === 3 && (
+          {quoteMode === 'guided' && currentStep === 3 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 
@@ -3314,6 +3423,58 @@ export default function CarWashWizard({
                 </div>
               )}
               
+              {/* Grid Connection Status - HIGH CONTRAST */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-gray-500/40 shadow-xl shadow-gray-500/10">
+                <h4 className="text-2xl font-black text-white mb-5 flex items-center gap-3">
+                  <div className="p-2 bg-gray-500/20 rounded-xl">
+                    <Zap className="w-7 h-7 text-gray-400" />
+                  </div>
+                  Grid Connection Status
+                </h4>
+                <p className="text-base text-gray-300 mb-5">
+                  How is your car wash connected to the power grid?
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { id: 'grid-tied' as const, label: 'Grid-Tied', desc: 'Connected to utility', icon: '🔌' },
+                    { id: 'grid-backup-only' as const, label: 'Limited Grid', desc: 'Unreliable connection', icon: '⚡' },
+                    { id: 'off-grid' as const, label: 'Off-Grid', desc: 'No utility connection', icon: '🏝️' },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => setGridConnection(prev => ({ ...prev, status: option.id }))}
+                      className={`p-5 rounded-2xl text-center transition-all transform hover:scale-[1.02] ${
+                        gridConnection.status === option.id 
+                          ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border-3 border-purple-400 ring-4 ring-purple-400/30' 
+                          : 'bg-gray-800/50 border-2 border-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">{option.icon}</div>
+                      <p className="text-lg font-black text-white">{option.label}</p>
+                      <p className="text-sm text-gray-400 font-medium">{option.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Contextual info based on selection */}
+                {gridConnection.status !== 'grid-tied' && (
+                  <div className={`mt-4 p-4 rounded-xl text-sm ${
+                    gridConnection.status === 'off-grid'
+                      ? 'bg-amber-500/20 border border-amber-400/30 text-amber-200'
+                      : 'bg-blue-500/20 border border-blue-400/30 text-blue-200'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Info className="w-5 h-5 flex-shrink-0" />
+                      <span>
+                        {gridConnection.status === 'off-grid'
+                          ? 'Off-grid systems require larger battery capacity and backup generation for reliability.'
+                          : 'Limited grid connection means we\'ll size your system for greater self-reliance.'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               {/* Financing Preference - HIGH CONTRAST */}
               <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
                 <h4 className="text-2xl font-black text-white mb-5 flex items-center gap-3">
@@ -3363,7 +3524,7 @@ export default function CarWashWizard({
           )}
           
           {/* Step 4: Review Quote */}
-          {currentStep === 4 && (
+          {quoteMode === 'guided' && currentStep === 4 && (
             <div className="space-y-6">
               {/* Step Help */}
               <WizardStepHelp 

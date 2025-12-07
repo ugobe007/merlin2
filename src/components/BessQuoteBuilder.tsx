@@ -101,6 +101,33 @@ export default function BessQuoteBuilder() {
   console.log('🔍 Modal states:', { showTemplates, showAnalytics, showBESSAnalytics, showFinancing });
   console.log('🔍 showBESSAnalytics value:', showBESSAnalytics);
 
+  // Check for URL parameters to open Advanced Quote Builder directly
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const advancedParam = urlParams.get('advanced');
+    const verticalParam = urlParams.get('vertical');
+    const viewParam = urlParams.get('view'); // New: specify initial view
+    
+    console.log('🔍 BessQuoteBuilder URL check:', { advancedParam, verticalParam, viewParam, url: window.location.href });
+    
+    if (advancedParam === 'true') {
+      console.log('🚀 Opening Advanced Quote Builder from URL parameter');
+      // Set the use case if coming from a vertical
+      if (verticalParam) {
+        console.log('🏨 Setting use case to:', verticalParam);
+        setUseCase(verticalParam);
+      }
+      // Set the initial view if specified (e.g., 'custom-config')
+      if (viewParam === 'custom-config' || viewParam === 'interactive-dashboard' || viewParam === 'professional-model') {
+        console.log('📊 Setting initial view to:', viewParam);
+        setAdvancedQuoteBuilderInitialView(viewParam as 'landing' | 'custom-config');
+      }
+      setShowAdvancedQuoteBuilderModal(true);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     // Simple routing check - look for /profile/ in URL
     const path = window.location.pathname;
