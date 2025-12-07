@@ -372,7 +372,7 @@ const MainQuoteForm: React.FC<MainQuoteFormProps> = ({
           <div className="space-y-3">
             <button
               onClick={() => {
-                console.log('📊 Enhanced Analytics button clicked!');
+                if (import.meta.env.DEV) { console.log('📊 Enhanced Analytics button clicked!'); }
                 openModal('showEnhancedAnalytics');
               }}
               className="w-full p-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -387,7 +387,7 @@ const MainQuoteForm: React.FC<MainQuoteFormProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🚀 BESS Analytics button clicked!');
+                if (import.meta.env.DEV) { console.log('🚀 BESS Analytics button clicked!'); }
                 openModal('bessAnalytics');
               }}
               onMouseDown={(e) => {
@@ -472,7 +472,7 @@ const MainQuoteForm: React.FC<MainQuoteFormProps> = ({
       <UseCaseROI
         onLoadTemplate={(useCase) => {
           // Handle loading use case template
-          console.log('Loading use case template:', useCase);
+          if (import.meta.env.DEV) { console.log('Loading use case template:', useCase); }
         }}
         autoRotate={true}
         rotationInterval={10000}

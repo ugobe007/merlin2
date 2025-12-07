@@ -60,7 +60,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
     setConversationHistory(newConversationHistory);
 
     try {
-      console.log('🤖 Sending message to OpenAI:', inputMessage);
+      if (import.meta.env.DEV) { console.log('🤖 Sending message to OpenAI:', inputMessage); }
       
       // Convert conversation history to OpenAI format
       const openAIHistory = openAIService.formatConversationHistory(newConversationHistory.slice(-10)); // Keep last 10 messages for context
@@ -68,7 +68,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
       // Get AI response from OpenAI service
       const aiResponse = await openAIService.sendMessage(inputMessage, openAIHistory);
       
-      console.log('✅ Received OpenAI response:', aiResponse.substring(0, 100) + '...');
+      if (import.meta.env.DEV) { console.log('✅ Received OpenAI response:', aiResponse.substring(0, 100) + '...'); }
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),

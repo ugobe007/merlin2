@@ -177,8 +177,8 @@ interface ModalManagerProps {
 }
 
 export default function ModalManager(props: ModalManagerProps) {
-  console.log('🔧 ModalManager received showBESSAnalytics:', props.showBESSAnalytics);
-  console.log('🔧 ModalManager received ALL PROPS:', props);
+  if (import.meta.env.DEV) { console.log('🔧 ModalManager received showBESSAnalytics:', props.showBESSAnalytics); }
+  if (import.meta.env.DEV) { console.log('🔧 ModalManager received ALL PROPS:', props); }
   
   const {
     // Modal states
@@ -300,10 +300,10 @@ export default function ModalManager(props: ModalManagerProps) {
         }}
         onOpenAdvanced={() => {
           // Close wizard and open Advanced Quote Builder in custom-config mode
-          console.log('🔥 ModalManager: onOpenAdvanced called');
+          if (import.meta.env.DEV) { console.log('🔥 ModalManager: onOpenAdvanced called'); }
           setShowSmartWizard(false);
           if (setShowAdvancedQuoteBuilderModal) {
-            console.log('🔥 Setting showAdvancedQuoteBuilderModal to true');
+            if (import.meta.env.DEV) { console.log('🔥 Setting showAdvancedQuoteBuilderModal to true'); }
             if (setAdvancedQuoteBuilderInitialView) {
               setAdvancedQuoteBuilderInitialView('custom-config');
             }

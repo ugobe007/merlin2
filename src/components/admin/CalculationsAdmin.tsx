@@ -438,7 +438,7 @@ const CalculationsAdmin: React.FC = () => {
           <button
             key={section.key}
             onClick={() => {
-              console.log('Tab clicked:', section.key);
+              if (import.meta.env.DEV) { console.log('Tab clicked:', section.key); }
               setActiveSection(section.key as typeof activeSection);
             }}
             className={`px-6 py-3 rounded-lg font-semibold transition-all cursor-pointer ${

@@ -67,7 +67,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         if (discount !== null) setDiscountRate(projectData.discountRate || discount);
         if (oAndM !== null) setOperatingCostsPercent(oAndM);
         setConstantsLoaded(true);
-        console.log('[AdvancedAnalytics] Loaded constants from database:', { degradation, discount, oAndM });
+        if (import.meta.env.DEV) { console.log('[AdvancedAnalytics] Loaded constants from database:', { degradation, discount, oAndM }); }
       } catch (error) {
         console.warn('[AdvancedAnalytics] Using fallback constants:', error);
         setConstantsLoaded(true);
