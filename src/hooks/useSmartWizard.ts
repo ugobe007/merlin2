@@ -176,7 +176,7 @@ export function useSmartWizard(): UseSmartWizardReturn {
   // =========================================================================
 
   const selectUseCase = useCallback(async (slug: string) => {
-    console.log('[useSmartWizard] 🎯 Selecting use case:', slug);
+    if (import.meta.env.DEV) { console.log('[useSmartWizard] 🎯 Selecting use case:', slug); }
     setState(prev => ({
       ...prev,
       config: {
@@ -187,9 +187,9 @@ export function useSmartWizard(): UseSmartWizardReturn {
     }));
 
     try {
-      console.log('[useSmartWizard] 📡 Fetching use case details from database...');
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] 📡 Fetching use case details from database...'); }
       const details = await useCaseService.getUseCaseBySlug(slug);
-      console.log('[useSmartWizard] ✅ Use case details loaded:', details?.name);
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] ✅ Use case details loaded:', details?.name); }
       
       if (!details) {
         throw new Error(`Use case "${slug}" not found in database`);
@@ -285,7 +285,7 @@ export function useSmartWizard(): UseSmartWizardReturn {
       return;
     }
 
-    console.log('[useSmartWizard] 🔍 Calculating power gap analysis...');
+    if (import.meta.env.DEV) { console.log('[useSmartWizard] 🔍 Calculating power gap analysis...'); }
     console.log('[useSmartWizard] Current state:', {
       useCaseSlug: state.config.useCaseSlug,
       answers: state.config.useCaseAnswers,
@@ -299,17 +299,17 @@ export function useSmartWizard(): UseSmartWizardReturn {
 
     try {
       // First calculate baseline if not already done
-      console.log('[useSmartWizard] Calculating baseline first...');
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] Calculating baseline first...'); }
       const baseline = await calculateDatabaseBaseline(
         state.config.useCaseSlug,
         1,
         state.config.useCaseAnswers
       );
       
-      console.log('[useSmartWizard] Baseline result:', baseline);
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] Baseline result:', baseline); }
 
       // Now calculate the power gap
-      console.log('[useSmartWizard] Now calculating power gap...');
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] Now calculating power gap...'); }
       const gapAnalysis = await calculateGap(
         state.config.useCaseSlug,
         state.config.useCaseAnswers,
@@ -509,7 +509,7 @@ export function useSmartWizard(): UseSmartWizardReturn {
   }, [state.config]);
 
   const reset = useCallback(() => {
-    console.log('[useSmartWizard] 🔄 Resetting wizard to initial state');
+    if (import.meta.env.DEV) { console.log('[useSmartWizard] 🔄 Resetting wizard to initial state'); }
     setState(INITIAL_STATE);
   }, []);
 
@@ -518,16 +518,16 @@ export function useSmartWizard(): UseSmartWizardReturn {
   // =========================================================================
 
   const initialize = useCallback(async () => {
-    console.log('[useSmartWizard] 🚀 Starting initialization...');
+    if (import.meta.env.DEV) { console.log('[useSmartWizard] 🚀 Starting initialization...'); }
     setState(prev => ({
       ...prev,
       ui: { ...prev.ui, isLoading: true }
     }));
 
     try {
-      console.log('[useSmartWizard] 📡 Fetching use cases...');
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] 📡 Fetching use cases...'); }
       const useCases = await useCaseService.getAllUseCases();
-      console.log('[useSmartWizard] ✅ Received use cases:', useCases.length);
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] ✅ Received use cases:', useCases.length); }
       
       if (useCases.length === 0) {
         throw new Error('No use cases available. Please check database connection.');
@@ -542,7 +542,7 @@ export function useSmartWizard(): UseSmartWizardReturn {
           isLoading: false
         }
       }));
-      console.log('[useSmartWizard] ✅ Initialization complete');
+      if (import.meta.env.DEV) { console.log('[useSmartWizard] ✅ Initialization complete'); }
     } catch (error) {
       console.error('[useSmartWizard] ❌ Initialization failed:', error);
       setState(prev => ({

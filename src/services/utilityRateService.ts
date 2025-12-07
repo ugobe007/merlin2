@@ -460,7 +460,7 @@ export async function getUtilityRatesByZip(zipCode: string): Promise<ZipCodeUtil
   // Check cache first
   const cached = rateCache.get(normalizedZip);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    console.log(`[UtilityRateService] Cache hit for ZIP ${normalizedZip}`);
+    if (import.meta.env.DEV) { console.log(`[UtilityRateService] Cache hit for ZIP ${normalizedZip}`); }
     return cached.data;
   }
   

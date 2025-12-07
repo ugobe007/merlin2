@@ -91,7 +91,7 @@ export async function getUseCaseWithCalculations(
   
   const { slug, facilitySize, location, customAnswers, solarEnabled, autonomyDays } = params;
   
-  console.log(`🔍 Fetching use case: ${slug}`);
+  if (import.meta.env.DEV) { console.log(`🔍 Fetching use case: ${slug}`); }
 
   try {
     // STEP 1: Check cache first (fastest path)
@@ -100,7 +100,7 @@ export async function getUseCaseWithCalculations(
     
     if (cached && cached.calculation_version === '2.1.0') {
       const executionTime = Date.now() - startTime;
-      console.log(`✅ Cache hit! (${executionTime}ms)`);
+      if (import.meta.env.DEV) { console.log(`✅ Cache hit! (${executionTime}ms)`); }
       
       return {
         ...cached.calculation_results,
@@ -110,7 +110,7 @@ export async function getUseCaseWithCalculations(
     }
 
     // STEP 2: Fetch template from database
-    console.log('📥 Fetching from database...');
+    if (import.meta.env.DEV) { console.log('📥 Fetching from database...'); }
     const { data: templateData, error: templateError } = await supabase
       .from('use_case_templates')
       .select('*')
@@ -168,7 +168,7 @@ export async function getUseCaseWithCalculations(
     }));
 
     // STEP 4: Run calculations
-    console.log('🧮 Running calculations...');
+    if (import.meta.env.DEV) { console.log('🧮 Running calculations...'); }
     
     // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
     const powerRatingMW = template.powerProfile.peakLoadKw / 1000;
@@ -195,7 +195,7 @@ export async function getUseCaseWithCalculations(
     // STEP 5: Add solar if enabled
     let solarCalculations = null;
     if (solarEnabled && template.solarCompatibility?.recommended) {
-      console.log('☀️  Calculating solar integration...');
+      if (import.meta.env.DEV) { console.log('☀️  Calculating solar integration...'); }
       
       solarCalculations = calculateSolarBESSSystem({
         dailyLoadkWh: (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
@@ -245,14 +245,14 @@ export async function getUseCaseWithCalculations(
     // STEP 7: Update usage stats
     await incrementTemplateUsage(templateData.id);
 
-    console.log(`✅ Complete! (${results.executionTimeMs}ms)`);
+    if (import.meta.env.DEV) { console.log(`✅ Complete! (${results.executionTimeMs}ms)`); }
     return results;
 
   } catch (error) {
     console.error('❌ Error in getUseCaseWithCalculations:', error);
     
     // Fallback to static templates
-    console.log('🔄 Falling back to static templates...');
+    if (import.meta.env.DEV) { console.log('🔄 Falling back to static templates...'); }
     return await fetchFromStaticTemplates(params);
   }
 }
@@ -326,7 +326,7 @@ async function saveToCalculationCache(
         expires_at: expiresAt.toISOString()
       });
 
-    console.log('💾 Results cached for 7 days');
+    if (import.meta.env.DEV) { console.log('💾 Results cached for 7 days'); }
   } catch (error) {
     console.error('Cache save error:', error);
     // Non-fatal - continue without caching
@@ -350,7 +350,7 @@ export async function clearExpiredCache(): Promise<number> {
     }
 
     const count = data?.length || 0;
-    console.log(`🗑️  Cleared ${count} expired cache entries`);
+    if (import.meta.env.DEV) { console.log(`🗑️  Cleared ${count} expired cache entries`); }
     return count;
   } catch (error) {
     console.error('Cache cleanup error:', error);
@@ -375,7 +375,7 @@ export async function clearAllCache(): Promise<number> {
     }
 
     const count = data?.length || 0;
-    console.log(`🗑️  Cleared ALL ${count} cache entries`);
+    if (import.meta.env.DEV) { console.log(`🗑️  Cleared ALL ${count} cache entries`); }
     return count;
   } catch (error) {
     console.error('Cache cleanup error:', error);
@@ -396,7 +396,7 @@ async function fetchFromStaticTemplates(
   const startTime = Date.now();
   const { slug, facilitySize, location, customAnswers, solarEnabled } = params;
 
-  console.log('📄 Using static templates fallback...');
+  if (import.meta.env.DEV) { console.log('📄 Using static templates fallback...'); }
 
   const staticTemplate = getUseCaseBySlug(slug);
   if (!staticTemplate) {

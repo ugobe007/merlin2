@@ -202,15 +202,15 @@ export async function getAIOptimization(
   input: AIOptimizationInput
 ): Promise<AIOptimizationResult> {
   try {
-    console.log('🤖 AI Optimization analyzing configuration...', input);
+    if (import.meta.env.DEV) { console.log('🤖 AI Optimization analyzing configuration...', input); }
 
     // STEP 1: Analyze use case context for intelligent recommendations
     const useCaseContext = analyzeUseCaseContext(input);
-    console.log('📊 Use case context:', useCaseContext);
+    if (import.meta.env.DEV) { console.log('📊 Use case context:', useCaseContext); }
 
     // STEP 2: Determine optimal renewable configuration based on context
     const renewableRecommendations = determineRenewableRecommendations(input, useCaseContext);
-    console.log('🌱 Renewable recommendations:', renewableRecommendations);
+    if (import.meta.env.DEV) { console.log('🌱 Renewable recommendations:', renewableRecommendations); }
 
     // STEP 3: Calculate metrics for current configuration
     const currentMetrics = await calculateFinancialMetrics({
@@ -222,7 +222,7 @@ export async function getAIOptimization(
       electricityRate: input.electricityRate || 0.15
     });
 
-    console.log('💰 Current config metrics:', currentMetrics);
+    if (import.meta.env.DEV) { console.log('💰 Current config metrics:', currentMetrics); }
 
     // STEP 4: Test alternative configurations for optimization opportunities
     // Always preserve/add renewables based on context recommendations
@@ -262,10 +262,10 @@ export async function getAIOptimization(
         location: input.location || 'California',
         electricityRate: input.electricityRate || 0.15
       });
-      console.log('🔄 Renewable improvement metrics:', renewableImprovementMetrics);
+      if (import.meta.env.DEV) { console.log('🔄 Renewable improvement metrics:', renewableImprovementMetrics); }
     }
 
-    console.log('📈 Alternative config metrics:', { longerDurationMetrics, largerSizeMetrics, renewableImprovementMetrics });
+    if (import.meta.env.DEV) { console.log('📈 Alternative config metrics:', { longerDurationMetrics, largerSizeMetrics, renewableImprovementMetrics }); }
 
     // Find best alternative (shortest payback or highest ROI)
     let bestAlternative = currentMetrics;
@@ -325,7 +325,7 @@ export async function getAIOptimization(
     const isOptimal = !improvement;
 
     if (isOptimal) {
-      console.log('✅ Configuration is already optimal!');
+      if (import.meta.env.DEV) { console.log('✅ Configuration is already optimal!'); }
       
       // Build benchmark comparison message with renewable context
       let benchmarkMessage = '';
@@ -376,7 +376,7 @@ export async function getAIOptimization(
       renewableJustification: renewableRecommendations.reasoning
     };
 
-    console.log('💡 AI Suggestion:', suggestion);
+    if (import.meta.env.DEV) { console.log('💡 AI Suggestion:', suggestion); }
 
     return {
       isOptimal: false,

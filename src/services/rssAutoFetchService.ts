@@ -176,7 +176,7 @@ async function fetchFromRSS(source: RSSSource): Promise<FetchedArticle[]> {
 export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
   const enabledSources = RSS_SOURCES.filter(source => source.enabled);
   
-  console.log(`📡 Fetching from ${enabledSources.length} RSS sources...`);
+  if (import.meta.env.DEV) { console.log(`📡 Fetching from ${enabledSources.length} RSS sources...`); }
   
   const results = await Promise.allSettled(
     enabledSources.map(source => fetchFromRSS(source))
@@ -187,7 +187,7 @@ export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') {
       allArticles.push(...result.value);
-      console.log(`✅ ${enabledSources[index].name}: ${result.value.length} articles`);
+      if (import.meta.env.DEV) { console.log(`✅ ${enabledSources[index].name}: ${result.value.length} articles`); }
     } else {
       console.error(`❌ ${enabledSources[index].name}: ${result.reason}`);
     }
@@ -196,7 +196,7 @@ export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
   // Sort by date (newest first)
   allArticles.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
   
-  console.log(`📊 Total articles fetched: ${allArticles.length}`);
+  if (import.meta.env.DEV) { console.log(`📊 Total articles fetched: ${allArticles.length}`); }
   
   return allArticles;
 }
@@ -223,11 +223,11 @@ function filterForPricingArticles(articles: FetchedArticle[]): FetchedArticle[] 
  * Also extracts data for AI/ML training database
  */
 export async function processRSSArticles(articles: FetchedArticle[]): Promise<void> {
-  console.log('🔍 Filtering articles for pricing information...');
+  if (import.meta.env.DEV) { console.log('🔍 Filtering articles for pricing information...'); }
   
   const pricingArticles = filterForPricingArticles(articles);
   
-  console.log(`📈 Found ${pricingArticles.length} articles with potential pricing info`);
+  if (import.meta.env.DEV) { console.log(`📈 Found ${pricingArticles.length} articles with potential pricing info`); }
   
   // Convert to format for AI database processing
   const aiArticles: AIRSSArticle[] = articles.map(article => ({
@@ -240,10 +240,10 @@ export async function processRSSArticles(articles: FetchedArticle[]): Promise<vo
   }));
   
   // Process for AI/ML database (pricing, config, trends)
-  console.log('🤖 Processing articles for AI/ML database...');
+  if (import.meta.env.DEV) { console.log('🤖 Processing articles for AI/ML database...'); }
   try {
     const aiResults = await processBatchForAI(aiArticles);
-    console.log(`✅ AI Database Update: ${aiResults.pricingDataPoints} pricing + ${aiResults.configDataPoints} configs + ${aiResults.trendDataPoints} trends`);
+    if (import.meta.env.DEV) { console.log(`✅ AI Database Update: ${aiResults.pricingDataPoints} pricing + ${aiResults.configDataPoints} configs + ${aiResults.trendDataPoints} trends`); }
   } catch (error) {
     console.error('❌ AI database processing failed:', error);
   }
@@ -263,7 +263,7 @@ export async function processRSSArticles(articles: FetchedArticle[]): Promise<vo
   const batchSize = 5;
   for (let i = 0; i < newsItems.length; i += batchSize) {
     const batch = newsItems.slice(i, i + batchSize);
-    console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(newsItems.length / batchSize)}...`);
+    if (import.meta.env.DEV) { console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(newsItems.length / batchSize)}...`); }
     
     try {
       await processNewsForPriceAlerts(batch);
@@ -274,7 +274,7 @@ export async function processRSSArticles(articles: FetchedArticle[]): Promise<vo
     }
   }
   
-  console.log('✅ RSS article processing complete');
+  if (import.meta.env.DEV) { console.log('✅ RSS article processing complete'); }
 }
 
 /**
@@ -286,7 +286,7 @@ export async function runRSSFetchCycle(): Promise<{
   errors: number;
 }> {
   try {
-    console.log('🚀 Starting RSS fetch cycle...');
+    if (import.meta.env.DEV) { console.log('🚀 Starting RSS fetch cycle...'); }
     
     const articles = await fetchAllRSSFeeds();
     
@@ -308,7 +308,7 @@ export async function runRSSFetchCycle(): Promise<{
  * @param intervalHours - How often to fetch (default: 6 hours)
  */
 export function scheduleRSSFetching(intervalHours: number = 6): () => void {
-  console.log(`⏰ Scheduling RSS fetching every ${intervalHours} hours`);
+  if (import.meta.env.DEV) { console.log(`⏰ Scheduling RSS fetching every ${intervalHours} hours`); }
   
   // Run immediately on startup
   runRSSFetchCycle().catch(error => {
@@ -325,7 +325,7 @@ export function scheduleRSSFetching(intervalHours: number = 6): () => void {
   
   // Return cleanup function
   return () => {
-    console.log('🛑 Stopping RSS fetch scheduling');
+    if (import.meta.env.DEV) { console.log('🛑 Stopping RSS fetch scheduling'); }
     clearInterval(intervalId);
   };
 }
@@ -371,6 +371,6 @@ export function toggleRSSSource(sourceName: string, enabled: boolean): void {
   const source = RSS_SOURCES.find(s => s.name === sourceName);
   if (source) {
     source.enabled = enabled;
-    console.log(`${enabled ? '✅ Enabled' : '⏸️  Disabled'} RSS source: ${sourceName}`);
+    if (import.meta.env.DEV) { console.log(`${enabled ? '✅ Enabled' : '⏸️  Disabled'} RSS source: ${sourceName}`); }
   }
 }

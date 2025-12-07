@@ -77,7 +77,7 @@ function linearRegression(data: { x: number; y: number }[]): { slope: number; in
  * Analyze price trends from collected data
  */
 async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
-  console.log('📊 Analyzing price trends...');
+  if (import.meta.env.DEV) { console.log('📊 Analyzing price trends...'); }
   const trends: PriceTrendAnalysis[] = [];
 
   try {
@@ -94,7 +94,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
     }
 
     if (!pricingData || pricingData.length === 0) {
-      console.log('No pricing data available for analysis');
+      if (import.meta.env.DEV) { console.log('No pricing data available for analysis'); }
       return trends;
     }
 
@@ -177,7 +177,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
       });
     }
 
-    console.log(`✅ Analyzed ${trends.length} price trends`);
+    if (import.meta.env.DEV) { console.log(`✅ Analyzed ${trends.length} price trends`); }
     return trends;
 
   } catch (error) {
@@ -190,7 +190,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
  * Generate market insights from collected trends
  */
 async function generateMarketInsights(): Promise<MarketInsight[]> {
-  console.log('🔍 Generating market insights...');
+  if (import.meta.env.DEV) { console.log('🔍 Generating market insights...'); }
   const insights: MarketInsight[] = [];
 
   try {
@@ -208,7 +208,7 @@ async function generateMarketInsights(): Promise<MarketInsight[]> {
     }
 
     if (!trendData || trendData.length === 0) {
-      console.log('No trend data available for analysis');
+      if (import.meta.env.DEV) { console.log('No trend data available for analysis'); }
       return insights;
     }
 
@@ -281,7 +281,7 @@ async function generateMarketInsights(): Promise<MarketInsight[]> {
       });
     }
 
-    console.log(`✅ Generated ${insights.length} market insights`);
+    if (import.meta.env.DEV) { console.log(`✅ Generated ${insights.length} market insights`); }
     return insights;
 
   } catch (error) {
@@ -333,7 +333,7 @@ async function storeMLResults(results: MLProcessingResult): Promise<void> {
       })
       .eq('processed_for_ml', false);
 
-    console.log('✅ ML results stored in database');
+    if (import.meta.env.DEV) { console.log('✅ ML results stored in database'); }
   } catch (error) {
     console.error('Failed to store ML results:', error);
   }
@@ -343,7 +343,7 @@ async function storeMLResults(results: MLProcessingResult): Promise<void> {
  * Main ML processing function - run periodically after data collection
  */
 export async function runMLProcessing(): Promise<MLProcessingResult> {
-  console.log('🤖 Starting ML processing...');
+  if (import.meta.env.DEV) { console.log('🤖 Starting ML processing...'); }
   const startTime = Date.now();
 
   try {
@@ -354,7 +354,7 @@ export async function runMLProcessing(): Promise<MLProcessingResult> {
       .eq('processed_for_ml', false);
 
     if (!count || count === 0) {
-      console.log('No new data to process');
+      if (import.meta.env.DEV) { console.log('No new data to process'); }
       return {
         priceTrends: [],
         marketInsights: [],
@@ -363,7 +363,7 @@ export async function runMLProcessing(): Promise<MLProcessingResult> {
       };
     }
 
-    console.log(`📊 Processing ${count} unprocessed records...`);
+    if (import.meta.env.DEV) { console.log(`📊 Processing ${count} unprocessed records...`); }
 
     // Run analyses
     const [priceTrends, marketInsights] = await Promise.all([
@@ -393,9 +393,9 @@ export async function runMLProcessing(): Promise<MLProcessingResult> {
       status: 'success'
     });
 
-    console.log(`✅ ML processing complete in ${processingTime.toFixed(2)}s`);
-    console.log(`   📈 ${priceTrends.length} price trends analyzed`);
-    console.log(`   💡 ${marketInsights.length} market insights generated`);
+    if (import.meta.env.DEV) { console.log(`✅ ML processing complete in ${processingTime.toFixed(2)}s`); }
+    if (import.meta.env.DEV) { console.log(`   📈 ${priceTrends.length} price trends analyzed`); }
+    if (import.meta.env.DEV) { console.log(`   💡 ${marketInsights.length} market insights generated`); }
 
     return results;
 
@@ -487,17 +487,17 @@ export async function getLatestMLInsights(): Promise<{
  * Schedule ML processing to run after data collection
  */
 export function scheduleMLProcessing(): void {
-  console.log('🤖 ML processing scheduler initialized');
+  if (import.meta.env.DEV) { console.log('🤖 ML processing scheduler initialized'); }
   
   // Run ML processing every 6 hours (after RSS fetching typically completes)
   setInterval(async () => {
-    console.log('⏰ Scheduled ML processing starting...');
+    if (import.meta.env.DEV) { console.log('⏰ Scheduled ML processing starting...'); }
     await runMLProcessing();
   }, 6 * 60 * 60 * 1000);
   
   // Run initial processing after a short delay
   setTimeout(async () => {
-    console.log('🚀 Initial ML processing...');
+    if (import.meta.env.DEV) { console.log('🚀 Initial ML processing...'); }
     await runMLProcessing();
   }, 30000); // 30 seconds after app startup
 }

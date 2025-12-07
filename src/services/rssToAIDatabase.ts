@@ -322,7 +322,7 @@ export async function storePricingData(
       }
     }
     
-    console.log(`✅ Stored ${pricingData.length} pricing data points`);
+    if (import.meta.env.DEV) { console.log(`✅ Stored ${pricingData.length} pricing data points`); }
   } catch (error) {
     console.error('Failed to store pricing data:', error);
   }
@@ -366,7 +366,7 @@ export async function storeConfigData(
       }
     }
     
-    console.log(`✅ Stored ${configData.length} configuration data points`);
+    if (import.meta.env.DEV) { console.log(`✅ Stored ${configData.length} configuration data points`); }
   } catch (error) {
     console.error('Failed to store config data:', error);
   }
@@ -411,7 +411,7 @@ export async function storeMarketTrends(
       }
     }
     
-    console.log(`✅ Stored ${trends.length} market trends`);
+    if (import.meta.env.DEV) { console.log(`✅ Stored ${trends.length} market trends`); }
   } catch (error) {
     console.error('Failed to store market trends:', error);
   }
@@ -425,7 +425,7 @@ export async function processArticleForAI(article: RSSArticle): Promise<{
   configData: number;
   trends: number;
 }> {
-  console.log(`📰 Processing: ${article.title}`);
+  if (import.meta.env.DEV) { console.log(`📰 Processing: ${article.title}`); }
   
   // Generate unique article ID
   const articleId = `${article.source}_${article.pubDate.getTime()}`;
@@ -435,9 +435,9 @@ export async function processArticleForAI(article: RSSArticle): Promise<{
   const configData = extractConfigData(article);
   const trends = extractMarketTrends(article);
   
-  console.log(`   💰 Found ${pricingData.length} pricing points`);
-  console.log(`   ⚙️  Found ${configData.length} config specs`);
-  console.log(`   📈 Found ${trends.length} market trends`);
+  if (import.meta.env.DEV) { console.log(`   💰 Found ${pricingData.length} pricing points`); }
+  if (import.meta.env.DEV) { console.log(`   ⚙️  Found ${configData.length} config specs`); }
+  if (import.meta.env.DEV) { console.log(`   📈 Found ${trends.length} market trends`); }
   
   // Store in database
   if (pricingData.length > 0) {
@@ -468,7 +468,7 @@ export async function processBatchForAI(articles: RSSArticle[]): Promise<{
   configDataPoints: number;
   trendDataPoints: number;
 }> {
-  console.log(`🚀 Processing ${articles.length} articles for AI database...`);
+  if (import.meta.env.DEV) { console.log(`🚀 Processing ${articles.length} articles for AI database...`); }
   
   let totalPricing = 0;
   let totalConfig = 0;
@@ -488,8 +488,8 @@ export async function processBatchForAI(articles: RSSArticle[]): Promise<{
     }
   }
   
-  console.log('✅ Batch processing complete!');
-  console.log(`   📊 Total: ${totalPricing} pricing, ${totalConfig} configs, ${totalTrends} trends`);
+  if (import.meta.env.DEV) { console.log('✅ Batch processing complete!'); }
+  if (import.meta.env.DEV) { console.log(`   📊 Total: ${totalPricing} pricing, ${totalConfig} configs, ${totalTrends} trends`); }
   
   return {
     totalArticles: articles.length,

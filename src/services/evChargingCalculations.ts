@@ -1137,27 +1137,27 @@ export function validateWestLondonCalculation(): void {
   const costs = calculateEVHubCosts(WEST_LONDON_EV_HUB_CONFIG);
   const bess = calculateEVHubBESSSize(power);
   
-  console.log('='.repeat(60));
-  console.log('WEST LONDON EV HUB VALIDATION');
-  console.log('='.repeat(60));
-  console.log('Configuration:');
-  console.log('  100 × 7 kW L2 = 700 kW');
-  console.log('  20 × 150 kW DCFC = 3,000 kW');
-  console.log('  16 × 350 kW HPC = 5,600 kW');
-  console.log('');
-  console.log('Power Calculation:');
-  console.log(`  Total Power: ${power.totalPowerKW.toLocaleString()} kW (${power.totalPowerMW.toFixed(1)} MW)`);
-  console.log(`  Peak Demand (70%): ${power.peakDemandKW.toLocaleString()} kW (${power.peakDemandMW.toFixed(1)} MW)`);
-  console.log('');
-  console.log('Quote Reference (3 MW BESS):');
-  console.log(`  Our BESS Recommendation: ${bess.recommendedPowerMW.toFixed(1)} MW / ${bess.recommendedEnergyMWh.toFixed(1)} MWh`);
-  console.log(`  Quote BESS: 3 MW / 10 MWh (actual spec from quote)`);
-  console.log('');
-  console.log('Cost Estimation (USD):');
-  console.log(`  Hardware: $${costs.hardwareCostUSD.toLocaleString()}`);
-  console.log(`  Installation: $${costs.installationCostUSD.toLocaleString()}`);
-  console.log(`  Total: $${costs.totalCostUSD.toLocaleString()}`);
-  console.log('='.repeat(60));
+  if (import.meta.env.DEV) { console.log('='.repeat(60)); }
+  if (import.meta.env.DEV) { console.log('WEST LONDON EV HUB VALIDATION'); }
+  if (import.meta.env.DEV) { console.log('='.repeat(60)); }
+  if (import.meta.env.DEV) { console.log('Configuration:'); }
+  if (import.meta.env.DEV) { console.log('  100 × 7 kW L2 = 700 kW'); }
+  if (import.meta.env.DEV) { console.log('  20 × 150 kW DCFC = 3,000 kW'); }
+  if (import.meta.env.DEV) { console.log('  16 × 350 kW HPC = 5,600 kW'); }
+  if (import.meta.env.DEV) { console.log(''); }
+  if (import.meta.env.DEV) { console.log('Power Calculation:'); }
+  if (import.meta.env.DEV) { console.log(`  Total Power: ${power.totalPowerKW.toLocaleString()} kW (${power.totalPowerMW.toFixed(1)} MW)`); }
+  if (import.meta.env.DEV) { console.log(`  Peak Demand (70%): ${power.peakDemandKW.toLocaleString()} kW (${power.peakDemandMW.toFixed(1)} MW)`); }
+  if (import.meta.env.DEV) { console.log(''); }
+  if (import.meta.env.DEV) { console.log('Quote Reference (3 MW BESS):'); }
+  if (import.meta.env.DEV) { console.log(`  Our BESS Recommendation: ${bess.recommendedPowerMW.toFixed(1)} MW / ${bess.recommendedEnergyMWh.toFixed(1)} MWh`); }
+  if (import.meta.env.DEV) { console.log(`  Quote BESS: 3 MW / 10 MWh (actual spec from quote)`); }
+  if (import.meta.env.DEV) { console.log(''); }
+  if (import.meta.env.DEV) { console.log('Cost Estimation (USD):'); }
+  if (import.meta.env.DEV) { console.log(`  Hardware: $${costs.hardwareCostUSD.toLocaleString()}`); }
+  if (import.meta.env.DEV) { console.log(`  Installation: $${costs.installationCostUSD.toLocaleString()}`); }
+  if (import.meta.env.DEV) { console.log(`  Total: $${costs.totalCostUSD.toLocaleString()}`); }
+  if (import.meta.env.DEV) { console.log('='.repeat(60)); }
 }
 
 // =============================================================================

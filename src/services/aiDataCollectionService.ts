@@ -94,7 +94,7 @@ export interface ConfigurationBestPractice {
  * Fetch latest battery pricing data from multiple sources
  */
 export async function collectBatteryPricing(): Promise<BatteryPricingData[]> {
-  console.log('🔄 [AI Data Collection] Fetching battery pricing data...');
+  if (import.meta.env.DEV) { console.log('🔄 [AI Data Collection] Fetching battery pricing data...'); }
   
   // In production, this would fetch from:
   // - BloombergNEF API
@@ -141,7 +141,7 @@ export async function collectBatteryPricing(): Promise<BatteryPricingData[]> {
     if (error) {
       console.error('Error storing pricing data:', error);
     } else {
-      console.log('✅ Battery pricing data updated');
+      if (import.meta.env.DEV) { console.log('✅ Battery pricing data updated'); }
     }
   } catch (err) {
     console.error('Database error:', err);
@@ -154,7 +154,7 @@ export async function collectBatteryPricing(): Promise<BatteryPricingData[]> {
  * Fetch latest product specifications
  */
 export async function collectProductData(): Promise<ProductData[]> {
-  console.log('🔄 [AI Data Collection] Fetching product data...');
+  if (import.meta.env.DEV) { console.log('🔄 [AI Data Collection] Fetching product data...'); }
   
   // In production, scrape/API from:
   // - Tesla Energy
@@ -204,7 +204,7 @@ export async function collectProductData(): Promise<ProductData[]> {
     if (error) {
       console.error('Error storing product data:', error);
     } else {
-      console.log('✅ Product data updated');
+      if (import.meta.env.DEV) { console.log('✅ Product data updated'); }
     }
   } catch (err) {
     console.error('Database error:', err);
@@ -217,7 +217,7 @@ export async function collectProductData(): Promise<ProductData[]> {
  * Fetch latest financing options and rates
  */
 export async function collectFinancingData(): Promise<FinancingOption[]> {
-  console.log('🔄 [AI Data Collection] Fetching financing data...');
+  if (import.meta.env.DEV) { console.log('🔄 [AI Data Collection] Fetching financing data...'); }
   
   // In production, API from:
   // - Generate Capital
@@ -261,7 +261,7 @@ export async function collectFinancingData(): Promise<FinancingOption[]> {
     if (error) {
       console.error('Error storing financing data:', error);
     } else {
-      console.log('✅ Financing data updated');
+      if (import.meta.env.DEV) { console.log('✅ Financing data updated'); }
     }
   } catch (err) {
     console.error('Database error:', err);
@@ -274,7 +274,7 @@ export async function collectFinancingData(): Promise<FinancingOption[]> {
  * Fetch latest industry news
  */
 export async function collectIndustryNews(): Promise<IndustryNews[]> {
-  console.log('🔄 [AI Data Collection] Fetching industry news...');
+  if (import.meta.env.DEV) { console.log('🔄 [AI Data Collection] Fetching industry news...'); }
   
   // In production, fetch from:
   // - Energy Storage News API
@@ -322,7 +322,7 @@ export async function collectIndustryNews(): Promise<IndustryNews[]> {
     if (error) {
       console.error('Error storing news data:', error);
     } else {
-      console.log('✅ Industry news updated');
+      if (import.meta.env.DEV) { console.log('✅ Industry news updated'); }
     }
   } catch (err) {
     console.error('Database error:', err);
@@ -335,7 +335,7 @@ export async function collectIndustryNews(): Promise<IndustryNews[]> {
  * Fetch latest incentive programs
  */
 export async function collectIncentiveData(): Promise<IncentiveProgram[]> {
-  console.log('🔄 [AI Data Collection] Fetching incentive data...');
+  if (import.meta.env.DEV) { console.log('🔄 [AI Data Collection] Fetching incentive data...'); }
   
   // In production, scrape/API from:
   // - DSIRE database (NC Clean Energy)
@@ -388,7 +388,7 @@ export async function collectIncentiveData(): Promise<IncentiveProgram[]> {
     if (error) {
       console.error('Error storing incentive data:', error);
     } else {
-      console.log('✅ Incentive data updated');
+      if (import.meta.env.DEV) { console.log('✅ Incentive data updated'); }
     }
   } catch (err) {
     console.error('Database error:', err);
@@ -401,7 +401,7 @@ export async function collectIncentiveData(): Promise<IncentiveProgram[]> {
  * Run daily data collection - updates all data sources
  */
 export async function runDailyDataCollection(): Promise<void> {
-  console.log('🤖 [AI Data Collection] Starting daily update...');
+  if (import.meta.env.DEV) { console.log('🤖 [AI Data Collection] Starting daily update...'); }
   const startTime = Date.now();
   
   try {
@@ -418,14 +418,14 @@ export async function runDailyDataCollection(): Promise<void> {
     results.forEach((result, index) => {
       const sources = ['pricing', 'products', 'financing', 'news', 'incentives'];
       if (result.status === 'fulfilled') {
-        console.log(`✅ ${sources[index]}: ${result.value.length} items collected`);
+        if (import.meta.env.DEV) { console.log(`✅ ${sources[index]}: ${result.value.length} items collected`); }
       } else {
         console.error(`❌ ${sources[index]} failed:`, result.reason);
       }
     });
     
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ [AI Data Collection] Daily update complete in ${duration}s`);
+    if (import.meta.env.DEV) { console.log(`✅ [AI Data Collection] Daily update complete in ${duration}s`); }
     
     // Store collection metadata
     await supabase.from('data_collection_log').insert({
@@ -453,7 +453,7 @@ export async function runDailyDataCollection(): Promise<void> {
  * - Schedules daily updates
  */
 export function initializeAIDataCollection(): void {
-  console.log('🤖 [AI Data Collection] Service initialized');
+  if (import.meta.env.DEV) { console.log('🤖 [AI Data Collection] Service initialized'); }
   
   // Run initial collection
   runDailyDataCollection();
@@ -477,7 +477,7 @@ export function initializeAIDataCollection(): void {
     setInterval(runDailyDataCollection, 24 * 60 * 60 * 1000);
   }, msUntil2AM);
   
-  console.log(`📅 Next collection scheduled for ${next2AM.toLocaleString()}`);
+  if (import.meta.env.DEV) { console.log(`📅 Next collection scheduled for ${next2AM.toLocaleString()}`); }
 }
 
 /**

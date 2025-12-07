@@ -1068,7 +1068,7 @@ export class UseCaseService {
       
       // Invalidate related caches
       const slug = useCase.slug;
-      console.log(`🔄 Invalidating caches for use case: ${slug}`);
+      if (import.meta.env.DEV) { console.log(`🔄 Invalidating caches for use case: ${slug}`); }
       
       // Clear all baseline calculations for this use case (all scales and variations)
       baselineCache.clearPattern(`baseline:${slug}:`);
@@ -1076,7 +1076,7 @@ export class UseCaseService {
       // Clear use case data cache
       useCaseCache.delete(`useCase:${slug}`);
       
-      console.log(`✅ Updated configuration ${configId} and invalidated caches`);
+      if (import.meta.env.DEV) { console.log(`✅ Updated configuration ${configId} and invalidated caches`); }
       return true;
     } catch (error) {
       console.error('Error updating use case configuration:', error);

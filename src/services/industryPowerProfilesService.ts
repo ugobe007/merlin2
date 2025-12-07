@@ -279,5 +279,5 @@ export async function getIndustryUnits(
 export function clearProfilesCache(): void {
   profilesCache.clear();
   cacheLastUpdated = new Date(0);
-  console.log('🔄 Industry profiles cache cleared');
+  if (import.meta.env.DEV) { console.log('🔄 Industry profiles cache cleared'); }
 }
