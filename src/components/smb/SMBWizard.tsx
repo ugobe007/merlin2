@@ -27,10 +27,10 @@ import {
 
 // Services
 import { getIndustryProfile, type IndustryPowerProfile } from '@/services/industryPowerProfilesService';
-import { getBatteryPricing, getSolarPricing } from '@/services/unifiedPricingService';
-import { calculateFinancialMetrics } from '@/services/centralizedCalculations';
-import { getPricingConstants } from '@/services/calculationConstantsService';
 import { supabase } from '@/services/supabaseClient';
+
+// ✅ SSOT: Use QuoteEngine for all quote generation
+import { QuoteEngine } from '@/core/calculations';
 
 // ============================================
 // TYPES
@@ -200,8 +200,8 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
     }
   }, [industryProfile, wizardState.unitCount, wizardState.wantsSolar]);
 
-  // Calculate quote
-  const calculateQuote = async () => {
+  // Calculate quote using QuoteEngine (SSOT)
+  const generateQuote = async () => {
     if (!industryProfile) return;
     
     setCalculating(true);
@@ -209,39 +209,27 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
       const batteryKWh = wizardState.recommendedBatteryKWh;
       const solarKW = wizardState.recommendedSolarKW;
       
-      // Get pricing from database
-      const [batteryPricing, solarPricing, pricingConstants] = await Promise.all([
-        getBatteryPricing(batteryKWh / 1000 / 4, 4), // Convert to MW, assume 4hr duration
-        getSolarPricing(),
-        getPricingConstants(),
-      ]);
-      
-      const batteryCost = batteryKWh * batteryPricing.pricePerKWh;
-      const solarCost = solarKW * 1000 * solarPricing.pricePerWatt;
-      const installationCost = (batteryCost + solarCost) * pricingConstants.installationPercent;
-      const totalCost = batteryCost + solarCost + installationCost;
-      
-      // Calculate financials
-      const financials = await calculateFinancialMetrics({
-        storageSizeMW: batteryKWh / 1000 / 4,
+      // ✅ SSOT: Use QuoteEngine.generateQuote() for all quote calculations
+      const quoteResult = await QuoteEngine.generateQuote({
+        storageSizeMW: Math.max(0.1, batteryKWh / 1000 / 4), // Convert kWh to MW (assume 4hr duration)
         durationHours: 4,
         solarMW: solarKW / 1000,
         location: wizardState.location || 'United States',
         electricityRate: industryProfile.avg_electricity_rate,
-        equipmentCost: batteryCost + solarCost,
-        installationCost: installationCost,
+        useCase: industrySlug,
+        gridConnection: 'on-grid',
       });
       
       const result: QuoteResult = {
         batteryKWh,
-        batteryCost,
+        batteryCost: quoteResult.equipment.batteries.totalCost,
         solarKW,
-        solarCost,
-        totalCost,
-        netCost: financials.netCost,
-        annualSavings: financials.annualSavings,
-        paybackYears: financials.paybackYears,
-        roi10Year: financials.roi10Year,
+        solarCost: quoteResult.equipment.solar?.totalCost || 0,
+        totalCost: quoteResult.costs.totalProjectCost,
+        netCost: quoteResult.costs.netCost,
+        annualSavings: quoteResult.financials.annualSavings,
+        paybackYears: quoteResult.financials.paybackYears,
+        roi10Year: quoteResult.financials.roi10Year,
         co2ReductionTons: (solarKW * 1500 * 0.0004), // ~0.4 kg CO2/kWh avoided
       };
       
@@ -259,7 +247,7 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
     if (step < 4) {
       setStep(step + 1);
       if (step === 3) {
-        calculateQuote();
+        generateQuote();
       }
     }
   };
