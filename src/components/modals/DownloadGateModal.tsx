@@ -169,7 +169,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
         });
       } catch (dbErr) {
         // Table might not exist - that's OK
-        console.log('Lead table insert (may not exist):', dbErr);
+        if (import.meta.env.DEV) { console.log('Lead table insert (may not exist):', dbErr); }
       }
 
       setSuccess(true);

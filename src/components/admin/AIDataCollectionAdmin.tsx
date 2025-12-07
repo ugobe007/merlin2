@@ -128,7 +128,7 @@ export default function AIDataCollectionAdmin() {
     setIsFetchingRSS(true);
     try {
       const result = await runRSSFetchCycle();
-      console.log('RSS Fetch result:', result);
+      if (import.meta.env.DEV) { console.log('RSS Fetch result:', result); }
       // Check feed health
       const health = await checkRSSFeedHealth();
       setRssFeedStatus(health);

@@ -109,7 +109,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
 
       if (insertError) {
         // If table doesn't exist, just log success (we'll save locally)
-        console.log('Quote request (table may not exist):', insertError);
+        if (import.meta.env.DEV) { console.log('Quote request (table may not exist):', insertError); }
         
         // Save to localStorage as backup
         const existingRequests = JSON.parse(localStorage.getItem('merlin_quote_requests') || '[]');

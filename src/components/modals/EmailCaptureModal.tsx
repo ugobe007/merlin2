@@ -96,7 +96,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
 
           if (signInError) {
             // User exists but password doesn't match - this is OK, we'll just update the user record
-            console.log('User exists, proceeding with existing account');
+            if (import.meta.env.DEV) { console.log('User exists, proceeding with existing account'); }
             // Get user by email
             const { data: userData, error: userError } = await supabase
               .from('users')

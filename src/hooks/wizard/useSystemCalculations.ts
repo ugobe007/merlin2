@@ -103,7 +103,7 @@ export const useSystemCalculations = ({
       parseInt(data.numberOfDCFastChargers || data.dcFastChargers) || 0
     );
     
-    console.log('🔌 [useSystemCalculations] EV config from centralized calc:', result);
+    if (import.meta.env.DEV) { console.log('🔌 [useSystemCalculations] EV config from centralized calc:', result); }
     
     return {
       powerMW: result.powerMW,
@@ -127,7 +127,7 @@ export const useSystemCalculations = ({
         // ✅ PRIMARY: Use centralized power calculation for ALL use cases
         // This is the SINGLE SOURCE OF TRUTH for power calculations
         const centralizedResult = calculateUseCasePower(selectedTemplate, useCaseData);
-        console.log('⚡ [useSystemCalculations] Centralized power calculation:', centralizedResult);
+        if (import.meta.env.DEV) { console.log('⚡ [useSystemCalculations] Centralized power calculation:', centralizedResult); }
         
         // Special handling for EV charging (centralized calc is sufficient)
         if (selectedTemplate === 'ev-charging') {
@@ -140,14 +140,14 @@ export const useSystemCalculations = ({
           
           // Use shared database-driven baseline calculation
           const baseline = await calculateDatabaseBaseline(selectedTemplate, scale, useCaseData);
-          console.log('🎯 [useSystemCalculations] Database baseline:', baseline);
+          if (import.meta.env.DEV) { console.log('🎯 [useSystemCalculations] Database baseline:', baseline); }
           
           // Use the higher of centralized or database calculation
           // This ensures we don't undersize due to missing database entries
           const finalPowerMW = Math.max(centralizedResult.powerMW, baseline.powerMW);
           const finalDurationHrs = baseline.durationHrs || centralizedResult.durationHrs;
           
-          console.log(`📊 [useSystemCalculations] Final power: ${finalPowerMW} MW (centralized: ${centralizedResult.powerMW}, baseline: ${baseline.powerMW})`);
+          if (import.meta.env.DEV) { console.log(`📊 [useSystemCalculations] Final power: ${finalPowerMW} MW (centralized: ${centralizedResult.powerMW}, baseline: ${baseline.powerMW})`); }
           
           setStorageSizeMW(finalPowerMW);
           setDurationHours(finalDurationHrs);

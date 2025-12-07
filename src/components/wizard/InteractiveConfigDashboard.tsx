@@ -292,7 +292,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
           BATTERY_DEGRADATION_ANNUAL: degradation ?? DEFAULT_REVENUE_CONSTANTS.BATTERY_DEGRADATION_ANNUAL,
         });
         
-        console.log('[InteractiveConfigDashboard] Loaded revenue constants from database');
+        if (import.meta.env.DEV) { console.log('[InteractiveConfigDashboard] Loaded revenue constants from database'); }
       } catch (error) {
         console.warn('[InteractiveConfigDashboard] Using fallback revenue constants:', error);
       }
@@ -324,7 +324,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
   useEffect(() => {
     const calculateMetrics = async () => {
       // 🔥 USE CENTRALIZED CALCULATION SERVICE - Single source of truth from database
-      console.log('📊 InteractiveConfigDashboard calculating from database...');
+      if (import.meta.env.DEV) { console.log('📊 InteractiveConfigDashboard calculating from database...'); }
       
       const result = await calculateFinancialMetrics({
         storageSizeMW,

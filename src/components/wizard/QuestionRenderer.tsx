@@ -341,15 +341,15 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   };
 
   const handleApplySuggestion = () => {
-    console.log('🤖 [AI Helper] handleApplySuggestion called for question:', question.id);
+    if (import.meta.env.DEV) { console.log('🤖 [AI Helper] handleApplySuggestion called for question:', question.id); }
     const suggestion = getIntelligentSuggestion();
-    console.log('🤖 [AI Helper] Suggestion value:', suggestion);
+    if (import.meta.env.DEV) { console.log('🤖 [AI Helper] Suggestion value:', suggestion); }
     if (suggestion !== null) {
-      console.log('🤖 [AI Helper] Applying suggestion via onChange:', { questionId: question.id, value: suggestion });
+      if (import.meta.env.DEV) { console.log('🤖 [AI Helper] Applying suggestion via onChange:', { questionId: question.id, value: suggestion }); }
       onChange(question.id, suggestion);
       setShowAIHelper(false);
     } else {
-      console.log('❌ [AI Helper] No suggestion available for this question');
+      if (import.meta.env.DEV) { console.log('❌ [AI Helper] No suggestion available for this question'); }
     }
   };
 
