@@ -163,7 +163,7 @@ export interface QuestionnaireConfig {
 export interface CalculationResponse {
   success: boolean;
   baseline?: BaselineCalculationResult;
-  pricing?: any; // Future: Define pricing types in v3.0
+  pricing?: Record<string, number>; // Pricing breakdown by component
   error?: string;
   warnings?: string[];
 }
@@ -197,7 +197,7 @@ export type UseCaseRow = {
 };
 
 export interface UseCaseWithConfiguration extends UseCaseRow {
-  configurations?: any[]; // Future: Define configuration type in v3.0
+  configurations?: Array<{ scale: string; power_mw: number; duration_hours: number }>; // Scale configurations (small/medium/large)
   customQuestions?: CustomQuestion[];
 }
 
