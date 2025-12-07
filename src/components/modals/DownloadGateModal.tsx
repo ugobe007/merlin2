@@ -17,6 +17,7 @@ interface DownloadGateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProceedWithDownload: () => void;
+  onShowLogin?: () => void;
   downloadType: DownloadType;
   quoteData?: {
     storageSizeMW?: number;
@@ -36,6 +37,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
   isOpen,
   onClose,
   onProceedWithDownload,
+  onShowLogin,
   downloadType,
   quoteData
 }) => {
@@ -380,7 +382,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
           {!success && (
             <div className="border-t border-gray-100 px-6 py-3 bg-gray-50">
               <p className="text-xs text-center text-gray-500">
-                Already have an account? <a href="#" className="text-purple-600 font-medium hover:underline" onClick={(e) => { e.preventDefault(); /* TODO: open login modal */ }}>Sign in</a> for instant access.
+                Already have an account? <a href="#" className="text-purple-600 font-medium hover:underline" onClick={(e) => { e.preventDefault(); onClose(); onShowLogin?.(); }}>Sign in</a> for instant access.
               </p>
             </div>
           )}
