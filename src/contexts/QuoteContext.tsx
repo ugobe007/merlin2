@@ -22,8 +22,6 @@ import {
   validateQuote
 } from '../types/QuoteDocument';
 
-console.log('🔍 [TRACE] QuoteContext.tsx loaded');
-
 interface QuoteContextValue {
   // Current quote document
   quote: QuoteDocument;
@@ -86,18 +84,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
   const [history, setHistory] = useState<QuoteDocument[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Log all quote changes for debugging
-  useEffect(() => {
-    console.log('📋 [QuoteContext] Quote updated:', {
-      id: quote.id,
-      status: quote.status,
-      completion: quote.completionPercentage,
-      industry: quote.useCase.industry,
-      batteryPowerMW: quote.configuration.battery.powerMW,
-      totalSystemPowerMW: quote.configuration.totalSystemPowerMW,
-      version: quote.version
-    });
-  }, [quote]);
+  /**
 
   /**
    * Generic update function with audit trail
@@ -185,8 +172,6 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
         }
       });
 
-      console.log(`📝 [QuoteContext] Updated ${Object.keys(updates).join(', ')} - v${newQuote.version}`);
-
       return newQuote;
     });
   }, []);
@@ -226,7 +211,6 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
     setQuote(emptyQuote);
     setHistory([]);
     setHistoryIndex(-1);
-    console.log('🔄 [QuoteContext] Quote reset to empty state');
   }, []);
 
   /**
@@ -236,7 +220,6 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
     setQuote(newQuote);
     setHistory([]);
     setHistoryIndex(-1);
-    console.log('📥 [QuoteContext] Quote loaded:', newQuote.id);
   }, []);
 
   /**

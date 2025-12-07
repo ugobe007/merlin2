@@ -13,20 +13,14 @@ import App from './App.tsx'
 // console.log('🤖 Initializing AI Data Collection Service...');
 // initializeAIDataCollection();
 
-console.log('🚀 Starting Merlin BESS application...');
-
 try {
   const rootElement = document.getElementById('root');
   if (!rootElement) {
     throw new Error('Root element not found!');
   }
-  console.log('✅ Root element found, creating React root...');
   
   const root = createRoot(rootElement);
-  console.log('✅ React root created, rendering App...');
-  
   root.render(<App />);
-  console.log('✅ App rendered successfully!');
 } catch (error) {
   console.error('❌ FATAL ERROR during initialization:', error);
   document.body.innerHTML = `

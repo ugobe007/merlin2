@@ -14,10 +14,7 @@ import { QuoteProvider } from './contexts/QuoteContext';
 //   (window as any).testCalculations = testCalculations;
 // }
 
-console.log('🔍 [TRACE] App.tsx loaded');
-
 function App() {
-  console.log('🔍 [TRACE] App component rendering');
   // Check for admin access via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   const adminParam = urlParams.get('admin');
