@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle } from 'lucide-react';
 import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
 import { generateProfessionalModel, type ProfessionalModelResult } from '@/services/professionalFinancialModel';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { type FinancialCalculationResult } from '@/services/centralizedCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
@@ -205,8 +206,8 @@ export default function AdvancedQuoteBuilder({
                                      (gridConnection === 'ac-coupled' || gridConnection === 'dc-coupled') ? 'on-grid' :
                                      gridConnection as 'on-grid' | 'off-grid' | 'limited';
         
-        // ✅ SINGLE SOURCE OF TRUTH: calculateQuote() orchestrates ALL calculations
-        const quoteResult = await calculateQuote({
+        // ✅ SINGLE SOURCE OF TRUTH: QuoteEngine.generateQuote() orchestrates ALL calculations
+        const quoteResult = await QuoteEngine.generateQuote({
           storageSizeMW,
           durationHours,
           solarMW: solarMWFromConfig,
@@ -417,8 +418,8 @@ export default function AdvancedQuoteBuilder({
     
     try {
       if (format === 'word') {
-        // ✅ SINGLE SOURCE OF TRUTH: Use unifiedQuoteCalculator for ALL pricing/financials
-        const quoteResult = await calculateQuote({
+        // ✅ SINGLE SOURCE OF TRUTH: Use QuoteEngine for ALL pricing/financials
+        const quoteResult = await QuoteEngine.generateQuote({
           storageSizeMW,
           durationHours,
           solarMW: solarPVIncluded ? solarCapacityKW / 1000 : 0,
