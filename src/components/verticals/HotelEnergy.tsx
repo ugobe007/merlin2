@@ -19,7 +19,8 @@ import {
   Sun, TrendingDown, Shield, Sparkles, X, Battery, ChevronDown,
   Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
   calculateHotelPowerSimple, 
   HOTEL_CLASS_PROFILES_SIMPLE, 
@@ -301,7 +302,7 @@ export default function HotelEnergy() {
       const storageSizeMW = (peakKW * 0.4) / 1000;
       const durationHours = 4;
       
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: inputs.state,

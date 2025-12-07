@@ -15,7 +15,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, Mail, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, FileText, MapPin, Loader2 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
   calculateCarWashPowerSimple,
   CAR_WASH_POWER_PROFILES_SIMPLE,
@@ -365,7 +366,7 @@ export default function CarWashEnergy() {
       const durationHours = 2; // 2 hour duration for peak shaving
       
       // Use unified calculator with ZIP-based rates
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW), // Min 100 kW
         durationHours,
         location: inputs.state,

@@ -19,7 +19,8 @@ import {
   Sun, TrendingDown, Shield, Sparkles, Car, X, Battery, Bolt,
   Gauge, Clock, MapPin
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
   calculateEVChargingPowerSimple,
   EV_CHARGER_SPECS_SIMPLE 
@@ -281,7 +282,7 @@ export default function EVChargingEnergy() {
       const storageSizeMW = peakKW / 1000;
       const durationHours = 2;
       
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: inputs.state,
