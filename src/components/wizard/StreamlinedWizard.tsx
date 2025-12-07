@@ -26,7 +26,7 @@ import {
   CheckCircle, ArrowRight, ArrowLeft, Zap, Sun, Battery, DollarSign,
   ChevronDown, ExternalLink, Car, Hotel, Droplets, TrendingDown,
   Shield, Clock, Download, Phone, Leaf, Gauge, Plus, Minus,
-  AlertTriangle, Info, FileSpreadsheet, Mail, Wind, Fuel
+  AlertTriangle, Info, FileSpreadsheet, Mail, Wind, Fuel, Upload, Wand2
 } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
@@ -733,6 +733,50 @@ export default function StreamlinedWizard({
                   </div>
                 )}
               </div>
+              
+              {/* Path Fork: Upload vs Guided (show after location selected) */}
+              {wizardState.state && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-700 text-center mb-6">
+                    How would you like to proceed?
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    {/* Path A: Upload Specs */}
+                    {onOpenAdvanced && (
+                      <button
+                        onClick={onOpenAdvanced}
+                        className="group p-6 bg-gradient-to-br from-purple-500/20 to-blue-500/20 border-2 border-purple-300/50 rounded-2xl hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/10 transition-all text-left"
+                      >
+                        <Upload className="w-10 h-10 text-purple-500 mb-4 group-hover:scale-110 transition-transform" />
+                        <h4 className="text-xl font-bold text-gray-800 mb-2">Upload Your Specs</h4>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          Have utility bills, equipment lists, or load data? Upload them and let AI extract the details automatically.
+                        </p>
+                        <div className="mt-4 flex items-center text-purple-600 text-sm font-medium">
+                          <span>Open Advanced Builder</span>
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    )}
+                    
+                    {/* Path B: Guided Wizard */}
+                    <button
+                      onClick={() => setCurrentSection(1)}
+                      className="group p-6 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-300/50 rounded-2xl hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 transition-all text-left"
+                    >
+                      <Wand2 className="w-10 h-10 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
+                      <h4 className="text-xl font-bold text-gray-800 mb-2">Guided Builder</h4>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Answer a few questions about your facility and goals. We'll recommend the optimal BESS configuration.
+                      </p>
+                      <div className="mt-4 flex items-center text-emerald-600 text-sm font-medium">
+                        <span>Continue with Questions</span>
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
               
               {/* Scroll hint */}
               {!wizardState.state && (
