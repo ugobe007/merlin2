@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle, ChevronDown } from 'lucide-react';
 import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
 import { generateProfessionalModel, type ProfessionalModelResult } from '@/services/professionalFinancialModel';
 import { QuoteEngine } from '@/core/calculations';
@@ -8,6 +8,9 @@ import { type FinancialCalculationResult } from '@/services/centralizedCalculati
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '../assets/images/new_Merlin.png';
+import { DocumentUploadZone } from './upload/DocumentUploadZone';
+import type { ExtractedSpecsData } from '@/services/openAIExtractionService';
+import type { ParsedDocument } from '@/services/documentParserService';
 
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
@@ -102,6 +105,11 @@ export default function AdvancedQuoteBuilder({
   const [solarMW, setSolarMW] = useState(0);
   const [windMW, setWindMW] = useState(0);
   const [generatorMW, setGeneratorMW] = useState(0);
+  
+  // NEW: Document Upload / Path A state
+  const [extractedData, setExtractedData] = useState<ExtractedSpecsData | null>(null);
+  const [uploadedDocuments, setUploadedDocuments] = useState<ParsedDocument[]>([]);
+  const [showUploadSection, setShowUploadSection] = useState(true);
   
   // Extended configuration state
   const [projectName, setProjectName] = useState('');
@@ -280,6 +288,55 @@ export default function AdvancedQuoteBuilder({
       window.scrollTo(0, 0);
     }
   }, [show, initialView]);
+
+  // Handler for document extraction completion (Path A)
+  const handleExtractionComplete = useCallback((
+    data: ExtractedSpecsData,
+    documents: ParsedDocument[]
+  ) => {
+    if (import.meta.env.DEV) {
+      console.log('📄 [AdvancedQuoteBuilder] Extraction complete:', data);
+    }
+    
+    setExtractedData(data);
+    setUploadedDocuments(documents);
+    
+    // Pre-populate form fields from extracted data
+    if (data.location?.state) {
+      setLocation(data.location.state);
+    }
+    
+    if (data.powerRequirements?.peakDemandKW) {
+      // Convert kW to MW for storage size (rough estimate: BESS covers 50% of peak)
+      const demandMW = data.powerRequirements.peakDemandKW / 1000;
+      onStorageSizeChange(Math.ceil(demandMW * 0.5 * 10) / 10);
+    }
+    
+    if (data.utilityInfo?.electricityRate) {
+      setUtilityRate(data.utilityInfo.electricityRate);
+    }
+    
+    if (data.utilityInfo?.demandCharge) {
+      setDemandCharge(data.utilityInfo.demandCharge);
+    }
+    
+    if (data.existingInfrastructure?.hasSolar && data.existingInfrastructure.solarKW) {
+      setSolarPVIncluded(true);
+      setIncludeRenewables(true);
+      setSolarCapacityKW(data.existingInfrastructure.solarKW);
+      setSolarMW(data.existingInfrastructure.solarKW / 1000);
+    }
+    
+    if (data.existingInfrastructure?.hasGenerator && data.existingInfrastructure.generatorKW) {
+      setDieselGenIncluded(true);
+      setIncludeRenewables(true);
+      setDieselGenCapacityKW(data.existingInfrastructure.generatorKW);
+      setGeneratorMW(data.existingInfrastructure.generatorKW / 1000);
+    }
+    
+    // Collapse upload section after successful extraction
+    setShowUploadSection(false);
+  }, [onStorageSizeChange]);
 
   if (!show) return null;
 
@@ -814,6 +871,91 @@ export default function AdvancedQuoteBuilder({
                     <span className="font-semibold">Market Intelligence:</span> Pricing reflects Q4 2025 realistic installed costs including all balance of system components, installation labor, and profit margins. Based on LFP chemistry improvements and actual utility RFP pricing.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Document Upload Section - Path A */}
+            <div className="max-w-7xl mx-auto px-6 pb-8">
+              <div 
+                className="bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-blue-600/20 backdrop-blur-xl border-2 border-purple-400/30 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10"
+              >
+                <div 
+                  className="flex items-center justify-between cursor-pointer p-6"
+                  onClick={() => setShowUploadSection(!showUploadSection)}
+                >
+                  <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg shadow-lg">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                    Upload Existing Specs
+                    {extractedData && (
+                      <span className="ml-2 px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-400/30">
+                        ✓ Data Extracted
+                      </span>
+                    )}
+                  </h3>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${showUploadSection ? 'rotate-180' : ''}`} />
+                </div>
+                
+                {showUploadSection && (
+                  <div className="px-6 pb-6">
+                    <p className="text-gray-400 text-sm mb-4">
+                      Have utility bills, equipment schedules, or load profiles? Upload them and let AI extract the data to pre-populate your quote.
+                    </p>
+                    <DocumentUploadZone
+                      onExtractionComplete={handleExtractionComplete}
+                      onError={(error) => {
+                        if (import.meta.env.DEV) {
+                          console.error('Upload error:', error);
+                        }
+                      }}
+                      maxFiles={5}
+                    />
+                    <p className="text-center text-gray-500 text-sm mt-6">
+                      — or configure your system manually below —
+                    </p>
+                  </div>
+                )}
+                
+                {extractedData && !showUploadSection && (
+                  <div className="px-6 pb-6">
+                    <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                      <p className="text-sm text-purple-300 mb-3">Pre-filled from uploaded documents:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {extractedData.powerRequirements?.peakDemandKW && (
+                          <span className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 border border-gray-700">
+                            {extractedData.powerRequirements.peakDemandKW.toLocaleString()} kW peak
+                          </span>
+                        )}
+                        {extractedData.powerRequirements?.monthlyKWh && (
+                          <span className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 border border-gray-700">
+                            {extractedData.powerRequirements.monthlyKWh.toLocaleString()} kWh/month
+                          </span>
+                        )}
+                        {extractedData.location?.state && (
+                          <span className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 border border-gray-700">
+                            📍 {extractedData.location.state}
+                          </span>
+                        )}
+                        {extractedData.utilityInfo?.electricityRate && (
+                          <span className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 border border-gray-700">
+                            ${extractedData.utilityInfo.electricityRate.toFixed(4)}/kWh
+                          </span>
+                        )}
+                        {extractedData.utilityInfo?.demandCharge && (
+                          <span className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 border border-gray-700">
+                            ${extractedData.utilityInfo.demandCharge.toFixed(2)}/kW demand
+                          </span>
+                        )}
+                        {extractedData.existingInfrastructure?.hasSolar && (
+                          <span className="px-3 py-1.5 bg-amber-800/50 rounded-lg text-sm text-amber-300 border border-amber-700/50">
+                            ☀️ {extractedData.existingInfrastructure.solarKW} kW solar
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
