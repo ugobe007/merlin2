@@ -282,7 +282,7 @@ export class QuoteEngine {
    */
   static clearCache(): void {
     this.quoteCache.clear();
-    console.log('🧹 [QuoteEngine] Cache cleared');
+    if (import.meta.env.DEV) console.log('🧹 [QuoteEngine] Cache cleared');
   }
   
   /**
@@ -348,7 +348,7 @@ export class QuoteEngine {
     if (!skipCache) {
       const cached = this.quoteCache.get(cacheKey);
       if (cached && this.isCacheValid(cached)) {
-        console.log('✅ [QuoteEngine] Cache hit');
+        if (import.meta.env.DEV) console.log('✅ [QuoteEngine] Cache hit');
         return {
           ...cached.result,
           metadata: {
@@ -360,13 +360,15 @@ export class QuoteEngine {
       }
     }
     
-    console.log('🔮 [QuoteEngine] Generating quote:', {
-      storageSizeMW: input.storageSizeMW,
-      durationHours: input.durationHours,
-      useCase: input.useCase,
-      location: input.location,
-      version: this.VERSION,
-    });
+    if (import.meta.env.DEV) {
+      console.log('🔮 [QuoteEngine] Generating quote:', {
+        storageSizeMW: input.storageSizeMW,
+        durationHours: input.durationHours,
+        useCase: input.useCase,
+        location: input.location,
+        version: this.VERSION,
+      });
+    }
     
     // Generate fresh quote
     const result = await calculateQuote(input);
@@ -410,7 +412,7 @@ export class QuoteEngine {
     durationHours: number,
     electricityRate: number = 0.15
   ): Promise<QuickEstimate> {
-    console.log('⚡ [QuoteEngine] Quick estimate:', { storageSizeMW, durationHours, electricityRate });
+    if (import.meta.env.DEV) console.log('⚡ [QuoteEngine] Quick estimate:', { storageSizeMW, durationHours, electricityRate });
     
     return estimatePayback(storageSizeMW, durationHours, electricityRate);
   }
@@ -436,7 +438,7 @@ export class QuoteEngine {
    * });
    */
   static calculatePower(useCase: string, data: Record<string, unknown>): PowerCalculationResult {
-    console.log('⚡ [QuoteEngine] Calculating power for:', useCase);
+    if (import.meta.env.DEV) console.log('⚡ [QuoteEngine] Calculating power for:', useCase);
     
     return calculateUseCasePower(useCase, data);
   }

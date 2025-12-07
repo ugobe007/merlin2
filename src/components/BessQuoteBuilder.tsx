@@ -38,10 +38,7 @@ import { getBatteryPricing, getSolarPricing, getWindPricing, getGeneratorPricing
 // NEW: Clean unified Advanced Quote Builder component
 import AdvancedQuoteBuilder from './AdvancedQuoteBuilder';
 
-console.log('🔍 [TRACE] BessQuoteBuilder.tsx loaded');
-
 export default function BessQuoteBuilder() {
-  console.log('🔍 [TRACE] BessQuoteBuilder component rendering');
   
   // ⚠️ DEPRECATION WARNING
   useEffect(() => {
@@ -116,10 +113,6 @@ export default function BessQuoteBuilder() {
     return <PublicProfileViewer profileSlug={publicProfileSlug} onSignUp={handleNavigateToApp} />;
   }
 
-  console.log('🔍 Current state - showAdvancedQuoteBuilder:', showAdvancedQuoteBuilder);
-  console.log('🔍 Modal states:', { showTemplates, showAnalytics, showBESSAnalytics, showFinancing });
-  console.log('🔍 showBESSAnalytics value:', showBESSAnalytics);
-
   // Check for URL parameters to open Advanced Quote Builder directly
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -127,18 +120,13 @@ export default function BessQuoteBuilder() {
     const verticalParam = urlParams.get('vertical');
     const viewParam = urlParams.get('view'); // New: specify initial view
     
-    console.log('🔍 BessQuoteBuilder URL check:', { advancedParam, verticalParam, viewParam, url: window.location.href });
-    
     if (advancedParam === 'true') {
-      console.log('🚀 Opening Advanced Quote Builder from URL parameter');
       // Set the use case if coming from a vertical
       if (verticalParam) {
-        console.log('🏨 Setting use case to:', verticalParam);
         setUseCase(verticalParam);
       }
       // Set the initial view if specified (e.g., 'custom-config')
       if (viewParam === 'custom-config' || viewParam === 'interactive-dashboard' || viewParam === 'professional-model') {
-        console.log('📊 Setting initial view to:', viewParam);
         setAdvancedQuoteBuilderInitialView(viewParam as 'landing' | 'custom-config');
       }
       setShowAdvancedQuoteBuilderModal(true);
@@ -165,25 +153,22 @@ export default function BessQuoteBuilder() {
 
   // Generic modal opener function
   const openModal = (modalName: string) => {
-    console.log('🎯 Opening modal:', modalName);
     switch (modalName) {
       case 'showChatModal':
-        console.log('🎯 Chat modal handler called - setting showChatModal to true');
         setShowChatModal(true);
         break;
       case 'showEnhancedAnalytics':
-        console.log('📊 Opening Enhanced Analytics (Financial)');
         setShowAnalytics(true);
         break;
       case 'bessAnalytics':
-        console.log('⚡ Opening BESS Analytics (ML Suite)');
         setShowBESSAnalytics(true);
         break;
       case 'showTemplates':
         setShowTemplates(true);
         break;
       default:
-        console.log(`Unknown modal: ${modalName}`);
+        // Unknown modal
+        break;
     }
   };
 
@@ -493,8 +478,6 @@ export default function BessQuoteBuilder() {
     </div>
 
     {/* MODAL MANAGER - Always rendered regardless of showAdvancedQuoteBuilder state */}
-    {console.log('🚀 About to render ModalManager with showBESSAnalytics:', showBESSAnalytics)}
-    {console.log('🚀 modalManagerProps.showBESSAnalytics:', modalManagerProps.showBESSAnalytics)}
     <ModalManager 
       key={`modal-${showBESSAnalytics}`} 
       {...modalManagerProps}
@@ -507,7 +490,6 @@ export default function BessQuoteBuilder() {
     />
 
     {/* ADVANCED QUOTE BUILDER - New clean unified component */}
-    {console.log('🏗️ Rendering AdvancedQuoteBuilder with showAdvancedQuoteBuilderModal:', showAdvancedQuoteBuilderModal)}
     <AdvancedQuoteBuilder
       show={showAdvancedQuoteBuilderModal}
       initialView={advancedQuoteBuilderInitialView}
@@ -540,13 +522,10 @@ export default function BessQuoteBuilder() {
       onDurationChange={setStandbyHours}
       onSystemCostChange={(cost) => {
         // System cost changes might affect grandCapEx calculation
-        // For now, just log - full integration would need more complex state management
-        console.log('System cost changed to:', cost);
+        // For now, no-op - full integration would need more complex state management
       }}
       onGenerateQuote={() => {
         // Generate quote with current configuration
-        console.log('Generate quote with:', { powerMW, standbyHours, grandCapEx });
-        
         const batteryMWh = powerMW * standbyHours;
         const batterySystemCost = batteryMWh * 200000; // $200/kWh for batteries
         const pcsCost = powerMW * 80000; // $80k/MW for PCS
