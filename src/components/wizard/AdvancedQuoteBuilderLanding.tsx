@@ -9,8 +9,10 @@ import {
   FileText,
   Wrench,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Upload
 } from 'lucide-react';
+import SpecUploadModal from '../upload/SpecUploadModal';
 
 interface AdvancedQuoteBuilderLandingProps {
   onBackToHome: () => void;
@@ -20,6 +22,16 @@ interface AdvancedQuoteBuilderLandingProps {
   onShowMarketAnalytics?: () => void;
   onShowComponentLibrary?: () => void;
   onShowQuoteTemplates?: () => void;
+  onExtractedSpecs?: (specs: {
+    storageSizeMW: number;
+    durationHours: number;
+    location?: string;
+    solarMW?: number;
+    windMW?: number;
+    generatorMW?: number;
+    gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+    useCase?: string;
+  }) => void;
 }
 
 const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = ({
@@ -29,11 +41,28 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
   onShowFinancialCalculator,
   onShowMarketAnalytics,
   onShowComponentLibrary,
-  onShowQuoteTemplates
+  onShowQuoteTemplates,
+  onExtractedSpecs
 }) => {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const tools = [
+    {
+      id: 'upload-specs',
+      icon: <Upload className="w-12 h-12" />,
+      title: 'Upload Specs',
+      description: 'Upload your RFP, spec sheet, or requirements document',
+      color: 'from-green-600 to-teal-600',
+      action: () => setShowUploadModal(true),
+      features: [
+        'PDF, Excel, CSV support',
+        'AI-powered data extraction',
+        'Automatic field population',
+        'Review before quote'
+      ],
+      isNew: true
+    },
     {
       id: 'custom-config',
       icon: <Settings className="w-12 h-12" />,
@@ -195,9 +224,15 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
           {tools.map((tool) => (
             <div
               key={tool.id}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 cursor-pointer overflow-hidden"
+              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 cursor-pointer overflow-hidden relative"
               onClick={tool.action}
             >
+              {/* NEW Badge */}
+              {'isNew' in tool && tool.isNew && (
+                <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10 animate-pulse">
+                  NEW
+                </div>
+              )}
               {/* Tool Header */}
               <div className={`bg-gradient-to-r ${tool.color} text-white p-6`}>
                 <div className="flex items-center justify-between mb-3">
@@ -302,6 +337,23 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Upload Specs Modal */}
+      {showUploadModal && (
+        <SpecUploadModal
+          onClose={() => setShowUploadModal(false)}
+          onExtracted={(specs) => {
+            setShowUploadModal(false);
+            if (onExtractedSpecs) {
+              onExtractedSpecs(specs);
+            } else {
+              // Fallback: start custom quote with extracted specs
+              // The parent component should handle this properly
+              onStartCustomQuote();
+            }
+          }}
+        />
       )}
     </div>
   );
