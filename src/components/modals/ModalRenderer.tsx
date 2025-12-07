@@ -258,6 +258,10 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
           show={isModalOpen('showSmartWizard')}
           onClose={() => closeModal('showSmartWizard')}
           onFinish={handleCreateWithWizard}
+          onOpenAdvanced={() => {
+            closeModal('showSmartWizard');
+            openModal('showAdvancedBuilder');
+          }}
         />
       )}
 
