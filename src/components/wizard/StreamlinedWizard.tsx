@@ -28,7 +28,8 @@ import {
   Shield, Clock, Download, Phone, Leaf, Gauge, Plus, Minus,
   AlertTriangle, Info, FileSpreadsheet, Mail, Wind, Fuel
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { calculateUseCasePower, type PowerCalculationResult } from '@/services/useCasePowerCalculations';
 import { calculateEVHubCosts } from '@/services/evChargingCalculations';
 import { 
@@ -2233,7 +2234,7 @@ export default function StreamlinedWizard({
                   completeSection('configuration');
                   
                   try {
-                    const result = await calculateQuote({
+                    const result = await QuoteEngine.generateQuote({
                       storageSizeMW: wizardState.batteryKW / 1000,
                       durationHours: wizardState.durationHours,
                       location: wizardState.state,
