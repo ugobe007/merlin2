@@ -107,6 +107,7 @@ function App() {
         show={true}
         onClose={() => window.location.href = '/'}
         onFinish={() => {}}
+        onOpenAdvanced={() => window.location.href = '/quote-builder'}
       />
     );
   }
