@@ -321,6 +321,14 @@ export function DocumentUploadZone({
           </div>
         ) : (
           <div className="space-y-3">
+            {/* AI-Powered Badge */}
+            <div className="flex justify-center mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-500/20 border border-purple-400/30 rounded-full text-xs text-purple-300 font-medium">
+                <Sparkles className="w-3 h-3" />
+                AI-Powered Extraction
+              </span>
+            </div>
+            
             <Upload className={`w-10 h-10 mx-auto ${isDragOver ? 'text-purple-400' : 'text-gray-500'}`} />
             <div>
               <p className="text-gray-300 font-medium">

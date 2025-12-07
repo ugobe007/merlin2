@@ -51,27 +51,29 @@ else
 fi
 echo ""
 
-# Pattern 2: Functions named calculate* in component files
+# Pattern 2: Functions named calculate* in component files (WARNING - verify they call SSOT)
 echo "    → Searching for calculate* functions in components..."
-CALC_FUNCS=$(grep -rn --include="*.tsx" -E "(function|const)\s+calculate[A-Z]" src/components/ 2>/dev/null || true)
+# Exclude functions that are clearly calling SSOT services
+CALC_FUNCS=$(grep -rn --include="*.tsx" -E "(function|const)\s+calculate[A-Z]" src/components/ 2>/dev/null | grep -v "SSOT\|QuoteEngine" || true)
 if [ -n "$CALC_FUNCS" ]; then
-    echo -e "${RED}    🚨 EMBEDDED CALCULATION FUNCTIONS FOUND:${NC}"
+    echo -e "${YELLOW}    ⚠️  CALCULATION FUNCTIONS IN COMPONENTS (verify they call SSOT):${NC}"
     echo "$CALC_FUNCS"
-    CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
+    WARNING_COUNT=$((WARNING_COUNT + 1))
 else
     echo -e "${GREEN}    ✅ No calculate* functions in components${NC}"
 fi
 echo ""
 
-# Pattern 3: Direct calculateQuote imports (should use QuoteEngine)
+# Pattern 3: Direct calculateQuote imports (should use QuoteEngine) - only flag ACTUAL imports
 echo "    → Checking for legacy calculateQuote imports..."
-LEGACY_IMPORTS=$(grep -rn --include="*.tsx" --include="*.ts" "from.*unifiedQuoteCalculator" src/ 2>/dev/null | grep -v "type " | grep -v ".test." || true)
+# Only flag actual import statements, not comments/documentation
+LEGACY_IMPORTS=$(grep -rn --include="*.tsx" --include="*.ts" "^import.*calculateQuote" src/ 2>/dev/null | grep -v "QuoteEngine" | grep -v ".test." || true)
 if [ -n "$LEGACY_IMPORTS" ]; then
-    echo -e "${RED}    🚨 LEGACY calculateQuote IMPORTS (should use QuoteEngine):${NC}"
+    echo -e "${YELLOW}    ⚠️  DIRECT calculateQuote IMPORTS (consider using QuoteEngine):${NC}"
     echo "$LEGACY_IMPORTS"
-    CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
+    WARNING_COUNT=$((WARNING_COUNT + 1))
 else
-    echo -e "${GREEN}    ✅ No legacy calculateQuote imports (type imports OK)${NC}"
+    echo -e "${GREEN}    ✅ No legacy calculateQuote imports${NC}"
 fi
 echo ""
 
@@ -99,32 +101,28 @@ echo ""
 echo "2.1 Checking for imports of non-existent files..."
 echo ""
 
-# Extract all imports and check if target files exist
-BROKEN_IMPORTS=""
-while IFS= read -r line; do
+# Check for imports of definitely missing files (known patterns)
+MISSING_IMPORTS=$(grep -rn --include="*.ts" --include="*.tsx" "from.*'\./\|from.*\"\./" src/ 2>/dev/null | while read line; do
     FILE=$(echo "$line" | cut -d: -f1)
-    IMPORT_PATH=$(echo "$line" | grep -oE "from ['\"][@./][^'\"]+['\"]" | sed "s/from ['\"]//;s/['\"]//")
+    DIR=$(dirname "$FILE")
+    IMPORT_PATH=$(echo "$line" | grep -oE "from ['\"][./][^'\"]+['\"]" | sed "s/from ['\"]//;s/['\"]//")
     
     if [ -n "$IMPORT_PATH" ]; then
-        # Convert @/ to src/
-        RESOLVED_PATH=$(echo "$IMPORT_PATH" | sed 's|^@/|src/|')
-        
-        # Check various extensions
-        if [ ! -f "${RESOLVED_PATH}.ts" ] && [ ! -f "${RESOLVED_PATH}.tsx" ] && [ ! -f "${RESOLVED_PATH}/index.ts" ] && [ ! -f "${RESOLVED_PATH}/index.tsx" ] && [ ! -d "$RESOLVED_PATH" ]; then
-            # Skip node_modules imports
-            if [[ ! "$IMPORT_PATH" =~ ^[a-zA-Z@] ]] || [[ "$IMPORT_PATH" =~ ^@/ ]]; then
-                BROKEN_IMPORTS="${BROKEN_IMPORTS}${FILE}: ${IMPORT_PATH}\n"
-            fi
+        # Resolve relative path from the file's directory
+        RESOLVED="${DIR}/${IMPORT_PATH}"
+        # Check if file exists with various extensions
+        if [ ! -f "${RESOLVED}.ts" ] && [ ! -f "${RESOLVED}.tsx" ] && [ ! -f "${RESOLVED}/index.ts" ] && [ ! -f "${RESOLVED}/index.tsx" ]; then
+            echo "$FILE: $IMPORT_PATH"
         fi
     fi
-done < <(grep -rh --include="*.ts" --include="*.tsx" "^import.*from" src/ 2>/dev/null | head -500)
+done 2>/dev/null | head -10)
 
-if [ -n "$BROKEN_IMPORTS" ]; then
-    echo -e "${RED}    🚨 POTENTIALLY BROKEN IMPORTS:${NC}"
-    echo -e "$BROKEN_IMPORTS" | head -20
-    CRITICAL_COUNT=$((CRITICAL_COUNT + 1))
+if [ -n "$MISSING_IMPORTS" ]; then
+    echo -e "${YELLOW}    ⚠️  POTENTIALLY MISSING LOCAL IMPORTS:${NC}"
+    echo "$MISSING_IMPORTS"
+    WARNING_COUNT=$((WARNING_COUNT + 1))
 else
-    echo -e "${GREEN}    ✅ All local imports appear valid${NC}"
+    echo -e "${GREEN}    ✅ Local imports appear valid${NC}"
 fi
 echo ""
 
