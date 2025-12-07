@@ -5,9 +5,10 @@ import QuoteBuilderLanding from '../wizard/QuoteBuilderLanding';
 import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
 import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
+import { QuoteEngine } from '@/core/calculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
 
-// Marketing constants for display-only calculations
+// Marketing constants for display-only calculations (hero stats, not quotes)
 import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
 
 // Import use case images
@@ -142,61 +143,76 @@ export default function HeroSection({
     setShowQuoteBuilderLanding(true);
   };
 
-  const handleGenerateQuote = () => {
+  const handleGenerateQuote = async () => {
     if (!selectedUseCaseForQuote) return;
     
     console.log('📄 Generating downloadable quote for:', selectedUseCaseForQuote.industry);
     
     const uc = selectedUseCaseForQuote;
-    const batteryMWh = uc.systemSizeMW * uc.duration;
-    // Use marketing constants for display-only calculations
-    const batterySystemCost = batteryMWh * 1000 * DISPLAY_PRICING.batteryPerKWh;
-    const pcsCost = uc.systemSizeMW * DISPLAY_PRICING.pcsPerMW;
-    const bosCost = uc.systemCost * (bosPercent / 100);
-    const epcCost = uc.systemCost * (epcPercent / 100);
     
-    // Create complete quote object for QuotePreviewModal
-    const generatedQuote = {
-      clientName: uc.industry,
-      projectName: `${uc.industry} - ${uc.systemSizeMW} MW / ${uc.duration}hr BESS`,
-      bessPowerMW: uc.systemSizeMW,
-      duration: uc.duration,
-      batteryMWh: batteryMWh,
-      solarMW: 0,
-      windMW: 0,
-      generatorMW: 0,
-      gridConnection: 'On-grid',
-      application: uc.industry,
-      location: selectedCountry || 'United States',
-      warranty: '10 years',
-      pcsIncluded: true,
-      costs: {
-        batterySystem: batterySystemCost,
-        pcs: pcsCost,
-        transformers: uc.systemSizeMW * DISPLAY_PRICING.transformersPerMW,
-        inverters: uc.systemSizeMW * DISPLAY_PRICING.invertersPerMW,
-        switchgear: uc.systemSizeMW * DISPLAY_PRICING.switchgearPerMW,
-        microgridControls: DISPLAY_PRICING.microgridControlsBase,
-        solar: 0,
-        solarInverters: 0,
-        wind: 0,
-        windConverters: 0,
-        generator: 0,
-        generatorControls: 0,
-        bos: bosCost,
-        epc: epcCost,
-        tariffs: uc.systemCost * (COST_MULTIPLIERS.tariffPercent / 100),
-        shipping: uc.systemCost * (COST_MULTIPLIERS.shippingPercent / 100),
-        grandTotal: uc.systemCost
-      },
-      annualSavings: uc.totalAnnualSavings,
-      paybackPeriod: uc.paybackYears
-    };
-    
-    // Close landing modal and show quote preview with download option
-    setShowQuoteBuilderLanding(false);
-    setCurrentQuote(generatedQuote);
-    setShowQuotePreview(true);
+    // ✅ SSOT: Use QuoteEngine.generateQuote() for actual quote generation
+    // This ensures quote preview matches what user would get from wizard
+    try {
+      const quoteResult = await QuoteEngine.generateQuote({
+        storageSizeMW: uc.systemSizeMW,
+        durationHours: uc.duration,
+        location: selectedCountry || 'United States',
+        electricityRate: 0.15, // Default rate - QuoteEngine handles regional adjustments
+        useCase: uc.industry.toLowerCase().replace(/ /g, '-'),
+        gridConnection: 'on-grid',
+        solarMW: 0,
+        windMW: 0,
+        generatorMW: 0,
+      });
+      
+      // Create quote object from SSOT result
+      // Map equipment breakdown to cost structure expected by QuotePreviewModal
+      const generatedQuote = {
+        clientName: uc.industry,
+        projectName: `${uc.industry} - ${uc.systemSizeMW} MW / ${uc.duration}hr BESS`,
+        bessPowerMW: uc.systemSizeMW,
+        duration: uc.duration,
+        batteryMWh: uc.systemSizeMW * uc.duration,
+        solarMW: 0,
+        windMW: 0,
+        generatorMW: 0,
+        gridConnection: 'On-grid',
+        application: uc.industry,
+        location: selectedCountry || 'United States',
+        warranty: '10 years',
+        pcsIncluded: true,
+        costs: {
+          batterySystem: quoteResult.equipment.batteries.totalCost,
+          pcs: quoteResult.equipment.inverters.totalCost,
+          transformers: quoteResult.equipment.transformers.totalCost,
+          inverters: quoteResult.equipment.inverters.totalCost,
+          switchgear: quoteResult.equipment.switchgear.totalCost,
+          microgridControls: Math.round(quoteResult.costs.installationCost * 0.1), // ~10% of installation
+          solar: 0,
+          solarInverters: 0,
+          wind: 0,
+          windConverters: 0,
+          generator: 0,
+          generatorControls: 0,
+          bos: Math.round(quoteResult.costs.equipmentCost * (bosPercent / 100)),
+          epc: Math.round(quoteResult.costs.equipmentCost * (epcPercent / 100)),
+          tariffs: Math.round(quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.tariffPercent / 100)),
+          shipping: Math.round(quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.shippingPercent / 100)),
+          grandTotal: quoteResult.costs.netCost
+        },
+        annualSavings: quoteResult.financials.annualSavings,
+        paybackPeriod: quoteResult.financials.paybackYears
+      };
+      
+      // Close landing modal and show quote preview with download option
+      setShowQuoteBuilderLanding(false);
+      setCurrentQuote(generatedQuote);
+      setShowQuotePreview(true);
+    } catch (error) {
+      console.error('Error generating quote:', error);
+      // Fallback: redirect to wizard for proper quote generation
+      handleCustomizeSystem();
+    }
   };
 
   const handleCustomizeSystem = () => {
