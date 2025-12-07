@@ -371,7 +371,9 @@ export async function calculateFinancialMetrics(
     finalShippingCost = finalEquipmentCost * 0.03;     // 3% shipping
     finalTariffCost = finalEquipmentCost * 0.05;       // 5% tariff (reduced from 10%)
     
-    console.log(`💰 [Pricing] Using NREL ATB 2024: $${batteryPricing.pricePerKWh}/kWh × ${totalEnergyKWh} kWh = $${finalEquipmentCost.toLocaleString()}`);
+    if (import.meta.env.DEV) {
+      console.log(`💰 [Pricing] Using NREL ATB 2024: $${batteryPricing.pricePerKWh}/kWh × ${totalEnergyKWh} kWh = $${finalEquipmentCost.toLocaleString()}`);
+    }
   }
   
   const totalProjectCost = finalEquipmentCost + finalInstallationCost + finalShippingCost + finalTariffCost;
@@ -403,16 +405,18 @@ export async function calculateFinancialMetrics(
   
   const annualSavings = peakShavingSavings + demandChargeSavings + gridServiceRevenue + solarSavings + windSavings;
   
-  // Debugging: Log the breakdown
-  console.log('📊 Savings breakdown:', {
-    peakShavingSavings: peakShavingSavings.toFixed(0),
-    demandChargeSavings: demandChargeSavings.toFixed(0),
-    gridServiceRevenue: gridServiceRevenue.toFixed(0),
-    solarSavings: solarSavings.toFixed(0),
-    windSavings: windSavings.toFixed(0),
-    annualSavings: annualSavings.toFixed(0),
-    netCost: netCost.toFixed(0)
-  });
+  // Debugging: Log the breakdown (DEV only)
+  if (import.meta.env.DEV) {
+    console.log('📊 Savings breakdown:', {
+      peakShavingSavings: peakShavingSavings.toFixed(0),
+      demandChargeSavings: demandChargeSavings.toFixed(0),
+      gridServiceRevenue: gridServiceRevenue.toFixed(0),
+      solarSavings: solarSavings.toFixed(0),
+      windSavings: windSavings.toFixed(0),
+      annualSavings: annualSavings.toFixed(0),
+      netCost: netCost.toFixed(0)
+    });
+  }
   
   // ===================================
   // 3. CALCULATE ROI METRICS
@@ -423,12 +427,14 @@ export async function calculateFinancialMetrics(
   const roi10Year = annualSavings > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
   const roi25Year = annualSavings > 0 ? ((annualSavings * 25 - netCost) / netCost) * 100 : 0;
   
-  console.log('💰 Payback calculation:', {
-    netCost,
-    annualSavings,
-    paybackYears,
-    calculation: `${netCost} / ${annualSavings} = ${paybackYears.toFixed(2)}`
-  });
+  if (import.meta.env.DEV) {
+    console.log('💰 Payback calculation:', {
+      netCost,
+      annualSavings,
+      paybackYears,
+      calculation: `${netCost} / ${annualSavings} = ${paybackYears.toFixed(2)}`
+    });
+  }
   
   // ===================================
   // 4. CALCULATE ADVANCED METRICS (NPV/IRR)
@@ -487,12 +493,14 @@ export async function calculateFinancialMetrics(
     const totalLifetimeCosts = netCost + (netCost * constants.OM_COST_PERCENT * projectYears);
     levelizedCostOfStorage = totalLifetimeEnergy > 0 ? totalLifetimeCosts / totalLifetimeEnergy : 0;
     
-    console.log('📈 Advanced metrics:', {
-      npv: npv.toFixed(0),
-      irr: irr.toFixed(2) + '%',
-      discountedPayback: discountedPayback?.toFixed(1) + ' years',
-      lcos: levelizedCostOfStorage.toFixed(2) + ' $/MWh'
-    });
+    if (import.meta.env.DEV) {
+      console.log('📈 Advanced metrics:', {
+        npv: npv.toFixed(0),
+        irr: irr.toFixed(2) + '%',
+        discountedPayback: discountedPayback?.toFixed(1) + ' years',
+        lcos: levelizedCostOfStorage.toFixed(2) + ' $/MWh'
+      });
+    }
   }
   
   // ===================================
@@ -563,7 +571,6 @@ export async function getCachedConstants(): Promise<CalculationConstants> {
 export function refreshConstantsCache(): void {
   cachedConstants = null;
   cacheTimestamp = 0;
-  console.log('🔄 Calculation constants cache cleared');
 }
 
 // ============================================

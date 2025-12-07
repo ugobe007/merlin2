@@ -169,7 +169,6 @@ export function useQuoteBuilder() {
       return null;
     }
 
-    console.log('📐 [useQuoteBuilder] Calculating baseline for:', state.selectedUseCaseSlug);
     setState(prev => ({ ...prev, isCalculatingBaseline: true, error: null }));
 
     try {
@@ -178,11 +177,6 @@ export function useQuoteBuilder() {
         1,
         state.useCaseAnswers
       );
-      console.log('✅ [useQuoteBuilder] Baseline calculated:', {
-        powerMW: baseline.powerMW,
-        durationHrs: baseline.durationHrs,
-        solarMW: baseline.solarMW
-      });
 
       setState(prev => ({
         ...prev,

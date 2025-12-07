@@ -1360,8 +1360,7 @@ export default function CarWashEnergy() {
             monthlyBill: inputs.currentMonthlyBill,
           }}
           onClose={() => setShowWizard(false)}
-          onComplete={(quote) => {
-            console.log('Wizard completed with quote:', quote);
+          onComplete={() => {
             setShowWizard(false);
             // Could show a success modal or redirect here
           }}

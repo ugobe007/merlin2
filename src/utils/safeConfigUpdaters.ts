@@ -35,11 +35,9 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
           updaters.setSolarConfig(config as SolarConfig);
         } else {
           console.error('❌ No solar config updater function available');
-          console.log('📋 Attempted to update solar config with:', config);
         }
       } catch (error) {
         console.error('❌ Error updating solar config:', error);
-        console.log('📋 Config that failed to update:', config);
       }
     },
 
@@ -55,11 +53,9 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
           updaters.setGeneratorConfig(config as GeneratorConfig);
         } else {
           console.error('❌ No generator config updater function available');
-          console.log('📋 Attempted to update generator config with:', config);
         }
       } catch (error) {
         console.error('❌ Error updating generator config:', error);
-        console.log('📋 Config that failed to update:', config);
       }
     },
 
@@ -75,11 +71,9 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
           updaters.setWindConfig(config as WindConfig);
         } else {
           console.error('❌ No wind config updater function available');
-          console.log('📋 Attempted to update wind config with:', config);
         }
       } catch (error) {
         console.error('❌ Error updating wind config:', error);
-        console.log('📋 Config that failed to update:', config);
       }
     },
 
@@ -95,11 +89,9 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
           updaters.setBessConfig(config as BessConfig);
         } else {
           console.error('❌ No BESS config updater function available');
-          console.log('📋 Attempted to update BESS config with:', config);
         }
       } catch (error) {
         console.error('❌ Error updating BESS config:', error);
-        console.log('📋 Config that failed to update:', config);
       }
     },
   };

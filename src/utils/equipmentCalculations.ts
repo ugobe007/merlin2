@@ -759,7 +759,7 @@ export const calculateEquipmentBreakdown = async (
       contingencyPercentage = bopConfig.contingencyPercentage || 0.05;
     }
   } catch (error) {
-    console.log('Using fallback installation cost values');
+    // Using fallback installation cost values - not an error, just DB unavailable
   }
   
   // Calculate installation breakdown

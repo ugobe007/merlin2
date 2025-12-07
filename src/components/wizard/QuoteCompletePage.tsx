@@ -58,14 +58,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   onUpdateQuote,
   onClose,
 }) => {
-  console.log('🎯 QuoteCompletePage rendered with data:', {
-    storageSizeMW: quoteData.storageSizeMW,
-    durationHours: quoteData.durationHours,
-    totalProjectCost: quoteData.totalProjectCost,
-    annualSavings: quoteData.annualSavings,
-    paybackYears: quoteData.paybackYears
-  });
-  
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [projectSaved, setProjectSaved] = useState(false);
@@ -112,7 +104,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
   useEffect(() => {
     const recalculateMetrics = async () => {
       try {
-        console.log('🔄 Recalculating dashboard metrics from database...');
         const result = await calculateFinancialMetrics({
           storageSizeMW: quoteData.storageSizeMW,
           durationHours: quoteData.durationHours,
@@ -120,14 +111,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
           windMW: quoteData.windMW,
           location: quoteData.location,
           electricityRate: quoteData.electricityRate || 0.12
-        });
-        
-        console.log('💰 Dashboard recalculated from database (data source:', result.dataSource + ')');
-        console.log('📊 Results:', {
-          netCost: result.netCost,
-          annualSavings: result.annualSavings,
-          paybackYears: result.paybackYears,
-          roi10Year: result.roi10Year
         });
         
         setDashboardMetrics({
@@ -232,12 +215,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
     // Their configuration was calculated correctly from their inputs (e.g., 150 rooms)
     // Recalculating with scale=1.0 uses wrong assumptions (e.g., 100 rooms default)
     
-    console.log('🤖 [AI Analysis] Using user\'s configured values (already calculated correctly):', {
-      storageSizeMW: quoteData.storageSizeMW,
-      durationHours: quoteData.durationHours,
-      solarMW: quoteData.solarMW
-    });
-    
     return {
       optimalPowerMW: quoteData.storageSizeMW, // Use their correctly calculated battery size
       optimalDurationHrs: quoteData.durationHours,
@@ -257,8 +234,6 @@ const QuoteCompletePage: React.FC<QuoteCompletePageProps> = ({
       location: quoteData.location || 'California',
       electricityRate: quoteData.electricityRate || 0.12
     });
-    
-    console.log('💰 Dashboard ROI calculation from centralized service (data source:', result.dataSource + ')');
     
     return { 
       totalCost: result.netCost, 

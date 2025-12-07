@@ -393,7 +393,6 @@ export default function StreamlinedWizard({
     if (useCaseId) {
       try {
         const questions = await useCaseService.getCustomQuestionsByUseCaseId(useCaseId);
-        console.log(`📋 Loaded ${questions.length} custom questions for ${name}:`, questions);
         
         // Initialize useCaseData with default values from questions
         const defaultData: Record<string, any> = {};
@@ -478,13 +477,6 @@ export default function StreamlinedWizard({
         // Installation: ~20% of equipment (this could also be from a service)
         const equipmentTotal = batteryCost + solarCost + windCost + generatorCost + totalEVCost;
         const installationCost = equipmentTotal * 0.20;
-        
-        console.log(`[StreamlinedWizard] Cost calculation using SSOT services:`);
-        console.log(`  Battery: ${wizardState.batteryKWh} kWh × $${batteryPricing.pricePerKWh}/kWh = $${batteryCost.toLocaleString()}`);
-        console.log(`  Solar: ${wizardState.solarKW} kW × $${solarPricing.pricePerWatt * 1000}/kW = $${solarCost.toLocaleString()}`);
-        console.log(`  Wind: ${wizardState.windTurbineKW} kW × $${windPricing.pricePerKW}/kW = $${windCost.toLocaleString()}`);
-        console.log(`  Generator: ${wizardState.generatorKW} kW × $${generatorPricing.pricePerKW}/kW = $${generatorCost.toLocaleString()}`);
-        console.log(`  EV Chargers: $${totalEVCost.toLocaleString()} (${wizardState.evChargersL2} L2, ${wizardState.evChargersDCFC} DCFC, ${wizardState.evChargersHPC} HPC)`);
         
         setWizardState(prev => ({
           ...prev,
@@ -1749,11 +1741,6 @@ export default function StreamlinedWizard({
                     : powerResult.durationHrs;
                   
                   const solarKW = wizardState.wantsSolar ? Math.round(baseKW * 1.2) : 0;
-                  
-                  console.log(`[StreamlinedWizard] Industry: ${wizardState.selectedIndustry}`);
-                  console.log(`[StreamlinedWizard] Power calculation: ${powerResult.description}`);
-                  console.log(`[StreamlinedWizard] Method: ${powerResult.calculationMethod}`);
-                  console.log(`[StreamlinedWizard] Result: ${baseKW} kW, ${durationHours} hrs = ${baseKW * durationHours} kWh`);
                   
                   setWizardState(prev => ({
                     ...prev,

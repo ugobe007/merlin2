@@ -390,7 +390,7 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
             {isModalOpen('showQuoteTemplates') && (
         <QuoteTemplates
           onClose={() => closeModal('showQuoteTemplates')}
-          onSelectTemplate={(template: any) => console.log('Template selected:', template)}
+          onSelectTemplate={() => closeModal('showQuoteTemplates')}
           userId={authService.getCurrentUser()?.id}
         />
       )}
@@ -398,7 +398,7 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
       {isModalOpen('showPricingPresets') && (
         <PricingPresets
           onClose={() => closeModal('showPricingPresets')}
-          onSelectPreset={(preset: any) => console.log('Preset selected:', preset)}
+          onSelectPreset={() => closeModal('showPricingPresets')}
           userId={authService.getCurrentUser()?.id}
         />
       )}
@@ -474,8 +474,7 @@ const ModalRenderer: React.FC<ModalRendererProps> = ({
         <LayoutPreferenceModal
           isOpen={isModalOpen('showLayoutPreference')}
           onClose={() => closeModal('showLayoutPreference')}
-          onSelect={(preference: 'beginner' | 'advanced') => {
-            console.log('Layout preference:', preference);
+          onSelect={() => {
             closeModal('showLayoutPreference');
           }}
         />

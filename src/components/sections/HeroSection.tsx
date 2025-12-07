@@ -135,9 +135,6 @@ export default function HeroSection({
   }, []);
 
   const handleLoadTemplate = (useCase: UseCaseData) => {
-    console.log('🎯🎯🎯 HeroSection handleLoadTemplate called with:', useCase.industry);
-    console.log('🚀 Opening QuoteBuilderLanding modal for:', useCase.industry);
-    
     // Set the selected use case and show the QuoteBuilderLanding modal
     setSelectedUseCaseForQuote(useCase);
     setShowQuoteBuilderLanding(true);
@@ -145,8 +142,6 @@ export default function HeroSection({
 
   const handleGenerateQuote = async () => {
     if (!selectedUseCaseForQuote) return;
-    
-    console.log('📄 Generating downloadable quote for:', selectedUseCaseForQuote.industry);
     
     const uc = selectedUseCaseForQuote;
     
@@ -218,8 +213,6 @@ export default function HeroSection({
   const handleCustomizeSystem = () => {
     if (!selectedUseCaseForQuote) return;
     
-    console.log('⚙️ Customizing system for:', selectedUseCaseForQuote.industry);
-    
     // Store use case data and start from step 1
     const wizardData = {
       selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, '-'),
@@ -236,15 +229,11 @@ export default function HeroSection({
   };
 
   const handleCancelQuoteBuilder = () => {
-    console.log('❌ Quote builder cancelled');
     setShowQuoteBuilderLanding(false);
     setSelectedUseCaseForQuote(null);
   };
 
   const handleLoadTemplate_OLD = (useCase: UseCaseData) => {
-    console.log('🎯🎯🎯 NEW SECTIONS/HeroSection handleLoadTemplate called with:', useCase.industry);
-    console.log('🎯🎯🎯 About to set Smart Wizard quickstart data');
-    
     // Store use case data in localStorage for wizard to pick up
     const wizardData = {
       selectedTemplate: useCase.industry.toLowerCase().replace(' ', '-'),
@@ -255,9 +244,7 @@ export default function HeroSection({
       useCase: useCase
     };
     
-    console.log('🚀🚀🚀 Storing wizard quickstart data:', wizardData);
     localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
-    console.log('🚀🚀🚀 Starting Smart Wizard for use case:', useCase.industry);
     setShowSmartWizard(true);
   };
 

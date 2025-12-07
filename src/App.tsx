@@ -106,7 +106,7 @@ function App() {
       <StreamlinedWizard 
         show={true}
         onClose={() => window.location.href = '/'}
-        onFinish={(data) => console.log('Quote finished:', data)}
+        onFinish={() => {}}
       />
     );
   }

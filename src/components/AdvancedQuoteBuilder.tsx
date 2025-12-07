@@ -74,8 +74,6 @@ export default function AdvancedQuoteBuilder({
   onGenerateQuote,
   initialView = 'landing',
 }: AdvancedQuoteBuilderProps) {
-  console.log('🏗️ AdvancedQuoteBuilder rendered with show:', show);
-  
   const [viewMode, setViewMode] = useState<ViewMode>(initialView);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [previewFormat, setPreviewFormat] = useState<'word' | 'excel'>('word');
@@ -180,8 +178,6 @@ export default function AdvancedQuoteBuilder({
     const calculateFromSSoT = async () => {
       setIsCalculating(true);
       try {
-        console.log('📊 Calling unifiedQuoteCalculator SSOT...');
-        
         // Calculate solar/wind/generator MW from kW if included
         const solarMWFromConfig = solarPVIncluded ? solarCapacityKW / 1000 : 0;
         const windMWFromConfig = windTurbineIncluded ? windCapacityKW / 1000 : 0;
@@ -220,19 +216,6 @@ export default function AdvancedQuoteBuilder({
           electricityRate: utilityRate,
           gridConnection: mappedGridConnection,
           useCase: useCase,
-        });
-        
-        console.log('✅ SSOT Quote Result:', {
-          totalProjectCost: quoteResult.costs.totalProjectCost,
-          netCost: quoteResult.costs.netCost,
-          annualSavings: quoteResult.financials.annualSavings,
-          paybackYears: quoteResult.financials.paybackYears,
-          equipment: {
-            batteryCost: quoteResult.equipment.batteries.totalCost,
-            solarCost: quoteResult.equipment.solar?.totalCost || 0,
-            windCost: quoteResult.equipment.wind?.totalCost || 0,
-            generatorCost: quoteResult.equipment.generators?.totalCost || 0,
-          }
         });
         
         // Map QuoteResult to FinancialCalculationResult for compatibility
@@ -293,7 +276,6 @@ export default function AdvancedQuoteBuilder({
   // Reset to initialView when modal opens
   useEffect(() => {
     if (show) {
-      console.log('🎭 Modal opened, setting viewMode to:', initialView);
       setViewMode(initialView);
       window.scrollTo(0, 0);
     }
@@ -408,8 +390,6 @@ export default function AdvancedQuoteBuilder({
       comingSoon: true,
     },
   ];
-
-  console.log('🎭 Current viewMode:', viewMode);
 
   // Export handler function
   const handleExportQuote = async (format: 'word' | 'excel' | 'pdf') => {
@@ -2285,7 +2265,6 @@ export default function AdvancedQuoteBuilder({
                         demandCharge,
                         warrantyYears,
                       };
-                      console.log('Advanced configuration:', configData);
                       onGenerateQuote?.();
                       onClose();
                     }}
