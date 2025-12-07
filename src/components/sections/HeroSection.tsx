@@ -7,6 +7,9 @@ import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
 
+// Marketing constants for display-only calculations
+import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
+
 // Import use case images
 import carWashImage from "../../assets/images/car_wash_1.jpg";
 import hospitalImage from "../../assets/images/hospital_1.jpg";
@@ -146,8 +149,9 @@ export default function HeroSection({
     
     const uc = selectedUseCaseForQuote;
     const batteryMWh = uc.systemSizeMW * uc.duration;
-    const batterySystemCost = batteryMWh * 200000; // $200/kWh
-    const pcsCost = uc.systemSizeMW * 80000; // $80k/MW
+    // Use marketing constants for display-only calculations
+    const batterySystemCost = batteryMWh * 1000 * DISPLAY_PRICING.batteryPerKWh;
+    const pcsCost = uc.systemSizeMW * DISPLAY_PRICING.pcsPerMW;
     const bosCost = uc.systemCost * (bosPercent / 100);
     const epcCost = uc.systemCost * (epcPercent / 100);
     
@@ -169,10 +173,10 @@ export default function HeroSection({
       costs: {
         batterySystem: batterySystemCost,
         pcs: pcsCost,
-        transformers: uc.systemSizeMW * 25000,
-        inverters: uc.systemSizeMW * 15000,
-        switchgear: uc.systemSizeMW * 20000,
-        microgridControls: 50000,
+        transformers: uc.systemSizeMW * DISPLAY_PRICING.transformersPerMW,
+        inverters: uc.systemSizeMW * DISPLAY_PRICING.invertersPerMW,
+        switchgear: uc.systemSizeMW * DISPLAY_PRICING.switchgearPerMW,
+        microgridControls: DISPLAY_PRICING.microgridControlsBase,
         solar: 0,
         solarInverters: 0,
         wind: 0,
@@ -181,8 +185,8 @@ export default function HeroSection({
         generatorControls: 0,
         bos: bosCost,
         epc: epcCost,
-        tariffs: uc.systemCost * 0.05,
-        shipping: uc.systemCost * 0.03,
+        tariffs: uc.systemCost * (COST_MULTIPLIERS.tariffPercent / 100),
+        shipping: uc.systemCost * (COST_MULTIPLIERS.shippingPercent / 100),
         grandTotal: uc.systemCost
       },
       annualSavings: uc.totalAnnualSavings,
