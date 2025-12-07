@@ -511,19 +511,19 @@ export function generateEmailHTML(report: DailyReport): string {
  * Generate the full daily report
  */
 export async function generateDailyReport(): Promise<DailyReport> {
-  console.log('📊 Generating daily BESS intelligence report...');
+  if (import.meta.env.DEV) { console.log('📊 Generating daily BESS intelligence report...'); }
 
   // Fetch news from RSS feeds
   const newsItems = await fetchRSSFeeds();
-  console.log(`  ✓ Fetched ${newsItems.length} relevant news items`);
+  if (import.meta.env.DEV) { console.log(`  ✓ Fetched ${newsItems.length} relevant news items`); }
 
   // Extract company mentions
   const companyMentions = extractCompanyMentions(newsItems);
-  console.log(`  ✓ Found ${companyMentions.length} company mentions`);
+  if (import.meta.env.DEV) { console.log(`  ✓ Found ${companyMentions.length} company mentions`); }
 
   // Identify potential customers
   const potentialCustomers = identifyPotentialCustomers(newsItems);
-  console.log(`  ✓ Identified ${potentialCustomers.length} potential customer leads`);
+  if (import.meta.env.DEV) { console.log(`  ✓ Identified ${potentialCustomers.length} potential customer leads`); }
 
   // Generate executive summary
   const executiveSummary = await generateExecutiveSummary(newsItems, companyMentions);
@@ -564,7 +564,7 @@ export async function sendDailyReport(
       html: html
     });
 
-    console.log('✅ Daily report sent successfully:', response);
+    if (import.meta.env.DEV) { console.log('✅ Daily report sent successfully:', response); }
     return { success: true, messageId: response.data?.id };
   } catch (error: any) {
     console.error('❌ Failed to send daily report:', error);
@@ -603,7 +603,7 @@ export interface Subscriber {
 // Store subscribers in Supabase (we'll add the table)
 export async function addSubscriber(subscriber: Omit<Subscriber, 'subscribedAt' | 'active'>): Promise<boolean> {
   // TODO: Implement Supabase storage
-  console.log('Adding subscriber:', subscriber.email);
+  if (import.meta.env.DEV) { console.log('Adding subscriber:', subscriber.email); }
   return true;
 }
 
@@ -622,7 +622,7 @@ export async function getActiveSubscribers(): Promise<string[]> {
  * Call this from a cron job or Supabase Edge Function
  */
 export async function runDailyReportJob(): Promise<void> {
-  console.log('🚀 Starting daily BESS intelligence report job...');
+  if (import.meta.env.DEV) { console.log('🚀 Starting daily BESS intelligence report job...'); }
   
   try {
     // Generate the report
@@ -632,7 +632,7 @@ export async function runDailyReportJob(): Promise<void> {
     const subscribers = await getActiveSubscribers();
     
     if (subscribers.length === 0) {
-      console.log('⚠️ No subscribers to send to');
+      if (import.meta.env.DEV) { console.log('⚠️ No subscribers to send to'); }
       return;
     }
 
@@ -640,7 +640,7 @@ export async function runDailyReportJob(): Promise<void> {
     const result = await sendDailyReport(report, subscribers);
     
     if (result.success) {
-      console.log(`✅ Daily report sent to ${subscribers.length} subscribers`);
+      if (import.meta.env.DEV) { console.log(`✅ Daily report sent to ${subscribers.length} subscribers`); }
     } else {
       console.error('❌ Failed to send report:', result.error);
     }

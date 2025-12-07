@@ -90,7 +90,7 @@ export function clearPricingCache(): void {
     lastCacheUpdate: new Date(0),
     cacheExpiryMinutes: 60
   };
-  console.log('💾 Unified pricing cache cleared');
+  if (import.meta.env.DEV) { console.log('💾 Unified pricing cache cleared'); }
 }
 
 /**
@@ -100,7 +100,7 @@ export function clearPricingCache(): void {
 export function clearAllPricingCaches(): void {
   clearPricingCache();
   clearConstantsCache();
-  console.log('🔄 All pricing caches cleared - will fetch fresh from database');
+  if (import.meta.env.DEV) { console.log('🔄 All pricing caches cleared - will fetch fresh from database'); }
 }
 
 // ============================================
@@ -485,7 +485,7 @@ export async function getBatteryPricing(
 ): Promise<BatteryPricing> {
   // Check cache first
   if (isCacheValid() && pricingCache.battery) {
-    console.log('💾 Using cached battery pricing');
+    if (import.meta.env.DEV) { console.log('💾 Using cached battery pricing'); }
     return pricingCache.battery;
   }
 
@@ -609,9 +609,9 @@ export async function getAllEquipmentPricing(
  * Call this on app startup or when admin updates pricing
  */
 export async function prefetchAllPricing(): Promise<void> {
-  console.log('🔄 Prefetching all equipment pricing...');
+  if (import.meta.env.DEV) { console.log('🔄 Prefetching all equipment pricing...'); }
   await getAllEquipmentPricing(5, 4); // Use typical 5MW/4hr system for cache
-  console.log('✅ All equipment pricing cached');
+  if (import.meta.env.DEV) { console.log('✅ All equipment pricing cached'); }
 }
 
 /**

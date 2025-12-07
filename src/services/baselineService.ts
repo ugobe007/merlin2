@@ -93,8 +93,8 @@ export async function calculateDatabaseBaseline(
   try {
     if (import.meta.env.DEV) {
       console.log(`🔍 [BaselineService] Fetching configuration for: ${templateKey}`, { scale, useCaseData });
-      console.log(`🔍 [BaselineService] useCaseData keys:`, useCaseData ? Object.keys(useCaseData) : 'null/undefined');
-      console.log(`🔍 [BaselineService] useCaseData values:`, useCaseData);
+      if (import.meta.env.DEV) { console.log(`🔍 [BaselineService] useCaseData keys:`, useCaseData ? Object.keys(useCaseData) : 'null/undefined'); }
+      if (import.meta.env.DEV) { console.log(`🔍 [BaselineService] useCaseData values:`, useCaseData); }
     }
     
     // Special case: EV Charging uses charger-specific calculation
@@ -139,9 +139,9 @@ export async function calculateDatabaseBaseline(
       
       if (import.meta.env.DEV) {
         console.log(`🚜 [BaselineService] Agriculture calculation:`);
-        console.log(`   Scale (from acreage): ${scale.toFixed(3)} MW`);
-        console.log(`   Irrigation load: ${irrigationKW} kW = ${(irrigationKW/1000).toFixed(3)} MW`);
-        console.log(`   Total power: ${totalPowerMW.toFixed(3)} MW`);
+        if (import.meta.env.DEV) { console.log(`   Scale (from acreage): ${scale.toFixed(3)} MW`); }
+        if (import.meta.env.DEV) { console.log(`   Irrigation load: ${irrigationKW} kW = ${(irrigationKW/1000).toFixed(3)} MW`); }
+        if (import.meta.env.DEV) { console.log(`   Total power: ${totalPowerMW.toFixed(3)} MW`); }
       }
       
       const agResult = {
@@ -171,8 +171,8 @@ export async function calculateDatabaseBaseline(
           facilitySize: useCaseData.facilitySize,
           operatingHours: useCaseData.operatingHours 
         });
-        console.log(`👤 [BaselineService] Cache key: "${cacheKey}"`);
-        console.log(`👤 [BaselineService] Template: "${templateKey}", Scale: ${scale}`);
+        if (import.meta.env.DEV) { console.log(`👤 [BaselineService] Cache key: "${cacheKey}"`); }
+        if (import.meta.env.DEV) { console.log(`👤 [BaselineService] Template: "${templateKey}", Scale: ${scale}`); }
       }
       
       const userResult = {
@@ -258,7 +258,7 @@ export async function calculateDatabaseBaseline(
       
       if (import.meta.env.DEV) {
         console.log(`🏨 [Hotel Calculation] Reference: ${referenceRooms} rooms @ ${defaultConfig.typical_load_kw} kW = ${kWPerRoom.toFixed(2)} kW/room`);
-        console.log(`🏨 [Hotel Calculation] Actual: ${actualRooms} rooms × ${kWPerRoom.toFixed(2)} kW/room = ${basePowerMW.toFixed(3)} MW`);
+        if (import.meta.env.DEV) { console.log(`🏨 [Hotel Calculation] Actual: ${actualRooms} rooms × ${kWPerRoom.toFixed(2)} kW/room = ${basePowerMW.toFixed(3)} MW`); }
       }
       
     } else {
@@ -344,7 +344,7 @@ export async function calculateDatabaseBaseline(
           powerMW += amenityLoadMW;
           if (import.meta.env.DEV) {
             console.log(`✨ [Amenities] Total additional load: ${amenityLoadKW} kW (${amenityLoadMW.toFixed(2)} MW)`);
-            console.log(`📊 [Final Power] Base + Amenities: ${powerMW.toFixed(2)} MW`);
+            if (import.meta.env.DEV) { console.log(`📊 [Final Power] Base + Amenities: ${powerMW.toFixed(2)} MW`); }
           }
         }
       }
@@ -786,7 +786,7 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
   
   if (import.meta.env.DEV) {
     console.log('🔋 [EV Charging] Recommended Battery Size:', roundedPowerMW, 'MW');
-    console.log('🔋 [EV Charging] Calculation: ' + totalCharging.toFixed(3) + ' MW × ' + (concurrency * 100) + '% = ' + powerMW.toFixed(3) + ' MW');
+    if (import.meta.env.DEV) { console.log('🔋 [EV Charging] Calculation: ' + totalCharging.toFixed(3) + ' MW × ' + (concurrency * 100) + '% = ' + powerMW.toFixed(3) + ' MW'); }
     console.log('☀️ [Generation Analysis]:', {
       gridConnection,
       gridCapacity: gridCapacity || 'unlimited',

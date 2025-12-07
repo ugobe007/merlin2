@@ -615,7 +615,7 @@ export async function generateProfessionalModel(
   input: ProfessionalModelInput
 ): Promise<ProfessionalModelResult> {
   
-  console.log('📊 [ProfessionalFinancialModel] Generating bank-ready model...');
+  if (import.meta.env.DEV) { console.log('📊 [ProfessionalFinancialModel] Generating bank-ready model...'); }
   
   // Apply defaults
   const config = {
@@ -661,8 +661,8 @@ export async function generateProfessionalModel(
   const debtAmount = totalCapex * config.debtEquityRatio;
   const equityAmount = totalCapex * (1 - config.debtEquityRatio);
   
-  console.log(`💰 Total CAPEX: $${(totalCapex / 1000000).toFixed(2)}M`);
-  console.log(`💵 Debt: $${(debtAmount / 1000000).toFixed(2)}M | Equity: $${(equityAmount / 1000000).toFixed(2)}M`);
+  if (import.meta.env.DEV) { console.log(`💰 Total CAPEX: $${(totalCapex / 1000000).toFixed(2)}M`); }
+  if (import.meta.env.DEV) { console.log(`💵 Debt: $${(debtAmount / 1000000).toFixed(2)}M | Equity: $${(equityAmount / 1000000).toFixed(2)}M`); }
   
   // Get battery efficiency
   const constants = await getCalculationConstants();
@@ -1001,9 +1001,9 @@ export async function generateProfessionalModel(
     cumulativeROI: Math.round(((cashFlowStatements[idx].cumulativeCashFlow + equityAmount) / equityAmount - 1) * 100)
   }));
   
-  console.log('✅ [ProfessionalFinancialModel] Model complete');
-  console.log(`📈 Unlevered IRR: ${unleveredIRR.toFixed(1)}% | Levered IRR: ${leveredIRR.toFixed(1)}%`);
-  console.log(`📊 NPV: $${(npv / 1000000).toFixed(2)}M | Min DSCR: ${minDSCR.toFixed(2)}x | LCOS: $${lcos}/MWh`);
+  if (import.meta.env.DEV) { console.log('✅ [ProfessionalFinancialModel] Model complete'); }
+  if (import.meta.env.DEV) { console.log(`📈 Unlevered IRR: ${unleveredIRR.toFixed(1)}% | Levered IRR: ${leveredIRR.toFixed(1)}%`); }
+  if (import.meta.env.DEV) { console.log(`📊 NPV: $${(npv / 1000000).toFixed(2)}M | Min DSCR: ${minDSCR.toFixed(2)}x | LCOS: $${lcos}/MWh`); }
   
   return {
     summary: {

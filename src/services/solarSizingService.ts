@@ -85,18 +85,18 @@ export function calculateSolarBESSSystem(
     temperatureC
   } = inputs;
 
-  console.log('☀️  Calculating solar + BESS system...');
-  console.log(`   Daily load: ${dailyLoadkWh} kWh`);
-  console.log(`   Peak load: ${peakLoadkW} kW`);
-  console.log(`   Autonomy: ${autonomyDays} days`);
+  if (import.meta.env.DEV) { console.log('☀️  Calculating solar + BESS system...'); }
+  if (import.meta.env.DEV) { console.log(`   Daily load: ${dailyLoadkWh} kWh`); }
+  if (import.meta.env.DEV) { console.log(`   Peak load: ${peakLoadkW} kW`); }
+  if (import.meta.env.DEV) { console.log(`   Autonomy: ${autonomyDays} days`); }
 
   // STEP 1: Get Peak Sun Hours for location
   const peakSunHours = getPeakSunHours(location);
-  console.log(`   Peak Sun Hours: ${peakSunHours} hrs/day`);
+  if (import.meta.env.DEV) { console.log(`   Peak Sun Hours: ${peakSunHours} hrs/day`); }
 
   // STEP 2: Get temperature derating factor
   const temperatureDerating = getTemperatureDerating(temperatureC);
-  console.log(`   Temperature derating: ${(temperatureDerating * 100).toFixed(0)}%`);
+  if (import.meta.env.DEV) { console.log(`   Temperature derating: ${(temperatureDerating * 100).toFixed(0)}%`); }
 
   // STEP 3: Calculate battery capacity
   // Formula: (Daily Wh × Autonomy Days × 2 × 1.1) ÷ (System Voltage × Temp Factor)
@@ -110,14 +110,14 @@ export function calculateSolarBESSSystem(
   const batteryCapacitykWh = (batteryCapacityAh * systemVoltage) / 1000;
   const usableCapacitykWh = batteryCapacitykWh * 0.5; // 50% max discharge
 
-  console.log(`   Battery: ${batteryCapacityAh.toFixed(0)} Ah = ${batteryCapacitykWh.toFixed(1)} kWh`);
-  console.log(`   Usable: ${usableCapacitykWh.toFixed(1)} kWh (50% DoD)`);
+  if (import.meta.env.DEV) { console.log(`   Battery: ${batteryCapacityAh.toFixed(0)} Ah = ${batteryCapacitykWh.toFixed(1)} kWh`); }
+  if (import.meta.env.DEV) { console.log(`   Usable: ${usableCapacitykWh.toFixed(1)} kWh (50% DoD)`); }
 
   // STEP 4: Determine charge controller type and efficiency
   const chargeControllerType: 'MPPT' | 'PWM' = systemVoltage >= 48 ? 'MPPT' : 'PWM';
   const chargeEfficiency = chargeControllerType === 'MPPT' ? 0.85 : 0.75;
 
-  console.log(`   Charge controller: ${chargeControllerType} (${(chargeEfficiency * 100).toFixed(0)}% efficient)`);
+  if (import.meta.env.DEV) { console.log(`   Charge controller: ${chargeControllerType} (${(chargeEfficiency * 100).toFixed(0)}% efficient)`); }
 
   // STEP 5: Calculate solar panel wattage
   // Formula: (Battery Ah × System Voltage) ÷ (PSH × Charge Efficiency)
@@ -129,7 +129,7 @@ export function calculateSolarBESSSystem(
   const numberOfPanels = Math.ceil(solarPanelWattage / 400);
   const actualSolarWattage = numberOfPanels * 400;
 
-  console.log(`   Solar: ${solarPanelWattage.toFixed(0)}W → ${numberOfPanels} × 400W panels = ${actualSolarWattage}W`);
+  if (import.meta.env.DEV) { console.log(`   Solar: ${solarPanelWattage.toFixed(0)}W → ${numberOfPanels} × 400W panels = ${actualSolarWattage}W`); }
 
   // STEP 6: Calculate charge controller rating
   // Size for 1.25× peak current (NEC safety factor)
@@ -154,8 +154,8 @@ export function calculateSolarBESSSystem(
   // STEP 9: Calculate system ratios
   const solarToBESSRatio = (actualSolarWattage / 1000) / (batteryCapacitykWh / 4); // Assume 4-hour BESS
 
-  console.log(`   Cost estimate: $${costs.total.toLocaleString()}`);
-  console.log(`   Solar:BESS ratio: ${solarToBESSRatio.toFixed(2)}:1`);
+  if (import.meta.env.DEV) { console.log(`   Cost estimate: $${costs.total.toLocaleString()}`); }
+  if (import.meta.env.DEV) { console.log(`   Solar:BESS ratio: ${solarToBESSRatio.toFixed(2)}:1`); }
 
   return {
     batteryCapacityAh: Math.round(batteryCapacityAh),
