@@ -36,7 +36,8 @@ import {
   Users, ParkingCircle, Clock, Leaf, Trophy, Shield, HelpCircle, Target, Lightbulb,
   ShoppingCart, Activity, Receipt, Info
 } from 'lucide-react';
-import { calculateQuote, type QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { QuoteEngine } from '@/core/calculations';
+import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { PowerGaugeWidget } from '@/components/wizard/widgets';
 import { 
   EV_CHARGER_SPECS, 
@@ -554,7 +555,7 @@ export default function EVChargingWizard({
       const gridConnectionType = gridConnection.status === 'off-grid' ? 'off-grid' : 
                                  gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid';
       
-      const result = await calculateQuote({
+      const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
         durationHours,
         location: state,
