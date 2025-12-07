@@ -6,6 +6,8 @@ import CarWashEnergy from './components/verticals/CarWashEnergy';
 import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
 import StreamlinedWizard from './components/wizard/StreamlinedWizard';
+import AdvancedQuoteBuilderLanding from './components/wizard/AdvancedQuoteBuilderLanding';
+import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder';
 import { QuoteProvider } from './contexts/QuoteContext';
 
 // Test calculations temporarily disabled for production build
@@ -26,6 +28,12 @@ function App() {
   
   const [showAdmin, setShowAdmin] = useState(adminParam === 'true');
   const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
+  
+  // NEW: Direct /quote-builder route support
+  // This enables verticals to redirect to Advanced Quote Builder directly
+  const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState(
+    pathname === '/quote-builder' || advancedParam === 'true'
+  );
   
   // If advanced=true is set, don't activate vertical (let BessQuoteBuilder handle it)
   const [activeVertical, setActiveVertical] = useState<string | null>(
@@ -100,6 +108,42 @@ function App() {
         onClose={() => window.location.href = '/'}
         onFinish={(data) => console.log('Quote finished:', data)}
       />
+    );
+  }
+
+  // Access via /quote-builder - Advanced Quote Builder with upload capability
+  // This is the professional tool with spec upload, custom config, AI optimization
+  if (showAdvancedQuoteBuilder) {
+    const sourceVertical = urlParams.get('vertical') || verticalParam;
+    return (
+      <QuoteProvider>
+        <AdvancedQuoteBuilderLanding
+          onBackToHome={() => {
+            // If came from a vertical, go back there
+            if (sourceVertical === 'car-wash') {
+              window.location.href = '/carwashenergy';
+            } else if (sourceVertical === 'ev-charging') {
+              window.location.href = '/evchargingenergy';
+            } else if (sourceVertical === 'hotel') {
+              window.location.href = '/hotelenergy';
+            } else {
+              window.location.href = '/';
+            }
+          }}
+          onStartCustomQuote={() => {
+            // Navigate to main Merlin with advanced builder open
+            window.location.href = '/?advanced=true&view=custom-config';
+          }}
+          onShowSmartWizard={() => {
+            window.location.href = '/wizard';
+          }}
+          onExtractedSpecs={(specs) => {
+            // Store specs in session storage and redirect to advanced builder
+            sessionStorage.setItem('extractedSpecs', JSON.stringify(specs));
+            window.location.href = '/?advanced=true&view=custom-config&fromUpload=true';
+          }}
+        />
+      </QuoteProvider>
     );
   }
 

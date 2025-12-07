@@ -46,6 +46,7 @@ import {
   type GeographicRecommendation 
 } from '@/services/geographicIntelligenceService';
 import PowerProfileTracker, { WIZARD_SECTIONS } from './PowerProfileTracker';
+import { PowerDashboardWidget, type PowerDashboardData } from './widgets';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================
@@ -572,17 +573,37 @@ export default function StreamlinedWizard({
             </button>
             <div className="w-px h-8 bg-gray-200"></div>
             <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
-            <div>
+            <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-gray-800">Merlin Quote Builder</h1>
               <p className="text-xs text-purple-600">Guided energy storage sizing</p>
             </div>
+          </div>
+          
+          {/* Power Dashboard Widget - Nav Bar Position */}
+          <div className="hidden md:flex items-center">
+            <PowerDashboardWidget
+              data={{
+                utilityRate: wizardState.electricityRate || 0.12,
+                demandCharge: 15, // Default demand charge
+                state: wizardState.state || undefined,
+                peakDemandKW: wizardState.batteryKW || 0,
+                storageKWh: wizardState.batteryKWh || 0,
+                durationHours: wizardState.durationHours || 4,
+                solarKW: wizardState.wantsSolar ? (wizardState.solarKW || 0) : 0,
+                windKW: wizardState.wantsWind ? 0 : 0,  // windKW not in state yet
+                generatorKW: wizardState.wantsGenerator ? (wizardState.generatorKW || 0) : 0,
+              }}
+              compact={true}
+              colorScheme="purple"
+              onDetailsClick={() => setShowPowerProfileExplainer(true)}
+            />
           </div>
           
           <div className="flex items-center gap-3">
             {onOpenAdvanced && (
               <button
                 onClick={onOpenAdvanced}
-                className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-300 rounded-lg hover:bg-purple-100 transition-colors"
+                className="hidden lg:flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-300 rounded-lg hover:bg-purple-100 transition-colors"
               >
                 <Zap className="w-4 h-4" />
                 Advanced Mode
