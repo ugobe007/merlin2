@@ -4,15 +4,18 @@ import {
   Zap, 
   Settings, 
   Calculator,
-  TrendingUp,
   BarChart3,
   FileText,
   Wrench,
   Sparkles,
   ChevronRight,
-  Upload
+  Upload,
+  Crown,
+  CheckCircle,
+  Star
 } from 'lucide-react';
 import SpecUploadModal from '../upload/SpecUploadModal';
+import merlinImage from '@/assets/images/new_Merlin.png';
 
 interface AdvancedQuoteBuilderLandingProps {
   onBackToHome: () => void;
@@ -44,142 +47,133 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
   onShowQuoteTemplates,
   onExtractedSpecs
 }) => {
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showComingSoonModal, setShowComingSoonModal] = useState<string | null>(null);
 
-  const tools = [
+  // BUG FIX: Auto-start custom quote if view=custom-config in URL
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam === 'custom-config' && onStartCustomQuote) {
+      // Small delay to ensure component is mounted
+      setTimeout(() => onStartCustomQuote(), 100);
+    }
+  }, [onStartCustomQuote]);
+
+  // Primary tools that work
+  const primaryTools = [
     {
       id: 'upload-specs',
-      icon: <Upload className="w-12 h-12" />,
+      icon: <Upload className="w-10 h-10" />,
       title: 'Upload Specs',
-      description: 'Upload your RFP, spec sheet, or requirements document',
-      color: 'from-green-600 to-teal-600',
+      subtitle: 'AI-Powered Extraction',
+      description: 'Upload utility bills, equipment lists, or load profiles',
+      gradient: 'from-purple-500 via-violet-500 to-fuchsia-500',
+      borderColor: 'border-purple-400/50',
       action: () => setShowUploadModal(true),
-      features: [
-        'PDF, Excel, CSV support',
-        'AI-powered data extraction',
-        'Automatic field population',
-        'Review before quote'
-      ],
-      isNew: true
+      features: ['PDF, Excel, Word, CSV, Images', 'AI data extraction', 'Auto-populate fields'],
+      isNew: true,
+      available: true
     },
     {
       id: 'custom-config',
-      icon: <Settings className="w-12 h-12" />,
-      title: 'Custom Configuration',
-      description: 'Build your quote from scratch with full manual control',
-      color: 'from-purple-600 to-indigo-600',
+      icon: <Settings className="w-10 h-10" />,
+      title: 'System Configuration',
+      subtitle: 'Full Manual Control',
+      description: 'Design your complete BESS system with all parameters',
+      gradient: 'from-purple-500 via-indigo-500 to-blue-500',
+      borderColor: 'border-purple-400/50',
       action: onStartCustomQuote,
-      features: [
-        'Manual power & energy sizing',
-        'Custom renewable integration',
-        'Advanced financial modeling',
-        'Full equipment control'
-      ]
+      features: ['Power & energy sizing', 'Renewable integration', 'Equipment selection'],
+      isNew: false,
+      available: true
     },
     {
-      id: 'optimization',
-      icon: <Sparkles className="w-12 h-12" />,
-      title: 'AI Optimization Engine',
-      description: 'Let AI analyze and optimize your configuration',
-      color: 'from-blue-600 to-cyan-600',
-      action: () => {
-        // Don't open Smart Wizard - user wants stable interface
-        // AI optimization is available in the Interactive Dashboard
-        if (window.confirm('💡 AI Optimization Engine\n\nWould you like to use the Smart Wizard with AI-powered recommendations?\n\nOK = Open Smart Wizard\nCancel = Return to Home')) {
-          onShowSmartWizard();
-        } else {
-          onBackToHome();
-        }
-      },
-      features: [
-        'Intelligent sizing recommendations',
-        'Cost-benefit analysis',
-        'Performance predictions',
-        'Alternative configurations'
-      ]
-    },
+      id: 'smart-wizard',
+      icon: <Sparkles className="w-10 h-10" />,
+      title: 'Smart Wizard',
+      subtitle: 'Guided Experience',
+      description: 'Answer questions and get AI-powered recommendations',
+      gradient: 'from-indigo-500 via-purple-500 to-pink-500',
+      borderColor: 'border-indigo-400/50',
+      action: onShowSmartWizard,
+      features: ['Step-by-step guidance', 'Industry templates', 'Auto-sizing'],
+      isNew: false,
+      available: true
+    }
+  ];
+
+  // Secondary tools (some coming soon)
+  const secondaryTools = [
     {
       id: 'financial',
-      icon: <Calculator className="w-12 h-12" />,
+      icon: <Calculator className="w-8 h-8" />,
       title: 'Financial Calculator',
-      description: 'Deep-dive financial analysis and projections',
-      color: 'from-green-600 to-emerald-600',
-      action: onShowFinancialCalculator || (() => setSelectedTool('financial')),
-      features: [
-        'ROI & payback calculations',
-        'Cash flow projections',
-        'Financing scenarios',
-        'Tax incentive analysis'
-      ]
+      description: 'ROI, NPV, payback analysis',
+      gradient: 'from-green-600 to-emerald-600',
+      action: onShowFinancialCalculator || (() => setShowComingSoonModal('Financial Calculator')),
+      available: !!onShowFinancialCalculator
     },
     {
       id: 'analytics',
-      icon: <BarChart3 className="w-12 h-12" />,
+      icon: <BarChart3 className="w-8 h-8" />,
       title: 'Market Analytics',
-      description: 'Industry benchmarks and market intelligence',
-      color: 'from-orange-600 to-red-600',
-      action: onShowMarketAnalytics || (() => setSelectedTool('analytics')),
-      features: [
-        'Industry comparisons',
-        'Pricing trends',
-        'Technology benchmarks',
-        'Market insights'
-      ]
+      description: 'Industry benchmarks & trends',
+      gradient: 'from-blue-600 to-cyan-600',
+      action: onShowMarketAnalytics || (() => setShowComingSoonModal('Market Analytics')),
+      available: !!onShowMarketAnalytics
     },
     {
       id: 'components',
-      icon: <Wrench className="w-12 h-12" />,
+      icon: <Wrench className="w-8 h-8" />,
       title: 'Component Library',
-      description: 'Browse and select specific equipment',
-      color: 'from-gray-600 to-slate-600',
-      action: onShowComponentLibrary || (() => setSelectedTool('components')),
-      features: [
-        'Battery specifications',
-        'Solar panel options',
-        'Inverter selection',
-        'BOS equipment'
-      ]
+      description: 'Equipment specifications',
+      gradient: 'from-slate-600 to-gray-600',
+      action: onShowComponentLibrary || (() => setShowComingSoonModal('Component Library')),
+      available: !!onShowComponentLibrary
     },
     {
       id: 'reports',
-      icon: <FileText className="w-12 h-12" />,
+      icon: <FileText className="w-8 h-8" />,
       title: 'Custom Reports',
-      description: 'Generate detailed technical and financial reports',
-      color: 'from-indigo-600 to-purple-600',
-      action: onShowQuoteTemplates || (() => setSelectedTool('reports')),
-      features: [
-        'Technical specifications',
-        'Financial summaries',
-        'Executive presentations',
-        'Export to PDF/Word'
-      ]
+      description: 'Professional documentation',
+      gradient: 'from-violet-600 to-purple-600',
+      action: onShowQuoteTemplates || (() => setShowComingSoonModal('Custom Reports')),
+      available: !!onShowQuoteTemplates
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white p-6 shadow-lg">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
+      {/* Header - Merlin Theme */}
+      <div className="bg-gradient-to-r from-purple-800 via-indigo-700 to-purple-800 border-b-4 border-purple-400 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <button
                 onClick={onBackToHome}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white"
               >
                 <ArrowLeft className="w-6 h-6" />
               </button>
-              <div>
-                <h1 className="text-3xl font-bold">⚡ Advanced Quote Builder</h1>
-                <p className="text-orange-100 mt-1">Professional tools for power users</p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-xl p-1 shadow-lg">
+                  <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <Zap className="w-6 h-6 text-yellow-400" />
+                    Advanced Quote Builder
+                  </h1>
+                  <p className="text-purple-200 text-sm">Professional BESS Configuration Tools</p>
+                </div>
               </div>
             </div>
             <button
               onClick={onShowSmartWizard}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl transition-colors font-semibold"
+              className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 hover:from-gray-200 hover:via-gray-300 hover:to-gray-200 px-5 py-2.5 rounded-xl transition-all font-bold text-purple-700 border-2 border-gray-300 hover:border-purple-400 shadow-md hover:shadow-lg"
             >
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-5 h-5 text-purple-600" />
               Smart Wizard Mode
             </button>
           </div>
@@ -187,153 +181,173 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Introduction */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 mb-8 border-2 border-blue-300">
-          <div className="flex items-start gap-4">
-            <div className="bg-blue-600 text-white p-3 rounded-xl">
-              <Zap className="w-8 h-8" />
+      <div className="max-w-7xl mx-auto p-6 lg:p-8">
+        
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-blue-600/20 backdrop-blur-xl border-2 border-purple-400/30 rounded-3xl p-8 mb-8 shadow-2xl">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            <div className="flex-shrink-0">
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-500/30 to-indigo-500/30 rounded-2xl p-3 border border-purple-400/30">
+                <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain drop-shadow-lg" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Advanced Mode</h2>
-              <p className="text-gray-700 mb-4">
-                Access professional-grade tools for building custom energy storage quotes. 
-                Choose from manual configuration, AI-powered optimization, financial analysis, 
-                and more specialized tools.
+            <div className="flex-1 text-center lg:text-left">
+              <h2 className="text-3xl font-bold text-white mb-3">Welcome to Professional Mode</h2>
+              <p className="text-purple-200 text-lg mb-4 max-w-2xl">
+                Access enterprise-grade tools for designing custom battery energy storage systems. 
+                Upload specs, configure manually, or let AI guide you.
               </p>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Full Control</span>
-                </div>
-                <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <span>AI Assistance Available</span>
-                </div>
-                <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full">
-                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                  <span>Professional Features</span>
-                </div>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-400/30 rounded-full text-emerald-300 text-sm font-medium">
+                  <CheckCircle className="w-4 h-4" /> Full Control
+                </span>
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 text-sm font-medium">
+                  <Sparkles className="w-4 h-4" /> AI-Powered
+                </span>
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full text-purple-300 text-sm font-medium">
+                  <Crown className="w-4 h-4" /> Professional
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tools Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.map((tool) => (
-            <div
-              key={tool.id}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 cursor-pointer overflow-hidden relative"
-              onClick={tool.action}
-            >
-              {/* NEW Badge */}
-              {'isNew' in tool && tool.isNew && (
-                <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10 animate-pulse">
-                  NEW
+        {/* Primary Tools - Large Cards */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-400" />
+            Start Your Quote
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            {primaryTools.map((tool) => (
+              <button
+                key={tool.id}
+                onClick={tool.action}
+                className={`group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-2xl overflow-hidden border-2 ${tool.borderColor} hover:border-white/50 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-2xl text-left`}
+              >
+                {/* NEW Badge */}
+                {tool.isNew && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                      NEW
+                    </span>
+                  </div>
+                )}
+                
+                {/* Gradient Header */}
+                <div className={`bg-gradient-to-r ${tool.gradient} p-6`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                      {tool.icon}
+                    </div>
+                    <ChevronRight className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-1">{tool.title}</h4>
+                  <p className="text-white/80 text-sm font-medium">{tool.subtitle}</p>
                 </div>
-              )}
-              {/* Tool Header */}
-              <div className={`bg-gradient-to-r ${tool.color} text-white p-6`}>
-                <div className="flex items-center justify-between mb-3">
-                  {tool.icon}
-                  <ChevronRight className="w-6 h-6" />
+                
+                {/* Content */}
+                <div className="p-6">
+                  <p className="text-gray-300 mb-4">{tool.description}</p>
+                  <ul className="space-y-2">
+                    {tool.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-400">
+                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{tool.title}</h3>
-                <p className="text-white/90 text-sm">{tool.description}</p>
-              </div>
-
-              {/* Features List */}
-              <div className="p-6">
-                <ul className="space-y-2">
-                  {tool.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="text-green-600 mt-0.5">✓</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Action Button */}
-              <div className="px-6 pb-6">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    tool.action();
-                  }}
-                  className={`w-full bg-gradient-to-r ${tool.color} hover:opacity-90 text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2`}
-                >
-                  Launch Tool
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Help Section */}
-        <div className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+        {/* Secondary Tools - Smaller Cards */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Wrench className="w-5 h-5 text-gray-400" />
+            Additional Tools
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {secondaryTools.map((tool) => (
+              <button
+                key={tool.id}
+                onClick={tool.action}
+                className={`group relative bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-xl p-5 border border-gray-700/50 hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02] text-left ${!tool.available ? 'opacity-70' : ''}`}
+              >
+                {!tool.available && (
+                  <div className="absolute top-2 right-2">
+                    <span className="bg-purple-700/50 text-purple-300 text-xs px-2 py-0.5 rounded-full">
+                      Soon
+                    </span>
+                  </div>
+                )}
+                <div className={`inline-flex p-2.5 bg-gradient-to-r ${tool.gradient} rounded-lg mb-3`}>
+                  {tool.icon}
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                  {tool.title}
+                </h4>
+                <p className="text-gray-400 text-sm">{tool.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Start Tips */}
+        <div className="bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 rounded-2xl p-6">
           <div className="flex items-start gap-4">
             <div className="text-4xl">💡</div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-800 mb-2">New to Advanced Mode?</h3>
-              <p className="text-gray-700 mb-3">
-                Start with <strong>Custom Configuration</strong> to build your quote manually, 
-                or use <strong>AI Optimization</strong> to get intelligent recommendations based on your inputs.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={onStartCustomQuote}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                >
-                  Start Custom Quote
-                </button>
-                <button
-                  onClick={onShowSmartWizard}
-                  className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm transition-colors border border-gray-300"
-                >
-                  Or Use Smart Wizard
-                </button>
-              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Quick Start Tips</h3>
+              <ul className="text-purple-200 space-y-1 text-sm">
+                <li>• <strong>Have specs?</strong> Use <span className="text-emerald-400">Upload Specs</span> for instant data extraction</li>
+                <li>• <strong>Know your requirements?</strong> Go to <span className="text-purple-400">System Configuration</span> for full control</li>
+                <li>• <strong>Need guidance?</strong> The <span className="text-amber-400">Smart Wizard</span> walks you through step-by-step</li>
+              </ul>
             </div>
           </div>
         </div>
 
-        {/* Coming Soon Tools */}
-        <div className="mt-6 text-center">
-          <p className="text-white/60 text-sm">
-            🚀 More tools coming soon: Template Library • Collaboration • Version Control • API Access
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-500 text-sm">
+            Powered by <span className="text-purple-400 font-semibold">Merlin Energy</span> • AI-Optimized Battery Storage Solutions
           </p>
         </div>
       </div>
 
-      {/* Tool Modal (for future implementation) */}
-      {selectedTool && selectedTool !== 'custom-config' && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Coming Soon!</h3>
-            <p className="text-gray-600 mb-6">
-              The <strong>{tools.find(t => t.id === selectedTool)?.title}</strong> tool 
-              is currently under development. For now, please use the Custom Configuration 
-              tool to build your quote.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setSelectedTool(null)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedTool(null);
-                  onStartCustomQuote();
-                }}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-colors"
-              >
-                Start Custom Quote
-              </button>
+      {/* Coming Soon Modal */}
+      {showComingSoonModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-purple-500/30">
+            <div className="text-center">
+              <div className="inline-flex p-4 bg-purple-500/20 rounded-full mb-4">
+                <Sparkles className="w-10 h-10 text-purple-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">Coming Soon!</h3>
+              <p className="text-gray-300 mb-6">
+                <strong className="text-purple-400">{showComingSoonModal}</strong> is currently under development. 
+                For now, use System Configuration or Smart Wizard to build your quote.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowComingSoonModal(null)}
+                  className="flex-1 bg-purple-800/60 hover:bg-purple-700/70 text-white py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowComingSoonModal(null);
+                    onStartCustomQuote();
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white py-3 rounded-xl font-semibold transition-all"
+                >
+                  Start Quote
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -348,8 +362,6 @@ const AdvancedQuoteBuilderLanding: React.FC<AdvancedQuoteBuilderLandingProps> = 
             if (onExtractedSpecs) {
               onExtractedSpecs(specs);
             } else {
-              // Fallback: start custom quote with extracted specs
-              // The parent component should handle this properly
               onStartCustomQuote();
             }
           }}

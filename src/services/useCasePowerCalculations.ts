@@ -198,17 +198,25 @@ export function calculateOfficePower(sqFt: number): PowerCalculationResult {
  */
 export function calculateHotelPower(roomCount: number): PowerCalculationResult {
   // Peak demand: 3.5 kW per room (HVAC at peak, all amenities running)
-  // Average is ~2.5 kW/room, but BESS needs to handle peak
+  // This is a midscale hotel assumption
   const kWPerRoom = POWER_DENSITY_STANDARDS.hotelPerRoom; // 3.5 kW peak
-  const powerKW = roomCount * kWPerRoom;
+  
+  // Apply diversity factor: Not all rooms at peak simultaneously
+  // Standard diversity factor for hotels is 0.6-0.8 (we use 0.75)
+  // This accounts for HVAC cycling, varying occupancy, and load staggering
+  const diversityFactor = 0.75;
+  
+  // Calculate power with diversity
+  const rawPowerKW = roomCount * kWPerRoom;
+  const powerKW = rawPowerKW * diversityFactor;
   const powerMW = powerKW / 1000;
   
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: 4,
-    description: `Hotel: ${roomCount} rooms × ${kWPerRoom} kW/room peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CBECS hospitality peak demand (3.5 kW/room)',
-    inputs: { roomCount, kWPerRoom }
+    description: `Hotel: ${roomCount} rooms × ${kWPerRoom} kW/room × 0.75 diversity = ${powerKW.toFixed(0)} kW peak`,
+    calculationMethod: 'CBECS hospitality peak demand (3.5 kW/room × 0.75 diversity factor)',
+    inputs: { roomCount, kWPerRoom, diversityFactor }
   };
 }
 
@@ -1327,9 +1335,15 @@ export function calculateUseCasePower(
       
     case 'hotel':
     case 'hotel-hospitality':
-      return calculateHotelPower(
-        parseInt(useCaseData.roomCount || useCaseData.numberOfRooms) || 100
-      );
+      // Support multiple field names: roomCount, numberOfRooms, facilitySize (from wizard)
+      // BUG FIX: wizard passes facilitySize for all industries, so accept it for hotels too
+      const hotelRooms = parseInt(
+        useCaseData.roomCount || 
+        useCaseData.numberOfRooms || 
+        useCaseData.facilitySize ||  // Wizard uses facilitySize generically
+        useCaseData.rooms
+      ) || 100;
+      return calculateHotelPower(hotelRooms);
       
     case 'hospital':
       return calculateHospitalPower(
