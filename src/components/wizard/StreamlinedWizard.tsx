@@ -110,7 +110,25 @@ interface WizardState {
   solarKW: number;
   durationHours: number;
   
-  // EV Chargers
+  // EV Chargers - NEW STRUCTURE (Q1: Existing, Q2: New)
+  hasExistingEVChargers: boolean;  // Q1: Do you have existing?
+  wantsNewEVChargers: boolean;     // Q2: Want to add new?
+  
+  // Existing EV Chargers (from Q1)
+  existingEV: {
+    L1: { count: number; powerKW: number };   // Level 1: 1.4 kW
+    L2: { count: number; powerKW: number };   // Level 2: 7/11/19 kW options
+    L3: { count: number; powerKW: number };   // Level 3 (DCFC/HPC): 50/150/350 kW
+  };
+  
+  // New EV Chargers to add (from Q2)
+  newEV: {
+    L1: { count: number; powerKW: number };
+    L2: { count: number; powerKW: number };
+    L3: { count: number; powerKW: number };
+  };
+  
+  // Legacy fields (for backwards compatibility - calculated from above)
   evChargersL2: number;   // Level 2 chargers (7-22 kW)
   evChargersDCFC: number; // DC Fast Chargers (50-150 kW)
   evChargersHPC: number;  // High Power Chargers (250-350 kW)
@@ -403,6 +421,18 @@ export default function StreamlinedWizard({
     batteryKWh: 0,
     solarKW: 0,
     durationHours: 4,
+    hasExistingEVChargers: false,
+    wantsNewEVChargers: false,
+    existingEV: {
+      L1: { count: 0, powerKW: 1.4 },
+      L2: { count: 0, powerKW: 11 },
+      L3: { count: 0, powerKW: 150 },
+    },
+    newEV: {
+      L1: { count: 0, powerKW: 1.4 },
+      L2: { count: 0, powerKW: 11 },
+      L3: { count: 0, powerKW: 150 },
+    },
     evChargersL2: 0,
     evChargersDCFC: 0,
     evChargersHPC: 0,
@@ -2625,138 +2655,336 @@ export default function StreamlinedWizard({
                 </div>
               </div>
               
-              {/* EV Charging Configuration */}
-              <div 
-                className={`bg-white/90 backdrop-blur-sm rounded-3xl p-6 border mb-6 shadow-lg cursor-pointer transition-all ${wizardState.wantsEVCharging ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-gray-200 hover:border-emerald-300'}`}
-                onClick={() => !wizardState.wantsEVCharging && setWizardState(prev => ({ 
-                  ...prev, 
-                  wantsEVCharging: true,
-                  evChargersL2: 4,
-                  evChargersDCFC: 2,
-                  evChargersHPC: 0,
-                }))}
-              >
+              {/* EV Charging Configuration - NEW Q1/Q2 FLOW */}
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-gray-200 mb-6 shadow-lg">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${wizardState.wantsEVCharging ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gray-200'}`}>
-                    <Car className={`w-6 h-6 ${wizardState.wantsEVCharging ? 'text-white' : 'text-gray-400'}`} />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <Car className="w-6 h-6 text-white" />
                   </div>
-                  <div className="flex-1">
+                  <div>
                     <h3 className="text-lg font-bold text-gray-800">EV Charging Infrastructure</h3>
-                    <p className="text-sm text-gray-500">{wizardState.wantsEVCharging ? 'Configure your charging stations' : 'Click anywhere to add EV chargers'}</p>
-                  </div>
-                  <div 
-                    className="flex items-center gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={wizardState.wantsEVCharging}
-                      onChange={(e) => setWizardState(prev => ({ 
-                        ...prev, 
-                        wantsEVCharging: e.target.checked,
-                        evChargersL2: e.target.checked ? 4 : 0,
-                        evChargersDCFC: e.target.checked ? 2 : 0,
-                        evChargersHPC: 0,
-                      }))}
-                      className="w-6 h-6 rounded accent-emerald-500"
-                    />
+                    <p className="text-sm text-gray-500">Configure existing and new charging stations</p>
                   </div>
                 </div>
                 
-                {wizardState.wantsEVCharging ? (
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {/* Level 2 Chargers */}
-                    <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-bold text-gray-800">Level 2</h4>
-                          <p className="text-xs text-gray-500">7-22 kW • ~8 hrs charge</p>
-                        </div>
-                        <span className="text-emerald-600 text-sm font-bold">~$8K/ea</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersL2: Math.max(0, prev.evChargersL2 - 1) }))}
-                          className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold"
-                        >−</button>
-                        <span className="flex-1 text-center text-2xl font-black text-gray-800">{wizardState.evChargersL2}</span>
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersL2: prev.evChargersL2 + 1 }))}
-                          className="w-10 h-10 bg-emerald-600 hover:bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold"
-                        >+</button>
-                      </div>
-                      <div className="text-center text-sm text-gray-500 mt-2">
-                        {wizardState.evChargersL2 * 15} kW total load
-                      </div>
+                {/* Q1: Do you have EXISTING EV chargers? */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div>
+                      <h4 className="font-bold text-gray-800">Q1: Do you have EXISTING EV chargers?</h4>
+                      <p className="text-sm text-gray-500">On-site chargers you already own</p>
                     </div>
-                    
-                    {/* DC Fast Chargers */}
-                    <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-bold text-gray-800">DC Fast (DCFC)</h4>
-                          <p className="text-xs text-gray-500">50-150 kW • ~30 min charge</p>
-                        </div>
-                        <span className="text-emerald-600 text-sm font-bold">~$85K/ea</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersDCFC: Math.max(0, prev.evChargersDCFC - 1) }))}
-                          className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold"
-                        >−</button>
-                        <span className="flex-1 text-center text-2xl font-black text-gray-800">{wizardState.evChargersDCFC}</span>
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersDCFC: prev.evChargersDCFC + 1 }))}
-                          className="w-10 h-10 bg-emerald-600 hover:bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold"
-                        >+</button>
-                      </div>
-                      <div className="text-center text-sm text-gray-500 mt-2">
-                        {wizardState.evChargersDCFC * 100} kW total load
-                      </div>
-                    </div>
-                    
-                    {/* High Power Chargers */}
-                    <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-bold text-gray-800">High Power (HPC)</h4>
-                          <p className="text-xs text-gray-500">250-350 kW • ~15 min charge</p>
-                        </div>
-                        <span className="text-emerald-600 text-sm font-bold">~$180K/ea</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersHPC: Math.max(0, prev.evChargersHPC - 1) }))}
-                          className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold"
-                        >−</button>
-                        <span className="flex-1 text-center text-2xl font-black text-gray-800">{wizardState.evChargersHPC}</span>
-                        <button 
-                          onClick={() => setWizardState(prev => ({ ...prev, evChargersHPC: prev.evChargersHPC + 1 }))}
-                          className="w-10 h-10 bg-emerald-600 hover:bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold"
-                        >+</button>
-                      </div>
-                      <div className="text-center text-sm text-gray-500 mt-2">
-                        {wizardState.evChargersHPC * 300} kW total load
-                      </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setWizardState(prev => ({ ...prev, hasExistingEVChargers: true }))}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${wizardState.hasExistingEVChargers ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setWizardState(prev => ({ 
+                          ...prev, 
+                          hasExistingEVChargers: false,
+                          existingEV: { L1: { count: 0, powerKW: 1.4 }, L2: { count: 0, powerKW: 11 }, L3: { count: 0, powerKW: 150 } }
+                        }))}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${!wizardState.hasExistingEVChargers ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                      >
+                        No
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-6 text-gray-400">
-                    <Car className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>Enable to add EV charging infrastructure</p>
-                    <p className="text-xs mt-1 text-gray-500">Level 2, DC Fast, and High Power chargers</p>
-                  </div>
-                )}
+                  
+                  {/* Existing EV Chargers Breakdown */}
+                  {wizardState.hasExistingEVChargers && (
+                    <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                      <h5 className="font-bold text-emerald-800 mb-4">How many existing chargers of each type?</h5>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        {/* Level 1 */}
+                        <div className="bg-white rounded-lg p-3 border border-emerald-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 1</h6>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">1.4 kW</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2">120V • Overnight (8-12+ hrs)</p>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L1: { ...prev.existingEV.L1, count: Math.max(0, prev.existingEV.L1.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.existingEV.L1.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L1: { ...prev.existingEV.L1, count: prev.existingEV.L1.count + 1 } } }))}
+                              className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-emerald-600 mt-1 font-medium">
+                            {(wizardState.existingEV.L1.count * 1.4).toFixed(1)} kW load
+                          </div>
+                        </div>
+                        
+                        {/* Level 2 */}
+                        <div className="bg-white rounded-lg p-3 border border-emerald-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 2</h6>
+                            <select 
+                              value={wizardState.existingEV.L2.powerKW}
+                              onChange={(e) => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L2: { ...prev.existingEV.L2, powerKW: Number(e.target.value) } } }))}
+                              className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-0.5"
+                            >
+                              <option value={7}>7 kW</option>
+                              <option value={11}>11 kW</option>
+                              <option value={19}>19 kW</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2">240V • Standard (4-8 hrs)</p>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L2: { ...prev.existingEV.L2, count: Math.max(0, prev.existingEV.L2.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.existingEV.L2.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L2: { ...prev.existingEV.L2, count: prev.existingEV.L2.count + 1 } } }))}
+                              className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-emerald-600 mt-1 font-medium">
+                            {wizardState.existingEV.L2.count * wizardState.existingEV.L2.powerKW} kW load
+                          </div>
+                        </div>
+                        
+                        {/* Level 3 (DCFC/HPC) */}
+                        <div className="bg-white rounded-lg p-3 border border-emerald-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 3 (DC Fast)</h6>
+                            <select 
+                              value={wizardState.existingEV.L3.powerKW}
+                              onChange={(e) => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L3: { ...prev.existingEV.L3, powerKW: Number(e.target.value) } } }))}
+                              className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-0.5"
+                            >
+                              <option value={50}>50 kW</option>
+                              <option value={150}>150 kW</option>
+                              <option value={350}>350 kW</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2">480V+ • Rapid (15-45 min)</p>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L3: { ...prev.existingEV.L3, count: Math.max(0, prev.existingEV.L3.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.existingEV.L3.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, existingEV: { ...prev.existingEV, L3: { ...prev.existingEV.L3, count: prev.existingEV.L3.count + 1 } } }))}
+                              className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-emerald-600 mt-1 font-medium">
+                            {wizardState.existingEV.L3.count * wizardState.existingEV.L3.powerKW} kW load
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Existing Total */}
+                      {(wizardState.existingEV.L1.count > 0 || wizardState.existingEV.L2.count > 0 || wizardState.existingEV.L3.count > 0) && (
+                        <div className="mt-4 pt-3 border-t border-emerald-200 flex justify-between items-center">
+                          <span className="text-sm text-emerald-700 font-medium">Existing EV Load:</span>
+                          <span className="text-lg font-bold text-emerald-700">
+                            {(wizardState.existingEV.L1.count * wizardState.existingEV.L1.powerKW + 
+                              wizardState.existingEV.L2.count * wizardState.existingEV.L2.powerKW + 
+                              wizardState.existingEV.L3.count * wizardState.existingEV.L3.powerKW).toLocaleString()} kW
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 
-                {wizardState.wantsEVCharging && wizardState.estimatedCost.evChargers > 0 && (
-                  <div className="mt-4 pt-4 border-t border-emerald-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">EV Infrastructure Total:</span>
-                      <span className="text-xl font-bold text-emerald-600">${wizardState.estimatedCost.evChargers.toLocaleString()}</span>
+                {/* Q2: Do you want to ADD NEW EV chargers? */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div>
+                      <h4 className="font-bold text-gray-800">Q2: Do you want to ADD NEW EV chargers?</h4>
+                      <p className="text-sm text-gray-500">New stations to install with this project</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Total charging capacity: {wizardState.evChargersL2 * 15 + wizardState.evChargersDCFC * 100 + wizardState.evChargersHPC * 300} kW
-                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setWizardState(prev => ({ 
+                          ...prev, 
+                          wantsNewEVChargers: true,
+                          wantsEVCharging: true,
+                          // Set reasonable defaults
+                          newEV: { L1: { count: 0, powerKW: 1.4 }, L2: { count: 4, powerKW: 11 }, L3: { count: 1, powerKW: 150 } }
+                        }))}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${wizardState.wantsNewEVChargers ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setWizardState(prev => ({ 
+                          ...prev, 
+                          wantsNewEVChargers: false,
+                          wantsEVCharging: prev.hasExistingEVChargers, // Keep wantsEVCharging if has existing
+                          newEV: { L1: { count: 0, powerKW: 1.4 }, L2: { count: 0, powerKW: 11 }, L3: { count: 0, powerKW: 150 } }
+                        }))}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${!wizardState.wantsNewEVChargers ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* New EV Chargers Breakdown */}
+                  {wizardState.wantsNewEVChargers && (
+                    <div className="mt-4 p-4 bg-teal-50 rounded-xl border border-teal-200">
+                      <h5 className="font-bold text-teal-800 mb-4">How many NEW chargers to add?</h5>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        {/* Level 1 */}
+                        <div className="bg-white rounded-lg p-3 border border-teal-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 1</h6>
+                            <span className="text-xs text-teal-600 font-bold">~$500/ea</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2">120V • 1.4 kW</p>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L1: { ...prev.newEV.L1, count: Math.max(0, prev.newEV.L1.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.newEV.L1.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L1: { ...prev.newEV.L1, count: prev.newEV.L1.count + 1 } } }))}
+                              className="w-8 h-8 bg-teal-500 hover:bg-teal-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-teal-600 mt-1 font-medium">
+                            {(wizardState.newEV.L1.count * 1.4).toFixed(1)} kW load
+                          </div>
+                        </div>
+                        
+                        {/* Level 2 */}
+                        <div className="bg-white rounded-lg p-3 border border-teal-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 2</h6>
+                            <span className="text-xs text-teal-600 font-bold">~$8K/ea</span>
+                          </div>
+                          <div className="mb-2">
+                            <select 
+                              value={wizardState.newEV.L2.powerKW}
+                              onChange={(e) => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L2: { ...prev.newEV.L2, powerKW: Number(e.target.value) } } }))}
+                              className="w-full text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1"
+                            >
+                              <option value={7}>7 kW (Basic)</option>
+                              <option value={11}>11 kW (Standard)</option>
+                              <option value={19}>19 kW (Fast)</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L2: { ...prev.newEV.L2, count: Math.max(0, prev.newEV.L2.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.newEV.L2.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L2: { ...prev.newEV.L2, count: prev.newEV.L2.count + 1 } } }))}
+                              className="w-8 h-8 bg-teal-500 hover:bg-teal-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-teal-600 mt-1 font-medium">
+                            {wizardState.newEV.L2.count * wizardState.newEV.L2.powerKW} kW load
+                          </div>
+                        </div>
+                        
+                        {/* Level 3 (DCFC/HPC) */}
+                        <div className="bg-white rounded-lg p-3 border border-teal-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-bold text-gray-800">Level 3 (DC Fast)</h6>
+                            <span className="text-xs text-teal-600 font-bold">~$85-180K/ea</span>
+                          </div>
+                          <div className="mb-2">
+                            <select 
+                              value={wizardState.newEV.L3.powerKW}
+                              onChange={(e) => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L3: { ...prev.newEV.L3, powerKW: Number(e.target.value) } } }))}
+                              className="w-full text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1"
+                            >
+                              <option value={50}>50 kW (DCFC Basic)</option>
+                              <option value={150}>150 kW (DCFC Standard)</option>
+                              <option value={350}>350 kW (HPC Ultra-fast)</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L3: { ...prev.newEV.L3, count: Math.max(0, prev.newEV.L3.count - 1) } } }))}
+                              className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-gray-700 font-bold"
+                            >−</button>
+                            <span className="flex-1 text-center text-xl font-bold">{wizardState.newEV.L3.count}</span>
+                            <button 
+                              onClick={() => setWizardState(prev => ({ ...prev, newEV: { ...prev.newEV, L3: { ...prev.newEV.L3, count: prev.newEV.L3.count + 1 } } }))}
+                              className="w-8 h-8 bg-teal-500 hover:bg-teal-600 rounded flex items-center justify-center text-white font-bold"
+                            >+</button>
+                          </div>
+                          <div className="text-center text-xs text-teal-600 mt-1 font-medium">
+                            {wizardState.newEV.L3.count * wizardState.newEV.L3.powerKW} kW load
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* New Total + Estimated Cost */}
+                      {(wizardState.newEV.L1.count > 0 || wizardState.newEV.L2.count > 0 || wizardState.newEV.L3.count > 0) && (
+                        <div className="mt-4 pt-3 border-t border-teal-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-teal-700 font-medium">New EV Load:</span>
+                            <span className="text-lg font-bold text-teal-700">
+                              {(wizardState.newEV.L1.count * wizardState.newEV.L1.powerKW + 
+                                wizardState.newEV.L2.count * wizardState.newEV.L2.powerKW + 
+                                wizardState.newEV.L3.count * wizardState.newEV.L3.powerKW).toLocaleString()} kW
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500">Estimated Equipment Cost:</span>
+                            <span className="font-bold text-teal-600">
+                              ${(
+                                wizardState.newEV.L1.count * 500 + 
+                                wizardState.newEV.L2.count * 8000 + 
+                                wizardState.newEV.L3.count * (wizardState.newEV.L3.powerKW >= 250 ? 180000 : 85000)
+                              ).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Total EV Load Summary */}
+                {(wizardState.hasExistingEVChargers || wizardState.wantsNewEVChargers) && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-xl border-2 border-emerald-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-gray-800">Total EV Load → Power Profile</h5>
+                          <p className="text-xs text-gray-600">Existing + New chargers combined</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                          {(() => {
+                            const existingLoad = wizardState.existingEV.L1.count * wizardState.existingEV.L1.powerKW + 
+                                                  wizardState.existingEV.L2.count * wizardState.existingEV.L2.powerKW + 
+                                                  wizardState.existingEV.L3.count * wizardState.existingEV.L3.powerKW;
+                            const newLoad = wizardState.newEV.L1.count * wizardState.newEV.L1.powerKW + 
+                                            wizardState.newEV.L2.count * wizardState.newEV.L2.powerKW + 
+                                            wizardState.newEV.L3.count * wizardState.newEV.L3.powerKW;
+                            const totalKW = existingLoad + newLoad;
+                            return totalKW >= 1000 ? `${(totalKW / 1000).toFixed(1)} MW` : `${totalKW.toLocaleString()} kW`;
+                          })()}
+                        </div>
+                        <p className="text-xs text-gray-500">Added to peak demand</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -3009,6 +3237,18 @@ export default function StreamlinedWizard({
                           batteryKWh: 0,
                           solarKW: 0,
                           durationHours: 4,
+                          hasExistingEVChargers: false,
+                          wantsNewEVChargers: false,
+                          existingEV: {
+                            L1: { count: 0, powerKW: 1.4 },
+                            L2: { count: 0, powerKW: 11 },
+                            L3: { count: 0, powerKW: 150 },
+                          },
+                          newEV: {
+                            L1: { count: 0, powerKW: 1.4 },
+                            L2: { count: 0, powerKW: 11 },
+                            L3: { count: 0, powerKW: 150 },
+                          },
                           evChargersL2: 0,
                           evChargersDCFC: 0,
                           evChargersHPC: 0,
