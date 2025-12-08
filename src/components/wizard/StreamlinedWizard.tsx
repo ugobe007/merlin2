@@ -51,6 +51,13 @@ import { DataCenterQuestionnaire, type DataCenterConfig } from '@/components/mod
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================
+// PHASE 1: CENTRALIZED STATE (Migration in progress)
+// Import new hook - will gradually replace existing useState calls
+// ============================================
+import { useWizardState } from '@/hooks/useWizardState';
+import type { WizardState as CentralizedWizardState } from '@/types/wizardState';
+
+// ============================================
 // TYPES
 // ============================================
 
@@ -327,12 +334,39 @@ export default function StreamlinedWizard({
   onFinish,
   onOpenAdvanced 
 }: StreamlinedWizardProps) {
+  // ════════════════════════════════════════════════════════════════
+  // PHASE 1: CENTRALIZED STATE HOOK (Migration in progress)
+  // This hook will gradually replace individual useState calls below
+  // For now, both coexist - we'll migrate section by section
+  // ════════════════════════════════════════════════════════════════
+  const {
+    wizardState: centralizedState,
+    updateSection: updateCentralizedSection,
+    updateExistingInfra,
+    updateEVChargers: updateCentralizedEVChargers,
+    updateNewEVChargers,
+    resetState: resetCentralizedState,
+    getLoadFactorInfo,
+  } = useWizardState();
+  
+  // Log centralized state for debugging during migration
+  // TODO: Remove after migration complete
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WizardState Migration] Centralized state:', centralizedState.calculated);
+    }
+  }, [centralizedState.calculated]);
+  
+  // ════════════════════════════════════════════════════════════════
+  // LEGACY STATE (Will be migrated to centralizedState in Phase 2)
+  // ════════════════════════════════════════════════════════════════
+  
   // Current section (0-5)
   const [currentSection, setCurrentSection] = useState(0);
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
   
-  // Wizard data state
+  // Wizard data state - LEGACY (to be migrated)
   const [wizardState, setWizardState] = useState<WizardState>({
     zipCode: '',
     state: '',
