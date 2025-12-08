@@ -358,6 +358,16 @@ export default function StreamlinedWizard({
   }, [centralizedState.calculated]);
   
   // ════════════════════════════════════════════════════════════════
+  // PHASE 2: SYNC BRIDGE - Legacy state syncs TO centralized state
+  // This allows new UI components to read from centralized state
+  // while existing components continue to write to legacy state
+  // TODO: Remove after full migration to centralized state
+  // ════════════════════════════════════════════════════════════════
+  
+  // We need to track wizardState for sync - use a ref to avoid dependency issues
+  const wizardStateRef = useRef<WizardState | null>(null);
+  
+  // ════════════════════════════════════════════════════════════════
   // LEGACY STATE (Will be migrated to centralizedState in Phase 2)
   // ════════════════════════════════════════════════════════════════
   
@@ -408,6 +418,115 @@ export default function StreamlinedWizard({
       total: 0,
     },
   });
+  
+  // ════════════════════════════════════════════════════════════════
+  // PHASE 2: SYNC EFFECTS - Sync legacy state TO centralized state
+  // ════════════════════════════════════════════════════════════════
+  
+  // Update ref when wizardState changes (for dependency-free access)
+  useEffect(() => {
+    wizardStateRef.current = wizardState;
+  }, [wizardState]);
+  
+  // Sync Location section (legacy → centralized)
+  useEffect(() => {
+    updateCentralizedSection('location', {
+      zipCode: wizardState.zipCode,
+      state: wizardState.state,
+      utilityRate: wizardState.electricityRate,
+      solarHours: wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 5,
+    });
+  }, [wizardState.zipCode, wizardState.state, wizardState.electricityRate, wizardState.geoRecommendations, updateCentralizedSection]);
+  
+  // Sync Industry section (legacy → centralized)
+  useEffect(() => {
+    updateCentralizedSection('industry', {
+      type: wizardState.selectedIndustry,
+    });
+  }, [wizardState.selectedIndustry, updateCentralizedSection]);
+  
+  // Sync Facility section (legacy → centralized)
+  useEffect(() => {
+    // Determine if this is rooms-based or sqft-based
+    const isRoomBased = ['hotel', 'hotel-hospitality', 'apartment-building'].includes(wizardState.selectedIndustry);
+    
+    updateCentralizedSection('facility', {
+      squareFeet: isRoomBased ? undefined : wizardState.facilitySize,
+      roomCount: isRoomBased ? wizardState.facilitySize : undefined,
+      operatingHours: 24, // Default for most industries
+      occupancy: 75, // Default percentage
+    });
+  }, [wizardState.facilitySize, wizardState.selectedIndustry, updateCentralizedSection]);
+  
+  // Sync Existing Infrastructure - EV chargers (legacy → centralized)
+  // Note: Legacy uses evChargersL2, evChargersDCFC, evChargersHPC; centralized uses L1, L2, L3
+  useEffect(() => {
+    // Map DCFC/HPC to L3 (industry standard DCFC = DC Fast Charging = Level 3)
+    const totalDCFastChargers = wizardState.evChargersDCFC + wizardState.evChargersHPC;
+    
+    updateCentralizedEVChargers('L2', { count: wizardState.evChargersL2 });
+    updateCentralizedEVChargers('L3', { count: totalDCFastChargers });
+    
+    // Update solar, generator, and grid connection
+    updateExistingInfra('solar', {
+      hasExisting: wizardState.wantsSolar,
+      capacityKW: wizardState.solarKW,
+    });
+    updateExistingInfra('generator', {
+      hasExisting: wizardState.wantsGenerator,
+      capacityKW: wizardState.generatorKW,
+      fuelType: (wizardState.generatorFuel as 'diesel' | 'natural-gas' | 'propane' | 'dual-fuel') || 'diesel',
+    });
+    updateExistingInfra('gridConnection', wizardState.gridConnection as 'on-grid' | 'off-grid' | 'limited');
+  }, [
+    wizardState.evChargersL2, wizardState.evChargersDCFC, wizardState.evChargersHPC,
+    wizardState.wantsSolar, wizardState.solarKW,
+    wizardState.wantsGenerator, wizardState.generatorKW, wizardState.generatorFuel,
+    wizardState.gridConnection,
+    updateCentralizedEVChargers, updateExistingInfra
+  ]);
+  
+  // Sync Goals section (legacy → centralized)
+  useEffect(() => {
+    // Map legacy goals array to primary goal
+    let primaryGoal: 'backup' | 'savings' | 'sustainability' | 'peak-shaving' = 'backup';
+    if (wizardState.goals?.includes('demand-charge-reduction')) primaryGoal = 'peak-shaving';
+    else if (wizardState.goals?.includes('lower-bills')) primaryGoal = 'savings';
+    else if (wizardState.goals?.includes('green-energy')) primaryGoal = 'sustainability';
+    else if (wizardState.goals?.includes('backup-power')) primaryGoal = 'backup';
+    
+    updateCentralizedSection('goals', {
+      primaryGoal,
+      addSolar: wizardState.wantsSolar,
+      solarKW: wizardState.solarKW,
+      addWind: wizardState.wantsWind,
+      windKW: wizardState.windTurbineKW,
+      addGenerator: wizardState.wantsGenerator,
+      generatorKW: wizardState.generatorKW,
+      generatorFuel: (wizardState.generatorFuel as 'diesel' | 'natural-gas' | 'propane' | 'dual-fuel') || 'natural-gas',
+      addEVChargers: wizardState.wantsEVCharging,
+    });
+  }, [wizardState.goals, wizardState.wantsSolar, wizardState.solarKW,
+      wizardState.wantsWind, wizardState.windTurbineKW,
+      wizardState.wantsGenerator, wizardState.generatorKW, wizardState.generatorFuel,
+      wizardState.wantsEVCharging, updateCentralizedSection]);
+  
+  // Debug: Log sync status in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Sync Bridge] Legacy → Centralized sync complete', {
+        legacyZip: wizardState.zipCode,
+        centralizedZip: centralizedState.location.zipCode,
+        legacyIndustry: wizardState.selectedIndustry,
+        centralizedIndustry: centralizedState.industry.type,
+        calculatedPeakKW: centralizedState.calculated.totalPeakDemandKW,
+      });
+    }
+  }, [wizardState.zipCode, wizardState.selectedIndustry, centralizedState]);
+  
+  // ════════════════════════════════════════════════════════════════
+  // OTHER STATE VARIABLES
+  // ════════════════════════════════════════════════════════════════
   
   // Available use cases from database
   const [availableUseCases, setAvailableUseCases] = useState<any[]>([]);
@@ -3127,6 +3246,57 @@ export default function StreamlinedWizard({
             advanceToSection(4);
           }}
         />
+      )}
+      
+      {/* Development-only Debug Panel for State Migration */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 bg-gray-900/95 text-xs text-white p-3 rounded-lg shadow-xl max-w-sm z-50 border border-purple-500/30">
+          <div className="font-bold text-purple-400 mb-2 flex items-center justify-between">
+            <span>🔧 State Sync Debug</span>
+            <span className="text-green-400 text-[10px]">Phase 2</span>
+          </div>
+          <div className="space-y-1 font-mono">
+            <div className="flex justify-between">
+              <span className="text-gray-400">ZIP:</span>
+              <span className={centralizedState.location.zipCode === wizardState.zipCode ? 'text-green-400' : 'text-red-400'}>
+                {wizardState.zipCode || '-'} → {centralizedState.location.zipCode || '-'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Industry:</span>
+              <span className={centralizedState.industry.type === wizardState.selectedIndustry ? 'text-green-400' : 'text-red-400'}>
+                {wizardState.selectedIndustry || '-'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Facility:</span>
+              <span>{wizardState.facilitySize?.toLocaleString() || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Rate:</span>
+              <span>${wizardState.electricityRate}/kWh</span>
+            </div>
+            <div className="border-t border-gray-700 pt-1 mt-1">
+              <div className="text-yellow-400 font-semibold">Calculated (Centralized):</div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Peak kW:</span>
+                <span className="text-cyan-400">{centralizedState.calculated.totalPeakDemandKW.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Base Load:</span>
+                <span className="text-cyan-400">{centralizedState.calculated.baseBuildingLoadKW.toLocaleString()} kW</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">BESS kW:</span>
+                <span className="text-cyan-400">{centralizedState.calculated.recommendedBatteryKW.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">EV Load:</span>
+                <span className="text-cyan-400">{(centralizedState.calculated.existingEVLoadKW + centralizedState.calculated.newEVLoadKW).toLocaleString()} kW</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
