@@ -114,7 +114,9 @@ function App() {
 
   // Access via /quote-builder - Advanced Quote Builder with upload capability
   // This is the professional tool with spec upload, custom config, AI optimization
-  if (showAdvancedQuoteBuilder) {
+  // BUG FIX: If view=custom-config is set, skip landing and go to BessQuoteBuilder
+  const viewParam = urlParams.get('view');
+  if (showAdvancedQuoteBuilder && viewParam !== 'custom-config') {
     const sourceVertical = urlParams.get('vertical') || verticalParam;
     return (
       <QuoteProvider>

@@ -47,6 +47,7 @@ import {
 } from '@/services/geographicIntelligenceService';
 import PowerProfileTracker, { WIZARD_SECTIONS } from './PowerProfileTracker';
 import { PowerDashboardWidget, type PowerDashboardData } from './widgets';
+import { DataCenterQuestionnaire, type DataCenterConfig } from '@/components/modals/DataCenterQuestionnaire';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================
@@ -94,7 +95,7 @@ interface WizardState {
   generatorType: 'traditional' | 'linear'; // Traditional (Cummins/Cat) vs Linear (Mainspring)
   
   // Grid connection status (for SSOT compliance)
-  gridConnection: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   
   // Section 5: Configuration
   batteryKW: number;
@@ -219,6 +220,104 @@ const INDUSTRY_ICONS: Record<string, React.ElementType> = {
 };
 
 // ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Format power value with intelligent kW/MW display
+ * Shows kW for values under 1000, MW for larger values
+ */
+const formatPower = (kw: number): string => {
+  if (kw >= 1000) return `${(kw / 1000).toFixed(1)} MW`;
+  return `${kw.toFixed(0)} kW`;
+};
+
+/**
+ * Get appropriate step size based on current value
+ * Provides more granular control at smaller values
+ */
+const getStepSize = (current: number): number => {
+  if (current < 100) return 10;
+  if (current < 500) return 25;
+  if (current < 1000) return 50;
+  if (current < 5000) return 100;
+  if (current < 10000) return 250;
+  if (current < 50000) return 500;
+  return 1000;
+};
+
+/**
+ * SOLAR/WIND POWER PRESETS
+ * BUG FIX: Using preset breakpoints instead of linear slider (0-1,000,000 was too compressed)
+ * This gives much better UX for selecting realistic power values in kW range
+ */
+// SOLAR PRESETS: 74% kW options for SMB, 26% MW options for commercial/utility
+const SOLAR_POWER_PRESETS = [
+  { label: '5 kW', value: 5 },
+  { label: '10 kW', value: 10 },
+  { label: '15 kW', value: 15 },
+  { label: '20 kW', value: 20 },
+  { label: '25 kW', value: 25 },
+  { label: '30 kW', value: 30 },
+  { label: '40 kW', value: 40 },
+  { label: '50 kW', value: 50 },
+  { label: '75 kW', value: 75 },
+  { label: '100 kW', value: 100 },
+  { label: '150 kW', value: 150 },
+  { label: '200 kW', value: 200 },
+  { label: '250 kW', value: 250 },
+  { label: '300 kW', value: 300 },
+  { label: '400 kW', value: 400 },
+  { label: '500 kW', value: 500 },
+  { label: '750 kW', value: 750 },
+  { label: '1 MW', value: 1000 },
+  { label: '2 MW', value: 2000 },
+  { label: '5 MW', value: 5000 },
+  { label: '10 MW', value: 10000 },
+  { label: '25 MW', value: 25000 },
+  { label: '50 MW', value: 50000 },
+];
+
+// WIND PRESETS: Similar granularity for small-scale wind
+const WIND_POWER_PRESETS = [
+  { label: '5 kW', value: 5 },
+  { label: '10 kW', value: 10 },
+  { label: '15 kW', value: 15 },
+  { label: '20 kW', value: 20 },
+  { label: '25 kW', value: 25 },
+  { label: '50 kW', value: 50 },
+  { label: '75 kW', value: 75 },
+  { label: '100 kW', value: 100 },
+  { label: '150 kW', value: 150 },
+  { label: '200 kW', value: 200 },
+  { label: '250 kW', value: 250 },
+  { label: '500 kW', value: 500 },
+  { label: '750 kW', value: 750 },
+  { label: '1 MW', value: 1000 },
+  { label: '2 MW', value: 2000 },
+  { label: '5 MW', value: 5000 },
+  { label: '10 MW', value: 10000 },
+  { label: '25 MW', value: 25000 },
+];
+
+/**
+ * Find the closest preset index for a given value
+ */
+const findClosestPresetIndex = (value: number, presets: typeof SOLAR_POWER_PRESETS): number => {
+  let closestIndex = 0;
+  let closestDiff = Math.abs(presets[0].value - value);
+  
+  for (let i = 1; i < presets.length; i++) {
+    const diff = Math.abs(presets[i].value - value);
+    if (diff < closestDiff) {
+      closestDiff = diff;
+      closestIndex = i;
+    }
+  }
+  return closestIndex;
+};
+
+// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -289,6 +388,9 @@ export default function StreamlinedWizard({
   
   // Power Profile Explainer modal state
   const [showPowerProfileExplainer, setShowPowerProfileExplainer] = useState(false);
+  
+  // Data Center Questionnaire modal state
+  const [showDataCenterModal, setShowDataCenterModal] = useState(false);
   
   // Load use cases on mount
   useEffect(() => {
@@ -380,6 +482,11 @@ export default function StreamlinedWizard({
   
   // Handle industry selection - fetch custom questions from database
   const handleIndustrySelect = async (slug: string, name: string, useCaseId?: string) => {
+    // Check if data center was selected - open specialized modal
+    if (slug === 'data-center' || slug === 'datacenter' || slug === 'edge-data-center') {
+      setShowDataCenterModal(true);
+    }
+    
     // Set basic state first
     setWizardState(prev => ({
       ...prev,
@@ -595,9 +702,9 @@ export default function StreamlinedWizard({
             {onOpenAdvanced && (
               <button
                 onClick={onOpenAdvanced}
-                className="hidden lg:flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-300 rounded-lg hover:bg-purple-100 transition-colors"
+                className="hidden lg:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-purple-700 bg-gradient-to-r from-slate-200 via-white to-slate-200 border-2 border-purple-400 rounded-xl shadow-lg shadow-purple-400/30 hover:shadow-xl hover:shadow-purple-500/50 hover:border-purple-500 hover:scale-105 transition-all duration-300"
               >
-                <Zap className="w-4 h-4" />
+                <Zap className="w-4 h-4 text-purple-600" />
                 Advanced Mode
               </button>
             )}
@@ -706,29 +813,70 @@ export default function StreamlinedWizard({
                   </div>
                 )}
                 
-                {/* Geographic Insights */}
+                {/* Geographic Insights - PROMINENT LOCATION RECOMMENDATIONS */}
                 {wizardState.geoRecommendations && (
-                  <div className="mt-6 grid grid-cols-3 gap-4">
-                    <div className="bg-amber-500/10 rounded-xl p-4 text-center border border-amber-400/30">
-                      <Sun className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                      <div className="text-sm text-gray-400">Solar Potential</div>
-                      <div className="text-lg font-bold text-amber-400">
-                        {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)}h/day
+                  <div className="mt-6 p-6 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-indigo-600/20 border-2 border-purple-400/50 rounded-2xl shadow-lg shadow-purple-500/10">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-purple-500" />
+                      Smart Recommendations for {wizardState.state}
+                    </h3>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="bg-white/80 rounded-xl p-4 text-center border border-amber-300 shadow-sm">
+                        <Sun className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                        <div className="text-2xl font-black text-amber-600">
+                          {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)}h
+                        </div>
+                        <div className="text-xs text-gray-500 font-medium">Avg Sun Hours/Day</div>
+                      </div>
+                      <div className="bg-white/80 rounded-xl p-4 text-center border border-purple-300 shadow-sm">
+                        <Battery className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                        <div className="text-2xl font-black text-purple-600">
+                          {wizardState.geoRecommendations.recommendations.batteryStorage.recommended ? '✓ Yes' : 'Optional'}
+                        </div>
+                        <div className="text-xs text-gray-500 font-medium">Battery Recommended</div>
+                      </div>
+                      <div className="bg-white/80 rounded-xl p-4 text-center border border-blue-300 shadow-sm">
+                        <Zap className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                        <div className="text-2xl font-black text-blue-600">
+                          {wizardState.geoRecommendations.profile.gridReliabilityScore}/100
+                        </div>
+                        <div className="text-xs text-gray-500 font-medium">Grid Reliability</div>
                       </div>
                     </div>
-                    <div className="bg-purple-500/10 rounded-xl p-4 text-center border border-purple-400/30">
-                      <Battery className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                      <div className="text-sm text-gray-400">Battery Storage</div>
-                      <div className="text-lg font-bold text-purple-400">
-                        {wizardState.geoRecommendations.recommendations.batteryStorage.recommended ? 'Recommended' : 'Optional'}
-                      </div>
-                    </div>
-                    <div className="bg-blue-500/10 rounded-xl p-4 text-center border border-blue-400/30">
-                      <Zap className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                      <div className="text-sm text-gray-400">Grid Score</div>
-                      <div className="text-lg font-bold text-blue-400">
-                        {wizardState.geoRecommendations.profile.gridReliabilityScore}/100
-                      </div>
+                    
+                    {/* Why These Recommendations */}
+                    <div className="bg-white/60 rounded-xl p-4 border border-purple-200">
+                      <h4 className="text-sm font-bold text-purple-700 mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Why This Matters for Your Project
+                      </h4>
+                      <ul className="space-y-1 text-sm text-gray-700">
+                        {wizardState.geoRecommendations.profile.avgSolarHoursPerDay >= 5 && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span><strong>Excellent solar potential</strong> - {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)} sun-hours/day is above average</span>
+                          </li>
+                        )}
+                        {wizardState.geoRecommendations.recommendations.batteryStorage.recommended && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span><strong>Battery storage recommended</strong> - Capture peak demand savings & backup power</span>
+                          </li>
+                        )}
+                        {wizardState.electricityRate > 0.12 && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span><strong>High utility rates</strong> (${wizardState.electricityRate.toFixed(2)}/kWh) make storage valuable</span>
+                          </li>
+                        )}
+                        {wizardState.geoRecommendations.profile.gridReliabilityScore < 85 && (
+                          <li className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                            <span><strong>Grid reliability concerns</strong> - Backup power provides peace of mind</span>
+                          </li>
+                        )}
+                      </ul>
                     </div>
                   </div>
                 )}
@@ -1313,14 +1461,14 @@ export default function StreamlinedWizard({
                       <span className="text-gray-500 text-xs">(120% of battery power for optimal charging)</span>
                     </div>
                     
-                    {/* Power Adjustment */}
+                    {/* Power Adjustment - USING PRESETS FOR BETTER UX */}
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600 w-20">Solar kW:</span>
                       <button
                         onClick={() => {
-                          const current = wizardState.solarKW || 0;
-                          const step = current > 100000 ? 10000 : current > 10000 ? 5000 : current > 1000 ? 1000 : 100;
-                          setWizardState(prev => ({ ...prev, solarKW: Math.max(100, current - step) }));
+                          const currentIndex = findClosestPresetIndex(wizardState.solarKW || 0, SOLAR_POWER_PRESETS);
+                          const newIndex = Math.max(0, currentIndex - 1);
+                          setWizardState(prev => ({ ...prev, solarKW: SOLAR_POWER_PRESETS[newIndex].value }));
                         }}
                         className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
                       >
@@ -1329,19 +1477,29 @@ export default function StreamlinedWizard({
                       <div className="flex-1 relative">
                         <input
                           type="range"
-                          min="100"
-                          max="1000000"
-                          step="100"
-                          value={wizardState.solarKW || 0}
-                          onChange={(e) => setWizardState(prev => ({ ...prev, solarKW: parseInt(e.target.value) }))}
+                          min={0}
+                          max={SOLAR_POWER_PRESETS.length - 1}
+                          step={1}
+                          value={findClosestPresetIndex(wizardState.solarKW || 0, SOLAR_POWER_PRESETS)}
+                          onChange={(e) => {
+                            const index = parseInt(e.target.value);
+                            setWizardState(prev => ({ ...prev, solarKW: SOLAR_POWER_PRESETS[index].value }));
+                          }}
                           className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
                         />
+                        {/* Preset markers - updated for new range */}
+                        <div className="flex justify-between text-[10px] text-amber-600 mt-1 px-1">
+                          <span>5kW</span>
+                          <span>100kW</span>
+                          <span>1MW</span>
+                          <span>50MW</span>
+                        </div>
                       </div>
                       <button
                         onClick={() => {
-                          const current = wizardState.solarKW || 0;
-                          const step = current >= 100000 ? 10000 : current >= 10000 ? 5000 : current >= 1000 ? 1000 : 100;
-                          setWizardState(prev => ({ ...prev, solarKW: Math.min(1000000, current + step) }));
+                          const currentIndex = findClosestPresetIndex(wizardState.solarKW || 0, SOLAR_POWER_PRESETS);
+                          const newIndex = Math.min(SOLAR_POWER_PRESETS.length - 1, currentIndex + 1);
+                          setWizardState(prev => ({ ...prev, solarKW: SOLAR_POWER_PRESETS[newIndex].value }));
                         }}
                         className="w-10 h-10 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center justify-center text-amber-700 font-bold"
                       >
@@ -1361,6 +1519,30 @@ export default function StreamlinedWizard({
                         )}
                       </div>
                     </div>
+                    
+                    {/* FIX 2: Roof Space Warning for Solar */}
+                    {(() => {
+                      const solarKW = wizardState.solarKW || 0;
+                      const sqFt = wizardState.facilitySize || 0;
+                      const estimatedRoofNeeded = solarKW * 100; // 1 kW = ~100 sq ft
+                      const estimatedRoofAvailable = sqFt * 0.6; // 60% of floor space
+                      const isOversized = solarKW > 0 && sqFt > 0 && estimatedRoofNeeded > estimatedRoofAvailable;
+                      
+                      return isOversized ? (
+                        <div className="p-3 bg-yellow-100 border border-yellow-400 rounded-lg mb-4">
+                          <div className="flex items-start gap-2 text-yellow-800 text-sm">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <strong>Space Consideration:</strong> {solarKW >= 1000 ? `${(solarKW/1000).toFixed(1)} MW` : `${solarKW} kW`} solar typically needs ~{estimatedRoofNeeded.toLocaleString()} sq ft of roof space.
+                              Your {sqFt.toLocaleString()} sq ft building has ~{Math.round(estimatedRoofAvailable).toLocaleString()} sq ft available.
+                              <span className="block mt-1 text-yellow-700">
+                                💡 Consider ground-mount, carport solar, or reducing capacity to {Math.round(estimatedRoofAvailable / 100)} kW.
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
                     
                     {/* Specs Info */}
                     <div className="grid grid-cols-3 gap-3 text-center">
@@ -1431,35 +1613,45 @@ export default function StreamlinedWizard({
                       <span className="text-gray-500 text-xs">(50% of battery for wind supplement)</span>
                     </div>
                     
-                    {/* Power Adjustment */}
+                    {/* Power Adjustment - USING PRESETS FOR BETTER UX */}
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600 w-20">Wind kW:</span>
                       <button
                         onClick={() => {
-                          const current = wizardState.windTurbineKW || 0;
-                          const step = current > 50000 ? 5000 : current > 10000 ? 2500 : current > 1000 ? 500 : 100;
-                          setWizardState(prev => ({ ...prev, windTurbineKW: Math.max(100, current - step) }));
+                          const currentIndex = findClosestPresetIndex(wizardState.windTurbineKW || 0, WIND_POWER_PRESETS);
+                          const newIndex = Math.max(0, currentIndex - 1);
+                          setWizardState(prev => ({ ...prev, windTurbineKW: WIND_POWER_PRESETS[newIndex].value }));
                         }}
                         className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
                       >
                         <Minus className="w-5 h-5" />
                       </button>
-                      <div className="flex-1">
+                      <div className="flex-1 relative">
                         <input
                           type="range"
-                          min="100"
-                          max="500000"
-                          step="100"
-                          value={wizardState.windTurbineKW || 0}
-                          onChange={(e) => setWizardState(prev => ({ ...prev, windTurbineKW: parseInt(e.target.value) }))}
+                          min={0}
+                          max={WIND_POWER_PRESETS.length - 1}
+                          step={1}
+                          value={findClosestPresetIndex(wizardState.windTurbineKW || 0, WIND_POWER_PRESETS)}
+                          onChange={(e) => {
+                            const index = parseInt(e.target.value);
+                            setWizardState(prev => ({ ...prev, windTurbineKW: WIND_POWER_PRESETS[index].value }));
+                          }}
                           className="w-full h-2 bg-sky-200 rounded-lg appearance-none cursor-pointer accent-sky-500"
                         />
+                        {/* Preset markers - updated for new range */}
+                        <div className="flex justify-between text-[10px] text-sky-600 mt-1 px-1">
+                          <span>5kW</span>
+                          <span>100kW</span>
+                          <span>1MW</span>
+                          <span>25MW</span>
+                        </div>
                       </div>
                       <button
                         onClick={() => {
-                          const current = wizardState.windTurbineKW || 0;
-                          const step = current >= 50000 ? 5000 : current >= 10000 ? 2500 : current >= 1000 ? 500 : 100;
-                          setWizardState(prev => ({ ...prev, windTurbineKW: Math.min(500000, current + step) }));
+                          const currentIndex = findClosestPresetIndex(wizardState.windTurbineKW || 0, WIND_POWER_PRESETS);
+                          const newIndex = Math.min(WIND_POWER_PRESETS.length - 1, currentIndex + 1);
+                          setWizardState(prev => ({ ...prev, windTurbineKW: WIND_POWER_PRESETS[newIndex].value }));
                         }}
                         className="w-10 h-10 bg-sky-100 hover:bg-sky-200 rounded-lg flex items-center justify-center text-sky-700 font-bold"
                       >
@@ -1693,24 +1885,36 @@ export default function StreamlinedWizard({
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                   {[
                     { 
                       id: 'on-grid' as const, 
                       label: 'Grid-Tied', 
-                      description: 'Connected to utility grid',
+                      description: 'Reliable connection',
                       icon: '🔌'
+                    },
+                    { 
+                      id: 'unreliable' as const, 
+                      label: 'Unreliable Grid', 
+                      description: 'Frequent outages',
+                      icon: '⚠️'
+                    },
+                    { 
+                      id: 'expensive' as const, 
+                      label: 'Grid Too Expensive', 
+                      description: 'High rates',
+                      icon: '💰'
                     },
                     { 
                       id: 'limited' as const, 
                       label: 'Limited Grid', 
-                      description: 'Unreliable grid connection',
-                      icon: '⚡'
+                      description: 'Constrained capacity',
+                      icon: '📉'
                     },
                     { 
                       id: 'off-grid' as const, 
                       label: 'Off-Grid', 
-                      description: 'No utility connection',
+                      description: 'No utility',
                       icon: '🏝️'
                     },
                   ].map((option) => (
@@ -1739,6 +1943,10 @@ export default function StreamlinedWizard({
                   <div className={`mt-4 p-3 rounded-lg text-sm ${
                     wizardState.gridConnection === 'off-grid'
                       ? 'bg-amber-50 border border-amber-200 text-amber-700'
+                      : wizardState.gridConnection === 'expensive'
+                      ? 'bg-green-50 border border-green-200 text-green-700'
+                      : wizardState.gridConnection === 'unreliable'
+                      ? 'bg-red-50 border border-red-200 text-red-700'
                       : 'bg-blue-50 border border-blue-200 text-blue-700'
                   }`}>
                     <div className="flex items-center gap-2">
@@ -1746,6 +1954,10 @@ export default function StreamlinedWizard({
                       <span>
                         {wizardState.gridConnection === 'off-grid'
                           ? 'Off-grid systems require larger battery capacity and backup generation for reliability.'
+                          : wizardState.gridConnection === 'expensive'
+                          ? 'BESS + solar can dramatically reduce your energy costs by avoiding peak rates and demand charges.'
+                          : wizardState.gridConnection === 'unreliable'
+                          ? 'We\'ll recommend backup power and longer battery duration for outage protection.'
                           : 'Limited grid connection means we\'ll size your system for greater self-reliance.'}
                       </span>
                     </div>
@@ -1968,6 +2180,123 @@ export default function StreamlinedWizard({
                   </div>
                 )}
               </div>
+              
+              {/* ═══════════════════════════════════════════════════════════════
+                  BEFORE/AFTER UTILITY IMPACT - FIX 4
+                  ═══════════════════════════════════════════════════════════════ */}
+              {(() => {
+                // Calculate utility impact based on configuration
+                const batteryKW = wizardState.batteryKW || 0;
+                const solarKW = wizardState.solarKW || 0;
+                const electricityRate = wizardState.electricityRate || 0.12;
+                const peakDemandKW = batteryKW * 1.5; // Estimate peak demand
+                const demandChargeRate = 15; // $/kW average
+                
+                // Before: Current utility costs
+                const monthlyEnergyConsumption = peakDemandKW * 720 * 0.3; // 30% load factor
+                const currentEnergyCost = Math.round(monthlyEnergyConsumption * electricityRate);
+                const currentDemandCharges = Math.round(peakDemandKW * demandChargeRate);
+                const currentMonthlyBill = currentEnergyCost + currentDemandCharges;
+                
+                // After: With BESS
+                const solarOffset = solarKW > 0 ? Math.min(0.4, (solarKW / peakDemandKW) * 0.5) : 0;
+                const peakShavingPercent = batteryKW > 0 ? Math.min(0.35, batteryKW / peakDemandKW * 0.3) : 0;
+                const projectedEnergyCost = Math.round(currentEnergyCost * (1 - solarOffset));
+                const projectedDemandCharges = Math.round(currentDemandCharges * (1 - peakShavingPercent));
+                const projectedMonthlyBill = projectedEnergyCost + projectedDemandCharges;
+                const monthlySavings = currentMonthlyBill - projectedMonthlyBill;
+                
+                return currentMonthlyBill > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    {/* Before/After Utility Comparison */}
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <TrendingDown className="w-5 h-5 text-green-500" />
+                        Utility Impact Comparison
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-4 bg-red-50 rounded-xl border border-red-200">
+                          <div className="text-xs text-red-600 font-semibold uppercase tracking-wide mb-1">Before BESS</div>
+                          <div className="text-3xl font-black text-red-500">
+                            ${currentMonthlyBill.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-500">/month</div>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
+                          <div className="text-xs text-green-600 font-semibold uppercase tracking-wide mb-1">After BESS</div>
+                          <div className="text-3xl font-black text-green-500">
+                            ${projectedMonthlyBill.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-500">/month</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+                        <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-500">
+                          Save ${monthlySavings.toLocaleString()}/month
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ({currentMonthlyBill > 0 ? Math.round((monthlySavings / currentMonthlyBill) * 100) : 0}% reduction • ${(monthlySavings * 12).toLocaleString()}/year)
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Why This Configuration - FIX 5 */}
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200 shadow-lg">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-purple-500" />
+                        Why This Configuration?
+                      </h3>
+                      <ul className="space-y-3">
+                        {solarKW > 0 && wizardState.geoRecommendations && (
+                          <li className="flex items-start gap-3 text-sm">
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-gray-800">Solar recommended:</span>
+                              <span className="text-gray-600"> {wizardState.state} averages {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)} sun-hours/day</span>
+                            </div>
+                          </li>
+                        )}
+                        {batteryKW > 0 && (
+                          <li className="flex items-start gap-3 text-sm">
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-gray-800">Battery storage:</span>
+                              <span className="text-gray-600"> Capture ~{Math.round(peakShavingPercent * 100)}% peak demand savings</span>
+                            </div>
+                          </li>
+                        )}
+                        {electricityRate > 0.12 && (
+                          <li className="flex items-start gap-3 text-sm">
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-gray-800">High utility rates:</span>
+                              <span className="text-gray-600"> ${electricityRate.toFixed(2)}/kWh makes storage valuable</span>
+                            </div>
+                          </li>
+                        )}
+                        {(wizardState.selectedIndustry === 'data-center' || wizardState.selectedIndustry === 'hospital') && (
+                          <li className="flex items-start gap-3 text-sm">
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-gray-800">Critical facility:</span>
+                              <span className="text-gray-600"> Extended backup ({wizardState.durationHours}+ hours) recommended</span>
+                            </div>
+                          </li>
+                        )}
+                        {wizardState.geoRecommendations?.profile.gridReliabilityScore && wizardState.geoRecommendations.profile.gridReliabilityScore < 85 && (
+                          <li className="flex items-start gap-3 text-sm">
+                            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-gray-800">Grid reliability:</span>
+                              <span className="text-gray-600"> Score {wizardState.geoRecommendations.profile.gridReliabilityScore}/100 - backup power valuable</span>
+                            </div>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
               
               {/* Configuration Cards Grid */}
               <div className="grid lg:grid-cols-2 gap-6 mb-6">
@@ -2286,6 +2615,12 @@ export default function StreamlinedWizard({
                   completeSection('configuration');
                   
                   try {
+                    // Map grid connection to SSOT-compatible values
+                    // 'unreliable' and 'expensive' map to 'limited' for sizing purposes
+                    const gridConnectionForQuote: 'on-grid' | 'off-grid' | 'limited' = 
+                      wizardState.gridConnection === 'off-grid' ? 'off-grid' :
+                      wizardState.gridConnection === 'on-grid' ? 'on-grid' : 'limited';
+                    
                     const result = await QuoteEngine.generateQuote({
                       storageSizeMW: wizardState.batteryKW / 1000,
                       durationHours: wizardState.durationHours,
@@ -2296,7 +2631,7 @@ export default function StreamlinedWizard({
                       windMW: wizardState.windTurbineKW / 1000,
                       generatorMW: wizardState.generatorKW / 1000,
                       generatorFuelType: wizardState.generatorFuel === 'propane' ? 'diesel' : wizardState.generatorFuel,
-                      gridConnection: wizardState.gridConnection,
+                      gridConnection: gridConnectionForQuote,
                     });
                     
                     setWizardState(prev => ({ ...prev, quoteResult: result, isCalculating: false }));
@@ -2707,6 +3042,57 @@ export default function StreamlinedWizard({
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Data Center Questionnaire Modal */}
+      {showDataCenterModal && (
+        <DataCenterQuestionnaire
+          isOpen={showDataCenterModal}
+          onClose={() => setShowDataCenterModal(false)}
+          onComplete={(config: DataCenterConfig) => {
+            // Calculate battery sizing from data center config
+            const totalPowerMW = (config.rackCount * config.avgPowerPerRack / 1000) * config.currentPUE;
+            const batteryKW = Math.round(totalPowerMW * 1000);
+            const batteryKWh = Math.round(batteryKW * config.backupDurationHours);
+            
+            // Pre-fill wizard with config values
+            setWizardState(prev => ({
+              ...prev,
+              batteryKW,
+              batteryKWh,
+              durationHours: config.backupDurationHours,
+              facilitySize: config.totalSquareFeet,
+              useCaseData: {
+                ...prev.useCaseData,
+                itLoadKW: config.rackCount * config.avgPowerPerRack,
+                rackCount: config.rackCount,
+                avgPowerPerRack: config.avgPowerPerRack,
+                pue: config.currentPUE,
+                uptimeRequirement: config.uptimeRequirement,
+                workloadType: config.workloadType,
+                tier: config.facilityTier,
+              },
+              // Auto-enable generator for high-reliability data centers
+              wantsGenerator: config.uptimeRequirement === '99.99' || config.uptimeRequirement === '99.999' || config.uptimeRequirement === '99.9999',
+              generatorKW: config.uptimeRequirement === '99.999' || config.uptimeRequirement === '99.9999' 
+                ? batteryKW // Match battery power for full backup
+                : Math.round(batteryKW * 0.5), // 50% for Tier III
+              // Set grid connection based on reliability (map to SSOT values)
+              gridConnection: config.gridReliability === 'none' ? 'off-grid' : 
+                             config.gridReliability === 'unreliable' ? 'limited' : 'on-grid',
+              // Auto-enable solar for renewable targets
+              wantsSolar: config.renewableTargetPercent > 25,
+              solarKW: config.renewableTargetPercent > 25 
+                ? Math.round(batteryKW * (config.renewableTargetPercent / 100) * 1.5) 
+                : 0,
+            }));
+            
+            setShowDataCenterModal(false);
+            
+            // Skip to configuration section since we have all the data
+            advanceToSection(4);
+          }}
+        />
       )}
     </>
   );

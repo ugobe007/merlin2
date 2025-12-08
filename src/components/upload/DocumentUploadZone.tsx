@@ -59,15 +59,24 @@ const ACCEPTED_TYPES = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
   'application/vnd.ms-excel': ['.xls'],
   'text/csv': ['.csv'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/msword': ['.doc'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
 };
 
-const ACCEPTED_EXTENSIONS = ['.pdf', '.xlsx', '.xls', '.csv'];
+const ACCEPTED_EXTENSIONS = ['.pdf', '.xlsx', '.xls', '.csv', '.docx', '.doc', '.jpg', '.jpeg', '.png'];
 
 const FILE_TYPE_ICONS: Record<string, React.FC<{ className?: string }>> = {
   pdf: FileText,
   xlsx: FileSpreadsheet,
   xls: FileSpreadsheet,
   csv: FileSpreadsheet,
+  docx: FileText,
+  doc: FileText,
+  jpg: File,
+  jpeg: File,
+  png: File,
   default: File,
 };
 
