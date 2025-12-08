@@ -24,7 +24,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, Sparkles, MapPin, Building2, Target, Settings, FileText,
   CheckCircle, ArrowRight, ArrowLeft, Zap, Sun, Battery, DollarSign,
-  ChevronDown, ExternalLink, Car, Hotel, Droplets, TrendingDown,
+  ChevronDown, ExternalLink, Car, Hotel, Droplets, TrendingDown, TrendingUp,
   Shield, Clock, Download, Phone, Leaf, Gauge, Plus, Minus,
   AlertTriangle, Info, FileSpreadsheet, Mail, Wind, Fuel, Upload, Wand2
 } from 'lucide-react';
@@ -2479,6 +2479,234 @@ export default function StreamlinedWizard({
                     </div>
                   </div>
                 ) : null;
+              })()}
+              
+              {/* ═══════════════════════════════════════════════════════════════
+                  POWER PROFILE - Real-time Demand/Supply Dashboard
+                  ═══════════════════════════════════════════════════════════════ */}
+              {(() => {
+                // Calculate all demand components
+                const baseBuildingKW = Math.round((wizardState.facilitySize || 25000) * 0.004); // ~4W/sqft default
+                const existingEVLoadKW = (wizardState.existingEV?.L1?.count || 0) * (wizardState.existingEV?.L1?.powerKW || 1.4) +
+                                          (wizardState.existingEV?.L2?.count || 0) * (wizardState.existingEV?.L2?.powerKW || 11) +
+                                          (wizardState.existingEV?.L3?.count || 0) * (wizardState.existingEV?.L3?.powerKW || 150);
+                const newEVLoadKW = (wizardState.newEV?.L1?.count || 0) * (wizardState.newEV?.L1?.powerKW || 1.4) +
+                                    (wizardState.newEV?.L2?.count || 0) * (wizardState.newEV?.L2?.powerKW || 11) +
+                                    (wizardState.newEV?.L3?.count || 0) * (wizardState.newEV?.L3?.powerKW || 150);
+                const totalEVLoadKW = existingEVLoadKW + newEVLoadKW;
+                const otherEquipmentKW = 0; // Placeholder for future
+                const totalPeakDemandKW = baseBuildingKW + totalEVLoadKW + otherEquipmentKW;
+                
+                // Calculate supply
+                const batteryKWh = wizardState.batteryKWh || 0;
+                const batteryKW = wizardState.batteryKW || 0;
+                const solarKW = wizardState.solarKW || 0;
+                const windKW = wizardState.windTurbineKW || 0;
+                const generatorKW = wizardState.generatorKW || 0;
+                const totalSupplyKW = batteryKW + solarKW + windKW + generatorKW;
+                
+                // Calculate backup duration
+                const backupDurationHrs = totalPeakDemandKW > 0 ? (batteryKWh / totalPeakDemandKW) : 0;
+                
+                // Grid status
+                const gridConnection = wizardState.gridConnection || 'on-grid';
+                const isGridUnreliable = gridConnection === 'unreliable' || gridConnection === 'limited' || gridConnection === 'off-grid';
+                const recommendedBackupHours = isGridUnreliable ? 6 : 4;
+                
+                // Calculate percentage met (supply vs demand)
+                const percentMet = totalPeakDemandKW > 0 ? Math.min(100, Math.round((totalSupplyKW / totalPeakDemandKW) * 100)) : 0;
+                
+                // Get gauge color
+                const getGaugeColor = (pct: number) => {
+                  if (pct >= 100) return 'from-green-500 to-emerald-500';
+                  if (pct >= 75) return 'from-lime-500 to-green-500';
+                  if (pct >= 50) return 'from-yellow-500 to-lime-500';
+                  if (pct >= 25) return 'from-orange-500 to-yellow-500';
+                  return 'from-red-500 to-orange-500';
+                };
+                
+                // EV charger count string
+                const evChargerCount = (wizardState.existingEV?.L2?.count || 0) + (wizardState.newEV?.L2?.count || 0) +
+                                       (wizardState.existingEV?.L3?.count || 0) + (wizardState.newEV?.L3?.count || 0);
+                const evChargerString = evChargerCount > 0 ? `(${evChargerCount}×${Math.round(totalEVLoadKW / Math.max(1, evChargerCount))}kW avg)` : '';
+                
+                return (
+                  <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 border-2 border-slate-600 mb-8 shadow-2xl">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        Power Profile
+                      </h3>
+                      <div className={`px-4 py-1.5 rounded-full text-sm font-bold ${percentMet >= 100 ? 'bg-green-500/20 text-green-400 border border-green-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}`}>
+                        {percentMet >= 100 ? '✓ Balanced' : '⚠ Unbalanced'}
+                      </div>
+                    </div>
+                    
+                    {/* Gauge + Percentage */}
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="relative w-48 h-28">
+                        {/* Gauge Background */}
+                        <svg viewBox="0 0 200 120" className="w-full h-full">
+                          {/* Background arc */}
+                          <path
+                            d="M 20 100 A 80 80 0 0 1 180 100"
+                            fill="none"
+                            stroke="#374151"
+                            strokeWidth="16"
+                            strokeLinecap="round"
+                          />
+                          {/* Colored arc based on percentage */}
+                          <defs>
+                            <linearGradient id="powerGauge" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#ef4444" />
+                              <stop offset="25%" stopColor="#f97316" />
+                              <stop offset="50%" stopColor="#eab308" />
+                              <stop offset="75%" stopColor="#84cc16" />
+                              <stop offset="100%" stopColor="#22c55e" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            d="M 20 100 A 80 80 0 0 1 180 100"
+                            fill="none"
+                            stroke="url(#powerGauge)"
+                            strokeWidth="16"
+                            strokeLinecap="round"
+                            strokeDasharray={`${percentMet * 2.51} 251`}
+                          />
+                          {/* Needle */}
+                          <g transform={`rotate(${-90 + (percentMet / 100) * 180} 100 100)`}>
+                            <line x1="100" y1="100" x2="100" y2="35" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                            <circle cx="100" cy="100" r="8" fill="white" />
+                          </g>
+                        </svg>
+                        {/* Percentage display */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                          <div className={`text-4xl font-black bg-gradient-to-r ${getGaugeColor(percentMet)} text-transparent bg-clip-text`}>
+                            {percentMet}%
+                          </div>
+                          <div className="text-xs text-gray-400">Supply/Demand</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* DEMAND BREAKDOWN */}
+                      <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+                        <h4 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4" />
+                          Demand Breakdown
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-purple-400" />
+                              Base Building
+                            </span>
+                            <span className="font-bold text-white">{baseBuildingKW.toLocaleString()} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Car className="w-4 h-4 text-emerald-400" />
+                              EV Chargers {evChargerString}
+                            </span>
+                            <span className="font-bold text-white">{Math.round(totalEVLoadKW).toLocaleString()} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Settings className="w-4 h-4 text-gray-400" />
+                              Other Equipment
+                            </span>
+                            <span className="font-bold text-white">{otherEquipmentKW.toLocaleString()} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 bg-red-500/10 rounded-lg px-3 -mx-1">
+                            <span className="text-red-400 font-bold flex items-center gap-2">
+                              <Zap className="w-4 h-4" />
+                              TOTAL PEAK
+                            </span>
+                            <span className="font-black text-red-400 text-lg">{totalPeakDemandKW.toLocaleString()} kW</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* SUPPLY */}
+                      <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+                        <h4 className="text-sm font-bold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Battery className="w-4 h-4" />
+                          Supply
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Battery className="w-4 h-4 text-purple-400" />
+                              Battery
+                            </span>
+                            <span className="font-bold text-white">{batteryKWh.toLocaleString()} kWh</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Sun className="w-4 h-4 text-amber-400" />
+                              Solar
+                            </span>
+                            <span className="font-bold text-white">{solarKW.toLocaleString()} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Fuel className="w-4 h-4 text-slate-400" />
+                              Generator
+                            </span>
+                            <span className="font-bold text-white">{generatorKW.toLocaleString()} kW</span>
+                          </div>
+                          <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                            <span className="text-gray-300 flex items-center gap-2">
+                              <Zap className={`w-4 h-4 ${isGridUnreliable ? 'text-amber-400' : 'text-green-400'}`} />
+                              Grid
+                            </span>
+                            <span className={`font-bold flex items-center gap-1 ${isGridUnreliable ? 'text-amber-400' : 'text-green-400'}`}>
+                              {gridConnection === 'on-grid' ? 'Reliable ✓' : 
+                               gridConnection === 'off-grid' ? 'Off-Grid' :
+                               gridConnection === 'unreliable' ? 'Unreliable ⚠️' :
+                               gridConnection === 'expensive' ? 'Expensive 💰' : 'Limited ⚠️'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Backup Duration */}
+                    <div className="mt-6 pt-4 border-t border-slate-700">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-gray-400 uppercase tracking-wider mb-1">Backup Duration</div>
+                          <div className="text-3xl font-black text-white">
+                            {backupDurationHrs.toFixed(1)} <span className="text-lg text-gray-400">hours</span>
+                          </div>
+                          <div className="text-xs text-gray-500">(Based on {totalPeakDemandKW.toLocaleString()} kW demand)</div>
+                        </div>
+                        {isGridUnreliable && backupDurationHrs < recommendedBackupHours && (
+                          <div className="bg-amber-500/20 border border-amber-500/40 rounded-xl px-4 py-3 max-w-xs">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <div className="text-amber-400 font-bold text-sm">Grid Unreliable</div>
+                                <div className="text-amber-300/80 text-xs">Recommend {recommendedBackupHours}+ hours backup</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {!isGridUnreliable && backupDurationHrs >= 4 && (
+                          <div className="bg-green-500/20 border border-green-500/40 rounded-xl px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="w-5 h-5 text-green-400" />
+                              <div className="text-green-400 font-bold text-sm">Adequate Backup</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
               })()}
               
               {/* Configuration Cards Grid */}
