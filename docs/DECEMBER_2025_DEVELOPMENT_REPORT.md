@@ -353,27 +353,107 @@ Enhanced market data infrastructure:
 
 ## 7. Competitive Positioning
 
-### 7.1 Market Differentiation Matrix
+### 7.1 AI Energy Platform Landscape (Grok Analysis - Dec 2025)
 
-| Feature | Merlin TrueQuote™ | Aurora | Energy Toolbase | Homer |
-|---------|-------------------|--------|-----------------|-------|
-| Source attribution | ✅ Every line item | ❌ | ❌ | ❌ |
-| NREL methodology alignment | ✅ Documented | ❓ Claimed | ❓ | ✅ Partial |
-| Audit metadata export | ✅ JSON/Excel | ❌ | ❌ | ❌ |
-| Deviation flagging | ✅ Automatic | ❌ | ❌ | ❌ |
-| Methodology whitepaper | ✅ Public | ❌ | ❌ | ❌ |
-| Industry authority badges | ✅ 8 authorities | ❌ | ❌ | ❌ |
+Vineet shared competitive intelligence from Grok identifying leading AI tools for BESS/Solar ROI:
 
-### 7.2 Sales Talking Points
+| Platform | Focus | Strengths | Gaps vs. TrueQuote™ |
+|----------|-------|-----------|---------------------|
+| **enSights.ai** | Multi-site EV/BESS dashboard | Cash flow, utility integration, OCPP | ❌ No source attribution, opaque methodology |
+| **Onix Solar** | AI site analysis agents | Quick payback estimates, weather impact | ❌ No benchmark citations, no audit export |
+| **SmartHelio** | Performance optimization | Predictive maintenance, O&M savings | ❌ No financial transparency, no NREL alignment docs |
+| **3E SynaptiQ** | Asset management | NPV/LCOE modeling, fault detection | ❌ No public methodology, no deviation flagging |
+| **Delfos Energy** | Grid/storage optimization | Cycle efficiency, forecasting | ❌ No source attribution, custom enterprise only |
+
+### 7.2 The TrueQuote™ Differentiator
+
+**What competitors do well:**
+- ✅ AI-driven demand forecasting
+- ✅ Multi-site centralization
+- ✅ Predictive maintenance
+- ✅ Load profile optimization
+
+**What NONE of them do (and TrueQuote™ does):**
+
+| Capability | Competitors | Merlin TrueQuote™ |
+|------------|-------------|-------------------|
+| **Source Attribution** | "Our AI calculated this" | "NREL ATB 2024, Table 6.1, LFP 4-hr" |
+| **Methodology Disclosure** | Proprietary black box | Public whitepaper, StoreFAST aligned |
+| **Audit Export** | PDF reports | JSON metadata with full assumptions |
+| **Deviation Flagging** | None | Auto-flag when >15% from benchmark |
+| **Bank Readiness** | Requires verification | Pre-verified, cite-ready |
+
+### 7.3 Competitive Matrix (Expanded)
+
+| Feature | Merlin TrueQuote™ | enSights.ai | Onix | SmartHelio | 3E SynaptiQ | Delfos |
+|---------|-------------------|-------------|------|------------|-------------|--------|
+| Source attribution | ✅ Every line | ❌ | ❌ | ❌ | ❌ | ❌ |
+| NREL methodology | ✅ Documented | ❓ | ❓ | ❓ | ❓ | ❓ |
+| Audit metadata | ✅ JSON/Excel | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Deviation flagging | ✅ Automatic | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Public whitepaper | ✅ Yes | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Authority badges | ✅ 8 agencies | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Multi-site mgmt | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Predictive maint. | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Demand forecasting | ✅ Basic | ✅ AI | ✅ AI | ✅ AI | ✅ AI | ✅ AI |
+| SMB verticals | ✅ Native | ❌ | ⚠️ Limited | ❌ | ❌ | ❌ |
+
+### 7.4 Strategic Positioning
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      ENERGY AI PLATFORM POSITIONING                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│         HIGH TRANSPARENCY                                                   │
+│              ▲                                                              │
+│              │                                                              │
+│              │          ┌─────────────────┐                                │
+│              │          │ MERLIN          │  ← TrueQuote™ creates          │
+│              │          │ TrueQuote™      │    unique positioning           │
+│              │          └─────────────────┘                                │
+│              │                                                              │
+│              │                                                              │
+│   SIMPLE ◄───┼───────────────────────────────────────────────► COMPLEX     │
+│   (SMB)      │                                                  (Utility)  │
+│              │      ┌─────────┐ ┌─────────┐ ┌─────────┐                    │
+│              │      │enSights │ │SmartHel.│ │ Delfos  │                    │
+│              │      └─────────┘ └─────────┘ └─────────┘                    │
+│              │           ┌─────────┐ ┌─────────┐                           │
+│              │           │  Onix   │ │3E Synap.│                           │
+│              │           └─────────┘ └─────────┘                           │
+│              │                                                              │
+│              ▼                                                              │
+│         LOW TRANSPARENCY (Black Box AI)                                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Merlin TrueQuote™ occupies a UNIQUE quadrant: 
+High Transparency + SMB Focus = Underserved market opportunity
+```
+
+### 7.5 Sales Talking Points
 
 **For Developers:**
 > "Merlin is the only BESS quoting platform where every number cites its source. When you present to a bank, they'll see NREL, DOE, and Sandia alignment — not a black box."
 
 **For Financiers:**
-> "Merlin exports audit-ready metadata. Your due diligence team can verify every assumption without calling us. That's never been possible before."
+> "Tools like enSights and SmartHelio do great optimization, but can your due diligence team verify their assumptions? Merlin exports audit-ready metadata. That's never been possible before."
 
 **For C&I Customers:**
-> "See those badges? NREL, DOE, Sandia. Your CFO can trust these numbers because they're based on the same data national laboratories use."
+> "See those badges? NREL, DOE, Sandia. Your CFO can trust these numbers because they're based on the same data national laboratories use — not proprietary AI guesswork."
+
+**Against AI Competitors (New):**
+> "enSights, Onix, SmartHelio — they're great at forecasting and optimization. But ask them: Where does your $150/kWh battery cost come from? They can't tell you. We cite NREL ATB 2024, Table 6.1. That's the TrueQuote™ difference."
+
+### 7.6 Competitive Response Playbook
+
+| Competitor Claim | TrueQuote™ Response |
+|------------------|---------------------|
+| "Our AI optimizes better" | "Optimization is table stakes. Can you cite your sources to a bank?" |
+| "We have 12-month ROI" | "Based on what assumptions? We show ours — NREL StoreFAST methodology." |
+| "We integrate with your EMS" | "Great for operations. For financing, you need audit-ready quotes." |
+| "Enterprise-grade platform" | "Enterprise platforms, SMB transparency. Best of both." |
 
 ---
 
