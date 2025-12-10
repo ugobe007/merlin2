@@ -9,6 +9,7 @@ import { QuoteEngine } from '@/core/calculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
 import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
+import { TrueQuoteModal } from '../shared/TrueQuoteModal';
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
@@ -127,6 +128,7 @@ export default function HeroSection({
   // Merlin Intelligence Engine popup states
   const [activeInfoPopup, setActiveInfoPopup] = useState<string | null>(null);
   const [showMerlinVideo, setShowMerlinVideo] = useState(false);
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
   // Auto-rotate through use case images
   useEffect(() => {
@@ -332,10 +334,20 @@ export default function HeroSection({
                 <span className="text-purple-300 group-hover:text-amber-300 group-hover:translate-x-1 transition-all">→</span>
               </button>
 
-              {/* TrueQuote™ Badge */}
+              {/* TrueQuote™ Badge - Clickable for marketing modal */}
               <div className="flex items-center justify-center gap-2 mb-6">
-                <TrueQuoteBadge size="md" />
-                <span className="text-purple-300 text-sm">Every number has a source</span>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <TrueQuoteBadge size="md" />
+                </button>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="text-purple-300 text-sm hover:text-amber-300 transition-colors cursor-pointer"
+                >
+                  Every number has a source →
+                </button>
               </div>
 
               {/* How it Works - with wizard icon */}
@@ -1530,6 +1542,16 @@ export default function HeroSection({
         onClose={() => setShowRealWorldModal(false)}
         application={selectedApplication}
         onStartWizard={() => setShowSmartWizard(true)}
+      />
+
+      {/* TrueQuote™ Marketing Modal */}
+      <TrueQuoteModal
+        isOpen={showTrueQuoteModal}
+        onClose={() => setShowTrueQuoteModal(false)}
+        onGetQuote={() => {
+          setShowTrueQuoteModal(false);
+          setShowSmartWizard(true);
+        }}
       />
     </>
   );

@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Battery, Zap, Target, Users, LineChart, Shield, Sparkles, Award, TrendingUp } from 'lucide-react';
 import { TrustBadgesGrid, MethodologyStatement } from './shared/IndustryComplianceBadges';
 import { TrueQuoteBadge, TrueQuoteBanner } from './shared/TrueQuoteBadge';
+import { TrueQuoteModal } from './shared/TrueQuoteModal';
 
 interface AboutMerlinProps {
   onStartWizard?: () => void;
 }
 
 const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -254,7 +257,9 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
           <div className="flex items-center gap-3 mb-8">
             <Shield className="w-8 h-8 text-amber-600" />
             <h2 className="text-3xl font-bold text-gray-800">Introducing TrueQuote™</h2>
-            <TrueQuoteBadge size="lg" showTooltip={false} />
+            <button onClick={() => setShowTrueQuoteModal(true)} className="hover:scale-105 transition-transform">
+              <TrueQuoteBadge size="lg" showTooltip={false} />
+            </button>
           </div>
           
           <div className="bg-gradient-to-br from-amber-50 via-white to-amber-50 rounded-xl border-2 border-amber-200 p-8 mb-8">
@@ -264,6 +269,12 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
                 Unlike competitors who hide behind "proprietary AI," every number in a Merlin quote 
                 is traceable to documented, authoritative sources.
               </p>
+              <button 
+                onClick={() => setShowTrueQuoteModal(true)}
+                className="mt-4 text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2 mx-auto"
+              >
+                Learn more about TrueQuote™ →
+              </button>
             </div>
             
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -466,6 +477,16 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
         </div>
 
       </div>
+
+      {/* TrueQuote™ Marketing Modal */}
+      <TrueQuoteModal
+        isOpen={showTrueQuoteModal}
+        onClose={() => setShowTrueQuoteModal(false)}
+        onGetQuote={() => {
+          setShowTrueQuoteModal(false);
+          onStartWizard?.();
+        }}
+      />
     </div>
   );
 };
