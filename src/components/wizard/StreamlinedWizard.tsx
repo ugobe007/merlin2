@@ -59,6 +59,7 @@ import {
 } from '@/services/premiumConfigurationService';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
 import { QuoteComplianceFooter, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
+import { TrueQuoteBadge, TrueQuoteBanner } from '@/components/shared/TrueQuoteBadge';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================
@@ -3787,9 +3788,12 @@ export default function StreamlinedWizard({
                 <>
                   {/* Header */}
                   <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-5 py-2 mb-4">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                      <span className="text-emerald-700 font-semibold">Quote Complete!</span>
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-5 py-2">
+                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                        <span className="text-emerald-700 font-semibold">Quote Complete!</span>
+                      </div>
+                      <TrueQuoteBadge size="md" />
                     </div>
                     
                     <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
@@ -3798,8 +3802,11 @@ export default function StreamlinedWizard({
                     <p className="text-gray-500">{wizardState.industryName} • {wizardState.state} • {wizardState.facilitySize.toLocaleString()} {FACILITY_PRESETS[wizardState.selectedIndustry]?.unit || 'sq ft'}</p>
                   </div>
                   
+                  {/* TrueQuote™ Banner - Shows transparency message */}
+                  <TrueQuoteBanner variant="compact" />
+                  
                   {/* Main Savings Card */}
-                  <div className="bg-gradient-to-br from-emerald-50 via-cyan-50 to-purple-50 rounded-3xl p-8 border-2 border-emerald-300 text-center mb-8 shadow-lg">
+                  <div className="bg-gradient-to-br from-emerald-50 via-cyan-50 to-purple-50 rounded-3xl p-8 border-2 border-emerald-300 text-center mb-8 mt-6 shadow-lg">
                     <p className="text-emerald-600 uppercase tracking-widest text-sm font-bold mb-2">💰 Estimated Annual Savings</p>
                     <p className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-500">
                       ${Math.round(wizardState.quoteResult.financials.annualSavings).toLocaleString()}

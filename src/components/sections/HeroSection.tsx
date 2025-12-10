@@ -8,6 +8,7 @@ import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { QuoteEngine } from '@/core/calculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
 import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
+import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
@@ -324,12 +325,18 @@ export default function HeroSection({
               {/* Advanced Builder - MATCHING WIDTH */}
               <button 
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="group flex items-center justify-center gap-3 mb-6 w-full max-w-md px-8 py-4 rounded-full border-2 border-purple-400/50 hover:border-amber-400 hover:bg-purple-800/30 transition-all"
+                className="group flex items-center justify-center gap-3 mb-4 w-full max-w-md px-8 py-4 rounded-full border-2 border-purple-400/50 hover:border-amber-400 hover:bg-purple-800/30 transition-all"
               >
                 <span className="text-xl">⚡</span>
                 <span className="text-white font-semibold text-lg">Advanced Quote Builder</span>
                 <span className="text-purple-300 group-hover:text-amber-300 group-hover:translate-x-1 transition-all">→</span>
               </button>
+
+              {/* TrueQuote™ Badge */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <TrueQuoteBadge size="md" />
+                <span className="text-purple-300 text-sm">Every number has a source</span>
+              </div>
 
               {/* How it Works - with wizard icon */}
               <button 
