@@ -114,10 +114,39 @@ export interface EquipmentBreakdown {
     contingency: number;
     totalInstallation: number;
   };
+  commissioning: {
+    factoryAcceptanceTest: number;      // FAT at manufacturer
+    siteAcceptanceTest: number;         // SAT on-site
+    scadaIntegration: number;           // Control system integration
+    functionalSafetyTest: number;       // Safety system validation (IEC 61508)
+    performanceTest: number;            // Capacity & round-trip efficiency testing
+    totalCommissioning: number;
+  };
+  certification: {
+    interconnectionStudy: number;       // Utility interconnection study
+    utilityUpgrades: number;            // Grid upgrades if required
+    environmentalPermits: number;       // NEPA, state/local environmental
+    buildingPermits: number;            // Construction permits
+    fireCodeCompliance: number;         // NFPA 855 compliance
+    totalCertification: number;
+  };
+  annualCosts: {
+    operationsAndMaintenance: number;   // Annual O&M (typically 1-2% of capex)
+    extendedWarranty: number;           // Extended warranty beyond standard
+    capacityTesting: number;            // Annual capacity verification
+    insurancePremium: number;           // Asset insurance
+    softwareLicenses: number;           // SCADA, energy management software
+    totalAnnualCost: number;
+    year1Total: number;                 // First year (higher due to commissioning overlap)
+  };
   totals: {
     equipmentCost: number;
     installationCost: number;
-    totalProjectCost: number;
+    commissioningCost: number;
+    certificationCost: number;
+    totalCapex: number;                 // Total capital expenditure
+    totalProjectCost: number;           // Capex + first year opex
+    annualOpex: number;                 // Ongoing annual costs
   };
 }
 
@@ -141,7 +170,7 @@ export const calculateEquipmentBreakdown = async (
 ): Promise<EquipmentBreakdown> => {
   
   // Extract options with defaults
-  const generatorFuelType = options?.generatorFuelType || 'diesel';
+  const generatorFuelType = options?.generatorFuelType || 'natural-gas';
   const fuelCellMW = options?.fuelCellMW || 0;
   const fuelCellType = options?.fuelCellType || 'hydrogen';
   
@@ -786,20 +815,200 @@ export const calculateEquipmentBreakdown = async (
     }
   };
 
+  // ============================================
+  // COMMISSIONING & FUNCTIONAL SAFETY TESTING
+  // ============================================
+  // Industry-standard testing and commissioning costs
+  // Sources: DNV GL, UL 9540A requirements, IEC 61508/62443
+  
+  // Fetch commissioning config from database if available
+  let commissioningConfig: any = null;
+  try {
+    const { useCaseService } = await import('../services/useCaseService');
+    commissioningConfig = await useCaseService.getPricingConfig('commissioning_costs_2025');
+  } catch (error) {
+    // Using fallback commissioning values
+  }
+  
+  // Factory Acceptance Test (FAT) - Testing at manufacturer before shipping
+  // Typically 1-2% of battery system cost
+  const fatPercentage = commissioningConfig?.fatPercentage || 0.015;
+  const factoryAcceptanceTest = batteries.totalCost * fatPercentage;
+  
+  // Site Acceptance Test (SAT) - On-site verification and integration testing
+  // Typically 2-3% of total equipment cost
+  const satPercentage = commissioningConfig?.satPercentage || 0.025;
+  const siteAcceptanceTest = equipmentCost * satPercentage;
+  
+  // SCADA/EMS Integration - Control system programming and integration
+  // Fixed base + per-MW cost for complexity
+  const scadaBaseCost = commissioningConfig?.scadaBaseCost || 25000;
+  const scadaPerMW = commissioningConfig?.scadaPerMW || 5000;
+  const scadaIntegration = scadaBaseCost + (storageSizeMW * scadaPerMW);
+  
+  // Functional Safety Testing (IEC 61508/62443 compliance)
+  // Critical for grid-connected and off-grid systems
+  // Includes: Protection relay testing, fault response, emergency shutdown
+  const safetyTestBaseCost = commissioningConfig?.safetyTestBaseCost || 15000;
+  const safetyTestPerMW = commissioningConfig?.safetyTestPerMW || 3000;
+  const functionalSafetyTest = safetyTestBaseCost + (storageSizeMW * safetyTestPerMW);
+  
+  // Performance Testing - Capacity verification, round-trip efficiency
+  // Required for warranty validation and performance guarantees
+  const performanceTestBaseCost = commissioningConfig?.performanceTestBaseCost || 10000;
+  const performanceTestPerMWh = commissioningConfig?.performanceTestPerMWh || 500;
+  const performanceTest = performanceTestBaseCost + (totalEnergyMWh * performanceTestPerMWh);
+  
+  const totalCommissioning = factoryAcceptanceTest + siteAcceptanceTest + 
+                             scadaIntegration + functionalSafetyTest + performanceTest;
+  
+  const commissioning = {
+    factoryAcceptanceTest,
+    siteAcceptanceTest,
+    scadaIntegration,
+    functionalSafetyTest,
+    performanceTest,
+    totalCommissioning
+  };
+  
+  // ============================================
+  // SITE CERTIFICATION & PERMITTING
+  // ============================================
+  // Regulatory approval and utility interconnection costs
+  // Sources: FERC 2222, state PUC requirements, local building codes
+  
+  let certificationConfig: any = null;
+  try {
+    const { useCaseService } = await import('../services/useCaseService');
+    certificationConfig = await useCaseService.getPricingConfig('certification_costs_2025');
+  } catch (error) {
+    // Using fallback certification values
+  }
+  
+  // Interconnection Study - Utility grid impact study
+  // Cost varies significantly by utility and system size
+  const interconnectionBaseCost = certificationConfig?.interconnectionBaseCost || 10000;
+  const interconnectionPerMW = certificationConfig?.interconnectionPerMW || 15000;
+  const interconnectionStudy = interconnectionBaseCost + (storageSizeMW * interconnectionPerMW);
+  
+  // Utility Grid Upgrades - If study determines upgrades needed
+  // Highly variable - using conservative estimate (may be $0 or much higher)
+  const utilityUpgradePercentage = certificationConfig?.utilityUpgradePercentage || 0.03;
+  const utilityUpgrades = gridConnection === 'off-grid' ? 0 : equipmentCost * utilityUpgradePercentage;
+  
+  // Environmental Permits - NEPA review, state environmental compliance
+  // Higher for larger systems and greenfield sites
+  const envPermitBaseCost = certificationConfig?.envPermitBaseCost || 5000;
+  const envPermitPerMW = certificationConfig?.envPermitPerMW || 2000;
+  const environmentalPermits = envPermitBaseCost + (storageSizeMW * envPermitPerMW);
+  
+  // Building Permits - Local construction permits, inspections
+  const buildingPermitPercentage = certificationConfig?.buildingPermitPercentage || 0.005;
+  const buildingPermitMin = certificationConfig?.buildingPermitMin || 2500;
+  const buildingPermits = Math.max(buildingPermitMin, equipmentCost * buildingPermitPercentage);
+  
+  // Fire Code Compliance - NFPA 855 (battery storage standard)
+  // Includes fire suppression, thermal management verification, signage
+  const fireCodeBaseCost = certificationConfig?.fireCodeBaseCost || 8000;
+  const fireCodePerMWh = certificationConfig?.fireCodePerMWh || 1000;
+  const fireCodeCompliance = fireCodeBaseCost + (totalEnergyMWh * fireCodePerMWh);
+  
+  const totalCertification = interconnectionStudy + utilityUpgrades + 
+                             environmentalPermits + buildingPermits + fireCodeCompliance;
+  
+  const certification = {
+    interconnectionStudy,
+    utilityUpgrades,
+    environmentalPermits,
+    buildingPermits,
+    fireCodeCompliance,
+    totalCertification
+  };
+  
+  // ============================================
+  // ANNUAL OPERATING COSTS (OPEX)
+  // ============================================
+  // Ongoing costs for operations, maintenance, and compliance
+  // Sources: NREL O&M benchmarks, industry standard warranties
+  
+  let annualConfig: any = null;
+  try {
+    const { useCaseService } = await import('../services/useCaseService');
+    annualConfig = await useCaseService.getPricingConfig('annual_costs_2025');
+  } catch (error) {
+    // Using fallback annual cost values
+  }
+  
+  // Operations & Maintenance - Ongoing monitoring, preventive maintenance
+  // Typically 1-2% of battery system capex annually
+  const omPercentage = annualConfig?.omPercentage || 0.015;
+  const operationsAndMaintenance = batteries.totalCost * omPercentage;
+  
+  // Extended Warranty - Beyond standard 10-year warranty
+  // Annual premium for capacity guarantee extension
+  const warrantyPercentage = annualConfig?.warrantyPercentage || 0.005;
+  const extendedWarranty = batteries.totalCost * warrantyPercentage;
+  
+  // Annual Capacity Testing - Required for warranty and performance guarantees
+  // Includes discharge testing, efficiency verification
+  const capacityTestBaseCost = annualConfig?.capacityTestBaseCost || 3000;
+  const capacityTestPerMWh = annualConfig?.capacityTestPerMWh || 200;
+  const capacityTesting = capacityTestBaseCost + (totalEnergyMWh * capacityTestPerMWh);
+  
+  // Insurance Premium - Asset insurance for the storage system
+  // Typically 0.3-0.5% of replacement value annually
+  const insurancePercentage = annualConfig?.insurancePercentage || 0.004;
+  const insurancePremium = equipmentCost * insurancePercentage;
+  
+  // Software Licenses - SCADA, energy management, optimization software
+  // Annual subscription fees
+  const softwareBaseCost = annualConfig?.softwareBaseCost || 5000;
+  const softwarePerMW = annualConfig?.softwarePerMW || 2000;
+  const softwareLicenses = softwareBaseCost + (storageSizeMW * softwarePerMW);
+  
+  const totalAnnualCost = operationsAndMaintenance + extendedWarranty + 
+                          capacityTesting + insurancePremium + softwareLicenses;
+  
+  // Year 1 typically higher due to overlap with commissioning activities
+  const year1Premium = annualConfig?.year1Premium || 1.25;
+  const year1Total = totalAnnualCost * year1Premium;
+  
+  const annualCosts = {
+    operationsAndMaintenance,
+    extendedWarranty,
+    capacityTesting,
+    insurancePremium,
+    softwareLicenses,
+    totalAnnualCost,
+    year1Total
+  };
+
+  // ============================================
+  // TOTAL PROJECT COSTS
+  // ============================================
+  const totalCapex = equipmentCost + totalInstallation + totalCommissioning + totalCertification;
+  const totalProjectCost = totalCapex + year1Total; // Include first year opex
+
   const totals = {
-    equipmentCost: equipmentCost,
-    installationCost: installation.totalInstallation,
-    totalProjectCost: equipmentCost + installation.totalInstallation
+    equipmentCost,
+    installationCost: totalInstallation,
+    commissioningCost: totalCommissioning,
+    certificationCost: totalCertification,
+    totalCapex,
+    totalProjectCost,
+    annualOpex: totalAnnualCost
   };
 
   if (import.meta.env.DEV) {
-    console.log(`📦 [Installation Breakdown]`, {
+    console.log(`📦 [Project Cost Breakdown]`, {
       equipment: `$${equipmentCost.toLocaleString()}`,
-      logistics: `$${logistics.toLocaleString()} (8%)`,
-      importDuty: `$${importDuty.toLocaleString()} (2%)`,
-      epc: `$${epc.toLocaleString()} (25%)`,
-      contingency: `$${contingency.toLocaleString()} (5%)`,
-      total: `$${(equipmentCost + totalInstallation).toLocaleString()}`
+      installation: `$${totalInstallation.toLocaleString()} (40%)`,
+      commissioning: `$${totalCommissioning.toLocaleString()}`,
+      certification: `$${totalCertification.toLocaleString()}`,
+      totalCapex: `$${totalCapex.toLocaleString()}`,
+      annualOpex: `$${totalAnnualCost.toLocaleString()}/year`,
+      year1Total: `$${year1Total.toLocaleString()} (first year)`,
+      totalProject: `$${totalProjectCost.toLocaleString()} (capex + year 1)`
     });
   }
 
@@ -809,11 +1018,14 @@ export const calculateEquipmentBreakdown = async (
     transformers,
     switchgear,
     generators,
-    fuelCells,  // NEW: Fuel cells
+    fuelCells,
     solar,
     wind,
     evChargers,
     installation,
+    commissioning,
+    certification,
+    annualCosts,
     totals
   };
 };

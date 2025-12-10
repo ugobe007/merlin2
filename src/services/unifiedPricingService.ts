@@ -23,6 +23,7 @@
  * 
  * Version: 2.0.0 - Now uses database-driven calculation_constants as primary SSOT
  * Date: November 30, 2025
+ * Updated: December 10, 2025 - Added market data integration
  */
 
 import { supabase } from './supabaseClient';
@@ -31,6 +32,11 @@ import {
   getPricingConstants,
   clearConstantsCache 
 } from './calculationConstantsService';
+import { 
+  getMarketAdjustedPrice, 
+  getMarketPriceSummary,
+  clearMarketDataCache
+} from './marketDataIntegrationService';
 import type {
   BatteryPricing,
   InverterPricing,
@@ -94,13 +100,14 @@ export function clearPricingCache(): void {
 }
 
 /**
- * Clear ALL caches (pricing + calculation constants)
+ * Clear ALL caches (pricing + calculation constants + market data)
  * Call this after admin updates pricing in database
  */
 export function clearAllPricingCaches(): void {
   clearPricingCache();
   clearConstantsCache();
-  if (import.meta.env.DEV) { console.log('🔄 All pricing caches cleared - will fetch fresh from database'); }
+  clearMarketDataCache();
+  if (import.meta.env.DEV) { console.log('🔄 All pricing caches cleared - will fetch fresh from database + market data'); }
 }
 
 // ============================================
@@ -159,11 +166,11 @@ const NREL_WIND_PRICING: WindPricing = {
 };
 
 const NREL_GENERATOR_PRICING: GeneratorPricing = {
-  pricePerKW: 500, // $500/kW for diesel generator
+  pricePerKW: 700, // $700/kW for natural gas generator
   manufacturer: 'Various (Industry Standard)',
-  model: 'Diesel Generator',
-  fuelType: 'diesel',
-  efficiency: 0.35,
+  model: 'Natural Gas Generator',
+  fuelType: 'natural-gas',
+  efficiency: 0.40,
   dataSource: 'nrel',
   lastUpdated: new Date('2024-11-01')
 };
@@ -263,7 +270,33 @@ async function fetchBatteryPricingFromDB(
       };
     }
     
-    // PRIORITY 3: Fall back to NREL constants
+    // PRIORITY 3: Try MARKET DATA INTEGRATION (scraped from RSS/web sources)
+    // This uses the daily market scraper for real-time pricing intelligence
+    const marketData = await getMarketAdjustedPrice('bess', NREL_ATB_2024_BATTERY.pricePerKWh, location);
+    
+    if (marketData.source === 'market' && marketData.confidence !== 'low') {
+      if (import.meta.env.DEV) {
+        console.log(`📈 Battery pricing from MARKET DATA: $${marketData.price}/kWh (${marketData.confidence} confidence, ${marketData.dataPoints || 0} data points)`);
+        if (marketData.marketTrend) {
+          console.log(`   Market trend: ${marketData.marketTrend}`);
+        }
+      }
+      
+      return {
+        pricePerKWh: Math.round(marketData.price),
+        manufacturer: 'Various (Market Intelligence)',
+        model: energyKWh >= 10000 ? 'Utility Scale LFP' : energyKWh >= 1000 ? 'Commercial Container' : 'Small Commercial',
+        chemistry: 'LFP',
+        warrantyYears: 10,
+        cycleLife: 4000,
+        efficiency: 0.85,
+        dataSource: 'database',
+        lastUpdated: new Date(),
+        confidence: marketData.confidence
+      };
+    }
+    
+    // PRIORITY 4: Fall back to NREL constants
     if (import.meta.env.DEV) {
       console.log(`📦 Battery pricing from NREL fallback: $${NREL_ATB_2024_BATTERY.pricePerKWh}/kWh`);
     }
@@ -329,17 +362,52 @@ async function fetchInverterPricingFromDB(powerMW: number): Promise<InverterPric
 
 /**
  * Fetch solar pricing from database
- * Priority: calculation_constants → equipment_pricing → NREL
+ * Priority: pricing_configurations.solar_default (scale-based) → NREL fallback
+ * 
+ * ⚠️ UPDATED Dec 2025: Now uses scale-based pricing to match calculateEquipmentBreakdown()
+ * - < 5 MW: commercial_per_watt (default $0.85/W)
+ * - ≥ 5 MW: utility_scale_per_watt (default $0.65/W)
+ * 
+ * @param solarMW - Optional solar capacity in MW for scale-based pricing
  */
-async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
+async function fetchSolarPricingFromDB(solarMW?: number): Promise<SolarPricing> {
   try {
-    // PRIORITY 1: Try calculation_constants
-    const pricePerWatt = await getConstant('solar_cost_per_watt');
-    if (pricePerWatt !== null) {
+    // PRIORITY 1: Try pricing_configurations for scale-based pricing (matches calculateEquipmentBreakdown)
+    const { data: configData, error: configError } = await supabase
+      .from('pricing_configurations')
+      .select('config_data')
+      .eq('config_key', 'solar_default')
+      .eq('is_active', true)
+      .single();
+    
+    if (!configError && configData?.config_data) {
+      const solarConfig = configData.config_data as {
+        utility_scale_per_watt?: number;
+        commercial_per_watt?: number;
+        small_scale_per_watt?: number;
+      };
+      
+      // Determine scale-based pricing
+      const isUtilityScale = solarMW !== undefined && solarMW >= 5; // 5MW+ is utility scale
+      let pricePerWatt: number;
+      let model: string;
+      
+      if (isUtilityScale) {
+        pricePerWatt = solarConfig.utility_scale_per_watt ?? 0.65;
+        model = 'Utility-Scale Solar (>5 MW)';
+      } else {
+        pricePerWatt = solarConfig.commercial_per_watt ?? 0.85;
+        model = 'Commercial Solar (<5 MW)';
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log(`☀️ Solar pricing from solar_default: $${pricePerWatt}/W (${model})`);
+      }
+      
       return {
         pricePerWatt,
         manufacturer: 'Various (NREL ATB 2024)',
-        model: 'Utility-Scale Solar',
+        model,
         efficiency: 0.20,
         warrantyYears: 25,
         dataSource: 'database',
@@ -347,7 +415,7 @@ async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
       };
     }
     
-    // PRIORITY 2: Try equipment_pricing
+    // PRIORITY 2: Try equipment_pricing table as fallback
     const { data, error } = await supabase
       .from('equipment_pricing')
       .select('*')
@@ -361,7 +429,7 @@ async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
       return {
         pricePerWatt: data.price_per_watt || 0.85,
         manufacturer: data.manufacturer || 'Various',
-        model: data.model || 'Utility-Scale Solar',
+        model: data.model || 'Commercial Solar',
         efficiency: 0.20,
         warrantyYears: 25,
         dataSource: 'database',
@@ -369,10 +437,21 @@ async function fetchSolarPricingFromDB(): Promise<SolarPricing> {
       };
     }
     
-    // PRIORITY 3: NREL fallback
-    return NREL_SOLAR_PRICING;
+    // PRIORITY 3: NREL fallback with scale-based pricing
+    const isUtilityScale = solarMW !== undefined && solarMW >= 5;
+    return {
+      ...NREL_SOLAR_PRICING,
+      pricePerWatt: isUtilityScale ? 0.65 : 0.85,
+      model: isUtilityScale ? 'Utility-Scale Solar (>5 MW)' : 'Commercial Solar (<5 MW)'
+    };
   } catch (error) {
-    return NREL_SOLAR_PRICING;
+    // FALLBACK: Use NREL with scale-based pricing
+    const isUtilityScale = solarMW !== undefined && solarMW >= 5;
+    return {
+      ...NREL_SOLAR_PRICING,
+      pricePerWatt: isUtilityScale ? 0.65 : 0.85,
+      model: isUtilityScale ? 'Utility-Scale Solar (>5 MW)' : 'Commercial Solar (<5 MW)'
+    };
   }
 }
 
@@ -426,11 +505,11 @@ async function fetchGeneratorPricingFromDB(): Promise<GeneratorPricing> {
     }
 
     return {
-      pricePerKW: data.price_per_kw || 500,
+      pricePerKW: data.price_per_kw || 700,
       manufacturer: data.manufacturer || 'Various',
-      model: data.model || 'Diesel Generator',
-      fuelType: 'diesel',
-      efficiency: 0.35,
+      model: data.model || 'Natural Gas Generator',
+      fuelType: 'natural-gas',
+      efficiency: 0.40,
       dataSource: 'database',
       lastUpdated: new Date(data.updated_at)
     };
@@ -531,8 +610,21 @@ export async function getTransformerPricing(): Promise<TransformerPricing> {
 
 /**
  * Get solar pricing - SINGLE SOURCE OF TRUTH
+ * 
+ * ⚠️ UPDATED Dec 2025: Now supports scale-based pricing
+ * - Pass solarMW to get appropriate pricing for your system size
+ * - < 5 MW: commercial pricing (~$0.85/W)
+ * - ≥ 5 MW: utility-scale pricing (~$0.65/W)
+ * 
+ * @param solarMW - Optional solar capacity in MW for scale-based pricing
  */
-export async function getSolarPricing(): Promise<SolarPricing> {
+export async function getSolarPricing(solarMW?: number): Promise<SolarPricing> {
+  // For scale-based pricing, always fetch fresh to get correct tier
+  if (solarMW !== undefined) {
+    return await fetchSolarPricingFromDB(solarMW);
+  }
+  
+  // For default (no size), use cache
   if (isCacheValid() && pricingCache.solar) {
     return pricingCache.solar;
   }
@@ -577,17 +669,23 @@ export async function getGeneratorPricing(): Promise<GeneratorPricing> {
 /**
  * Get all equipment pricing at once (batch operation)
  * Useful for loading complete system quotes
+ * 
+ * @param powerMW - Storage power in MW
+ * @param durationHours - Storage duration hours
+ * @param location - Location/country
+ * @param solarMW - Optional solar capacity for scale-based pricing
  */
 export async function getAllEquipmentPricing(
   powerMW: number,
   durationHours: number,
-  location: string = 'United States'
+  location: string = 'United States',
+  solarMW?: number
 ): Promise<UnifiedPricingCache> {
   const [battery, inverter, transformer, solar, wind, generator] = await Promise.all([
     getBatteryPricing(powerMW, durationHours, location),
     getInverterPricing(powerMW),
     getTransformerPricing(),
-    getSolarPricing(),
+    getSolarPricing(solarMW),  // Pass solar size for scale-based pricing
     getWindPricing(),
     getGeneratorPricing()
   ]);

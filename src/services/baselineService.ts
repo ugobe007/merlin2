@@ -8,12 +8,14 @@
  * and calculates recommended BESS sizing based on actual data.
  * 
  * Performance: Uses in-memory caching to reduce database queries.
+ * 
+ * ✅ SSOT COMPLIANT (Dec 2025):
+ * - Uses useCaseService.getCustomQuestionsByUseCaseId() for custom questions
+ * - NO longer imports from deprecated useCaseTemplates.ts
  */
 
-import { useCaseService } from './useCaseService';
+import { useCaseService, type CustomQuestionRow } from './useCaseService';
 import { baselineCache } from './cacheService';
-import { USE_CASE_TEMPLATES } from '../data/useCaseTemplates';
-import type { UseCaseTemplate } from '../types/useCase.types';
 import { DATACENTER_TIER_STANDARDS, AMENITY_POWER_STANDARDS } from './useCasePowerCalculations';
 
 export interface BaselineCalculationResult {
@@ -282,58 +284,56 @@ export async function calculateDatabaseBaseline(
     // Minimum of 0.2 MW (200 kW) for small facilities
     let powerMW = Math.max(0.2, Math.round(basePowerMW * 100) / 100);
     
-    // Add amenity loads from customQuestions marked with impactType: 'power_add'
-    // This reads power values directly from the template (single source of truth)
+    // Add amenity loads from customQuestions marked with impactType: 'power_add' or 'additionalLoad'
+    // ✅ SSOT: Now queries database instead of hardcoded templates
     if (useCaseData) {
-      // Find the template from useCaseTemplates.ts (single source of truth)
-      const templateObj: UseCaseTemplate | undefined = USE_CASE_TEMPLATES.find(
-        (t: UseCaseTemplate) => t.slug === templateKey || t.id === templateKey
-      );
+      // Get custom questions from database (SSOT)
+      let customQuestions: CustomQuestionRow[] = [];
+      try {
+        // First try to get use case by slug
+        const useCase = await useCaseService.getUseCaseBySlug(templateKey);
+        if (useCase?.id) {
+          customQuestions = await useCaseService.getCustomQuestionsByUseCaseId(useCase.id);
+        }
+      } catch (error) {
+        console.warn('[baselineService] Could not fetch custom questions from DB:', error);
+      }
       
-      if (templateObj?.customQuestions) {
+      if (customQuestions.length > 0) {
         let amenityLoadKW = 0;
         
-        for (const question of templateObj.customQuestions) {
-          if (question.impactType !== 'power_add') continue;
+        for (const question of customQuestions) {
+          // DB uses 'additionalLoad' for power add impacts
+          if (question.impact_type !== 'additionalLoad') continue;
           
-          const userValue = useCaseData[question.id];
+          // Use question_key (DB column) to look up user value
+          const userValue = useCaseData[question.question_key];
           if (!userValue) continue;
           
-          // Handle select questions with powerKw in options
-          if (question.type === 'select' && question.options) {
-            const selectedOption = question.options.find((opt: any) => 
+          // Handle select questions with powerKw in select_options
+          if (question.question_type === 'select' && question.select_options) {
+            const options = Array.isArray(question.select_options) ? question.select_options : [];
+            const selectedOption = options.find((opt: any) => 
               typeof opt === 'object' && opt.value === userValue
             );
             if (selectedOption && typeof selectedOption === 'object' && 'powerKw' in selectedOption) {
               amenityLoadKW += (selectedOption as any).powerKw;
               if (import.meta.env.DEV) {
-                console.log(`  ➕ ${question.id}: +${(selectedOption as any).powerKw} kW (${userValue})`);
+                console.log(`  ➕ ${question.question_key}: +${(selectedOption as any).powerKw} kW (${userValue})`);
               }
             }
           }
           
-          // Handle multiselect questions with powerKw in options
-          if ((question.type === 'multiselect' || question.type === 'multi-select') && 
-              Array.isArray(userValue) && question.options) {
-            userValue.forEach((value: string) => {
-              const selectedOption = question.options!.find((opt: any) => 
-                typeof opt === 'object' && opt.value === value
-              );
-              if (selectedOption && typeof selectedOption === 'object' && 'powerKw' in selectedOption) {
-                amenityLoadKW += (selectedOption as any).powerKw;
-                if (import.meta.env.DEV) {
-                  console.log(`  ➕ ${question.id}: +${(selectedOption as any).powerKw} kW (${value})`);
-                }
+          // Handle number inputs - check impact_calculation for additional load value
+          if (question.question_type === 'number' && typeof userValue === 'number') {
+            const impactCalc = question.impact_calculation as any;
+            const additionalLoadKw = impactCalc?.additionalLoadKw || impactCalc?.powerKw || 0;
+            if (additionalLoadKw > 0) {
+              const calculatedLoad = userValue * additionalLoadKw;
+              amenityLoadKW += calculatedLoad;
+              if (import.meta.env.DEV) {
+                console.log(`  ➕ ${question.question_key}: +${calculatedLoad} kW (${userValue} × ${additionalLoadKw} kW)`);
               }
-            });
-          }
-          
-          // Handle number inputs with additionalLoadKw multiplier
-          if (question.type === 'number' && question.additionalLoadKw && typeof userValue === 'number') {
-            const calculatedLoad = userValue * question.additionalLoadKw;
-            amenityLoadKW += calculatedLoad;
-            if (import.meta.env.DEV) {
-              console.log(`  ➕ ${question.id}: +${calculatedLoad} kW (${userValue} × ${question.additionalLoadKw} kW)`);
             }
           }
         }
@@ -344,7 +344,7 @@ export async function calculateDatabaseBaseline(
           powerMW += amenityLoadMW;
           if (import.meta.env.DEV) {
             console.log(`✨ [Amenities] Total additional load: ${amenityLoadKW} kW (${amenityLoadMW.toFixed(2)} MW)`);
-            if (import.meta.env.DEV) { console.log(`📊 [Final Power] Base + Amenities: ${powerMW.toFixed(2)} MW`); }
+            console.log(`📊 [Final Power] Base + Amenities: ${powerMW.toFixed(2)} MW`);
           }
         }
       }

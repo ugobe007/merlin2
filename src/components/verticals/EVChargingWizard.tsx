@@ -1542,11 +1542,15 @@ export default function EVChargingWizard({
                       </div>
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={customChargers.level1}
-                          onChange={(e) => setCustomChargers({...customChargers, level1: Math.min(100, parseInt(e.target.value) || 0)})}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={customChargers.level1 || ''}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '');
+                            setCustomChargers({...customChargers, level1: Math.min(100, parseInt(val) || 0)});
+                          }}
+                          onFocus={(e) => e.target.select()}
                           className="w-20 bg-white/10 rounded px-2 py-1 text-right text-gray-300 font-bold text-xl border border-gray-400/30"
                         />
                       </div>
@@ -1590,11 +1594,15 @@ export default function EVChargingWizard({
                     </div>
                     <div className="flex items-center gap-2">
                       <input
-                        type="number"
-                        min={0}
-                        max={500}
-                        value={customChargers.level2 || recommendation.chargers.level2}
-                        onChange={(e) => setCustomChargers({...customChargers, level2: Math.min(500, parseInt(e.target.value) || 0)})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={customChargers.level2 || recommendation.chargers.level2 || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setCustomChargers({...customChargers, level2: Math.min(500, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-white/10 rounded px-2 py-1 text-right text-cyan-400 font-bold text-xl border border-cyan-400/30"
                       />
                     </div>
@@ -1627,11 +1635,15 @@ export default function EVChargingWizard({
                     </div>
                     <div className="flex items-center gap-2">
                       <input
-                        type="number"
-                        min={0}
-                        max={300}
-                        value={customChargers.dcfc || recommendation.chargers.dcfc}
-                        onChange={(e) => setCustomChargers({...customChargers, dcfc: Math.min(300, parseInt(e.target.value) || 0)})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={customChargers.dcfc || recommendation.chargers.dcfc || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setCustomChargers({...customChargers, dcfc: Math.min(300, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-white/10 rounded px-2 py-1 text-right text-amber-400 font-bold text-xl border border-amber-400/30"
                       />
                     </div>
@@ -1664,11 +1676,15 @@ export default function EVChargingWizard({
                     </div>
                     <div className="flex items-center gap-2">
                       <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={customChargers.hpc || recommendation.chargers.hpc}
-                        onChange={(e) => setCustomChargers({...customChargers, hpc: Math.min(100, parseInt(e.target.value) || 0)})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={customChargers.hpc || recommendation.chargers.hpc || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setCustomChargers({...customChargers, hpc: Math.min(100, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-white/10 rounded px-2 py-1 text-right text-purple-400 font-bold text-xl border border-purple-400/30"
                       />
                     </div>

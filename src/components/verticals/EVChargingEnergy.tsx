@@ -11,6 +11,9 @@
  * - Merlin-branded but EV-focused messaging
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
+ * 
+ * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='ev-charging'
+ * instead of separate EVChargingWizard component (2.7K+ lines of duplicate code removed)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -29,7 +32,9 @@ import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.png';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.webp';
-import EVChargingWizard, { type EVChargingWizardInputs } from './EVChargingWizard';
+// REFACTORED: Use StreamlinedWizard instead of EVChargingWizard
+import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 
 // ============================================
 // TYPES
@@ -1093,11 +1098,15 @@ export default function EVChargingEnergy() {
                   />
                   <div className="bg-white/10 rounded-xl px-3 py-2 text-center min-w-[100px]">
                     <input
-                      type="number"
-                      min={1}
-                      max={500}
-                      value={quickPorts}
-                      onChange={(e) => setQuickPorts(Math.min(500, Math.max(1, parseInt(e.target.value) || 1)))}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={quickPorts || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setQuickPorts(Math.min(500, Math.max(1, parseInt(val) || 1)));
+                      }}
+                      onFocus={(e) => e.target.select()}
                       className="w-16 bg-transparent text-4xl font-black text-emerald-400 text-right outline-none"
                     />
                     <span className="text-emerald-300 text-sm ml-1">ports</span>
@@ -1149,9 +1158,9 @@ export default function EVChargingEnergy() {
                     }
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-white px-6 py-5 rounded-xl font-black text-lg shadow-xl shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 border-2 border-emerald-300/50 hover:scale-[1.02] animate-pulse hover:animate-none"
+                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-lg shadow-2xl shadow-purple-500/50 transition-all flex items-center justify-center gap-2 border-2 border-purple-300/60 hover:scale-[1.03] animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
                   Get Detailed Quote
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -1166,32 +1175,37 @@ export default function EVChargingEnergy() {
                 </button>
               </div>
               
-              <p className="text-center text-emerald-200 text-xs mt-4 font-medium">
-                ✓ 2 minute detailed quote • ✓ No commitment required
-              </p>
+              <div className="text-center mt-4 space-y-3">
+                <p className="text-emerald-200 text-xs font-medium">
+                  ✓ 2 minute detailed quote • ✓ No commitment required
+                </p>
+                <MethodologyStatement 
+                  variant="compact" 
+                  darkMode={true}
+                  message="NREL ATB 2024 & DOE methodology"
+                />
+              </div>
             </div>
           </div>
         </div>
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL
+          WIZARD MODAL - Uses StreamlinedWizard with ev-charging pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <EVChargingWizard
-          initialInputs={{
-            level2Ports: inputs.level2Ports,
-            dcfcPorts: inputs.dcfcPorts,
-            hpcPorts: inputs.hpcPorts,
-            state: inputs.state,
+        <StreamlinedWizard
+          show={showWizard}
+          initialUseCase="ev-charging"
+          initialState={inputs.state}
+          initialData={{
+            numberOfLevel2Chargers: inputs.level2Ports,
+            numberOfDCFastChargers: inputs.dcfcPorts,
+            // Note: HPC ports not in database custom_questions yet
           }}
           onClose={() => setShowWizard(false)}
-          onComplete={() => {
+          onFinish={() => {
             setShowWizard(false);
-          }}
-          onRequestConsultation={() => {
-            setShowWizard(false);
-            setShowLeadForm(true);
           }}
         />
       )}

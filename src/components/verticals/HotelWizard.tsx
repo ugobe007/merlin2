@@ -20,9 +20,12 @@ import {
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { 
-  calculateHotelPowerDetailed, 
+  calculateHotelPowerDetailed,
+  HOTEL_CLASS_PROFILES,
+  HOTEL_AMENITY_SPECS,
   type HotelPowerInput,
-  type HotelAmenity 
+  type HotelAmenity,
+  type HotelClass
 } from '@/services/useCasePowerCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -53,25 +56,27 @@ interface HotelWizardProps {
 }
 
 // ============================================
-// HOTEL SPECIFICATIONS
+// HOTEL SPECIFICATIONS - FROM SSOT
 // ============================================
+// HOTEL_CLASS_PROFILES and HOTEL_AMENITY_SPECS imported from useCasePowerCalculations.ts
+// DO NOT duplicate here - update the SSOT service if values need to change
 
-const HOTEL_CLASS_PROFILES = {
-  economy: { kWhPerRoom: 25, peakKWPerRoom: 1.5, name: 'Economy/Budget', hvacTons: 0.5 },
-  midscale: { kWhPerRoom: 35, peakKWPerRoom: 2.0, name: 'Midscale', hvacTons: 0.75 },
-  upscale: { kWhPerRoom: 50, peakKWPerRoom: 2.5, name: 'Upscale', hvacTons: 1.0 },
-  luxury: { kWhPerRoom: 75, peakKWPerRoom: 3.5, name: 'Luxury/Resort', hvacTons: 1.5 },
+// Icons for amenities (UI-only, not part of SSOT power calculations)
+const AMENITY_ICONS: Record<HotelAmenity, React.ComponentType<any>> = {
+  pool: Waves,
+  restaurant: Coffee,
+  spa: Thermometer,
+  fitnessCenter: Dumbbell,
+  evCharging: Car,
+  laundry: Wind,
+  conferenceCenter: Building2,
 };
 
-const AMENITY_SPECS = {
-  pool: { name: 'Pool & Hot Tub', peakKW: 50, dailyKWh: 300, icon: Waves },
-  restaurant: { name: 'Restaurant/Kitchen', peakKW: 75, dailyKWh: 400, icon: Coffee },
-  spa: { name: 'Spa/Sauna/Steam', peakKW: 40, dailyKWh: 200, icon: Thermometer },
-  fitnessCenter: { name: 'Fitness Center', peakKW: 15, dailyKWh: 100, icon: Dumbbell },
-  evCharging: { name: 'EV Charging (8 L2 ports)', peakKW: 60, dailyKWh: 200, icon: Car },
-  laundry: { name: 'On-Site Laundry', peakKW: 40, dailyKWh: 250, icon: Wind },
-  conferenceCenter: { name: 'Conference/Meeting Rooms', peakKW: 30, dailyKWh: 150, icon: Building2 },
-};
+// Helper to get amenity with icon for UI
+const getAmenityWithIcon = (key: HotelAmenity) => ({
+  ...HOTEL_AMENITY_SPECS[key],
+  icon: AMENITY_ICONS[key],
+});
 
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
   'California': { rate: 0.20, demandCharge: 22 },
@@ -392,7 +397,7 @@ export default function HotelWizard({
         useCase: 'hotel',
         solarMW: energyGoals.interestInSolar ? (energyGoals.solarKW / 1000) : 0,
         generatorMW,
-        generatorFuelType: 'diesel', // Hotels typically use diesel backup generators
+        generatorFuelType: 'natural-gas', // Hotels use natural gas generators
         gridConnection: gridConnectionType,
       });
       
@@ -559,7 +564,7 @@ export default function HotelWizard({
     if (!quoteResult) return;
     
     const batteryKW = Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100);
-    const enabledAmenities = Object.entries(amenities).filter(([_, v]) => v).map(([k]) => AMENITY_SPECS[k as keyof typeof AMENITY_SPECS]?.name).join(', ');
+    const enabledAmenities = Object.entries(amenities).filter(([_, v]) => v).map(([k]) => HOTEL_AMENITY_SPECS[k as keyof typeof HOTEL_AMENITY_SPECS]?.name).join(', ');
     
     const csvRows = [
       ['MERLIN ENERGY - Hotel Quote'],
@@ -1603,8 +1608,8 @@ export default function HotelWizard({
                   Select Your Amenities
                 </h4>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {Object.entries(AMENITY_SPECS).map(([key, spec]) => {
-                    const Icon = spec.icon;
+                  {Object.entries(HOTEL_AMENITY_SPECS).map(([key, spec]) => {
+                    const Icon = AMENITY_ICONS[key as HotelAmenity];
                     const isEnabled = amenities[key as keyof typeof amenities];
                     
                     return (
@@ -1880,11 +1885,15 @@ export default function HotelWizard({
                   <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
                     <label className="text-sm text-gray-300 font-medium">Generator Capacity (kW)</label>
                     <input
-                      type="number"
-                      min={50}
-                      max={2000}
-                      value={operations.generatorKW}
-                      onChange={(e) => setOperations({...operations, generatorKW: parseInt(e.target.value) || 200})}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={operations.generatorKW || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setOperations({...operations, generatorKW: Math.min(2000, parseInt(val) || 0)});
+                      }}
+                      onFocus={(e) => e.target.select()}
                       className="w-full bg-gray-800 border-2 border-gray-600 rounded-xl px-4 py-3 text-white text-lg font-medium mt-2 focus:border-amber-400 focus:outline-none"
                     />
                   </div>

@@ -290,7 +290,7 @@ export class PricingRepository {
       pricePerKW: row.price_per_unit,
       manufacturer: metadata.manufacturer || 'Generic',
       model: metadata.model || 'Standard',
-      fuelType: metadata.fuel_type || 'diesel',
+      fuelType: metadata.fuel_type || 'natural-gas', // SSOT Dec 2025: default to natural-gas
       efficiency: metadata.efficiency || 35,
       dataSource: 'database',
       lastUpdated: new Date(row.updated_at)

@@ -178,13 +178,18 @@ const CalculationsAdmin: React.FC = () => {
 
   const renderFormulasList = () => (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-2xl font-bold text-white">📐 System Formulas</h3>
-          <p className="text-gray-400 text-sm">Core calculation formulas used across the platform</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <span className="text-lg">📐</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">System Formulas</h3>
+            <p className="text-gray-500 text-xs">Core calculation formulas used across the platform</p>
+          </div>
         </div>
-        <button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all">
-          + Add Custom Formula
+        <button className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/20 transition-all">
+          + Add Formula
         </button>
       </div>
 
@@ -194,7 +199,7 @@ const CalculationsAdmin: React.FC = () => {
         placeholder="🔍 Search formulas..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full bg-slate-700/50 text-white px-4 py-3 rounded-lg border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+        className="w-full bg-white/80 text-gray-800 px-4 py-2.5 rounded-xl border border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all placeholder-gray-400"
       />
 
       {/* Category Filters */}
@@ -202,7 +207,7 @@ const CalculationsAdmin: React.FC = () => {
         {['all', 'power_sizing', 'financial', 'equipment', 'solar', 'storage'].map(cat => (
           <button
             key={cat}
-            className="px-4 py-2 rounded-lg bg-slate-700/50 text-gray-300 hover:bg-purple-600/30 hover:text-white transition-all text-sm font-medium"
+            className="px-3 py-1.5 rounded-lg bg-white/80 text-gray-600 hover:bg-purple-100 hover:text-purple-700 border border-gray-200 hover:border-purple-300 transition-all text-xs font-medium"
           >
             {cat === 'all' ? '📋 All' : cat.replace('_', ' ').toUpperCase()}
           </button>
@@ -210,57 +215,57 @@ const CalculationsAdmin: React.FC = () => {
       </div>
 
       {/* Formulas Grid */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {filteredFormulas.map(formula => (
           <div
             key={formula.id}
-            className="bg-slate-800/50 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/60 transition-all"
+            className="bg-white/80 backdrop-blur-md border border-purple-100/50 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all"
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-3">
               <div>
-                <h4 className="text-xl font-bold text-white mb-1">{formula.name}</h4>
-                <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                  formula.category === 'power_sizing' ? 'bg-blue-600/30 text-blue-300' :
-                  formula.category === 'financial' ? 'bg-green-600/30 text-green-300' :
-                  formula.category === 'equipment' ? 'bg-orange-600/30 text-orange-300' :
-                  formula.category === 'solar' ? 'bg-yellow-600/30 text-yellow-300' :
-                  'bg-purple-600/30 text-purple-300'
+                <h4 className="text-base font-bold text-gray-800 mb-1">{formula.name}</h4>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  formula.category === 'power_sizing' ? 'bg-blue-100 text-blue-700' :
+                  formula.category === 'financial' ? 'bg-emerald-100 text-emerald-700' :
+                  formula.category === 'equipment' ? 'bg-orange-100 text-orange-700' :
+                  formula.category === 'solar' ? 'bg-amber-100 text-amber-700' :
+                  'bg-purple-100 text-purple-700'
                 }`}>
                   {formula.category.replace('_', ' ')}
                 </span>
               </div>
               <button
                 onClick={() => setEditingFormula(formula)}
-                className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-medium transition-all"
               >
                 ✏️ Edit
               </button>
             </div>
 
             {/* Formula */}
-            <div className="bg-slate-900/50 p-4 rounded-lg mb-4 border border-gray-700">
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 rounded-lg mb-3">
               <p className="text-xs text-gray-400 mb-1">FORMULA:</p>
-              <code className="text-green-400 font-mono text-lg">{formula.formula}</code>
+              <code className="text-emerald-400 font-mono text-sm">{formula.formula}</code>
             </div>
 
             {/* Variables */}
-            <div className="mb-4">
-              <p className="text-xs text-gray-400 mb-2">VARIABLES:</p>
+            <div className="mb-3">
+              <p className="text-xs text-gray-500 mb-2">VARIABLES:</p>
               <div className="grid md:grid-cols-2 gap-2">
                 {formula.variables.map(v => (
-                  <div key={v.name} className="bg-slate-700/30 p-2 rounded text-sm">
-                    <span className="text-blue-300 font-mono">{v.name}</span>
-                    <span className="text-gray-400"> ({v.unit})</span>
-                    <p className="text-gray-500 text-xs mt-1">{v.description}</p>
+                  <div key={v.name} className="bg-purple-50/50 p-2 rounded-lg text-sm border border-purple-100">
+                    <span className="text-purple-700 font-mono font-medium">{v.name}</span>
+                    <span className="text-gray-500"> ({v.unit})</span>
+                    <p className="text-gray-400 text-xs mt-1">{v.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Description & Source */}
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-300">{formula.description}</p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-600">{formula.description}</p>
+              <div className="flex items-center gap-4 text-xs text-gray-400">
                 <span>📚 Source: {formula.dataSource}</span>
                 <span>🕒 Updated: {formula.lastUpdated.toLocaleDateString()}</span>
               </div>
@@ -273,34 +278,39 @@ const CalculationsAdmin: React.FC = () => {
 
   const renderUseCasesConfig = () => (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-2xl font-bold text-white">🏢 Use Case Configurations</h3>
-          <p className="text-gray-400 text-sm">Power profiles and calculations for each use case</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
+            <span className="text-lg">🏢</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">Use Case Configurations</h3>
+            <p className="text-gray-500 text-xs">Power profiles and calculations for each use case</p>
+          </div>
         </div>
-        <button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all">
+        <button className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/20 transition-all">
           + Add Use Case
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-400 py-12">Loading use cases...</div>
+        <div className="text-center text-gray-500 py-12">Loading use cases...</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {useCases.map(useCase => (
             <div
               key={useCase.id}
-              className="bg-slate-800/50 border border-purple-500/30 rounded-xl p-6"
+              className="bg-white/80 backdrop-blur-md border border-purple-100/50 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all"
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{useCase.icon}</span>
+                  <span className="text-2xl">{useCase.icon}</span>
                   <div>
-                    <h4 className="text-xl font-bold text-white">{useCase.name}</h4>
-                    <p className="text-gray-400 text-sm">{useCase.description}</p>
+                    <h4 className="text-base font-bold text-gray-800">{useCase.name}</h4>
+                    <p className="text-gray-500 text-xs">{useCase.description}</p>
                   </div>
                 </div>
-                <button className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                <button className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-medium transition-all">
                   ✏️ Edit
                 </button>
               </div>
@@ -427,7 +437,7 @@ const CalculationsAdmin: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Section Navigation */}
       <div className="flex gap-2">
         {[
@@ -441,10 +451,10 @@ const CalculationsAdmin: React.FC = () => {
               if (import.meta.env.DEV) { console.log('Tab clicked:', section.key); }
               setActiveSection(section.key as typeof activeSection);
             }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               activeSection === section.key
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
-                : 'bg-slate-700/50 text-gray-400 hover:text-white hover:bg-slate-700'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20'
+                : 'bg-white/80 text-gray-600 hover:text-purple-700 hover:bg-purple-50 border border-gray-200'
             }`}
             style={{ pointerEvents: 'auto' }}
           >
@@ -455,13 +465,13 @@ const CalculationsAdmin: React.FC = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-          <p className="text-yellow-200 text-sm">⚠️ {error}</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <p className="text-amber-700 text-sm">⚠️ {error}</p>
         </div>
       )}
 
       {/* Content Area */}
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px]">
         {activeSection === 'formulas' && renderFormulasList()}
         {activeSection === 'use_cases' && renderUseCasesConfig()}
         {activeSection === 'equipment' && renderEquipmentTemplates()}
@@ -469,14 +479,14 @@ const CalculationsAdmin: React.FC = () => {
 
       {/* Edit Formula Modal */}
       {editingFormula && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-purple-500">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-purple-200 shadow-2xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">Edit Formula: {editingFormula.name}</h3>
+                <h3 className="text-xl font-bold text-gray-800">Edit Formula: {editingFormula.name}</h3>
                 <button
                   onClick={() => setEditingFormula(null)}
-                  className="text-gray-400 hover:text-white text-2xl"
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
                 >
                   ×
                 </button>
@@ -484,48 +494,48 @@ const CalculationsAdmin: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Formula Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Formula Name</label>
                   <input
                     type="text"
                     value={editingFormula.name}
-                    className="w-full bg-slate-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    className="w-full bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Formula Expression</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Formula Expression</label>
                   <input
                     type="text"
                     value={editingFormula.formula}
-                    className="w-full bg-slate-900 text-green-400 font-mono px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    className="w-full bg-gray-800 text-emerald-400 font-mono px-4 py-2.5 rounded-xl border border-gray-700 focus:border-purple-500 outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     value={editingFormula.description}
                     rows={3}
-                    className="w-full bg-slate-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    className="w-full bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Data Source</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Source</label>
                   <input
                     type="text"
                     value={editingFormula.dataSource}
-                    className="w-full bg-slate-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                    className="w-full bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
                   />
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all">
+                  <button className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-md shadow-emerald-500/20 transition-all">
                     💾 Save Changes
                   </button>
                   <button
                     onClick={() => setEditingFormula(null)}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl font-medium transition-all"
                   >
                     Cancel
                   </button>

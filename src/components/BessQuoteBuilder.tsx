@@ -238,7 +238,9 @@ export default function BessQuoteBuilder() {
         const batteryPricing = await getBatteryPricing(powerMW, standbyHours, selectedCountry || 'United States');
         setBatteryPricePerKwh(batteryPricing.pricePerKWh);
         
-        const solar = await getSolarPricing();
+        // Use scale-based solar pricing: < 5 MW = commercial, ≥ 5 MW = utility
+        const solarMW = solarKwp / 1000;  // Convert kWp to MW for scale-based pricing
+        const solar = await getSolarPricing(solarMW);
         setSolarPricePerKw(solar.pricePerWatt * 1000); // Convert $/W to $/kW
         
         const wind = await getWindPricing();
@@ -251,7 +253,7 @@ export default function BessQuoteBuilder() {
       }
     };
     fetchPricing();
-  }, [powerMW, standbyHours, selectedCountry]);
+  }, [powerMW, standbyHours, selectedCountry, solarKwp]);
   
   // Basic CapEx calculation for Advanced Quote Builder using SSOT pricing
   const totalMWh = powerMW * standbyHours;

@@ -1,16 +1,41 @@
 /**
+ * ⚠️ DEPRECATED - DO NOT USE FOR NEW CODE
+ * 
  * Wizard utility functions
  * 
- * Helper functions extracted from StreamlinedWizard for:
+ * @deprecated This file is deprecated as of Dec 2025. Use:
+ * - calculateUseCasePower() from src/services/useCasePowerCalculations.ts for power calculations
+ * - calculateDatabaseBaseline() from src/services/baselineService.ts for baseline sizing
+ * - POWER_DENSITY_STANDARDS from src/services/useCasePowerCalculations.ts for power density values
+ * 
+ * ⚠️ WARNING: This file has VALUES THAT DIFFER from the SSOT:
+ * - warehouse: 5 W/sqft here vs 2.0 W/sqft in SSOT
+ * - retail: 10 W/sqft here vs 8.0 W/sqft in SSOT
+ * - hospital: 20 W/sqft here vs 10 kW/bed (different units!) in SSOT
+ * 
+ * DO NOT USE THESE VALUES - they may produce incorrect calculations!
+ * 
+ * Old purpose (no longer applicable):
  * - Power density calculations by building type
  * - Scale factor calculations for different industries
  * - Building-specific power requirements
  * - Use case specific sizing helpers
  */
 
+// Log deprecation warning at runtime
+if (typeof window !== 'undefined') {
+  console.warn(
+    '⚠️ DEPRECATED: wizardHelpers.ts is deprecated. ' +
+    'Use calculateUseCasePower() from useCasePowerCalculations.ts instead. ' +
+    'Values in this file may be INCORRECT and differ from SSOT.'
+  );
+}
+
 /**
+ * @deprecated Use calculateUseCasePower() from useCasePowerCalculations.ts instead
  * Calculate power density by building type (W/sq ft)
- * Based on CBECS (Commercial Buildings Energy Consumption Survey) & industry standards
+ * 
+ * ⚠️ VALUES MAY BE INCORRECT - see useCasePowerCalculations.ts for authoritative values
  * 
  * @param buildingType - The type of building/facility
  * @param subType - Optional sub-type for more specific calculations

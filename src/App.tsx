@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BessQuoteBuilder from './components/BessQuoteBuilder';
 import AdminDashboard from './components/AdminDashboard';
+import VendorPortal from './components/VendorPortal';
 import MerlinAssistant from './components/MerlinAssistant';
 import CarWashEnergy from './components/verticals/CarWashEnergy';
 import EVChargingEnergy from './components/verticals/EVChargingEnergy';
@@ -26,7 +27,12 @@ function App() {
   // Check for path-based routing (e.g., /carwashenergy)
   const pathname = window.location.pathname;
   
-  const [showAdmin, setShowAdmin] = useState(adminParam === 'true');
+  // Route detection for admin and vendor portal
+  const isAdminRoute = pathname === '/admin' || adminParam === 'true';
+  const isVendorPortalRoute = pathname === '/vendor-portal' || pathname === '/vendor';
+  
+  const [showAdmin, setShowAdmin] = useState(isAdminRoute);
+  const [showVendorPortal, setShowVendorPortal] = useState(isVendorPortalRoute);
   const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
   
   // NEW: Direct /quote-builder route support
@@ -84,6 +90,11 @@ function App() {
     );
   }
 
+  // Access via /vendor-portal or /vendor - Vendor Portal
+  if (showVendorPortal) {
+    return <VendorPortal />;
+  }
+
   // White-label verticals
   // Access via ?vertical=carwash or eventually carwashenergy.com
   if (activeVertical === 'carwash') {
@@ -101,9 +112,11 @@ function App() {
   }
   
   // Access via /wizard - Streamlined Wizard (new UX)
+  // Use URL hash to force remount when navigating back to wizard
   if (showStreamlinedWizard) {
     return (
       <StreamlinedWizard 
+        key="wizard-fresh" // Stable key - reset handled in component
         show={true}
         onClose={() => window.location.href = '/'}
         onFinish={() => {}}

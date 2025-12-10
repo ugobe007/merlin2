@@ -1,7 +1,95 @@
 import React, { useState } from 'react';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot, Sparkles, AlertTriangle, Info } from 'lucide-react';
 import AISquareFootageCalculator from './AISquareFootageCalculator';
 import type { CustomQuestion } from '@/types/useCase.types';
+
+// ============================================
+// INDUSTRY VALIDATION THRESHOLDS
+// ============================================
+
+interface ValidationResult {
+  status: 'normal' | 'warning' | 'extreme';
+  message: string;
+  suggestion?: number;
+  context?: string;
+}
+
+/**
+ * Get validation for input values with industry context
+ * Based on real-world data from Claude/industry sources
+ */
+function getValueValidation(questionId: string, value: number, industry: string): ValidationResult | null {
+  // DATA CENTER RACK VALIDATION
+  // Source: Industry standards - Medium: 500-1000, Large: 1000-5000, Hyperscale: 5000-20000+
+  if (questionId === 'rackCount' || questionId === 'serverRacks') {
+    if (value <= 0) return null;
+    
+    if (value <= 100) {
+      return { status: 'normal', message: 'Small edge data center / colocation', context: 'Typical: 10-100 racks' };
+    }
+    if (value <= 500) {
+      return { status: 'normal', message: 'Medium data center', context: 'Typical: 100-500 racks' };
+    }
+    if (value <= 1000) {
+      return { status: 'normal', message: 'Large enterprise data center', context: 'Typical: 500-1,000 racks' };
+    }
+    if (value <= 5000) {
+      return { status: 'warning', message: 'Very large / hyperscale facility', context: 'Major cloud provider scale (1,000-5,000 racks)', suggestion: 500 };
+    }
+    if (value <= 20000) {
+      return { status: 'extreme', message: '⚠️ Hyperscale mega-facility', context: 'AWS/Google/Microsoft scale (5,000-20,000 racks). Are you sure?', suggestion: 1000 };
+    }
+    return { status: 'extreme', message: '⚠️ Exceeds largest known facilities', context: 'This would be larger than any existing data center. Did you mean a smaller number?', suggestion: 500 };
+  }
+  
+  // HOSPITAL BED VALIDATION
+  // Source: AHA data - Small: <100, Medium: 100-500, Large: 500-1000, Major: 1000+
+  if (questionId === 'bedCount' || questionId === 'beds') {
+    if (value <= 0) return null;
+    
+    if (value <= 50) {
+      return { status: 'normal', message: 'Small clinic / rural hospital', context: 'Typical: 10-50 beds' };
+    }
+    if (value <= 200) {
+      return { status: 'normal', message: 'Community hospital', context: 'Typical: 50-200 beds' };
+    }
+    if (value <= 500) {
+      return { status: 'normal', message: 'Regional medical center', context: 'Typical: 200-500 beds' };
+    }
+    if (value <= 1000) {
+      return { status: 'warning', message: 'Major medical center', context: 'Large academic/research hospital (500-1,000 beds)' };
+    }
+    if (value <= 2500) {
+      return { status: 'warning', message: 'One of the largest US hospitals', context: 'Only ~20 hospitals in US have 1,000+ beds', suggestion: 500 };
+    }
+    return { status: 'extreme', message: '⚠️ Exceeds largest hospitals', context: 'No US hospital has this many beds. Did you mean a smaller number?', suggestion: 500 };
+  }
+  
+  // HOTEL ROOM VALIDATION
+  // Source: Industry data - Boutique: <50, Mid-size: 50-200, Large: 200-500, Mega: 500+
+  if (questionId === 'numberOfRooms' || questionId === 'rooms') {
+    if (value <= 0) return null;
+    
+    if (value <= 50) {
+      return { status: 'normal', message: 'Boutique hotel', context: 'Typical: 10-50 rooms' };
+    }
+    if (value <= 200) {
+      return { status: 'normal', message: 'Standard hotel', context: 'Typical: 50-200 rooms' };
+    }
+    if (value <= 500) {
+      return { status: 'normal', message: 'Large hotel / resort', context: 'Typical: 200-500 rooms' };
+    }
+    if (value <= 3000) {
+      return { status: 'warning', message: 'Mega-resort / casino hotel', context: 'Las Vegas-scale property (500-3,000 rooms)' };
+    }
+    if (value <= 7000) {
+      return { status: 'warning', message: 'One of the world\'s largest hotels', context: 'Only a handful of hotels globally have 3,000+ rooms', suggestion: 500 };
+    }
+    return { status: 'extreme', message: '⚠️ Exceeds largest hotels', context: 'The world\'s largest hotel has ~7,000 rooms. Did you mean a smaller number?', suggestion: 500 };
+  }
+  
+  return null;
+}
 
 interface QuestionRendererProps {
   question: CustomQuestion;
@@ -118,8 +206,8 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     
     // === COMMON NUMERIC FIELDS (BY ID) ===
     
-    // Server racks (datacenters)
-    if (questionId === 'rackCount') return 400;
+    // Server racks (datacenters) - Medium datacenter: 50-100 racks is typical
+    if (questionId === 'rackCount') return 100;
     
     // Bed count (hospitals)
     if (questionId === 'bedCount') return 200;
@@ -432,6 +520,54 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               <span className="text-gray-600 font-medium">{question.suffix || question.unit}</span>
             )}
           </div>
+          
+          {/* Value Validation Feedback */}
+          {(() => {
+            const validation = getValueValidation(question.id, value as number, selectedIndustry);
+            if (!validation) return null;
+            
+            const bgColors = {
+              normal: 'bg-blue-50 border-blue-200',
+              warning: 'bg-amber-50 border-amber-300',
+              extreme: 'bg-red-50 border-red-300',
+            };
+            const textColors = {
+              normal: 'text-blue-700',
+              warning: 'text-amber-700',
+              extreme: 'text-red-700',
+            };
+            const iconColors = {
+              normal: 'text-blue-500',
+              warning: 'text-amber-500',
+              extreme: 'text-red-500',
+            };
+            
+            return (
+              <div className={`mt-3 p-3 rounded-lg border ${bgColors[validation.status]}`}>
+                <div className="flex items-start gap-2">
+                  {validation.status === 'extreme' ? (
+                    <AlertTriangle className={`w-5 h-5 ${iconColors[validation.status]} flex-shrink-0 mt-0.5`} />
+                  ) : (
+                    <Info className={`w-5 h-5 ${iconColors[validation.status]} flex-shrink-0 mt-0.5`} />
+                  )}
+                  <div className="flex-1">
+                    <p className={`font-medium ${textColors[validation.status]}`}>{validation.message}</p>
+                    {validation.context && (
+                      <p className="text-sm text-gray-600 mt-1">{validation.context}</p>
+                    )}
+                    {validation.suggestion && validation.status !== 'normal' && (
+                      <button
+                        onClick={() => handleInputChange(validation.suggestion)}
+                        className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700 underline"
+                      >
+                        Use typical value ({validation.suggestion.toLocaleString()}) instead
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       );
 

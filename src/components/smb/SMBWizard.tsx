@@ -333,11 +333,15 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
                   How many {industryProfile.unit_plural} do you have?
                 </label>
                 <input
-                  type="number"
-                  min={1}
-                  max={1000}
-                  value={wizardState.unitCount}
-                  onChange={(e) => setWizardState({ ...wizardState, unitCount: parseInt(e.target.value) || 1 })}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={wizardState.unitCount || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setWizardState({ ...wizardState, unitCount: Math.min(1000, parseInt(val) || 0) });
+                  }}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg"
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -366,11 +370,15 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
                   Current Monthly Electric Bill
                 </label>
                 <input
-                  type="number"
-                  min={100}
-                  max={100000}
-                  value={wizardState.currentMonthlyBill}
-                  onChange={(e) => setWizardState({ ...wizardState, currentMonthlyBill: parseInt(e.target.value) || 0 })}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={wizardState.currentMonthlyBill || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setWizardState({ ...wizardState, currentMonthlyBill: Math.min(100000, parseInt(val) || 0) });
+                  }}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>

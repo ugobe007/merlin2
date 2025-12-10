@@ -115,14 +115,16 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     let testRate = 0.05;
     let increment = 0.01;
     
+    // SSOT: IRR Calculation using Newton-Raphson approximation
+    // This is for sensitivity analysis visualization - production quotes use centralizedCalculations.ts
     for (let i = 0; i < 100; i++) {
-      let testNPV = -totalCapEx;
+      let testNPV = -totalCapEx; // SSOT: NPV starts with negative CapEx
       for (let year = 1; year <= batteryLifeYears; year++) {
         const degradationFactor = Math.pow(1 - degradationRate, year - 1);
         const inflationFactor = Math.pow(1 + inflationRate, year - 1);
         const operatingCosts = totalCapEx * operatingCostsPercent;
         const yearSavings = (annualSavings * degradationFactor * inflationFactor) - operatingCosts;
-        testNPV += yearSavings / Math.pow(1 + testRate, year);
+        testNPV += yearSavings / Math.pow(1 + testRate, year); // SSOT: DCF formula
       }
       
       if (Math.abs(testNPV) < 1000) {

@@ -4,12 +4,15 @@
  * Processes articles for price alerts using AI
  * Extracts pricing, configuration, and market trend data for AI/ML database
  * 
+ * Updated: December 10, 2025 - Now uses database-driven sources via market_data_sources table
+ * 
  * Note: In browser environment, RSS feeds are fetched via a CORS proxy
  * In production, consider using a backend service or serverless function
  */
 
 import { processNewsForPriceAlerts } from './priceAlertService';
 import { processBatchForAI, type RSSArticle as AIRSSArticle } from './rssToAIDatabase';
+import { getMarketDataSources, type MarketDataSource } from './marketDataIntegrationService';
 
 // CORS proxy for browser-based RSS fetching (use your own proxy in production)
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
@@ -20,11 +23,13 @@ interface RSSSource {
   feedUrl: string;
   category: 'market' | 'technology' | 'policy' | 'company';
   enabled: boolean;
+  equipmentCategories?: string[];
 }
 
 /**
  * RSS feeds for free industry sources
- * Only includes sources with public RSS/Atom feeds
+ * DEPRECATED: Now uses database-driven sources from market_data_sources table
+ * Kept as fallback if database is unavailable
  */
 export const RSS_SOURCES: RSSSource[] = [
   {
@@ -32,72 +37,123 @@ export const RSS_SOURCES: RSSSource[] = [
     url: 'https://www.energy-storage.news',
     feedUrl: 'https://www.energy-storage.news/feed/',
     category: 'market',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess']
   },
   {
     name: 'ESS News (Energy Storage & Solar News)',
     url: 'https://www.essnews.com.au',
     feedUrl: 'https://www.essnews.com.au/feed/',
     category: 'market',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess', 'solar']
   },
   {
     name: 'Microgrid Knowledge',
     url: 'https://www.microgridknowledge.com',
     feedUrl: 'https://www.microgridknowledge.com/feed/',
     category: 'technology',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess', 'solar', 'generator']
   },
   {
     name: 'Energy Storage Journal',
     url: 'https://www.energystoragejournal.com',
     feedUrl: 'https://www.energystoragejournal.com/feed/',
     category: 'market',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess']
   },
   {
     name: 'PV Magazine (Energy Storage Section)',
     url: 'https://pv-magazine-usa.com',
     feedUrl: 'https://pv-magazine-usa.com/category/energy-storage/feed/',
     category: 'technology',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['solar', 'bess']
   },
   {
     name: 'Utility Dive (Energy Storage)',
     url: 'https://www.utilitydive.com',
     feedUrl: 'https://www.utilitydive.com/feeds/news/',
     category: 'market',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['all']
   },
   {
     name: 'Renewable Energy World',
     url: 'https://www.renewableenergyworld.com',
     feedUrl: 'https://www.renewableenergyworld.com/feed/',
     category: 'technology',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['solar', 'wind', 'bess']
   },
   {
     name: 'CleanTechnica',
     url: 'https://cleantechnica.com',
     feedUrl: 'https://cleantechnica.com/feed/',
     category: 'technology',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['solar', 'bess', 'ev-charger']
   },
   {
     name: 'GTM (Greentech Media)',
     url: 'https://www.greentechmedia.com',
     feedUrl: 'https://www.greentechmedia.com/rss',
     category: 'market',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess', 'solar', 'wind']
   },
   {
     name: 'Energy Vault Newsroom',
     url: 'https://www.energyvault.com/newsroom',
     feedUrl: 'https://www.energyvault.com/newsroom/rss.xml',
     category: 'company',
-    enabled: true
+    enabled: true,
+    equipmentCategories: ['bess']
   }
 ];
+
+/**
+ * Get RSS sources from database, with fallback to hardcoded sources
+ */
+async function getRSSSources(): Promise<RSSSource[]> {
+  try {
+    const dbSources = await getMarketDataSources();
+    const rssSources = dbSources.filter(s => s.sourceType === 'rss_feed' && s.feedUrl);
+    
+    if (rssSources.length > 0) {
+      if (import.meta.env.DEV) { console.log(`📊 Using ${rssSources.length} RSS sources from database`); }
+      return rssSources.map(s => ({
+        name: s.name,
+        url: s.url,
+        feedUrl: s.feedUrl!,
+        category: mapContentTypeToCategory(s.contentType),
+        enabled: s.isActive,
+        equipmentCategories: s.equipmentCategories
+      }));
+    }
+  } catch (error) {
+    console.warn('Failed to fetch RSS sources from database, using fallback:', error);
+  }
+  
+  // Fallback to hardcoded sources
+  return RSS_SOURCES.filter(s => s.enabled);
+}
+
+function mapContentTypeToCategory(contentType: string): 'market' | 'technology' | 'policy' | 'company' {
+  switch (contentType) {
+    case 'pricing':
+    case 'market_trends':
+      return 'market';
+    case 'product_specs':
+      return 'technology';
+    case 'policy':
+      return 'policy';
+    default:
+      return 'market';
+  }
+}
 
 interface FetchedArticle {
   title: string;
@@ -106,6 +162,7 @@ interface FetchedArticle {
   content: string;
   source: string;
   category: string;
+  equipmentCategories?: string[];
 }
 
 /**
@@ -172,9 +229,11 @@ async function fetchFromRSS(source: RSSSource): Promise<FetchedArticle[]> {
 
 /**
  * Fetch articles from all enabled RSS sources
+ * Now uses database-driven sources with fallback to hardcoded list
  */
 export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
-  const enabledSources = RSS_SOURCES.filter(source => source.enabled);
+  // Get sources from database or fallback
+  const enabledSources = await getRSSSources();
   
   if (import.meta.env.DEV) { console.log(`📡 Fetching from ${enabledSources.length} RSS sources...`); }
   
@@ -186,7 +245,12 @@ export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
   
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') {
-      allArticles.push(...result.value);
+      // Add equipment categories to articles for better filtering
+      const articlesWithCategories = result.value.map(article => ({
+        ...article,
+        equipmentCategories: enabledSources[index].equipmentCategories
+      }));
+      allArticles.push(...articlesWithCategories);
       if (import.meta.env.DEV) { console.log(`✅ ${enabledSources[index].name}: ${result.value.length} articles`); }
     } else {
       console.error(`❌ ${enabledSources[index].name}: ${result.reason}`);
@@ -197,6 +261,39 @@ export async function fetchAllRSSFeeds(): Promise<FetchedArticle[]> {
   allArticles.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
   
   if (import.meta.env.DEV) { console.log(`📊 Total articles fetched: ${allArticles.length}`); }
+  
+  return allArticles;
+}
+
+/**
+ * Fetch articles for a specific equipment type
+ */
+export async function fetchRSSFeedsForEquipment(equipmentType: string): Promise<FetchedArticle[]> {
+  const allSources = await getRSSSources();
+  const relevantSources = allSources.filter(source => 
+    source.equipmentCategories?.includes(equipmentType) || 
+    source.equipmentCategories?.includes('all')
+  );
+  
+  if (import.meta.env.DEV) { console.log(`📡 Fetching ${equipmentType} from ${relevantSources.length} RSS sources...`); }
+  
+  const results = await Promise.allSettled(
+    relevantSources.map(source => fetchFromRSS(source))
+  );
+
+  const allArticles: FetchedArticle[] = [];
+  
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      const articlesWithCategories = result.value.map(article => ({
+        ...article,
+        equipmentCategories: relevantSources[index].equipmentCategories
+      }));
+      allArticles.push(...articlesWithCategories);
+    }
+  });
+
+  allArticles.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
   
   return allArticles;
 }

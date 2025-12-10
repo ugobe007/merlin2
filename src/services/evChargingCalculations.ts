@@ -175,6 +175,214 @@ export const GRID_SERVICES = {
   },
 } as const;
 
+// ============================================================================
+// EV CHARGING HUB CLASSIFICATIONS - From Equipment Specification Sheet (Dec 2025)
+// Source: Merlin BESS Quote Builder - EV Charging Hub Classifications & Equipment Specifications
+// ============================================================================
+
+/**
+ * EV Charger Input Power Specifications (AC Input, including efficiency losses)
+ * Output Power → AC Input Power (for electrical infrastructure sizing)
+ */
+export const EV_CHARGER_INPUT_POWER = {
+  // Standard DC Fast Charging (DCFC)
+  dcfc_50kw: { outputKW: 50, inputKW: 57.5, efficiency: 0.87, description: '50 kW DCFC (CHAdeMO/CCS)' },
+  dcfc_150kw: { outputKW: 150, inputKW: 170, efficiency: 0.88, description: '150 kW DCFC (CCS Combo)' },
+  
+  // Ultra-Fast Charging
+  ultraFast_250kw: { outputKW: 250, inputKW: 278, efficiency: 0.90, description: '250 kW Ultra-Fast (CCS)' },
+  ultraFast_350kw: { outputKW: 350, inputKW: 392, efficiency: 0.89, description: '350 kW Ultra-Fast (CCS)' },
+  
+  // Megawatt Charging System (MCS) - Heavy Duty
+  mcs_1000kw: { outputKW: 1000, inputKW: 1111, efficiency: 0.90, description: '1 MW Megawatt Charging (MCS)' },
+  mcs_3000kw: { outputKW: 3000, inputKW: 3333, efficiency: 0.90, description: '3 MW Megawatt Charging (MCS)' },
+  
+  // Level 2 AC Charging (for reference)
+  level2_7kw: { outputKW: 7.2, inputKW: 7.5, efficiency: 0.96, description: '7.2 kW Level 2 AC' },
+  level2_19kw: { outputKW: 19.2, inputKW: 20, efficiency: 0.96, description: '19.2 kW Level 2 AC' },
+} as const;
+
+/**
+ * EV Hub Classifications by Size
+ * Based on ChargePoint, ABB, and industry standard hub configurations
+ */
+export const EV_HUB_CLASSIFICATIONS = {
+  small: {
+    name: 'Small Hub',
+    description: 'Retail, convenience, workplace charging',
+    chargerRange: { min: 4, max: 30 },
+    connectedLoadMW: { min: 0.5, max: 6 },
+    peakDemandMW: { min: 0.4, max: 5 },
+    typicalConfiguration: {
+      level2: { count: 8, powerKW: 7.2 },
+      dcfc_150kw: { count: 6, powerKW: 150 },
+      ultraFast_350kw: { count: 2, powerKW: 350 },
+    },
+    diversityFactor: 0.70, // 70% simultaneous usage
+    infrastructureNotes: 'Single 480V service, may require utility upgrade',
+  },
+  medium: {
+    name: 'Medium Hub',
+    description: 'Highway travel centers, fleet depots, urban charging plazas',
+    chargerRange: { min: 30, max: 100 },
+    connectedLoadMW: { min: 6, max: 20 },
+    peakDemandMW: { min: 5, max: 16 },
+    typicalConfiguration: {
+      level2: { count: 20, powerKW: 7.2 },
+      dcfc_150kw: { count: 25, powerKW: 150 },
+      ultraFast_350kw: { count: 15, powerKW: 350 },
+    },
+    diversityFactor: 0.65, // 65% simultaneous usage
+    infrastructureNotes: 'Dedicated medium voltage (MV) service, on-site substation typical',
+  },
+  superSite: {
+    name: 'Super Site',
+    description: 'Major travel plazas, logistics hubs, regional charging centers',
+    chargerRange: { min: 100, max: 300 },
+    connectedLoadMW: { min: 20, max: 60 },
+    peakDemandMW: { min: 16, max: 50 },
+    typicalConfiguration: {
+      level2: { count: 50, powerKW: 7.2 },
+      dcfc_150kw: { count: 60, powerKW: 150 },
+      ultraFast_350kw: { count: 40, powerKW: 350 },
+      mcs_1000kw: { count: 10, powerKW: 1000 },
+    },
+    diversityFactor: 0.55, // 55% simultaneous usage (more diverse load profile)
+    infrastructureNotes: 'Dedicated HV substation, grid interconnection study required',
+  },
+} as const;
+
+export type EVHubClassification = keyof typeof EV_HUB_CLASSIFICATIONS;
+
+/**
+ * EV Hub Auxiliary Power Loads (Supporting Infrastructure)
+ * Power requirements beyond chargers - critical for total site sizing
+ */
+export const EV_HUB_AUXILIARY_LOADS = {
+  small: {
+    description: 'Small Hub (4-30 chargers)',
+    transformerLossesKW: { min: 15, max: 60 }, // 2-3% of connected load
+    chargerCoolingKW: { min: 20, max: 75 }, // Active cooling for DC chargers
+    bessAuxiliaryKW: { min: 10, max: 40 }, // HVAC, BMS, fire suppression
+    controlsITKW: { min: 10, max: 30 }, // Network, monitoring, payment systems
+    siteLightingKW: { min: 5, max: 15 },
+    amenitiesKW: { min: 0, max: 0 }, // Minimal amenities
+    securityKW: { min: 2, max: 5 },
+    totalRangeKW: { min: 62, max: 225 },
+  },
+  medium: {
+    description: 'Medium Hub (30-100 chargers)',
+    transformerLossesKW: { min: 60, max: 200 },
+    chargerCoolingKW: { min: 75, max: 300 },
+    bessAuxiliaryKW: { min: 40, max: 150 },
+    controlsITKW: { min: 30, max: 80 },
+    siteLightingKW: { min: 15, max: 40 },
+    amenitiesKW: { min: 20, max: 150 }, // Convenience store, restrooms, vending
+    securityKW: { min: 5, max: 20 },
+    totalRangeKW: { min: 245, max: 940 },
+  },
+  superSite: {
+    description: 'Super Site (100-300+ chargers)',
+    transformerLossesKW: { min: 200, max: 600 },
+    chargerCoolingKW: { min: 300, max: 1000 },
+    bessAuxiliaryKW: { min: 150, max: 500 },
+    controlsITKW: { min: 80, max: 200 },
+    siteLightingKW: { min: 40, max: 100 },
+    amenitiesKW: { min: 150, max: 800 }, // Full truck stop: restaurant, lounge, showers
+    securityKW: { min: 20, max: 80 },
+    totalRangeKW: { min: 940, max: 3280 },
+  },
+} as const;
+
+/**
+ * BESS Integration Sizing for EV Hubs
+ * Recommendations based on hub classification and use case
+ */
+export const EV_HUB_BESS_SIZING = {
+  small: {
+    recommendedMWh: { min: 0.5, max: 3 },
+    recommendedMW: { min: 0.25, max: 1.5 },
+    typicalDurationHours: 2,
+    primaryUseCase: 'Peak shaving and demand charge management',
+    roiYears: { typical: 5, range: '4-7' },
+    gridServicesCapable: true,
+    notes: 'Often combined with solar canopy for additional benefits',
+  },
+  medium: {
+    recommendedMWh: { min: 3, max: 15 },
+    recommendedMW: { min: 1.5, max: 8 },
+    typicalDurationHours: 2,
+    primaryUseCase: 'Peak shaving, demand response, grid services',
+    roiYears: { typical: 4, range: '3-6' },
+    gridServicesCapable: true,
+    notes: 'Grid services revenue significantly improves economics',
+  },
+  superSite: {
+    recommendedMWh: { min: 15, max: 60 },
+    recommendedMW: { min: 8, max: 30 },
+    typicalDurationHours: 2,
+    primaryUseCase: 'Grid-scale storage, wholesale market participation',
+    roiYears: { typical: 4, range: '3-5' },
+    gridServicesCapable: true,
+    notes: 'May qualify for grid interconnection as battery storage project',
+  },
+} as const;
+
+/**
+ * Transformer Sizing Guidelines for EV Hubs
+ */
+export const EV_HUB_TRANSFORMER_SPECS = {
+  small: {
+    typicalKVA: { min: 500, max: 2500 },
+    voltage: '480V 3-phase',
+    redundancy: 'N configuration (single transformer)',
+    costPerKVA: { min: 25, max: 40 },
+  },
+  medium: {
+    typicalKVA: { min: 2500, max: 10000 },
+    voltage: '12.47kV to 480V or 4160V',
+    redundancy: 'N+1 recommended',
+    costPerKVA: { min: 20, max: 35 },
+  },
+  superSite: {
+    typicalKVA: { min: 10000, max: 50000 },
+    voltage: '34.5kV or 69kV to MV distribution',
+    redundancy: 'N+1 or 2N for critical loads',
+    costPerKVA: { min: 15, max: 30 },
+  },
+} as const;
+
+/**
+ * Site Civil/Infrastructure Requirements
+ */
+export const EV_HUB_SITE_REQUIREMENTS = {
+  small: {
+    minAcres: 0.5,
+    typicalAcres: 1.0,
+    parkingSpaces: { min: 10, max: 40 },
+    electricalRoomSqFt: { min: 200, max: 500 },
+    bessPadSqFt: { min: 400, max: 1000 },
+  },
+  medium: {
+    minAcres: 2.0,
+    typicalAcres: 5.0,
+    parkingSpaces: { min: 40, max: 120 },
+    electricalRoomSqFt: { min: 500, max: 1500 },
+    bessPadSqFt: { min: 1000, max: 5000 },
+  },
+  superSite: {
+    minAcres: 5.0,
+    typicalAcres: 15.0,
+    parkingSpaces: { min: 120, max: 400 },
+    electricalRoomSqFt: { min: 1500, max: 5000 },
+    bessPadSqFt: { min: 5000, max: 20000 },
+  },
+} as const;
+
+// ============================================================================
+// V2G CONFIGURATION
+// ============================================================================
+
 export const V2G_CONFIG = {
   // V2G-capable vehicles (as of 2024-2025)
   compatibleVehicles: [
@@ -384,6 +592,345 @@ function normalizeEVChargerConfig(config: EVChargerConfig): EVChargerConfig {
   }
   
   return normalized;
+}
+
+// ============================================================================
+// EQUIPMENT-BASED POWER CALCULATION (Dec 2025)
+// ============================================================================
+
+/**
+ * Input for comprehensive EV hub power calculation
+ */
+export interface EVHubPowerFromEquipmentInput {
+  // Charger counts by type
+  level2_7kw?: number;
+  level2_19kw?: number;
+  dcfc_50kw?: number;
+  dcfc_150kw?: number;
+  ultraFast_250kw?: number;
+  ultraFast_350kw?: number;
+  mcs_1000kw?: number;
+  
+  // Alternative: specify hub classification to use defaults
+  hubClassification?: EVHubClassification;
+  
+  // Options
+  includeAuxiliaryLoads?: boolean;  // Default true - add transformer, cooling, etc.
+  customDiversityFactor?: number;   // Override default diversity factor
+}
+
+/**
+ * Result from comprehensive EV hub power calculation
+ */
+export interface EVHubPowerFromEquipmentResult {
+  // Power totals
+  connectedLoadKW: number;         // Total nameplate capacity (charger output)
+  connectedLoadMW: number;
+  inputPowerKW: number;            // AC input required (with efficiency)
+  inputPowerMW: number;
+  auxiliaryLoadKW: number;         // Supporting infrastructure
+  totalSiteLoadKW: number;         // Input + auxiliary
+  totalSiteLoadMW: number;
+  
+  // Peak demand (with diversity)
+  diversityFactor: number;
+  peakDemandKW: number;
+  peakDemandMW: number;
+  
+  // Hub classification
+  classifiedAs: EVHubClassification;
+  classificationDetails: typeof EV_HUB_CLASSIFICATIONS[EVHubClassification];
+  
+  // BESS recommendation
+  bessRecommendation: {
+    powerMW: { min: number; max: number };
+    energyMWh: { min: number; max: number };
+    durationHours: number;
+    primaryUseCase: string;
+  };
+  
+  // Breakdown
+  breakdown: {
+    level2: { count: number; outputKW: number; inputKW: number };
+    dcfc: { count: number; outputKW: number; inputKW: number };
+    ultraFast: { count: number; outputKW: number; inputKW: number };
+    mcs: { count: number; outputKW: number; inputKW: number };
+    auxiliary: {
+      transformerLossesKW: number;
+      chargerCoolingKW: number;
+      bessAuxiliaryKW: number;
+      controlsITKW: number;
+      siteLightingKW: number;
+      amenitiesKW: number;
+      securityKW: number;
+    };
+  };
+  
+  // Validation
+  validation: {
+    isValid: boolean;
+    warnings: string[];
+    withinClassBounds: boolean;
+  };
+  
+  // Description
+  description: string;
+  calculationMethod: string;
+}
+
+/**
+ * Classify hub based on charger count and connected load
+ */
+function classifyEVHub(totalChargers: number, connectedLoadMW: number): EVHubClassification {
+  // Primary classification by charger count
+  if (totalChargers <= 30 && connectedLoadMW <= 6) {
+    return 'small';
+  } else if (totalChargers <= 100 && connectedLoadMW <= 20) {
+    return 'medium';
+  } else {
+    return 'superSite';
+  }
+}
+
+/**
+ * Calculate comprehensive power requirements for an EV Charging Hub
+ * Uses equipment specifications and includes auxiliary loads
+ * 
+ * @param input - Charger configuration or hub classification
+ * @returns Complete power analysis with BESS recommendations
+ */
+export function calculateEVHubPowerFromEquipment(
+  input: EVHubPowerFromEquipmentInput
+): EVHubPowerFromEquipmentResult {
+  
+  // If hub classification provided, use typical configuration
+  let chargerCounts = {
+    level2_7kw: input.level2_7kw || 0,
+    level2_19kw: input.level2_19kw || 0,
+    dcfc_50kw: input.dcfc_50kw || 0,
+    dcfc_150kw: input.dcfc_150kw || 0,
+    ultraFast_250kw: input.ultraFast_250kw || 0,
+    ultraFast_350kw: input.ultraFast_350kw || 0,
+    mcs_1000kw: input.mcs_1000kw || 0,
+  };
+  
+  // Use hub classification defaults if no chargers specified
+  if (input.hubClassification && Object.values(chargerCounts).every(v => v === 0)) {
+    const hubConfig = EV_HUB_CLASSIFICATIONS[input.hubClassification].typicalConfiguration;
+    chargerCounts.level2_7kw = hubConfig.level2?.count || 0;
+    chargerCounts.dcfc_150kw = hubConfig.dcfc_150kw?.count || 0;
+    chargerCounts.ultraFast_350kw = hubConfig.ultraFast_350kw?.count || 0;
+    chargerCounts.mcs_1000kw = (hubConfig as typeof EV_HUB_CLASSIFICATIONS.superSite.typicalConfiguration).mcs_1000kw?.count || 0;
+  }
+  
+  // Calculate Level 2 power
+  const l2_7kw_output = chargerCounts.level2_7kw * EV_CHARGER_INPUT_POWER.level2_7kw.outputKW;
+  const l2_7kw_input = chargerCounts.level2_7kw * EV_CHARGER_INPUT_POWER.level2_7kw.inputKW;
+  const l2_19kw_output = chargerCounts.level2_19kw * EV_CHARGER_INPUT_POWER.level2_19kw.outputKW;
+  const l2_19kw_input = chargerCounts.level2_19kw * EV_CHARGER_INPUT_POWER.level2_19kw.inputKW;
+  const level2OutputKW = l2_7kw_output + l2_19kw_output;
+  const level2InputKW = l2_7kw_input + l2_19kw_input;
+  const level2Count = chargerCounts.level2_7kw + chargerCounts.level2_19kw;
+  
+  // Calculate DCFC power
+  const dcfc_50_output = chargerCounts.dcfc_50kw * EV_CHARGER_INPUT_POWER.dcfc_50kw.outputKW;
+  const dcfc_50_input = chargerCounts.dcfc_50kw * EV_CHARGER_INPUT_POWER.dcfc_50kw.inputKW;
+  const dcfc_150_output = chargerCounts.dcfc_150kw * EV_CHARGER_INPUT_POWER.dcfc_150kw.outputKW;
+  const dcfc_150_input = chargerCounts.dcfc_150kw * EV_CHARGER_INPUT_POWER.dcfc_150kw.inputKW;
+  const dcfcOutputKW = dcfc_50_output + dcfc_150_output;
+  const dcfcInputKW = dcfc_50_input + dcfc_150_input;
+  const dcfcCount = chargerCounts.dcfc_50kw + chargerCounts.dcfc_150kw;
+  
+  // Calculate Ultra-Fast power
+  const uf_250_output = chargerCounts.ultraFast_250kw * EV_CHARGER_INPUT_POWER.ultraFast_250kw.outputKW;
+  const uf_250_input = chargerCounts.ultraFast_250kw * EV_CHARGER_INPUT_POWER.ultraFast_250kw.inputKW;
+  const uf_350_output = chargerCounts.ultraFast_350kw * EV_CHARGER_INPUT_POWER.ultraFast_350kw.outputKW;
+  const uf_350_input = chargerCounts.ultraFast_350kw * EV_CHARGER_INPUT_POWER.ultraFast_350kw.inputKW;
+  const ultraFastOutputKW = uf_250_output + uf_350_output;
+  const ultraFastInputKW = uf_250_input + uf_350_input;
+  const ultraFastCount = chargerCounts.ultraFast_250kw + chargerCounts.ultraFast_350kw;
+  
+  // Calculate MCS power
+  const mcs_output = chargerCounts.mcs_1000kw * EV_CHARGER_INPUT_POWER.mcs_1000kw.outputKW;
+  const mcs_input = chargerCounts.mcs_1000kw * EV_CHARGER_INPUT_POWER.mcs_1000kw.inputKW;
+  const mcsCount = chargerCounts.mcs_1000kw;
+  
+  // Total charger power
+  const connectedLoadKW = level2OutputKW + dcfcOutputKW + ultraFastOutputKW + mcs_output;
+  const inputPowerKW = level2InputKW + dcfcInputKW + ultraFastInputKW + mcs_input;
+  const totalChargers = level2Count + dcfcCount + ultraFastCount + mcsCount;
+  
+  // Classify hub
+  const classification = input.hubClassification || classifyEVHub(totalChargers, connectedLoadKW / 1000);
+  const classificationDetails = EV_HUB_CLASSIFICATIONS[classification];
+  const auxiliaryLoads = EV_HUB_AUXILIARY_LOADS[classification];
+  
+  // Calculate auxiliary loads (use midpoint of ranges)
+  const includeAux = input.includeAuxiliaryLoads !== false;
+  let auxiliaryBreakdown = {
+    transformerLossesKW: 0,
+    chargerCoolingKW: 0,
+    bessAuxiliaryKW: 0,
+    controlsITKW: 0,
+    siteLightingKW: 0,
+    amenitiesKW: 0,
+    securityKW: 0,
+  };
+  
+  if (includeAux) {
+    // Scale auxiliary loads based on actual connected load vs typical range
+    const loadRatio = connectedLoadKW / ((classificationDetails.connectedLoadMW.min + classificationDetails.connectedLoadMW.max) / 2 * 1000);
+    const clampedRatio = Math.max(0.5, Math.min(1.5, loadRatio)); // Clamp between 50% and 150%
+    
+    auxiliaryBreakdown = {
+      transformerLossesKW: Math.round((auxiliaryLoads.transformerLossesKW.min + auxiliaryLoads.transformerLossesKW.max) / 2 * clampedRatio),
+      chargerCoolingKW: Math.round((auxiliaryLoads.chargerCoolingKW.min + auxiliaryLoads.chargerCoolingKW.max) / 2 * clampedRatio),
+      bessAuxiliaryKW: Math.round((auxiliaryLoads.bessAuxiliaryKW.min + auxiliaryLoads.bessAuxiliaryKW.max) / 2 * clampedRatio),
+      controlsITKW: Math.round((auxiliaryLoads.controlsITKW.min + auxiliaryLoads.controlsITKW.max) / 2 * clampedRatio),
+      siteLightingKW: Math.round((auxiliaryLoads.siteLightingKW.min + auxiliaryLoads.siteLightingKW.max) / 2 * clampedRatio),
+      amenitiesKW: Math.round((auxiliaryLoads.amenitiesKW.min + auxiliaryLoads.amenitiesKW.max) / 2 * clampedRatio),
+      securityKW: Math.round((auxiliaryLoads.securityKW.min + auxiliaryLoads.securityKW.max) / 2 * clampedRatio),
+    };
+  }
+  
+  const auxiliaryLoadKW = Object.values(auxiliaryBreakdown).reduce((sum, v) => sum + v, 0);
+  const totalSiteLoadKW = inputPowerKW + auxiliaryLoadKW;
+  
+  // Apply diversity factor
+  const diversityFactor = input.customDiversityFactor || classificationDetails.diversityFactor;
+  const peakDemandKW = Math.round(totalSiteLoadKW * diversityFactor);
+  
+  // Get BESS recommendation
+  const bessConfig = EV_HUB_BESS_SIZING[classification];
+  
+  // Validation
+  const warnings: string[] = [];
+  const withinClassBounds = 
+    totalChargers >= classificationDetails.chargerRange.min && 
+    totalChargers <= classificationDetails.chargerRange.max &&
+    connectedLoadKW / 1000 >= classificationDetails.connectedLoadMW.min &&
+    connectedLoadKW / 1000 <= classificationDetails.connectedLoadMW.max;
+  
+  if (!withinClassBounds) {
+    warnings.push(`Configuration outside typical ${classification} hub bounds - consider ${
+      totalChargers > classificationDetails.chargerRange.max ? 'upgrading to larger classification' : 'verify sizing'
+    }`);
+  }
+  
+  if (peakDemandKW / 1000 > classificationDetails.peakDemandMW.max) {
+    warnings.push(`Peak demand ${(peakDemandKW / 1000).toFixed(1)} MW exceeds typical ${classification} hub maximum of ${classificationDetails.peakDemandMW.max} MW`);
+  }
+  
+  // Build description
+  const chargerParts: string[] = [];
+  if (level2Count > 0) chargerParts.push(`${level2Count} L2`);
+  if (dcfcCount > 0) chargerParts.push(`${dcfcCount} DCFC`);
+  if (ultraFastCount > 0) chargerParts.push(`${ultraFastCount} Ultra-Fast`);
+  if (mcsCount > 0) chargerParts.push(`${mcsCount} MCS`);
+  
+  const description = `${classificationDetails.name}: ${chargerParts.join(', ')} = ${connectedLoadKW.toLocaleString()} kW connected load, ${peakDemandKW.toLocaleString()} kW peak demand (${Math.round(diversityFactor * 100)}% diversity)`;
+  
+  return {
+    connectedLoadKW,
+    connectedLoadMW: connectedLoadKW / 1000,
+    inputPowerKW: Math.round(inputPowerKW),
+    inputPowerMW: inputPowerKW / 1000,
+    auxiliaryLoadKW,
+    totalSiteLoadKW: Math.round(totalSiteLoadKW),
+    totalSiteLoadMW: totalSiteLoadKW / 1000,
+    
+    diversityFactor,
+    peakDemandKW,
+    peakDemandMW: peakDemandKW / 1000,
+    
+    classifiedAs: classification,
+    classificationDetails,
+    
+    bessRecommendation: {
+      powerMW: bessConfig.recommendedMW,
+      energyMWh: bessConfig.recommendedMWh,
+      durationHours: bessConfig.typicalDurationHours,
+      primaryUseCase: bessConfig.primaryUseCase,
+    },
+    
+    breakdown: {
+      level2: { count: level2Count, outputKW: level2OutputKW, inputKW: Math.round(level2InputKW) },
+      dcfc: { count: dcfcCount, outputKW: dcfcOutputKW, inputKW: Math.round(dcfcInputKW) },
+      ultraFast: { count: ultraFastCount, outputKW: ultraFastOutputKW, inputKW: Math.round(ultraFastInputKW) },
+      mcs: { count: mcsCount, outputKW: mcs_output, inputKW: Math.round(mcs_input) },
+      auxiliary: auxiliaryBreakdown,
+    },
+    
+    validation: {
+      isValid: warnings.length === 0,
+      warnings,
+      withinClassBounds,
+    },
+    
+    description,
+    calculationMethod: 'Equipment-based calculation per EV Charging Hub Classifications & Equipment Specifications (Dec 2025)',
+  };
+}
+
+/**
+ * Simple helper for EVChargingEnergy landing page
+ * Returns just the key metrics needed for display
+ */
+export interface EVHubPowerSimpleInput {
+  level2Chargers?: number;
+  dcfcChargers?: number;
+  hpcChargers?: number;
+  hubType?: 'small' | 'medium' | 'superSite';
+  electricityRate?: number;
+}
+
+export interface EVHubPowerSimpleResult {
+  peakKW: number;
+  dailyKWh: number;
+  monthlyDemandCharge: number;
+  hubClassification: string;
+  bessRecommendedKWh: number;
+}
+
+/**
+ * Simplified EV hub power calculation for landing pages
+ * SSOT wrapper for EVChargingEnergy.tsx
+ */
+export function calculateEVHubPowerSimple(input: EVHubPowerSimpleInput): EVHubPowerSimpleResult {
+  const level2 = input.level2Chargers || 0;
+  const dcfc = input.dcfcChargers || 0;
+  const hpc = input.hpcChargers || 0;
+  
+  // Use full equipment-based calculation
+  const result = calculateEVHubPowerFromEquipment({
+    level2_7kw: level2,           // Assume 7.2 kW L2 for simplicity
+    dcfc_150kw: dcfc,             // Assume 150 kW DCFC
+    ultraFast_350kw: hpc,         // Assume 350 kW for HPC
+    hubClassification: input.hubType,
+    includeAuxiliaryLoads: true,
+  });
+  
+  // Estimate daily kWh based on utilization
+  // Highway: ~6h effective use, Urban: ~8h, Fleet: ~12h
+  const utilizationHours = 8; // Default to urban pattern
+  const dailyKWh = Math.round(result.peakDemandKW * utilizationHours * 0.5); // 50% average load factor
+  
+  // Calculate demand charge impact
+  const demandChargeRate = 15; // $/kW typical
+  const monthlyDemandCharge = Math.round(result.peakDemandKW * demandChargeRate);
+  
+  // BESS recommendation (midpoint of range)
+  const bessKWh = Math.round(
+    ((result.bessRecommendation.energyMWh.min + result.bessRecommendation.energyMWh.max) / 2) * 1000
+  );
+  
+  return {
+    peakKW: result.peakDemandKW,
+    dailyKWh,
+    monthlyDemandCharge,
+    hubClassification: result.classificationDetails.name,
+    bessRecommendedKWh: bessKWh,
+  };
 }
 
 // ============================================================================

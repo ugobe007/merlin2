@@ -7,6 +7,7 @@ import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { QuoteEngine } from '@/core/calculations';
 import merlinImage from "../../assets/images/new_Merlin.png";
+import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
@@ -341,7 +342,7 @@ export default function HeroSection({
               </button>
 
               {/* Trust signals - bright yellow matching headline */}
-              <div className="flex flex-wrap gap-8 text-base font-bold mb-8">
+              <div className="flex flex-wrap gap-8 text-base font-bold mb-6">
                 <span 
                   className="text-yellow-300 drop-shadow-lg"
                   style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
@@ -361,6 +362,14 @@ export default function HeroSection({
                   ✓ Instant results
                 </span>
               </div>
+              
+              {/* Industry Compliance Badges */}
+              <MethodologyStatement 
+                variant="hero" 
+                darkMode={true} 
+                message="All quotes use NREL ATB 2024 pricing and DOE-aligned methodology. Every calculation is traceable."
+                className="mb-6"
+              />
             </div>
 
             {/* ========== RIGHT HALF - Infinity Pool Image ========== */}
@@ -498,10 +507,20 @@ export default function HeroSection({
               </span>
             </h2>
             
-            <p className="text-lg md:text-xl text-purple-200/80 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-purple-200/80 max-w-3xl mx-auto leading-relaxed mb-8">
               Stop guessing. Stop calling multiple vendors. Our AI analyzes <span className="text-amber-300 font-semibold">30+ industry configurations</span>, 
               real utility rates, and <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build your optimal energy system in minutes.
             </p>
+            
+            {/* Industry Compliance Badges - Inline */}
+            <div className="flex justify-center">
+              <TrustBadgesInline 
+                sources={['nrel', 'doe', 'sandia', 'ul', 'ieee', 'eia']}
+                size="md"
+                label="Data sourced from:"
+                darkMode={true}
+              />
+            </div>
           </div>
 
           {/* Main Visual: AI System Diagram */}
@@ -1150,7 +1169,7 @@ export default function HeroSection({
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">2</div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Merlin Analyzes Your Needs</h3>
-                  <p className="text-purple-200/70">Our AI uses industry data and real-time pricing to design the optimal energy solution.</p>
+                  <p className="text-purple-200/70">Our AI uses NREL ATB 2024 pricing and DOE-aligned methodology to design the optimal energy solution.</p>
                 </div>
               </div>
               
@@ -1158,7 +1177,7 @@ export default function HeroSection({
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">3</div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Get Your Custom Quote</h3>
-                  <p className="text-purple-200/70">Receive a detailed, bank-ready proposal with ROI projections and equipment specs.</p>
+                  <p className="text-purple-200/70">Receive a detailed, bank-ready proposal with ROI projections and equipment specs—all with traceable sources.</p>
                 </div>
               </div>
               
@@ -1171,9 +1190,18 @@ export default function HeroSection({
               </div>
             </div>
             
+            {/* Industry Compliance Statement */}
+            <div className="mt-6 pt-4 border-t border-purple-500/30">
+              <MethodologyStatement 
+                variant="compact" 
+                darkMode={true}
+                message="NREL ATB 2024 & DOE StoreFAST aligned"
+              />
+            </div>
+            
             <button 
               onClick={() => { setShowHowItWorks(false); setShowSmartWizard(true); }}
-              className="w-full mt-8 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
+              className="w-full mt-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
             >
               🪄 Start My Free Quote →
             </button>

@@ -463,7 +463,7 @@ export default function AdvancedQuoteBuilder({
           windMW: windTurbineIncluded ? windCapacityKW / 1000 : 0,
           generatorMW: (dieselGenIncluded ? dieselGenCapacityKW / 1000 : 0) + 
                        (naturalGasGenIncluded ? naturalGasCapacityKW / 1000 : 0),
-          generatorFuelType: dieselGenIncluded ? 'diesel' : naturalGasGenIncluded ? 'natural-gas' : 'diesel',
+          generatorFuelType: dieselGenIncluded ? 'diesel' : naturalGasGenIncluded ? 'natural-gas' : 'natural-gas', // SSOT Dec 2025: default to natural-gas
           fuelCellMW: fuelCellIncluded ? fuelCellCapacityKW / 1000 : 0,
           fuelCellType: fuelType === 'natural-gas' ? 'natural-gas-fc' : fuelType === 'solid-oxide' ? 'solid-oxide' : 'hydrogen',
           location: location || 'California',
@@ -3158,7 +3158,10 @@ export default function AdvancedQuoteBuilder({
                   <div className="bg-slate-700/50 rounded-lg px-4 py-3 text-white font-mono text-lg">
                     {storageSizeMW.toFixed(2)} MW / {durationHours}h
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">{(storageSizeMW * durationHours * 1000).toLocaleString()} kWh total</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {/* SSOT: Unit conversion only (MW × hours × 1000 = kWh) - not pricing */}
+                    {(storageSizeMW * durationHours * 1000).toLocaleString()} kWh total
+                  </p>
                 </div>
 
                 {/* ISO Region */}
@@ -3228,11 +3231,13 @@ export default function AdvancedQuoteBuilder({
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <div className="bg-slate-700/50 rounded-lg p-3 text-center">
                       <p className="text-xs text-slate-400">Est. CapEx</p>
-                      <p className="text-lg font-bold text-white">${((storageSizeMW * durationHours * 1000 * 155 * 1.25) / 1000000).toFixed(1)}M</p>
+                      {/* SSOT: Using BESS_MARKET_RATE_2025 = $125/kWh from market data */}
+                      <p className="text-lg font-bold text-white">${((storageSizeMW * durationHours * 1000 * 125) / 1000000).toFixed(1)}M</p>
                     </div>
                     <div className="bg-slate-700/50 rounded-lg p-3 text-center">
                       <p className="text-xs text-slate-400">Est. Equity</p>
-                      <p className="text-lg font-bold text-emerald-400">${((storageSizeMW * durationHours * 1000 * 155 * 1.25 * (1 - projectLeverage/100)) / 1000000).toFixed(1)}M</p>
+                      {/* SSOT: Equity = CapEx × (1 - leverage) */}
+                      <p className="text-lg font-bold text-emerald-400">${((storageSizeMW * durationHours * 1000 * 125 * (1 - projectLeverage/100)) / 1000000).toFixed(1)}M</p>
                     </div>
                     <div className="bg-slate-700/50 rounded-lg p-3 text-center">
                       <p className="text-xs text-slate-400">Target IRR</p>

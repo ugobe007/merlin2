@@ -11,6 +11,9 @@
  * - Merlin-branded but car-wash focused messaging
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
+ * 
+ * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='car-wash'
+ * instead of separate CarWashWizard component (4K+ lines of duplicate code removed)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -36,7 +39,9 @@ import carWashPitStop3 from '@/assets/images/Car_Wash_PitStop3.jpg';
 import carWashPitStop4 from '@/assets/images/Car_Wash_PitStop4.jpg';
 import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
-import CarWashWizard, { type CarWashWizardInputs } from './CarWashWizard';
+// REFACTORED: Use StreamlinedWizard instead of CarWashWizard
+import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 
 // ============================================
 // TYPES
@@ -791,9 +796,15 @@ export default function CarWashEnergy() {
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
                     <input
-                      type="number"
-                      value={inputs.currentMonthlyBill}
-                      onChange={(e) => setInputs({ ...inputs, currentMonthlyBill: parseInt(e.target.value) || 0 })}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={inputs.currentMonthlyBill || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setInputs({ ...inputs, currentMonthlyBill: parseInt(val) || 0 });
+                      }}
+                      onFocus={(e) => e.target.select()}
                       placeholder="5000"
                       className="w-full bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 py-3 text-white placeholder-white/40 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                     />
@@ -1322,8 +1333,9 @@ export default function CarWashEnergy() {
                     setInputs(prev => ({ ...prev, numberOfBays: quickBays }));
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-6 py-5 rounded-xl font-black text-xl shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-3 border-2 border-emerald-400/50"
+                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-xl shadow-2xl shadow-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/60 transition-all flex items-center justify-center gap-3 border-2 border-purple-300/60 animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900 hover:scale-[1.03]"
                 >
+                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
                   Get Detailed Quote
                   <ArrowRight className="w-6 h-6" />
                 </button>
@@ -1339,34 +1351,40 @@ export default function CarWashEnergy() {
                 </button>
               </div>
               
-              {/* Trust signal */}
-              <p className="text-center text-gray-400 text-sm mt-4 font-medium">
-                2 minute detailed quote • No commitment required
-              </p>
+              {/* Trust signal + Methodology */}
+              <div className="text-center mt-4 space-y-3">
+                <p className="text-gray-400 text-sm font-medium">
+                  2 minute detailed quote • No commitment required
+                </p>
+                <MethodologyStatement 
+                  variant="compact" 
+                  darkMode={true}
+                  message="NREL ATB 2024 & DOE methodology"
+                />
+              </div>
             </div>
           </div>
         </div>
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          CAR WASH WIZARD MODAL
+          CAR WASH WIZARD MODAL - Uses StreamlinedWizard with car-wash pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <CarWashWizard
-          initialInputs={{
-            numberOfBays: inputs.numberOfBays,
-            carsPerDay: inputs.carsPerDay,
-            state: inputs.state,
-            monthlyBill: inputs.currentMonthlyBill,
+        <StreamlinedWizard
+          show={showWizard}
+          initialUseCase="car-wash"
+          initialState={inputs.state}
+          initialData={{
+            bayCount: inputs.numberOfBays,
+            washType: 'tunnel', // Landing page uses tunnel type
+            dailyVehicles: inputs.carsPerDay,
+            hasVacuums: inputs.includesVacuums,
+            hasDryers: inputs.includesDryers,
           }}
           onClose={() => setShowWizard(false)}
-          onComplete={() => {
+          onFinish={() => {
             setShowWizard(false);
-            // Could show a success modal or redirect here
-          }}
-          onRequestConsultation={() => {
-            setShowWizard(false);
-            setShowLeadForm(true);
           }}
         />
       )}

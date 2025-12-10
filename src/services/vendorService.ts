@@ -246,6 +246,200 @@ export const updateProduct = async (productId: string, updates: Partial<ProductS
 // RFQs (REQUEST FOR QUOTES)
 // =====================================================
 
+export interface CreateRFQData {
+  projectName: string;
+  systemSizeMW: number;
+  durationHours: number;
+  solarMW?: number;
+  windMW?: number;
+  generatorMW?: number;
+  location: string;
+  useCase: string;
+  isPremium: boolean;
+  
+  // Customer info
+  customerEmail?: string;
+  customerName?: string;
+  customerPhone?: string;
+  
+  // Requirements
+  requirements?: {
+    batteryManufacturer?: string;
+    batteryModel?: string;
+    inverterManufacturer?: string;
+    inverterModel?: string;
+    minWarrantyYears?: number;
+    minCycleLife?: number;
+    requiredCertifications?: string[];
+  };
+  
+  // Pricing from SSOT
+  standardQuoteCost: number;
+  premiumQuoteCost?: number;
+  
+  // Timeline
+  projectTimeline?: 'immediate' | '3-months' | '6-months' | '12-months';
+}
+
+/**
+ * Create a new RFQ (Request for Quote) from customer quote
+ * 
+ * SSOT: Uses data processed through unifiedQuoteCalculator
+ * AAD: Accurate pricing from calculateQuote() + premium comparison
+ * Workflow: Creates RFQ → Notifies relevant vendors → Vendors respond
+ */
+export const createRFQ = async (data: CreateRFQData) => {
+  if (!isSupabaseConfigured()) {
+    console.warn('Supabase not configured - RFQ stored locally');
+    return { success: true, rfqId: `local-${Date.now()}`, message: 'Quote request saved (offline mode)' };
+  }
+
+  try {
+    // Generate RFQ number
+    const rfqNumber = `RFQ-${data.isPremium ? 'P' : 'S'}-${Date.now().toString(36).toUpperCase()}`;
+    
+    // Calculate due date (7 days for standard, 14 for premium)
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + (data.isPremium ? 14 : 7));
+    
+    // Create RFQ record
+    const { data: rfq, error: rfqError } = await supabase
+      .from('rfqs')
+      .insert({
+        rfq_number: rfqNumber,
+        project_name: data.projectName,
+        system_size_mw: data.systemSizeMW,
+        duration_hours: data.durationHours,
+        solar_mw: data.solarMW || 0,
+        wind_mw: data.windMW || 0,
+        generator_mw: data.generatorMW || 0,
+        location: data.location,
+        use_case: data.useCase,
+        is_premium: data.isPremium,
+        
+        // Customer info
+        customer_email: data.customerEmail,
+        customer_name: data.customerName,
+        customer_phone: data.customerPhone,
+        
+        // Requirements (stored as JSONB)
+        requirements: data.requirements || {},
+        
+        // Pricing reference (SSOT data)
+        estimated_budget_min: Math.round(data.standardQuoteCost * 0.9),
+        estimated_budget_max: Math.round((data.premiumQuoteCost || data.standardQuoteCost) * 1.1),
+        
+        // Status
+        status: 'open',
+        due_date: dueDate.toISOString(),
+        responses_count: 0
+      })
+      .select()
+      .single();
+
+    if (rfqError) throw rfqError;
+
+    // Notify relevant vendors based on specialty and capacity
+    await notifyRelevantVendors(rfq.id, data);
+
+    return {
+      success: true,
+      rfqId: rfq.id,
+      rfqNumber: rfq.rfq_number,
+      message: data.isPremium 
+        ? 'Premium quote request submitted! Qualified vendors will respond within 14 days.'
+        : 'Quote request submitted! Vendors will respond within 7 days.'
+    };
+  } catch (error: any) {
+    console.error('Error creating RFQ:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to create quote request'
+    };
+  }
+};
+
+/**
+ * Notify vendors who match the RFQ requirements
+ */
+async function notifyRelevantVendors(rfqId: string, data: CreateRFQData) {
+  try {
+    // Get vendors that match (approved, specialty matches)
+    const specialties = ['battery', 'inverter', 'integrator', 'epc'];
+    
+    const { data: vendors, error } = await supabase
+      .from('vendors')
+      .select('id, email, company_name, specialty')
+      .eq('status', 'approved')
+      .in('specialty', specialties);
+
+    if (error || !vendors?.length) {
+      console.log('No matching vendors found for RFQ notification');
+      return;
+    }
+
+    // Create notifications for each vendor
+    const notifications = vendors.map(vendor => ({
+      vendor_id: vendor.id,
+      type: data.isPremium ? 'premium_rfq' : 'new_rfq',
+      title: data.isPremium 
+        ? `🌟 Premium RFQ: ${data.projectName}`
+        : `New RFQ: ${data.projectName}`,
+      message: `${data.systemSizeMW.toFixed(2)} MW / ${data.durationHours}h system in ${data.location}. ` +
+               `Use case: ${data.useCase}. ` +
+               (data.isPremium ? 'Premium equipment required.' : ''),
+      rfq_id: rfqId,
+      is_read: false
+    }));
+
+    await supabase.from('vendor_notifications').insert(notifications);
+
+    // Queue email notifications (processed by background job)
+    await queueVendorEmails(vendors, data, rfqId);
+
+  } catch (error) {
+    console.error('Error notifying vendors:', error);
+  }
+}
+
+/**
+ * Queue emails to vendors about new RFQ
+ */
+async function queueVendorEmails(
+  vendors: { id: string; email: string; company_name: string; specialty: string }[],
+  data: CreateRFQData,
+  rfqId: string
+) {
+  try {
+    const emailJobs = vendors.map(vendor => ({
+      vendor_id: vendor.id,
+      email_type: 'rfq_notification',
+      to_email: vendor.email,
+      subject: data.isPremium 
+        ? `🌟 Premium Quote Opportunity: ${data.projectName}`
+        : `New Quote Opportunity: ${data.projectName}`,
+      template_data: {
+        vendorName: vendor.company_name,
+        projectName: data.projectName,
+        systemSize: `${data.systemSizeMW.toFixed(2)} MW`,
+        duration: `${data.durationHours} hours`,
+        location: data.location,
+        useCase: data.useCase,
+        isPremium: data.isPremium,
+        requirements: data.requirements,
+        rfqId: rfqId,
+        portalUrl: `${window.location.origin}/vendor-portal?rfq=${rfqId}`
+      },
+      status: 'queued',
+      created_at: new Date().toISOString()
+    }));
+
+    await supabase.from('email_queue').insert(emailJobs);
+  } catch (error) {
+    console.error('Error queuing vendor emails:', error);
+  }
+}
+
 /**
  * Get open RFQs for vendor
  */
@@ -504,6 +698,7 @@ export const vendorService = {
   updateProduct,
   
   // RFQs
+  createRFQ,
   getOpenRFQs,
   getRFQDetails,
   

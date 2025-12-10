@@ -51,13 +51,20 @@ export interface WizardState {
 
   // Section 2: Facility Details
   facility: {
-    squareFeet?: number;
-    roomCount?: number;      // Hotels
+    squareFeet?: number;     // Offices, retail, manufacturing
+    roomCount?: number;      // Hotels, apartments
+    bedCount?: number;       // Hospitals
     rackCount?: number;      // Data centers
-    bays?: number;           // Car washes
+    bayCount?: number;       // Car washes
+    unitCount?: number;      // Apartments
+    bays?: number;           // Car washes (legacy)
     occupancy?: number;
     operatingHours?: number;
   };
+
+  // Custom question data from templates (industry-specific fields)
+  // Contains fields like annualPassengers (airport), gamingSpaceSqFt (casino), etc.
+  useCaseData: Record<string, any>;
 
   // Section 3: Existing Infrastructure
   existingInfrastructure: {
@@ -124,6 +131,7 @@ export const INITIAL_WIZARD_STATE: WizardState = {
     subType: '',
   },
   facility: {},
+  useCaseData: {},  // Custom question data (annualPassengers, gamingSpaceSqFt, etc.)
   existingInfrastructure: {
     evChargers: {
       L1: { count: 0, powerKW: 1.4 },
@@ -131,7 +139,7 @@ export const INITIAL_WIZARD_STATE: WizardState = {
       L3: { count: 0, powerKW: 150 },
     },
     solar: { hasExisting: false, capacityKW: 0 },
-    generator: { hasExisting: false, capacityKW: 0, fuelType: 'diesel' },
+    generator: { hasExisting: false, capacityKW: 0, fuelType: 'natural-gas' },
     gridConnection: 'on-grid',
   },
   goals: {

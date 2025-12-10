@@ -240,7 +240,7 @@ export class QuoteEngine {
       solarMW: input.solarMW || 0,
       windMW: input.windMW || 0,
       generatorMW: input.generatorMW || 0,
-      generatorFuelType: input.generatorFuelType || 'diesel',
+      generatorFuelType: input.generatorFuelType || 'natural-gas',
       fuelCellMW: input.fuelCellMW || 0,
       fuelCellType: input.fuelCellType || 'hydrogen',
       location: input.location || 'California',
