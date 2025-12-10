@@ -16,7 +16,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Info, ExternalLink, BookOpen, Shield, FileText } from 'lucide-react';
-import type { BenchmarkSourceAttribution } from '@/services/unifiedQuoteCalculator';
+import type { BenchmarkSource } from '@/services/benchmarkSources';
+
+// Re-export for convenience
+export type BenchmarkSourceAttribution = BenchmarkSource;
 
 // ============================================================================
 // TYPES
@@ -119,10 +122,12 @@ const SOURCE_TYPE_CONFIG: Record<string, {
 // HELPER FUNCTIONS
 // ============================================================================
 
+type SourceType = 'government' | 'industry' | 'academic' | 'standard' | 'manufacturer' | 'internal';
+
 /**
  * Determines the source type based on the source name
  */
-function getSourceType(sourceName: string): keyof typeof SOURCE_TYPE_CONFIG {
+function getSourceType(sourceName: string): SourceType {
   const lowerName = sourceName.toLowerCase();
   
   if (lowerName.includes('nrel') || lowerName.includes('doe') || lowerName.includes('sandia') || 
@@ -226,7 +231,7 @@ export const SourceAttributionTooltip: React.FC<SourceAttributionTooltipProps> =
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
-  const sourceType = getSourceType(source.sourceName);
+  const sourceType = getSourceType(source.name);
   const config = SOURCE_TYPE_CONFIG[sourceType];
   
   const iconSizeClasses = {
@@ -286,7 +291,7 @@ export const SourceAttributionTooltip: React.FC<SourceAttributionTooltipProps> =
           transition-colors duration-150
           focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400
         `}
-        aria-label={`Source: ${source.sourceName}`}
+        aria-label={`Source: ${source.name}`}
       >
         {trigger || <Info className={iconSizeClasses[iconSize]} />}
       </button>
@@ -305,7 +310,7 @@ export const SourceAttributionTooltip: React.FC<SourceAttributionTooltipProps> =
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 text-sm leading-tight">
-                {source.sourceName}
+                {source.name}
               </div>
               <div className="text-xs text-gray-500">{config.label}</div>
             </div>
@@ -314,18 +319,18 @@ export const SourceAttributionTooltip: React.FC<SourceAttributionTooltipProps> =
           {/* Details */}
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-500">Metric:</span>
-              <span className="text-gray-900 font-medium">{source.metric}</span>
+              <span className="text-gray-500">Organization:</span>
+              <span className="text-gray-900 font-medium">{source.organization}</span>
             </div>
-            {source.citation && (
+            {source.notes && (
               <div className="text-gray-600 italic border-l-2 border-gray-200 pl-2">
-                "{source.citation}"
+                "{source.notes}"
               </div>
             )}
-            {source.dateAccessed && (
+            {source.retrievalDate && (
               <div className="flex justify-between">
                 <span className="text-gray-500">Accessed:</span>
-                <span className="text-gray-700">{formatDate(source.dateAccessed)}</span>
+                <span className="text-gray-700">{formatDate(source.retrievalDate)}</span>
               </div>
             )}
             {source.url && (
@@ -417,7 +422,7 @@ export const QuoteAuditSection: React.FC<QuoteAuditSectionProps> = ({
             <h4 className="text-sm font-medium text-gray-700 mb-2">Data Sources</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {benchmarkAudit.sources.map((source, index) => {
-                const sourceType = getSourceType(source.sourceName);
+                const sourceType = getSourceType(source.name);
                 return (
                   <div 
                     key={index}
@@ -426,11 +431,11 @@ export const QuoteAuditSection: React.FC<QuoteAuditSectionProps> = ({
                     <div className="flex items-start gap-2">
                       <SourceBadge 
                         sourceType={sourceType} 
-                        name={source.sourceName.split(' ')[0]} 
+                        name={source.name.split(' ')[0]} 
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-gray-600 truncate">{source.metric}</div>
+                        <div className="text-xs text-gray-600 truncate">{source.organization}</div>
                         {source.url && (
                           <a 
                             href={source.url} 

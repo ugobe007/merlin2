@@ -12,7 +12,10 @@
 import React from 'react';
 import { Info, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { SourceAttributionTooltip, SourceBadge } from './SourceAttributionTooltip';
-import type { BenchmarkSourceAttribution } from '@/services/unifiedQuoteCalculator';
+import type { BenchmarkSource } from '@/services/benchmarkSources';
+
+// Re-export for convenience
+export type BenchmarkSourceAttribution = BenchmarkSource;
 
 // ============================================================================
 // TYPES

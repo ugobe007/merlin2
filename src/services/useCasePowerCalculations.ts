@@ -3752,10 +3752,7 @@ export function calculateAirportPower(annualPassengersMillions: number): PowerCa
 // AIRPORT - COMPREHENSIVE EQUIPMENT-BASED CALCULATIONS
 // ============================================================================
 
-/**
- * Airport Classification Types
- */
-export type AirportClassification = keyof typeof AIRPORT_CLASSIFICATIONS;
+// Note: AirportClassification type is defined above near AIRPORT_CLASSIFICATIONS constant
 
 /**
  * Airport Power Calculation Input - Simple Interface
@@ -3859,8 +3856,8 @@ function determineAirportClassification(
 ): AirportClassification {
   // Primary classification by passengers, refined by gates if provided
   if (annualPassengersMillions >= 50) return 'megaHub';
-  if (annualPassengersMillions >= 25) return 'internationalHub';
-  if (annualPassengersMillions >= 10) return 'largeDomestic';
+  if (annualPassengersMillions >= 25) return 'majorHub';      // Major international hubs
+  if (annualPassengersMillions >= 10) return 'largeRegional'; // Large regional/small hub
   if (annualPassengersMillions >= 3) return 'mediumRegional';
   return 'smallRegional';
 }
@@ -3899,8 +3896,8 @@ export function calculateAirportPowerFromEquipment(
   const loadRange = classProfile.totalFacilityLoad;
   const totalPeakKW = (loadRange.min + loadRange.max) / 2 * 1000; // Convert MW to kW
   
-  // Use provided values or derive from classification
-  const effectiveGateCount = gateCount || classProfile.gates.typical;
+  // Use provided values or derive from classification (use midpoint of range)
+  const effectiveGateCount = gateCount || Math.round((classProfile.gates.min + classProfile.gates.max) / 2);
   const effectiveTerminalSqFt = terminalSqFt || (effectiveGateCount * 50000);
   
   // Estimate breakdown proportions (typical airport distribution)
@@ -3926,8 +3923,8 @@ export function calculateAirportPowerFromEquipment(
   const waterWastewaterKW = totalPeakKW * 0.01;
   const sustainableEnergyKW = 0;
   
-  // Apply load factor for average demand
-  const loadFactor = classProfile.loadFactor.typical;
+  // Apply load factor for average demand (use midpoint of range)
+  const loadFactor = (classProfile.loadFactor.min + classProfile.loadFactor.max) / 2;
   const avgDemandKW = totalPeakKW * loadFactor;
   
   // Convert to MW
