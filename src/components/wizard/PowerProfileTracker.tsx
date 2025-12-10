@@ -13,7 +13,7 @@ import React from 'react';
 import { 
   Zap, MapPin, Building2, ClipboardList, Target, Settings, 
   FileText, CheckCircle, Circle, Sparkles, TrendingUp,
-  Battery, Sun, DollarSign
+  Battery, Sun, DollarSign, AlertTriangle
 } from 'lucide-react';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
@@ -43,6 +43,12 @@ export interface PowerProfileTrackerProps {
   compact?: boolean;
   onShowExplainer?: () => void;
   onSectionClick?: (sectionIndex: number) => void; // Navigate to section
+  
+  // Power Gap props - NEW
+  neededPowerKW?: number;   // What the facility needs
+  neededEnergyKWh?: number; // Energy needed
+  neededDurationHours?: number; // Duration needed
+  onAcceptRecommendation?: () => void; // Accept Merlin's optimal config
 }
 
 // ============================================
@@ -99,6 +105,11 @@ export default function PowerProfileTracker({
   compact = false,
   onShowExplainer,
   onSectionClick,
+  // PowerGap props
+  neededPowerKW,
+  neededEnergyKWh,
+  neededDurationHours,
+  onAcceptRecommendation,
 }: PowerProfileTrackerProps) {
   const levelInfo = getLevelInfo(totalPoints);
   const nextLevelPoints = getNextLevelPoints(totalPoints);
@@ -189,26 +200,22 @@ export default function PowerProfileTracker({
           </div>
         </div>
         
-        {/* Level Badge */}
-        <div className={`bg-gradient-to-r ${levelInfo.gradient} rounded-xl p-3 text-center`}>
-          <div className="text-2xl mb-1">{levelInfo.emoji}</div>
-          <div className="text-white font-bold">{levelInfo.name}</div>
-          <div className="text-white/80 text-sm">{totalPoints} points</div>
-        </div>
-        
-        {/* Progress to next level */}
-        {totalPoints < 100 && (
-          <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>Progress</span>
-              <span>{nextLevelPoints - totalPoints} pts to next level</span>
+        {/* Power Profile Status - Shows calculated peak demand */}
+        {systemSize && systemSize > 0 ? (
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-3 text-center">
+            <div className="text-xs text-white/80 uppercase tracking-wider mb-1">Peak Demand</div>
+            <div className="text-2xl font-black text-white">
+              {systemSize >= 1000 ? `${(systemSize/1000).toFixed(1)} MW` : `${Math.round(systemSize)} kW`}
             </div>
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full bg-gradient-to-r ${levelInfo.gradient} transition-all duration-700`}
-                style={{ width: `${(totalPoints / nextLevelPoints) * 100}%` }}
-              />
-            </div>
+            {durationHours && (
+              <div className="text-white/70 text-sm">{durationHours}hr backup recommended</div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-3 text-center">
+            <div className="text-xs text-white/80 uppercase tracking-wider mb-1">Peak Demand</div>
+            <div className="text-lg font-bold text-white/60">Calculating...</div>
+            <div className="text-white/50 text-xs">Complete facility details</div>
           </div>
         )}
       </div>
@@ -269,13 +276,10 @@ export default function PowerProfileTracker({
                   </div>
                 </div>
                 
-                {/* Points Badge or Edit indicator */}
-                {isCompleted ? (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-emerald-400">+{section.pointsAwarded}</span>
-                    <span className="text-xs text-gray-500">✏️</span>
-                  </div>
-                ) : null}
+                {/* Edit indicator for completed sections */}
+                {isCompleted && (
+                  <span className="text-xs text-gray-500">✏️</span>
+                )}
               </button>
             );
           })}
@@ -284,6 +288,83 @@ export default function PowerProfileTracker({
       
       {/* Stats Footer */}
       <div className="p-4 border-t border-purple-500/20 bg-slate-900/50">
+        {/* POWER GAP INDICATOR - Uses ENERGY (kWh) coverage, not just power */}
+        {neededPowerKW && neededPowerKW > 0 && systemSize && systemSize > 0 && (() => {
+          // Calculate energy-based coverage (more accurate than power-only)
+          // User's energy = systemSize (kW) × durationHours
+          // Needed energy = neededPowerKW × neededDurationHours
+          const userEnergyKWh = (systemSize || 0) * (durationHours || 4);
+          const neededEnergyKWh_calc = (neededPowerKW || 0) * (neededDurationHours || 4);
+          
+          // Use the larger of power coverage or energy coverage (whichever is the bottleneck)
+          const powerCoverage = neededPowerKW > 0 ? (systemSize / neededPowerKW) * 100 : 100;
+          const energyCoverage = neededEnergyKWh_calc > 0 ? (userEnergyKWh / neededEnergyKWh_calc) * 100 : 100;
+          
+          // Overall coverage is the MINIMUM (bottleneck)
+          const coverage = Math.min(150, Math.min(powerCoverage, energyCoverage));
+          const hasSufficientPower = coverage >= 90; // 90% is close enough
+          const isCritical = coverage < 70;
+          
+          return (
+            <div className={`mb-4 rounded-xl p-3 border ${
+              hasSufficientPower 
+                ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-emerald-400/30'
+                : isCritical
+                  ? 'bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-400/30'
+                  : 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20 border-yellow-400/30'
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">Power Gap</span>
+                <span className={`text-sm font-bold ${
+                  hasSufficientPower ? 'text-emerald-400' : isCritical ? 'text-red-400' : 'text-yellow-400'
+                }`}>
+                  {Math.round(coverage)}%
+                </span>
+              </div>
+              
+              {/* Gauge bar */}
+              <div className="relative h-2 bg-black/30 rounded-full overflow-hidden mb-2">
+                <div className="absolute left-[60%] top-0 bottom-0 w-0.5 bg-white/20 z-10" />
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    hasSufficientPower 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                      : isCritical
+                        ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                        : 'bg-gradient-to-r from-yellow-500 to-amber-500'
+                  }`}
+                  style={{ width: `${Math.min(100, (coverage / 150) * 100)}%` }}
+                />
+              </div>
+              
+              {/* Status message */}
+              <div className="flex items-center gap-2">
+                {hasSufficientPower ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs text-emerald-400">Power needs met ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className={`w-4 h-4 ${isCritical ? 'text-red-400' : 'text-yellow-400'}`} />
+                    <span className={`text-xs ${isCritical ? 'text-red-400' : 'text-yellow-400'}`}>
+                      Need {Math.round(100 - coverage)}% more
+                    </span>
+                    {onAcceptRecommendation && (
+                      <button 
+                        onClick={onAcceptRecommendation}
+                        className="ml-auto text-xs text-purple-400 hover:text-purple-300 underline"
+                      >
+                        Fix it
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        
         {/* PROMINENT POWER DISPLAY - THE MAIN POINT! */}
         {systemKWh && systemKWh > 0 && (
           <div className="mb-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-3 border border-emerald-400/30">
@@ -356,12 +437,14 @@ export default function PowerProfileTracker({
           </div>
         )}
         
-        {/* Overall Progress */}
+        {/* Overall Progress - with step indicator */}
         <div className="text-center">
           <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
             {progressPercent}%
           </div>
-          <div className="text-xs text-gray-500">Complete</div>
+          <div className="text-xs text-gray-500">
+            Step {completedSections.length + 1} of {WIZARD_SECTIONS.length}
+          </div>
         </div>
       </div>
       

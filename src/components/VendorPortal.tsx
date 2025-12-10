@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Mail, Phone, Building2 } from 'lucide-react';
-
-interface VendorProfile {
-  company: string;
-  contact_name: string;
-  email: string;
-  phone: string;
-  specialty: string;
-  certifications: string[];
-}
+import React, { useState, useEffect } from 'react';
+import { Upload, FileText, DollarSign, CheckCircle, Clock, TrendingUp, Mail, Phone, Building2, AlertCircle, Loader2 } from 'lucide-react';
+import { 
+  registerVendor, 
+  loginVendor, 
+  logoutVendor, 
+  getCurrentVendor,
+  submitProduct,
+  getVendorProducts,
+  getOpenRFQs,
+  getVendorStats,
+  type VendorRegistrationData,
+  type ProductSubmissionData
+} from '@/services/vendorService';
+import type { Vendor, VendorProduct, RFQ } from '@/services/supabaseClient';
 
 interface PricingSubmission {
   id: string;
@@ -24,8 +28,23 @@ interface PricingSubmission {
 
 const VendorPortal: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentVendor, setCurrentVendor] = useState<Vendor | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'submit-pricing' | 'rfqs' | 'profile'>('dashboard');
   const [showRegistration, setShowRegistration] = useState(false);
+  
+  // Dashboard data
+  const [vendorProducts, setVendorProducts] = useState<VendorProduct[]>([]);
+  const [openRFQs, setOpenRFQs] = useState<RFQ[]>([]);
+  const [stats, setStats] = useState<{
+    pendingProducts: number;
+    approvedProducts: number;
+    activeSubmissions: number;
+    openRFQs: number;
+    quotesThisMonth: number;
+    unreadNotifications: number;
+  } | null>(null);
   
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registrationForm, setRegistrationForm] = useState({
@@ -34,13 +53,13 @@ const VendorPortal: React.FC = () => {
     email: '',
     phone: '',
     password: '',
-    specialty: '',
+    specialty: '' as 'battery' | 'inverter' | 'ems' | 'bos' | 'epc' | 'integrator' | '',
     website: '',
     description: ''
   });
 
   const [pricingForm, setPricingForm] = useState({
-    product_category: 'battery',
+    product_category: 'battery' as 'battery' | 'inverter' | 'ems' | 'bos' | 'container',
     manufacturer: '',
     model: '',
     capacity_kwh: '',
@@ -53,129 +72,200 @@ const VendorPortal: React.FC = () => {
     datasheet: null as File | null
   });
 
-  // Mock data for demonstration
-  const mockSubmissions: PricingSubmission[] = [
-    {
-      id: '1',
-      product_category: 'LFP Battery',
-      model: 'CATL LFP 280Ah',
-      price_per_kwh: 145,
-      lead_time_weeks: 12,
-      warranty_years: 10,
-      status: 'approved',
-      submitted_date: '2025-10-15'
-    },
-    {
-      id: '2',
-      product_category: 'PCS Inverter',
-      model: 'SMA 500kW',
-      price_per_kw: 180,
-      lead_time_weeks: 8,
-      warranty_years: 5,
-      status: 'pending',
-      submitted_date: '2025-10-28'
-    }
-  ];
-
-  const mockRFQs = [
-    {
-      id: 'RFQ-2025-001',
-      project: 'Hotel (300 Rooms) BESS',
-      capacity: '2 MW / 4 MWh',
-      location: 'California',
-      due_date: '2025-11-15',
-      status: 'open'
-    },
-    {
-      id: 'RFQ-2025-002',
-      project: 'Data Center Backup Power',
-      capacity: '5 MW / 10 MWh',
-      location: 'Texas',
-      due_date: '2025-11-20',
-      status: 'open'
-    }
-  ];
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Basic vendor authentication - integrates with existing auth system
-    if (loginForm.email && loginForm.password) {
-      // In production, this would validate against vendor database
-      const mockVendors = ['vendor@tesla.com', 'sales@lg-energy.com', 'vendor@catl.com'];
-      if (mockVendors.includes(loginForm.email.toLowerCase())) {
-        setIsLoggedIn(true);
-        localStorage.setItem('vendor_logged_in', 'true');
-        localStorage.setItem('vendor_email', loginForm.email);
-      } else {
-        alert('Invalid vendor credentials. Please register first or contact support.');
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const vendor = await getCurrentVendor();
+        if (vendor) {
+          setCurrentVendor(vendor);
+          setIsLoggedIn(true);
+          await loadDashboardData();
+        }
+      } catch (err) {
+        // No session, that's fine
+        console.log('No active vendor session');
+      } finally {
+        setIsLoading(false);
       }
+    };
+    checkSession();
+  }, []);
+
+  // Load dashboard data when logged in
+  const loadDashboardData = async () => {
+    try {
+      const [products, rfqs, vendorStats] = await Promise.all([
+        getVendorProducts(),
+        getOpenRFQs(),
+        getVendorStats()
+      ]);
+      setVendorProducts(products);
+      setOpenRFQs(rfqs);
+      setStats(vendorStats);
+    } catch (err: any) {
+      console.error('Error loading dashboard data:', err);
     }
   };
 
-  const handleRegistration = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement vendor registration with validation
-    if (!registrationForm.company || !registrationForm.email || !registrationForm.contact_name) {
-      alert('Please fill in all required fields');
+    setError(null);
+    setIsLoading(true);
+    
+    try {
+      const result = await loginVendor({
+        email: loginForm.email,
+        password: loginForm.password
+      });
+      
+      if (result.success && result.vendor) {
+        setCurrentVendor(result.vendor);
+        setIsLoggedIn(true);
+        await loadDashboardData();
+      } else {
+        setError(result.error || 'Login failed. Please check your credentials.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutVendor();
+      setIsLoggedIn(false);
+      setCurrentVendor(null);
+      setVendorProducts([]);
+      setOpenRFQs([]);
+      setStats(null);
+    } catch (err: any) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  const handleRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!registrationForm.company || !registrationForm.email || !registrationForm.contact_name || !registrationForm.password || !registrationForm.specialty) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    if (registrationForm.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     
-    // Store registration data locally (in production would go to Supabase)
-    const registrationData = {
-      ...registrationForm,
-      id: Date.now().toString(),
-      status: 'pending',
-      registered_at: new Date().toISOString()
-    };
+    setIsLoading(true);
     
-    const existingRegistrations = JSON.parse(localStorage.getItem('vendor_registrations') || '[]');
-    existingRegistrations.push(registrationData);
-    localStorage.setItem('vendor_registrations', JSON.stringify(existingRegistrations));
-    
-    alert('Registration submitted successfully! Our team will review and approve your vendor account within 24 hours. You\'ll receive an email confirmation once approved.');
-    setShowRegistration(false);
-    setRegistrationForm({
-      company: '', contact_name: '', email: '', phone: '', password: '', 
-      specialty: '', website: '', description: ''
-    });
+    try {
+      const registrationData: VendorRegistrationData = {
+        company_name: registrationForm.company,
+        contact_name: registrationForm.contact_name,
+        email: registrationForm.email,
+        phone: registrationForm.phone || undefined,
+        password: registrationForm.password,
+        specialty: registrationForm.specialty as VendorRegistrationData['specialty'],
+        website: registrationForm.website || undefined,
+        description: registrationForm.description || undefined
+      };
+      
+      const result = await registerVendor(registrationData);
+      
+      if (result.success) {
+        alert('Registration submitted successfully! Your account is pending approval. You\'ll receive an email confirmation once approved.');
+        setShowRegistration(false);
+        setRegistrationForm({
+          company: '', contact_name: '', email: '', phone: '', password: '', 
+          specialty: '', website: '', description: ''
+        });
+      } else {
+        setError(result.error || 'Registration failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during registration.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePricingSubmit = (e: React.FormEvent) => {
+  const handlePricingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement pricing submission with validation
-    if (!pricingForm.manufacturer || !pricingForm.model || !pricingForm.price_per_kwh) {
-      alert('Please fill in all required fields');
+    setError(null);
+    
+    if (!pricingForm.manufacturer || !pricingForm.model) {
+      setError('Please fill in manufacturer and model');
       return;
     }
 
-    // Store pricing data locally (in production would go to Supabase)
-    const pricingData = {
-      ...pricingForm,
-      id: Date.now().toString(),
-      vendor_email: localStorage.getItem('vendor_email'),
-      submitted_at: new Date().toISOString(),
-      status: 'pending_review'
-    };
+    if (!pricingForm.price_per_kwh && !pricingForm.price_per_kw) {
+      setError('Please provide either price per kWh or price per kW');
+      return;
+    }
+
+    if (!pricingForm.lead_time_weeks || !pricingForm.warranty_years) {
+      setError('Please provide lead time and warranty information');
+      return;
+    }
     
-    const existingPricing = JSON.parse(localStorage.getItem('vendor_pricing') || '[]');
-    existingPricing.push(pricingData);
-    localStorage.setItem('vendor_pricing', JSON.stringify(existingPricing));
+    setIsLoading(true);
     
-    alert('Pricing submitted successfully! Our team will review and update our pricing database within 48 hours.');
-    setPricingForm({
-      product_category: 'battery',
-      manufacturer: '',
-      model: '',
-      capacity_kwh: '',
-      power_kw: '',
-      price_per_kwh: '',
-      price_per_kw: '',
-      lead_time_weeks: '',
-      warranty_years: '',
-      certifications: '',
-      datasheet: null
-    });
+    try {
+      const productData: ProductSubmissionData = {
+        product_category: pricingForm.product_category,
+        manufacturer: pricingForm.manufacturer,
+        model: pricingForm.model,
+        capacity_kwh: pricingForm.capacity_kwh ? parseFloat(pricingForm.capacity_kwh) : undefined,
+        power_kw: pricingForm.power_kw ? parseFloat(pricingForm.power_kw) : undefined,
+        price_per_kwh: pricingForm.price_per_kwh ? parseFloat(pricingForm.price_per_kwh) : undefined,
+        price_per_kw: pricingForm.price_per_kw ? parseFloat(pricingForm.price_per_kw) : undefined,
+        lead_time_weeks: parseInt(pricingForm.lead_time_weeks),
+        warranty_years: parseInt(pricingForm.warranty_years),
+        certifications: pricingForm.certifications ? pricingForm.certifications.split(',').map(c => c.trim()) : undefined
+      };
+      
+      await submitProduct(productData);
+      
+      alert('Pricing submitted successfully! Our team will review and update our pricing database within 48 hours.');
+      setPricingForm({
+        product_category: 'battery',
+        manufacturer: '',
+        model: '',
+        capacity_kwh: '',
+        power_kw: '',
+        price_per_kwh: '',
+        price_per_kw: '',
+        lead_time_weeks: '',
+        warranty_years: '',
+        certifications: '',
+        datasheet: null
+      });
+      
+      // Reload products
+      const products = await getVendorProducts();
+      setVendorProducts(products);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit pricing');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Show loading spinner while checking session
+  if (isLoading && !isLoggedIn && !showRegistration) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading vendor portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Login/Registration Screen
   if (!isLoggedIn) {
@@ -201,6 +291,15 @@ const VendorPortal: React.FC = () => {
             {/* Login Section */}
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Login</h2>
+              
+              {/* Error Display */}
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-red-700 text-sm">{error}</div>
+                </div>
+              )}
+              
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -209,10 +308,11 @@ const VendorPortal: React.FC = () => {
                   <input
                     type="email"
                     value={loginForm.email}
-                    onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                    onChange={(e) => { setLoginForm({...loginForm, email: e.target.value}); setError(null); }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="vendor@company.com"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -223,18 +323,27 @@ const VendorPortal: React.FC = () => {
                   <input
                     type="password"
                     value={loginForm.password}
-                    onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                    onChange={(e) => { setLoginForm({...loginForm, password: e.target.value}); setError(null); }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Sign In
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
                 </button>
                 
                 <p className="text-center text-sm text-gray-600 mt-4">
@@ -296,6 +405,14 @@ const VendorPortal: React.FC = () => {
               <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Registration</h2>
                 
+                {/* Error Display */}
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-red-700 text-sm">{error}</div>
+                  </div>
+                )}
+                
                 <form onSubmit={handleRegistration} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -303,9 +420,10 @@ const VendorPortal: React.FC = () => {
                       <input
                         type="text"
                         value={registrationForm.company}
-                        onChange={(e) => setRegistrationForm({...registrationForm, company: e.target.value})}
+                        onChange={(e) => { setRegistrationForm({...registrationForm, company: e.target.value}); setError(null); }}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                         required
+                        disabled={isLoading}
                       />
                     </div>
                     
@@ -360,7 +478,7 @@ const VendorPortal: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Specialty/Product Category *</label>
                     <select
                       value={registrationForm.specialty}
-                      onChange={(e) => setRegistrationForm({...registrationForm, specialty: e.target.value})}
+                      onChange={(e) => setRegistrationForm({...registrationForm, specialty: e.target.value as typeof registrationForm.specialty})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                       required
                     >
@@ -399,16 +517,25 @@ const VendorPortal: React.FC = () => {
                   <div className="flex gap-4 pt-4">
                     <button
                       type="button"
-                      onClick={() => setShowRegistration(false)}
-                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                      onClick={() => { setShowRegistration(false); setError(null); }}
+                      disabled={isLoading}
+                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                      disabled={isLoading}
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Submit Registration
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Registering...
+                        </>
+                      ) : (
+                        'Submit Registration'
+                      )}
                     </button>
                   </div>
                 </form>
@@ -432,9 +559,12 @@ const VendorPortal: React.FC = () => {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Merlin Vendor Portal
             </h1>
+            {currentVendor && (
+              <span className="text-sm text-gray-500 ml-2">({currentVendor.company_name})</span>
+            )}
           </div>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className="text-gray-600 hover:text-gray-800 font-semibold"
           >
             Sign Out
@@ -475,16 +605,18 @@ const VendorPortal: React.FC = () => {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-800">Welcome Back!</h2>
+            <h2 className="text-3xl font-bold text-gray-800">
+              Welcome Back{currentVendor ? `, ${currentVendor.contact_name}` : ''}!
+            </h2>
             
             {/* Stats */}
             <div className="grid md:grid-cols-4 gap-6">
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600">Active Submissions</p>
+                  <p className="text-gray-600">Pending Products</p>
                   <Clock className="w-5 h-5 text-yellow-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">1</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.pendingProducts || 0}</p>
               </div>
               
               <div className="bg-white rounded-xl shadow-lg p-6">
@@ -492,7 +624,7 @@ const VendorPortal: React.FC = () => {
                   <p className="text-gray-600">Approved Products</p>
                   <CheckCircle className="w-5 h-5 text-green-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">1</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.approvedProducts || 0}</p>
               </div>
               
               <div className="bg-white rounded-xl shadow-lg p-6">
@@ -500,7 +632,7 @@ const VendorPortal: React.FC = () => {
                   <p className="text-gray-600">Open RFQs</p>
                   <FileText className="w-5 h-5 text-blue-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">{mockRFQs.length}</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.openRFQs || openRFQs.length}</p>
               </div>
               
               <div className="bg-white rounded-xl shadow-lg p-6">
@@ -508,35 +640,49 @@ const VendorPortal: React.FC = () => {
                   <p className="text-gray-600">Quotes This Month</p>
                   <TrendingUp className="w-5 h-5 text-purple-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-800">247</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.quotesThisMonth || 0}</p>
               </div>
             </div>
 
             {/* Recent Submissions */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Pricing Submissions</h3>
-              <div className="space-y-3">
-                {mockSubmissions.map(submission => (
-                  <div key={submission.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold text-gray-800">{submission.product_category} - {submission.model}</p>
-                      <p className="text-sm text-gray-600">
-                        ${submission.price_per_kwh || submission.price_per_kw}/
-                        {submission.price_per_kwh ? 'kWh' : 'kW'} • 
-                        {submission.lead_time_weeks} weeks • 
-                        {submission.warranty_years}yr warranty
-                      </p>
+              {vendorProducts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No products submitted yet.</p>
+                  <button
+                    onClick={() => setActiveTab('submit-pricing')}
+                    className="mt-3 text-purple-600 hover:text-purple-700 font-semibold"
+                  >
+                    Submit your first product →
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {vendorProducts.slice(0, 5).map(product => (
+                    <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-gray-800">{product.product_category} - {product.model}</p>
+                        <p className="text-sm text-gray-600">
+                          {product.price_per_kwh ? `$${product.price_per_kwh}/kWh` : ''}
+                          {product.price_per_kwh && product.price_per_kw ? ' • ' : ''}
+                          {product.price_per_kw ? `$${product.price_per_kw}/kW` : ''} • 
+                          {product.lead_time_weeks} weeks • 
+                          {product.warranty_years}yr warranty
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        product.status === 'approved' ? 'bg-green-100 text-green-700' :
+                        product.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {product.status.toUpperCase()}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      submission.status === 'approved' ? 'bg-green-100 text-green-700' :
-                      submission.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {submission.status.toUpperCase()}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -546,14 +692,23 @@ const VendorPortal: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Submit Product Pricing</h2>
             
+            {/* Error Display */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="text-red-700 text-sm">{error}</div>
+              </div>
+            )}
+            
             <form onSubmit={handlePricingSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Category *</label>
                 <select
                   value={pricingForm.product_category}
-                  onChange={(e) => setPricingForm({...pricingForm, product_category: e.target.value})}
+                  onChange={(e) => { setPricingForm({...pricingForm, product_category: e.target.value as any}); setError(null); }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   required
+                  disabled={isLoading}
                 >
                   <option value="battery">Battery Module</option>
                   <option value="inverter">Inverter/PCS</option>
@@ -569,10 +724,11 @@ const VendorPortal: React.FC = () => {
                   <input
                     type="text"
                     value={pricingForm.manufacturer}
-                    onChange={(e) => setPricingForm({...pricingForm, manufacturer: e.target.value})}
+                    onChange={(e) => { setPricingForm({...pricingForm, manufacturer: e.target.value}); setError(null); }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., CATL, BYD, Tesla"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -581,10 +737,11 @@ const VendorPortal: React.FC = () => {
                   <input
                     type="text"
                     value={pricingForm.model}
-                    onChange={(e) => setPricingForm({...pricingForm, model: e.target.value})}
+                    onChange={(e) => { setPricingForm({...pricingForm, model: e.target.value}); setError(null); }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="e.g., LFP 280Ah"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -598,6 +755,7 @@ const VendorPortal: React.FC = () => {
                     value={pricingForm.capacity_kwh}
                     onChange={(e) => setPricingForm({...pricingForm, capacity_kwh: e.target.value})}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -672,6 +830,7 @@ const VendorPortal: React.FC = () => {
                   onChange={(e) => setPricingForm({...pricingForm, certifications: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   placeholder="e.g., UL9540, IEC 62619, UN38.3"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -682,15 +841,26 @@ const VendorPortal: React.FC = () => {
                   accept=".pdf"
                   onChange={(e) => setPricingForm({...pricingForm, datasheet: e.target.files?.[0] || null})}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  disabled={isLoading}
                 />
               </div>
               
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Upload className="w-5 h-5" />
-                Submit Pricing
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5" />
+                    Submit Pricing
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -701,52 +871,75 @@ const VendorPortal: React.FC = () => {
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-gray-800">Active RFQs</h2>
             
-            <div className="grid gap-6">
-              {mockRFQs.map(rfq => (
-                <div key={rfq.id} className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <p className="text-sm text-purple-600 font-semibold">{rfq.id}</p>
-                      <h3 className="text-xl font-bold text-gray-800 mt-1">{rfq.project}</h3>
+            {openRFQs.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Open RFQs</h3>
+                <p className="text-gray-600">
+                  There are no active requests for quotes at the moment. Check back later!
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {openRFQs.map(rfq => (
+                  <div key={rfq.id} className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <p className="text-sm text-purple-600 font-semibold">{rfq.rfq_number}</p>
+                        <h3 className="text-xl font-bold text-gray-800 mt-1">{rfq.project_name}</h3>
+                      </div>
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                        {rfq.status.toUpperCase()}
+                      </span>
                     </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                      {rfq.status.toUpperCase()}
-                    </span>
+                    
+                    <div className="grid md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm text-gray-600">System Size</p>
+                        <p className="font-semibold text-gray-800">
+                          {rfq.system_size_mw} MW / {rfq.system_size_mw * rfq.duration_hours} MWh
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Location</p>
+                        <p className="font-semibold text-gray-800">{rfq.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Due Date</p>
+                        <p className="font-semibold text-gray-800">{new Date(rfq.due_date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <button className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                        Submit Proposal
+                      </button>
+                      <button className="px-6 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                        View Details
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-600">System Size</p>
-                      <p className="font-semibold text-gray-800">{rfq.capacity}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Location</p>
-                      <p className="font-semibold text-gray-800">{rfq.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Due Date</p>
-                      <p className="font-semibold text-gray-800">{new Date(rfq.due_date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-4">
-                    <button className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                      Submit Proposal
-                    </button>
-                    <button className="px-6 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* Profile Tab */}
-        {activeTab === 'profile' && (
+        {activeTab === 'profile' && currentVendor && (
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Vendor Profile</h2>
+            
+            {/* Status Badge */}
+            <div className="mb-6">
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                currentVendor.status === 'approved' ? 'bg-green-100 text-green-700' :
+                currentVendor.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-red-100 text-red-700'
+              }`}>
+                Account Status: {currentVendor.status.toUpperCase()}
+              </span>
+            </div>
             
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
@@ -754,8 +947,9 @@ const VendorPortal: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
                   <input
                     type="text"
-                    defaultValue="ACME Battery Solutions"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    value={currentVendor.company_name}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
                   />
                 </div>
                 
@@ -763,8 +957,9 @@ const VendorPortal: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Contact Name</label>
                   <input
                     type="text"
-                    defaultValue="John Smith"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    value={currentVendor.contact_name}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
                   />
                 </div>
               </div>
@@ -774,8 +969,9 @@ const VendorPortal: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
-                    defaultValue="john@acmebattery.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    value={currentVendor.email}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
                   />
                 </div>
                 
@@ -783,25 +979,61 @@ const VendorPortal: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                   <input
                     type="tel"
-                    defaultValue="(555) 123-4567"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    value={currentVendor.phone || 'Not provided'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
                   />
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Specialty</label>
-                <input
-                  type="text"
-                  defaultValue="Battery Manufacturer"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  disabled
-                />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Specialty</label>
+                  <input
+                    type="text"
+                    value={currentVendor.specialty.replace('_', ' ').toUpperCase()}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                  <input
+                    type="text"
+                    value={currentVendor.website || 'Not provided'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
+                  />
+                </div>
               </div>
               
-              <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
-                Save Changes
-              </button>
+              {currentVendor.description && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Description</label>
+                  <textarea
+                    value={currentVendor.description}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                    rows={4}
+                    readOnly
+                  />
+                </div>
+              )}
+              
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500">
+                  Member since: {new Date(currentVendor.created_at).toLocaleDateString()}
+                </p>
+                {currentVendor.last_login && (
+                  <p className="text-sm text-gray-500">
+                    Last login: {new Date(currentVendor.last_login).toLocaleString()}
+                  </p>
+                )}
+              </div>
+              
+              <p className="text-sm text-gray-500 italic">
+                To update your profile information, please contact support at vendors@merlin.energy
+              </p>
             </div>
           </div>
         )}

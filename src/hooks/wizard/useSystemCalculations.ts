@@ -47,12 +47,20 @@ export const useSystemCalculations = ({
   };
 
   /**
-   * @deprecated Use calculateScaleFactor from baselineService or calculateUseCasePower directly
-   * This function is kept for backward compatibility.
+   * @deprecated Use calculateUseCasePower() directly - it handles scale internally
+   * This function is kept ONLY for database baseline calls which still need scale.
+   * 
+   * ⚠️ WARNING: These scale factors may differ from SSOT calculations.
+   * The SSOT (useCasePowerCalculations.ts) handles scaling internally with
+   * more accurate industry-specific parameters.
    */
   const calculateScaleFactor = (template: string, data: { [key: string]: any }): number => {
+    // Log deprecation in dev mode
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ calculateScaleFactor is deprecated - SSOT handles scaling internally');
+    }
     // For most use cases, we now use calculateUseCasePower directly
-    // This function is only used as a fallback
+    // This function is only used as a fallback for baselineService
     switch (template) {
       case 'hotel':
         return (parseInt(data.numRooms) || 100) / 100;

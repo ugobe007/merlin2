@@ -1658,6 +1658,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                         const lifetimeSavings = (minSavings + healthOptimizedRevenue) * lifetimeYears;
                         const netProjectCost = calculations.totalProjectCost * (1 - (0.2 + incentivesLevel * 0.1));
                         const netValue = lifetimeSavings - netProjectCost;
+                        // SSOT: ROI formula = (lifetime savings / net cost) × 100
                         const roi = (lifetimeSavings / netProjectCost) * 100;
                         const payback = netProjectCost / (minSavings + healthOptimizedRevenue);
                         
@@ -1765,6 +1766,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <div className="flex justify-between">
                         <span>CO₂ Avoided Annually:</span>
                         <span className="font-bold text-emerald-800">
+                          {/* SSOT: Environmental impact = (energy throughput + solar generation) × carbon factor */}
                           {((storageSizeMW * durationHours * 365 + solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * 0.4) * revenueConstants.CARBON_OFFSET_FACTOR).toFixed(1)} tons
                         </span>
                       </div>
@@ -1783,6 +1785,7 @@ const InteractiveConfigDashboard: React.FC<InteractiveConfigDashboardProps> = ({
                       <div className="mt-3 pt-2 border-t border-emerald-200">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-emerald-600">
+                            {/* SSOT: Cars equivalent = CO2 avoided / 15 tons per car per year */}
                             {((storageSizeMW * durationHours * 365 + solarMW * 1000 * revenueConstants.HOURS_PER_YEAR * 0.4) * revenueConstants.CARBON_OFFSET_FACTOR / 15).toFixed(1)}
                           </div>
                           <div className="text-xs text-emerald-600">Cars off road equivalent</div>

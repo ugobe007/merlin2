@@ -1,5 +1,6 @@
 import React from 'react';
 import { Battery, Zap, Target, Users, LineChart, Shield, Sparkles, Award, TrendingUp } from 'lucide-react';
+import { TrustBadgesGrid, MethodologyStatement } from './shared/IndustryComplianceBadges';
 
 interface AboutMerlinProps {
   onStartWizard?: () => void;
@@ -222,17 +223,17 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-3">Transparent Pricing</h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Every quote is based on current market prices, updated regularly from manufacturers and 
-                suppliers. No hidden costs, no surprises—just clear, honest pricing you can trust.
+                Every quote is based on current market prices from NREL and DOE benchmarks. 
+                No hidden costs, no surprises—just clear, honest pricing you can trust and verify.
               </p>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">✓</span>
-                  <span>Latest equipment price sheets</span>
+                  <span>NREL ATB 2024 equipment pricing</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">✓</span>
-                  <span>Installation cost breakdowns</span>
+                  <span>DOE StoreFAST financial methodology</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">✓</span>
@@ -245,6 +246,15 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
               </ul>
             </div>
           </div>
+        </div>
+
+        {/* Industry Compliance Section - NEW */}
+        <div className="mb-16">
+          <TrustBadgesGrid 
+            title="Benchmark-Backed Methodology"
+            subtitle="Every calculation in Merlin is traceable to authoritative sources. No black boxes, no guesswork—just transparent, verifiable numbers."
+            columns={4}
+          />
         </div>
 
         {/* Path to Zero Carbon */}

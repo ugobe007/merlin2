@@ -134,7 +134,7 @@ export function useWizardFormState() {
 
   // Generator configuration
   const [generatorConfig, setGeneratorConfig] = useState<GeneratorConfig>({
-    fuelType: 'diesel',
+    fuelType: 'natural-gas',
     runtimeHours: 8760,
     loadFactor: 0.75,
     manualMW: 0
@@ -232,7 +232,7 @@ export function useWizardFormState() {
       manualMW: 0
     });
     setGeneratorConfig({
-      fuelType: 'diesel',
+      fuelType: 'natural-gas',
       runtimeHours: 8760,
       loadFactor: 0.75,
       manualMW: 0

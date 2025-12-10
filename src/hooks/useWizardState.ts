@@ -1,13 +1,18 @@
 /**
  * USE WIZARD STATE HOOK - CENTRALIZED STATE MANAGEMENT
  * 
- * ⚠️ CRITICAL: This hook is the SINGLE SOURCE OF TRUTH for wizard state management.
+ * ⚠️ CRITICAL: This hook manages wizard state and delegates calculations to SSOT.
+ * 
+ * ARCHITECTURE (Option A - Dec 8, 2025):
+ * - This hook manages STATE only
+ * - Building load calculations DELEGATE to useCasePowerCalculations.ts (SSOT)
+ * - EV charger calculations stay here (they're additive, not duplicated)
+ * - No duplicate formulas - single source of truth
  * 
  * Features:
  * - Centralized state with typed updates
- * - Auto-calculation of derived values (loads, recommendations)
- * - Industry-specific load factors
- * - EV charger load calculations
+ * - Auto-calculation via SSOT delegation
+ * - EV charger load calculations (additive)
  * - Recommended backup hours based on grid reliability and industry
  * 
  * Usage:
@@ -17,59 +22,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { WizardState } from '@/types/wizardState';
 import { INITIAL_WIZARD_STATE } from '@/types/wizardState';
-
-// ============================================
-// INDUSTRY LOAD FACTORS (kW per unit)
-// Source: CBECS, Energy Star, industry standards
-// ============================================
-const INDUSTRY_LOAD_FACTORS: Record<string, { perUnit: number; unit: string }> = {
-  // Commercial Office
-  'office': { perUnit: 0.003, unit: 'squareFeet' },           // 3 W/sq ft
-  'office-building': { perUnit: 0.003, unit: 'squareFeet' },
-  
-  // Hospitality
-  'hotel': { perUnit: 3.5, unit: 'roomCount' },               // 3.5 kW/room
-  'hotel-hospitality': { perUnit: 3.5, unit: 'roomCount' },
-  
-  // Data Centers
-  'data-center': { perUnit: 10, unit: 'rackCount' },          // 10 kW/rack average
-  'datacenter': { perUnit: 10, unit: 'rackCount' },
-  'edge-data-center': { perUnit: 8, unit: 'rackCount' },
-  
-  // Healthcare
-  'hospital': { perUnit: 0.015, unit: 'squareFeet' },         // 15 W/sq ft
-  
-  // Industrial
-  'manufacturing': { perUnit: 0.008, unit: 'squareFeet' },    // 8 W/sq ft
-  'warehouse': { perUnit: 0.002, unit: 'squareFeet' },        // 2 W/sq ft
-  'distribution-center': { perUnit: 0.003, unit: 'squareFeet' },
-  
-  // Retail
-  'retail': { perUnit: 0.004, unit: 'squareFeet' },           // 4 W/sq ft
-  'shopping-center': { perUnit: 0.005, unit: 'squareFeet' },
-  
-  // Residential
-  'apartment': { perUnit: 2, unit: 'roomCount' },             // 2 kW/unit
-  'apartment-building': { perUnit: 2, unit: 'roomCount' },
-  'residential': { perUnit: 0.002, unit: 'squareFeet' },
-  
-  // Food & Beverage
-  'restaurant': { perUnit: 0.02, unit: 'squareFeet' },        // 20 W/sq ft (high due to kitchen)
-  
-  // Education
-  'school': { perUnit: 0.005, unit: 'squareFeet' },           // 5 W/sq ft
-  'university': { perUnit: 0.006, unit: 'squareFeet' },
-  
-  // Automotive
-  'car-wash': { perUnit: 30, unit: 'bays' },                  // 30 kW/bay average
-  'gas-station': { perUnit: 0.008, unit: 'squareFeet' },
-  
-  // EV Charging
-  'ev-charging': { perUnit: 50, unit: 'squareFeet' },         // Placeholder - calculated separately
-  
-  // Default fallback
-  'default': { perUnit: 0.004, unit: 'squareFeet' },          // 4 W/sq ft
-};
+import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
 
 // ============================================
 // CUSTOM HOOK
@@ -162,19 +115,90 @@ export function useWizardState() {
   // ────────────────────────────────────────────
 
   /**
-   * Calculate building base load based on industry and facility size
+   * Calculate building base load by DELEGATING to SSOT (useCasePowerCalculations.ts)
+   * This ensures Power Profile shows the same values as the final quote.
    */
   const calculateBuildingLoad = useCallback((state: WizardState): number => {
     const industryType = state.industry.type.toLowerCase();
-    const factors = INDUSTRY_LOAD_FACTORS[industryType] || INDUSTRY_LOAD_FACTORS['default'];
     
-    const unitValue = state.facility[factors.unit as keyof typeof state.facility] as number || 0;
-    const baseLoad = unitValue * factors.perUnit;
+    // DEBUG: Log input state
+    console.log('🔧 [calculateBuildingLoad] INPUT:', {
+      industryType,
+      facilitySquareFeet: state.facility.squareFeet,
+      facilityRoomCount: state.facility.roomCount,
+      useCaseData: state.useCaseData,
+    });
     
-    // Apply diversity factor (not all loads peak simultaneously)
-    const diversityFactor = 0.75;
+    // Skip calculation if no industry selected
+    if (!industryType || industryType === '') {
+      console.log('🔧 [calculateBuildingLoad] No industry - returning 0');
+      return 0;
+    }
     
-    return Math.round(baseLoad * diversityFactor * 10) / 10; // Round to 1 decimal
+    // ═══════════════════════════════════════════════════════════════════════
+    // CRITICAL FIX: Merge useCaseData (template-specific fields) with facility data
+    // This ensures industry-specific fields like annualPassengers, gamingSpaceSqFt
+    // are passed to SSOT calculations, not just generic facility.squareFeet
+    // ═══════════════════════════════════════════════════════════════════════
+    const useCaseData: Record<string, any> = {
+      // First, spread ALL custom question data (annualPassengers, gamingSpaceSqFt, etc.)
+      ...state.useCaseData,
+      
+      // Then add facility variants (some templates use facility.*, some use useCaseData.*)
+      // Square footage variants
+      squareFeet: state.useCaseData.squareFeet || state.facility.squareFeet || 0,
+      facilitySqFt: state.useCaseData.facilitySqFt || state.facility.squareFeet || 0,
+      buildingSqFt: state.useCaseData.buildingSqFt || state.facility.squareFeet || 0,
+      
+      // Room count variants (hotels, apartments)
+      roomCount: state.useCaseData.roomCount || state.facility.roomCount || 0,
+      numberOfRooms: state.useCaseData.numberOfRooms || state.facility.roomCount || 0,
+      rooms: state.useCaseData.rooms || state.facility.roomCount || 0,
+      
+      // Bed count (hospitals)
+      bedCount: state.useCaseData.bedCount || state.facility.bedCount || state.facility.roomCount || 0,
+      beds: state.useCaseData.beds || state.facility.bedCount || state.facility.roomCount || 0,
+      
+      // Rack count (data centers)
+      rackCount: state.useCaseData.rackCount || state.facility.rackCount || 0,
+      racks: state.useCaseData.racks || state.facility.rackCount || 0,
+      
+      // Bay count (car wash)
+      washBays: state.useCaseData.washBays || state.facility.bayCount || 0,
+      bayCount: state.useCaseData.bayCount || state.facility.bayCount || 0,
+      
+      // Unit count (apartments)
+      unitCount: state.useCaseData.unitCount || state.facility.unitCount || 0,
+      numUnits: state.useCaseData.numUnits || state.facility.unitCount || 0,
+      
+      // Generic fallback
+      facilitySize: state.useCaseData.facilitySize || state.facility.squareFeet || state.facility.roomCount || 0,
+    };
+    
+    console.log('🔧 [calculateBuildingLoad] useCaseData being sent to SSOT:', useCaseData);
+    
+    try {
+      // DELEGATE to SSOT - this is the single source of truth
+      const powerResult = calculateUseCasePower(industryType, useCaseData);
+      
+      // Convert MW to kW
+      const baseLoadKW = powerResult.powerMW * 1000;
+      
+      console.log('🔧 [calculateBuildingLoad] SSOT result:', {
+        industryType,
+        squareFeet: useCaseData.squareFeet,
+        powerMW: powerResult.powerMW,
+        baseLoadKW,
+        description: powerResult.description
+      });
+      
+      return Math.round(baseLoadKW * 10) / 10; // Round to 1 decimal
+    } catch (error) {
+      console.warn('[useWizardState] SSOT calculation failed, using fallback:', error);
+      // Fallback: 4 W/sq ft default if SSOT fails
+      const fallbackLoad = (state.facility.squareFeet || 0) * 0.004 * 0.75;
+      return Math.round(fallbackLoad * 10) / 10;
+    }
   }, []);
 
   /**
@@ -225,10 +249,16 @@ export function useWizardState() {
         hours = 4;
     }
     
-    // Critical facilities need more backup
-    const criticalIndustries = ['hospital', 'data-center', 'datacenter', 'edge-data-center'];
-    if (criticalIndustries.includes(state.industry.type.toLowerCase())) {
-      hours = Math.max(hours, 8);
+    // Critical facilities: hospitals need extended backup, data centers have UPS (less BESS)
+    const hospitalIndustries = ['hospital'];
+    if (hospitalIndustries.includes(state.industry.type.toLowerCase())) {
+      hours = Math.max(hours, 8); // Hospitals need extended backup for patient safety
+    }
+    
+    // Data centers have UPS systems, BESS is supplemental (4 hours standard)
+    const datacenterIndustries = ['data-center', 'datacenter', 'edge-data-center'];
+    if (datacenterIndustries.includes(state.industry.type.toLowerCase())) {
+      hours = Math.max(hours, 4); // UPS + 4hr BESS is industry standard
     }
     
     // Hotels/hospitality need reasonable backup
@@ -250,12 +280,50 @@ export function useWizardState() {
     const totalPeakDemandKW = baseBuildingLoadKW + existingEVLoadKW + newEVLoadKW;
     
     const recommendedBackupHours = getRecommendedBackupHours(state);
-    const recommendedBatteryKWh = Math.round(totalPeakDemandKW * recommendedBackupHours);
-    const recommendedBatteryKW = Math.round(totalPeakDemandKW * 1.1); // 10% headroom
     
-    // Solar recommendation: enough to charge battery in available sun hours
+    // Base battery sizing: peak demand × backup hours
+    // Battery power matches peak demand exactly - user stated their actual peak
+    // Previous formula added 10% headroom which created confusing "gap" between user input and recommendation
+    let recommendedBatteryKWh = Math.round(totalPeakDemandKW * recommendedBackupHours);
+    let recommendedBatteryKW = Math.round(totalPeakDemandKW);
+    
+    // ⚠️ SOLAR STORAGE: If user adds solar, increase battery to capture solar energy
+    // Rule: Battery should be able to store 4-6 hours of solar generation for evening use
     const solarHours = state.location.solarHours || 5;
-    const recommendedSolarKW = Math.round((totalPeakDemandKW * 0.8 * 8) / solarHours);
+    if (state.goals.addSolar && state.goals.solarKW > 0) {
+      const solarDailyKWh = state.goals.solarKW * solarHours;
+      const solarStorageKWh = Math.round(solarDailyKWh * 0.6); // Store 60% of daily solar
+      
+      // Take the larger of: peak demand backup OR solar storage
+      recommendedBatteryKWh = Math.max(recommendedBatteryKWh, solarStorageKWh);
+      
+      // Battery power should handle solar input rate
+      const solarInputKW = Math.round(state.goals.solarKW * 0.8); // 80% of solar capacity
+      recommendedBatteryKW = Math.max(recommendedBatteryKW, solarInputKW);
+      
+      console.log('🔋 [recalculate] Solar storage adjustment:', {
+        solarKW: state.goals.solarKW,
+        solarDailyKWh,
+        solarStorageKWh,
+        finalBatteryKWh: recommendedBatteryKWh,
+        finalBatteryKW: recommendedBatteryKW,
+      });
+    }
+    
+    // Solar recommendation: match peak demand (1:1 ratio)
+    // Users can scale down if they only want partial offset
+    // Previous formula was: (totalPeakDemandKW * 0.8 * 8) / solarHours = 1.28x overbuild (wrong!)
+    const recommendedSolarKW = Math.round(totalPeakDemandKW);
+    
+    console.log('🔋 [recalculate] Final values:', {
+      baseBuildingLoadKW,
+      existingEVLoadKW,
+      newEVLoadKW,
+      totalPeakDemandKW,
+      recommendedBackupHours,
+      recommendedBatteryKWh,
+      recommendedBatteryKW,
+    });
     
     return {
       baseBuildingLoadKW: Math.round(baseBuildingLoadKW * 10) / 10,
@@ -275,6 +343,15 @@ export function useWizardState() {
   useEffect(() => {
     const newCalculated = recalculate(wizardState);
     
+    // Debug logging
+    console.log('[useWizardState] Recalculating:', {
+      industryType: wizardState.industry.type,
+      facilitySquareFeet: wizardState.facility.squareFeet,
+      useCaseData: wizardState.useCaseData,
+      evChargers: wizardState.existingInfrastructure.evChargers,
+      newCalculated
+    });
+    
     // Only update if values actually changed (prevent infinite loop)
     const hasChanged = Object.keys(newCalculated).some(
       key => newCalculated[key as keyof typeof newCalculated] !== 
@@ -291,6 +368,7 @@ export function useWizardState() {
     wizardState.location,
     wizardState.industry,
     wizardState.facility,
+    wizardState.useCaseData,  // CRITICAL: Triggers recalc when template data changes
     wizardState.existingInfrastructure,
     wizardState.goals,
     recalculate,
@@ -308,11 +386,25 @@ export function useWizardState() {
   }, []);
 
   /**
-   * Get industry-specific load factor info
+   * Get industry-specific info (for UI display purposes)
+   * Note: Actual calculations are done by SSOT, this is just for UI hints
    */
   const getLoadFactorInfo = useCallback((industryType: string) => {
     const type = industryType.toLowerCase();
-    return INDUSTRY_LOAD_FACTORS[type] || INDUSTRY_LOAD_FACTORS['default'];
+    
+    // Simple mapping for UI display - actual calculation uses SSOT
+    const uiHints: Record<string, { perUnit: number; unit: string }> = {
+      'office': { perUnit: 0.003, unit: 'squareFeet' },
+      'hotel': { perUnit: 3.5, unit: 'roomCount' },
+      'hospital': { perUnit: 0.015, unit: 'squareFeet' },
+      'datacenter': { perUnit: 10, unit: 'rackCount' },
+      'manufacturing': { perUnit: 0.008, unit: 'squareFeet' },
+      'retail': { perUnit: 0.004, unit: 'squareFeet' },
+      'car-wash': { perUnit: 30, unit: 'bays' },
+      'default': { perUnit: 0.004, unit: 'squareFeet' },
+    };
+    
+    return uiHints[type] || uiHints['default'];
   }, []);
 
   // ────────────────────────────────────────────

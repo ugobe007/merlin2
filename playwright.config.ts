@@ -122,15 +122,15 @@ export default defineConfig({
     },
   ],
 
-  // Commented out - run dev server manually before tests
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:5178',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120 * 1000,
-  //   stdout: 'ignore',
-  //   stderr: 'pipe',
-  // },
+  // Run dev server automatically before tests
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5177',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+    stdout: 'ignore',
+    stderr: 'pipe',
+  },
 
   // Global setup and teardown
   globalSetup: './tests/utils/global-setup.ts',

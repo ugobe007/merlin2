@@ -476,6 +476,13 @@ interface QuoteData {
   installationOption: string;
   shippingOption: string;
   financingOption: string;
+  // New detailed cost breakdown (Dec 2025)
+  equipmentCost?: number;
+  installationCost?: number;
+  commissioningCost?: number;
+  certificationCost?: number;
+  totalCapex?: number;
+  annualOpex?: number;
 }
 
 const getIndustryName = (template: string | string[]): string => {
@@ -522,7 +529,17 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
     installationOption: quoteData?.installationOption || 'epc',
     shippingOption: quoteData?.shippingOption || 'standard',
     financingOption: quoteData?.financingOption || 'cash',
+    // New detailed costs with fallbacks to percentage estimates
+    equipmentCost: quoteData?.equipmentCost || equipmentBreakdown?.totals?.equipmentCost || (quoteData?.totalProjectCost * 0.55),
+    installationCost: quoteData?.installationCost || equipmentBreakdown?.totals?.installationCost || (quoteData?.totalProjectCost * 0.25),
+    commissioningCost: quoteData?.commissioningCost || equipmentBreakdown?.commissioning?.totalCommissioning || (quoteData?.totalProjectCost * 0.08),
+    certificationCost: quoteData?.certificationCost || equipmentBreakdown?.certification?.totalCertification || (quoteData?.totalProjectCost * 0.07),
+    totalCapex: quoteData?.totalCapex || equipmentBreakdown?.totals?.totalCapex || quoteData?.totalProjectCost,
+    annualOpex: quoteData?.annualOpex || equipmentBreakdown?.annualCosts?.totalAnnualCost || (quoteData?.totalProjectCost * 0.02),
   };
+  
+  // Extract detailed breakdown if available
+  const hasDetailedBreakdown = equipmentBreakdown?.commissioning && equipmentBreakdown?.certification;
   
   const totalEnergyMWh = q.storageSizeMW * q.durationHours;
   const hasRenewables = q.solarMW > 0 || q.windMW > 0 || q.generatorMW > 0;
@@ -921,24 +938,24 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <div class="section-title">🎯 Financial Summary</div>
             <div class="cost-breakdown">
               <div class="cost-row">
-                <span>Equipment Cost (Battery + Inverter)</span>
-                <span><strong>$${((q.totalProjectCost * 0.60) / 1000000).toFixed(2)}M</strong></span>
+                <span>Equipment Cost (Battery, Inverter, Transformer, BOS)</span>
+                <span><strong>$${(q.equipmentCost / 1000000).toFixed(2)}M</strong></span>
               </div>
               <div class="cost-row">
-                <span>Installation & Engineering</span>
-                <span><strong>$${((q.totalProjectCost * 0.25) / 1000000).toFixed(2)}M</strong></span>
+                <span>Installation & Engineering (EPC)</span>
+                <span><strong>$${(q.installationCost / 1000000).toFixed(2)}M</strong></span>
               </div>
               <div class="cost-row">
-                <span>Shipping & Logistics</span>
-                <span><strong>$${((q.totalProjectCost * 0.10) / 1000000).toFixed(2)}M</strong></span>
+                <span>Commissioning & Safety Testing</span>
+                <span><strong>$${(q.commissioningCost / 1000000).toFixed(2)}M</strong></span>
               </div>
               <div class="cost-row">
-                <span>Permits, Commissioning & Misc.</span>
-                <span><strong>$${((q.totalProjectCost * 0.05) / 1000000).toFixed(2)}M</strong></span>
+                <span>Certification & Permitting</span>
+                <span><strong>$${(q.certificationCost / 1000000).toFixed(2)}M</strong></span>
               </div>
               <div class="cost-row" style="background: #f3f4f6; margin-top: 10px; padding: 15px;">
-                <span>Total Project Cost</span>
-                <span><strong>$${(q.totalProjectCost / 1000000).toFixed(2)}M</strong></span>
+                <span>Total Capital Expenditure (CAPEX)</span>
+                <span><strong>$${(q.totalCapex / 1000000).toFixed(2)}M</strong></span>
               </div>
               <div class="cost-row savings">
                 <span>Federal ITC Tax Credit (30%)</span>
@@ -947,6 +964,10 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               <div class="cost-row">
                 <span>Net Investment After Tax Credit</span>
                 <span><strong>$${(q.netCost / 1000000).toFixed(2)}M</strong></span>
+              </div>
+              <div class="cost-row" style="background: #fef3c7; margin-top: 10px; padding: 15px; border-left: 4px solid #f59e0b;">
+                <span>Annual Operating Costs (O&M, Insurance, Testing)</span>
+                <span><strong>$${(q.annualOpex / 1000).toFixed(0)}K/year</strong></span>
               </div>
             </div>
             
@@ -969,6 +990,45 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 <strong>Note:</strong> Actual savings will vary based on utility rates, usage patterns, and operational strategy. This estimate assumes typical ${industryName.toLowerCase()} load profiles and current utility rates in ${q.location || 'your area'}.
               </div>
             </div>
+            
+            ${hasDetailedBreakdown ? `
+            <!-- Commissioning & Certification Details -->
+            <div style="margin-top: 20px; padding: 20px; background: #ede9fe; border-radius: 12px; border-left: 4px solid #7c3aed;">
+              <div style="font-weight: bold; margin-bottom: 15px; color: #5b21b6; font-size: 18px;">🔧 Commissioning & Testing Costs</div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
+                <div><span style="color: #6b7280;">Factory Acceptance Test (FAT):</span> <strong>$${((equipmentBreakdown?.commissioning?.factoryAcceptanceTest || q.commissioningCost * 0.12) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Site Acceptance Test (SAT):</span> <strong>$${((equipmentBreakdown?.commissioning?.siteAcceptanceTest || q.commissioningCost * 0.27) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">SCADA/EMS Integration:</span> <strong>$${((equipmentBreakdown?.commissioning?.scadaIntegration || q.commissioningCost * 0.32) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Functional Safety (IEC 61508):</span> <strong>$${((equipmentBreakdown?.commissioning?.functionalSafetyTest || q.commissioningCost * 0.19) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Performance Testing:</span> <strong>$${((equipmentBreakdown?.commissioning?.performanceTest || q.commissioningCost * 0.10) / 1000).toFixed(0)}K</strong></div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 20px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #f59e0b;">
+              <div style="font-weight: bold; margin-bottom: 15px; color: #92400e; font-size: 18px;">📜 Certification & Permitting Costs</div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
+                <div><span style="color: #6b7280;">Interconnection Study:</span> <strong>$${((equipmentBreakdown?.certification?.interconnectionStudy || q.certificationCost * 0.35) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Utility Grid Upgrades:</span> <strong>$${((equipmentBreakdown?.certification?.utilityUpgrades || q.certificationCost * 0.35) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Environmental Permits:</span> <strong>$${((equipmentBreakdown?.certification?.environmentalPermits || q.certificationCost * 0.10) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Building Permits:</span> <strong>$${((equipmentBreakdown?.certification?.buildingPermits || q.certificationCost * 0.06) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Fire Code (NFPA 855):</span> <strong>$${((equipmentBreakdown?.certification?.fireCodeCompliance || q.certificationCost * 0.14) / 1000).toFixed(0)}K</strong></div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 20px; background: #ecfdf5; border-radius: 12px; border-left: 4px solid #10b981;">
+              <div style="font-weight: bold; margin-bottom: 15px; color: #065f46; font-size: 18px;">📅 Annual Operating Costs (OPEX)</div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
+                <div><span style="color: #6b7280;">Operations & Maintenance:</span> <strong>$${((equipmentBreakdown?.annualCosts?.operationsAndMaintenance || q.annualOpex * 0.37) / 1000).toFixed(0)}K/yr</strong></div>
+                <div><span style="color: #6b7280;">Extended Warranty:</span> <strong>$${((equipmentBreakdown?.annualCosts?.extendedWarranty || q.annualOpex * 0.12) / 1000).toFixed(0)}K/yr</strong></div>
+                <div><span style="color: #6b7280;">Annual Capacity Testing:</span> <strong>$${((equipmentBreakdown?.annualCosts?.capacityTesting || q.annualOpex * 0.13) / 1000).toFixed(0)}K/yr</strong></div>
+                <div><span style="color: #6b7280;">Insurance Premium:</span> <strong>$${((equipmentBreakdown?.annualCosts?.insurancePremium || q.annualOpex * 0.12) / 1000).toFixed(0)}K/yr</strong></div>
+                <div><span style="color: #6b7280;">Software Licenses (SCADA/EMS):</span> <strong>$${((equipmentBreakdown?.annualCosts?.softwareLicenses || q.annualOpex * 0.26) / 1000).toFixed(0)}K/yr</strong></div>
+              </div>
+              <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; font-size: 13px; color: #065f46;">
+                <strong>Year 1 Total:</strong> $${((equipmentBreakdown?.annualCosts?.year1Total || q.annualOpex * 1.25) / 1000).toFixed(0)}K (includes startup activities)
+              </div>
+            </div>
+            ` : ''}
           </div>
           
           <!-- Your Selections -->
@@ -1348,10 +1408,44 @@ Self-Installation,+0%,Highest (DIY or own crew),9-12 months
 COST BREAKDOWN BY CATEGORY
 ====================================
 Category,Amount,Percentage
-Equipment,$${((q.totalProjectCost * 0.60) / 1000000).toFixed(2)}M,60%
-Installation,$${((q.totalProjectCost * 0.25) / 1000000).toFixed(2)}M,25%
-Shipping,$${((q.totalProjectCost * 0.10) / 1000000).toFixed(2)}M,10%
-Permits & Other,$${((q.totalProjectCost * 0.05) / 1000000).toFixed(2)}M,5%
+Equipment,$${(eb.totals.equipmentCost / 1000000).toFixed(2)}M,${((eb.totals.equipmentCost / q.totalProjectCost) * 100).toFixed(0)}%
+Installation & EPC,$${(eb.totals.installationCost / 1000000).toFixed(2)}M,${((eb.totals.installationCost / q.totalProjectCost) * 100).toFixed(0)}%
+Commissioning & Testing,$${((equipmentBreakdown?.commissioning?.totalCommissioning || q.totalProjectCost * 0.08) / 1000000).toFixed(2)}M,${(((equipmentBreakdown?.commissioning?.totalCommissioning || q.totalProjectCost * 0.08) / q.totalProjectCost) * 100).toFixed(0)}%
+Certification & Permits,$${((equipmentBreakdown?.certification?.totalCertification || q.totalProjectCost * 0.07) / 1000000).toFixed(2)}M,${(((equipmentBreakdown?.certification?.totalCertification || q.totalProjectCost * 0.07) / q.totalProjectCost) * 100).toFixed(0)}%
+
+====================================
+COMMISSIONING & SAFETY TESTING COSTS
+====================================
+Item,Cost,Description
+Factory Acceptance Test (FAT),$${((equipmentBreakdown?.commissioning?.factoryAcceptanceTest || q.totalProjectCost * 0.012) / 1000).toFixed(0)}K,Testing at manufacturer before shipping
+Site Acceptance Test (SAT),$${((equipmentBreakdown?.commissioning?.siteAcceptanceTest || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,On-site verification and integration testing
+SCADA/EMS Integration,$${((equipmentBreakdown?.commissioning?.scadaIntegration || 30000) / 1000).toFixed(0)}K,Control system programming and integration
+Functional Safety Test (IEC 61508),$${((equipmentBreakdown?.commissioning?.functionalSafetyTest || 18000) / 1000).toFixed(0)}K,Protection relay and emergency shutdown testing
+Performance Testing,$${((equipmentBreakdown?.commissioning?.performanceTest || 12000) / 1000).toFixed(0)}K,Capacity verification and efficiency testing
+TOTAL COMMISSIONING,$${((equipmentBreakdown?.commissioning?.totalCommissioning || q.totalProjectCost * 0.08) / 1000).toFixed(0)}K,
+
+====================================
+CERTIFICATION & PERMITTING COSTS
+====================================
+Item,Cost,Description
+Interconnection Study,$${((equipmentBreakdown?.certification?.interconnectionStudy || 25000) / 1000).toFixed(0)}K,Utility grid impact study
+Utility Grid Upgrades,$${((equipmentBreakdown?.certification?.utilityUpgrades || q.totalProjectCost * 0.03) / 1000).toFixed(0)}K,Grid upgrades if required (estimate)
+Environmental Permits,$${((equipmentBreakdown?.certification?.environmentalPermits || 7000) / 1000).toFixed(0)}K,NEPA and state environmental compliance
+Building Permits,$${((equipmentBreakdown?.certification?.buildingPermits || 4000) / 1000).toFixed(0)}K,Local construction permits and inspections
+Fire Code Compliance (NFPA 855),$${((equipmentBreakdown?.certification?.fireCodeCompliance || 12000) / 1000).toFixed(0)}K,Fire suppression and thermal management verification
+TOTAL CERTIFICATION,$${((equipmentBreakdown?.certification?.totalCertification || q.totalProjectCost * 0.07) / 1000).toFixed(0)}K,
+
+====================================
+ANNUAL OPERATING COSTS (OPEX)
+====================================
+Item,Annual Cost,Description
+Operations & Maintenance,$${((equipmentBreakdown?.annualCosts?.operationsAndMaintenance || eb.batteries.totalCost * 0.015) / 1000).toFixed(0)}K/yr,Ongoing monitoring and preventive maintenance
+Extended Warranty,$${((equipmentBreakdown?.annualCosts?.extendedWarranty || eb.batteries.totalCost * 0.005) / 1000).toFixed(0)}K/yr,Capacity guarantee beyond standard warranty
+Annual Capacity Testing,$${((equipmentBreakdown?.annualCosts?.capacityTesting || 5000) / 1000).toFixed(0)}K/yr,Required for warranty and performance guarantees
+Insurance Premium,$${((equipmentBreakdown?.annualCosts?.insurancePremium || eb.totals.equipmentCost * 0.004) / 1000).toFixed(0)}K/yr,Asset insurance coverage
+Software Licenses,$${((equipmentBreakdown?.annualCosts?.softwareLicenses || 10000) / 1000).toFixed(0)}K/yr,SCADA and energy management software
+TOTAL ANNUAL OPEX,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K/yr,
+Year 1 Total (includes startup),$${((equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025) / 1000).toFixed(0)}K,Higher due to commissioning overlap
 
 ====================================
 ESTIMATED SAVINGS BREAKDOWN
@@ -1365,13 +1459,13 @@ Backup Power Value,$${(q.annualSavings * 0.05 / 1000).toFixed(0)}K,5%
 ====================================
 25-YEAR FINANCIAL PROJECTION
 ====================================
-Year,Annual Savings,Cumulative Savings,Net Position
-1,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings / 1000).toFixed(0)}K,-$${((q.netCost - q.annualSavings) / 1000000).toFixed(2)}M
-5,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings * 5 / 1000).toFixed(0)}K,${q.annualSavings * 5 > q.netCost ? '+' : '-'}$${(Math.abs(q.annualSavings * 5 - q.netCost) / 1000000).toFixed(2)}M
-10,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings * 10 / 1000).toFixed(0)}K,+$${((q.annualSavings * 10 - q.netCost) / 1000000).toFixed(2)}M
-15,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings * 15 / 1000).toFixed(0)}K,+$${((q.annualSavings * 15 - q.netCost) / 1000000).toFixed(2)}M
-20,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings * 20 / 1000).toFixed(0)}K,+$${((q.annualSavings * 20 - q.netCost) / 1000000).toFixed(2)}M
-25,$${(q.annualSavings / 1000).toFixed(0)}K,$${(q.annualSavings * 25 / 1000).toFixed(0)}K,+$${((q.annualSavings * 25 - q.netCost) / 1000000).toFixed(2)}M
+Year,Annual Savings,Annual OPEX,Net Annual Benefit,Cumulative Net Position
+1,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025)) / 1000).toFixed(0)}K,-$${((q.netCost - q.annualSavings + (equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025)) / 1000000).toFixed(2)}M
+5,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 > q.netCost) ? '+' : '-'}$${(Math.abs((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 - q.netCost) / 1000000).toFixed(2)}M
+10,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 10 - q.netCost) / 1000000).toFixed(2)}M
+15,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 15 - q.netCost) / 1000000).toFixed(2)}M
+20,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 20 - q.netCost) / 1000000).toFixed(2)}M
+25,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 25 - q.netCost) / 1000000).toFixed(2)}M
 
 ====================================
 IMPORTANT NOTES

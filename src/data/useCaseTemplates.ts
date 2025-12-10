@@ -1,6 +1,22 @@
 /**
- * Use Case Template Database
+ * ⚠️ DEPRECATED - DO NOT USE FOR NEW CODE
+ * 
+ * Use Case Template Database (LEGACY)
  * Pre-configured templates for common BESS applications
+ * 
+ * @deprecated This file is deprecated as of Dec 2025. Use database tables instead:
+ * - use_cases table for use case definitions
+ * - custom_questions table for questions
+ * - use_case_configurations table for sizing presets
+ * 
+ * NEW CODE SHOULD USE:
+ * - useCaseService.getAllUseCases() for use case list
+ * - useCaseService.getCustomQuestionsByUseCaseId() for questions
+ * - useCaseService.getUseCaseBySlug() for single use case
+ * 
+ * This file is ONLY kept for:
+ * 1. Migration reference (templateMigrationService.ts)
+ * 2. Fallback if database is unavailable
  * 
  * 🔬 INDUSTRY STANDARDS COMPLIANCE:
  * • NREL Commercial Reference Buildings (DOE/NREL Commercial Building Database)

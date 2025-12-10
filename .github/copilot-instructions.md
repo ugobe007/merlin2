@@ -125,9 +125,44 @@
 3. ✅ `unifiedQuoteCalculator.ts` passes fuel type parameters through to equipment breakdown
 4. ✅ `AdvancedQuoteBuilder.tsx` passes fuel type and fuel cell config to SSOT
 5. ✅ Added `fuel_cell_default` pricing config to SEED_INITIAL_DATA.sql
+6. ✅ **ALL generator fuel types default to `'natural-gas'`** (not diesel) - Fixed Dec 2025
+7. ✅ `baselineService.ts` now uses database `custom_questions` table instead of hardcoded `USE_CASE_TEMPLATES`
+8. ✅ `src/data/useCaseTemplates.ts` marked as **DEPRECATED** - Use `useCaseService` methods instead
+9. ✅ All code defaults in `useCasePowerCalculations.ts` aligned with database values
+10. ✅ Field name priority order fixed: DB column names (snake_case) checked first
+11. ✅ **Solar pricing now uses scale-based pricing** - Dec 10, 2025
+    - `getSolarPricing(solarMW)` now accepts optional size parameter
+    - < 5 MW: `$0.85/W` (commercial) from `solar_default.commercial_per_watt`
+    - ≥ 5 MW: `$0.65/W` (utility) from `solar_default.utility_scale_per_watt`
+    - FIXED: StreamlinedWizard was using flat $2.50/W (SEIA rooftop) instead of scale-based
+
+**Solar Pricing Standard (Dec 10, 2025):**
+Solar uses **scale-based pricing** from `pricing_configurations.solar_default`:
+- `commercial_per_watt`: $0.85/W (< 5 MW systems)
+- `utility_scale_per_watt`: $0.65/W (≥ 5 MW systems)
+- `small_scale_per_watt`: $1.10/W (optional, for < 100 kW residential)
+
+⚠️ **DO NOT** use `calculation_constants.solar_cost_per_watt` ($2.50/W) - that's SEIA rooftop (fully installed with soft costs), not appropriate for direct cost estimates.
+
+**Generator Fuel Type Standard (Dec 2025):**
+ALL use cases default to `'natural-gas'` for generators. This is set in:
+- `src/types/wizardState.ts` - fuelType default
+- `src/hooks/useWizardFormState.ts` - initial state (2 places)
+- `src/utils/equipmentCalculations.ts` - fallback
+- `src/services/unifiedQuoteCalculator.ts` - default
+- `src/services/unifiedPricingService.ts` - NREL_GENERATOR_PRICING
+- `src/core/calculations/QuoteEngine.ts` - cache key
 
 **Database Pricing Configs (in Supabase `pricing_configurations`):**
 ```sql
+-- Solar (scale-based pricing) - Dec 2025 SSOT
+'solar_default': {
+  "commercial_per_watt": 0.85,      -- < 5 MW systems
+  "utility_scale_per_watt": 0.65,   -- ≥ 5 MW systems
+  "small_scale_per_watt": 1.10,     -- < 100 kW (optional)
+  "tracking_upcharge": 0.08
+}
+
 -- Generator (all fuel types)
 'generator_default': {
   "diesel_per_kw": 800,
@@ -153,6 +188,139 @@
 - `professionalFinancialModel.ts` - Bank-ready 3-statement model
 - `baselineService.ts` - Database-driven BESS sizing + calculateBESSSize()
 - `dataIntegrationService.ts` - Unified API (uses baselineService)
+- `marketDataIntegrationService.ts` - Market data from RSS/web sources (NEW Dec 10, 2025)
+
+**MARKET DATA SOURCES (Dec 10, 2025):**
+RSS feeds and market data sources are now **database-driven** via `market_data_sources` table:
+- `getMarketDataSources()` - Get all active sources
+- `getRSSSourcesForEquipment(type)` - Get RSS feeds for specific equipment
+- `getMarketAdjustedPrice(type, default, region)` - Get market-adjusted pricing
+- `saveMarketPrice(data)` - Save extracted pricing data
+
+**Database table**: `market_data_sources`
+- Contains 40+ pre-seeded sources: NREL, BNEF, PV Magazine, Energy Storage News, etc.
+- Equipment categories: `bess`, `solar`, `wind`, `generator`, `inverter`, `ev-charger`
+- Source types: `rss_feed`, `api`, `web_scrape`, `data_provider`, `government`, `manufacturer`
+
+**Migrations**:
+- `database/migrations/20251210_market_data_sources.sql` - Core tables
+- `database/migrations/20251210_add_bess_pricing_sources.sql` - 80+ BESS sources
+- `database/migrations/20251210_add_solar_bess_carwash_sources.sql` - Solar, car wash vertical
+- `database/migrations/20251210_expanded_equipment_scraping.sql` - All equipment types + scraping infrastructure
+
+**DAILY MARKET SCRAPING SYSTEM (Dec 10, 2025):**
+
+Automated daily scraping for market pricing and regulatory updates:
+
+**Equipment Types Tracked:**
+- BESS (battery energy storage), ESS, BMS
+- Solar, Wind
+- Generators (combustion, linear/Mainspring, fuel cells)
+- Inverters, Transformers, Switchgear
+- DC/AC Panels
+- EV Chargers (Level 1, Level 2, DCFC, HPC)
+- Microgrids, Hybrid Systems
+- AI Energy Management
+
+**Topics Tracked:**
+- Pricing updates ($/kWh, $/W, $/kW)
+- Regulations and incentives (ITC, PTC, IRA, tariffs)
+- Net metering policies
+- State/federal rebates
+
+**Scraping Infrastructure:**
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| Service | `src/services/marketDataScraper.ts` | Core scraping logic, RSS parsing, price extraction |
+| Script | `scripts/run-daily-scrape.ts` | CLI runner for local/CI execution |
+| Edge Function | `supabase/functions/daily-market-scrape/index.ts` | Supabase cron job |
+| GitHub Action | `.github/workflows/daily-market-scrape.yml` | 6 AM UTC daily trigger |
+
+**Database Tables:**
+- `market_data_sources` - 140+ configured sources
+- `scraped_articles` - Fetched content with NLP classification
+- `collected_market_prices` - Extracted pricing data points
+- `regulatory_updates` - Tax credits, rebates, tariffs
+- `scrape_jobs` - Job scheduling and tracking
+
+**Key Functions:**
+```typescript
+import { runDailyScrape, classifyContent, extractPrices } from '@/services/marketDataScraper';
+
+// Run full daily scrape
+const results = await runDailyScrape();
+// Returns: { sourcesProcessed, articlesFound, articlesSaved, pricesExtracted, errors }
+
+// Classify content for equipment mentions
+const { equipment, topics, relevanceScore } = classifyContent(articleText);
+
+// Extract prices from text
+const prices = extractPrices(text, ['bess', 'solar']);
+// Returns: [{ equipment: 'bess', price: 125, unit: 'kWh', confidence: 0.8 }]
+```
+
+**Running the Scraper:**
+```bash
+# Local development
+npx tsx scripts/run-daily-scrape.ts
+
+# Via GitHub Actions (automatic daily at 6 AM UTC)
+# Or manual trigger from Actions tab
+
+# Via Supabase cron (deploy edge function first)
+supabase functions deploy daily-market-scrape
+```
+
+**PRICING POLICIES (Dec 10, 2025):**
+Database-driven pricing weights for market data aggregation:
+
+**Database table**: `pricing_policies`
+- Defines how to weight different data sources
+- Industry floor/ceiling bounds from NREL/BNEF
+- Regional multipliers for different markets
+
+**Key columns:**
+- `source_weights` - JSON: how much to trust each source type (government=35, data_provider=30, manufacturer=20, etc.)
+- `frequency_weights` - JSON: recency weights (daily=0.95, weekly=0.85, monthly=0.70)
+- `industry_floor/ceiling` - Price bounds from authoritative sources
+- `industry_guidance_weight` - How much to blend market data with industry guidance (0.40 = 40%)
+- `regional_multipliers` - Price adjustments by region (europe=1.15, asia-pacific=0.85)
+
+**Service functions** (in `marketDataIntegrationService.ts`):
+- `getPricingPolicies(equipmentType?)` - Get all active policies
+- `getActivePricingPolicy(equipmentType)` - Get policy for specific equipment
+- `calculateWeightedPrice(type, region, capacity)` - Calculate weighted average using policy
+- `saveCollectedPrice(data)` - Save extracted price point
+- `getCollectedPrices(type, options)` - Get collected prices with filters
+- `verifyCollectedPrice(id, notes)` - Admin: verify a price point
+
+**Database table**: `collected_market_prices`
+- Stores individual price points extracted from sources
+- Links to `market_data_sources` via `source_id`
+- Tracks confidence, verification, extraction method
+
+**Example: Calculate weighted BESS price:**
+```typescript
+import { calculateWeightedPrice } from '@/services/marketDataIntegrationService';
+
+const result = await calculateWeightedPrice('bess', 'north-america', 5.0);
+// Returns: {
+//   weightedPrice: 112.50,  // $/kWh (Dec 2025 market rate)
+//   sampleCount: 15,
+//   confidence: 0.85,
+//   floorPrice: 100,        // Current market minimum
+//   ceilingPrice: 175,      // Market ceiling
+//   priceRangeLow: 95.63,   // -15%
+//   priceRangeHigh: 129.38  // +15%
+// }
+```
+
+**BESS Pricing Standard (Dec 2025):**
+BESS is now **$100-125/kWh** based on latest vendor quotes and pricing sheets.
+- Floor: $100/kWh (competitive utility-scale)
+- Ceiling: $175/kWh (includes installation margin)
+- Typical: $110-125/kWh for 4-hour systems
 
 **DEPRECATED - DO NOT USE:**
 - ❌ `bessDataService.calculateBESSFinancials()` - Use `unifiedQuoteCalculator.calculateQuote()`
@@ -161,6 +329,8 @@
 - ❌ `InteractiveConfigDashboard` hardcoded prices - Use `calculateEquipmentBreakdown()`
 - ❌ ANY hardcoded $/kWh values - Use `getBatteryPricing()` from unifiedPricingService
 - ❌ "Level 3 chargers" - **NO SUCH THING** - Use DCFC or HPC
+- ❌ `src/data/useCaseTemplates.ts` - **DEPRECATED Dec 2025** - Use `useCaseService` methods instead
+- ❌ Hardcoded `RSS_SOURCES` array - Use database `market_data_sources` table
 
 **FORBIDDEN PATTERNS:**
 ```typescript
@@ -215,6 +385,21 @@ All these use cases flow through StreamlinedWizard → calculateQuote():
 | university | Education | ✅ SSOT |
 
 See `CALCULATION_FILES_AUDIT.md` for complete architecture documentation.
+
+**SSOT DEFAULTS (Aligned Dec 2025):**
+Code defaults in `useCasePowerCalculations.ts` MUST match database `custom_questions` defaults:
+
+| Use Case | Field | Default Value | Source |
+|----------|-------|---------------|--------|
+| hotel | rooms | 150 | DB `custom_questions` |
+| hospital | beds | 250 | DB `custom_questions` |
+| warehouse | squareFootage | 250,000 | DB `custom_questions` |
+| apartment-building | units | 400 | DB `custom_questions` |
+| car-wash | numberOfBays | 4 | DB `custom_questions` |
+| manufacturing | squareFootage | 100,000 | DB `custom_questions` |
+| airport | annualPassengers | 5,000,000 | DB `custom_questions` |
+| casino | gamingFloorSqft | 100,000 | DB `custom_questions` |
+| ev-charging | level2Chargers / dcfcChargers | 12 / 8 | DB `custom_questions` |
 
 ---
 

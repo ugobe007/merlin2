@@ -3085,11 +3085,16 @@ export default function CarWashWizard({
                     <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
                       <span className="text-white font-medium">{limits?.highPressurePumps?.label || 'HP Pump Stations'} ({limits?.highPressurePumps?.powerKW ?? 11} kW each)</span>
                       <input
-                        type="number"
-                        min={limits?.highPressurePumps?.min ?? 0}
-                        max={limits?.highPressurePumps?.max ?? 8}
-                        value={equipment.highPressurePumps}
-                        onChange={(e) => setEquipment({...equipment, highPressurePumps: parseInt(e.target.value) || 0})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={equipment.highPressurePumps || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          const max = limits?.highPressurePumps?.max ?? 8;
+                          setEquipment({...equipment, highPressurePumps: Math.min(max, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-blue-400"
                       />
                     </div>
@@ -3118,11 +3123,16 @@ export default function CarWashWizard({
                     <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
                       <span className="text-white font-medium">{limits?.standardBlowers?.label || 'Standard Blowers'} ({limits?.standardBlowers?.powerKW ?? 7.5} kW each)</span>
                       <input
-                        type="number"
-                        min={limits?.standardBlowers?.min ?? 0}
-                        max={limits?.standardBlowers?.max ?? 20}
-                        value={equipment.standardBlowers}
-                        onChange={(e) => setEquipment({...equipment, standardBlowers: parseInt(e.target.value) || 0})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={equipment.standardBlowers || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          const max = limits?.standardBlowers?.max ?? 20;
+                          setEquipment({...equipment, standardBlowers: Math.min(max, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-amber-400"
                       />
                     </div>
@@ -3160,11 +3170,16 @@ export default function CarWashWizard({
                     <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
                       <span className="text-white font-medium">{limits?.vacuumStations?.label || 'Vacuum Stations'} ({limits?.vacuumStations?.powerKW ?? 3} kW each)</span>
                       <input
-                        type="number"
-                        min={limits?.vacuumStations?.min ?? 0}
-                        max={limits?.vacuumStations?.max ?? 40}
-                        value={equipment.vacuumStations}
-                        onChange={(e) => setEquipment({...equipment, vacuumStations: parseInt(e.target.value) || 0})}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={equipment.vacuumStations || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          const max = limits?.vacuumStations?.max ?? 40;
+                          setEquipment({...equipment, vacuumStations: Math.min(max, parseInt(val) || 0)});
+                        }}
+                        onFocus={(e) => e.target.select()}
                         className="w-20 bg-gray-700 rounded-lg px-3 py-2 text-white text-center font-bold border-2 border-gray-600 focus:border-cyan-400"
                       />
                     </div>

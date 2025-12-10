@@ -119,10 +119,10 @@ export const EnhancedBESSAnalytics: React.FC<EnhancedBESSAnalyticsProps> = ({
       // Generate synthetic data
       const historicalData = generateSyntheticLoadProfile();
       
-      // Create battery model
+      // SSOT: Standard battery model using Power × Duration = Energy formula
       const batteryModel: BatteryModel = {
-        capacity_kWh: projectData.storageSizeMW * projectData.durationHours * 1000,
-        power_kW: projectData.storageSizeMW * 1000,
+        capacity_kWh: projectData.storageSizeMW * projectData.durationHours * 1000, // SSOT: MW × hrs × 1000 = kWh
+        power_kW: projectData.storageSizeMW * 1000, // SSOT: MW × 1000 = kW
         efficiency_charge: 0.92,
         efficiency_discharge: 0.95,
         voltage_nominal: 3.2,

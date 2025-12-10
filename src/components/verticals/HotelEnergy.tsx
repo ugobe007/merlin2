@@ -11,6 +11,9 @@
  * - Merlin-branded but hospitality-focused messaging
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
+ * 
+ * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='hotel'
+ * instead of separate HotelWizard component (10K+ lines of duplicate code removed)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -32,7 +35,9 @@ import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import hotelImage from '@/assets/images/hotel_1.avif';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.webp';
-import HotelWizard, { type HotelWizardInputs } from './HotelWizard';
+// REFACTORED: Use StreamlinedWizard instead of HotelWizard
+import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+import { TrustBadgesInline, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 
 // ============================================
 // TYPES
@@ -934,10 +939,18 @@ export default function HotelEnergy() {
           </button>
           
           {/* Trust indicators */}
-          <div className="mt-8 flex items-center justify-center gap-8 text-indigo-200/60 text-sm font-medium">
-            <span>🔒 Secure</span>
-            <span>⚡ Instant Results</span>
-            <span>💼 Professional</span>
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <div className="flex items-center justify-center gap-8 text-indigo-200/60 text-sm font-medium">
+              <span>🔒 Secure</span>
+              <span>⚡ Instant Results</span>
+              <span>💼 Professional</span>
+            </div>
+            {/* Industry Compliance Badges */}
+            <MethodologyStatement 
+              variant="compact" 
+              darkMode={true}
+              message="NREL ATB 2024 & DOE methodology"
+            />
           </div>
         </div>
       </section>
@@ -1189,9 +1202,9 @@ export default function HotelEnergy() {
                     setInputs(prev => ({ ...prev, numberOfRooms: quickRooms, hotelClass: quickClass }));
                     setShowWizard(true);
                   }}
-                  className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white px-6 py-5 rounded-xl font-black text-lg shadow-xl shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 border-2 border-indigo-300/50 hover:scale-[1.02] animate-pulse hover:animate-none"
+                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-lg shadow-2xl shadow-purple-500/50 transition-all flex items-center justify-center gap-2 border-2 border-purple-300/60 hover:scale-[1.03] animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
                   Get Detailed Quote
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -1215,22 +1228,22 @@ export default function HotelEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL
+          WIZARD MODAL - Uses StreamlinedWizard with hotel pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <HotelWizard
-          initialInputs={{
-            numberOfRooms: inputs.numberOfRooms,
+        <StreamlinedWizard
+          show={showWizard}
+          initialUseCase="hotel"
+          initialState={inputs.state}
+          initialData={{
+            roomCount: inputs.numberOfRooms,
             hotelClass: inputs.hotelClass,
-            state: inputs.state,
+            hasPool: inputs.hasPool,
+            hasRestaurant: inputs.hasRestaurant,
           }}
           onClose={() => setShowWizard(false)}
-          onComplete={() => {
+          onFinish={() => {
             setShowWizard(false);
-          }}
-          onRequestConsultation={() => {
-            setShowWizard(false);
-            setShowLeadForm(true);
           }}
         />
       )}
