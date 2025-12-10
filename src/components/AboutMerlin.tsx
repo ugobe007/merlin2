@@ -1,6 +1,7 @@
 import React from 'react';
 import { Battery, Zap, Target, Users, LineChart, Shield, Sparkles, Award, TrendingUp } from 'lucide-react';
 import { TrustBadgesGrid, MethodologyStatement } from './shared/IndustryComplianceBadges';
+import { TrueQuoteBadge, TrueQuoteBanner } from './shared/TrueQuoteBadge';
 
 interface AboutMerlinProps {
   onStartWizard?: () => void;
@@ -248,7 +249,56 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
           </div>
         </div>
 
-        {/* Industry Compliance Section - NEW */}
+        {/* TrueQuote™ Section - NEW */}
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <Shield className="w-8 h-8 text-amber-600" />
+            <h2 className="text-3xl font-bold text-gray-800">Introducing TrueQuote™</h2>
+            <TrueQuoteBadge size="lg" showTooltip={false} />
+          </div>
+          
+          <div className="bg-gradient-to-br from-amber-50 via-white to-amber-50 rounded-xl border-2 border-amber-200 p-8 mb-8">
+            <div className="max-w-3xl mx-auto text-center mb-8">
+              <p className="text-2xl font-bold text-gray-800 mb-2">The Quote That Shows Its Work™</p>
+              <p className="text-gray-600">
+                Unlike competitors who hide behind "proprietary AI," every number in a Merlin quote 
+                is traceable to documented, authoritative sources.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-lg p-6 border border-blue-200 text-center">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
+                  <Target className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Traceable</h3>
+                <p className="text-sm text-gray-600">Every number links to NREL ATB, DOE, or EIA sources</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 border border-emerald-200 text-center">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                  <LineChart className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Auditable</h3>
+                <p className="text-sm text-gray-600">Export JSON metadata with all assumptions for due diligence</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 border border-purple-200 text-center">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3">
+                  <Award className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2">Verifiable</h3>
+                <p className="text-sm text-gray-600">Third parties can independently check without calling us</p>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-amber-700 font-semibold italic">
+                "Ask competitors where their numbers come from."
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Industry Compliance Section */}
         <div className="mb-16">
           <TrustBadgesGrid 
             title="Benchmark-Backed Methodology"
