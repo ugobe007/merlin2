@@ -58,6 +58,7 @@ import {
   type PremiumConfiguration 
 } from '@/services/premiumConfigurationService';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
+import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { QuoteComplianceFooter, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge, TrueQuoteBanner } from '@/components/shared/TrueQuoteBadge';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -4079,23 +4080,108 @@ export default function StreamlinedWizard({
                   
                   {/* CTA Buttons */}
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button
-                      onClick={() => {
-                        // Simple HTML download
-                        const html = `<!DOCTYPE html><html><head><title>Merlin Quote</title></head><body><h1>Your Merlin Energy Quote</h1><p>Annual Savings: $${Math.round(wizardState.quoteResult!.financials.annualSavings).toLocaleString()}</p><p>Net Cost: $${Math.round(wizardState.quoteResult!.costs.netCost).toLocaleString()}</p><p>Payback: ${wizardState.quoteResult!.financials.paybackYears.toFixed(1)} years</p></body></html>`;
-                        const blob = new Blob([html], { type: 'text/html' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `Merlin_Quote_${new Date().toISOString().split('T')[0]}.html`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                      }}
-                      className="flex items-center justify-center gap-2 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors"
-                    >
-                      <Download className="w-5 h-5" />
-                      Download
-                    </button>
+                    {/* Export Dropdown */}
+                    <div className="relative group">
+                      <button
+                        className="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors"
+                      >
+                        <Download className="w-5 h-5" />
+                        Export Quote
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                        <button
+                          onClick={() => {
+                            const quoteData = {
+                              storageSizeMW: wizardState.batteryKW / 1000,
+                              durationHours: wizardState.durationHours,
+                              solarMW: wizardState.solarKW / 1000,
+                              windMW: wizardState.windTurbineKW / 1000,
+                              generatorMW: wizardState.generatorKW / 1000,
+                              location: wizardState.state,
+                              industryTemplate: wizardState.selectedIndustry || 'bess',
+                              gridConnection: wizardState.gridConnection,
+                              totalProjectCost: wizardState.quoteResult!.costs.totalProjectCost,
+                              annualSavings: wizardState.quoteResult!.financials.annualSavings,
+                              paybackYears: wizardState.quoteResult!.financials.paybackYears,
+                              taxCredit: wizardState.quoteResult!.costs.taxCredit || 0,
+                              netCost: wizardState.quoteResult!.costs.netCost,
+                              installationOption: 'epc',
+                              shippingOption: 'standard',
+                              financingOption: 'cash',
+                            };
+                            generatePDF(quoteData, wizardState.quoteResult!.equipment);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors border-b border-gray-100"
+                        >
+                          <FileText className="w-5 h-5 text-red-500" />
+                          <div>
+                            <div className="font-semibold">PDF Document</div>
+                            <div className="text-xs text-gray-500">Professional quote for stakeholders</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const quoteData = {
+                              storageSizeMW: wizardState.batteryKW / 1000,
+                              durationHours: wizardState.durationHours,
+                              solarMW: wizardState.solarKW / 1000,
+                              windMW: wizardState.windTurbineKW / 1000,
+                              generatorMW: wizardState.generatorKW / 1000,
+                              location: wizardState.state,
+                              industryTemplate: wizardState.selectedIndustry || 'bess',
+                              gridConnection: wizardState.gridConnection,
+                              totalProjectCost: wizardState.quoteResult!.costs.totalProjectCost,
+                              annualSavings: wizardState.quoteResult!.financials.annualSavings,
+                              paybackYears: wizardState.quoteResult!.financials.paybackYears,
+                              taxCredit: wizardState.quoteResult!.costs.taxCredit || 0,
+                              netCost: wizardState.quoteResult!.costs.netCost,
+                              installationOption: 'epc',
+                              shippingOption: 'standard',
+                              financingOption: 'cash',
+                            };
+                            generateWord(quoteData, wizardState.quoteResult!.equipment);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-gray-100"
+                        >
+                          <FileText className="w-5 h-5 text-blue-500" />
+                          <div>
+                            <div className="font-semibold">Word Document</div>
+                            <div className="text-xs text-gray-500">Editable proposal template</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const quoteData = {
+                              storageSizeMW: wizardState.batteryKW / 1000,
+                              durationHours: wizardState.durationHours,
+                              solarMW: wizardState.solarKW / 1000,
+                              windMW: wizardState.windTurbineKW / 1000,
+                              generatorMW: wizardState.generatorKW / 1000,
+                              location: wizardState.state,
+                              industryTemplate: wizardState.selectedIndustry || 'bess',
+                              gridConnection: wizardState.gridConnection,
+                              totalProjectCost: wizardState.quoteResult!.costs.totalProjectCost,
+                              annualSavings: wizardState.quoteResult!.financials.annualSavings,
+                              paybackYears: wizardState.quoteResult!.financials.paybackYears,
+                              taxCredit: wizardState.quoteResult!.costs.taxCredit || 0,
+                              netCost: wizardState.quoteResult!.costs.netCost,
+                              installationOption: 'epc',
+                              shippingOption: 'standard',
+                              financingOption: 'cash',
+                            };
+                            generateExcel(quoteData, wizardState.quoteResult!.equipment);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                        >
+                          <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                          <div>
+                            <div className="font-semibold">Excel Spreadsheet</div>
+                            <div className="text-xs text-gray-500">Detailed financial model</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                     
                     <button
                       onClick={() => {
