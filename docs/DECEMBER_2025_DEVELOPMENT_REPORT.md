@@ -353,17 +353,49 @@ Enhanced market data infrastructure:
 
 ## 7. Competitive Positioning
 
-### 7.1 AI Energy Platform Landscape (Grok Analysis - Dec 2025)
+### 7.1 AI Energy Platform Landscape (Grok/Gemini Analysis - Dec 2025)
 
-Vineet shared competitive intelligence from Grok identifying leading AI tools for BESS/Solar ROI:
+Vineet shared competitive intelligence from Grok and Gemini identifying leading AI tools for BESS/Solar ROI:
 
-| Platform | Focus | Strengths | Gaps vs. TrueQuote™ |
-|----------|-------|-----------|---------------------|
-| **enSights.ai** | Multi-site EV/BESS dashboard | Cash flow, utility integration, OCPP | ❌ No source attribution, opaque methodology |
-| **Onix Solar** | AI site analysis agents | Quick payback estimates, weather impact | ❌ No benchmark citations, no audit export |
-| **SmartHelio** | Performance optimization | Predictive maintenance, O&M savings | ❌ No financial transparency, no NREL alignment docs |
-| **3E SynaptiQ** | Asset management | NPV/LCOE modeling, fault detection | ❌ No public methodology, no deviation flagging |
-| **Delfos Energy** | Grid/storage optimization | Cycle efficiency, forecasting | ❌ No source attribution, custom enterprise only |
+| Platform | Focus | Funding | Strengths | Gaps vs. TrueQuote™ |
+|----------|-------|---------|-----------|---------------------|
+| **enSights.ai** | Multi-site EV/BESS dashboard | — | Cash flow, utility integration, OCPP | ❌ No source attribution, opaque methodology |
+| **Onix Solar** | AI site analysis agents | — | Quick payback estimates, weather impact | ❌ No benchmark citations, no audit export |
+| **SmartHelio** | Performance optimization | — | Predictive maintenance, O&M savings | ❌ No financial transparency, no NREL alignment docs |
+| **3E SynaptiQ** | Asset management | — | NPV/LCOE modeling, fault detection | ❌ No public methodology, no deviation flagging |
+| **Delfos Energy** | Grid/storage optimization | — | Cycle efficiency, forecasting | ❌ No source attribution, custom enterprise only |
+| **Paces** | Site selection/permitting | **$11M Series A** | Zoning, interconnection, due diligence | ❌ Different focus (pre-development vs. quoting) |
+
+### 7.1.1 Paces Deep Dive (New Intel - Dec 2025)
+
+**Paces** is a well-funded ($11M Series A) AI platform for **green infrastructure developers** — fundamentally different market than Merlin:
+
+**What Paces Does:**
+- **Site Selection**: AI-powered analysis of land parcels for solar/wind suitability
+- **Due Diligence Automation**: Zoning, permitting, environmental factors
+- **Interconnection Queue Analysis**: Grid capacity and connection timelines
+- **Risk Assessment**: De-risking investments before construction
+- **Timeline Acceleration**: Months of manual work → minutes
+
+**Key Customers**: EDF Renewables, AES (utility-scale developers)
+
+**Value Proposition**: *"Accelerating deployment of renewable energy projects by automating site selection, due diligence, and risk assessment"*
+
+**TrueQuote™ vs. Paces Positioning:**
+
+| Dimension | Paces | Merlin TrueQuote™ |
+|-----------|-------|-------------------|
+| **Stage** | Pre-development (site selection) | Post-site (quoting/financing) |
+| **Target** | Utility-scale developers | SMB facilities & C&I |
+| **Problem** | "Where should I build?" | "What will it cost & save?" |
+| **Output** | Site risk scores, permitting data | Financial quotes, ROI models |
+| **Customers** | EDF, AES (enterprise) | Hotels, car washes, hospitals (SMB) |
+| **Transparency** | Proprietary risk models | Source-attributed quotes |
+
+**Strategic Insight**: Paces is a potential **partner, not competitor**:
+- They find sites → We quote systems
+- They do pre-development → We do post-site financial modeling
+- They serve developers → We serve end customers
 
 ### 7.2 The TrueQuote™ Differentiator
 
@@ -372,6 +404,7 @@ Vineet shared competitive intelligence from Grok identifying leading AI tools fo
 - ✅ Multi-site centralization
 - ✅ Predictive maintenance
 - ✅ Load profile optimization
+- ✅ Site selection (Paces)
 
 **What NONE of them do (and TrueQuote™ does):**
 
@@ -385,18 +418,22 @@ Vineet shared competitive intelligence from Grok identifying leading AI tools fo
 
 ### 7.3 Competitive Matrix (Expanded)
 
-| Feature | Merlin TrueQuote™ | enSights.ai | Onix | SmartHelio | 3E SynaptiQ | Delfos |
-|---------|-------------------|-------------|------|------------|-------------|--------|
-| Source attribution | ✅ Every line | ❌ | ❌ | ❌ | ❌ | ❌ |
-| NREL methodology | ✅ Documented | ❓ | ❓ | ❓ | ❓ | ❓ |
-| Audit metadata | ✅ JSON/Excel | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Deviation flagging | ✅ Automatic | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Public whitepaper | ✅ Yes | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Authority badges | ✅ 8 agencies | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Multi-site mgmt | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Predictive maint. | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Demand forecasting | ✅ Basic | ✅ AI | ✅ AI | ✅ AI | ✅ AI | ✅ AI |
-| SMB verticals | ✅ Native | ❌ | ⚠️ Limited | ❌ | ❌ | ❌ |
+| Feature | Merlin TrueQuote™ | enSights.ai | Onix | SmartHelio | 3E SynaptiQ | Delfos | Paces |
+|---------|-------------------|-------------|------|------------|-------------|--------|-------|
+| Source attribution | ✅ Every line | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| NREL methodology | ✅ Documented | ❓ | ❓ | ❓ | ❓ | ❓ | ❓ |
+| Audit metadata | ✅ JSON/Excel | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Deviation flagging | ✅ Automatic | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Public whitepaper | ✅ Yes | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Authority badges | ✅ 8 agencies | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Multi-site mgmt | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Predictive maint. | 🔜 Roadmap | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Demand forecasting | ✅ Basic | ✅ AI | ✅ AI | ✅ AI | ✅ AI | ✅ AI | ❌ |
+| SMB verticals | ✅ Native | ❌ | ⚠️ Limited | ❌ | ❌ | ❌ | ❌ |
+| Site selection | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ Best |
+| Zoning/permitting | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ Best |
+| Enterprise clients | 🔜 | ⚠️ | ⚠️ | ⚠️ | ✅ | ✅ | ✅ |
+| **Partner potential** | — | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ✅ High |
 
 ### 7.4 Strategic Positioning
 

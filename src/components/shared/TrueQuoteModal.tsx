@@ -147,20 +147,20 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="overflow-y-auto max-h-[calc(90vh-300px)] p-8">
+        <div className="overflow-y-auto max-h-[calc(90vh-300px)] p-8 bg-white">
           
           {/* TAB: Why It Matters */}
           {activeTab === 'why' && (
             <div className="space-y-8">
               {/* The Problem */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6 text-red-500" />
                   The Industry's Dirty Secret
                 </h2>
-                <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                <p className="text-gray-700 text-lg leading-relaxed mb-6">
                   When you get a BESS quote from most vendors, you're trusting a black box. 
-                  They give you numbers, but <strong>can't tell you where they came from</strong>. 
+                  They give you numbers, but <strong className="text-gray-900">can't tell you where they came from</strong>. 
                   Banks know this. Investors know this. That's why projects stall.
                 </p>
               </div>
@@ -170,82 +170,82 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                 {/* Competitor Quote */}
                 <div className={`bg-gray-100 rounded-2xl p-6 border-2 border-gray-300 transition-all duration-700 ${showComparison ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
                   <div className="flex items-center gap-2 mb-4">
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                    <h3 className="font-bold text-gray-700">Typical Competitor Quote</h3>
+                    <EyeOff className="w-5 h-5 text-gray-500" />
+                    <h3 className="font-bold text-gray-800 text-lg">Typical Competitor Quote</h3>
                   </div>
                   
                   <div className="space-y-3 font-mono text-sm">
-                    <div className="flex justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-600">Battery System:</span>
-                      <span className="font-bold">$2,400,000</span>
+                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
+                      <span className="text-gray-700">Battery System:</span>
+                      <span className="font-bold text-gray-900">$2,400,000</span>
                     </div>
-                    <div className="flex justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-600">Annual Savings:</span>
-                      <span className="font-bold">$450,000</span>
+                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
+                      <span className="text-gray-700">Annual Savings:</span>
+                      <span className="font-bold text-gray-900">$450,000</span>
                     </div>
-                    <div className="flex justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-600">Payback Period:</span>
-                      <span className="font-bold">5.3 years</span>
+                    <div className="flex justify-between p-3 bg-white rounded-lg border border-gray-200">
+                      <span className="text-gray-700">Payback Period:</span>
+                      <span className="font-bold text-gray-900">5.3 years</span>
                     </div>
                   </div>
                   
-                  <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="mt-4 p-4 bg-red-100 rounded-lg border-2 border-red-300">
                     <div className="flex items-start gap-2">
-                      <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-red-700">
-                        <strong>Where do these numbers come from?</strong>
-                        <p className="text-red-600 mt-1">"Trust us, we're experts."</p>
+                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <strong className="text-red-800">Where do these numbers come from?</strong>
+                        <p className="text-red-700 mt-1 font-medium">"Trust us, we're experts."</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* TrueQuote */}
-                <div className={`bg-gradient-to-br from-amber-50 to-white rounded-2xl p-6 border-2 border-amber-300 shadow-lg transition-all duration-700 delay-200 ${showComparison ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
+                <div className={`bg-gradient-to-br from-amber-50 to-white rounded-2xl p-6 border-2 border-amber-400 shadow-lg transition-all duration-700 delay-200 ${showComparison ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
                   <div className="flex items-center gap-2 mb-4">
                     <TrueQuoteBadge size="sm" showTooltip={false} />
-                    <h3 className="font-bold text-amber-800">Merlin TrueQuote™</h3>
+                    <h3 className="font-bold text-amber-900 text-lg">Merlin TrueQuote™</h3>
                   </div>
                   
                   <div className="space-y-3 font-mono text-sm">
-                    <div className="p-3 bg-white rounded-lg border border-amber-200">
+                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
                       <div className="flex justify-between mb-1">
-                        <span className="text-gray-600">Battery System:</span>
-                        <span className="font-bold">$2,400,000</span>
+                        <span className="text-gray-700">Battery System:</span>
+                        <span className="font-bold text-gray-900">$2,400,000</span>
                       </div>
-                      <div className="text-xs text-amber-700 flex items-center gap-1">
+                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
                         <FileCheck className="w-3 h-3" />
                         NREL ATB 2024, LFP 4-hr, $150/kWh
                       </div>
                     </div>
-                    <div className="p-3 bg-white rounded-lg border border-amber-200">
+                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
                       <div className="flex justify-between mb-1">
-                        <span className="text-gray-600">Annual Savings:</span>
-                        <span className="font-bold">$450,000</span>
+                        <span className="text-gray-700">Annual Savings:</span>
+                        <span className="font-bold text-gray-900">$450,000</span>
                       </div>
-                      <div className="text-xs text-amber-700 flex items-center gap-1">
+                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
                         <FileCheck className="w-3 h-3" />
                         StoreFAST methodology, EIA rates
                       </div>
                     </div>
-                    <div className="p-3 bg-white rounded-lg border border-amber-200">
+                    <div className="p-3 bg-white rounded-lg border-2 border-amber-200">
                       <div className="flex justify-between mb-1">
-                        <span className="text-gray-600">Payback Period:</span>
-                        <span className="font-bold">5.3 years</span>
+                        <span className="text-gray-700">Payback Period:</span>
+                        <span className="font-bold text-gray-900">5.3 years</span>
                       </div>
-                      <div className="text-xs text-amber-700 flex items-center gap-1">
+                      <div className="text-xs text-amber-800 flex items-center gap-1 font-semibold">
                         <FileCheck className="w-3 h-3" />
                         8% discount, 2% degradation, 30% ITC
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="mt-4 p-4 bg-emerald-100 rounded-lg border-2 border-emerald-300">
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-emerald-700">
-                        <strong>Every number is verifiable.</strong>
-                        <p className="text-emerald-600 mt-1">Export JSON audit trail for bank due diligence.</p>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <strong className="text-emerald-800">Every number is verifiable.</strong>
+                        <p className="text-emerald-700 mt-1 font-medium">Export JSON audit trail for bank due diligence.</p>
                       </div>
                     </div>
                   </div>
@@ -253,8 +253,8 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
               </div>
 
               {/* Quote */}
-              <div className="text-center py-6">
-                <p className="text-2xl font-bold text-gray-700 italic">
+              <div className="text-center py-6 bg-gray-50 rounded-xl">
+                <p className="text-2xl font-bold text-gray-800 italic">
                   "Ask competitors where their numbers come from."
                 </p>
               </div>
@@ -265,82 +265,82 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           {activeTab === 'how' && (
             <div className="space-y-8">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">The Three Pillars of TrueQuote™</h2>
-                <p className="text-gray-600">Every Merlin quote meets these standards. No exceptions.</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">The Three Pillars of TrueQuote™</h2>
+                <p className="text-gray-700 text-lg">Every Merlin quote meets these standards. No exceptions.</p>
               </div>
 
               {/* Three Pillars - Large Cards */}
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Traceable */}
-                <div className="group bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border-2 border-blue-200 hover:border-blue-400 hover:shadow-lg transition-all">
+                <div className="group bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all">
                   <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Search className="w-8 h-8 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Traceable</h3>
-                  <p className="text-gray-600 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Traceable</h3>
+                  <p className="text-gray-700 mb-4">
                     Every number links to a specific, documented source. NREL ATB, DOE, EIA — not "our proprietary model."
                   </p>
-                  <ul className="space-y-2 text-sm text-blue-700">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2 text-blue-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
                       Line-item source citations
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-blue-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
                       Direct links to benchmarks
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-blue-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
                       Version-dated references
                     </li>
                   </ul>
                 </div>
 
                 {/* Auditable */}
-                <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-200 hover:border-emerald-400 hover:shadow-lg transition-all">
+                <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-300 hover:border-emerald-500 hover:shadow-xl transition-all">
                   <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileCheck className="w-8 h-8 text-emerald-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Auditable</h3>
-                  <p className="text-gray-600 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Auditable</h3>
+                  <p className="text-gray-700 mb-4">
                     Complete methodology is documented. Export JSON metadata with every assumption laid bare.
                   </p>
-                  <ul className="space-y-2 text-sm text-emerald-700">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2 text-emerald-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       JSON/Excel audit export
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-emerald-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       All assumptions documented
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-emerald-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       Public methodology whitepaper
                     </li>
                   </ul>
                 </div>
 
                 {/* Verifiable */}
-                <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 border-2 border-purple-200 hover:border-purple-400 hover:shadow-lg transition-all">
+                <div className="group bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 border-2 border-purple-300 hover:border-purple-500 hover:shadow-xl transition-all">
                   <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <BadgeCheck className="w-8 h-8 text-purple-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Verifiable</h3>
-                  <p className="text-gray-600 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Verifiable</h3>
+                  <p className="text-gray-700 mb-4">
                     Third parties can check independently. Banks don't need to call us — they can verify themselves.
                   </p>
-                  <ul className="space-y-2 text-sm text-purple-700">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2 text-purple-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
                       Public benchmark references
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-purple-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
                       Deviation auto-flagging
                     </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <li className="flex items-center gap-2 text-purple-800 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
                       Formula transparency
                     </li>
                   </ul>
@@ -348,24 +348,24 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
               </div>
 
               {/* Deviation Flagging Example */}
-              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+              <div className="bg-gray-100 rounded-2xl p-6 border-2 border-gray-300">
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
                   Automatic Deviation Flagging
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-700 mb-4">
                   When our applied price differs from the benchmark by more than 15%, TrueQuote™ automatically flags it with an explanation:
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 font-mono text-sm">
-                  <div className="text-amber-800">
-                    <span className="text-amber-600">⚠️ DEVIATION:</span> Battery pack $/kWh
+                <div className="bg-amber-100 border-2 border-amber-400 rounded-lg p-4 font-mono text-sm">
+                  <div className="text-amber-900 font-bold">
+                    <span className="text-amber-700">⚠️ DEVIATION:</span> Battery pack $/kWh
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-2 text-amber-700">
-                    <div>Benchmark: <strong>$155/kWh</strong></div>
-                    <div>Applied: <strong>$275/kWh</strong></div>
+                  <div className="grid grid-cols-2 gap-4 mt-2 text-amber-800">
+                    <div>Benchmark: <strong className="text-amber-900">$155/kWh</strong></div>
+                    <div>Applied: <strong className="text-amber-900">$275/kWh</strong></div>
                   </div>
-                  <div className="mt-2 text-amber-600 text-xs">
-                    Reason: Commercial-scale pricing (C&I systems &lt;1 MW include higher installation costs)
+                  <div className="mt-3 text-amber-800 text-xs bg-amber-50 p-2 rounded">
+                    <strong>Reason:</strong> Commercial-scale pricing (C&I systems &lt;1 MW include higher installation costs)
                   </div>
                 </div>
               </div>
@@ -376,8 +376,8 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           {activeTab === 'proof' && (
             <div className="space-y-8">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Backed by Industry Authorities</h2>
-                <p className="text-gray-600">Our methodology aligns with the sources banks and investors trust.</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Backed by Industry Authorities</h2>
+                <p className="text-gray-700 text-lg">Our methodology aligns with the sources banks and investors trust.</p>
               </div>
 
               {/* Authority Grid */}
@@ -388,13 +388,13 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group p-4 rounded-xl border-2 ${source.bgColor} ${source.color} hover:shadow-lg transition-all`}
+                    className={`group p-4 rounded-xl border-2 ${source.bgColor} hover:shadow-xl transition-all`}
                   >
                     <div className="text-center">
-                      <div className="text-3xl mb-2">{source.logo}</div>
-                      <div className="font-bold">{source.name}</div>
-                      <div className="text-xs opacity-75 truncate">{source.fullName}</div>
-                      <ExternalLink className="w-3 h-3 mx-auto mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="text-4xl mb-2">{source.logo}</div>
+                      <div className="font-bold text-gray-900">{source.name}</div>
+                      <div className="text-xs text-gray-600 truncate">{source.fullName}</div>
+                      <ExternalLink className="w-3 h-3 mx-auto mt-2 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </a>
                 ))}
@@ -402,35 +402,35 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
 
               {/* Who Benefits */}
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-                  <Building2 className="w-8 h-8 text-blue-600 mb-3" />
-                  <h3 className="font-bold text-gray-800 mb-2">For Businesses</h3>
-                  <p className="text-sm text-gray-600">
+                <div className="bg-blue-100 rounded-xl p-6 border-2 border-blue-300">
+                  <Building2 className="w-8 h-8 text-blue-700 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Businesses</h3>
+                  <p className="text-gray-700">
                     Present quotes to your CFO with confidence. Every number is defensible because every number has a source.
                   </p>
                 </div>
-                <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-                  <Landmark className="w-8 h-8 text-emerald-600 mb-3" />
-                  <h3 className="font-bold text-gray-800 mb-2">For Banks</h3>
-                  <p className="text-sm text-gray-600">
+                <div className="bg-emerald-100 rounded-xl p-6 border-2 border-emerald-300">
+                  <Landmark className="w-8 h-8 text-emerald-700 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Banks</h3>
+                  <p className="text-gray-700">
                     Due diligence teams can verify assumptions without calling us. Export audit-ready JSON with full metadata.
                   </p>
                 </div>
-                <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-                  <Sparkles className="w-8 h-8 text-purple-600 mb-3" />
-                  <h3 className="font-bold text-gray-800 mb-2">For Developers</h3>
-                  <p className="text-sm text-gray-600">
+                <div className="bg-purple-100 rounded-xl p-6 border-2 border-purple-300">
+                  <Sparkles className="w-8 h-8 text-purple-700 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">For Developers</h3>
+                  <p className="text-gray-700">
                     Close deals faster. When prospects see NREL and DOE alignment, they stop questioning your numbers.
                   </p>
                 </div>
               </div>
 
               {/* Testimonial Placeholder */}
-              <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white text-center">
+              <div className="bg-gradient-to-r from-purple-700 to-blue-700 rounded-2xl p-8 text-white text-center">
                 <p className="text-xl font-medium italic mb-4">
                   "For the first time, we got a BESS quote where we could actually verify the numbers ourselves. That's when we signed."
                 </p>
-                <p className="text-purple-200">— Future Customer Testimonial</p>
+                <p className="text-purple-200 font-medium">— Future Customer Testimonial</p>
               </div>
             </div>
           )}
