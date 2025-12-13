@@ -39,8 +39,8 @@ import hotelHolidayInn4 from "../../assets/images/hotel_motel_holidayinn_4.jpg";
 // Hero use cases with real financial data - Hotel & Hospitality Focus
 const heroUseCases = [
   {
-    id: 'hotel-holidayinn-1',
-    name: 'Holiday Inn Express',
+    id: 'hotel-boutique-1',
+    name: 'Boutique Hotel',
     image: hotelHolidayInn1,
     savings: '$890K',
     payback: '1.3 yrs',
@@ -48,8 +48,8 @@ const heroUseCases = [
     systemSize: '1.5 MW / 6 MWh'
   },
   {
-    id: 'hotel-holidayinn-2',
-    name: 'Holiday Inn & Suites',
+    id: 'hotel-luxury-2',
+    name: 'Luxury Hotel & Spa',
     image: hotelHolidayInn2,
     savings: '$1.2M',
     payback: '1.1 yrs',
@@ -57,8 +57,8 @@ const heroUseCases = [
     systemSize: '2.0 MW / 8 MWh'
   },
   {
-    id: 'hotel-holidayinn-3',
-    name: 'Holiday Inn Resort',
+    id: 'hotel-resort-3',
+    name: 'Resort & Casino',
     image: hotelHolidayInn3,
     savings: '$1.6M',
     payback: '0.9 yrs',
@@ -66,8 +66,8 @@ const heroUseCases = [
     systemSize: '2.5 MW / 10 MWh'
   },
   {
-    id: 'hotel-holidayinn-4',
-    name: 'Holiday Inn Conference Center',
+    id: 'hotel-conference-4',
+    name: 'Conference Center Hotel',
     image: hotelHolidayInn4,
     savings: '$2.1M',
     payback: '0.8 yrs',
