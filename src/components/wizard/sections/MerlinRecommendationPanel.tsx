@@ -555,23 +555,23 @@ export function MerlinRecommendationPanel({
 
         {/* Comparison Note - if user has made changes */}
         {hasChanges && !impact.isMatch && (
-          <div className="rounded-xl p-3 mb-4 text-white transition-all bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-amber-600">
-            <div className="flex items-center justify-between gap-3">
+          <div className="rounded-xl p-2.5 mb-3 text-white transition-all bg-gradient-to-r from-amber-500 to-orange-500 border border-amber-600">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                <span className="text-sm font-semibold">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-xs font-semibold">
                   {impact.isWorse 
-                    ? `⚠️ Your selections: ${formatCurrency(impact.savingsLoss, recommendation.currency)}/yr less savings`
-                    : 'Modified configuration'
+                    ? `⚠️ ${formatCurrency(impact.savingsLoss, recommendation.currency)}/yr less savings`
+                    : 'Modified'
                   }
                 </span>
               </div>
               <button
                 onClick={onAcceptRecommendation}
-                className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-white/90 text-amber-700 font-bold rounded-lg transition-colors shadow-sm text-sm"
+                className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-white/90 text-amber-700 font-semibold rounded-md transition-colors shadow-sm text-xs"
               >
                 <RefreshCw className="w-3 h-3" />
-                Use Optimal
+                Reset
               </button>
             </div>
           </div>
