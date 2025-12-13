@@ -397,20 +397,20 @@ export default function HeroSection({
               {/* CTA Button - Deep Purple gradient with Neon Green text */}
               <button 
                 onClick={() => setShowSmartWizard(true)}
-                className="group relative w-full max-w-xl px-12 py-5 rounded-full font-bold text-2xl transition-all duration-300 hover:scale-105 mb-6 overflow-hidden"
+                className="group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 hover:scale-105 mb-6 overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, #4C1D95 0%, #5B21B6 30%, #6D28D9 60%, #7C3AED 100%)',
-                  boxShadow: '0 0 40px rgba(91,33,182,0.7), 0 0 80px rgba(109,40,217,0.4), 0 8px 40px rgba(0,0,0,0.5)'
+                  background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 30%, #FCD34D 60%, #F59E0B 100%)',
+                  boxShadow: '0 0 30px rgba(245,158,11,0.6), 0 0 60px rgba(251,191,36,0.3), 0 6px 30px rgba(0,0,0,0.4)'
                 }}
               >
                 {/* Glow ring */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 rounded-full blur-lg opacity-70 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 rounded-full blur-lg opacity-60 group-hover:opacity-90 transition-opacity" />
                 {/* Shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
-                <span className="relative flex items-center justify-center gap-3" style={{ color: '#10B981', textShadow: '0 0 20px rgba(16,185,129,0.8), 0 3px 6px rgba(0,0,0,0.6)' }}>
-                  <span className="text-3xl animate-pulse">🪄</span>
-                  <span className="text-3xl font-black">Get My Free Quote</span>
-                  <span className="text-3xl group-hover:translate-x-2 transition-transform">→</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
+                <span className="relative flex items-center justify-center gap-2 text-gray-900">
+                  <span className="text-2xl animate-pulse">✨</span>
+                  <span className="text-xl font-black whitespace-nowrap">Get My Free Quote</span>
+                  <span className="text-2xl group-hover:translate-x-2 transition-transform">→</span>
                 </span>
               </button>
 

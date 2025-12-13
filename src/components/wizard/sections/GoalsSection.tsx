@@ -238,43 +238,28 @@ export function GoalsSection({
         </div>
 
         {/* PROMINENT INSTRUCTION PANEL AT TOP */}
-        <div className="mb-6 p-6 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-2 border-amber-400 rounded-2xl">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 animate-bounce">
-              <ArrowRight className="w-8 h-8 text-white" />
+        <div className="mb-6 p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-400/50 rounded-xl">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <ArrowRight className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-2xl font-black text-white mb-2 flex items-center gap-2">
-                <span>🎯</span> Review & Configure Your System
+              <h3 className="text-xl font-bold text-white mb-2">
+                Review & Configure Your System
               </h3>
-              <p className="text-lg text-amber-100 mb-3 leading-relaxed">
-                Scroll down to review Merlin's power configuration. You can accept the recommendation or customize each component.
-                When you're satisfied, click the "Continue to Quote" button to see pricing and savings.
+              <p className="text-sm text-amber-100 leading-relaxed">
+                Review Merlin's power configuration below. Accept the recommendation or customize each component, then click "Continue to Quote" for pricing and savings.
               </p>
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <span className="text-2xl">📊</span>
-                  <span className="text-white font-semibold">Check power coverage below</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <span className="text-2xl">⚙️</span>
-                  <span className="text-white font-semibold">Adjust batteries, solar, generators</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <span className="text-2xl">✨</span>
-                  <span className="text-white font-semibold">Accept or customize recommendation</span>
-                </div>
-              </div>
             </div>
           </div>
           <button
             onClick={onContinue}
             disabled={wizardState.goals.length === 0}
-            className="w-full px-8 py-5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-2xl transition-all shadow-lg hover:shadow-amber-500/50 hover:scale-105 flex items-center justify-center gap-3"
+            className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-lg font-bold text-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
-            <span className="text-3xl">💰</span>
+            <span className="text-xl">💰</span>
             <span>Continue to Quote</span>
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
 
