@@ -399,7 +399,7 @@ export default function HeroSection({
                 Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.
               </p>
 
-              {/* CTA Button - Spinning micro-interaction on hover */}
+              {/* CTA Button - Purple-Pink Gradient with Smooth Animation */}
               <style>{`
                 @keyframes spinButton {
                   0% { transform: scale(1) rotate(0deg); }
@@ -408,30 +408,43 @@ export default function HeroSection({
                   75% { transform: scale(1.05) rotate(-5deg); }
                   100% { transform: scale(1) rotate(0deg); }
                 }
-                @keyframes rotateGlow {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
+                @keyframes gradientShift {
+                  0% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+                  100% { background-position: 0% 50%; }
+                }
+                @keyframes floatGlow {
+                  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+                  50% { transform: scale(1.1) rotate(180deg); opacity: 0.9; }
+                }
+                .gradient-button {
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
+                  background-size: 300% 300%;
+                  animation: gradientShift 3s ease infinite;
                 }
                 .spin-button:hover {
                   animation: spinButton 0.6s ease-in-out;
                 }
-                .spin-button:hover .rotate-glow {
-                  animation: rotateGlow 2s linear infinite;
+                .gradient-button:hover {
+                  background-size: 400% 400%;
+                  animation: gradientShift 2s ease infinite;
+                }
+                .float-glow {
+                  animation: floatGlow 3s ease-in-out infinite;
                 }
               `}</style>
               <button 
                 onClick={() => setShowSmartWizard(true)}
-                className="spin-button group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 mb-6 overflow-hidden"
+                className="gradient-button spin-button group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 mb-6 overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 30%, #FCD34D 60%, #F59E0B 100%)',
-                  boxShadow: '0 0 30px rgba(245,158,11,0.6), 0 0 60px rgba(251,191,36,0.3), 0 6px 30px rgba(0,0,0,0.4)'
+                  boxShadow: '0 0 40px rgba(102,126,234,0.6), 0 0 80px rgba(118,75,162,0.4), 0 8px 32px rgba(0,0,0,0.3)'
                 }}
               >
-                {/* Rotating glow ring */}
-                <div className="rotate-glow absolute -inset-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 rounded-full blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
+                {/* Floating glow ring */}
+                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full blur-xl opacity-60" />
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
-                <span className="relative flex items-center justify-center gap-2 text-gray-900">
+                <span className="relative flex items-center justify-center gap-2 text-white">
                   <span className="text-2xl animate-pulse">✨</span>
                   <span className="text-xl font-black whitespace-nowrap">Get My Free Quote</span>
                   <span className="text-2xl group-hover:translate-x-2 transition-transform">→</span>
