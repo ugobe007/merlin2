@@ -165,16 +165,16 @@ export function ConfigurationSection({
         {/* Real-time Cost Summary - Enhanced with glassmorphism */}
         <CostSummaryBar wizardState={wizardState} />
         
-        {/* Utility Impact Comparison */}
-        <UtilityImpactComparison wizardState={wizardState} />
-        
-        {/* Review & Customize Panel */}
+        {/* Review & Customize Panel - MOVED UP */}
         <ReviewCustomizePanel 
           wizardState={wizardState}
           setWizardState={setWizardState}
           centralizedState={centralizedState}
           onShowPowerProfileExplainer={onShowPowerProfileExplainer}
         />
+        
+        {/* Utility Impact Comparison */}
+        <UtilityImpactComparison wizardState={wizardState} />
         
         {/* Generate Quote Button */}
         <GenerateQuoteButton 
@@ -436,54 +436,54 @@ function UtilityImpactComparison({ wizardState }: { wizardState: WizardState }) 
 
 function WhyThisConfiguration({ wizardState, peakShavingPercent }: { wizardState: WizardState; peakShavingPercent: number }) {
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200 shadow-lg">
-      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-purple-500" />
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+        <Sparkles className="w-6 h-6 text-purple-500" />
         Why This Configuration?
       </h3>
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {wizardState.solarKW > 0 && wizardState.geoRecommendations && (
-          <li className="flex items-start gap-3 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <li className="flex items-start gap-4 text-base">
+            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-gray-800">Solar recommended:</span>
-              <span className="text-gray-600"> {wizardState.state} averages {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)} sun-hours/day</span>
+              <span className="font-bold text-gray-800">Solar recommended:</span>
+              <span className="text-gray-700"> {wizardState.state} averages {wizardState.geoRecommendations.profile.avgSolarHoursPerDay.toFixed(1)} sun-hours/day</span>
             </div>
           </li>
         )}
         {wizardState.batteryKW > 0 && (
-          <li className="flex items-start gap-3 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <li className="flex items-start gap-4 text-base">
+            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-gray-800">Battery storage:</span>
-              <span className="text-gray-600"> Capture ~{Math.round(peakShavingPercent * 100)}% peak demand savings</span>
+              <span className="font-bold text-gray-800">Battery storage:</span>
+              <span className="text-gray-700"> Capture ~{Math.round(peakShavingPercent * 100)}% peak demand savings</span>
             </div>
           </li>
         )}
         {wizardState.electricityRate > 0.12 && (
-          <li className="flex items-start gap-3 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <li className="flex items-start gap-4 text-base">
+            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-gray-800">High utility rates:</span>
-              <span className="text-gray-600"> ${wizardState.electricityRate.toFixed(2)}/kWh makes storage valuable</span>
+              <span className="font-bold text-gray-800">High utility rates:</span>
+              <span className="text-gray-700"> ${wizardState.electricityRate.toFixed(2)}/kWh makes storage valuable</span>
             </div>
           </li>
         )}
         {(wizardState.selectedIndustry === 'data-center' || wizardState.selectedIndustry === 'hospital') && (
-          <li className="flex items-start gap-3 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <li className="flex items-start gap-4 text-base">
+            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-gray-800">Critical facility:</span>
-              <span className="text-gray-600"> Extended backup ({wizardState.durationHours}+ hours) recommended</span>
+              <span className="font-bold text-gray-800">Critical facility:</span>
+              <span className="text-gray-700"> Extended backup ({wizardState.durationHours}+ hours) recommended</span>
             </div>
           </li>
         )}
         {wizardState.geoRecommendations?.profile.gridReliabilityScore && wizardState.geoRecommendations.profile.gridReliabilityScore < 85 && (
-          <li className="flex items-start gap-3 text-sm">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <li className="flex items-start gap-4 text-base">
+            <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-gray-800">Grid reliability:</span>
-              <span className="text-gray-600"> Score {wizardState.geoRecommendations.profile.gridReliabilityScore}/100 - backup power valuable</span>
+              <span className="font-bold text-gray-800">Grid reliability:</span>
+              <span className="text-gray-700"> Score {wizardState.geoRecommendations.profile.gridReliabilityScore}/100 - backup power valuable</span>
             </div>
           </li>
         )}
