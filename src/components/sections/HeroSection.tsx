@@ -30,9 +30,50 @@ import evChargingStationImage from "../../assets/images/ev_charging_station.png"
 import evChargingHotelImage from "../../assets/images/ev_charging_hotel.webp";
 import hotelImage from "../../assets/images/hotel_1.avif";
 import airportImage from "../../assets/images/airports_1.jpg";
+// Holiday Inn hotel images
+import hotelHolidayInn1 from "../../assets/images/hotel_motel_holidayinn_1.jpg";
+import hotelHolidayInn2 from "../../assets/images/hotel_motel_holidayinn_2.jpg";
+import hotelHolidayInn3 from "../../assets/images/hotel_motel_holidayinn_3.jpg";
+import hotelHolidayInn4 from "../../assets/images/hotel_motel_holidayinn_4.jpg";
 
-// Hero use cases with real financial data
+// Hero use cases with real financial data - Hotel & Hospitality Focus
 const heroUseCases = [
+  {
+    id: 'hotel-holidayinn-1',
+    name: 'Holiday Inn Express',
+    image: hotelHolidayInn1,
+    savings: '$890K',
+    payback: '1.3 yrs',
+    roi: '780%',
+    systemSize: '1.5 MW / 6 MWh'
+  },
+  {
+    id: 'hotel-holidayinn-2',
+    name: 'Holiday Inn & Suites',
+    image: hotelHolidayInn2,
+    savings: '$1.2M',
+    payback: '1.1 yrs',
+    roi: '920%',
+    systemSize: '2.0 MW / 8 MWh'
+  },
+  {
+    id: 'hotel-holidayinn-3',
+    name: 'Holiday Inn Resort',
+    image: hotelHolidayInn3,
+    savings: '$1.6M',
+    payback: '0.9 yrs',
+    roi: '1,100%',
+    systemSize: '2.5 MW / 10 MWh'
+  },
+  {
+    id: 'hotel-holidayinn-4',
+    name: 'Holiday Inn Conference Center',
+    image: hotelHolidayInn4,
+    savings: '$2.1M',
+    payback: '0.8 yrs',
+    roi: '1,300%',
+    systemSize: '3.5 MW / 14 MWh'
+  },
   {
     id: 'car-wash',
     name: 'Car Wash',
@@ -43,33 +84,6 @@ const heroUseCases = [
     systemSize: '0.5 MW / 2 MWh'
   },
   {
-    id: 'car-wash-pitstop',
-    name: 'Express Car Wash',
-    image: carWashPitStop,
-    savings: '$98K',
-    payback: '2.4 yrs',
-    roi: '420%',
-    systemSize: '0.4 MW / 1.6 MWh'
-  },
-  {
-    id: 'hotel',
-    name: 'Luxury Hotel',
-    image: hotelImage,
-    savings: '$1.38M',
-    payback: '9 mo',
-    roi: '1,100%',
-    systemSize: '2.0 MW / 8 MWh'
-  },
-  {
-    id: 'car-wash-tunnel',
-    name: 'Tunnel Car Wash',
-    image: carWashTunnel,
-    savings: '$156K',
-    payback: '1.9 yrs',
-    roi: '530%',
-    systemSize: '0.6 MW / 2.4 MWh'
-  },
-  {
     id: 'hospital',
     name: 'Hospital',
     image: hospitalImage,
@@ -77,15 +91,6 @@ const heroUseCases = [
     payback: '1.8 yrs',
     roi: '560%',
     systemSize: '1.5 MW / 6 MWh'
-  },
-  {
-    id: 'car-wash-preen',
-    name: 'Full Service Car Wash',
-    image: carWashPreen,
-    savings: '$142K',
-    payback: '2.0 yrs',
-    roi: '505%',
-    systemSize: '0.55 MW / 2.2 MWh'
   },
   {
     id: 'ev-charging',
