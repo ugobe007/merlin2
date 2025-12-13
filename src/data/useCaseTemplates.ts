@@ -35,10 +35,10 @@ import type { UseCaseTemplate } from '../types/useCase.types';
 
 // Import the new images
 import carWashImage from '../assets/images/car_wash_1.jpg';
-import evChargingStationImage from '../assets/images/ev_charging_station.png';
-import evChargingHotelImage from '../assets/images/ev_charging_hotel.webp';
+import evChargingStationImage from '../assets/images/ev_charging_station.jpg';
+import evChargingHotelImage from '../assets/images/ev_charging_hotel.jpg';
 import hospitalImage from '../assets/images/hospital_1.jpg';
-import hotelImage from '../assets/images/hotel_1.avif';
+import hotelImage from '../assets/images/hotel_1.jpg';
 import airportImage from '../assets/images/airports_1.jpg';
 
 export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
