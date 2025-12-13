@@ -266,7 +266,47 @@ export function useWizardState() {
   const getRecommendedBackupHours = useCallback((state: WizardState): number => {
     let hours = 4; // Default
     
-    // Adjust based on grid reliability
+    // Check for data center-specific backup duration target
+    const datacenterIndustries = ['data-center', 'datacenter', 'edge-data-center'];
+    const isDataCenter = datacenterIndustries.includes(state.industry.type.toLowerCase());
+    
+    if (isDataCenter && state.useCaseData?.backupDurationTarget) {
+      // Use explicit backup duration from data center configuration
+      const durationMap: Record<string, number> = {
+        '15_minutes': 0.25,
+        '2_hours': 2,
+        '4_hours': 4,
+        '6_hours': 6,
+        '8_hours': 8,
+        '12_hours': 12,
+        '24_hours': 24
+      };
+      return durationMap[state.useCaseData.backupDurationTarget] || 4;
+    }
+    
+    // Check for data center grid connection status
+    if (isDataCenter && state.useCaseData?.gridConnectionStatus) {
+      switch (state.useCaseData.gridConnectionStatus) {
+        case 'off_grid':
+          hours = 8; // Off-grid minimum
+          break;
+        case 'microgrid':
+          hours = 6; // Microgrid with renewable integration
+          break;
+        case 'unreliable_grid':
+          hours = 6;
+          break;
+        case 'limited_grid':
+          hours = 5;
+          break;
+        case 'on_grid_reliable':
+        default:
+          hours = 4; // Standard UPS + BESS
+      }
+      return hours;
+    }
+    
+    // Fallback: Adjust based on generic grid reliability
     switch (state.existingInfrastructure.gridConnection) {
       case 'unreliable':
         hours = 6;
@@ -284,16 +324,15 @@ export function useWizardState() {
         hours = 4;
     }
     
-    // Critical facilities: hospitals need extended backup, data centers have UPS (less BESS)
+    // Critical facilities: hospitals need extended backup
     const hospitalIndustries = ['hospital'];
     if (hospitalIndustries.includes(state.industry.type.toLowerCase())) {
       hours = Math.max(hours, 8); // Hospitals need extended backup for patient safety
     }
     
-    // Data centers have UPS systems, BESS is supplemental (4 hours standard)
-    const datacenterIndustries = ['data-center', 'datacenter', 'edge-data-center'];
-    if (datacenterIndustries.includes(state.industry.type.toLowerCase())) {
-      hours = Math.max(hours, 4); // UPS + 4hr BESS is industry standard
+    // Data centers: Use standard 4 hours unless off-grid
+    if (isDataCenter) {
+      hours = Math.max(hours, 4); // UPS + 4hr BESS is industry standard minimum
     }
     
     // Hotels/hospitality need reasonable backup
@@ -346,22 +385,59 @@ export function useWizardState() {
     // Map user's primary goal to BESS use case
     let bessRatio = BESS_POWER_RATIOS.peak_shaving; // Default: 0.40 (most common)
     
-    const primaryGoal = state.goals?.primaryGoal || 'savings';
-    switch (primaryGoal) {
-      case 'backup':
-        bessRatio = BESS_POWER_RATIOS.resilience; // 0.70 - critical load backup
-        break;
-      case 'savings':
-        bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - cost optimization
-        break;
-      case 'sustainability':
-        bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - renewable integration
-        break;
-      case 'peak-shaving':
-        bessRatio = BESS_POWER_RATIOS.peak_shaving; // 0.40 - demand charge reduction
-        break;
-      default:
-        bessRatio = BESS_POWER_RATIOS.peak_shaving; // Default to optimal economic sizing
+    // Check for data center-specific BESS application
+    const datacenterIndustries = ['data-center', 'datacenter', 'edge-data-center'];
+    const isDataCenter = datacenterIndustries.includes(state.industry.type.toLowerCase());
+    
+    if (isDataCenter && state.useCaseData?.primaryBESSApplication) {
+      // Use data center-specific BESS sizing ratios
+      switch (state.useCaseData.primaryBESSApplication) {
+        case 'ups_ride_through':
+          bessRatio = 0.25; // 15-30 min ride-through only
+          break;
+        case 'backup_power':
+          bessRatio = BESS_POWER_RATIOS.resilience; // 0.70 - extended backup
+          break;
+        case 'microgrid':
+          bessRatio = BESS_POWER_RATIOS.microgrid; // 1.00 - full islanding capability
+          break;
+        case 'load_leveling':
+          bessRatio = 0.60; // Smooth renewable variability
+          break;
+        case 'peak_shaving':
+          bessRatio = BESS_POWER_RATIOS.peak_shaving; // 0.40 - demand charge reduction
+          break;
+        case 'frequency_regulation':
+          bessRatio = 0.30; // Fast response, shorter duration
+          break;
+        default:
+          bessRatio = BESS_POWER_RATIOS.peak_shaving;
+      }
+    } else if (isDataCenter && state.useCaseData?.gridConnectionStatus === 'off_grid') {
+      // Off-grid data centers require full coverage
+      bessRatio = BESS_POWER_RATIOS.microgrid; // 1.00 - must cover full load
+    } else if (isDataCenter && state.useCaseData?.gridConnectionStatus === 'microgrid') {
+      // Microgrid data centers with renewable integration
+      bessRatio = BESS_POWER_RATIOS.microgrid; // 1.00 - islanding capability
+    } else {
+      // Standard goal-based sizing for non-data-center or unspecified
+      const primaryGoal = state.goals?.primaryGoal || 'savings';
+      switch (primaryGoal) {
+        case 'backup':
+          bessRatio = BESS_POWER_RATIOS.resilience; // 0.70 - critical load backup
+          break;
+        case 'savings':
+          bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - cost optimization
+          break;
+        case 'sustainability':
+          bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - renewable integration
+          break;
+        case 'peak-shaving':
+          bessRatio = BESS_POWER_RATIOS.peak_shaving; // 0.40 - demand charge reduction
+          break;
+        default:
+          bessRatio = BESS_POWER_RATIOS.peak_shaving; // Default to optimal economic sizing
+      }
     }
     
     // Calculate BESS power and energy
@@ -371,7 +447,8 @@ export function useWizardState() {
     console.log('🔋 [recalculate] BESS sizing v2.0:', {
       totalPeakDemandKW,
       bessRatio,
-      primaryGoal,
+      primaryGoal: state.goals?.primaryGoal || state.useCaseData?.primaryBESSApplication || 'default',
+      gridStatus: state.useCaseData?.gridConnectionStatus || state.existingInfrastructure.gridConnection,
       recommendedBatteryKW,
       recommendedBatteryKWh,
       source: 'IEEE 4538388, MDPI Energies 11(8):2048',
