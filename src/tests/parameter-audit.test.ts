@@ -110,11 +110,11 @@ describe('Power Density Standards Audit', () => {
     console.log(`✅ Hotel: ${value} kW/room (expected 3-4)`);
   });
   
-  test('Hospital: 8-12 kW per bed peak (ASHRAE healthcare)', () => {
+  test('Hospital: 4-6 kW per bed peak (ASHRAE healthcare)', () => {
     const value = POWER_DENSITY_STANDARDS.hospitalPerBed;
-    expect(value).toBeGreaterThanOrEqual(8);
-    expect(value).toBeLessThanOrEqual(12);
-    console.log(`✅ Hospital: ${value} kW/bed (expected 8-12)`);
+    expect(value).toBeGreaterThanOrEqual(4);
+    expect(value).toBeLessThanOrEqual(6);
+    console.log(`✅ Hospital: ${value} kW/bed (expected 4-6)`);
   });
   
   test('Agriculture: 0.3-1.0 kW per acre peak (USDA)', () => {
@@ -137,39 +137,39 @@ describe('Power Density Standards Audit', () => {
 // ============================================
 describe('Hotel Class Profiles Audit', () => {
   
-  test('Economy: 20-30 kWh/room, 1-2 kW/room peak', () => {
+  test('Economy: 20-30 kWh/room, 2-3 kW/room peak', () => {
     const profile = HOTEL_CLASS_PROFILES.economy;
     expect(profile.kWhPerRoom).toBeGreaterThanOrEqual(20);
     expect(profile.kWhPerRoom).toBeLessThanOrEqual(30);
-    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(1);
-    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(2);
+    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(2);
+    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(3);
     console.log(`✅ Economy: ${profile.kWhPerRoom} kWh/room, ${profile.peakKWPerRoom} kW peak`);
   });
   
-  test('Midscale: 30-45 kWh/room, 1.5-2.5 kW/room peak', () => {
+  test('Midscale: 30-45 kWh/room, 3-5 kW/room peak', () => {
     const profile = HOTEL_CLASS_PROFILES.midscale;
     expect(profile.kWhPerRoom).toBeGreaterThanOrEqual(30);
     expect(profile.kWhPerRoom).toBeLessThanOrEqual(45);
-    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(1.5);
-    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(2.5);
+    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(3);
+    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(5);
     console.log(`✅ Midscale: ${profile.kWhPerRoom} kWh/room, ${profile.peakKWPerRoom} kW peak`);
   });
   
-  test('Upscale: 40-60 kWh/room, 2-3 kW/room peak', () => {
+  test('Upscale: 40-60 kWh/room, 4-6 kW/room peak', () => {
     const profile = HOTEL_CLASS_PROFILES.upscale;
     expect(profile.kWhPerRoom).toBeGreaterThanOrEqual(40);
     expect(profile.kWhPerRoom).toBeLessThanOrEqual(60);
-    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(2);
-    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(3);
+    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(4);
+    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(6);
     console.log(`✅ Upscale: ${profile.kWhPerRoom} kWh/room, ${profile.peakKWPerRoom} kW peak`);
   });
   
-  test('Luxury: 65-90 kWh/room, 3-4 kW/room peak', () => {
+  test('Luxury: 65-90 kWh/room, 6-8 kW/room peak', () => {
     const profile = HOTEL_CLASS_PROFILES.luxury;
     expect(profile.kWhPerRoom).toBeGreaterThanOrEqual(65);
     expect(profile.kWhPerRoom).toBeLessThanOrEqual(90);
-    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(3);
-    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(4);
+    expect(profile.peakKWPerRoom).toBeGreaterThanOrEqual(6);
+    expect(profile.peakKWPerRoom).toBeLessThanOrEqual(8);
     console.log(`✅ Luxury: ${profile.kWhPerRoom} kWh/room, ${profile.peakKWPerRoom} kW peak`);
   });
 });

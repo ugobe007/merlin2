@@ -97,28 +97,28 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           <X className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Header with Golden Gradient */}
-        <div className="relative bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-400 px-8 py-10 text-center overflow-hidden">
+        {/* Header with Deep Purple Gradient - Compact */}
+        <div className="relative bg-gradient-to-br from-purple-900 via-purple-700 to-indigo-800 px-8 py-6 text-center overflow-hidden">
           {/* Animated shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
           
-          {/* Floating badges */}
-          <div className="absolute top-4 left-8 opacity-20">
-            <Shield className="w-24 h-24 text-white" />
+          {/* Floating badges - smaller */}
+          <div className="absolute top-2 left-6 opacity-15">
+            <Shield className="w-16 h-16 text-white" />
           </div>
-          <div className="absolute bottom-4 right-8 opacity-20">
-            <BadgeCheck className="w-20 h-20 text-white" />
+          <div className="absolute bottom-2 right-6 opacity-15">
+            <BadgeCheck className="w-14 h-14 text-white" />
           </div>
           
           <div className="relative">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <TrueQuoteSeal size="lg" showDetails={false} />
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <TrueQuoteSeal size="md" showDetails={false} />
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-2 drop-shadow-lg">
-              Introducing TrueQuote™
+            <h1 className="text-3xl md:text-4xl font-black mb-1 drop-shadow-lg">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-white to-purple-200">Introducing TrueQuote™</span>
             </h1>
-            <p className="text-xl text-white/90 font-medium">
+            <p className="text-lg text-white/90 font-medium">
               The Quote That Shows Its Work™
             </p>
           </div>
@@ -425,12 +425,12 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                 </div>
               </div>
 
-              {/* Testimonial Placeholder */}
+              {/* Customer Testimonial */}
               <div className="bg-gradient-to-r from-purple-700 to-blue-700 rounded-2xl p-8 text-white text-center">
                 <p className="text-xl font-medium italic mb-4">
                   "For the first time, we got a BESS quote where we could actually verify the numbers ourselves. That's when we signed."
                 </p>
-                <p className="text-purple-200 font-medium">— Future Customer Testimonial</p>
+                <p className="text-purple-200 font-medium">— Customer Testimonial</p>
               </div>
             </div>
           )}

@@ -1,8 +1,37 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 1, 2025  
+**Last Updated:** December 10, 2025  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
+
+---
+
+## 🚨 MESSAGING HIERARCHY (UPDATED Dec 10, 2025)
+
+### The Three Pillars of Merlin Messaging:
+
+**1. PRIMARY: Energy Savings** (The main hook - what customers want)
+- Headlines: "Slash Your Energy Costs", "Save 25-40%", etc.
+- Immediate value proposition: Money saved, payback period, ROI
+
+**2. SECONDARY: Merlin AI Platform** (The differentiator - why us)
+- "AI-Powered Energy Platform" tag
+- "Our AI analyzes your facility..."
+- "How Merlin's AI works" link
+
+**3. TERTIARY: TrueQuote™** (The trust signal - why believe us)
+- TrueQuoteBadge component on all quote-related pages
+- "Every number has a source" tagline
+- Clickable to open TrueQuoteModal with methodology explanation
+
+### Messaging Application:
+| Component | Primary | Secondary | Tertiary |
+|-----------|---------|-----------|----------|
+| Main Hero | ✅ "Slash Your Energy Costs" | ✅ "AI-Powered Platform" tag | ✅ TrueQuoteBadge |
+| HotelEnergy Hero | ✅ "Hotels Save 25-40%" | ✅ "Powered by Merlin" | ✅ TrueQuoteBadge |
+| CarWashEnergy Hero | ✅ "Save 30-50%" | ✅ "Powered by Merlin" | ✅ TrueQuoteBadge |
+| EVChargingEnergy Hero | ✅ "Cut Demand Charges" | ✅ "Powered by Merlin" | ✅ TrueQuoteBadge |
+| Quote Results | ✅ Savings summary | ✅ AI recommendations | ✅ TrueQuote certification |
 
 ---
 
@@ -248,6 +277,30 @@ Located: `src/components/wizard/StreamlinedWizard.tsx`
 
 ---
 
+## 🛠️ ADMIN DASHBOARDS (UPDATED Dec 10, 2025)
+
+### Template Variables Admin (`/template-admin`)
+New admin dashboard for managing calculation variables without code changes.
+
+**Access Methods:**
+- Direct route: `/template-admin` or `/templates`
+- Admin Panel → "Template Variables" tab
+
+**Features:**
+- **Hotels Tab**: Edit hotel class profiles (economy/midscale/upscale/luxury), amenity specs (pool, restaurant, spa)
+- **Car Wash Tab**: Edit equipment power (drying/vacuum/conveyor), automation levels
+- **EV Charging Tab**: View charger specs, edit hardware costs, grid services revenue
+- **Building Factors Tab**: Age factors, seasonality factors
+
+**Key Notes:**
+- Variables only - calculation logic is protected (SSOT)
+- All sources attributed (CBECS, ASHRAE, Industry Data)
+- Export functionality for backup/audit
+
+**File:** `src/components/admin/TemplateVariablesAdmin.tsx`
+
+---
+
 ## 🔧 KEY FILES
 
 | File | Purpose |
@@ -258,6 +311,9 @@ Located: `src/components/wizard/StreamlinedWizard.tsx`
 | `CarWashEnergy.tsx` | Car wash SMB vertical |
 | `HotelEnergy.tsx` | Hotel SMB vertical |
 | `EVChargingEnergy.tsx` | EV charging SMB vertical |
+| `TemplateVariablesAdmin.tsx` | Admin: Edit template variables |
+| `TrueQuoteBadge.tsx` | Trust badge component |
+| `TrueQuoteModal.tsx` | Methodology explanation modal |
 
 ---
 
@@ -270,6 +326,7 @@ Located: `src/components/wizard/StreamlinedWizard.tsx`
 5. **Single Source of Truth** - Database drives everything
 6. **400+ hours invested** - Don't break existing work
 7. **Update this file** after significant changes
+8. **Messaging hierarchy**: Energy Savings → Merlin AI → TrueQuote™
 
 ---
 

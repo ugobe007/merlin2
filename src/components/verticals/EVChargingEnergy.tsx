@@ -35,6 +35,8 @@ import evChargingHotelImage from '@/assets/images/ev_charging_hotel.webp';
 // REFACTORED: Use StreamlinedWizard instead of EVChargingWizard
 import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================
 // TYPES
@@ -78,18 +80,58 @@ const EV_CHARGER_DISPLAY = {
 };
 
 // State electricity rates (for UI and calculation)
+// Updated Dec 2025: Added all 50 states with EV-specific demand charges
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
-  'California': { rate: 0.22, demandCharge: 28 },
-  'Texas': { rate: 0.12, demandCharge: 18 },
-  'Florida': { rate: 0.14, demandCharge: 15 },
-  'New York': { rate: 0.20, demandCharge: 25 },
+  'Alabama': { rate: 0.13, demandCharge: 14 },
+  'Alaska': { rate: 0.22, demandCharge: 18 },
   'Arizona': { rate: 0.13, demandCharge: 20 },
-  'Nevada': { rate: 0.11, demandCharge: 18 },
+  'Arkansas': { rate: 0.10, demandCharge: 12 },
+  'California': { rate: 0.22, demandCharge: 28 },
   'Colorado': { rate: 0.12, demandCharge: 16 },
-  'Washington': { rate: 0.10, demandCharge: 12 },
-  'Oregon': { rate: 0.11, demandCharge: 14 },
+  'Connecticut': { rate: 0.21, demandCharge: 22 },
+  'Delaware': { rate: 0.12, demandCharge: 15 },
+  'Florida': { rate: 0.14, demandCharge: 15 },
   'Georgia': { rate: 0.12, demandCharge: 16 },
-  'Other': { rate: 0.14, demandCharge: 18 },
+  'Hawaii': { rate: 0.35, demandCharge: 32 },
+  'Idaho': { rate: 0.10, demandCharge: 11 },
+  'Illinois': { rate: 0.13, demandCharge: 16 },
+  'Indiana': { rate: 0.12, demandCharge: 14 },
+  'Iowa': { rate: 0.11, demandCharge: 12 },
+  'Kansas': { rate: 0.12, demandCharge: 14 },
+  'Kentucky': { rate: 0.11, demandCharge: 12 },
+  'Louisiana': { rate: 0.10, demandCharge: 13 },
+  'Maine': { rate: 0.17, demandCharge: 18 },
+  'Maryland': { rate: 0.14, demandCharge: 17 },
+  'Massachusetts': { rate: 0.22, demandCharge: 24 },
+  'Michigan': { rate: 0.16, demandCharge: 18 },
+  'Minnesota': { rate: 0.12, demandCharge: 15 },
+  'Mississippi': { rate: 0.11, demandCharge: 12 },
+  'Missouri': { rate: 0.11, demandCharge: 13 },
+  'Montana': { rate: 0.11, demandCharge: 12 },
+  'Nebraska': { rate: 0.10, demandCharge: 11 },
+  'Nevada': { rate: 0.11, demandCharge: 18 },
+  'New Hampshire': { rate: 0.19, demandCharge: 20 },
+  'New Jersey': { rate: 0.16, demandCharge: 19 },
+  'New Mexico': { rate: 0.12, demandCharge: 14 },
+  'New York': { rate: 0.20, demandCharge: 25 },
+  'North Carolina': { rate: 0.11, demandCharge: 14 },
+  'North Dakota': { rate: 0.10, demandCharge: 11 },
+  'Ohio': { rate: 0.12, demandCharge: 15 },
+  'Oklahoma': { rate: 0.10, demandCharge: 12 },
+  'Oregon': { rate: 0.11, demandCharge: 14 },
+  'Pennsylvania': { rate: 0.14, demandCharge: 16 },
+  'Rhode Island': { rate: 0.20, demandCharge: 21 },
+  'South Carolina': { rate: 0.12, demandCharge: 14 },
+  'South Dakota': { rate: 0.11, demandCharge: 12 },
+  'Tennessee': { rate: 0.11, demandCharge: 13 },
+  'Texas': { rate: 0.12, demandCharge: 18 },
+  'Utah': { rate: 0.10, demandCharge: 13 },
+  'Vermont': { rate: 0.18, demandCharge: 19 },
+  'Virginia': { rate: 0.12, demandCharge: 15 },
+  'Washington': { rate: 0.10, demandCharge: 12 },
+  'West Virginia': { rate: 0.11, demandCharge: 13 },
+  'Wisconsin': { rate: 0.13, demandCharge: 15 },
+  'Wyoming': { rate: 0.10, demandCharge: 11 },
 };
 
 // ============================================
@@ -240,6 +282,9 @@ export default function EVChargingEnergy() {
   
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
+  
+  // TrueQuote Modal
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
   // Quick Estimate Modal - Progressive Disclosure
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
@@ -413,6 +458,22 @@ export default function EVChargingEnergy() {
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* TrueQuote Badge - Trust signal */}
+              <div className="flex items-center gap-2 mt-4">
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <TrueQuoteBadge size="sm" />
+                </button>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="text-emerald-300 text-xs hover:text-white transition-colors cursor-pointer"
+                >
+                  Every number sourced →
+                </button>
+              </div>
               
               {/* Down Arrow Indicator */}
               <div className="mt-8 flex flex-col items-center animate-bounce">
@@ -1209,6 +1270,12 @@ export default function EVChargingEnergy() {
           }}
         />
       )}
+      
+      {/* TrueQuote Modal */}
+      <TrueQuoteModal 
+        isOpen={showTrueQuoteModal} 
+        onClose={() => setShowTrueQuoteModal(false)} 
+      />
     </div>
   );
 }

@@ -16,6 +16,15 @@ import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
 
 // Import use case images
 import carWashImage from "../../assets/images/car_wash_1.jpg";
+import carWashPitStop from "../../assets/images/Car_Wash_PitStop.jpg";
+import carWashPitStop1 from "../../assets/images/Car_Wash_PitStop1.jpg";
+import carWashPitStop2 from "../../assets/images/Car_Wash_PitStop2.jpg";
+import carWashPitStop3 from "../../assets/images/Car_Wash_PitStop3.jpg";
+import carWashPitStop4 from "../../assets/images/Car_Wash_PitStop4.jpg";
+import carWashPitStop5 from "../../assets/images/Car_Wash_PitStop5.jpg";
+import carWashPreen from "../../assets/images/Car_Wash_Preen.jpg";
+import carWashRobot from "../../assets/images/car_wash_robot.jpg";
+import carWashTunnel from "../../assets/images/car_wash_tunnel.jpg";
 import hospitalImage from "../../assets/images/hospital_1.jpg";
 import evChargingStationImage from "../../assets/images/ev_charging_station.png";
 import evChargingHotelImage from "../../assets/images/ev_charging_hotel.webp";
@@ -34,6 +43,15 @@ const heroUseCases = [
     systemSize: '0.5 MW / 2 MWh'
   },
   {
+    id: 'car-wash-pitstop',
+    name: 'Express Car Wash',
+    image: carWashPitStop,
+    savings: '$98K',
+    payback: '2.4 yrs',
+    roi: '420%',
+    systemSize: '0.4 MW / 1.6 MWh'
+  },
+  {
     id: 'hotel',
     name: 'Luxury Hotel',
     image: hotelImage,
@@ -41,6 +59,15 @@ const heroUseCases = [
     payback: '9 mo',
     roi: '1,100%',
     systemSize: '2.0 MW / 8 MWh'
+  },
+  {
+    id: 'car-wash-tunnel',
+    name: 'Tunnel Car Wash',
+    image: carWashTunnel,
+    savings: '$156K',
+    payback: '1.9 yrs',
+    roi: '530%',
+    systemSize: '0.6 MW / 2.4 MWh'
   },
   {
     id: 'hospital',
@@ -52,6 +79,15 @@ const heroUseCases = [
     systemSize: '1.5 MW / 6 MWh'
   },
   {
+    id: 'car-wash-preen',
+    name: 'Full Service Car Wash',
+    image: carWashPreen,
+    savings: '$142K',
+    payback: '2.0 yrs',
+    roi: '505%',
+    systemSize: '0.55 MW / 2.2 MWh'
+  },
+  {
     id: 'ev-charging',
     name: 'EV Charging Hub',
     image: evChargingStationImage,
@@ -59,6 +95,15 @@ const heroUseCases = [
     payback: '6 mo',
     roi: '2,400%',
     systemSize: '5.0 MW / 20 MWh'
+  },
+  {
+    id: 'car-wash-robot',
+    name: 'Robotic Car Wash',
+    image: carWashRobot,
+    savings: '$118K',
+    payback: '2.2 yrs',
+    roi: '460%',
+    systemSize: '0.45 MW / 1.8 MWh'
   },
   {
     id: 'airport',
@@ -70,6 +115,15 @@ const heroUseCases = [
     systemSize: '4.0 MW / 16 MWh'
   },
   {
+    id: 'car-wash-pitstop2',
+    name: 'Premium Car Wash',
+    image: carWashPitStop2,
+    savings: '$135K',
+    payback: '2.1 yrs',
+    roi: '490%',
+    systemSize: '0.52 MW / 2.1 MWh'
+  },
+  {
     id: 'ev-hotel',
     name: 'Hotel + EV Charging',
     image: evChargingHotelImage,
@@ -77,6 +131,42 @@ const heroUseCases = [
     payback: '1.2 yrs',
     roi: '830%',
     systemSize: '1.2 MW / 4.8 MWh'
+  },
+  {
+    id: 'car-wash-pitstop3',
+    name: 'Eco Car Wash',
+    image: carWashPitStop3,
+    savings: '$109K',
+    payback: '2.3 yrs',
+    roi: '440%',
+    systemSize: '0.42 MW / 1.7 MWh'
+  },
+  {
+    id: 'car-wash-pitstop4',
+    name: 'Solar Car Wash',
+    image: carWashPitStop4,
+    savings: '$145K',
+    payback: '1.8 yrs',
+    roi: '550%',
+    systemSize: '0.58 MW / 2.3 MWh'
+  },
+  {
+    id: 'car-wash-pitstop5',
+    name: 'Quick Shine Wash',
+    image: carWashPitStop5,
+    savings: '$88K',
+    payback: '2.5 yrs',
+    roi: '400%',
+    systemSize: '0.35 MW / 1.4 MWh'
+  },
+  {
+    id: 'car-wash-pitstop1',
+    name: 'Auto Spa',
+    image: carWashPitStop1,
+    savings: '$122K',
+    payback: '2.2 yrs',
+    roi: '470%',
+    systemSize: '0.48 MW / 1.9 MWh'
   }
 ];
 
@@ -304,23 +394,23 @@ export default function HeroSection({
                 Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.
               </p>
 
-              {/* CTA Button - Deep Purple gradient with Yellow text - LARGER */}
+              {/* CTA Button - Deep Purple gradient with Neon Green text */}
               <button 
                 onClick={() => setShowSmartWizard(true)}
-                className="group relative w-full max-w-md px-14 py-6 rounded-full font-bold text-2xl transition-all duration-300 hover:scale-105 mb-6 overflow-hidden"
+                className="group relative w-full max-w-xl px-12 py-5 rounded-full font-bold text-2xl transition-all duration-300 hover:scale-105 mb-6 overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #4C1D95 0%, #5B21B6 30%, #6D28D9 60%, #7C3AED 100%)',
-                  boxShadow: '0 0 50px rgba(91,33,182,0.7), 0 0 100px rgba(109,40,217,0.4), 0 10px 40px rgba(0,0,0,0.5)'
+                  boxShadow: '0 0 40px rgba(91,33,182,0.7), 0 0 80px rgba(109,40,217,0.4), 0 8px 40px rgba(0,0,0,0.5)'
                 }}
               >
                 {/* Glow ring */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 rounded-full blur-md opacity-60 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 rounded-full blur-lg opacity-70 group-hover:opacity-100 transition-opacity" />
                 {/* Shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
-                <span className="relative flex items-center justify-center gap-3" style={{ color: '#FCD34D', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                  <span className="text-3xl">🪄</span>
-                  <span>Get My Free Quote</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
+                <span className="relative flex items-center justify-center gap-3" style={{ color: '#10B981', textShadow: '0 0 20px rgba(16,185,129,0.8), 0 3px 6px rgba(0,0,0,0.6)' }}>
+                  <span className="text-3xl animate-pulse">🪄</span>
+                  <span className="text-3xl font-black">Get My Free Quote</span>
+                  <span className="text-3xl group-hover:translate-x-2 transition-transform">→</span>
                 </span>
               </button>
 
@@ -335,7 +425,7 @@ export default function HeroSection({
               </button>
 
               {/* TrueQuote™ Badge - Clickable for marketing modal */}
-              <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-10">
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="hover:scale-105 transition-transform cursor-pointer"
@@ -350,45 +440,23 @@ export default function HeroSection({
                 </button>
               </div>
 
-              {/* How it Works - with wizard icon */}
-              <button 
-                onClick={() => setShowHowItWorks(true)}
-                className="flex items-center gap-3 text-purple-300 hover:text-amber-300 transition-colors mb-12"
-              >
-                <img src={merlinImage} alt="" className="w-6 h-6" />
-                <span>See how Merlin works his magic</span>
-                <span>→</span>
-              </button>
-
-              {/* Trust signals - bright yellow matching headline */}
-              <div className="flex flex-wrap gap-8 text-base font-bold mb-6">
-                <span 
-                  className="text-yellow-300 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
-                >
-                  ✓ No signup required
-                </span>
-                <span 
-                  className="text-yellow-300 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
-                >
-                  ✓ 30% Federal Tax Credit
-                </span>
-                <span 
-                  className="text-yellow-300 drop-shadow-lg"
-                  style={{ textShadow: '0 0 10px rgba(253,224,71,0.6), 0 0 20px rgba(253,224,71,0.4)' }}
-                >
-                  ✓ Instant results
-                </span>
-              </div>
-              
-              {/* Industry Compliance Badges */}
+              {/* Industry Compliance - Transparent, Auditable Pricing */}
               <MethodologyStatement 
                 variant="hero" 
                 darkMode={true} 
                 message="All quotes use NREL ATB 2024 pricing and DOE-aligned methodology. Every calculation is traceable."
                 className="mb-6"
               />
+              
+              {/* How it Works - with wizard icon */}
+              <button 
+                onClick={() => setShowHowItWorks(true)}
+                className="flex items-center gap-3 text-purple-300 hover:text-amber-300 transition-colors"
+              >
+                <img src={merlinImage} alt="" className="w-6 h-6" />
+                <span>See how Merlin works his magic</span>
+                <span>→</span>
+              </button>
             </div>
 
             {/* ========== RIGHT HALF - Infinity Pool Image ========== */}

@@ -483,6 +483,35 @@ interface QuoteData {
   certificationCost?: number;
   totalCapex?: number;
   annualOpex?: number;
+  // Power Profile & Opportunity Metrics (Dec 11, 2025)
+  powerProfile?: {
+    totalEnergyKWh: number;      // Battery + Solar daily production
+    totalPowerKW: number;        // Battery + Solar + Generator capacity
+    batteryKWh: number;
+    batteryKW: number;
+    solarKW: number;
+    generatorKW: number;
+  };
+  powerGap?: {
+    peakDemandKW: number;        // Calculated peak demand
+    configuredKW: number;        // Total configured power
+    coveragePercent: number;     // Coverage %
+    gapKW: number;               // Shortfall (if any)
+    status: 'covered' | 'partial' | 'gap';
+  };
+  solarOpportunity?: {
+    solarHours: number;          // Peak sun hours/day
+    rating: number;              // 1-5 rating
+    label: string;               // Limited/Fair/Good/Excellent/Exceptional
+    estimatedLCOE: number;       // $/kWh
+  };
+  energyOpportunities?: {
+    peakShaving: { active: boolean; value?: string; savings: string };
+    arbitrage: { active: boolean; value?: string; savings: string };
+    gridStability: { active: boolean; value?: string; savings: string };
+    demandResponse: { active: boolean; value?: string; savings: string };
+    activeCount: number;
+  };
 }
 
 const getIndustryName = (template: string | string[]): string => {
@@ -932,6 +961,159 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             </div>
             ` : ''}
           </div>
+          
+          <!-- Power Profile & Opportunity Metrics -->
+          ${quoteData.powerProfile || quoteData.solarOpportunity || quoteData.energyOpportunities ? `
+          <div class="section" style="page-break-inside: avoid;">
+            <div class="section-title">📊 Power Profile & Opportunity Analysis</div>
+            
+            <!-- Power Profile Summary -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+              ${quoteData.powerProfile ? `
+              <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 25px; border-radius: 15px; border: 2px solid #10b981;">
+                <div style="font-weight: bold; color: #065f46; font-size: 18px; margin-bottom: 15px;">🔋 Power Profile</div>
+                <div style="font-size: 36px; font-weight: bold; color: #059669; margin-bottom: 5px;">
+                  ${quoteData.powerProfile.totalEnergyKWh >= 1000 
+                    ? (quoteData.powerProfile.totalEnergyKWh / 1000).toFixed(1) + ' MWh' 
+                    : Math.round(quoteData.powerProfile.totalEnergyKWh) + ' kWh'}
+                </div>
+                <div style="font-size: 14px; color: #047857;">Total Energy Capacity</div>
+                <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; font-size: 13px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #6b7280;">🔋 Battery:</span>
+                    <strong>${Math.round(quoteData.powerProfile.batteryKW)} kW / ${Math.round(quoteData.powerProfile.batteryKWh)} kWh</strong>
+                  </div>
+                  ${quoteData.powerProfile.solarKW > 0 ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #6b7280;">☀️ Solar:</span>
+                    <strong>${Math.round(quoteData.powerProfile.solarKW)} kW</strong>
+                  </div>` : ''}
+                  ${quoteData.powerProfile.generatorKW > 0 ? `
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #6b7280;">⚡ Generator:</span>
+                    <strong>${Math.round(quoteData.powerProfile.generatorKW)} kW</strong>
+                  </div>` : ''}
+                </div>
+              </div>
+              ` : ''}
+              
+              ${quoteData.powerGap ? `
+              <div style="background: linear-gradient(135deg, ${
+                quoteData.powerGap.status === 'covered' ? '#ecfdf5, #d1fae5' :
+                quoteData.powerGap.status === 'partial' ? '#fef3c7, #fde68a' :
+                '#fee2e2, #fecaca'
+              }); padding: 25px; border-radius: 15px; border: 2px solid ${
+                quoteData.powerGap.status === 'covered' ? '#10b981' :
+                quoteData.powerGap.status === 'partial' ? '#f59e0b' :
+                '#ef4444'
+              };">
+                <div style="font-weight: bold; color: ${
+                  quoteData.powerGap.status === 'covered' ? '#065f46' :
+                  quoteData.powerGap.status === 'partial' ? '#92400e' :
+                  '#991b1b'
+                }; font-size: 18px; margin-bottom: 15px;">⚡ Power Gap Analysis</div>
+                <div style="font-size: 36px; font-weight: bold; color: ${
+                  quoteData.powerGap.status === 'covered' ? '#059669' :
+                  quoteData.powerGap.status === 'partial' ? '#d97706' :
+                  '#dc2626'
+                }; margin-bottom: 5px;">
+                  ${quoteData.powerGap.coveragePercent}%
+                </div>
+                <div style="font-size: 14px; color: #6b7280;">
+                  ${quoteData.powerGap.status === 'covered' 
+                    ? '✓ Peak Demand Fully Covered' 
+                    : quoteData.powerGap.status === 'partial'
+                      ? '⚠ Partial Coverage - Grid Support Needed'
+                      : '⚠ Gap Exists - ' + Math.round(quoteData.powerGap.gapKW) + ' kW Shortfall'}
+                </div>
+                <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; font-size: 13px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #6b7280;">Peak Demand:</span>
+                    <strong>${Math.round(quoteData.powerGap.peakDemandKW)} kW</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #6b7280;">Configured Power:</span>
+                    <strong>${Math.round(quoteData.powerGap.configuredKW)} kW</strong>
+                  </div>
+                </div>
+              </div>
+              ` : ''}
+            </div>
+            
+            <!-- Solar & Energy Opportunities -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+              ${quoteData.solarOpportunity ? `
+              <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 25px; border-radius: 15px; border: 2px solid #f59e0b;">
+                <div style="font-weight: bold; color: #92400e; font-size: 18px; margin-bottom: 15px;">☀️ Solar Opportunity</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                  ${[1,2,3,4,5].map(i => `<span style="font-size: 28px; opacity: ${i <= quoteData.solarOpportunity!.rating ? 1 : 0.3};">☀️</span>`).join('')}
+                </div>
+                <div style="font-size: 24px; font-weight: bold; color: #d97706;">${quoteData.solarOpportunity.label}</div>
+                <div style="font-size: 14px; color: #92400e; margin-top: 5px;">${quoteData.solarOpportunity.solarHours.toFixed(1)} peak sun hours/day</div>
+                <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; font-size: 13px; color: #6b7280;">
+                  <strong>Est. Solar LCOE:</strong> ~${(quoteData.solarOpportunity.estimatedLCOE * 100).toFixed(1)}¢/kWh
+                </div>
+              </div>
+              ` : ''}
+              
+              ${quoteData.energyOpportunities ? `
+              <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 25px; border-radius: 15px; border: 2px solid #ef4444;">
+                <div style="font-weight: bold; color: #991b1b; font-size: 18px; margin-bottom: 15px;">🔥 Energy Opportunities</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                  ${[1,2,3].map(i => `<span style="font-size: 28px; opacity: ${i <= quoteData.energyOpportunities!.activeCount ? 1 : 0.3};">🔥</span>`).join('')}
+                </div>
+                <div style="font-size: 14px; color: #dc2626; font-weight: bold; margin-bottom: 10px;">${quoteData.energyOpportunities.activeCount} Active Opportunities</div>
+                <div style="font-size: 13px; space-y: 8px;">
+                  ${quoteData.energyOpportunities.peakShaving.active ? `
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="color: #f97316;">🔥</span>
+                    <span><strong>Peak Shaving</strong> ${quoteData.energyOpportunities.peakShaving.value || ''}</span>
+                  </div>` : ''}
+                  ${quoteData.energyOpportunities.arbitrage.active ? `
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="color: #f97316;">🔥</span>
+                    <span><strong>Energy Arbitrage</strong> ${quoteData.energyOpportunities.arbitrage.value || ''}</span>
+                  </div>` : ''}
+                  ${quoteData.energyOpportunities.gridStability.active ? `
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="color: #f97316;">🔥</span>
+                    <span><strong>Grid Stability</strong> ${quoteData.energyOpportunities.gridStability.value || ''}</span>
+                  </div>` : ''}
+                  ${quoteData.energyOpportunities.demandResponse.active ? `
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #f97316;">🔥</span>
+                    <span><strong>Demand Response</strong></span>
+                  </div>` : ''}
+                </div>
+              </div>
+              ` : ''}
+            </div>
+            
+            <!-- How Your Quote Aligns -->
+            <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-radius: 12px; border-left: 4px solid #7c3aed;">
+              <div style="font-weight: bold; color: #5b21b6; font-size: 18px; margin-bottom: 15px;">🎯 How Your Quote Aligns With These Metrics</div>
+              <ul style="margin-left: 20px; color: #4c1d95; font-size: 14px; line-height: 1.8;">
+                ${quoteData.powerGap?.status === 'covered' 
+                  ? '<li><strong>✓ Full Coverage:</strong> Your system is sized to meet 100% of your peak demand, ensuring grid independence during peak periods.</li>' 
+                  : quoteData.powerGap?.status === 'partial'
+                    ? '<li><strong>⚠ Partial Coverage:</strong> Consider increasing system size by ' + Math.round((quoteData.powerGap?.gapKW || 0)) + ' kW for full peak demand coverage, or rely on grid during peaks.</li>'
+                    : '<li><strong>System Sizing:</strong> Your configuration is optimized for your facility\'s energy profile.</li>'}
+                ${quoteData.solarOpportunity && quoteData.solarOpportunity.rating >= 3 
+                  ? '<li><strong>☀️ Solar Integration:</strong> Your location has excellent solar potential (' + quoteData.solarOpportunity.solarHours.toFixed(1) + ' hrs/day). Adding solar can reduce your effective energy cost to ~' + (quoteData.solarOpportunity.estimatedLCOE * 100).toFixed(1) + '¢/kWh.</li>'
+                  : ''}
+                ${quoteData.energyOpportunities?.peakShaving.active 
+                  ? '<li><strong>⚡ Peak Shaving:</strong> Your ' + (quoteData.energyOpportunities.peakShaving.value || 'demand charges') + ' make peak shaving a priority. Expected savings: ' + quoteData.energyOpportunities.peakShaving.savings + '.</li>'
+                  : ''}
+                ${quoteData.energyOpportunities?.arbitrage.active 
+                  ? '<li><strong>💱 Arbitrage:</strong> Your utility rate (' + (quoteData.energyOpportunities.arbitrage.value || 'TOU') + ') enables energy arbitrage. Expected savings: ' + quoteData.energyOpportunities.arbitrage.savings + '.</li>'
+                  : ''}
+                ${quoteData.energyOpportunities?.gridStability.active 
+                  ? '<li><strong>🔌 Grid Stability:</strong> With ' + (quoteData.energyOpportunities.gridStability.value || 'reliability concerns') + ', your battery provides critical backup protection. Value: ' + quoteData.energyOpportunities.gridStability.savings + '.</li>'
+                  : ''}
+              </ul>
+            </div>
+          </div>
+          ` : ''}
           
           <!-- Financial Summary -->
           <div class="section">

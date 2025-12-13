@@ -33,6 +33,9 @@ import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
 import { WizardPowerProfile, WizardStepHelp, COMMON_STEP_HELP, type StepHelpContent } from '@/components/wizard/shared';
 import { PowerGaugeWidget, type PowerGaugeData } from '@/components/wizard/widgets';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
+import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 
 // ============================================
 // TYPES
@@ -1476,7 +1479,85 @@ export default function CarWashWizard({
     }
   }
   
-  // Download quote as formatted HTML document
+  // ============================================
+  // QUOTE EXPORT - SHARED UTILITIES
+  // ============================================
+  
+  // Helper to convert quote result to shared QuoteData format
+  function getQuoteDataForExport() {
+    if (!quoteResult) return null;
+    
+    const storageSizeMW = Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100) / 1000;
+    const needsBackup = energyGoals.primaryGoal === 'backup-power' || energyGoals.primaryGoal === 'all';
+    
+    // Calculate solar MW from roof area (rough estimate: 15W per sq ft)
+    const solarMW = energyGoals.interestInSolar ? (energyGoals.solarRoofArea * 15 / 1000000) : 0;
+    
+    return {
+      storageSizeMW,
+      durationHours: operations.peakHoursEnd - operations.peakHoursStart || 4,
+      solarMW,
+      windMW: 0,
+      generatorMW: energyGoals.includeGenerator ? (energyGoals.generatorSizeKW / 1000) : (needsBackup ? 0.2 : 0),
+      location: mergedInputs.state,
+      industryTemplate: 'car-wash',
+      gridConnection: gridConnection.status === 'off-grid' ? 'off-grid' : 
+                      gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid',
+      totalProjectCost: quoteResult.costs.totalProjectCost,
+      annualSavings: quoteResult.financials.annualSavings,
+      paybackYears: quoteResult.financials.paybackYears,
+      taxCredit: quoteResult.costs.taxCredit,
+      netCost: quoteResult.costs.netCost,
+      installationOption: 'epc',
+      shippingOption: 'standard',
+      financingOption: energyGoals.financingPreference === 'cash' ? 'purchase' : energyGoals.financingPreference,
+      equipmentCost: quoteResult.costs.equipmentCost,
+      installationCost: quoteResult.costs.installationCost,
+    };
+  }
+  
+  // Helper to get equipment breakdown for export
+  function getEquipmentBreakdownForExport() {
+    if (!quoteResult) return null;
+    
+    const equipment = quoteResult.equipment;
+    return {
+      batteries: equipment?.batteries ? [equipment.batteries] : [],
+      inverters: equipment?.inverters ? [equipment.inverters] : [],
+      transformers: equipment?.transformers ? [equipment.transformers] : [],
+      switchgear: equipment?.switchgear ? [equipment.switchgear] : [],
+      solar: equipment?.solar,
+      generators: equipment?.generators,
+    };
+  }
+  
+  // Handlers using shared utilities
+  function handleDownloadPDF() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
+    
+    generatePDF(quoteData, equipment);
+    onComplete?.({ inputs: mergedInputs, equipment, operations, energyGoals, calculatedPower, quoteResult });
+  }
+  
+  async function handleDownloadWord() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
+    
+    await generateWord(quoteData, equipment);
+  }
+  
+  function handleDownloadExcel() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
+    
+    generateExcel(quoteData, equipment);
+  }
+  
+  // Download quote as formatted HTML document (LEGACY - kept for backward compatibility)
   function downloadQuote() {
     if (!quoteResult) return;
     
@@ -3553,7 +3634,10 @@ export default function CarWashWizard({
               ) : quoteResult ? (
                 <>
                   <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">Your Custom Car Wash Quote</h3>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <h3 className="text-2xl font-bold text-white">Your Custom Car Wash Quote</h3>
+                      <TrueQuoteBadge size="md" />
+                    </div>
                     <p className="text-cyan-200/70">{mergedInputs.businessName || 'Your Car Wash'} • {numberOfBays} Bays • {mergedInputs.state}</p>
                   </div>
                   
@@ -4151,25 +4235,25 @@ export default function CarWashWizard({
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <button
-                        onClick={downloadWord}
-                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-blue-600/30 to-purple-600/30 hover:from-blue-500/50 hover:to-purple-500/50 border-2 border-blue-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30"
-                      >
-                        <FileText className="w-10 h-10 text-blue-400" />
-                        <span className="text-base font-bold">Word (.docx)</span>
-                      </button>
-                      <button
-                        onClick={downloadExcel}
-                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-emerald-600/30 to-green-600/30 hover:from-emerald-500/50 hover:to-green-500/50 border-2 border-emerald-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/30"
-                      >
-                        <FileSpreadsheet className="w-10 h-10 text-emerald-400" />
-                        <span className="text-base font-bold">Excel (.csv)</span>
-                      </button>
-                      <button
-                        onClick={downloadPDF}
+                        onClick={handleDownloadPDF}
                         className="flex flex-col items-center gap-3 bg-gradient-to-br from-red-600/30 to-orange-600/30 hover:from-red-500/50 hover:to-orange-500/50 border-2 border-red-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-red-500/30"
                       >
                         <File className="w-10 h-10 text-red-400" />
-                        <span className="text-base font-bold">PDF (Print)</span>
+                        <span className="text-base font-bold">PDF</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadWord}
+                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-blue-600/30 to-purple-600/30 hover:from-blue-500/50 hover:to-purple-500/50 border-2 border-blue-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30"
+                      >
+                        <FileText className="w-10 h-10 text-blue-400" />
+                        <span className="text-base font-bold">Word</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadExcel}
+                        className="flex flex-col items-center gap-3 bg-gradient-to-br from-emerald-600/30 to-green-600/30 hover:from-emerald-500/50 hover:to-green-500/50 border-2 border-emerald-400/50 text-white py-5 rounded-xl font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/30"
+                      >
+                        <FileSpreadsheet className="w-10 h-10 text-emerald-400" />
+                        <span className="text-base font-bold">Excel</span>
                       </button>
                     </div>
                   </div>

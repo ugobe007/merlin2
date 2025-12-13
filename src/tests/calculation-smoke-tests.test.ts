@@ -138,13 +138,17 @@ describe('Power Calculations by Use Case', () => {
 // ============================================
 describe('Scaling Behavior', () => {
   
-  test('Hotel power scales linearly with rooms', () => {
+  test('Hotel power scales with rooms (class-adjusted)', () => {
     const small = calculateUseCasePower('hotel', { rooms: 50 });
     const medium = calculateUseCasePower('hotel', { rooms: 100 });
     const large = calculateUseCasePower('hotel', { rooms: 200 });
     
-    // Medium should be ~2x small, large should be ~2x medium
-    expect(medium.powerMW / small.powerMW).toBeCloseTo(2, 0);
+    // Hotels auto-assign class by size, so scaling is NOT linear
+    // 50 rooms = economy (2.5 kW/room), 100+ rooms = midscale (4.0 kW/room)
+    // What matters is that larger hotels have more power (not exact 2x)
+    expect(medium.powerMW).toBeGreaterThan(small.powerMW);
+    expect(large.powerMW).toBeGreaterThan(medium.powerMW);
+    // Large (200) should be ~2x medium (100) since both are midscale
     expect(large.powerMW / medium.powerMW).toBeCloseTo(2, 0);
   });
   
@@ -345,19 +349,19 @@ describe('No Duplicate Constants (Architecture Check)', () => {
   
   test('HOTEL_CLASS_PROFILES values are consistent', () => {
     // These values should match what's in useCasePowerCalculations.ts
-    // If HotelWizard.tsx had duplicates, they should now be removed
+    // UPDATED Dec 2025: Values validated against real-world Marriott data (2.5-7 kW/room)
     
-    expect(HOTEL_CLASS_PROFILES.economy.peakKWPerRoom).toBe(1.5);
-    expect(HOTEL_CLASS_PROFILES.midscale.peakKWPerRoom).toBe(2.0);
-    expect(HOTEL_CLASS_PROFILES.upscale.peakKWPerRoom).toBe(2.5);
-    expect(HOTEL_CLASS_PROFILES.luxury.peakKWPerRoom).toBe(3.5);
+    expect(HOTEL_CLASS_PROFILES.economy.peakKWPerRoom).toBe(2.5);
+    expect(HOTEL_CLASS_PROFILES.midscale.peakKWPerRoom).toBe(4.0);
+    expect(HOTEL_CLASS_PROFILES.upscale.peakKWPerRoom).toBe(5.0);
+    expect(HOTEL_CLASS_PROFILES.luxury.peakKWPerRoom).toBe(7.0);
     
-    // Document expected values for reference
-    console.log('Expected HOTEL_CLASS_PROFILES (SSOT):');
-    console.log('  economy: 1.5 kW/room');
-    console.log('  midscale: 2.0 kW/room');
-    console.log('  upscale: 2.5 kW/room');
-    console.log('  luxury: 3.5 kW/room');
+    // Document expected values for reference (validated Dec 2025)
+    console.log('Expected HOTEL_CLASS_PROFILES (SSOT - Dec 2025):');
+    console.log('  economy: 2.5 kW/room');
+    console.log('  midscale: 4.0 kW/room (validated vs Marriott Lancaster)');
+    console.log('  upscale: 5.0 kW/room');
+    console.log('  luxury: 7.0 kW/room');
   });
   
   test('HOTEL_AMENITY_SPECS values are consistent', () => {

@@ -56,12 +56,12 @@ export interface PowerProfileTrackerProps {
 // ============================================
 
 export const WIZARD_SECTIONS: WizardSection[] = [
-  { id: 'location', title: 'Location', icon: MapPin, description: 'Where is your project?', pointsAwarded: 10 },
+  { id: 'location', title: 'Location & Goals', icon: MapPin, description: 'Where + what you want', pointsAwarded: 20 },
   { id: 'industry', title: 'Industry', icon: Building2, description: 'What type of facility?', pointsAwarded: 15 },
   { id: 'details', title: 'Details', icon: ClipboardList, description: 'Facility specifications', pointsAwarded: 25 },
-  { id: 'goals', title: 'Goals', icon: Target, description: 'What do you want to achieve?', pointsAwarded: 15 },
+  { id: 'addons', title: 'Add-ons', icon: Target, description: 'Additional equipment', pointsAwarded: 10 },
   { id: 'configuration', title: 'System', icon: Settings, description: 'Battery + solar sizing', pointsAwarded: 20 },
-  { id: 'quote', title: 'Quote', icon: FileText, description: 'Your custom quote', pointsAwarded: 15 },
+  { id: 'quote', title: 'Quote', icon: FileText, description: 'Your custom quote', pointsAwarded: 10 },
 ];
 
 export const POWER_LEVELS = [
@@ -200,8 +200,8 @@ export default function PowerProfileTracker({
           </div>
         </div>
         
-        {/* Power Profile Status - Shows calculated peak demand */}
-        {systemSize && systemSize > 0 ? (
+        {/* Power Profile Status - Only show after facility details (Section 2+) */}
+        {currentSection >= 2 && systemSize && systemSize > 0 ? (
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-3 text-center">
             <div className="text-xs text-white/80 uppercase tracking-wider mb-1">Peak Demand</div>
             <div className="text-2xl font-black text-white">
@@ -211,11 +211,17 @@ export default function PowerProfileTracker({
               <div className="text-white/70 text-sm">{durationHours}hr backup recommended</div>
             )}
           </div>
-        ) : (
+        ) : currentSection >= 2 ? (
           <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-3 text-center">
             <div className="text-xs text-white/80 uppercase tracking-wider mb-1">Peak Demand</div>
             <div className="text-lg font-bold text-white/60">Calculating...</div>
             <div className="text-white/50 text-xs">Complete facility details</div>
+          </div>
+        ) : (
+          /* Before Section 2: Show welcome message instead */
+          <div className="bg-gradient-to-r from-purple-600/50 to-indigo-600/50 rounded-xl p-3 text-center">
+            <div className="text-xs text-white/80 uppercase tracking-wider mb-1">Getting Started</div>
+            <div className="text-sm font-medium text-white/80">Tell us about your project</div>
           </div>
         )}
       </div>

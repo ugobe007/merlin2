@@ -27,12 +27,13 @@ import {
   type HotelAmenity,
   type HotelClass
 } from '@/services/useCasePowerCalculations';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
-import { saveAs } from 'file-saver';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
 import { WizardPowerProfile, WizardStepHelp, type StepHelpContent } from '@/components/wizard/shared';
 import { PowerGaugeWidget } from '@/components/wizard/widgets';
+import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 
 // ============================================
 // TYPES
@@ -409,196 +410,80 @@ export default function HotelWizard({
     }
   }
   
-  // Downloads
-  function downloadQuote() {
-    if (!quoteResult) return;
+  // ============================================
+  // QUOTE EXPORT - USING SHARED UTILITIES
+  // ============================================
+  
+  // Helper to convert quote result to shared QuoteData format
+  function getQuoteDataForExport() {
+    if (!quoteResult) return null;
     
-    const formatCurrency = (n: number) => `$${Math.round(n).toLocaleString()}`;
-    const batteryKW = Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100);
+    const storageSizeMW = Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100) / 1000;
+    const needsBackup = energyGoals.primaryGoal === 'backup-power' || energyGoals.primaryGoal === 'all';
     
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Hotel Energy Quote - ${mergedInputs.businessName || 'Your Hotel'}</title>
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1e293b; }
-    h1 { color: #6366f1; border-bottom: 3px solid #6366f1; padding-bottom: 10px; }
-    h2 { color: #8b5cf6; margin-top: 30px; }
-    .summary-box { background: linear-gradient(135deg, #eef2ff, #f5f3ff); border: 2px solid #6366f1; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
-    .savings { font-size: 48px; font-weight: bold; color: #6366f1; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; }
-    .card h4 { margin: 0 0 10px 0; color: #475569; font-size: 14px; }
-    .card .value { font-size: 24px; font-weight: bold; color: #1e293b; }
-    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f1f5f9; }
-    .total-row { background: #eef2ff; font-weight: bold; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <h1>🏨 Hotel Battery Storage Quote</h1>
+    return {
+      storageSizeMW,
+      durationHours: 4, // Standard 4-hour duration for hotels
+      solarMW: energyGoals.interestInSolar ? (energyGoals.solarKW / 1000) : 0,
+      windMW: 0,
+      generatorMW: needsBackup ? 0.25 : 0,
+      location: hotelDetails.state,
+      industryTemplate: 'hotel',
+      gridConnection: gridConnection.status === 'off-grid' ? 'off-grid' : 
+                      gridConnection.status === 'grid-backup-only' ? 'limited' : 'on-grid',
+      totalProjectCost: quoteResult.costs.totalProjectCost,
+      annualSavings: quoteResult.financials.annualSavings,
+      paybackYears: quoteResult.financials.paybackYears,
+      taxCredit: quoteResult.costs.taxCredit,
+      netCost: quoteResult.costs.netCost,
+      installationOption: 'epc',
+      shippingOption: 'standard',
+      financingOption: 'purchase',
+      // New detailed cost breakdown
+      equipmentCost: quoteResult.costs.equipmentCost,
+      installationCost: quoteResult.costs.installationCost,
+    };
+  }
   
-  <p><strong>${mergedInputs.businessName || 'Hotel'}</strong><br>
-  ${hotelDetails.numberOfRooms} rooms • ${HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name} • ${hotelDetails.state}</p>
-  
-  <div class="summary-box">
-    <div style="font-size: 14px; color: #6366f1;">ESTIMATED ANNUAL SAVINGS</div>
-    <div class="savings">${formatCurrency(quoteResult.financials.annualSavings)}</div>
-    <div style="color: #64748b;">per year</div>
-  </div>
-  
-  <div class="grid">
-    <div class="card"><h4>Payback Period</h4><div class="value">${quoteResult.financials.paybackYears.toFixed(1)} years</div></div>
-    <div class="card"><h4>25-Year ROI</h4><div class="value">${Math.round(quoteResult.financials.roi25Year)}%</div></div>
-    <div class="card"><h4>Net Cost (after ITC)</h4><div class="value">${formatCurrency(quoteResult.costs.netCost)}</div></div>
-    <div class="card"><h4>Battery Size</h4><div class="value">${batteryKW} kW</div></div>
-  </div>
-  
-  <h2>Investment Summary</h2>
-  <table>
-    <tr><td>Total Equipment Cost</td><td>${formatCurrency(quoteResult.costs.equipmentCost)}</td></tr>
-    <tr><td>Installation</td><td>${formatCurrency(quoteResult.costs.installationCost)}</td></tr>
-    <tr class="total-row"><td>Total Project Cost</td><td>${formatCurrency(quoteResult.costs.totalProjectCost)}</td></tr>
-    <tr style="color: #6366f1;"><td>Federal Tax Credit (30%)</td><td>-${formatCurrency(quoteResult.costs.taxCredit)}</td></tr>
-    <tr class="total-row"><td><strong>Net Cost</strong></td><td><strong>${formatCurrency(quoteResult.costs.netCost)}</strong></td></tr>
-  </table>
-  
-  <div class="footer">
-    <p>Generated by Merlin Energy • ${new Date().toLocaleString()}</p>
-  </div>
-</body>
-</html>`;
+  // Helper to get equipment breakdown for export
+  function getEquipmentBreakdownForExport() {
+    if (!quoteResult) return null;
     
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Hotel_Quote_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Transform equipment to the format expected by quoteExport
+    const equipment = quoteResult.equipment;
+    return {
+      batteries: equipment?.batteries ? [equipment.batteries] : [],
+      inverters: equipment?.inverters ? [equipment.inverters] : [],
+      transformers: equipment?.transformers ? [equipment.transformers] : [],
+      switchgear: equipment?.switchgear ? [equipment.switchgear] : [],
+      solar: equipment?.solar,
+      generators: equipment?.generators,
+    };
+  }
+  
+  function handleDownloadPDF() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
     
+    generatePDF(quoteData, equipment);
     onComplete?.({ inputs: mergedInputs, hotelDetails, amenities, operations, energyGoals, calculatedPower, quoteResult });
   }
-
-  async function downloadWord() {
-    if (!quoteResult) return;
+  
+  async function handleDownloadWord() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
     
-    const formatCurrency = (n: number) => `$${Math.round(n).toLocaleString()}`;
-    const batteryKW = Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100);
-    
-    const doc = new Document({
-      sections: [{
-        children: [
-          new Paragraph({
-            children: [new TextRun({ text: '🏨 MERLIN ENERGY', bold: true, size: 48, color: '6366F1' })],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: 'HOTEL BATTERY STORAGE QUOTE', bold: true, size: 32, color: '8B5CF6' })],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `Hotel: ${mergedInputs.businessName || 'Hotel'}`, size: 24 })],
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `${hotelDetails.numberOfRooms} rooms • ${HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name}`, size: 24 })],
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: `Location: ${hotelDetails.state}`, size: 24 })],
-            spacing: { after: 300 },
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: 'ANNUAL SAVINGS', bold: true, size: 28, color: '6366F1' })],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            children: [new TextRun({ text: formatCurrency(quoteResult.financials.annualSavings), bold: true, size: 72, color: '6366F1' })],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: [
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Payback Period')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${quoteResult.financials.paybackYears.toFixed(1)} years`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('25-Year ROI')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${Math.round(quoteResult.financials.roi25Year)}%`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Battery Size')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(`${batteryKW} kW`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Total Project Cost')], shading: { fill: 'F3F4F6' } }),
-                new TableCell({ children: [new Paragraph(formatCurrency(quoteResult.costs.totalProjectCost))] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph('Federal Tax Credit (30%)')], shading: { fill: 'EEF2FF' } }),
-                new TableCell({ children: [new Paragraph(`-${formatCurrency(quoteResult.costs.taxCredit)}`)] }),
-              ]}),
-              new TableRow({ children: [
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Net Cost', bold: true })] })], shading: { fill: 'E0E7FF' } }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(quoteResult.costs.netCost), bold: true, color: '6366F1' })] })] }),
-              ]}),
-            ],
-          }),
-        ],
-      }],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `Hotel_Quote_${new Date().toISOString().split('T')[0]}.docx`);
+    await generateWord(quoteData, equipment);
   }
-
-  function downloadExcel() {
-    if (!quoteResult) return;
+  
+  function handleDownloadExcel() {
+    const quoteData = getQuoteDataForExport();
+    const equipment = getEquipmentBreakdownForExport();
+    if (!quoteData || !equipment) return;
     
-    const batteryKW = Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100);
-    const enabledAmenities = Object.entries(amenities).filter(([_, v]) => v).map(([k]) => HOTEL_AMENITY_SPECS[k as keyof typeof HOTEL_AMENITY_SPECS]?.name).join(', ');
-    
-    const csvRows = [
-      ['MERLIN ENERGY - Hotel Quote'],
-      [''],
-      ['Quote Date', new Date().toLocaleDateString()],
-      [''],
-      ['HOTEL INFORMATION'],
-      ['Hotel Name', mergedInputs.businessName || 'Hotel'],
-      ['Location', hotelDetails.state],
-      ['Number of Rooms', hotelDetails.numberOfRooms],
-      ['Hotel Class', HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name],
-      ['Amenities', enabledAmenities],
-      [''],
-      ['POWER ANALYSIS'],
-      ['Base Peak Demand (kW)', calculatedPower.basePeakKW],
-      ['Amenity Peak Demand (kW)', calculatedPower.amenityPeakKW],
-      ['Total Peak Demand (kW)', calculatedPower.totalPeakKW],
-      [''],
-      ['BATTERY SYSTEM'],
-      ['Battery Size (kW)', batteryKW],
-      ['Target Savings', `${energyGoals.targetSavingsPercent}%`],
-      [''],
-      ['FINANCIALS'],
-      ['Total Project Cost', Math.round(quoteResult.costs.totalProjectCost)],
-      ['Federal Tax Credit', -Math.round(quoteResult.costs.taxCredit)],
-      ['Net Cost', Math.round(quoteResult.costs.netCost)],
-      ['Annual Savings', Math.round(quoteResult.financials.annualSavings)],
-      ['Payback (years)', quoteResult.financials.paybackYears.toFixed(1)],
-      ['25-Year ROI (%)', Math.round(quoteResult.financials.roi25Year)],
-    ];
-    
-    const csvContent = csvRows.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, `Hotel_Quote_${new Date().toISOString().split('T')[0]}.csv`);
+    generateExcel(quoteData, equipment);
   }
 
   // Run quote calculation when reaching final step
@@ -2070,7 +1955,10 @@ export default function HotelWizard({
                 <>
                   {/* Quote Header */}
                   <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10 text-center">
-                    <h3 className="text-3xl font-black text-white mb-2">Your Hotel Battery Storage Quote</h3>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <h3 className="text-3xl font-black text-white">Your Hotel Battery Storage Quote</h3>
+                      <TrueQuoteBadge size="md" />
+                    </div>
                     <p className="text-gray-300 text-lg">{hotelDetails.numberOfRooms} rooms • {HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name} • {hotelDetails.state}</p>
                   </div>
                   
@@ -2541,17 +2429,17 @@ export default function HotelWizard({
                   <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-gray-600 shadow-xl">
                     <h4 className="font-black text-xl text-white mb-4">📥 Download Your Quote</h4>
                     <div className="grid grid-cols-3 gap-4">
-                      <button onClick={downloadWord} className="flex flex-col items-center gap-3 bg-blue-600/30 hover:bg-blue-600/50 border-2 border-blue-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-blue-500/20">
+                      <button onClick={handleDownloadPDF} className="flex flex-col items-center gap-3 bg-red-600/30 hover:bg-red-600/50 border-2 border-red-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-500/20">
+                        <File className="w-10 h-10 text-red-400" />
+                        <span className="font-bold">PDF</span>
+                      </button>
+                      <button onClick={handleDownloadWord} className="flex flex-col items-center gap-3 bg-blue-600/30 hover:bg-blue-600/50 border-2 border-blue-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-blue-500/20">
                         <FileText className="w-10 h-10 text-blue-400" />
                         <span className="font-bold">Word</span>
                       </button>
-                      <button onClick={downloadExcel} className="flex flex-col items-center gap-3 bg-emerald-600/30 hover:bg-emerald-600/50 border-2 border-emerald-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
+                      <button onClick={handleDownloadExcel} className="flex flex-col items-center gap-3 bg-emerald-600/30 hover:bg-emerald-600/50 border-2 border-emerald-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
                         <FileSpreadsheet className="w-10 h-10 text-emerald-400" />
                         <span className="font-bold">Excel</span>
-                      </button>
-                      <button onClick={downloadQuote} className="flex flex-col items-center gap-3 bg-red-600/30 hover:bg-red-600/50 border-2 border-red-400 text-white py-5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-500/20">
-                        <File className="w-10 h-10 text-red-400" />
-                        <span className="font-bold">HTML</span>
                       </button>
                     </div>
                   </div>

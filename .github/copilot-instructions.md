@@ -2,10 +2,106 @@
 
 ## 🚀 BUSINESS STRATEGY - READ FIRST!
 
-**BEFORE making ANY changes, read:** `MERLIN_STRATEGIC_ROADMAP.md` in project root
-- Contains the 5-phase business plan
-- Merlin = Platform/Engine powering SMB verticals + Merlin Pro
-- Updated December 1, 2025
+**BEFORE making ANY changes, read these files:**
+
+1. **`MERLIN_STRATEGIC_ROADMAP.md`** - 5-phase business plan (Dec 2025)
+   - Merlin = Platform/Engine powering SMB verticals + Merlin Pro
+   - Revenue model: SaaS + Lead Gen + API
+
+2. **`docs/MERLIN_ARCHITECTURE_EVOLUTION.md`** - Architecture scaling plan (Dec 11, 2025)
+   - TrueQuote™ as core differentiator
+   - Migration to @merlin/truequote-core package
+   - Pro vs SMB vs API product separation
+
+## 🎯 TRUEQUOTE™ IS THE FUTURE
+
+**TrueQuote™** = Every number in a quote is traceable to an authoritative source.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      MERLIN TRUEQUOTE™ ENGINE                               │
+│                    (Future: @merlin/truequote-core)                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Current SSOT Files → Future Package Location:                              │
+│  ├── unifiedQuoteCalculator.ts    → @merlin/truequote-core/engine/         │
+│  ├── centralizedCalculations.ts   → @merlin/truequote-core/engine/         │
+│  ├── equipmentCalculations.ts     → @merlin/truequote-core/engine/         │
+│  ├── useCasePowerCalculations.ts  → @merlin/truequote-core/engine/         │
+│  └── benchmarkSources.ts          → @merlin/truequote-core/truequote/      │
+│                                                                             │
+│  Key Principle: ALL quotes include audit trail (sources, methodology)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**When building NEW features, ask:**
+- Does this support TrueQuote™ source attribution?
+- Is this a Pro feature, SMB feature, or shared?
+- Can this be extracted to the core engine later?
+
+### TrueQuote™ UI Components (Dec 2025)
+
+**Quote display components** in `src/components/quotes/`:
+- `QuoteLineItemWithSource` - Cost line item with source attribution tooltip
+- `SourceAttributionTooltip` - Hover tooltip showing benchmark source details
+- `SourceBadge` - Visual badge for source type (government, industry, academic)
+- `QuoteAuditSection` - Expandable section with full source methodology
+
+**TrueQuote™ badges** in `src/components/shared/TrueQuoteBadge.tsx`:
+- `TrueQuoteBadge` - Small badge indicating TrueQuote verified
+- `TrueQuoteBanner` - Full banner with source methodology description
+
+**Benchmark sources** in `src/services/benchmarkSources.ts`:
+- `AUTHORITATIVE_SOURCES` - All benchmark sources with metadata
+- `PRICING_BENCHMARKS` - Equipment-specific pricing benchmarks
+- Key sources: `nrel-atb-2024`, `nrel-cost-benchmark-2024`, `ira-2022`
+
+**Current Integration (Dec 2025):**
+- ✅ `QuoteResultsSection.tsx` - Investment Summary uses `QuoteLineItemWithSource`
+- ✅ Sources shown: BESS (NREL ATB 2024), Solar (NREL Cost Benchmark), Installation (NREL), ITC (IRA 2022)
+- ✅ "View TrueQuote™ Sources" button expands source attribution list
+- ✅ **NEW**: Sizing Methodology v2.0 with IEEE/MDPI/NREL sources displayed in audit trail
+
+### BESS Sizing Methodology v2.0 (Dec 11, 2025)
+
+**All sizing ratios are benchmark-backed and traceable:**
+
+| Ratio | Value | Source |
+|-------|-------|--------|
+| BESS/Peak (peak shaving) | 0.40 | IEEE 4538388, MDPI Energies 11(8):2048 |
+| BESS/Peak (arbitrage) | 0.50 | Industry practice |
+| BESS/Peak (resilience) | 0.70 | IEEE 446-1995 (Orange Book) |
+| BESS/Peak (microgrid) | 1.00 | NREL microgrid standards |
+| Solar ILR (DC-coupled) | 1.40 | NREL ATB 2024 PV-Plus-Battery |
+| Solar ILR (aggressive) | 1.70 | EIA Today in Energy |
+| Generator Reserve | 1.25 | LADWP, NEC 700/701/702, WPP Guide |
+
+**Critical Load % by Industry (for generator sizing):**
+
+| Industry | Critical % | Source |
+|----------|------------|--------|
+| Data Center | 100% | IEEE 446-1995, Tier III/IV |
+| Hospital | 85% | NEC 517, NFPA 99 |
+| Airport | 55% | FAA requirements |
+| Hotel | 50% | LADWP commercial guidance |
+| Manufacturing | 60% | IEEE 446-1995 |
+| Retail | 40% | LADWP commercial guidance |
+| Warehouse | 35% | Industry practice |
+| Car Wash | 25% | Minimal critical load |
+
+**Helper Functions** in `benchmarkSources.ts`:
+- `getBESSSizingRatioWithSource(useCase)` - Returns ratio + full citation
+- `getSolarILRWithSource(couplingType)` - Returns ILR + full citation
+- `getCriticalLoadWithSource(industryType)` - Returns % + citation
+- `getGeneratorReserveMarginWithSource()` - Returns margin + citation
+- `generateSizingAuditTrail(params)` - Complete TrueQuote™ audit trail
+
+**Constants** in `wizardConstants.ts`:
+- `BESS_POWER_RATIOS` - Use case ratios (peak_shaving: 0.40, etc.)
+- `CRITICAL_LOAD_PERCENTAGES` - Industry-specific critical load %
+- `SOLAR_BATTERY_RATIOS` - ILR by coupling type
+- `GENERATOR_RESERVE_MARGIN` - 1.25 (25% reserve)
+- `calculateSystemSizing(params)` - Complete sizing function with metadata
 
 ## 🎨 UI/UX DESIGN - READ SECOND!
 
@@ -362,40 +458,65 @@ const quote = await calculateQuote({ storageSizeMW, durationHours, ... });
 - ⚠️ `InteractiveConfigDashboard.tsx` - Needs audit for direct calculation calls
 - ⚠️ `QuoteResultsPanel.tsx` - Needs audit for rogue calculations
 
-**USE CASES COVERED BY STREAMLINED WIZARD (18+):**
+**USE CASES IN DATABASE (26 total, 21 active after Dec 11, 2025 cleanup):**
 All these use cases flow through StreamlinedWizard → calculateQuote():
-| Slug | Category | Status |
-|------|----------|--------|
-| apartment-building | Residential | ✅ SSOT |
-| car-wash | Commercial | ✅ SSOT (also has CarWashWizard) |
-| distribution-center | Industrial | ✅ SSOT |
-| edge-data-center | Commercial | ✅ SSOT |
-| ev-charging | Transportation | ✅ SSOT (also has EVChargingWizard) |
-| gas-station | Commercial | ✅ SSOT |
-| hospital | Commercial | ✅ SSOT |
-| hotel / hotel-hospitality | Commercial | ✅ SSOT (also has HotelWizard) |
-| indoor-farm | Agriculture | ✅ SSOT |
-| manufacturing | Industrial | ✅ SSOT |
-| microgrid | Renewable | ✅ SSOT |
-| office | Commercial | ✅ SSOT |
-| public-building | Government | ✅ SSOT |
-| residential | Residential | ✅ SSOT |
-| retail | Commercial | ✅ SSOT |
-| shopping-center | Commercial | ✅ SSOT |
-| university | Education | ✅ SSOT |
+
+| DB Slug | Name | Category | Questions | Configs | Status |
+|---------|------|----------|-----------|---------|--------|
+| `apartment` | Apartment Complex | Residential | 16 | 1 | ✅ SSOT |
+| `car-wash` | Car Wash | Commercial | 16 | 1 | ✅ SSOT (also has CarWashWizard) |
+| `warehouse` | Warehouse & Logistics | Industrial | 16 | 1 | ✅ SSOT |
+| `data-center` | Data Center | Commercial | 8 | 1 | ✅ SSOT |
+| `ev-charging` | EV Charging Station | Commercial | 16 | 1 | ✅ SSOT (also has EVChargingWizard) |
+| `gas-station` | Gas Station | Commercial | 16 | 1 | ✅ SSOT |
+| `hospital` | Hospital | Institutional | 16 | 1 | ✅ SSOT |
+| `hotel` | Hotel | Commercial | 16 | 2 | ✅ SSOT (also has HotelWizard) |
+| `indoor-farm` | Indoor Farm | Agricultural | 16 | 1 | ✅ SSOT |
+| `manufacturing` | Manufacturing Facility | Industrial | 16 | 1 | ✅ SSOT |
+| `microgrid` | Microgrid & Renewable | Commercial | 16 | 1 | ✅ SSOT (Premium) |
+| `office` | Office Building | Commercial | 16 | 3 | ✅ SSOT |
+| `government` | Government & Public | Institutional | 16 | 1 | ✅ SSOT (Premium) |
+| `residential` | Residential | Residential | 16 | 1 | ✅ SSOT |
+| `retail` | Retail & Commercial | Commercial | 16 | 1 | ✅ SSOT |
+| `shopping-center` | Shopping Center/Mall | Commercial | 16 | 1 | ✅ SSOT |
+| `college` | College & University | Institutional | 16 | 1 | ✅ SSOT (Premium) |
+| `airport` | Airport | Institutional | 16 | 1 | ✅ SSOT (Premium) |
+| `casino` | Casino & Gaming | Commercial | 16 | 1 | ✅ SSOT (Premium) |
+| `agricultural` | Agricultural | Agricultural | 16 | 1 | ✅ SSOT (Premium) |
+| `cold-storage` | Cold Storage | Industrial | 16 | 1 | ✅ SSOT (Premium) |
+
+**CLEANED UP (Dec 11, 2025):**
+| DB Slug | Action | Reason |
+|---------|--------|--------|
+| `ev-fast-charging` | ❌ DELETED | Duplicate of `ev-charging` |
+| `peak-shaving-commercial` | ⏸️ DEACTIVATED | Application type → use `primaryBESSApplication` question |
+| `energy-arbitrage-utility` | ⏸️ DEACTIVATED | Application type → use `primaryBESSApplication` question |
+| `backup-critical-infrastructure` | ⏸️ DEACTIVATED | Application type → use `primaryBESSApplication` question |
+| `hotel-hospitality` | ⏸️ INACTIVE | Duplicate of `hotel` |
 
 See `CALCULATION_FILES_AUDIT.md` for complete architecture documentation.
+
+**NEW: `primaryBESSApplication` Question (Dec 11, 2025):**
+Added to all 21 active use cases. Options:
+- `peak_shaving` - Reduce demand charges during peak periods (default)
+- `energy_arbitrage` - Buy low, sell/use high (time-of-use optimization)
+- `backup_power` - Critical load protection during outages
+- `demand_response` - Participate in utility DR programs for revenue
+- `renewable_integration` - Maximize solar/wind self-consumption
+- `load_shifting` - Move energy consumption to off-peak hours
+- `frequency_regulation` - Grid services revenue (utility scale)
+- `stacked` - Multiple applications (advanced)
 
 **SSOT DEFAULTS (Aligned Dec 2025):**
 Code defaults in `useCasePowerCalculations.ts` MUST match database `custom_questions` defaults:
 
 | Use Case | Field | Default Value | Source |
 |----------|-------|---------------|--------|
-| hotel | rooms | 150 | DB `custom_questions` |
-| hospital | beds | 250 | DB `custom_questions` |
-| warehouse | squareFootage | 250,000 | DB `custom_questions` |
-| apartment-building | units | 400 | DB `custom_questions` |
-| car-wash | numberOfBays | 4 | DB `custom_questions` |
+| hotel | roomCount | 150 | DB `custom_questions` |
+| hospital | bedCount | 200 | DB `custom_questions` |
+| warehouse | warehouseSqFt | 200,000 | DB `custom_questions` |
+| apartment | unitCount | 100 | DB `custom_questions` |
+| car-wash | bayCount | 4 | DB `custom_questions` |
 | manufacturing | squareFootage | 100,000 | DB `custom_questions` |
 | airport | annualPassengers | 5,000,000 | DB `custom_questions` |
 | casino | gamingFloorSqft | 100,000 | DB `custom_questions` |
@@ -569,16 +690,153 @@ flyctl deploy            # Deploy to production
    - ❌ `industryStandardFormulas.calculateFinancialMetrics()` - name conflict, deprecated
    - ✅ **Use `centralizedCalculations.calculateFinancialMetrics()` for ALL financial calculations**
 
-3. **Wizard Architecture (UPDATED Dec 5, 2025)**:
-   - ✅ **StreamlinedWizard** is the SINGLE SOURCE OF TRUTH for generic wizard flows
-   - **Vertical Wizards** (HotelWizard, CarWashWizard, EVChargingWizard) are specialized
-   - See **VERTICAL WIZARD STANDARDS** section below for requirements
+3. **Wizard Architecture (REFACTORED Dec 11, 2025)**:
+   - ✅ **StreamlinedWizard** is MODULAR — 280 lines (was 4,677 lines)
+   - See **STREAMLINED WIZARD ARCHITECTURE** section below for full details
+   - **Vertical landing pages** (HotelEnergy, CarWashEnergy, EVChargingEnergy) use StreamlinedWizard with `initialUseCase` prop
 
 4. **Modal Props**: ModalManager has 20+ prop type errors. Use ModalRenderer for all new modals.
 
 5. **Database Sizing**: EV Charging has special sizing logic in `baselineService.ts` (user kW input overrides template).
 
 6. **Region Pricing**: Different pricing by region (North America, Europe, Asia, Middle East). Use `unifiedPricingService.ts` which handles regional variations.
+
+---
+
+## 🧙‍♂️ STREAMLINED WIZARD ARCHITECTURE (Dec 11, 2025)
+
+**The StreamlinedWizard was refactored from 4,677 lines to 280 lines via modular extraction.**
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         StreamlinedWizard.tsx                               │
+│                      (~280 lines - Lean Orchestrator)                       │
+│                                                                             │
+│  - Renders header, sidebar, and section components                          │
+│  - Manages section navigation (progress indicators)                         │
+│  - Passes all state from useStreamlinedWizard hook                          │
+└─────────────────────────────────────┬───────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    useStreamlinedWizard.ts Hook                             │
+│                      (~633 lines - State + Effects)                         │
+│                                                                             │
+│  - All 20+ useState hooks centralized                                       │
+│  - All useEffect hooks for data sync                                        │
+│  - Callbacks: generateQuote(), handleIndustrySelect(), etc.                 │
+│  - Integrates with QuoteEngine.generateQuote() for SSOT                     │
+└─────────────────────────────────────┬───────────────────────────────────────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              ▼                       ▼                       ▼
+┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+│  constants/        │  │  types/            │  │  sections/         │
+│  wizardConstants.ts│  │  wizardTypes.ts    │  │  (6 section files) │
+│  (294 lines)       │  │  (284 lines)       │  │                    │
+│                    │  │                    │  │  ├─ Section 0:     │
+│  GOAL_OPTIONS      │  │  WizardState       │  │  │  WelcomeLoc...  │
+│  FACILITY_PRESETS  │  │  DEFAULT_STATE     │  │  ├─ Section 1:     │
+│  US_STATES         │  │  RFQFormState      │  │  │  IndustrySec... │
+│  SOLAR/WIND_PRESETS│  │  Section Props     │  │  ├─ Section 2:     │
+│                    │  │  CustomQuestion    │  │  │  FacilityDet... │
+└────────────────────┘  └────────────────────┘  │  ├─ Section 3:     │
+                                                │  │  GoalsSection   │
+                                                │  ├─ Section 4:     │
+                                                │  │  Configuration  │
+                                                │  └─ Section 5:     │
+                                                │     QuoteResults   │
+                                                └────────────────────┘
+```
+
+### File Structure
+
+```
+src/components/wizard/
+├── StreamlinedWizard.tsx        # 280 lines - Orchestrator
+├── constants/
+│   ├── index.ts                 # Re-exports
+│   └── wizardConstants.ts       # 294 lines - All shared constants
+├── types/
+│   ├── index.ts                 # Re-exports
+│   └── wizardTypes.ts           # 284 lines - State & prop types
+├── hooks/
+│   ├── index.ts                 # Re-exports
+│   └── useStreamlinedWizard.ts  # 633 lines - All state management
+├── sections/
+│   ├── index.ts                 # Re-exports all sections
+│   ├── WelcomeLocationSection.tsx    # Section 0: Location
+│   ├── IndustrySection.tsx           # Section 1: Use case selection
+│   ├── FacilityDetailsSection.tsx    # Section 2: Custom questions
+│   ├── GoalsSection.tsx              # Section 3: Goals + add-ons
+│   ├── ConfigurationSection.tsx      # Section 4: System sizing
+│   └── QuoteResultsSection.tsx       # Section 5: Results + export
+└── _deprecated/
+    ├── StreamlinedWizard.legacy.tsx  # Original 4,677 lines (archived)
+    ├── SmartWizardModal.tsx          # Legacy modal
+    └── SmartWizardUseCases.tsx       # Legacy use case picker
+```
+
+### SSOT Compliance
+
+The hook's `generateQuote()` callback calls the SSOT:
+
+```typescript
+// useStreamlinedWizard.ts - generateQuote callback
+const result = await QuoteEngine.generateQuote({
+  storageSizeMW: wizardState.batteryKW / 1000,
+  durationHours: wizardState.durationHours,
+  location: wizardState.state,
+  electricityRate: wizardState.electricityRate,
+  useCase: wizardState.selectedIndustry,
+  solarMW: wizardState.solarKW / 1000,
+  windMW: wizardState.windTurbineKW / 1000,
+  generatorMW: wizardState.generatorKW / 1000,
+  generatorFuelType: fuelTypeMap[wizardState.generatorFuel] || 'natural-gas',
+  gridConnection: gridMap[wizardState.gridConnection] || 'on-grid',
+});
+```
+
+### Importing Components
+
+```typescript
+// From orchestrator or other files:
+import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+
+// From sections (for testing or extension):
+import { GoalsSection, ConfigurationSection } from '@/components/wizard/sections';
+
+// From types (for TypeScript):
+import type { WizardState, GoalsSectionProps } from '@/components/wizard/types';
+
+// From constants (for reuse):
+import { GOAL_OPTIONS, US_STATES, FACILITY_PRESETS } from '@/components/wizard/constants';
+
+// From hooks (for custom wizard implementations):
+import { useStreamlinedWizard } from '@/components/wizard/hooks';
+```
+
+### Key Benefits
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Main file lines | 4,677 | 280 |
+| useState hooks | 20+ scattered | Centralized in hook |
+| useEffect hooks | 12+ scattered | Organized in hook |
+| Testability | Difficult | Each section testable |
+| Reusability | None | Constants/types shared |
+
+### Deprecated Files (DO NOT IMPORT)
+
+```typescript
+// ❌ NEVER import from _deprecated/
+import StreamlinedWizard from './wizard/_deprecated/StreamlinedWizard.legacy';
+
+// ✅ ALWAYS use the new modular version:
+import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+```
 
 ---
 

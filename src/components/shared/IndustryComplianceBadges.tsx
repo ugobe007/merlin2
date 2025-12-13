@@ -42,61 +42,61 @@ export const AUTHORITY_SOURCES: AuthoritySource[] = [
     id: 'nrel',
     name: 'NREL',
     fullName: 'National Renewable Energy Laboratory',
-    logo: '🔬', // Will be replaced with actual logo
+    logo: '', // No emoji - just text
     url: 'https://www.nrel.gov/',
     category: 'government',
     description: 'U.S. Department of Energy national laboratory focused on renewable energy research',
     whatWeUse: 'Annual Technology Baseline (ATB) for battery pricing, StoreFAST for LCOS methodology',
     color: 'text-blue-700',
-    bgColor: 'bg-blue-50'
+    bgColor: 'bg-blue-100'
   },
   {
     id: 'doe',
     name: 'DOE',
     fullName: 'U.S. Department of Energy',
-    logo: '⚡',
+    logo: '',
     url: 'https://www.energy.gov/',
     category: 'government',
     description: 'Federal agency responsible for energy policy and research',
     whatWeUse: 'Grid modernization standards, energy storage program cost targets',
     color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50'
+    bgColor: 'bg-emerald-100'
   },
   {
     id: 'sandia',
     name: 'Sandia',
     fullName: 'Sandia National Laboratories',
-    logo: '🔋',
+    logo: '',
     url: 'https://www.sandia.gov/',
     category: 'government',
     description: 'DOE national lab with extensive energy storage safety research',
     whatWeUse: 'Energy storage performance protocols, safety testing standards',
     color: 'text-orange-700',
-    bgColor: 'bg-orange-50'
+    bgColor: 'bg-orange-100'
   },
   {
     id: 'ul',
     name: 'UL',
     fullName: 'UL Solutions (UL 9540)',
-    logo: '✓',
+    logo: '',
     url: 'https://www.ul.com/services/battery-and-energy-storage-system-testing',
     category: 'standard',
     description: 'Global safety certification organization',
     whatWeUse: 'UL 9540 and UL 9540A safety certification requirements for BESS',
     color: 'text-red-700',
-    bgColor: 'bg-red-50'
+    bgColor: 'bg-red-100'
   },
   {
     id: 'ieee',
     name: 'IEEE',
     fullName: 'IEEE Standards Association',
-    logo: '📐',
+    logo: '',
     url: 'https://standards.ieee.org/',
     category: 'standard',
     description: 'World\'s largest technical professional organization',
     whatWeUse: 'IEEE 1547 interconnection standards, IEEE 2030 smart grid guidelines',
     color: 'text-indigo-700',
-    bgColor: 'bg-indigo-50'
+    bgColor: 'bg-indigo-100'
   },
   {
     id: 'nfpa',
