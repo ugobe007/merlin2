@@ -54,15 +54,6 @@ const heroUseCases = [
     systemSize: '2.0 MW / 8 MWh'
   },
   {
-    id: 'car-wash-express',
-    name: 'Express Car Wash',
-    image: carWashPitStop,
-    savings: '$98K',
-    payback: '2.4 yrs',
-    roi: '420%',
-    systemSize: '0.4 MW / 1.6 MWh'
-  },
-  {
     id: 'data-center-enterprise',
     name: 'Enterprise Data Center',
     image: dataCenter1,
@@ -70,6 +61,15 @@ const heroUseCases = [
     payback: '1.2 yrs',
     roi: '840%',
     systemSize: '5.0 MW / 20 MWh'
+  },
+  {
+    id: 'car-wash-tunnel',
+    name: 'Tunnel Car Wash',
+    image: carWashTunnel,
+    savings: '$156K',
+    payback: '1.8 yrs',
+    roi: '560%',
+    systemSize: '0.65 MW / 2.6 MWh'
   },
   {
     id: 'ev-charging',
@@ -90,15 +90,6 @@ const heroUseCases = [
     systemSize: '1.5 MW / 6 MWh'
   },
   {
-    id: 'car-wash-tunnel',
-    name: 'Tunnel Car Wash',
-    image: carWashTunnel,
-    savings: '$156K',
-    payback: '1.8 yrs',
-    roi: '560%',
-    systemSize: '0.65 MW / 2.6 MWh'
-  },
-  {
     id: 'hotel-resort',
     name: 'Resort & Casino',
     image: hotelHolidayInn3,
@@ -117,51 +108,6 @@ const heroUseCases = [
     systemSize: '3.5 MW / 14 MWh'
   },
   {
-    id: 'airport',
-    name: 'Regional Airport',
-    image: airportImage,
-    savings: '$2.1M',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '4.0 MW / 16 MWh'
-  },
-  {
-    id: 'data-center-hyperscale',
-    name: 'Hyperscale Data Center',
-    image: dataCenter3,
-    savings: '$4.2M',
-    payback: '1.0 yrs',
-    roi: '1,000%',
-    systemSize: '10.0 MW / 40 MWh'
-  },
-  {
-    id: 'car-wash-premium',
-    name: 'Premium Car Wash',
-    image: carWashPitStop2,
-    savings: '$135K',
-    payback: '2.1 yrs',
-    roi: '490%',
-    systemSize: '0.52 MW / 2.1 MWh'
-  },
-  {
-    id: 'airport',
-    name: 'Airport',
-    image: airportImage,
-    savings: '$2.1M',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '4.0 MW / 16 MWh'
-  },
-  {
-    id: 'car-wash-pitstop2',
-    name: 'Premium Car Wash',
-    image: carWashPitStop2,
-    savings: '$135K',
-    payback: '2.1 yrs',
-    roi: '490%',
-    systemSize: '0.52 MW / 2.1 MWh'
-  },
-  {
     id: 'car-wash-auto',
     name: 'Automated Car Wash',
     image: carWashAuto,
@@ -171,13 +117,13 @@ const heroUseCases = [
     systemSize: '0.6 MW / 2.4 MWh'
   },
   {
-    id: 'data-center-hyperscale',
-    name: 'Hyperscale Data Center',
-    image: dataCenter3,
-    savings: '$4.2M',
-    payback: '1.1 yrs',
-    roi: '930%',
-    systemSize: '8.0 MW / 32 MWh'
+    id: 'airport',
+    name: 'Regional Airport',
+    image: airportImage,
+    savings: '$2.1M',
+    payback: '1.4 yrs',
+    roi: '720%',
+    systemSize: '4.0 MW / 16 MWh'
   },
   {
     id: 'hotel-boutique',
@@ -189,13 +135,13 @@ const heroUseCases = [
     systemSize: '1.5 MW / 6 MWh'
   },
   {
-    id: 'car-wash-full-service',
-    name: 'Full Service Car Wash',
-    image: carWashPreen,
-    savings: '$142K',
-    payback: '2.0 yrs',
-    roi: '505%',
-    systemSize: '0.55 MW / 2.2 MWh'
+    id: 'data-center-hyperscale',
+    name: 'Hyperscale Data Center',
+    image: dataCenter3,
+    savings: '$4.2M',
+    payback: '1.1 yrs',
+    roi: '930%',
+    systemSize: '8.0 MW / 32 MWh'
   },
   {
     id: 'ev-hotel',
@@ -205,42 +151,6 @@ const heroUseCases = [
     payback: '1.2 yrs',
     roi: '830%',
     systemSize: '1.2 MW / 4.8 MWh'
-  },
-  {
-    id: 'car-wash-robot',
-    name: 'Robotic Car Wash',
-    image: carWashRobot,
-    savings: '$118K',
-    payback: '2.2 yrs',
-    roi: '460%',
-    systemSize: '0.45 MW / 1.8 MWh'
-  },
-  {
-    id: 'car-wash-pitstop4',
-    name: 'Solar Car Wash',
-    image: carWashPitStop4,
-    savings: '$145K',
-    payback: '1.8 yrs',
-    roi: '550%',
-    systemSize: '0.58 MW / 2.3 MWh'
-  },
-  {
-    id: 'car-wash-pitstop5',
-    name: 'Quick Shine Wash',
-    image: carWashPitStop5,
-    savings: '$88K',
-    payback: '2.5 yrs',
-    roi: '400%',
-    systemSize: '0.35 MW / 1.4 MWh'
-  },
-  {
-    id: 'car-wash-pitstop1',
-    name: 'Auto Spa',
-    image: carWashPitStop1,
-    savings: '$122K',
-    payback: '2.2 yrs',
-    roi: '470%',
-    systemSize: '0.48 MW / 1.9 MWh'
   }
 ];
 
