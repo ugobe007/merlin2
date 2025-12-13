@@ -82,9 +82,6 @@ export function GoalsSection({
   const needsMorePower = powerCoverage < 100;
   const [showEquipmentDetails, setShowEquipmentDetails] = useState(false);
   const [hasAutoPopulated, setHasAutoPopulated] = useState(false);
-  
-  // Ref to maintain scroll position when EV charger panel expands
-  const scrollPositionRef = useRef<number>(0);
 
   // DYNAMIC RECOMMENDATION - Recalculates when peak demand or EV chargers change
   const defaultRecommendation: MerlinRecommendation = React.useMemo(() => {
