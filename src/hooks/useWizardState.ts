@@ -170,7 +170,19 @@ export function useWizardState() {
       
       // Data center IT load (convert MW to kW for SSOT)
       // Database stores itLoadMW (in MW), SSOT expects itLoadKW (in kW)
-      itLoadKW: state.useCaseData.itLoadKW || (state.useCaseData.itLoadMW ? parseFloat(state.useCaseData.itLoadMW) * 1000 : undefined),
+      itLoadKW: (() => {
+        const itLoadKW = state.useCaseData.itLoadKW;
+        const itLoadMW = state.useCaseData.itLoadMW;
+        const converted = itLoadMW ? parseFloat(itLoadMW) * 1000 : undefined;
+        console.log('🔧 [useCaseData mapping] IT Load conversion:', {
+          raw_itLoadKW: itLoadKW,
+          raw_itLoadMW: itLoadMW,
+          parsed_MW: itLoadMW ? parseFloat(itLoadMW) : 'N/A',
+          converted_kW: converted,
+          final: itLoadKW || converted
+        });
+        return itLoadKW || converted;
+      })(),
       
       // Bay count (car wash)
       washBays: state.useCaseData.washBays || state.facility.bayCount || 0,
