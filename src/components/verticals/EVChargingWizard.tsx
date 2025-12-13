@@ -64,6 +64,8 @@ import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDas
 import { quickCO2Estimate, calculateEVChargingCO2Impact } from '@/services/environmentalMetricsService';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { WizardPowerProfile, WizardStepHelp, type StepHelpContent } from '@/components/wizard/shared';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
 
 // ============================================
 // CONCIERGE SERVICE TIERS
@@ -2064,9 +2066,12 @@ export default function EVChargingWizard({
                 <>
                   {/* Quote Header - HIGH CONTRAST */}
                   <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10 text-center">
-                    <h3 className="text-3xl font-black text-white mb-2">
-                      {businessName ? `${businessName} - ` : ''}Your EV Charging Quote
-                    </h3>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <h3 className="text-3xl font-black text-white">
+                        {businessName ? `${businessName} - ` : ''}Your EV Charging Quote
+                      </h3>
+                      <TrueQuoteBadge size="md" />
+                    </div>
                     <p className="text-gray-300 text-lg">
                       {STATION_TYPES[stationType].name} • {SCALE_OPTIONS[scale].description} • {state}
                     </p>

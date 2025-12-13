@@ -38,6 +38,8 @@ import evChargingHotelImage from '@/assets/images/ev_charging_hotel.webp';
 // REFACTORED: Use StreamlinedWizard instead of HotelWizard
 import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
 import { TrustBadgesInline, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================
 // TYPES
@@ -85,18 +87,58 @@ const AMENITY_DISPLAY = {
 };
 
 // State electricity rates (for UI and calculation)
+// Updated Dec 2025: Added all 50 states with regional rates
 const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
-  'California': { rate: 0.20, demandCharge: 22 },
-  'Florida': { rate: 0.13, demandCharge: 14 },
-  'Texas': { rate: 0.11, demandCharge: 12 },
-  'New York': { rate: 0.18, demandCharge: 20 },
-  'Nevada': { rate: 0.12, demandCharge: 15 },
+  'Alabama': { rate: 0.13, demandCharge: 12 },
+  'Alaska': { rate: 0.22, demandCharge: 16 },
   'Arizona': { rate: 0.12, demandCharge: 16 },
+  'Arkansas': { rate: 0.10, demandCharge: 11 },
+  'California': { rate: 0.20, demandCharge: 22 },
   'Colorado': { rate: 0.11, demandCharge: 13 },
+  'Connecticut': { rate: 0.21, demandCharge: 19 },
+  'Delaware': { rate: 0.12, demandCharge: 14 },
+  'Florida': { rate: 0.13, demandCharge: 14 },
+  'Georgia': { rate: 0.12, demandCharge: 13 },
   'Hawaii': { rate: 0.35, demandCharge: 30 },
+  'Idaho': { rate: 0.10, demandCharge: 10 },
+  'Illinois': { rate: 0.13, demandCharge: 14 },
+  'Indiana': { rate: 0.12, demandCharge: 12 },
+  'Iowa': { rate: 0.11, demandCharge: 11 },
+  'Kansas': { rate: 0.12, demandCharge: 12 },
+  'Kentucky': { rate: 0.10, demandCharge: 10 },
+  'Louisiana': { rate: 0.10, demandCharge: 11 },
+  'Maine': { rate: 0.17, demandCharge: 16 },
+  'Maryland': { rate: 0.14, demandCharge: 15 },
   'Massachusetts': { rate: 0.22, demandCharge: 18 },
+  'Michigan': { rate: 0.16, demandCharge: 15 },
+  'Minnesota': { rate: 0.12, demandCharge: 13 },
+  'Mississippi': { rate: 0.11, demandCharge: 11 },
+  'Missouri': { rate: 0.11, demandCharge: 11 },
+  'Montana': { rate: 0.11, demandCharge: 11 },
+  'Nebraska': { rate: 0.10, demandCharge: 10 },
+  'Nevada': { rate: 0.12, demandCharge: 15 },
+  'New Hampshire': { rate: 0.19, demandCharge: 17 },
+  'New Jersey': { rate: 0.16, demandCharge: 16 },
+  'New Mexico': { rate: 0.12, demandCharge: 12 },
+  'New York': { rate: 0.18, demandCharge: 20 },
+  'North Carolina': { rate: 0.11, demandCharge: 12 },
+  'North Dakota': { rate: 0.10, demandCharge: 10 },
+  'Ohio': { rate: 0.12, demandCharge: 13 },
+  'Oklahoma': { rate: 0.10, demandCharge: 10 },
+  'Oregon': { rate: 0.11, demandCharge: 12 },
+  'Pennsylvania': { rate: 0.14, demandCharge: 14 },
+  'Rhode Island': { rate: 0.20, demandCharge: 18 },
+  'South Carolina': { rate: 0.12, demandCharge: 12 },
+  'South Dakota': { rate: 0.11, demandCharge: 11 },
+  'Tennessee': { rate: 0.11, demandCharge: 11 },
+  'Texas': { rate: 0.11, demandCharge: 12 },
+  'Utah': { rate: 0.10, demandCharge: 11 },
+  'Vermont': { rate: 0.18, demandCharge: 16 },
+  'Virginia': { rate: 0.12, demandCharge: 13 },
   'Washington': { rate: 0.10, demandCharge: 10 },
-  'Other': { rate: 0.13, demandCharge: 15 },
+  'West Virginia': { rate: 0.11, demandCharge: 11 },
+  'Wisconsin': { rate: 0.13, demandCharge: 13 },
+  'Wyoming': { rate: 0.10, demandCharge: 10 },
 };
 
 // ============================================
@@ -260,6 +302,9 @@ export default function HotelEnergy() {
   
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
+  
+  // TrueQuote Modal
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
   // Quick Estimate Modal - Progressive Disclosure
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
@@ -433,6 +478,22 @@ export default function HotelEnergy() {
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* TrueQuote Badge - Trust signal */}
+              <div className="flex items-center gap-2 mt-4">
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <TrueQuoteBadge size="sm" />
+                </button>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="text-indigo-300 text-xs hover:text-white transition-colors cursor-pointer"
+                >
+                  Every number sourced →
+                </button>
+              </div>
               
               {/* Down arrow indicator */}
               <div className="flex flex-col items-center mt-6 animate-bounce">
@@ -940,12 +1001,7 @@ export default function HotelEnergy() {
           
           {/* Trust indicators */}
           <div className="mt-6 flex flex-col items-center gap-4">
-            <div className="flex items-center justify-center gap-8 text-indigo-200/60 text-sm font-medium">
-              <span>🔒 Secure</span>
-              <span>⚡ Instant Results</span>
-              <span>💼 Professional</span>
-            </div>
-            {/* Industry Compliance Badges */}
+            {/* Industry Compliance Badges - Transparent, Auditable Pricing */}
             <MethodologyStatement 
               variant="compact" 
               darkMode={true}
@@ -1247,6 +1303,12 @@ export default function HotelEnergy() {
           }}
         />
       )}
+      
+      {/* TrueQuote Modal */}
+      <TrueQuoteModal 
+        isOpen={showTrueQuoteModal} 
+        onClose={() => setShowTrueQuoteModal(false)} 
+      />
     </div>
   );
 }

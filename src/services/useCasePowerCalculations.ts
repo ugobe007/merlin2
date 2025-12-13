@@ -52,11 +52,14 @@ export const POWER_DENSITY_STANDARDS = {
   
   // Hospitality (per room/bed, not sq ft)
   hotelPerRoom: 3.5,        // 3-4 kW peak per room (HVAC spikes)
-  hospitalPerBed: 10.0,     // 8-12 kW peak per bed (critical equipment)
+  hospitalPerBed: 5.0,     // 4-6 kW peak per bed (ASHRAE with concurrency factor)
   
   // Special
   agriculturePerAcre: 0.6,  // 0.3-1.0 kW/acre (irrigation pumps at peak)
-  airportPerMillion: 1.5,   // 1.2-2.0 MW per million passengers/year
+  // Airport uses tiered calculation - see calculateAirportPower()
+  // Small Regional (<1M): 2-6 MW, Medium (1-5M): 6-18 MW, Large (5-15M): 18-55 MW
+  // Major Hub (15-50M): 55-175 MW, Mega Hub (50-100M+): 175-500+ MW
+  airportPerMillion: 3.5,   // Average ~3.5 MW/M (but actual calc is tiered)
 };
 
 /**
@@ -1798,66 +1801,83 @@ export function calculateHotelPower(
   hotelClass?: string
 ): PowerCalculationResult {
   // ═══════════════════════════════════════════════════════════════════════════
-  // HOTEL POWER CALCULATION - Using BESS Sizing Questionnaire Equipment Specs
-  // Source: Hotel Energy Specification Sheet
+  // HOTEL POWER CALCULATION - SSOT using validated benchmarks
   // 
-  // Facility Type Benchmarks:
-  // - Small/Boutique (20-75 rooms):      100-300 kW peak
-  // - Medium/Select-Service (75-150):    300-600 kW peak
-  // - Large/Full-Service (150-400):      600-1,500 kW peak
-  // - Luxury/Resort (200-500+):          1,000-3,000 kW peak
-  // - Corporate/Convention (300-1000+):  1,800-4,500 kW peak
+  // Validated Dec 2025: Marriott Lancaster 133 rooms = 384 kW = 2.89 kW/room
+  // 
+  // Using HOTEL_CLASS_PROFILES peakKWPerRoom × 0.75 diversity:
+  // - economy: 2.5 × 0.75 = 1.875 kW/room actual
+  // - midscale: 4.0 × 0.75 = 3.0 kW/room actual ← Matches Marriott!
+  // - upscale: 5.0 × 0.75 = 3.75 kW/room actual
+  // - luxury: 7.0 × 0.75 = 5.25 kW/room actual
+  // 
+  // For unknown class, default to midscale (most common)
   // ═══════════════════════════════════════════════════════════════════════════
   
-  // Determine facility type based on room count and optional class
-  let facilityType: HotelFacilityType;
+  // Determine hotel class from room count if not specified
+  let effectiveClass = hotelClass?.toLowerCase() || 'midscale';
   
-  if (hotelClass) {
-    // Map hotel class to facility type
-    switch (hotelClass.toLowerCase()) {
-      case 'economy':
-      case 'budget':
-      case 'boutique':
-        facilityType = 'smallBoutique';
-        break;
-      case 'midscale':
-      case 'select-service':
-      case 'selectservice':
-        facilityType = 'mediumSelectService';
-        break;
-      case 'upscale':
-      case 'full-service':
-      case 'fullservice':
-        facilityType = 'largeFullService';
-        break;
-      case 'luxury':
-      case 'resort':
-        facilityType = 'luxuryResort';
-        break;
-      case 'corporate':
-      case 'convention':
-        facilityType = 'corporateConvention';
-        break;
-      default:
-        // Fall through to room-based determination
-        facilityType = roomCount <= 75 ? 'smallBoutique' :
-                       roomCount <= 150 ? 'mediumSelectService' :
-                       roomCount <= 400 ? 'largeFullService' :
-                       roomCount <= 600 ? 'luxuryResort' : 'corporateConvention';
+  if (!hotelClass) {
+    // Infer class from room count
+    if (roomCount <= 75) {
+      effectiveClass = 'economy';
+    } else if (roomCount <= 200) {
+      effectiveClass = 'midscale';
+    } else if (roomCount <= 400) {
+      effectiveClass = 'upscale';
+    } else {
+      effectiveClass = 'luxury';
     }
-  } else {
-    // Determine by room count alone
-    facilityType = roomCount <= 75 ? 'smallBoutique' :
-                   roomCount <= 150 ? 'mediumSelectService' :
-                   roomCount <= 400 ? 'largeFullService' :
-                   roomCount <= 600 ? 'luxuryResort' : 'corporateConvention';
   }
   
-  // Use the comprehensive equipment-based calculation
-  return calculateHotelPowerFromEquipment({
+  // Map to standard class names
+  switch (effectiveClass) {
+    case 'budget':
+    case 'boutique':
+      effectiveClass = 'economy';
+      break;
+    case 'select-service':
+    case 'selectservice':
+      effectiveClass = 'midscale';
+      break;
+    case 'full-service':
+    case 'fullservice':
+      effectiveClass = 'upscale';
+      break;
+    case 'resort':
+    case 'corporate':
+    case 'convention':
+      effectiveClass = 'luxury';
+      break;
+  }
+  
+  // Get profile (default to midscale if unknown)
+  const profile = HOTEL_CLASS_PROFILES[effectiveClass as keyof typeof HOTEL_CLASS_PROFILES] 
+                  || HOTEL_CLASS_PROFILES.midscale;
+  
+  // Calculate peak demand: rooms × peakKWPerRoom × 0.75 diversity
+  const diversityFactor = 0.75;
+  const peakDemandKW = roomCount * profile.peakKWPerRoom * diversityFactor;
+  const powerMW = peakDemandKW / 1000;
+  
+  const description = `${profile.name} Hotel (${roomCount} rooms): ${Math.round(peakDemandKW)} kW peak demand`;
+  
+  console.log('🏨 [calculateHotelPower] SSOT calculation:', {
     roomCount,
-    facilityType,
+    hotelClass: effectiveClass,
+    peakKWPerRoom: profile.peakKWPerRoom,
+    diversityFactor,
+    peakDemandKW: Math.round(peakDemandKW),
+    powerMW: Math.round(powerMW * 100) / 100,
   });
+  
+  return {
+    powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
+    durationHrs: 4, // Standard hotel backup duration
+    description,
+    calculationMethod: 'SSOT: HOTEL_CLASS_PROFILES validated against Marriott benchmarks',
+    inputs: { roomCount, hotelClass: effectiveClass, peakKWPerRoom: profile.peakKWPerRoom, diversityFactor },
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -1870,57 +1890,66 @@ export function calculateHotelPower(
 /**
  * Hotel Classification & Typical Power Profiles
  * Source: Hotel Energy Specification Sheet
+ * 
+ * UPDATED Dec 2025: Peak ranges aligned with HOTEL_CLASS_PROFILES
+ * Validated against Marriott Lancaster: 133 rooms = 384 kW (2.89 kW/room)
+ * 
+ * Formula: rooms × peakKWPerRoom (from HOTEL_CLASS_PROFILES) × 0.75 diversity
+ * - economy/smallBoutique: 2.5 kW/room → 1.875 kW/room actual
+ * - midscale/mediumSelectService: 4.0 kW/room → 3.0 kW/room actual  
+ * - upscale/largeFullService: 5.0 kW/room → 3.75 kW/room actual
+ * - luxury/luxuryResort: 7.0 kW/room → 5.25 kW/room actual
  */
 export const HOTEL_FACILITY_TYPES = {
   smallBoutique: {
     name: 'Small/Boutique',
     roomRange: { min: 20, max: 75 },
-    connected: { min: 150, max: 400 },    // kW
-    peak: { min: 100, max: 300 },         // kW
-    avgOperating: { min: 60, max: 150 },  // kW
-    kWPerRoom: { min: 5, max: 8 },
+    connected: { min: 50, max: 190 },      // kW (rooms × 2.5)
+    peak: { min: 38, max: 141 },           // kW (connected × 0.75)
+    avgOperating: { min: 20, max: 70 },    // kW
+    kWPerRoom: { min: 2.0, max: 3.0 },     // CORRECTED: Was 5-8, now 2-3
     loadFactor: { min: 0.40, max: 0.50 },
-    demandDiversity: { min: 0.60, max: 0.70 },
+    demandDiversity: { min: 0.70, max: 0.80 }, // Higher diversity for small hotels
   },
   mediumSelectService: {
     name: 'Medium/Select-Service',
     roomRange: { min: 75, max: 150 },
-    connected: { min: 400, max: 800 },
-    peak: { min: 300, max: 600 },
-    avgOperating: { min: 150, max: 350 },
-    kWPerRoom: { min: 5, max: 7 },
+    connected: { min: 300, max: 600 },     // kW (rooms × 4.0)
+    peak: { min: 225, max: 450 },          // kW (connected × 0.75) - Marriott 133 rooms = 384 kW
+    avgOperating: { min: 100, max: 225 },  // kW
+    kWPerRoom: { min: 3.5, max: 4.5 },     // CORRECTED: Was 5-7, now 3.5-4.5
     loadFactor: { min: 0.45, max: 0.55 },
-    demandDiversity: { min: 0.55, max: 0.65 },
+    demandDiversity: { min: 0.70, max: 0.80 },
   },
   largeFullService: {
     name: 'Large/Full-Service',
     roomRange: { min: 150, max: 400 },
-    connected: { min: 800, max: 2000 },
-    peak: { min: 600, max: 1500 },
-    avgOperating: { min: 350, max: 800 },
-    kWPerRoom: { min: 5, max: 8 },
+    connected: { min: 750, max: 2000 },    // kW (rooms × 5.0)
+    peak: { min: 563, max: 1500 },         // kW (connected × 0.75) - 300 rooms ≈ 900 kW
+    avgOperating: { min: 280, max: 750 },  // kW
+    kWPerRoom: { min: 4.5, max: 5.5 },     // CORRECTED: Was 5-8, now 4.5-5.5
     loadFactor: { min: 0.50, max: 0.60 },
-    demandDiversity: { min: 0.50, max: 0.60 },
+    demandDiversity: { min: 0.70, max: 0.80 },
   },
   luxuryResort: {
     name: 'Luxury/Resort',
     roomRange: { min: 200, max: 500 },
-    connected: { min: 1500, max: 4000 },
-    peak: { min: 1000, max: 3000 },
-    avgOperating: { min: 600, max: 1500 },
-    kWPerRoom: { min: 8, max: 12 },
+    connected: { min: 1400, max: 3500 },   // kW (rooms × 7.0)
+    peak: { min: 1050, max: 2625 },        // kW (connected × 0.75)
+    avgOperating: { min: 500, max: 1300 }, // kW
+    kWPerRoom: { min: 6.0, max: 8.0 },     // CORRECTED: Was 8-12, now 6-8
     loadFactor: { min: 0.50, max: 0.60 },
-    demandDiversity: { min: 0.50, max: 0.60 },
+    demandDiversity: { min: 0.70, max: 0.80 },
   },
   corporateConvention: {
     name: 'Corporate/Convention',
     roomRange: { min: 300, max: 1000 },
-    connected: { min: 2500, max: 6000 },
-    peak: { min: 1800, max: 4500 },
-    avgOperating: { min: 1000, max: 2500 },
-    kWPerRoom: { min: 6, max: 10 },
+    connected: { min: 2100, max: 7000 },   // kW (rooms × 7.0)
+    peak: { min: 1575, max: 5250 },        // kW (connected × 0.75)
+    avgOperating: { min: 800, max: 2600 }, // kW
+    kWPerRoom: { min: 6.0, max: 8.0 },     // CORRECTED: Was 6-10, now 6-8
     loadFactor: { min: 0.55, max: 0.65 },
-    demandDiversity: { min: 0.50, max: 0.60 },
+    demandDiversity: { min: 0.70, max: 0.80 },
   },
 } as const;
 
@@ -2648,14 +2677,21 @@ export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): Po
 }
 
 // ============================================
-// LEGACY HOTEL CLASS PROFILES - Keep for backward compatibility
-// Source: CBECS 2018, hospitality energy audits
+// HOTEL CLASS PROFILES - Energy and Peak Demand
+// Source: CBECS 2018, ASHRAE 90.1, Marriott energy benchmarks
+// 
+// IMPORTANT: peakKWPerRoom is CONNECTED LOAD (before diversity)
+// Peak demand = rooms × peakKWPerRoom × 0.75 (diversity factor)
+// DO NOT multiply by occupancy - that applies to energy (kWh) only
+// 
+// Validated Dec 2025: Marriott Lancaster 133 rooms = 384 kW peak
+// → 2.89 kW/room actual = 3.85 kW/room connected (÷ 0.75 diversity)
 // ============================================
 export const HOTEL_CLASS_PROFILES = {
-  economy: { kWhPerRoom: 25, peakKWPerRoom: 1.5, name: 'Economy/Budget', hvacTons: 0.5 },
-  midscale: { kWhPerRoom: 35, peakKWPerRoom: 2.0, name: 'Midscale', hvacTons: 0.75 },
-  upscale: { kWhPerRoom: 50, peakKWPerRoom: 2.5, name: 'Upscale', hvacTons: 1.0 },
-  luxury: { kWhPerRoom: 75, peakKWPerRoom: 3.5, name: 'Luxury/Resort', hvacTons: 1.5 },
+  economy: { kWhPerRoom: 25, peakKWPerRoom: 2.5, name: 'Economy/Budget', hvacTons: 0.5 },
+  midscale: { kWhPerRoom: 35, peakKWPerRoom: 4.0, name: 'Midscale', hvacTons: 0.75 },
+  upscale: { kWhPerRoom: 50, peakKWPerRoom: 5.0, name: 'Upscale', hvacTons: 1.0 },
+  luxury: { kWhPerRoom: 75, peakKWPerRoom: 7.0, name: 'Luxury/Resort', hvacTons: 1.5 },
 } as const;
 
 export type HotelClass = keyof typeof HOTEL_CLASS_PROFILES;
@@ -2780,8 +2816,12 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
   // ════════════════════════════════════════════════════════════════
   // BASE LOAD FROM ROOMS
   // ════════════════════════════════════════════════════════════════
-  let basePeakKW = input.rooms * classProfile.peakKWPerRoom * occupancyFactor;
-  let dailyKWh = input.rooms * classProfile.kWhPerRoom * occupancyFactor;
+  // IMPORTANT: Peak demand (kW) is NOT reduced by occupancy!
+  // HVAC and common areas are sized for 100% capacity
+  // Only ENERGY consumption (kWh) is affected by occupancy
+  // ════════════════════════════════════════════════════════════════
+  let basePeakKW = input.rooms * classProfile.peakKWPerRoom; // NO occupancy factor for peak!
+  let dailyKWh = input.rooms * classProfile.kWhPerRoom * occupancyFactor; // Occupancy affects energy
   
   // Apply building age efficiency factor
   basePeakKW *= ageFactor;
@@ -3267,24 +3307,43 @@ export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWas
 
 /**
  * Calculate power requirement for Hospital
- * Source: ASHRAE healthcare guidelines
+ * Source: ASHRAE healthcare guidelines, CBECS 2018, Energy Star Healthcare
+ * 
+ * Benchmarks:
+ * - Community hospital (100 beds): 300-500 kW peak → 4 kW/bed
+ * - Regional hospital (250 beds): 1-1.5 MW peak → 5 kW/bed  
+ * - Academic medical center (500+ beds): 3-5 MW peak → 6-8 kW/bed
  * 
  * @param bedCount - Number of hospital beds
+ * @param hospitalType - Type of hospital (affects kW/bed)
  * @returns Power in MW
  */
-export function calculateHospitalPower(bedCount: number): PowerCalculationResult {
-  // Peak demand: 10 kW per bed (all critical equipment, HVAC at max, OR running)
-  // Average is ~6-8 kW/bed, but hospitals need peak capacity for emergencies
-  const kWPerBed = POWER_DENSITY_STANDARDS.hospitalPerBed; // 10 kW peak
+export function calculateHospitalPower(
+  bedCount: number,
+  hospitalType: 'community' | 'regional' | 'academic' | 'specialty' = 'regional'
+): PowerCalculationResult {
+  // kW per bed varies by hospital type
+  // Community: basic services, lower acuity
+  // Regional: full services, moderate ICU
+  // Academic: teaching hospital, higher acuity, research equipment
+  // Specialty: cardiac, cancer, trauma - highest equipment density
+  const kWPerBedByType = {
+    community: 4.0,  // Basic services
+    regional: 5.0,   // Standard acute care
+    academic: 6.0,   // Teaching/research hospital
+    specialty: 7.5,  // Cardiac, cancer, trauma centers
+  };
+  
+  const kWPerBed = kWPerBedByType[hospitalType];
   const powerKW = bedCount * kWPerBed;
   const powerMW = powerKW / 1000;
   
   return {
     powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100), // Min 200kW
-    durationHrs: 8, // Hospitals need longer backup
-    description: `Hospital: ${bedCount} beds × ${kWPerBed} kW/bed peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'ASHRAE healthcare peak demand (10 kW/bed)',
-    inputs: { bedCount, kWPerBed }
+    durationHrs: 8, // Hospitals need longer backup for critical care
+    description: `${hospitalType.charAt(0).toUpperCase() + hospitalType.slice(1)} Hospital: ${bedCount} beds × ${kWPerBed} kW/bed = ${powerKW.toFixed(0)} kW`,
+    calculationMethod: `ASHRAE healthcare peak demand (${kWPerBed} kW/bed for ${hospitalType})`,
+    inputs: { bedCount, hospitalType, kWPerBed }
   };
 }
 
@@ -3729,21 +3788,60 @@ export function calculateEVChargingPower(
  * Calculate power requirement for Airport
  * Source: FAA, international airport energy benchmarks
  * 
+ * Airport Classifications (Peak Demand):
+ * - Small Regional (< 1M pax): 2–6 MW
+ * - Medium Regional (1–5M pax): 6–18 MW  
+ * - Large Regional (5–15M pax): 18–55 MW
+ * - Major Hub (15–50M pax): 55–175 MW
+ * - Mega Hub (50–100M+ pax): 175–500+ MW
+ * 
  * @param annualPassengersMillions - Million passengers per year
  * @returns Power in MW
  */
 export function calculateAirportPower(annualPassengersMillions: number): PowerCalculationResult {
-  // Peak demand: ~1.5 MW per million annual passengers
-  // Includes terminals at peak, all baggage handling, retail, food service
-  const mwPerMillion = POWER_DENSITY_STANDARDS.airportPerMillion; // 1.5 MW
-  const powerMW = annualPassengersMillions * mwPerMillion;
+  // Updated formula based on industry data:
+  // Base load + scaling factor that accounts for terminal infrastructure
+  // Small airports have higher MW/passenger due to fixed infrastructure
+  
+  let powerMW: number;
+  let classification: string;
+  
+  if (annualPassengersMillions < 1) {
+    // Small Regional: 2-6 MW range
+    // Linear interpolation: 0.1M → 2MW, 1M → 6MW
+    powerMW = 2 + (annualPassengersMillions * 4);
+    classification = 'Small Regional';
+  } else if (annualPassengersMillions < 5) {
+    // Medium Regional: 6-18 MW range
+    // Linear: 1M → 6MW, 5M → 18MW
+    powerMW = 6 + ((annualPassengersMillions - 1) * 3);
+    classification = 'Medium Regional';
+  } else if (annualPassengersMillions < 15) {
+    // Large Regional: 18-55 MW range
+    // Linear: 5M → 18MW, 15M → 55MW
+    powerMW = 18 + ((annualPassengersMillions - 5) * 3.7);
+    classification = 'Large Regional';
+  } else if (annualPassengersMillions < 50) {
+    // Major Hub: 55-175 MW range
+    // Linear: 15M → 55MW, 50M → 175MW
+    powerMW = 55 + ((annualPassengersMillions - 15) * 3.43);
+    classification = 'Major Hub';
+  } else {
+    // Mega Hub: 175-500+ MW range
+    // Linear: 50M → 175MW, 100M → 500MW
+    powerMW = 175 + ((annualPassengersMillions - 50) * 6.5);
+    classification = 'Mega Hub';
+  }
+  
+  // Round to 1 decimal
+  powerMW = Math.round(powerMW * 10) / 10;
   
   return {
-    powerMW: Math.max(0.5, Math.round(powerMW * 100) / 100), // Min 500kW
+    powerMW: Math.max(2, powerMW), // Min 2MW for smallest airports
     durationHrs: 4,
-    description: `Airport: ${annualPassengersMillions}M passengers/year × ${mwPerMillion} MW/M peak = ${powerMW.toFixed(2)} MW`,
-    calculationMethod: 'FAA airport peak demand (1.5 MW per million passengers)',
-    inputs: { annualPassengersMillions, mwPerMillion }
+    description: `${classification} Airport: ${annualPassengersMillions}M passengers/year → ${powerMW.toFixed(1)} MW peak demand`,
+    calculationMethod: `FAA/industry airport benchmarks (${classification}: ${annualPassengersMillions}M pax)`,
+    inputs: { annualPassengersMillions, classification, powerMW }
   };
 }
 
@@ -4868,28 +4966,49 @@ export function calculateCarWashPower(
  * Calculate power requirement for Gas Station
  * Source: NACS (National Association of Convenience Stores)
  * 
- * @param dispenserCount - Number of fuel dispensers
+ * @param dispenserCount - Number of fuel dispensers/pumps
  * @param hasConvenienceStore - Whether attached store exists
- * @returns Power in MW
+ * @param stationType - 'gas-only' | 'with-cstore' | 'truck-stop'
+ * @returns Power calculation result
  */
 export function calculateGasStationPower(
   dispenserCount: number,
-  hasConvenienceStore: boolean = true
+  hasConvenienceStore: boolean = true,
+  stationType: string = 'with-cstore'
 ): PowerCalculationResult {
-  // Pumps: 1-2 kW per dispenser
-  // Convenience store: 3-5 W/sq ft (typically 2,000-3,000 sq ft)
-  const kWPerDispenser = 1.5;
+  // Base pump power: 1.5-2 kW per dispenser
+  // Truck stop diesel pumps: 2.5 kW (larger pumps, DEF dispensers)
+  const isTrackStop = stationType === 'truck-stop';
+  const kWPerDispenser = isTrackStop ? 2.5 : 1.5;
   const pumpPowerKW = dispenserCount * kWPerDispenser;
-  const storePowerKW = hasConvenienceStore ? 10 : 0; // ~2,500 sq ft × 4 W/sq ft
+  
+  // Convenience store power based on type:
+  // - Gas only: 0 kW
+  // - Small C-store: 10-15 kW (2,500 sq ft × 4-6 W/sq ft)
+  // - Truck stop: 40-80 kW (8,000-15,000 sq ft + kitchen + showers + gaming)
+  let storePowerKW = 0;
+  if (hasConvenienceStore && stationType !== 'gas-only') {
+    if (isTrackStop) {
+      // Truck stops have large stores, restaurants, showers, laundry
+      storePowerKW = 60 + (dispenserCount > 20 ? 40 : 0); // 60-100 kW
+    } else {
+      // Regular convenience store
+      storePowerKW = 15; // ~3,000 sq ft × 5 W/sq ft
+    }
+  }
+  
   const powerKW = pumpPowerKW + storePowerKW;
   const powerMW = powerKW / 1000;
   
+  const stationLabel = isTrackStop ? 'Truck Stop' : 
+                       hasConvenienceStore ? 'Gas Station + C-Store' : 'Gas Station';
+  
   return {
     powerMW: Math.max(0.01, Math.round(powerMW * 100) / 100), // Min 10kW
-    durationHrs: 4,
-    description: `Gas Station: ${dispenserCount} dispensers + ${hasConvenienceStore ? 'store' : 'pumps only'} = ${powerKW.toFixed(1)} kW`,
+    durationHrs: isTrackStop ? 6 : 4, // Truck stops need longer backup
+    description: `${stationLabel}: ${dispenserCount} dispensers × ${kWPerDispenser} kW + ${storePowerKW} kW store = ${powerKW.toFixed(0)} kW`,
     calculationMethod: 'NACS fuel retail benchmark',
-    inputs: { dispenserCount, hasConvenienceStore, pumpPowerKW, storePowerKW }
+    inputs: { dispenserCount, hasConvenienceStore, stationType, pumpPowerKW, storePowerKW }
   };
 }
 
@@ -4945,10 +5064,78 @@ export function calculateUseCasePower(
       ) || 150;  // DB default: 150 rooms
       return calculateHotelPower(hotelRooms);
       
-    case 'hospital':
-      return calculateHospitalPower(
-        parseInt(useCaseData.bedCount) || 250  // DB default: 250 beds
-      );
+    case 'hospital': {
+      // Base calculation from bed count
+      const bedCount = parseInt(useCaseData.bedCount) || parseInt(useCaseData.beds) || 250;
+      const baseResult = calculateHospitalPower(bedCount);
+      
+      // Add equipment-specific power loads
+      // Equipment power values from ASHRAE healthcare standards
+      let equipmentLoadKW = 0;
+      let equipmentDetails: string[] = [];
+      
+      // Surgical suites: 30-50 kW each (lighting, equipment, HVAC)
+      const surgicalSuites = parseInt(useCaseData.surgicalSuites) || parseInt(useCaseData.operatingRooms) || 0;
+      if (surgicalSuites > 0) {
+        const surgicalPower = surgicalSuites * 40; // 40 kW average per suite
+        equipmentLoadKW += surgicalPower;
+        equipmentDetails.push(`${surgicalSuites} surgical suites @ 40kW = ${surgicalPower}kW`);
+      }
+      
+      // MRI machines: 50-150 kW each
+      const hasMRI = useCaseData.hasMRI === true || useCaseData.hasMRI === 'true';
+      const mriCount = parseInt(useCaseData.mriCount) || (hasMRI ? 1 : 0);
+      if (mriCount > 0) {
+        const mriPower = mriCount * 100; // 100 kW average per MRI
+        equipmentLoadKW += mriPower;
+        equipmentDetails.push(`${mriCount} MRI @ 100kW = ${mriPower}kW`);
+      }
+      
+      // CT scanners: 80-120 kW each
+      const hasCT = useCaseData.hasCT === true || useCaseData.hasCT === 'true' || 
+                    useCaseData.hasCTScanners === true || useCaseData.hasCTScanners === 'true';
+      const ctCount = parseInt(useCaseData.ctCount) || parseInt(useCaseData.ctScanners) || (hasCT ? 1 : 0);
+      if (ctCount > 0) {
+        const ctPower = ctCount * 100; // 100 kW average per CT
+        equipmentLoadKW += ctPower;
+        equipmentDetails.push(`${ctCount} CT scanners @ 100kW = ${ctPower}kW`);
+      }
+      
+      // ICU beds: Higher power requirement (monitoring, life support)
+      const icuBeds = parseInt(useCaseData.icuBeds) || 0;
+      if (icuBeds > 0) {
+        const icuPower = icuBeds * 2; // 2 kW additional per ICU bed (monitoring, ventilators)
+        equipmentLoadKW += icuPower;
+        equipmentDetails.push(`${icuBeds} ICU beds @ 2kW = ${icuPower}kW`);
+      }
+      
+      // Calculate total
+      const basePowerKW = baseResult.powerMW * 1000;
+      const totalPowerKW = basePowerKW + equipmentLoadKW;
+      const totalPowerMW = totalPowerKW / 1000;
+      
+      // Build description
+      let description = baseResult.description;
+      if (equipmentDetails.length > 0) {
+        description += ` + Equipment: ${equipmentDetails.join(', ')}`;
+      }
+      
+      console.log('🏥 [Hospital Power] Calculation:', {
+        bedCount,
+        basePowerKW,
+        equipmentLoadKW,
+        totalPowerKW,
+        equipmentDetails
+      });
+      
+      return {
+        powerMW: Math.round(totalPowerMW * 100) / 100,
+        durationHrs: baseResult.durationHrs,
+        description,
+        calculationMethod: baseResult.calculationMethod + (equipmentLoadKW > 0 ? ' + equipment loads' : ''),
+        inputs: { bedCount, surgicalSuites, mriCount, ctCount, icuBeds, equipmentLoadKW }
+      };
+    }
       
     case 'datacenter':
     case 'data-center':
@@ -5034,9 +5221,9 @@ export function calculateUseCasePower(
       return calculateEVChargingPower(evLevel1, evLevel2, evDcFast);
       
     case 'airport':
-      // Convert raw passenger count to millions (user enters 5000000, we need 5.0)
-      // DB default: 5 million passengers (medium regional airport)
-      const rawPassengers = parseFloat(useCaseData.annualPassengers || useCaseData.annual_passengers) || 5000000;
+      // Convert raw passenger count to millions (user enters 1000000, we need 1.0)
+      // DB default: 1 million passengers (small regional airport) - was 5M but too high for initial estimate
+      const rawPassengers = parseFloat(useCaseData.annualPassengers || useCaseData.annual_passengers) || 1000000;
       const passengersInMillions = rawPassengers / 1000000;
       return calculateAirportPower(passengersInMillions);
       
@@ -5167,9 +5354,11 @@ export function calculateUseCasePower(
       
     case 'gas-station':
     case 'fuel-station':
+      // Database uses numPumps, legacy uses dispenserCount, some use pumpCount
       return calculateGasStationPower(
-        parseInt(useCaseData.dispenserCount) || 8,
-        useCaseData.hasConvenienceStore !== false
+        parseInt(useCaseData.numPumps || useCaseData.pumpCount || useCaseData.dispenserCount) || 8,
+        useCaseData.hasConvenienceStore !== false && useCaseData.stationType !== 'gas-only',
+        useCaseData.stationType || 'with-cstore'
       );
       
     case 'government':
@@ -5382,12 +5571,20 @@ export function calculateHotelSolarSizing(
 /**
  * Hotel class profiles for simplified landing page calculator
  * SSOT for HotelEnergy.tsx landing page
+ * 
+ * IMPORTANT: peakKWPerRoom is CONNECTED LOAD (before diversity)
+ * The calculateHotelPowerSimple() function applies 0.75 diversity
+ * 
+ * Validated Dec 2025 against Marriott Lancaster:
+ * - 133 rooms midscale = 384 kW actual peak
+ * - 384 ÷ 133 ÷ 0.75 = 3.85 kW/room connected
+ * - Using 4.0 for midscale gives 133 × 4.0 × 0.75 = 399 kW ✓
  */
 export const HOTEL_CLASS_PROFILES_SIMPLE = {
-  economy: { peakKWPerRoom: 1.5, name: 'Economy/Budget' },
-  midscale: { peakKWPerRoom: 2.5, name: 'Midscale/Select Service' },
-  upscale: { peakKWPerRoom: 4.0, name: 'Upscale/Full Service' },
-  luxury: { peakKWPerRoom: 6.0, name: 'Luxury/Resort' },
+  economy: { peakKWPerRoom: 2.5, name: 'Economy/Budget' },
+  midscale: { peakKWPerRoom: 4.0, name: 'Midscale/Select Service' },
+  upscale: { peakKWPerRoom: 5.0, name: 'Upscale/Full Service' },
+  luxury: { peakKWPerRoom: 7.0, name: 'Luxury/Resort' },
 } as const;
 
 /**
@@ -5527,8 +5724,9 @@ export function calculateCarWashPowerSimple(input: CarWashPowerSimpleInput): Car
   const monthlyDemandCost = peakKW * demandCharge;
   
   // Annual energy calculation
-  // kWh per car varies by type: self-service ~2, automatic ~8, tunnel ~15, full ~25
-  const kWhPerCar = { selfService: 2, automatic: 8, tunnel: 15, fullService: 25 }[washType];
+  // kWh per car based on real-world data (Tommy Express, Mister Car Wash, Zips benchmarks)
+  // Express tunnels are highly efficient: ~2-3 kWh/car despite high peak power
+  const kWhPerCar = { selfService: 2, automatic: 4, tunnel: 2.5, fullService: 6 }[washType];
   const annualKWh = carsPerDay * 365 * kWhPerCar;
   const annualEnergyCost = annualKWh * electricityRate;
   

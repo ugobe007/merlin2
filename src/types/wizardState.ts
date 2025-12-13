@@ -60,6 +60,11 @@ export interface WizardState {
     bays?: number;           // Car washes (legacy)
     occupancy?: number;
     operatingHours?: number;
+    // Hospital-specific equipment (for accurate power calculations)
+    surgicalSuites?: number; // Operating rooms - high power draw
+    mriCount?: number;       // MRI machines - ~100kW each
+    ctScannerCount?: number; // CT scanners - ~100kW each
+    icuBeds?: number;        // ICU beds - higher power than regular beds
   };
 
   // Custom question data from templates (industry-specific fields)

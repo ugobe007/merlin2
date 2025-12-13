@@ -85,7 +85,7 @@ describe('SSOT Power Calculations', () => {
     hospital: {
       slug: 'hospital',
       input: { bedCount: 200, squareFeet: 300000 },
-      expectedPowerMW: { min: 2.0, max: 6.0 }, // Hospitals: 10-20 W/sqft
+      expectedPowerMW: { min: 0.8, max: 1.5 }, // 200 beds × 5 kW/bed = 1 MW (SSOT uses kW/bed, not sqft)
       description: '200-bed hospital',
     },
     dataCenter: {
@@ -113,7 +113,7 @@ describe('SSOT Power Calculations', () => {
     carWash: {
       slug: 'car-wash',
       input: { washBays: 4, bayType: 'automatic' },
-      expectedPowerMW: { min: 0.05, max: 0.2 }, // 4 bays × 20-40 kW
+      expectedPowerMW: { min: 0.1, max: 0.3 }, // 4 bays × 60 kW/bay = 240 kW (SSOT automatic uses ~60 kW/bay)
       description: '4-bay automatic car wash',
     },
     

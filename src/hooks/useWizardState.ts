@@ -23,6 +23,11 @@ import { useState, useCallback, useEffect } from 'react';
 import type { WizardState } from '@/types/wizardState';
 import { INITIAL_WIZARD_STATE } from '@/types/wizardState';
 import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
+import {
+  BESS_POWER_RATIOS,
+  getBESSPowerRatio,
+  SOLAR_TO_BESS_RATIO,
+} from '@/components/wizard/constants/wizardConstants';
 
 // ============================================
 // CUSTOM HOOK
@@ -171,6 +176,16 @@ export function useWizardState() {
       unitCount: state.useCaseData.unitCount || state.facility.unitCount || 0,
       numUnits: state.useCaseData.numUnits || state.facility.unitCount || 0,
       
+      // Hospital-specific equipment (for accurate power calculations)
+      surgicalSuites: state.useCaseData.surgicalSuites || state.facility.surgicalSuites || 0,
+      operatingRooms: state.useCaseData.operatingRooms || state.useCaseData.surgicalSuites || state.facility.surgicalSuites || 0,
+      mriCount: state.useCaseData.mriCount || state.facility.mriCount || 0,
+      mriMachines: state.useCaseData.mriMachines || state.useCaseData.mriCount || state.facility.mriCount || 0,
+      ctScannerCount: state.useCaseData.ctScannerCount || state.facility.ctScannerCount || 0,
+      ctScanners: state.useCaseData.ctScanners || state.useCaseData.ctScannerCount || state.facility.ctScannerCount || 0,
+      icuBeds: state.useCaseData.icuBeds || state.facility.icuBeds || 0,
+      icuBedCount: state.useCaseData.icuBedCount || state.useCaseData.icuBeds || state.facility.icuBeds || 0,
+      
       // Generic fallback
       facilitySize: state.useCaseData.facilitySize || state.facility.squareFeet || state.facility.roomCount || 0,
     };
@@ -203,26 +218,42 @@ export function useWizardState() {
 
   /**
    * Calculate total load from existing EV chargers
+   * Applies concurrency factor since not all chargers are used simultaneously
    */
   const calculateEVLoad = useCallback((
     chargers: WizardState['existingInfrastructure']['evChargers']
   ): number => {
-    return (
+    // EV charger concurrency: typically 30-50% at commercial sites
+    // Hotels: 35% (guests charge overnight, not all at once)
+    // Retail/Commercial: 40% (higher turnover)
+    // EV stations: 50% (dedicated charging)
+    const EV_CONCURRENCY_FACTOR = 0.40; // 40% concurrent usage assumption
+    
+    const installedCapacityKW = (
       (chargers.L1.count * chargers.L1.powerKW) +
       (chargers.L2.count * chargers.L2.powerKW) +
       (chargers.L3.count * chargers.L3.powerKW)
     );
+    
+    // Apply concurrency - not all chargers run at peak simultaneously
+    return Math.round(installedCapacityKW * EV_CONCURRENCY_FACTOR);
   }, []);
 
   /**
    * Calculate load from NEW EV chargers (goals section)
+   * Applies concurrency factor since not all chargers are used simultaneously
    */
   const calculateNewEVLoad = useCallback((goals: WizardState['goals']): number => {
     if (!goals.addEVChargers) return 0;
-    return (
+    
+    const EV_CONCURRENCY_FACTOR = 0.40; // 40% concurrent usage assumption
+    
+    const installedCapacityKW = (
       (goals.newEVChargers.L2.count * goals.newEVChargers.L2.powerKW) +
       (goals.newEVChargers.L3.count * goals.newEVChargers.L3.powerKW)
     );
+    
+    return Math.round(installedCapacityKW * EV_CONCURRENCY_FACTOR);
   }, []);
 
   /**
@@ -281,11 +312,52 @@ export function useWizardState() {
     
     const recommendedBackupHours = getRecommendedBackupHours(state);
     
-    // Base battery sizing: peak demand × backup hours
-    // Battery power matches peak demand exactly - user stated their actual peak
-    // Previous formula added 10% headroom which created confusing "gap" between user input and recommendation
-    let recommendedBatteryKWh = Math.round(totalPeakDemandKW * recommendedBackupHours);
-    let recommendedBatteryKW = Math.round(totalPeakDemandKW);
+    // ═══════════════════════════════════════════════════════════════════════
+    // BESS SIZING v2.0 - BENCHMARK-BACKED METHODOLOGY (Dec 2025)
+    // Sources: IEEE 4538388, MDPI Energies 11(8):2048, NREL ATB 2024
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // BESS Power ratio depends on primary application:
+    // | Use Case       | Ratio | Description                          |
+    // |----------------|-------|--------------------------------------|
+    // | peak_shaving   | 0.40  | Shave top demand peaks only          |
+    // | arbitrage      | 0.50  | Peak shaving + TOU energy shifting   |
+    // | resilience     | 0.70  | Cover critical loads during outages  |
+    // | microgrid      | 1.00  | Full islanding capability            |
+    
+    // Map user's primary goal to BESS use case
+    let bessRatio = BESS_POWER_RATIOS.peak_shaving; // Default: 0.40 (most common)
+    
+    const primaryGoal = state.goals?.primaryGoal || 'savings';
+    switch (primaryGoal) {
+      case 'backup':
+        bessRatio = BESS_POWER_RATIOS.resilience; // 0.70 - critical load backup
+        break;
+      case 'savings':
+        bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - cost optimization
+        break;
+      case 'sustainability':
+        bessRatio = BESS_POWER_RATIOS.arbitrage; // 0.50 - renewable integration
+        break;
+      case 'peak-shaving':
+        bessRatio = BESS_POWER_RATIOS.peak_shaving; // 0.40 - demand charge reduction
+        break;
+      default:
+        bessRatio = BESS_POWER_RATIOS.peak_shaving; // Default to optimal economic sizing
+    }
+    
+    // Calculate BESS power and energy
+    let recommendedBatteryKW = Math.round(totalPeakDemandKW * bessRatio);
+    let recommendedBatteryKWh = Math.round(recommendedBatteryKW * recommendedBackupHours);
+    
+    console.log('🔋 [recalculate] BESS sizing v2.0:', {
+      totalPeakDemandKW,
+      bessRatio,
+      primaryGoal,
+      recommendedBatteryKW,
+      recommendedBatteryKWh,
+      source: 'IEEE 4538388, MDPI Energies 11(8):2048',
+    });
     
     // ⚠️ SOLAR STORAGE: If user adds solar, increase battery to capture solar energy
     // Rule: Battery should be able to store 4-6 hours of solar generation for evening use
@@ -310,19 +382,21 @@ export function useWizardState() {
       });
     }
     
-    // Solar recommendation: match peak demand (1:1 ratio)
-    // Users can scale down if they only want partial offset
-    // Previous formula was: (totalPeakDemandKW * 0.8 * 8) / solarHours = 1.28x overbuild (wrong!)
-    const recommendedSolarKW = Math.round(totalPeakDemandKW);
+    // Solar recommendation: Size solar relative to BESS capacity
+    // NREL ILR (Inverter Loading Ratio) guidance: 1.3-1.5x for DC-coupled systems
+    // Using 1.4x allows solar to fully charge BESS while serving load
+    const recommendedSolarKW = Math.round(recommendedBatteryKW * SOLAR_TO_BESS_RATIO);
     
     console.log('🔋 [recalculate] Final values:', {
       baseBuildingLoadKW,
       existingEVLoadKW,
       newEVLoadKW,
       totalPeakDemandKW,
+      bessRatio,
       recommendedBackupHours,
       recommendedBatteryKWh,
       recommendedBatteryKW,
+      recommendedSolarKW,
     });
     
     return {
@@ -343,12 +417,15 @@ export function useWizardState() {
   useEffect(() => {
     const newCalculated = recalculate(wizardState);
     
-    // Debug logging
-    console.log('[useWizardState] Recalculating:', {
+    // Debug logging - CRITICAL for tracing Power Gap updates
+    console.log('⚡ [useWizardState] RECALCULATE TRIGGERED:', {
       industryType: wizardState.industry.type,
       facilitySquareFeet: wizardState.facility.squareFeet,
+      facilityBedCount: wizardState.facility.bedCount,
+      facilitySurgicalSuites: wizardState.facility.surgicalSuites,
+      facilityMriCount: wizardState.facility.mriCount,
       useCaseData: wizardState.useCaseData,
-      evChargers: wizardState.existingInfrastructure.evChargers,
+      gridConnection: wizardState.existingInfrastructure.gridConnection,
       newCalculated
     });
     

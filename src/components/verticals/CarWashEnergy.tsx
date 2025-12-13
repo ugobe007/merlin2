@@ -42,6 +42,8 @@ import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
 // REFACTORED: Use StreamlinedWizard instead of CarWashWizard
 import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
+import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================
 // TYPES
@@ -318,6 +320,9 @@ export default function CarWashEnergy() {
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
   
+  // TrueQuote Modal
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  
   // Quick Estimate Modal - Progressive Disclosure (Option A)
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
   const [quickBays, setQuickBays] = useState(1);
@@ -518,6 +523,22 @@ export default function CarWashEnergy() {
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* TrueQuote Badge - Trust signal */}
+              <div className="flex items-center gap-2 mt-4">
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <TrueQuoteBadge size="sm" />
+                </button>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="text-cyan-300 text-xs hover:text-white transition-colors cursor-pointer"
+                >
+                  Every number sourced →
+                </button>
+              </div>
               
               {/* Down Arrow Indicator */}
               <div className="mt-8 flex flex-col items-center animate-bounce lg:items-start">
@@ -1388,6 +1409,12 @@ export default function CarWashEnergy() {
           }}
         />
       )}
+      
+      {/* TrueQuote Modal */}
+      <TrueQuoteModal 
+        isOpen={showTrueQuoteModal} 
+        onClose={() => setShowTrueQuoteModal(false)} 
+      />
     </div>
   );
 }

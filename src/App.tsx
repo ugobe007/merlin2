@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import BessQuoteBuilder from './components/BessQuoteBuilder';
 import AdminDashboard from './components/AdminDashboard';
 import VendorPortal from './components/VendorPortal';
-import MerlinAssistant from './components/MerlinAssistant';
 import CarWashEnergy from './components/verticals/CarWashEnergy';
 import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
@@ -167,9 +166,6 @@ function App() {
     <QuoteProvider>
       <div>
         <BessQuoteBuilder />
-        
-        {/* Merlin AI Assistant - Floating Help Widget (Upper Right) */}
-        <MerlinAssistant />
         
         {/* Floating Admin Access Button - Bottom Right */}
         <button

@@ -23,6 +23,7 @@ interface Message {
 
 interface MerlinAssistantProps {
   className?: string;
+  hideWhenWizardOpen?: boolean;
 }
 
 // Pre-built FAQ suggestions
@@ -410,7 +411,7 @@ Our calculator asks about your backup requirements to size appropriately.`;
 Feel free to ask about any of these topics!`;
 }
 
-const MerlinAssistant: React.FC<MerlinAssistantProps> = ({ className = '' }) => {
+const MerlinAssistant: React.FC<MerlinAssistantProps> = ({ className = '', hideWhenWizardOpen = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -509,6 +510,11 @@ Or click one of the suggested questions below!`,
       return <p key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: line }} />;
     });
   };
+
+  // Don't render if wizard is open (wizard has its own Merlin integration)
+  if (hideWhenWizardOpen) {
+    return null;
+  }
 
   return (
     <>
