@@ -28,6 +28,8 @@ import carWashTunnel from "../../assets/images/car_wash_tunnel.jpg";
 import carWashAuto from "../../assets/images/Car_Wash_Auto.jpg";
 import carWash1 from "../../assets/images/carwash1.jpg";
 import hospitalImage from "../../assets/images/hospital_1.jpg";
+import hospital2Image from "../../assets/images/hospital_2.jpg";
+import hospital3Image from "../../assets/images/hospital_3.jpg";
 import evChargingStationImage from "@/assets/images/ev_charging_station.jpg";
 import evChargingHotelImage from "@/assets/images/ev_charging_hotel.jpg";
 import hotelImage from "@/assets/images/hotel_1.jpg";
@@ -151,6 +153,33 @@ const heroUseCases = [
     payback: '1.2 yrs',
     roi: '830%',
     systemSize: '1.2 MW / 4.8 MWh'
+  },
+  {
+    id: 'hospital-urgent-care',
+    name: 'Urgent Care Center',
+    image: hospital2Image,
+    savings: '$420K',
+    payback: '2.0 yrs',
+    roi: '500%',
+    systemSize: '0.8 MW / 3.2 MWh'
+  },
+  {
+    id: 'ev-charging-public',
+    name: 'Public EV Charging Network',
+    image: evChargingStationImage,
+    savings: '$3.2M',
+    payback: '0.8 yrs',
+    roi: '1,250%',
+    systemSize: '3.0 MW / 12 MWh'
+  },
+  {
+    id: 'hospital-medical-center',
+    name: 'Medical Center',
+    image: hospital3Image,
+    savings: '$1.1M',
+    payback: '1.5 yrs',
+    roi: '670%',
+    systemSize: '2.0 MW / 8 MWh'
   }
 ];
 
