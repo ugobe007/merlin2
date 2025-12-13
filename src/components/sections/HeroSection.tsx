@@ -42,7 +42,7 @@ import hotelHolidayInn4 from "../../assets/images/hotel_motel_holidayinn_4.jpg";
 // Data center images (using hospital/airport images as placeholders until proper images are added)
 const dataCenter1 = hospitalImage;
 const dataCenter2 = airportImage;
-const dataCenter3 = hospitalImage;
+const dataCenter3 = airportImage;
 
 // Hero use cases with real financial data - Diverse Industries (Alternating Pattern)
 const heroUseCases = [
@@ -85,7 +85,7 @@ const heroUseCases = [
   {
     id: 'hospital',
     name: 'Hospital',
-    image: hospitalImage,
+    image: hospital3Image,
     savings: '$890K',
     payback: '1.8 yrs',
     roi: '560%',
@@ -157,7 +157,7 @@ const heroUseCases = [
   {
     id: 'hospital-urgent-care',
     name: 'Urgent Care Center',
-    image: hospital2Image,
+    image: hospitalImage,
     savings: '$420K',
     payback: '2.0 yrs',
     roi: '500%',
@@ -175,7 +175,7 @@ const heroUseCases = [
   {
     id: 'hospital-medical-center',
     name: 'Medical Center',
-    image: hospital3Image,
+    image: hospital2Image,
     savings: '$1.1M',
     payback: '1.5 yrs',
     roi: '670%',
