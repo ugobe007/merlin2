@@ -168,6 +168,10 @@ export function useWizardState() {
       rackCount: state.useCaseData.rackCount || state.facility.rackCount || 0,
       racks: state.useCaseData.racks || state.facility.rackCount || 0,
       
+      // Data center IT load (convert MW to kW for SSOT)
+      // Database stores itLoadMW (in MW), SSOT expects itLoadKW (in kW)
+      itLoadKW: state.useCaseData.itLoadKW || (state.useCaseData.itLoadMW ? parseFloat(state.useCaseData.itLoadMW) * 1000 : undefined),
+      
       // Bay count (car wash)
       washBays: state.useCaseData.washBays || state.facility.bayCount || 0,
       bayCount: state.useCaseData.bayCount || state.facility.bayCount || 0,
@@ -309,6 +313,20 @@ export function useWizardState() {
     const existingEVLoadKW = calculateEVLoad(state.existingInfrastructure.evChargers);
     const newEVLoadKW = calculateNewEVLoad(state.goals);
     const totalPeakDemandKW = baseBuildingLoadKW + existingEVLoadKW + newEVLoadKW;
+    
+    console.log('🔋🔋🔋 [recalculate] CRITICAL DATA CENTER DEBUG:', {
+      industryType: state.industry.type,
+      baseBuildingLoadKW,
+      existingEVLoadKW,
+      newEVLoadKW,
+      totalPeakDemandKW,
+      facilityData: {
+        squareFeet: state.facility.squareFeet,
+        rackCount: state.facility.rackCount,
+        itLoadKW: state.useCaseData?.itLoadKW,
+        useCaseDataKeys: Object.keys(state.useCaseData || {})
+      }
+    });
     
     const recommendedBackupHours = getRecommendedBackupHours(state);
     

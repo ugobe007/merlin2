@@ -3361,6 +3361,8 @@ export function calculateDatacenterPower(
   rackCount?: number,
   rackDensityKW: number = 8
 ): PowerCalculationResult {
+  console.log('🏢 [calculateDatacenterPower] INPUTS:', { itLoadKW, rackCount, rackDensityKW });
+  
   let powerKW: number;
   let method: string;
   
@@ -3368,18 +3370,23 @@ export function calculateDatacenterPower(
     // Direct IT load specified - add 50% for cooling (PUE ~1.5)
     powerKW = itLoadKW * 1.5;
     method = `Direct IT load ${itLoadKW}kW × 1.5 PUE`;
+    console.log('🏢 [calculateDatacenterPower] Using IT Load method:', { itLoadKW, powerKW, method });
   } else if (rackCount && rackCount > 0) {
     // Calculate from rack count
     const itPower = rackCount * rackDensityKW;
     powerKW = itPower * 1.5; // PUE ~1.5
     method = `${rackCount} racks × ${rackDensityKW}kW × 1.5 PUE`;
+    console.log('🏢 [calculateDatacenterPower] Using Rack Count method:', { rackCount, rackDensityKW, itPower, powerKW, method });
   } else {
     // Default small datacenter
     powerKW = 2000; // 2 MW default
     method = 'Default 2MW datacenter';
+    console.log('⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!');
   }
   
   const powerMW = powerKW / 1000;
+  
+  console.log('🏢 [calculateDatacenterPower] FINAL OUTPUT:', { powerKW, powerMW, method });
   
   return {
     powerMW: Math.max(0.5, Math.round(powerMW * 100) / 100), // Min 500kW
@@ -5140,6 +5147,13 @@ export function calculateUseCasePower(
     case 'datacenter':
     case 'data-center':
       // Database uses 'averageRackDensity' (Dec 2025), legacy: rackDensityKW
+      console.log('🏢🏢🏢 [calculateUseCasePower] DATA CENTER CASE - useCaseData:', {
+        itLoadKW: useCaseData.itLoadKW,
+        rackCount: useCaseData.rackCount,
+        averageRackDensity: useCaseData.averageRackDensity,
+        rackDensityKW: useCaseData.rackDensityKW,
+        allKeys: Object.keys(useCaseData)
+      });
       return calculateDatacenterPower(
         parseInt(useCaseData.itLoadKW) || undefined,
         parseInt(useCaseData.rackCount) || undefined,
