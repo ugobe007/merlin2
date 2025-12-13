@@ -426,17 +426,9 @@ export const MethodologyStatement: React.FC<MethodologyStatementProps> = ({
             <h4 className={`font-semibold text-sm mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Transparent, Auditable Pricing
             </h4>
-            <p className={`text-xs mb-3 ${darkMode ? 'text-purple-200' : 'text-gray-600'}`}>
+            <p className={`text-xs ${darkMode ? 'text-purple-200' : 'text-gray-600'}`}>
               {message || defaultMessage}
             </p>
-            {showBadges && (
-              <TrustBadgesInline 
-                sources={['nrel', 'doe', 'sandia', 'ul', 'ieee']} 
-                size="sm"
-                showLabel={false}
-                darkMode={darkMode}
-              />
-            )}
           </div>
         </div>
       </div>
