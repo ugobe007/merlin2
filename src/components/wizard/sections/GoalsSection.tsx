@@ -155,18 +155,7 @@ export function GoalsSection({
     }
   }, [currentSection, defaultRecommendation, hasAutoPopulated]);
   
-  // Preserve scroll position when wantsEVCharging toggles (prevents jump to top)
-  useEffect(() => {
-    // Save scroll position before render
-    scrollPositionRef.current = window.scrollY;
-  });
-  
-  useEffect(() => {
-    // Restore scroll position after render if EV charger panel toggled
-    if (scrollPositionRef.current > 0) {
-      window.scrollTo(0, scrollPositionRef.current);
-    }
-  }, [wizardState.wantsEVCharging]);
+  // Removed scroll preservation - was causing unwanted page jumps when toggling add-ons
 
   // User's current selection
   const userSelection = {
