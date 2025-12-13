@@ -619,6 +619,8 @@ export function useStreamlinedWizard({
         gridConnection: gridMap[wizardState.gridConnection] || 'on-grid',
       });
       
+      console.log('🧙 [generateQuote] Quote generated successfully:', result);
+      
       // Update wizardState with the effective values used in the quote
       // This ensures System Specs displays the correct battery size
       setWizardState(prev => ({
@@ -631,9 +633,15 @@ export function useStreamlinedWizard({
       }));
       
       completeSection('configuration');
-      advanceToSection(5);
+      
+      // Small delay to ensure state updates before navigation
+      setTimeout(() => {
+        console.log('🧙 [generateQuote] Navigating to results section');
+        advanceToSection(5);
+      }, 100);
     } catch (error) {
       console.error('[Wizard] Quote generation failed:', error);
+      alert('Failed to generate quote. Please check your configuration and try again.');
       setWizardState(prev => ({ ...prev, isCalculating: false }));
     }
   }, [wizardState, centralizedState, completeSection, advanceToSection]);
