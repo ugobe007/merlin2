@@ -33,8 +33,8 @@ import {
 } from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
-import hotelImage from '@/assets/images/hotel_1.avif';
-import evChargingHotelImage from '@/assets/images/ev_charging_hotel.webp';
+import hotelImage from '@/assets/images/hotel_1.jpg';
+import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // REFACTORED: Use StreamlinedWizard instead of HotelWizard
 import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
 import { TrustBadgesInline, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';

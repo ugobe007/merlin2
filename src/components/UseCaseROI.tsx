@@ -4,9 +4,9 @@ import { TrendingUp, Zap, DollarSign, Clock, ArrowRight, ChevronLeft, ChevronRig
 // Import use case images with explicit extensions for Vite
 import carWashImage from '../assets/images/car_wash_1.jpg?url';
 import hospitalImage from '../assets/images/hospital_1.jpg?url';
-import evChargingStationImage from '../assets/images/ev_charging_station.png?url';
-import evChargingHotelImage from '../assets/images/ev_charging_hotel.webp?url';
-import hotelImage from '../assets/images/hotel_1.avif?url';
+import evChargingStationImage from '../assets/images/ev_charging_station.jpg?url';
+import evChargingHotelImage from '../assets/images/ev_charging_hotel.jpg?url';
+import hotelImage from '../assets/images/hotel_1.jpg?url';
 import airportImage from '../assets/images/airports_1.jpg?url';
 
 interface UseCaseData {
