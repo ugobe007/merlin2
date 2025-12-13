@@ -399,17 +399,36 @@ export default function HeroSection({
                 Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.
               </p>
 
-              {/* CTA Button - Deep Purple gradient with Neon Green text */}
+              {/* CTA Button - Spinning micro-interaction on hover */}
+              <style>{`
+                @keyframes spinButton {
+                  0% { transform: scale(1) rotate(0deg); }
+                  25% { transform: scale(1.05) rotate(5deg); }
+                  50% { transform: scale(1.1) rotate(0deg); }
+                  75% { transform: scale(1.05) rotate(-5deg); }
+                  100% { transform: scale(1) rotate(0deg); }
+                }
+                @keyframes rotateGlow {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+                .spin-button:hover {
+                  animation: spinButton 0.6s ease-in-out;
+                }
+                .spin-button:hover .rotate-glow {
+                  animation: rotateGlow 2s linear infinite;
+                }
+              `}</style>
               <button 
                 onClick={() => setShowSmartWizard(true)}
-                className="group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 hover:scale-105 mb-6 overflow-hidden"
+                className="spin-button group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 mb-6 overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 30%, #FCD34D 60%, #F59E0B 100%)',
                   boxShadow: '0 0 30px rgba(245,158,11,0.6), 0 0 60px rgba(251,191,36,0.3), 0 6px 30px rgba(0,0,0,0.4)'
                 }}
               >
-                {/* Glow ring */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 rounded-full blur-lg opacity-60 group-hover:opacity-90 transition-opacity" />
+                {/* Rotating glow ring */}
+                <div className="rotate-glow absolute -inset-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 rounded-full blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
                 <span className="relative flex items-center justify-center gap-2 text-gray-900">
