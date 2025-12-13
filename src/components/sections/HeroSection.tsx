@@ -1080,7 +1080,7 @@ export default function HeroSection({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Car Wash */}
+            {/* Data Center */}
             <div 
               className="group cursor-pointer"
               onClick={() => setShowSmartWizard(true)}
@@ -1093,7 +1093,7 @@ export default function HeroSection({
                 <div className="relative h-56 overflow-hidden">
                   <img 
                     src={carWashImage} 
-                    alt="Car Wash" 
+                    alt="Car Wash Success Story" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
@@ -1106,20 +1106,20 @@ export default function HeroSection({
                 
                 {/* Content */}
                 <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
-                  <h4 className="text-xl font-bold text-white mb-2">Automated Car Wash</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">500 kW peak demand • 24/7 operation</p>
+                  <h4 className="text-xl font-bold text-white mb-2">Multi-Bay Car Wash</h4>
+                  <p className="text-purple-200/70 text-sm mb-4">500 kW peak demand • 32% energy savings</p>
                   
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-amber-400">2.1yr</div>
+                      <div className="text-lg font-bold text-amber-400">1.2yr</div>
                       <div className="text-xs text-purple-300">Payback</div>
                     </div>
                     <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-cyan-400">485%</div>
+                      <div className="text-lg font-bold text-cyan-400">840%</div>
                       <div className="text-xs text-purple-300">ROI</div>
                     </div>
                     <div className="text-center bg-white/10 rounded-xl py-2">
-                      <div className="text-lg font-bold text-white">2 MWh</div>
+                      <div className="text-lg font-bold text-white">20 MWh</div>
                       <div className="text-xs text-purple-300">System</div>
                     </div>
                   </div>
