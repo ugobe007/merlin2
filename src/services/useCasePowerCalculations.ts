@@ -5139,10 +5139,11 @@ export function calculateUseCasePower(
       
     case 'datacenter':
     case 'data-center':
+      // Database uses 'averageRackDensity' (Dec 2025), legacy: rackDensityKW
       return calculateDatacenterPower(
         parseInt(useCaseData.itLoadKW) || undefined,
         parseInt(useCaseData.rackCount) || undefined,
-        parseFloat(useCaseData.rackDensityKW) || 8
+        parseFloat(useCaseData.averageRackDensity || useCaseData.rackDensityKW) || 8
       );
       
     case 'ev-charging':
@@ -5228,11 +5229,11 @@ export function calculateUseCasePower(
       return calculateAirportPower(passengersInMillions);
       
     case 'manufacturing':
-      // Database uses 'squareFeet', UI variants: 'facilitySqFt', 'sqFt'
+      // Database uses 'facilitySqFt', 'manufacturingType' (Dec 2025), legacy: squareFeet, industryType
       // DB default: 100,000 sqft
       return calculateManufacturingPower(
-        parseInt(useCaseData.squareFeet || useCaseData.facilitySqFt || useCaseData.sqFt) || 100000,
-        useCaseData.industryType
+        parseInt(useCaseData.facilitySqFt || useCaseData.squareFeet || useCaseData.sqFt) || 100000,
+        useCaseData.manufacturingType || useCaseData.industryType
       );
       
     case 'warehouse':
@@ -5340,11 +5341,11 @@ export function calculateUseCasePower(
       );
       
     case 'car-wash':
-      // Database uses 'bayCount', code accepts multiple variants
+      // Database uses 'bayCount', 'carWashType' (Dec 2025), legacy: washBays, washType
       // DB default: 4 bays, default type: tunnel (most common for BESS customers)
       return calculateCarWashPower(
         parseInt(useCaseData.bayCount || useCaseData.washBays || useCaseData.numBays || useCaseData.numberOfBays) || 4,
-        useCaseData.washType || 'tunnel',
+        useCaseData.carWashType || useCaseData.washType || 'tunnel',
         {
           hasVacuums: useCaseData.hasVacuums !== false,
           hasDryers: useCaseData.hasDryers !== false,
@@ -5354,9 +5355,9 @@ export function calculateUseCasePower(
       
     case 'gas-station':
     case 'fuel-station':
-      // Database uses numPumps, legacy uses dispenserCount, some use pumpCount
+      // Database uses 'fuelDispensers' (Dec 2025), legacy: dispenserCount, pumpCount, numPumps
       return calculateGasStationPower(
-        parseInt(useCaseData.numPumps || useCaseData.pumpCount || useCaseData.dispenserCount) || 8,
+        parseInt(useCaseData.fuelDispensers || useCaseData.numPumps || useCaseData.pumpCount || useCaseData.dispenserCount) || 8,
         useCaseData.hasConvenienceStore !== false && useCaseData.stationType !== 'gas-only',
         useCaseData.stationType || 'with-cstore'
       );
