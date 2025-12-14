@@ -5779,3 +5779,72 @@ export function calculateCarWashPowerSimple(input: CarWashPowerSimpleInput): Car
     potentialSavings,
   };
 }
+
+/**
+ * CAR WASH FACILITY CONSTRAINTS - Industry Standards
+ * Source: International Carwash Association (ICA), ICWG (International Carwash Group)
+ * 
+ * TrueQuote™ Sources:
+ * - ICA 2024 Industry Study: Typical site size and building footprints
+ * - Professional Carwash & Detailing Magazine: Construction standards
+ * - ICWG Market Intelligence: Express tunnel facility specs
+ */
+export const CAR_WASH_FACILITY_CONSTRAINTS = {
+  MAX_SITE_AREA_SQFT: 43560,        // 1 acre typical max site
+  BUILDING_FOOTPRINT_MIN: 4000,     // Minimum enclosed building
+  BUILDING_FOOTPRINT_MAX: 7000,     // Maximum typical building
+  BUILDING_FOOTPRINT_TYPICAL: 5500, // Average express tunnel
+  USABLE_ROOF_PERCENT: 0.75,        // 75% of roof usable for solar (accounting for vents, setbacks, shading)
+  SOLAR_PANEL_EFFICIENCY_W: 400,    // Modern panel wattage
+  SOLAR_PANEL_AREA_SQFT: 20,        // ~20 sq ft per 400W panel (includes spacing)
+  SOLAR_WATTS_PER_SQFT: 15,         // Industry standard: ~15W/sq ft usable roof
+};
+
+/**
+ * Validate solar capacity against car wash roof constraints
+ * 
+ * TrueQuote™ compliant: Uses ICA/ICWG industry standards for facility sizing
+ * 
+ * @param solarKW - Requested solar capacity in kW
+ * @param buildingSqFt - Total building footprint in sq ft (default: 5500 typical)
+ * @returns Validation result with max capacity and warnings
+ */
+export function validateCarWashSolarCapacity(
+  solarKW: number,
+  buildingSqFt: number = CAR_WASH_FACILITY_CONSTRAINTS.BUILDING_FOOTPRINT_TYPICAL
+): {
+  isValid: boolean;
+  maxSolarKW: number;
+  usableRoofSqFt: number;
+  requiredRoofSqFt: number;
+  exceedsBy?: number;
+  warning?: string;
+} {
+  // Calculate usable roof area (75% of building footprint)
+  const usableRoofSqFt = Math.round(buildingSqFt * CAR_WASH_FACILITY_CONSTRAINTS.USABLE_ROOF_PERCENT);
+  
+  // Calculate max solar capacity for available roof
+  const maxSolarKW = Math.floor(usableRoofSqFt * CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT / 1000);
+  
+  // Calculate required roof space for requested solar
+  const requiredRoofSqFt = Math.round(solarKW * 1000 / CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT);
+  
+  if (solarKW > maxSolarKW) {
+    const exceedsBy = Math.round(solarKW - maxSolarKW);
+    return {
+      isValid: false,
+      maxSolarKW,
+      usableRoofSqFt,
+      requiredRoofSqFt,
+      exceedsBy,
+      warning: `⚠️ Solar array requires ${requiredRoofSqFt.toLocaleString()} sq ft but only ${usableRoofSqFt.toLocaleString()} sq ft available on typical car wash roof. Maximum realistic solar: ${maxSolarKW} kW.`
+    };
+  }
+  
+  return {
+    isValid: true,
+    maxSolarKW,
+    usableRoofSqFt,
+    requiredRoofSqFt
+  };
+}
