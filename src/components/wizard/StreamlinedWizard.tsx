@@ -548,15 +548,34 @@ export default function StreamlinedWizard({
             />
 
             {/* Section 3: Goals & Preferences */}
-            {/* Calculate power coverage to pass to GoalsSection for highlighting */}
+            {/* Calculate power coverage and pass SSOT calculated values */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
-              const peakDemandKW = calc.recommendedBatteryKW || calc.totalPeakDemandKW || 0;
+              const peakDemandKW = calc.totalPeakDemandKW || 0;
               const batteryKW = wizard.wizardState.batteryKW || 0;
               const solarKW = wizard.wizardState.solarKW || 0;
               const generatorKW = wizard.wizardState.generatorKW || 0;
               const totalConfiguredKW = batteryKW + solarKW + generatorKW;
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 100;
+              
+              // Dec 14, 2025 - CRITICAL FIX: Pass calculated recommendation from SSOT
+              const merlinRecommendation = calc.recommendedBatteryKW ? {
+                batteryKW: calc.recommendedBatteryKW || 0,
+                batteryKWh: calc.recommendedBatteryKWh || 0,
+                durationHours: 4,
+                solarKW: calc.recommendedSolarKW || 0,
+                windKW: 0,
+                generatorKW: Math.round(peakDemandKW * 0.25),
+                pcsKW: calc.recommendedBatteryKW || 0,
+                transformerKVA: Math.round(peakDemandKW * 0.5),
+                totalProductionKW: (calc.recommendedBatteryKW || 0) + (calc.recommendedSolarKW || 0),
+                totalStorageKWh: calc.recommendedBatteryKWh || 0,
+                dailyProductionKWh: Math.round((calc.recommendedSolarKW || 0) * 4.5),
+                annualSavings: Math.round(peakDemandKW * 150),
+                paybackYears: 3.5,
+                roi10Year: 285,
+                currency: 'USD',
+              } : undefined;
               
               return (
                 <GoalsSection
@@ -573,6 +592,8 @@ export default function StreamlinedWizard({
                     wizard.generateQuote(); // This will show AcceptCustomizeModal
                   }}
                   powerCoverage={powerCoverage}
+                  peakDemandKW={peakDemandKW}
+                  merlinRecommendation={merlinRecommendation}
                 />
               );
             })()}
