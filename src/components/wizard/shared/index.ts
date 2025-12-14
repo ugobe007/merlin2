@@ -37,3 +37,7 @@ export type {
   VerticalType, 
   WizardModeSelectorProps 
 } from './WizardModeSelector';
+
+// Accept/Customize Modal Component (NEW - Dec 2025)
+export { AcceptCustomizeModal } from './AcceptCustomizeModal';
+export type { AcceptCustomizeModalProps } from './AcceptCustomizeModal';

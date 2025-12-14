@@ -5848,3 +5848,195 @@ export function validateCarWashSolarCapacity(
     requiredRoofSqFt
   };
 }
+
+/**
+ * GROUND-MOUNT SOLAR CONSTRAINTS - Industry Standards
+ * Source: NREL Solar Land Use Requirements, SEIA Ground-Mount Best Practices
+ * 
+ * TrueQuote™ Sources:
+ * - NREL/TP-6A20-56290 (2013): "Land-Use Requirements for Solar"
+ * - SEIA Ground-Mount Solar Guide (2024)
+ * - DOE Solar Energy Technologies Office: Fixed-Tilt vs Tracking
+ */
+export const GROUND_MOUNT_SOLAR_CONSTRAINTS = {
+  // Land area required per MW (fixed-tilt, standard spacing)
+  ACRES_PER_MW_FIXED_TILT: 5.5,        // 5-6 acres/MW typical
+  ACRES_PER_MW_SINGLE_AXIS: 7.5,       // 7-8 acres/MW (needs wider spacing)
+  SQFT_PER_ACRE: 43560,                 // Conversion factor
+  
+  // Ground coverage ratio (GCR) - panel area / ground area
+  GCR_FIXED_TILT: 0.40,                 // 40% coverage typical
+  GCR_SINGLE_AXIS: 0.30,                // 30% coverage (wider row spacing)
+  
+  // Production boost from tracking (vs fixed)
+  TRACKING_PRODUCTION_BOOST: 1.25,      // 25% more energy
+  
+  // Cost premium
+  COST_PER_WATT_FIXED: 0.85,           // $0.85/W installed (ground-mount)
+  COST_PER_WATT_TRACKING: 1.10,        // $1.10/W (single-axis tracking)
+  
+  // Minimum land area for economic viability
+  MIN_ACRES_ECONOMICAL: 1.0,            // Below 1 acre rarely cost-effective
+  
+  // Maximum practical size for commercial/industrial
+  MAX_MW_COMMERCIAL: 5.0,               // 5 MW typical max for C&I
+};
+
+/**
+ * CARPORT SOLAR CONSTRAINTS - Industry Standards
+ * Source: EV Charging + Solar Carport Integrated Systems
+ * 
+ * TrueQuote™ Sources:
+ * - NREL: "Solar Photovoltaic Carport Structures" (2022)
+ * - US DOE: Vehicle-to-Grid and Solar Integration
+ * - Standard parking space: 9' × 18' = 162 sq ft
+ */
+export const CARPORT_SOLAR_CONSTRAINTS = {
+  // Parking space dimensions
+  PARKING_SPACE_WIDTH_FT: 9,            // Standard width
+  PARKING_SPACE_LENGTH_FT: 18,          // Standard length
+  PARKING_SPACE_SQFT: 162,              // 9' × 18'
+  
+  // Solar coverage per parking space (single space)
+  SOLAR_COVERAGE_PERCENT: 0.90,         // 90% of space covered (allow for posts)
+  USABLE_SOLAR_SQFT_PER_SPACE: 145,    // ~145 sq ft per space
+  
+  // Solar production per sq ft (carports are elevated, less efficient than roof)
+  WATTS_PER_SQFT_CARPORT: 12,          // 10-12W/sq ft (vs 15W for roof)
+  
+  // Typical carport configurations
+  SPACES_PER_CARPORT_UNIT: 10,         // Typical carport covers 10 spaces
+  CARPORT_KW_PER_10_SPACES: 17.4,      // ~17.4 kW per 10-space unit
+  
+  // Cost
+  COST_PER_WATT_CARPORT: 2.50,         // $2.50/W (higher than roof due to structure)
+  COST_PER_SPACE_STRUCTURE: 8000,      // $8k per space for carport structure
+  
+  // EV Charging Integration
+  EV_CHARGER_SPACES_PERCENT: 0.20,     // Typically 20% of carport spaces have chargers
+  CARPORT_WITH_DCFC_PREMIUM: 1.30,     // 30% cost premium if including DCFC
+};
+
+/**
+ * Calculate ground-mount solar capacity based on available land
+ * 
+ * TrueQuote™ compliant: Uses NREL/SEIA land-use standards
+ * 
+ * @param availableAcres - Available land area in acres
+ * @param trackingType - 'fixed-tilt' or 'single-axis-tracking'
+ * @returns Solar capacity analysis with land requirements
+ */
+export function calculateGroundMountSolarCapacity(
+  availableAcres: number,
+  trackingType: 'fixed-tilt' | 'single-axis-tracking' = 'fixed-tilt'
+): {
+  isEconomical: boolean;
+  maxSolarMW: number;
+  maxSolarKW: number;
+  requiredAcres: number;
+  trackingBoost: number;
+  estimatedCost: number;
+  costPerWatt: number;
+  warning?: string;
+} {
+  const acresPerMW = trackingType === 'single-axis-tracking' 
+    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_SINGLE_AXIS
+    : GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_FIXED_TILT;
+  
+  const costPerWatt = trackingType === 'single-axis-tracking'
+    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_TRACKING
+    : GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_FIXED;
+  
+  const maxSolarMW = Math.min(
+    availableAcres / acresPerMW,
+    GROUND_MOUNT_SOLAR_CONSTRAINTS.MAX_MW_COMMERCIAL
+  );
+  
+  const maxSolarKW = Math.floor(maxSolarMW * 1000);
+  const estimatedCost = maxSolarKW * costPerWatt * 1000;
+  
+  const trackingBoost = trackingType === 'single-axis-tracking' 
+    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.TRACKING_PRODUCTION_BOOST 
+    : 1.0;
+  
+  if (availableAcres < GROUND_MOUNT_SOLAR_CONSTRAINTS.MIN_ACRES_ECONOMICAL) {
+    return {
+      isEconomical: false,
+      maxSolarMW,
+      maxSolarKW,
+      requiredAcres: availableAcres,
+      trackingBoost,
+      estimatedCost,
+      costPerWatt,
+      warning: `⚠️ Ground-mount solar requires minimum ${GROUND_MOUNT_SOLAR_CONSTRAINTS.MIN_ACRES_ECONOMICAL} acre for economic viability. Consider rooftop or carport solar instead.`
+    };
+  }
+  
+  return {
+    isEconomical: true,
+    maxSolarMW,
+    maxSolarKW,
+    requiredAcres: maxSolarMW * acresPerMW,
+    trackingBoost,
+    estimatedCost,
+    costPerWatt
+  };
+}
+
+/**
+ * Calculate carport solar capacity based on parking spaces
+ * 
+ * TrueQuote™ compliant: Uses NREL carport solar integration standards
+ * 
+ * @param parkingSpaces - Number of parking spaces to cover
+ * @param includeEVChargers - Whether to include EV charging integration
+ * @returns Carport solar capacity and cost analysis
+ */
+export function calculateCarportSolarCapacity(
+  parkingSpaces: number,
+  includeEVChargers: boolean = false
+): {
+  maxSolarKW: number;
+  usableSolarSqFt: number;
+  numberOfCarportUnits: number;
+  estimatedSolarCost: number;
+  estimatedStructureCost: number;
+  totalCost: number;
+  costPerSpace: number;
+  evChargerSpaces?: number;
+  evChargerCost?: number;
+} {
+  const usableSolarSqFt = parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.USABLE_SOLAR_SQFT_PER_SPACE;
+  const maxSolarKW = Math.floor(usableSolarSqFt * CARPORT_SOLAR_CONSTRAINTS.WATTS_PER_SQFT_CARPORT / 1000);
+  
+  const numberOfCarportUnits = Math.ceil(parkingSpaces / CARPORT_SOLAR_CONSTRAINTS.SPACES_PER_CARPORT_UNIT);
+  
+  // Solar equipment cost
+  let estimatedSolarCost = maxSolarKW * CARPORT_SOLAR_CONSTRAINTS.COST_PER_WATT_CARPORT * 1000;
+  
+  // Carport structure cost
+  const estimatedStructureCost = parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.COST_PER_SPACE_STRUCTURE;
+  
+  // EV charger integration premium
+  let evChargerSpaces = 0;
+  let evChargerCost = 0;
+  if (includeEVChargers) {
+    evChargerSpaces = Math.ceil(parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.EV_CHARGER_SPACES_PERCENT);
+    estimatedSolarCost *= CARPORT_SOLAR_CONSTRAINTS.CARPORT_WITH_DCFC_PREMIUM; // Premium for EV integration
+    evChargerCost = evChargerSpaces * 50000; // Rough estimate for Level 2 chargers
+  }
+  
+  const totalCost = estimatedSolarCost + estimatedStructureCost + evChargerCost;
+  const costPerSpace = totalCost / parkingSpaces;
+  
+  return {
+    maxSolarKW,
+    usableSolarSqFt,
+    numberOfCarportUnits,
+    estimatedSolarCost,
+    estimatedStructureCost,
+    totalCost,
+    costPerSpace,
+    ...(includeEVChargers && { evChargerSpaces, evChargerCost })
+  };
+}
