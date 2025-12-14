@@ -51,19 +51,6 @@ interface StreamlinedWizardProps {
 }
 
 // ============================================
-// SECTION METADATA
-// ============================================
-
-const SECTION_META = [
-  { id: 'location', label: 'Location', icon: MapPin, points: 100 },
-  { id: 'industry', label: 'Industry', icon: Building2, points: 100 },
-  { id: 'facility', label: 'Details', icon: Target, points: 100 },
-  { id: 'goals', label: 'Goals', icon: Sparkles, points: 100 },
-  { id: 'configuration', label: 'Configure', icon: Settings, points: 100 },
-  { id: 'quote', label: 'Quote', icon: FileText, points: 100 },
-];
-
-// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -189,24 +176,9 @@ export default function StreamlinedWizard({
               </button>
             </div>
 
-            {/* Progress Indicator - Only show current step */}
-            <div className="hidden md:flex items-center gap-2">
-              {(() => {
-                const currentMeta = SECTION_META[wizard.currentSection];
-                if (!currentMeta) return null;
-                const Icon = currentMeta.icon;
-                return (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-purple-900 shadow-lg shadow-purple-500/30">
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{currentMeta.label}</span>
-                  </div>
-                );
-              })()}
-            </div>
-
             {/* Actions */}
             <div className="flex items-center gap-2">
-              {/* Solar Opportunity - Sun icons only */}
+              {/* Solar Opportunity - Clickable sun icons */}
               {(() => {
                 const solarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 0;
                 const hasLocation = wizard.wizardState.state && solarHours > 0;
@@ -217,7 +189,11 @@ export default function StreamlinedWizard({
                 if (!hasLocation) return null;
                 
                 return (
-                  <div className="flex items-center gap-1" title={`${solarHours.toFixed(1)} hours avg solar`}>
+                  <button
+                    onClick={() => setShowSolarOpportunity(true)}
+                    className="flex items-center gap-1 px-2 py-1 hover:bg-amber-500/10 rounded-lg transition-colors"
+                    title={`${solarHours.toFixed(1)} hours avg solar - Click for details`}
+                  >
                     {[1, 2, 3, 4, 5].map((i) => (
                       <Sun 
                         key={i}
@@ -228,7 +204,7 @@ export default function StreamlinedWizard({
                         }`}
                       />
                     ))}
-                  </div>
+                  </button>
                 );
               })()}
               
@@ -450,16 +426,7 @@ export default function StreamlinedWizard({
                 );
               })()}
               
-              {/* Pro Mode - Small icon button */}
-              {onOpenAdvanced && (
-                <button
-                  onClick={onOpenAdvanced}
-                  className="p-2 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-400/40 text-amber-400 rounded-lg transition-colors"
-                  title="Pro Mode - Advanced Configuration"
-                >
-                  <Wand2 className="w-4 h-4" />
-                </button>
-              )}
+
               
               {/* Points Badge (smaller now) */}
               <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-purple-500/20 border border-purple-400/30 rounded-full">

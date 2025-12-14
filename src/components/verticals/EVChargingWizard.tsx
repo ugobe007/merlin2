@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { useRealtimePowerCalculation } from '@/components/wizard/hooks';
 import { PowerGaugeWidget } from '@/components/wizard/widgets';
 import { 
   EV_CHARGER_SPECS, 
@@ -451,6 +452,27 @@ export default function EVChargingWizard({
     hpc: 0,
   });
   
+  // ══════════════════════════════════════════════════════════════════════════════════════
+  // REAL-TIME POWER CALCULATION - Using Shared Hook (Phase 2 - Dec 14, 2025)
+  // ══════════════════════════════════════════════════════════════════════════════════════
+  // Note: EVChargingWizard already uses calculateEVStationRecommendation SSOT,
+  // but we add the shared hook for consistency and Power Profile integration
+  
+  const { powerResult, isCalculating: isPowerCalculating } = useRealtimePowerCalculation({
+    industry: 'ev-charging',
+    useCaseData: {
+      level2Chargers: customChargers.level2,
+      dcfc50kwChargers: 0,
+      dcfc150kwChargers: customChargers.dcfc,
+      dcfc350kwChargers: customChargers.hpc,
+    },
+    wantsSolar: wantsSolarCanopy,
+    targetReduction: 70, // EV charging typically targets 70% peak reduction
+    durationHours: 2,
+    enabled: true,
+    debounceMs: 300,
+  });
+  
   // Initialize customChargers when station type or scale changes
   useEffect(() => {
     const station = STATION_TYPES[stationType];
@@ -545,8 +567,14 @@ export default function EVChargingWizard({
     setIsCalculating(true);
     
     try {
-      const storageSizeMW = recommendation.recommendation.bessKW / 1000;
-      const durationHours = 2; // 2 hours for peak shaving
+      // Use powerResult from shared hook (Phase 2 - Dec 14, 2025)
+      // Fallback to recommendation if powerResult not valid yet
+      const storageSizeMW = powerResult.isValid 
+        ? powerResult.recommendedBatteryMW 
+        : recommendation.recommendation.bessKW / 1000;
+      const durationHours = powerResult.isValid 
+        ? powerResult.durationHours 
+        : 2; // 2 hours for peak shaving
       
       const stateData = STATE_RATES[state] || STATE_RATES['Other'];
       

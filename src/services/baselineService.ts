@@ -692,55 +692,132 @@ export function calculateGridStrategySavings(
  * Calculate EV charging baseline based on charger specifications
  * 
  * This handles the complex calculation for EV charging stations based on:
- * - Number and power of Level 2 chargers
- * - Number and power of DC Fast chargers
+ * - Number and power of Level 2 chargers (7-22 kW)
+ * - Number and power of DC Fast chargers (50-150 kW)
+ * - Number and power of HPC chargers (350 kW)
+ * - Number and power of Megawatt chargers (1 MW+)
  * - Peak concurrency factor
+ * 
+ * ✅ FIXED Dec 14, 2025: Support NEW database field names:
+ * - level2Chargers, dcfc50kwChargers, dcfc150kwChargers, dcfc350kwChargers, megawattChargers
+ * - concurrentChargingSessions (not peakConcurrency)
  */
 function calculateEVChargingBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
-  // FIXED: Support ALL field name variants from database and UI
-  // Database seeds use: level2Count, dcfastCount, numberOfLevel1Chargers
-  // Migration uses: numberOfLevel2Chargers, numberOfDCFastChargers
-  const level1Count = parseInt(useCaseData.level1Count || useCaseData.numberOfLevel1Chargers || useCaseData.level1Chargers) || 0;
-  const level2Count = parseInt(useCaseData.level2Count || useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
-  const level1Power = 1.9; // kW (Level 1 standard)
-  const level2Power = parseFloat(useCaseData.level2Power) || 19.2; // kW (commercial Level 2 standard)
-  const dcFastCount = parseInt(useCaseData.dcfastCount || useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
-  const dcFastPower = parseFloat(useCaseData.dcFastPower) || 150; // kW (DC fast charger standard)
-  const concurrency = Math.min(parseInt(useCaseData.peakConcurrency) || 70, 80) / 100; // 70% default
-  
-  const totalLevel1 = (level1Count * level1Power) / 1000; // MW
+  // ============================================
+  // LEVEL 2 AC CHARGERS (7-22 kW)
+  // ============================================
+  // Database field: level2Chargers (NEW Dec 2025)
+  // Legacy fields: level2Count, numberOfLevel2Chargers
+  const level2Count = parseInt(
+    useCaseData.level2Chargers || 
+    useCaseData.level2Count || 
+    useCaseData.numberOfLevel2Chargers || 
+    useCaseData.level2_chargers ||
+    useCaseData.l2Chargers
+  ) || 0;
+  const level2Power = parseFloat(useCaseData.level2Power) || 19.2; // kW (default commercial Level 2)
   const totalLevel2 = (level2Count * level2Power) / 1000; // MW
-  const totalDCFast = (dcFastCount * dcFastPower) / 1000; // MW
-  const totalCharging = totalLevel1 + totalLevel2 + totalDCFast;
+  
+  // ============================================
+  // DC FAST CHARGERS (50-150 kW)
+  // ============================================
+  // Database fields: dcfc50kwChargers, dcfc150kwChargers (NEW Dec 2025)
+  // Legacy fields: dcfastCount, numberOfDCFastChargers
+  const dcfc50Count = parseInt(useCaseData.dcfc50kwChargers || 0) || 0;
+  const dcfc150Count = parseInt(useCaseData.dcfc150kwChargers || 0) || 0;
+  const dcFastCountLegacy = parseInt(
+    useCaseData.dcfastCount || 
+    useCaseData.numberOfDCFastChargers || 
+    useCaseData.dcFastChargers
+  ) || 0;
+  
+  // If legacy dcFastCount exists but no granular data, assume all 150kW
+  const totalDcfc50 = (dcfc50Count * 50) / 1000; // MW
+  const totalDcfc150 = ((dcfc150Count + (dcFastCountLegacy && !dcfc50Count && !dcfc150Count ? dcFastCountLegacy : 0)) * 150) / 1000; // MW
+  const totalDCFast = totalDcfc50 + totalDcfc150;
+  
+  // ============================================
+  // HPC CHARGERS (350 kW)
+  // ============================================
+  // Database field: dcfc350kwChargers (NEW Dec 2025)
+  const hpc350Count = parseInt(useCaseData.dcfc350kwChargers || 0) || 0;
+  const totalHPC = (hpc350Count * 350) / 1000; // MW
+  
+  // ============================================
+  // MEGAWATT CHARGERS (1 MW+)
+  // ============================================
+  // Database field: megawattChargers (NEW Dec 2025)
+  const megawattCount = parseInt(useCaseData.megawattChargers || 0) || 0;
+  const totalMegawatt = megawattCount * 1.0; // MW (1 MW per charger)
+  
+  // ============================================
+  // TOTAL CHARGING CAPACITY
+  // ============================================
+  const totalCharging = totalLevel2 + totalDCFast + totalHPC + totalMegawatt;
+  
+  // ============================================
+  // CONCURRENCY FACTOR
+  // ============================================
+  // Database field: concurrentChargingSessions (NEW Dec 2025)
+  // Legacy field: peakConcurrency
+  const concurrency = Math.min(
+    parseInt(useCaseData.concurrentChargingSessions || useCaseData.peakConcurrency) || 60, 
+    90
+  ) / 100; // Default 60%, max 90%
   
   if (import.meta.env.DEV) {
     console.log('🔌 [EV Charging Baseline] Field mapping check:', {
       rawDataKeys: Object.keys(useCaseData || {}),
-      // Level 1 variants
-      level1Count_raw: useCaseData.level1Count,
-      numberOfLevel1Chargers_raw: useCaseData.numberOfLevel1Chargers,
-      resolved_level1: level1Count,
-      // Level 2 variants
-      level2Count_raw: useCaseData.level2Count,
-      numberOfLevel2Chargers_raw: useCaseData.numberOfLevel2Chargers,
+      // Level 2
+      level2Chargers_raw: useCaseData.level2Chargers,
+      level2Count_legacy: useCaseData.level2Count,
       resolved_level2: level2Count,
-      // DC Fast variants
-      dcfastCount_raw: useCaseData.dcfastCount,
-      numberOfDCFastChargers_raw: useCaseData.numberOfDCFastChargers,
-      resolved_dcFast: dcFastCount
+      // DC Fast
+      dcfc50kwChargers_raw: useCaseData.dcfc50kwChargers,
+      dcfc150kwChargers_raw: useCaseData.dcfc150kwChargers,
+      dcfastCount_legacy: dcFastCountLegacy,
+      resolved_dcfc50: dcfc50Count,
+      resolved_dcfc150: dcfc150Count,
+      // HPC
+      dcfc350kwChargers_raw: useCaseData.dcfc350kwChargers,
+      resolved_hpc350: hpc350Count,
+      // Megawatt
+      megawattChargers_raw: useCaseData.megawattChargers,
+      resolved_megawatt: megawattCount,
+      // Concurrency
+      concurrentChargingSessions_raw: useCaseData.concurrentChargingSessions,
+      peakConcurrency_legacy: useCaseData.peakConcurrency,
+      resolved_concurrency: (concurrency * 100) + '%'
     });
     console.log('🔌 [EV Charging Baseline] Power breakdown:', {
-      level1Count,
-      level1Power,
-      level1Total: totalLevel1.toFixed(3) + ' MW',
-      level2Count,
-      level2Power,
-      level2Total: totalLevel2.toFixed(3) + ' MW',
-      dcFastCount,
-      dcFastPower,
-      dcFastTotal: totalDCFast.toFixed(3) + ' MW',
+      level2: {
+        count: level2Count,
+        power: level2Power + ' kW',
+        total: totalLevel2.toFixed(3) + ' MW'
+      },
+      dcfc50: {
+        count: dcfc50Count,
+        power: '50 kW',
+        total: totalDcfc50.toFixed(3) + ' MW'
+      },
+      dcfc150: {
+        count: dcfc150Count + (dcFastCountLegacy && !dcfc50Count && !dcfc150Count ? dcFastCountLegacy : 0),
+        power: '150 kW',
+        total: totalDcfc150.toFixed(3) + ' MW'
+      },
+      hpc350: {
+        count: hpc350Count,
+        power: '350 kW',
+        total: totalHPC.toFixed(3) + ' MW'
+      },
+      megawatt: {
+        count: megawattCount,
+        power: '1000 kW',
+        total: totalMegawatt.toFixed(3) + ' MW'
+      },
       concurrency: (concurrency * 100) + '%',
-      totalCharging: totalCharging.toFixed(3) + ' MW'
+      totalCharging: totalCharging.toFixed(3) + ' MW',
+      peakDemand: (totalCharging * concurrency).toFixed(3) + ' MW'
     });
   }
   
@@ -800,11 +877,24 @@ function calculateEVChargingBaseline(useCaseData: Record<string, any>): Baseline
   // Calculate grid strategy savings (for European off-grid/limited-grid scenarios)
   const gridStrategy = calculateGridStrategySavings(useCaseData, peakDemandMW);
   
+  // Build detailed description showing all charger types
+  const descParts: string[] = [];
+  if (level2Count > 0) descParts.push(`${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW)`);
+  if (dcfc50Count > 0) descParts.push(`${dcfc50Count} DCFC-50 (${(totalDcfc50 * 1000).toFixed(0)}kW)`);
+  const dcfc150Total = dcfc150Count + (dcFastCountLegacy && !dcfc50Count && !dcfc150Count ? dcFastCountLegacy : 0);
+  if (dcfc150Total > 0) descParts.push(`${dcfc150Total} DCFC-150 (${(totalDcfc150 * 1000).toFixed(0)}kW)`);
+  if (hpc350Count > 0) descParts.push(`${hpc350Count} HPC-350 (${(totalHPC * 1000).toFixed(0)}kW)`);
+  if (megawattCount > 0) descParts.push(`${megawattCount} MW-Chargers (${(totalMegawatt * 1000).toFixed(0)}kW)`);
+  
+  const description = descParts.length > 0 
+    ? `EV Charging: ${descParts.join(' + ')}` 
+    : 'EV Charging Station';
+  
   return {
     powerMW: roundedPowerMW,
     durationHrs: 2, // Short duration for demand management
     solarMW: 0, // ✅ FIXED: Don't auto-add solar - let user decide
-    description: `EV Charging: ${level1Count > 0 ? level1Count + ' L1 (' + (totalLevel1 * 1000).toFixed(0) + 'kW) + ' : ''}${level2Count} Level 2 (${(totalLevel2 * 1000).toFixed(0)}kW) + ${dcFastCount} DC Fast (${(totalDCFast * 1000).toFixed(0)}kW)`,
+    description,
     dataSource: 'Calculated from charger specifications',
     gridConnection,
     gridCapacity,

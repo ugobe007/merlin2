@@ -33,6 +33,7 @@ import {
   TrendingDown,
   RefreshCw,
   ThumbsUp,
+  ArrowDown,
 } from 'lucide-react';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
@@ -447,33 +448,73 @@ export function MerlinRecommendationPanel({
         ) : (
           /* Accept Button with Key Metrics - Before acceptance */
           <div className="mb-4">
-            {/* ACCEPT BUTTON WITH SAVINGS */}
-            <button
-              onClick={onAcceptRecommendation}
-              className="w-full py-8 px-6 rounded-2xl font-bold text-xl transition-all shadow-2xl hover:shadow-purple-500/60 hover:scale-[1.02] bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:via-indigo-600 hover:to-purple-700 text-white mb-4 group"
-            >
-              <div className="flex items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <CheckCircle className="w-10 h-10 group-hover:scale-110 transition-transform" />
-                  <div className="text-left">
+            {/* TWO BUTTONS - Accept and Scroll to Configuration */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* ACCEPT BUTTON WITH SAVINGS */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('🧙‍♂️ Accept button clicked!');
+                  console.log('🧙‍♂️ onAcceptRecommendation function:', onAcceptRecommendation);
+                  console.log('🧙‍♂️ typeof onAcceptRecommendation:', typeof onAcceptRecommendation);
+                  onAcceptRecommendation();
+                }}
+                className="py-6 px-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/60 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:via-indigo-600 hover:to-purple-700 text-white transition-all duration-200 hover:scale-105"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <CheckCircle className="w-8 h-8" />
+                  <div className="text-center">
+                    <div className="text-xl font-black mb-1">
+                      🧙‍♂️ Accept
+                    </div>
+                    <div className="text-xs font-normal text-white/90">
+                      Auto-apply settings
+                    </div>
+                  </div>
+                  {/* SAVINGS */}
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30 mt-1">
+                    <div className="text-xs font-bold uppercase text-white/90">💰 Save</div>
+                    <div className="text-lg font-black">
+                      {formatCurrency(displaySavings, recommendation.currency)}<span className="text-xs">/yr</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+              
+              {/* SCROLL TO CONFIGURATION BUTTON */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('⚙️ Configure button clicked! Scrolling to configuration sections...');
+                  // Find the first configuration section (Solar, Wind, Generator, or BESS sliders)
+                  // These sections are below the recommendation panel in GoalsSection
+                  const configSection = document.querySelector('[data-section="solar-config"], [data-section="wind-config"], [data-section="generator-config"], [data-section="bess-config"]');
+                  if (configSection) {
+                    configSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    // Fallback: scroll down 800px if sections not found
+                    window.scrollBy({ top: 800, behavior: 'smooth' });
+                  }
+                }}
+                className="py-6 px-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/80 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:via-blue-400 hover:to-indigo-500 text-white transition-all duration-200 hover:scale-105"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Settings className="w-10 h-10" />
+                  <div className="text-center">
                     <div className="text-2xl font-black mb-1">
-                      🧙‍♂️ Accept Merlin's Configuration
+                      ⚙️ CUSTOMIZE
                     </div>
-                    <div className="text-sm font-normal text-white/90">
-                      Optimized for maximum savings
+                    <div className="text-sm font-bold text-cyan-100">
+                      Fine-tune your system
                     </div>
                   </div>
-                </div>
-                
-                {/* SAVINGS HIGHLIGHT - Light Blue for visibility */}
-                <div className="bg-gradient-to-br from-blue-400/90 to-purple-400/90 backdrop-blur-sm rounded-xl px-6 py-3 border-2 border-blue-200/60 shadow-lg">
-                  <div className="text-xs font-bold uppercase mb-1 text-white">💰 Save</div>
-                  <div className="text-3xl font-black">
-                    {formatCurrency(displaySavings, recommendation.currency)}<span className="text-base">/yr</span>
+                  <div className="flex items-center gap-2 text-sm text-white bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mt-1">
+                    <ArrowDown className="w-4 h-4" />
+                    <span className="font-semibold">Scroll to Tools</span>
                   </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            </div>
 
             {/* KEY METRICS BELOW BUTTON */}
             <div className="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 rounded-2xl p-5 border-2 border-purple-300">

@@ -27,6 +27,7 @@ import {
   type HotelAmenity,
   type HotelClass
 } from '@/services/useCasePowerCalculations';
+import { useRealtimePowerCalculation } from '@/components/wizard/hooks';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
 import { WizardPowerProfile, WizardStepHelp, type StepHelpContent, AcceptCustomizeModal } from '@/components/wizard/shared';
@@ -321,7 +322,40 @@ export default function HotelWizard({
     budgetRange: 'moderate' as 'tight' | 'moderate' | 'flexible',
   });
   
+  // ════════════════════════════════════════════════════════════════
+  // REAL-TIME POWER CALCULATION - Using Shared Hook (Phase 2 - Dec 14, 2025)
+  // ════════════════════════════════════════════════════════════════
+  const { powerResult, isCalculating: isPowerCalculating } = useRealtimePowerCalculation({
+    industry: 'hotel',
+    useCaseData: {
+      roomCount: hotelDetails.numberOfRooms,
+      numberOfRooms: hotelDetails.numberOfRooms,
+      hotelClass: hotelDetails.hotelClass,
+      buildingAge: hotelDetails.buildingAge,
+      avgOccupancy: operations.avgOccupancy,
+      amenities,
+      evChargingConfig: amenities.evCharging ? {
+        numLevel1Ports: evConfig.numLevel1Ports,
+        numLevel2Ports: evConfig.numLevel2Ports,
+        level2Power: evConfig.level2Power,
+        numDCFCPorts: evConfig.numDCFCPorts,
+        dcfcPower: evConfig.dcfcPower,
+      } : undefined,
+      operations: {
+        seasonality: operations.seasonality,
+        peakHoursStart: operations.peakHoursStart,
+        peakHoursEnd: operations.peakHoursEnd,
+      },
+    },
+    wantsSolar: energyGoals.interestInSolar,
+    targetReduction: energyGoals.targetSavingsPercent,
+    durationHours: energyGoals.primaryGoal === 'backup-power' ? 6 : 4,
+    enabled: true,
+    debounceMs: 300,
+  });
+  
   // Calculated values - comprehensive energy metrics
+  // Now derived from powerResult + detailed calculation for hotel-specific metrics
   const [calculatedPower, setCalculatedPower] = useState({
     basePeakKW: 0,
     amenityPeakKW: 0,
@@ -337,17 +371,18 @@ export default function HotelWizard({
     offSeasonMonthlyKWh: 0,
     // Peak hours arbitrage
     peakHoursDuration: 0,
-    peakEnergyKWh: 0,      // Energy used during peak hours (BESS discharge opportunity)
-    offPeakEnergyKWh: 0,   // Energy used during off-peak (BESS charge opportunity)
-    arbitrageSavingsPotential: 0, // $ saved by time-shifting energy
+    peakEnergyKWh: 0,
+    offPeakEnergyKWh: 0,
+    arbitrageSavingsPotential: 0,
   });
   
-  // Calculate power using SSOT
+  // Sync powerResult to calculatedPower for hotel-specific UI metrics
   useEffect(() => {
-    // Get state-specific rates
+    if (!powerResult.isValid) return;
+    
     const stateData = STATE_RATES[hotelDetails.state] || STATE_RATES['Other'];
     
-    // Build input for SSOT function
+    // Build detailed input for hotel-specific calculations
     const input: HotelPowerInput = {
       rooms: hotelDetails.numberOfRooms,
       hotelClass: hotelDetails.hotelClass,
@@ -370,10 +405,10 @@ export default function HotelWizard({
       demandCharge: stateData.demandCharge,
     };
     
-    // Call SSOT function
-    const calc = calculateHotelPowerDetailed(input);
-    setCalculatedPower(calc);
-  }, [hotelDetails, amenities, evConfig, operations]);
+    // Get detailed hotel metrics (arbitrage, seasonality, etc.)
+    const detailedCalc = calculateHotelPowerDetailed(input);
+    setCalculatedPower(detailedCalc);
+  }, [powerResult, hotelDetails, amenities, evConfig, operations]);
   
   // Generate quote (called when user clicks "Generate My Quote" button in Step 3)
   // Shows Accept/Customize modal after calculation completes
@@ -381,10 +416,9 @@ export default function HotelWizard({
     setIsCalculating(true);
     
     try {
-      const targetReduction = energyGoals.targetSavingsPercent / 100;
-      const batteryPowerKW = calculatedPower.totalPeakKW * targetReduction;
-      const storageSizeMW = batteryPowerKW / 1000;
-      const durationHours = energyGoals.primaryGoal === 'backup-power' ? 6 : 4;
+      // Use powerResult from shared hook (Phase 2 - Dec 14, 2025)
+      const storageSizeMW = powerResult.recommendedBatteryMW;
+      const durationHours = powerResult.durationHours;
       
       const stateData = STATE_RATES[hotelDetails.state] || STATE_RATES['Other'];
       

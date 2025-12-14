@@ -129,28 +129,36 @@ export function GoalsSection({
     wizardState.evChargersHPC,
   ]);
 
-  // Auto-populate AND keep in sync - updates whenever recommendation changes
+  // Store recommendation in ref to avoid callback recreation on every render
+  const recommendationRef = React.useRef(defaultRecommendation);
+  
+  // Update ref whenever recommendation changes
   React.useEffect(() => {
-    if (currentSection === 3) {
-      // CRITICAL: Always keep wizardState in sync with defaultRecommendation
-      // This ensures PowerProfile header shows correct numbers
+    recommendationRef.current = defaultRecommendation;
+  }, [defaultRecommendation]);
+
+  // Auto-populate on first load only - DO NOT continuously sync
+  React.useEffect(() => {
+    if (currentSection === 3 && !hasAutoPopulated) {
+      // Only populate ONCE when user first arrives at this section
+      const rec = recommendationRef.current;
       setWizardState(prev => ({
         ...prev,
-        solarKW: defaultRecommendation.solarKW,
-        wantsSolar: defaultRecommendation.solarKW > 0,
-        windTurbineKW: defaultRecommendation.windKW,
-        wantsWind: defaultRecommendation.windKW > 0,
-        generatorKW: defaultRecommendation.generatorKW,
-        wantsGenerator: defaultRecommendation.generatorKW > 0,
-        batteryKW: defaultRecommendation.batteryKW,
-        batteryKWh: defaultRecommendation.batteryKWh,
-        durationHours: defaultRecommendation.durationHours,
+        solarKW: rec.solarKW,
+        wantsSolar: rec.solarKW > 0,
+        windTurbineKW: rec.windKW,
+        wantsWind: rec.windKW > 0,
+        generatorKW: rec.generatorKW,
+        wantsGenerator: rec.generatorKW > 0,
+        batteryKW: rec.batteryKW,
+        batteryKWh: rec.batteryKWh,
+        durationHours: rec.durationHours,
       }));
-      if (!hasAutoPopulated) {
-        setHasAutoPopulated(true);
-      }
+      setHasAutoPopulated(true);
     }
-  }, [currentSection, defaultRecommendation, hasAutoPopulated]);
+    // CRITICAL: Do NOT include setWizardState in deps - causes re-run after Accept button
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSection, hasAutoPopulated]);
   
   // Removed scroll preservation - was causing unwanted page jumps when toggling add-ons
 
@@ -164,28 +172,33 @@ export function GoalsSection({
     durationHours: wizardState.durationHours || 4,
   };
 
-  // Accept Merlin's recommendation and auto-advance
-  const handleAcceptRecommendation = () => {
+  // Accept Merlin's recommendation - stable callback using ref
+  const handleAcceptRecommendation = React.useCallback(() => {
+    console.log('✅ Accepting recommendation from ref:', recommendationRef.current);
+    const rec = recommendationRef.current;
+    
+    // Use a single setState to batch all updates
     setWizardState(prev => ({
       ...prev,
-      solarKW: defaultRecommendation.solarKW,
-      wantsSolar: defaultRecommendation.solarKW > 0,
-      windTurbineKW: defaultRecommendation.windKW,
-      wantsWind: defaultRecommendation.windKW > 0,
-      generatorKW: defaultRecommendation.generatorKW,
-      wantsGenerator: defaultRecommendation.generatorKW > 0,
-      batteryKW: defaultRecommendation.batteryKW,
-      batteryKWh: defaultRecommendation.batteryKWh,
-      durationHours: defaultRecommendation.durationHours,
+      solarKW: rec.solarKW,
+      wantsSolar: rec.solarKW > 0,
+      windTurbineKW: rec.windKW,
+      wantsWind: rec.windKW > 0,
+      generatorKW: rec.generatorKW,
+      wantsGenerator: rec.generatorKW > 0,
+      batteryKW: rec.batteryKW,
+      batteryKWh: rec.batteryKWh,
+      durationHours: rec.durationHours,
     }));
     
-    // Auto-advance to Configuration step after a brief moment
-    setTimeout(() => {
-      onContinue();
-      // Scroll to top so user sees the configuration section
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 800);
-  };
+    // Show detailed popup with accepted values
+    const formatKW = (kw: number) => kw >= 1000 ? `${(kw/1000).toFixed(1)} MW` : `${kw} kW`;
+    const formatKWh = (kwh: number) => kwh >= 1000 ? `${(kwh/1000).toFixed(1)} MWh` : `${kwh} kWh`;
+    
+    const summary = `✅ RECOMMENDATION ACCEPTED!\n\n🔋 BATTERY STORAGE:\n• Power: ${formatKW(rec.batteryKW)}\n• Capacity: ${formatKWh(rec.batteryKWh)}\n• Duration: ${rec.durationHours} hours\n\n${rec.solarKW > 0 ? `☀️ SOLAR: ${formatKW(rec.solarKW)}\n\n` : ''}${rec.windKW > 0 ? `🌪️ WIND: ${formatKW(rec.windKW)}\n\n` : ''}${rec.generatorKW > 0 ? `⚡ GENERATOR: ${formatKW(rec.generatorKW)}\n\n` : ''}These settings have been applied to the configuration sliders below.`;
+    
+    alert(summary);
+  }, [setWizardState]);
 
   return (
     <div
@@ -281,7 +294,7 @@ export function GoalsSection({
         </div>
 
         {/* Solar Toggle - SECTION 3 */}
-        <div className="mb-4">
+        <div className="mb-4" data-section="solar-config">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm">3</div>
             <h3 className="text-lg font-bold text-white">Solar Power</h3>
@@ -291,7 +304,7 @@ export function GoalsSection({
         </div>
 
         {/* Wind Toggle - SECTION 4 */}
-        <div className="mb-4">
+        <div className="mb-4" data-section="wind-config">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold text-sm">4</div>
             <h3 className="text-lg font-bold text-white">Wind Power</h3>
@@ -321,15 +334,10 @@ export function GoalsSection({
         {/* Continue button */}
         <button
           onClick={onContinue}
-          disabled={wizardState.goals.length === 0}
-          className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2"
         >
           Continue <ArrowRight className="w-5 h-5" />
         </button>
-
-        {wizardState.goals.length === 0 && (
-          <p className="text-center text-gray-500 text-sm mt-3">Select at least one goal to continue</p>
-        )}
       </div>
     </div>
   );
