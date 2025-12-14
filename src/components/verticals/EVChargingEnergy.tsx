@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, 
   Sun, TrendingDown, Shield, Sparkles, Car, X, Battery, Bolt,
-  Gauge, Clock, MapPin
+  Gauge, Clock, MapPin, ChevronDown
 } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
@@ -328,8 +328,10 @@ export default function EVChargingEnergy() {
       const { peakKW, dailyKWh } = calculateEVChargingPower(inputs);
       const stateData = STATE_RATES[inputs.state] || STATE_RATES['Other'];
       
-      // Size battery: cover peak demand for 2-4 hours (peak shaving)
-      const storageSizeMW = peakKW / 1000;
+      // Size battery: 0.50 ratio (arbitrage - balanced cost savings + backup capability)
+      // Ratio per SSOT standards: peak_shaving=0.40, arbitrage=0.50, resilience=0.70, microgrid=1.00
+      const bessRatio = 0.50; // Arbitrage use case (cost optimization + load smoothing)
+      const storageSizeMW = (peakKW * bessRatio) / 1000;
       const durationHours = 2;
       
       const result = await QuoteEngine.generateQuote({
@@ -774,6 +776,31 @@ export default function EVChargingEnergy() {
                       <p className="text-sm text-white/70">Net Cost (after ITC)</p>
                     </div>
                   </div>
+                  
+                  {/* TrueQuote™ Attribution - NEW Dec 13, 2025 */}
+                  {quoteResult.benchmarkAudit && (
+                    <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl p-4 border border-emerald-400/30">
+                      <div className="flex items-start gap-3">
+                        <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-bold text-emerald-300">TrueQuote™ Verified</span>
+                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <p className="text-xs text-emerald-200/80 mb-2">
+                            All costs traceable to {quoteResult.benchmarkAudit.sources?.length || 0} authoritative sources
+                          </p>
+                          <button
+                            onClick={() => setShowTrueQuoteModal(true)}
+                            className="text-xs text-emerald-300 hover:text-emerald-200 underline flex items-center gap-1"
+                          >
+                            View Source Attribution
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* CTA Buttons - Pulsing Effect */}
                   <div className="flex flex-col gap-3 pt-2">
