@@ -29,7 +29,7 @@ import {
 } from '@/services/useCasePowerCalculations';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import { KeyMetricsDashboard, CO2Badge } from '@/components/shared/KeyMetricsDashboard';
-import { WizardPowerProfile, WizardStepHelp, type StepHelpContent } from '@/components/wizard/shared';
+import { WizardPowerProfile, WizardStepHelp, type StepHelpContent, AcceptCustomizeModal } from '@/components/wizard/shared';
 import { PowerGaugeWidget } from '@/components/wizard/widgets';
 import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
@@ -228,6 +228,10 @@ export default function HotelWizard({
   // 'guided' = Step-by-step wizard for those who need guidance
   const [quoteMode, setQuoteMode] = useState<'select' | 'pro' | 'guided'>('select');
   
+  // Accept/Customize Modal State (Phase 2.1 - Dec 2025)
+  const [showAcceptCustomizeModal, setShowAcceptCustomizeModal] = useState(false);
+  const [userQuoteChoice, setUserQuoteChoice] = useState<'accept' | 'customize' | null>(null);
+  
   // Pro Mode Direct Inputs (when user has their own specs)
   const [proModeInputs, setProModeInputs] = useState({
     peakDemandKW: 0,
@@ -371,7 +375,8 @@ export default function HotelWizard({
     setCalculatedPower(calc);
   }, [hotelDetails, amenities, evConfig, operations]);
   
-  // Generate quote
+  // Generate quote (called when user clicks "Generate My Quote" button in Step 3)
+  // Shows Accept/Customize modal after calculation completes
   async function generateQuote() {
     setIsCalculating(true);
     
@@ -403,11 +408,28 @@ export default function HotelWizard({
       });
       
       setQuoteResult(result);
+      
+      // Show Accept/Customize modal after quote generated (Phase 2.1 - Dec 2025)
+      setShowAcceptCustomizeModal(true);
     } catch (error) {
       console.error('Quote calculation error:', error);
     } finally {
       setIsCalculating(false);
     }
+  }
+  
+  // Accept AI Recommendation - Go to Step 4 (Quote Results)
+  function handleAcceptAI() {
+    setUserQuoteChoice('accept');
+    setShowAcceptCustomizeModal(false);
+    setCurrentStep(4); // Show full quote
+  }
+  
+  // Customize Configuration - Stay on Step 3, allow adjustments
+  function handleCustomize() {
+    setUserQuoteChoice('customize');
+    setShowAcceptCustomizeModal(false);
+    // User stays on Step 3 to adjust sliders
   }
   
   // ============================================
@@ -1926,11 +1948,21 @@ export default function HotelWizard({
               {/* PROMINENT NEXT BUTTON - Step 3 */}
               <div className="mt-8 pt-6 border-t-2 border-purple-500/30">
                 <button
-                  onClick={() => setCurrentStep(4)}
-                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50 animate-pulse hover:animate-none"
+                  onClick={generateQuote}
+                  disabled={isCalculating}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/60 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-emerald-300/50 animate-pulse hover:animate-none disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
                 >
-                  <span>📊 Generate My Quote</span>
-                  <ArrowRight className="w-6 h-6" />
+                  {isCalculating ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Calculating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📊 Generate My Quote</span>
+                      <ArrowRight className="w-6 h-6" />
+                    </>
+                  )}
                 </button>
                 <p className="text-center text-emerald-300 text-sm mt-3 font-medium">
                   Step 4 of 5 • See your savings!
@@ -2584,6 +2616,32 @@ export default function HotelWizard({
             ) >= calculatedPower.totalPeakKW * 0.9,
           }}
           position="fixed"
+        />
+      )}
+      
+      {/* Accept/Customize Modal - Phase 2.1 (Dec 2025) */}
+      {quoteResult && (
+        <AcceptCustomizeModal
+          isOpen={showAcceptCustomizeModal}
+          onClose={() => setShowAcceptCustomizeModal(false)}
+          onAccept={handleAcceptAI}
+          onCustomize={handleCustomize}
+          quoteResult={quoteResult}
+          verticalName="Hotel"
+          facilityDetails={{
+            name: mergedInputs.businessName || 'Hotel Property',
+            size: `${HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name} • ${hotelDetails.numberOfRooms} rooms`,
+            location: hotelDetails.state,
+          }}
+          systemSummary={{
+            bessKW: Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100),
+            bessKWh: Math.round(calculatedPower.totalPeakKW * energyGoals.targetSavingsPercent / 100 * 4),
+            solarKW: energyGoals.interestInSolar ? Math.round(energyGoals.solarKW) : undefined,
+            generatorKW: operations.hasBackupGenerator ? operations.generatorKW : undefined,
+            paybackYears: quoteResult.financials.paybackYears,
+            annualSavings: quoteResult.financials.annualSavings,
+          }}
+          colorScheme="emerald"
         />
       )}
     </div>
