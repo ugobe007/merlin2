@@ -235,23 +235,11 @@ export default function StreamlinedWizard({
               
               {/* Power Profile - Total System Power (Battery + Solar + Generator) */}
               {(() => {
-                // Calculate total system capacity - use configured values OR recommended values as fallback
-                const calc = wizard.centralizedState?.calculated || {};
-                
-                // Battery: user-configured OR recommended
-                const batteryKW = wizard.wizardState.batteryKW > 0 
-                  ? wizard.wizardState.batteryKW 
-                  : (calc.recommendedBatteryKW || 0);
-                const batteryKWh = wizard.wizardState.batteryKWh > 0 
-                  ? wizard.wizardState.batteryKWh 
-                  : (calc.recommendedBatteryKWh || batteryKW * (wizard.wizardState.durationHours || 4));
-                
-                // Solar: user-configured OR 0 if not wanted
-                const solarKW = wizard.wizardState.solarKW > 0 
-                  ? wizard.wizardState.solarKW 
-                  : (wizard.wizardState.wantsSolar ? (calc.recommendedSolarKW || 0) : 0);
-                
-                // Generator: user-configured
+                // ONLY show user-configured values, no fallbacks to recommended
+                // This keeps header and configuration section in sync
+                const batteryKW = wizard.wizardState.batteryKW || 0;
+                const batteryKWh = wizard.wizardState.batteryKWh || 0;
+                const solarKW = wizard.wizardState.solarKW || 0;
                 const generatorKW = wizard.wizardState.generatorKW || 0;
                 
                 // Totals - Show BATTERY STORAGE ONLY (not daily solar production)
@@ -295,9 +283,8 @@ export default function StreamlinedWizard({
                 // Get peak demand from centralized calculations
                 const calc = wizard.centralizedState?.calculated || {};
                 
-                // Use totalPeakDemandKW as the actual power need (building + EV loads)
-                // recommendedBatteryKW is the SIZED battery (reduced by BESS ratio) - not the full demand
-                const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 0;
+                // ONLY use totalPeakDemandKW - never fall back to recommendedBatteryKW
+                const peakDemandKW = calc.totalPeakDemandKW || 0;
                 
                 // Get configured power - use ONLY user-configured values
                 // Don't auto-fill from recommended, only use what user has explicitly set
@@ -328,6 +315,9 @@ export default function StreamlinedWizard({
                 const hasPeakDemand = peakDemandKW > 0;
                 const hasPowerConfig = totalConfiguredKW > 0;
                 const hasData = hasPeakDemand && hasPowerConfig;
+                
+                // Don't show power gap until user has configured something
+                if (!hasPowerConfig) return null;
                 
                 // Determine the status message
                 const statusMessage = (() => {
