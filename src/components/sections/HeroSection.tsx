@@ -644,14 +644,19 @@ export default function HeroSection({
               real utility rates, and <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build your optimal energy system in minutes.
             </p>
             
-            {/* Industry Compliance Badges - Inline */}
+            {/* Data Sources Badge */}
             <div className="flex justify-center">
-              <TrustBadgesInline 
-                sources={['nrel', 'doe', 'sandia', 'ul', 'ieee', 'eia']}
-                size="md"
-                label="Data sourced from:"
-                darkMode={true}
-              />
+              <div className="flex items-center gap-4 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                <span className="text-sm text-purple-300 font-medium">Data sourced from:</span>
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg border border-blue-400/30">NREL</span>
+                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm font-semibold rounded-lg border border-emerald-400/30">DOE</span>
+                  <span className="px-3 py-1 bg-orange-500/20 text-orange-300 text-sm font-semibold rounded-lg border border-orange-400/30">Sandia</span>
+                  <span className="px-3 py-1 bg-red-500/20 text-red-300 text-sm font-semibold rounded-lg border border-red-400/30">UL</span>
+                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm font-semibold rounded-lg border border-purple-400/30">IEEE</span>
+                  <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-sm font-semibold rounded-lg border border-cyan-400/30">EIA</span>
+                </div>
+              </div>
             </div>
           </div>
 
