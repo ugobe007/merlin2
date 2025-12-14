@@ -576,6 +576,15 @@ export function useStreamlinedWizard({
     setWizardState(prev => ({ ...prev, isCalculating: true }));
     
     try {
+      // ⚠️ CRITICAL FIX: Ensure centralized state has industry type set
+      // This fixes the bug where calculations return 0 because industryType is empty
+      if (wizardState.selectedIndustry && (!centralizedState.industry.type || centralizedState.industry.type === '')) {
+        console.warn('🔧 [generateQuote] Industry not synced to centralized state, forcing sync...');
+        updateSection('industry', { type: wizardState.selectedIndustry });
+        // Give it a tick to propagate
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
       // Map fuel type to valid API values
       const fuelTypeMap: Record<string, 'diesel' | 'natural-gas' | 'dual-fuel'> = {
         'diesel': 'diesel',
@@ -594,6 +603,14 @@ export function useStreamlinedWizard({
       
       // Use recommended values as fallback if user hasn't set custom values
       const calc = centralizedState?.calculated || {};
+      
+      console.log('🧙 [generateQuote] Centralized state check:', {
+        industryType: centralizedState.industry.type,
+        selectedIndustry: wizardState.selectedIndustry,
+        calculatedBatteryKW: calc.recommendedBatteryKW,
+        calculatedBatteryKWh: calc.recommendedBatteryKWh
+      });
+      
       const effectiveBatteryKW = wizardState.batteryKW || calc.recommendedBatteryKW || 100; // Minimum 100 kW
       const effectiveBatteryKWh = wizardState.batteryKWh || calc.recommendedBatteryKWh || (effectiveBatteryKW * 4);
       const effectiveDuration = wizardState.durationHours || 4;
