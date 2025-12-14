@@ -24,6 +24,7 @@ import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Batt
 // Modular components
 import { useStreamlinedWizard } from './hooks';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
+import { AcceptCustomizeModal } from './shared';
 import {
   WelcomeLocationSection,
   IndustrySection,
@@ -1034,16 +1035,22 @@ export default function StreamlinedWizard({
                 const selectedUseCase = wizard.availableUseCases?.find((uc: any) => uc.slug === wizard.wizardState.selectedIndustry);
                 const industryName = selectedUseCase?.name || wizard.wizardState.selectedIndustry || 'your facility';
                 
-                // CRITICAL: Use CURRENT wizard state values, not static calc values
-                // This ensures the popup shows the SAME numbers as Power Profile/Goals
+                // Dec 14, 2025 - Critical Fix #4: Use ACTUAL calculated values from user inputs
+                // Don't show modal if calculations haven't been populated (still using defaults)
                 const basePeakKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 0;
                 const peakKW = basePeakKW;
                 
-                // ALWAYS show recommended values in modal, not current config
-                const recBatteryKW = calc.recommendedBatteryKW || Math.round(peakKW * 0.4);
-                const recBatteryKWh = calc.recommendedBatteryKWh || recBatteryKW * 4;
+                // Use recommended values from calculations (NOT fallback formulas)
+                const recBatteryKW = calc.recommendedBatteryKW || 0;
+                const recBatteryKWh = calc.recommendedBatteryKWh || 0;
                 const recSolarKW = calc.recommendedSolarKW || 0;
                 const solarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 5;
+                
+                // If values are still 0, user hasn't completed form - don't show misleading data
+                if (recBatteryKW === 0 && peakKW === 0) {
+                  console.warn('⚠️ Merlin Insight: No calculated values available, modal should not be shown');
+                  return null;
+                }
                 
                 return (
                   <>
@@ -1449,6 +1456,37 @@ export default function StreamlinedWizard({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Accept/Customize Modal - Dec 14, 2025 CRITICAL FIX #2 */}
+      {wizard.showAcceptCustomizeModal && wizard.wizardState.quoteResult && (
+        <AcceptCustomizeModal
+          isOpen={wizard.showAcceptCustomizeModal}
+          onClose={() => wizard.setShowAcceptCustomizeModal(false)}
+          onAccept={wizard.handleAcceptAI}
+          onCustomize={wizard.handleCustomize}
+          quoteResult={wizard.wizardState.quoteResult}
+          verticalName={
+            wizard.wizardState.selectedIndustry 
+              ? wizard.wizardState.selectedIndustry.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+              : 'Your Facility'
+          }
+          facilityDetails={{
+            name: wizard.wizardState.industryName || 'Your Facility',
+            size: wizard.centralizedState?.calculated?.totalPeakDemandKW 
+              ? `${Math.round(wizard.centralizedState.calculated.totalPeakDemandKW)} kW Peak Demand`
+              : undefined,
+            location: wizard.wizardState.state || undefined,
+          }}
+          systemSummary={{
+            bessKW: wizard.centralizedState?.calculated?.recommendedBatteryKW || 0,
+            bessKWh: wizard.centralizedState?.calculated?.recommendedBatteryKWh || 0,
+            solarKW: wizard.centralizedState?.calculated?.recommendedSolarKW || 0,
+            paybackYears: wizard.wizardState.quoteResult.financials?.paybackYears || 0,
+            annualSavings: wizard.wizardState.quoteResult.financials?.annualSavings || 0,
+          }}
+          colorScheme="purple"
+        />
       )}
     </div>
   );

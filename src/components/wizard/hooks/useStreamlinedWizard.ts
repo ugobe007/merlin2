@@ -97,6 +97,11 @@ export interface UseStreamlinedWizardReturn {
   isTransitioning: boolean;
   setIsTransitioning: React.Dispatch<React.SetStateAction<boolean>>;
   
+  // Accept/Customize Modal state (Dec 14, 2025)
+  showAcceptCustomizeModal: boolean;
+  setShowAcceptCustomizeModal: React.Dispatch<React.SetStateAction<boolean>>;
+  userQuoteChoice: 'accept' | 'customize' | null;
+  
   // Callbacks
   completeSection: (sectionId: string) => void;
   advanceToSection: (index: number) => void;
@@ -106,6 +111,8 @@ export interface UseStreamlinedWizardReturn {
   handleIndustrySelect: (slug: string, name: string, useCaseId?: string) => Promise<void>;
   generateQuote: () => Promise<void>;
   generatePremiumQuote: () => void;
+  handleAcceptAI: () => void;
+  handleCustomize: () => void;
 }
 
 // ============================================
@@ -181,6 +188,12 @@ export function useStreamlinedWizard({
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   // ═══════════════════════════════════════════════════════════════
+  // ACCEPT/CUSTOMIZE MODAL STATE (Dec 14, 2025 - Critical Fix #2)
+  // ═══════════════════════════════════════════════════════════════
+  const [showAcceptCustomizeModal, setShowAcceptCustomizeModal] = useState(false);
+  const [userQuoteChoice, setUserQuoteChoice] = useState<'accept' | 'customize' | null>(null);
+  
+  // ═══════════════════════════════════════════════════════════════
   // CENTRALIZED STATE INTEGRATION
   // ═══════════════════════════════════════════════════════════════
   const {
@@ -192,6 +205,33 @@ export function useStreamlinedWizard({
     updateNewEVChargers,
     resetState: resetCentralizedState,
   } = useWizardState();
+  
+  // ═══════════════════════════════════════════════════════════════
+  // EFFECT: Sync sliders with calculated values when entering Section 4
+  // Dec 14, 2025 - Critical Fix #3: "Power profile shows 139%" bug
+  // NOTE: This MUST come AFTER centralizedState is declared
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (currentSection === 4 && centralizedState?.calculated) {
+      const calc = centralizedState.calculated;
+      
+      // Only update if we have actual calculated values (not defaults)
+      if (calc.recommendedBatteryKW > 0) {
+        console.log('🎚️ [SYNC] Initializing Section 4 sliders from calculated values:', {
+          batteryKW: calc.recommendedBatteryKW,
+          batteryKWh: calc.recommendedBatteryKWh,
+          solarKW: calc.recommendedSolarKW,
+        });
+        
+        setWizardState((prev) => ({
+          ...prev,
+          batteryKW: calc.recommendedBatteryKW,
+          batteryKWh: calc.recommendedBatteryKWh,
+          solarKW: calc.recommendedSolarKW || prev.solarKW,
+        }));
+      }
+    }
+  }, [currentSection, centralizedState?.calculated]);
   
   // ═══════════════════════════════════════════════════════════════
   // GROUPED USE CASES (memoized)
@@ -367,6 +407,65 @@ export function useStreamlinedWizard({
       timestamp: new Date().toISOString().split('T')[1].slice(0, 8)
     });
   }, [wizardState.useCaseData, updateSection, setCentralizedState]);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // EFFECT: CRITICAL FIX - Recalculate when user completes Section 2
+  // This triggers SSOT calculation with actual user inputs
+  // Dec 14, 2025 - Fix for "User inputs not recorded" bug
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Only trigger calculation when transitioning FROM Section 2 TO Section 3
+    // This ensures user has completed facility details form
+    if (currentSection === 3 && wizardState.useCaseData && wizardState.selectedIndustry) {
+      const data = wizardState.useCaseData;
+      
+      console.log('🔄 [RECALC] Triggering power calculation with user inputs:', {
+        industry: wizardState.selectedIndustry,
+        useCaseData: data,
+        currentSection,
+      });
+      
+      // Extract power calculation from useCaseData (calculated by SSOT)
+      const peakDemandKW = data.peakDemandKW || data.totalPeakKW || data.recommendedBatteryKW || 0;
+      const dailyKWh = data.dailyKWh || 0;
+      const monthlyKWh = data.monthlyKWh || dailyKWh * 30;
+      
+      // Calculate recommended BESS size based on user's goal
+      // Default to 70% of peak demand for peak shaving
+      // Note: targetSavingsPercent doesn't exist in WizardState, using default 0.7
+      const targetReduction = 0.7;
+      const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
+      const recommendedBatteryKWh = recommendedBatteryKW * 4; // Standard 4-hour duration
+      
+      // Calculate solar recommendation if user expressed interest
+      let recommendedSolarKW = 0;
+      if (wizardState.solarKW > 0 || data.solarKW > 0) {
+        // Use user's input or calculate based on facility size
+        recommendedSolarKW = wizardState.solarKW || data.solarKW || Math.round(peakDemandKW * 0.6);
+      }
+      
+      // UPDATE centralizedState.calculated with ACTUAL user values
+      setCentralizedState((prev: any) => ({
+        ...prev,
+        calculated: {
+          totalPeakDemandKW: peakDemandKW,
+          recommendedBatteryKW,
+          recommendedBatteryKWh,
+          recommendedSolarKW,
+          dailyKWh,
+          monthlyKWh,
+          calculatedAt: new Date().toISOString(),
+        },
+      }));
+      
+      console.log('✅ [RECALC] Updated centralizedState.calculated:', {
+        totalPeakDemandKW: peakDemandKW,
+        recommendedBatteryKW,
+        recommendedBatteryKWh,
+        recommendedSolarKW,
+      });
+    }
+  }, [currentSection, wizardState.useCaseData, wizardState.selectedIndustry, wizardState.solarKW, setCentralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
   // EFFECT: Sync industry to centralized state
@@ -651,17 +750,39 @@ export function useStreamlinedWizard({
       
       completeSection('configuration');
       
-      // Small delay to ensure state updates before navigation
-      setTimeout(() => {
-        console.log('🧙 [generateQuote] Navigating to results section');
-        advanceToSection(5);
-      }, 100);
+      // Dec 14, 2025 - Critical Fix #2: Show AcceptCustomizeModal instead of auto-navigating
+      setShowAcceptCustomizeModal(true);
+      
     } catch (error) {
       console.error('[Wizard] Quote generation failed:', error);
       alert('Failed to generate quote. Please check your configuration and try again.');
       setWizardState(prev => ({ ...prev, isCalculating: false }));
     }
-  }, [wizardState, centralizedState, completeSection, advanceToSection]);
+  }, [wizardState, centralizedState, completeSection]);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // CALLBACK: Handle Accept AI Recommendation (Dec 14, 2025)
+  // ═══════════════════════════════════════════════════════════════
+  const handleAcceptAI = useCallback(() => {
+    console.log('✅ [AcceptAI] User accepted Merlin recommendation, skipping to Section 5');
+    setUserQuoteChoice('accept');
+    setShowAcceptCustomizeModal(false);
+    
+    // Skip Section 4 (sliders), go directly to Section 5 (final quote)
+    advanceToSection(5);
+  }, [advanceToSection]);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // CALLBACK: Handle Customize Configuration (Dec 14, 2025)
+  // ═══════════════════════════════════════════════════════════════
+  const handleCustomize = useCallback(() => {
+    console.log('🎨 [Customize] User wants to customize, going to Section 4');
+    setUserQuoteChoice('customize');
+    setShowAcceptCustomizeModal(false);
+    
+    // Go to Section 4 (configuration sliders)
+    advanceToSection(4);
+  }, [advanceToSection]);
   
   const generatePremiumQuote = useCallback(() => {
     if (!wizardState.quoteResult) return;
@@ -744,6 +865,11 @@ export function useStreamlinedWizard({
     isTransitioning,
     setIsTransitioning,
     
+    // Accept/Customize Modal state (Dec 14, 2025)
+    showAcceptCustomizeModal,
+    setShowAcceptCustomizeModal,
+    userQuoteChoice,
+    
     // Callbacks
     completeSection,
     advanceToSection,
@@ -753,6 +879,8 @@ export function useStreamlinedWizard({
     handleIndustrySelect,
     generateQuote,
     generatePremiumQuote,
+    handleAcceptAI,
+    handleCustomize,
   };
 }
 
