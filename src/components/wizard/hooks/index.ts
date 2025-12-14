@@ -7,3 +7,9 @@
  */
 
 export { useStreamlinedWizard, type UseStreamlinedWizardProps, type UseStreamlinedWizardReturn } from './useStreamlinedWizard';
+export { 
+  useRealtimePowerCalculation, 
+  type PowerCalculationInput, 
+  type PowerCalculationResult, 
+  type UseRealtimePowerCalculationProps 
+} from './useRealtimePowerCalculation';

@@ -12,7 +12,8 @@ export { IndustrySection } from './IndustrySection';
 export { FacilityDetailsSection } from './FacilityDetailsSection';
 export { GoalsSection } from './GoalsSection';
 export { ConfigurationSection } from './ConfigurationSection';
-export { QuoteResultsSection } from './QuoteResultsSection';
+// Using new redesigned quote template (Dec 14, 2025)
+export { QuoteResultsSection } from './QuoteResultsSectionNew';
 
 // Shared panels
 export { MerlinRecommendationPanel } from './MerlinRecommendationPanel';

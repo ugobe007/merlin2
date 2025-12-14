@@ -410,6 +410,110 @@ export function useStreamlinedWizard({
   }, [wizardState.useCaseData, updateSection, setCentralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
+  // EFFECT: REAL-TIME POWER CALCULATION (Dec 14, 2025)
+  // Updates Power Profile immediately as user selects chargers/inputs
+  // This ensures the PP icon updates in real-time on Section 2
+  // NOW USING SHARED useRealtimePowerCalculation HOOK LOGIC
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Skip if no industry selected or no useCaseData yet
+    if (!wizardState.selectedIndustry || !wizardState.useCaseData) return;
+    
+    // Only calculate if user is actively filling out facility details (Section 2+)
+    if (currentSection < 2) return;
+    
+    try {
+      // Normalize field names for SSOT compatibility
+      const normalizedData = { ...wizardState.useCaseData };
+      
+      // Industry-specific field normalization (same as useRealtimePowerCalculation)
+      if (wizardState.selectedIndustry === 'hotel') {
+        if (!normalizedData.roomCount) {
+          normalizedData.roomCount = normalizedData.numberOfRooms || normalizedData.rooms || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'office') {
+        if (!normalizedData.squareFeet) {
+          normalizedData.squareFeet = normalizedData.officeSqFt || normalizedData.buildingSqFt || normalizedData.sqFt || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'hospital') {
+        if (!normalizedData.bedCount) {
+          normalizedData.bedCount = normalizedData.beds || normalizedData.numberOfBeds || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'warehouse') {
+        if (!normalizedData.squareFeet) {
+          normalizedData.squareFeet = normalizedData.warehouseSqFt || normalizedData.sqFt || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'car-wash') {
+        if (!normalizedData.bayCount) {
+          normalizedData.bayCount = normalizedData.washBays || normalizedData.numBays || normalizedData.bays || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'airport') {
+        if (!normalizedData.annualPassengers) {
+          normalizedData.annualPassengers = normalizedData.totalPassengers || normalizedData.passengers || normalizedData.facilitySize;
+        }
+      } else if (wizardState.selectedIndustry === 'casino') {
+        if (!normalizedData.gamingFloorSqFt) {
+          normalizedData.gamingFloorSqFt = normalizedData.gamingFloorSize || normalizedData.gamingSpaceSqFt || normalizedData.facilitySize;
+        }
+      }
+      // EV Charging: Pass through all charger fields directly
+      // The SSOT handles: level2Chargers, dcfc50kwChargers, dcfc150kwChargers, dcfc350kwChargers, megawattChargers
+      
+      const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
+      const peakDemandKW = (powerResult.powerMW || 0) * 1000;
+      const dailyKWh = peakDemandKW * 24 * 0.4;
+      const monthlyKWh = dailyKWh * 30;
+      
+      // Calculate recommended BESS size (70% of peak)
+      const targetReduction = 0.7;
+      const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
+      const recommendedBatteryKWh = recommendedBatteryKW * 4;
+      
+      // Calculate solar recommendation
+      let recommendedSolarKW = 0;
+      if (wizardState.wantsSolar) {
+        recommendedSolarKW = Math.round(peakDemandKW * 0.6);
+      }
+      
+      // Update both wizardState AND centralizedState for Power Profile
+      setWizardState(prev => ({
+        ...prev,
+        batteryKW: recommendedBatteryKW,
+        batteryKWh: recommendedBatteryKWh,
+        solarKW: recommendedSolarKW,
+      }));
+      
+      setCentralizedState((prev: any) => ({
+        ...prev,
+        calculated: {
+          totalPeakDemandKW: peakDemandKW,
+          recommendedBatteryKW,
+          recommendedBatteryKWh,
+          recommendedSolarKW,
+          dailyKWh,
+          monthlyKWh,
+          calculatedAt: new Date().toISOString(),
+        },
+      }));
+      
+      if (import.meta.env.DEV) {
+        console.log('⚡ [REAL-TIME] Power calculation updated:', {
+          industry: wizardState.selectedIndustry,
+          peakKW: peakDemandKW,
+          batteryKW: recommendedBatteryKW,
+          batteryKWh: recommendedBatteryKWh,
+          solarKW: recommendedSolarKW,
+        });
+      }
+    } catch (error) {
+      console.error('❌ [REAL-TIME] Power calculation failed:', error);
+    }
+    // CRITICAL FIX (Dec 14, 2025): Use JSON.stringify to detect nested object changes
+    // Without this, changing useCaseData.level2Chargers doesn't trigger recalculation
+    // because React does shallow comparison and sees same object reference
+  }, [JSON.stringify(wizardState.useCaseData), wizardState.selectedIndustry, wizardState.wantsSolar, currentSection, setWizardState, setCentralizedState]);
+  
+  // ═══════════════════════════════════════════════════════════════
   // EFFECT: CRITICAL FIX - Recalculate when user completes Section 2
   // This triggers SSOT calculation with actual user inputs
   // Dec 14, 2025 - Fix for "User inputs not recorded" bug

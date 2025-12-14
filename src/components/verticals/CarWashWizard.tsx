@@ -22,6 +22,7 @@ import {
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
+import { useRealtimePowerCalculation } from '@/components/wizard/hooks';
 import { 
   calculateCarWashEquipmentPower,
   validateCarWashSolarCapacity,
@@ -1368,7 +1369,37 @@ export default function CarWashWizard({
   const [showAcceptCustomizeModal, setShowAcceptCustomizeModal] = useState(false);
   const [userQuoteChoice, setUserQuoteChoice] = useState<'accept' | 'customize' | null>(null);
   
-  // Calculated values
+  // Memoize brand entries to prevent re-computation on every render
+  const brandEntries = useMemo(() => Object.entries(CAR_WASH_BRANDS), []);
+  const filteredBrands = useMemo(() => 
+    brandEntries.filter(([key]) => key !== 'independent'),
+    [brandEntries]
+  );
+  
+  // ════════════════════════════════════════════════════════════════
+  // REAL-TIME POWER CALCULATION - Using Shared Hook (Phase 2 - Dec 14, 2025)
+  // ════════════════════════════════════════════════════════════════
+  const includeSolar = energyGoals.primaryGoal === 'solar-storage' || 
+    energyGoals.primaryGoal === 'solar-generator' || 
+    energyGoals.primaryGoal === 'all';
+  
+  const { powerResult, isCalculating: isPowerCalculating } = useRealtimePowerCalculation({
+    industry: 'car-wash',
+    useCaseData: {
+      bayCount: mergedInputs.numberOfBays,
+      washBays: mergedInputs.numberOfBays,
+      equipment,
+      operations,
+      automationLevel,
+    },
+    wantsSolar: includeSolar,
+    targetReduction: energyGoals.targetSavingsPercent,
+    durationHours: Math.min(operations.peakHoursEnd - operations.peakHoursStart, 4),
+    enabled: true,
+    debounceMs: 300,
+  });
+  
+  // Calculated values - derived from powerResult + detailed car wash calculations
   const [calculatedPower, setCalculatedPower] = useState({
     peakDemandKW: 0,
     avgDemandKW: 0,
@@ -1378,19 +1409,12 @@ export default function CarWashWizard({
     energyCharges: 0,
   });
   
-  // Memoize brand entries to prevent re-computation on every render
-  const brandEntries = useMemo(() => Object.entries(CAR_WASH_BRANDS), []);
-  const filteredBrands = useMemo(() => 
-    brandEntries.filter(([key]) => key !== 'independent'),
-    [brandEntries]
-  );
-  
-  // Calculate power using SSOT
+  // Sync powerResult to calculatedPower for car wash-specific UI metrics
   useEffect(() => {
-    // Get state-specific rates
+    if (!powerResult.isValid) return;
+    
     const stateData = STATE_RATES[mergedInputs.state] || STATE_RATES['Other'];
     
-    // Build input for SSOT function
     const input: CarWashPowerInput = {
       equipment: {
         hasConveyor: equipment.hasConveyor,
@@ -1424,10 +1448,9 @@ export default function CarWashWizard({
       demandCharge: stateData.demandCharge,
     };
     
-    // Call SSOT function
-    const calc = calculateCarWashEquipmentPower(input);
-    setCalculatedPower(calc);
-  }, [equipment, operations, washType, automationLevel, initialInputs, mergedInputs.state]);
+    const detailedCalc = calculateCarWashEquipmentPower(input);
+    setCalculatedPower(detailedCalc);
+  }, [powerResult, equipment, operations, washType, automationLevel, mergedInputs]);
   
   // Validate solar capacity whenever roof area changes
   useEffect(() => {
@@ -1446,14 +1469,9 @@ export default function CarWashWizard({
     setIsCalculating(true);
     
     try {
-      // Size battery to shave peak demand
-      const targetPeakReduction = energyGoals.targetSavingsPercent / 100;
-      const batteryPowerKW = calculatedPower.peakDemandKW * targetPeakReduction;
-      const storageSizeMW = batteryPowerKW / 1000;
-      
-      // Duration based on peak hours
-      const peakHours = operations.peakHoursEnd - operations.peakHoursStart;
-      const durationHours = Math.min(peakHours, 4); // Max 4 hours typically
+      // Use powerResult from shared hook (Phase 2 - Dec 14, 2025)
+      const storageSizeMW = powerResult.recommendedBatteryMW;
+      const durationHours = powerResult.durationHours;
       
       const stateData = STATE_RATES[mergedInputs.state] || STATE_RATES['Other'];
       
