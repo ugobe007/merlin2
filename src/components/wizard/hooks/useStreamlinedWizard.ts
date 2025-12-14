@@ -432,7 +432,67 @@ export function useStreamlinedWizard({
       let monthlyKWh = 0;
       
       try {
-        const powerResult = calculateUseCasePower(wizardState.selectedIndustry, data);
+        // Normalize field names for SSOT compatibility
+        // Database uses various field names, SSOT expects specific names
+        const normalizedData = { ...data };
+        
+        // For ALL use cases: Try to extract the primary sizing field
+        // Hotel: roomCount
+        if (wizardState.selectedIndustry === 'hotel') {
+          if (!normalizedData.roomCount) {
+            normalizedData.roomCount = data.numberOfRooms || data.rooms || data.facilitySize;
+          }
+        }
+        // Office: squareFeet
+        else if (wizardState.selectedIndustry === 'office') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = data.officeSqFt || data.buildingSqFt || data.sqFt || data.facilitySize;
+          }
+        }
+        // Hospital: bedCount
+        else if (wizardState.selectedIndustry === 'hospital') {
+          if (!normalizedData.bedCount) {
+            normalizedData.bedCount = data.beds || data.numberOfBeds || data.facilitySize;
+          }
+        }
+        // Warehouse: squareFeet
+        else if (wizardState.selectedIndustry === 'warehouse') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = data.warehouseSqFt || data.sqFt || data.facilitySize;
+          }
+        }
+        // Manufacturing: squareFeet
+        else if (wizardState.selectedIndustry === 'manufacturing') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = data.facilitySqFt || data.squareFeet || data.sqFt || data.facilitySize;
+          }
+        }
+        // Retail: squareFeet
+        else if (wizardState.selectedIndustry === 'retail') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = data.retailSqFt || data.sqFt || data.facilitySize;
+          }
+        }
+        // Airport: annualPassengers
+        else if (wizardState.selectedIndustry === 'airport') {
+          if (!normalizedData.annualPassengers) {
+            normalizedData.annualPassengers = data.totalPassengers || data.passengers || data.facilitySize;
+          }
+        }
+        // Casino: gamingFloorSqFt
+        else if (wizardState.selectedIndustry === 'casino') {
+          if (!normalizedData.gamingFloorSqFt) {
+            normalizedData.gamingFloorSqFt = data.gamingFloorSize || data.gamingSpaceSqFt || data.facilitySize;
+          }
+        }
+        // Car Wash: bayCount
+        else if (wizardState.selectedIndustry === 'car-wash') {
+          if (!normalizedData.bayCount) {
+            normalizedData.bayCount = data.washBays || data.numBays || data.bays || data.facilitySize;
+          }
+        }
+        
+        const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
         peakDemandKW = (powerResult.powerMW || 0) * 1000; // Convert MW to kW
         // Estimate daily/monthly from peak (assumes 40% capacity factor)
         dailyKWh = peakDemandKW * 24 * 0.4;
@@ -440,6 +500,8 @@ export function useStreamlinedWizard({
         
         console.log('✅ [SSOT] Calculated power from user inputs:', {
           industry: wizardState.selectedIndustry,
+          rawData: Object.keys(data),
+          normalizedData: Object.keys(normalizedData),
           peakKW: peakDemandKW,
           powerMW: powerResult.powerMW,
           method: powerResult.calculationMethod,
