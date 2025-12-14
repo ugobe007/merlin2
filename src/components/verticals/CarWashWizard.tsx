@@ -24,6 +24,8 @@ import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
 import { 
   calculateCarWashEquipmentPower,
+  validateCarWashSolarCapacity,
+  CAR_WASH_FACILITY_CONSTRAINTS,
   type CarWashPowerInput,
   type CarWashAutomationLevel,
 } from '@/services/useCasePowerCalculations';
@@ -1187,7 +1189,7 @@ export default function CarWashWizard({
   const mergedInputs = {
     numberOfBays: initialInputs.numberOfBays ?? limits?.numberOfBays?.default ?? 1,
     carsPerDay: initialInputs.carsPerDay ?? limits?.carsPerDay?.default ?? 150,
-    state: initialInputs.state ?? 'California',
+    state: initialInputs.state ?? '', // No default - user must select
     monthlyBill: initialInputs.monthlyBill ?? limits?.currentMonthlyBill?.default ?? 5000,
     includesVacuums: initialInputs.includesVacuums ?? true,
     includesDryers: initialInputs.includesDryers ?? true,
@@ -1261,7 +1263,7 @@ export default function CarWashWizard({
   const [simplifiedWashType, setSimplifiedWashType] = useState<keyof typeof SIMPLIFIED_WASH_TYPES>('automated-tunnel');
   const [selectedEnergyGoal, setSelectedEnergyGoal] = useState<keyof typeof ENERGY_GOALS_OPTIONS>('solar-bess');
   const [targetReductionPercent, setTargetReductionPercent] = useState(40);
-  const [selectedState, setSelectedState] = useState(initialInputs.state ?? 'California');
+  const [selectedState, setSelectedState] = useState(initialInputs.state ?? '');
   const [zipCode, setZipCode] = useState('');
   
   // Sync simplifiedWashType to detailed washType
@@ -1359,6 +1361,13 @@ export default function CarWashWizard({
     financingPreference: 'loan' as 'cash' | 'loan' | 'ppa' | 'lease',
   });
   
+  // Solar validation state
+  const [solarValidation, setSolarValidation] = useState<ReturnType<typeof validateCarWashSolarCapacity> | null>(null);
+  
+  // Accept AI vs Customize modal state
+  const [showAcceptCustomizeModal, setShowAcceptCustomizeModal] = useState(false);
+  const [userQuoteChoice, setUserQuoteChoice] = useState<'accept' | 'customize' | null>(null);
+  
   // Calculated values
   const [calculatedPower, setCalculatedPower] = useState({
     peakDemandKW: 0,
@@ -1419,6 +1428,18 @@ export default function CarWashWizard({
     const calc = calculateCarWashEquipmentPower(input);
     setCalculatedPower(calc);
   }, [equipment, operations, washType, automationLevel, initialInputs, mergedInputs.state]);
+  
+  // Validate solar capacity whenever roof area changes
+  useEffect(() => {
+    if (energyGoals.interestInSolar && energyGoals.solarRoofArea > 0) {
+      const requestedSolarKW = energyGoals.solarRoofArea * 0.015;
+      const buildingSqFt = CAR_WASH_FACILITY_CONSTRAINTS.BUILDING_FOOTPRINT_TYPICAL;
+      const validation = validateCarWashSolarCapacity(requestedSolarKW, buildingSqFt);
+      setSolarValidation(validation);
+    } else {
+      setSolarValidation(null);
+    }
+  }, [energyGoals.solarRoofArea, energyGoals.interestInSolar]);
   
   // Generate final quote
   async function generateQuote() {
@@ -3457,7 +3478,7 @@ export default function CarWashWizard({
                     <input
                       type="range"
                       min={0}
-                      max={50000}
+                      max={CAR_WASH_FACILITY_CONSTRAINTS.BUILDING_FOOTPRINT_MAX}
                       step={500}
                       value={energyGoals.solarRoofArea}
                       onChange={(e) => setEnergyGoals({...energyGoals, solarRoofArea: parseInt(e.target.value)})}
@@ -3467,6 +3488,40 @@ export default function CarWashWizard({
                       <span className="text-2xl font-black text-white">{energyGoals.solarRoofArea.toLocaleString()} <span className="text-lg text-gray-400">sq ft</span></span>
                       <span className="text-2xl font-black text-amber-400">~{Math.round(energyGoals.solarRoofArea * 0.015)} <span className="text-lg text-gray-400">kW solar</span></span>
                     </div>
+                    
+                    {/* Solar Validation Warning */}
+                    {solarValidation && !solarValidation.isValid && (
+                      <div className="mt-4 bg-red-900/30 border-2 border-red-500/50 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-red-200 font-bold text-sm mb-2">⚠️ Solar System Too Large for Typical Car Wash Roof</p>
+                            <p className="text-red-300 text-sm leading-relaxed mb-3">
+                              Your requested {Math.round(energyGoals.solarRoofArea * 0.015)} kW solar array requires <span className="font-bold">{solarValidation.requiredRoofSqFt.toLocaleString()} sq ft</span> of roof space, 
+                              but typical car wash buildings only have <span className="font-bold">{solarValidation.usableRoofSqFt.toLocaleString()} sq ft</span> of usable roof area.
+                            </p>
+                            <div className="bg-red-950/50 rounded-lg p-3 border border-red-500/30">
+                              <p className="text-amber-300 font-bold text-sm mb-1">💡 Recommendation:</p>
+                              <p className="text-gray-200 text-sm">
+                                Maximum realistic solar for your car wash: <span className="font-black text-amber-400">{solarValidation.maxSolarKW} kW</span> ({solarValidation.usableRoofSqFt.toLocaleString()} sq ft available)
+                              </p>
+                              <button
+                                onClick={() => setEnergyGoals({...energyGoals, solarRoofArea: solarValidation.usableRoofSqFt})}
+                                className="mt-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-white font-bold text-sm transition-colors"
+                              >
+                                Use Maximum ({solarValidation.maxSolarKW} kW)
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Industry Context */}
+                    <p className="text-xs text-gray-400 mt-3 bg-gray-900/50 p-2 rounded-lg">
+                      ℹ️ Industry Standard: Typical car wash buildings are 4,000-7,000 sq ft with 75% usable for solar (3,000-5,300 sq ft). 
+                      Ground-mount or carport solar may be an option if roof space is insufficient.
+                    </p>
                   </div>
                 </div>
               )}
@@ -3592,7 +3647,7 @@ export default function CarWashWizard({
                 <button
                   onClick={() => {
                     generateQuote();
-                    setCurrentStep(4);
+                    setShowAcceptCustomizeModal(true); // Show modal instead of going directly to step 4
                   }}
                   className="px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-500 hover:via-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-cyan-500/30 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
                 >
@@ -3600,6 +3655,137 @@ export default function CarWashWizard({
                   Generate Your Quote
                   <ArrowRight className="w-5 h-5" />
                 </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Accept AI vs Customize Modal */}
+          {showAcceptCustomizeModal && quoteResult && !isCalculating && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-3xl border-2 border-cyan-500/40 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-8">
+                  {/* Header */}
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <Sparkles className="w-10 h-10 text-cyan-400" />
+                      <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-400">
+                        Merlin AI Recommendation
+                      </h2>
+                    </div>
+                    <p className="text-gray-300 text-lg">Your custom car wash energy storage system is ready!</p>
+                  </div>
+                  
+                  {/* AI Recommended System Summary */}
+                  <div className="bg-gradient-to-r from-cyan-900/30 to-purple-900/30 rounded-2xl p-6 border-2 border-cyan-500/30 mb-8">
+                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                      <Battery className="w-6 h-6 text-cyan-400" />
+                      Recommended Configuration
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-black text-cyan-400 mb-1">
+                          {Math.round(calculatedPower.peakDemandKW * energyGoals.targetSavingsPercent / 100)} kW
+                        </p>
+                        <p className="text-sm text-gray-400">BESS Power</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-black text-purple-400 mb-1">
+                          {quoteResult.equipment.batteries.unitEnergyMWh >= 1 
+                            ? `${quoteResult.equipment.batteries.unitEnergyMWh.toFixed(1)} MWh` 
+                            : `${Math.round(quoteResult.equipment.batteries.unitEnergyMWh * 1000)} kWh`}
+                        </p>
+                        <p className="text-sm text-gray-400">Storage</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-black text-amber-400 mb-1">
+                          {energyGoals.interestInSolar ? `${Math.round(energyGoals.solarRoofArea * 0.015)} kW` : '—'}
+                        </p>
+                        <p className="text-sm text-gray-400">Solar</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-black text-emerald-400 mb-1">
+                          {quoteResult.financials.paybackYears.toFixed(1)} yr
+                        </p>
+                        <p className="text-sm text-gray-400">Payback</p>
+                      </div>
+                    </div>
+                    
+                    {/* Annual Savings */}
+                    <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 rounded-xl p-5 border border-emerald-500/30 text-center">
+                      <p className="text-emerald-200 uppercase tracking-widest text-xs font-bold mb-2">💰 Estimated Annual Savings</p>
+                      <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">
+                        ${Math.round(quoteResult.financials.annualSavings).toLocaleString()}
+                      </p>
+                      <p className="text-gray-300 text-sm mt-2">per year</p>
+                    </div>
+                  </div>
+                  
+                  {/* Choice Buttons */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Accept AI Setup */}
+                    <button
+                      onClick={() => {
+                        setUserQuoteChoice('accept');
+                        setShowAcceptCustomizeModal(false);
+                        setCurrentStep(4); // Go to results/export
+                      }}
+                      className="group relative bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl p-8 text-left transition-all transform hover:scale-[1.02] border-2 border-emerald-400/50 shadow-xl shadow-emerald-500/20"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-white/20 rounded-xl">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-2xl font-black text-white mb-2">Accept Merlin AI Setup</h4>
+                          <p className="text-emerald-100 text-sm mb-4 leading-relaxed">
+                            Proceed with Merlin's optimized configuration. You'll be able to export quotes, review detailed breakdowns, and contact our team.
+                          </p>
+                          <div className="flex items-center gap-2 text-white font-bold">
+                            <span>View Full Quote</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    {/* Customize */}
+                    <button
+                      onClick={() => {
+                        setUserQuoteChoice('customize');
+                        setShowAcceptCustomizeModal(false);
+                        setCurrentStep(4); // Go to results with config options
+                      }}
+                      className="group relative bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-2xl p-8 text-left transition-all transform hover:scale-[1.02] border-2 border-purple-400/50 shadow-xl shadow-purple-500/20"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-white/20 rounded-xl">
+                          <Gauge className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-2xl font-black text-white mb-2">Customize Configuration</h4>
+                          <p className="text-purple-100 text-sm mb-4 leading-relaxed">
+                            Fine-tune system sizing, adjust solar/generator capacity, and explore different equipment options to match your exact needs.
+                          </p>
+                          <div className="flex items-center gap-2 text-white font-bold">
+                            <span>Adjust System</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  {/* Close Button */}
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowAcceptCustomizeModal(false)}
+                      className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300 font-medium transition-colors"
+                    >
+                      Go Back to Step 3
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
