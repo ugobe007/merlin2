@@ -3320,7 +3320,8 @@ export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWas
  */
 export function calculateHospitalPower(
   bedCount: number,
-  hospitalType: 'community' | 'regional' | 'academic' | 'specialty' = 'regional'
+  hospitalType: 'community' | 'regional' | 'academic' | 'specialty' = 'regional',
+  operatingHours: 'limited' | 'extended' | '24_7' = '24_7'
 ): PowerCalculationResult {
   // kW per bed varies by hospital type
   // Community: basic services, lower acuity
@@ -3334,16 +3335,31 @@ export function calculateHospitalPower(
     specialty: 7.5,  // Cardiac, cancer, trauma centers
   };
   
+  // Operating hours multiplier (NEW - Dec 13, 2025)
+  // Source: Healthcare facility operational standards
+  const hoursMultiplier = {
+    limited: 0.4,    // 8am-6pm outpatient/clinic (10 hours)
+    extended: 0.7,   // 6am-10pm urgent care (16 hours)
+    '24_7': 1.0      // Full hospital (24 hours)
+  }[operatingHours];
+  
   const kWPerBed = kWPerBedByType[hospitalType];
-  const powerKW = bedCount * kWPerBed;
+  const basePowerKW = bedCount * kWPerBed;
+  const powerKW = basePowerKW * hoursMultiplier;
   const powerMW = powerKW / 1000;
+  
+  const hoursLabel = {
+    limited: 'Limited Hours (8am-6pm)',
+    extended: 'Extended Hours (6am-10pm)',
+    '24_7': '24/7 Operations'
+  }[operatingHours];
   
   return {
     powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100), // Min 200kW
     durationHrs: 8, // Hospitals need longer backup for critical care
-    description: `${hospitalType.charAt(0).toUpperCase() + hospitalType.slice(1)} Hospital: ${bedCount} beds × ${kWPerBed} kW/bed = ${powerKW.toFixed(0)} kW`,
-    calculationMethod: `ASHRAE healthcare peak demand (${kWPerBed} kW/bed for ${hospitalType})`,
-    inputs: { bedCount, hospitalType, kWPerBed }
+    description: `${hospitalType.charAt(0).toUpperCase() + hospitalType.slice(1)} Hospital: ${bedCount} beds × ${kWPerBed} kW/bed × ${hoursMultiplier} (${hoursLabel}) = ${powerKW.toFixed(0)} kW`,
+    calculationMethod: `ASHRAE healthcare peak demand (${kWPerBed} kW/bed for ${hospitalType}, ${hoursLabel})`,
+    inputs: { bedCount, hospitalType, kWPerBed, operatingHours, hoursMultiplier }
   };
 }
 
