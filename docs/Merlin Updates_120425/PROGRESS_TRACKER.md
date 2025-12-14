@@ -116,19 +116,31 @@
 
 ## 🔄 PHASE 2: ACCEPT/CUSTOMIZE MODAL ROLLOUT (Week 1)
 
-### 2.1 Apply to HotelWizard - PENDING 🔄
-**Planned:** December 5, 2025  
-**Files to Modify:**
-- `src/components/verticals/HotelWizard.tsx`
+### 2.1 Apply to HotelWizard - COMPLETED ✅
+**Date:** December 4, 2025  
+**Commit:** 0e27905  
+**Files Modified:**
+- `src/components/verticals/HotelWizard.tsx` (+64 lines, -6 lines)
 
 **Changes:**
-1. Import `AcceptCustomizeModal` from shared
-2. Add state: `showAcceptCustomizeModal`, `userQuoteChoice`
-3. Replace "Generate Quote" button flow
-4. Show modal after quote generation, before Step 4
-5. Color scheme: `emerald` (hotel brand color)
+1. ✅ Imported `AcceptCustomizeModal` from shared components
+2. ✅ Added state: `showAcceptCustomizeModal`, `userQuoteChoice`
+3. ✅ Modified `generateQuote()` to show modal after calculation
+4. ✅ Added `handleAcceptAI()` → Go to Step 4 (quote results)
+5. ✅ Added `handleCustomize()` → Stay on Step 3 (adjust sliders)
+6. ✅ Updated "Generate My Quote" button to call `generateQuote()`
+7. ✅ Configured emerald color scheme (hotel brand)
+8. ✅ Facility details: Hotel class, room count, state
+9. ✅ System summary: BESS kW/kWh, solar, generator, payback, savings
 
-**Status:** ⏳ Waiting for Phase 1 build test
+**Pattern Reuse:**
+- Follows same pattern as CarWashWizard integration
+- Modal shows after Step 3, before Step 4
+- Two-choice UX: Accept AI recommendation or Customize
+
+**Build Status:** ✅ Build succeeded (6.45s, no errors)
+
+**Status:** ✅ COMPLETE - Ready for deployment
 
 ---
 
@@ -226,14 +238,31 @@
 
 ---
 
-## 📊 STATISTICS
+## 📊 IMPLEMENTATION STATISTICS
 
-### Code Added (Phase 1):
-- **Total Lines:** 583
-- **New Files:** 1
-- **Modified Files:** 2
-- **New Functions:** 3
-- **New Constants:** 3
+### Phase 1 (Ground-mount/Carport Solar + Shared Modal):
+**Commit:** bd3a8b2 (Dec 4, 2025)
+- `useCasePowerCalculations.ts`: +330 lines (ground-mount + carport)
+- `AcceptCustomizeModal.tsx`: +250 lines (new file)
+- `shared/index.ts`: +3 lines (exports)
+- **Phase 1 Total:** 583 lines, 2 modified, 1 created
+- **Build Status:** ✅ Succeeded (9.93s)
+- **Deployment:** ✅ Live at https://merlin2.fly.dev/
+
+### Phase 2.1 (HotelWizard Integration):
+**Commit:** 0e27905 (Dec 4, 2025)
+- `HotelWizard.tsx`: +64 lines, -6 lines (net +58 lines)
+- **Phase 2.1 Total:** 58 lines, 1 modified
+- **Build Status:** ✅ Succeeded (6.45s)
+- **Deployment:** ⏳ Pending push to production
+
+### Cumulative Progress:
+- **Total Lines Added:** 641 lines (net)
+- **Files Modified:** 3 files
+- **Files Created:** 1 file
+- **Commits:** 2 (bd3a8b2, 0e27905)
+- **Build Time:** ~16s total
+- **Success Rate:** 100% (2/2 builds passed)
 
 ### TrueQuote™ Sources Added:
 - NREL/TP-6A20-56290 (Land-Use Requirements)
@@ -242,9 +271,9 @@
 - NREL Carport Solar Study (2022)
 - DOE Vehicle-to-Grid Integration
 
-### Build Status:
-- ⏳ **Pending:** TypeScript compilation test
-- ⏳ **Pending:** Production deployment
+### Deployment Status:
+- ✅ **Phase 1:** Deployed to production
+- ⏳ **Phase 2.1:** Ready for deployment (pending git push)
 
 ---
 
