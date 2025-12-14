@@ -470,7 +470,7 @@ export default function HeroSection({
               </button>
 
               {/* TrueQuote™ Badge - Clickable for marketing modal */}
-              <div className="flex items-center justify-center gap-2 mb-10">
+              <div className="flex items-center justify-center gap-2 mb-6">
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="hover:scale-105 transition-transform cursor-pointer"
@@ -485,14 +485,6 @@ export default function HeroSection({
                 </button>
               </div>
 
-              {/* Industry Compliance - Transparent, Auditable Pricing */}
-              <MethodologyStatement 
-                variant="hero" 
-                darkMode={true} 
-                message="All quotes use NREL ATB 2024 pricing and DOE-aligned methodology. Every calculation is traceable."
-                className="mb-6"
-              />
-              
               {/* How it Works - with wizard icon */}
               <button 
                 onClick={() => setShowHowItWorks(true)}
