@@ -31,6 +31,7 @@ import {
   type PremiumConfiguration 
 } from '@/services/premiumConfigurationService';
 import { useWizardState } from '@/hooks/useWizardState';
+import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
 
 // ============================================
 // HOOK PROPS & RETURN TYPES
@@ -425,23 +426,42 @@ export function useStreamlinedWizard({
         currentSection,
       });
       
-      // Extract power calculation from useCaseData (calculated by SSOT)
-      const peakDemandKW = data.peakDemandKW || data.totalPeakKW || data.recommendedBatteryKW || 0;
-      const dailyKWh = data.dailyKWh || 0;
-      const monthlyKWh = data.monthlyKWh || dailyKWh * 30;
+      // CALL THE SSOT to calculate power from user inputs
+      let peakDemandKW = 0;
+      let dailyKWh = 0;
+      let monthlyKWh = 0;
       
-      // Calculate recommended BESS size based on user's goal
-      // Default to 70% of peak demand for peak shaving
-      // Note: targetSavingsPercent doesn't exist in WizardState, using default 0.7
+      try {
+        const powerResult = calculateUseCasePower(wizardState.selectedIndustry, data);
+        peakDemandKW = (powerResult.powerMW || 0) * 1000; // Convert MW to kW
+        // Estimate daily/monthly from peak (assumes 40% capacity factor)
+        dailyKWh = peakDemandKW * 24 * 0.4;
+        monthlyKWh = dailyKWh * 30;
+        
+        console.log('✅ [SSOT] Calculated power from user inputs:', {
+          industry: wizardState.selectedIndustry,
+          peakKW: peakDemandKW,
+          powerMW: powerResult.powerMW,
+          method: powerResult.calculationMethod,
+        });
+      } catch (error) {
+        console.error('❌ [SSOT] Power calculation failed:', error);
+        // Fallback to any values in useCaseData
+        peakDemandKW = data.peakDemandKW || data.totalPeakKW || 0;
+        dailyKWh = data.dailyKWh || 0;
+        monthlyKWh = data.monthlyKWh || dailyKWh * 30;
+      }
+      
+      // Calculate recommended BESS size (70% of peak for peak shaving)
       const targetReduction = 0.7;
       const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
-      const recommendedBatteryKWh = recommendedBatteryKW * 4; // Standard 4-hour duration
+      const recommendedBatteryKWh = recommendedBatteryKW * 4; // 4-hour duration
       
-      // Calculate solar recommendation if user expressed interest
+      // Calculate solar recommendation
       let recommendedSolarKW = 0;
-      if (wizardState.solarKW > 0 || data.solarKW > 0) {
-        // Use user's input or calculate based on facility size
-        recommendedSolarKW = wizardState.solarKW || data.solarKW || Math.round(peakDemandKW * 0.6);
+      if (wizardState.wantsSolar) {
+        // 60% of peak demand (typical solar sizing)
+        recommendedSolarKW = Math.round(peakDemandKW * 0.6);
       }
       
       // UPDATE centralizedState.calculated with ACTUAL user values
