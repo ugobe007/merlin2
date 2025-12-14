@@ -420,11 +420,13 @@ export function useStreamlinedWizard({
     if (currentSection === 3 && wizardState.useCaseData && wizardState.selectedIndustry) {
       const data = wizardState.useCaseData;
       
-      console.log('🔄 [RECALC] Triggering power calculation with user inputs:', {
-        industry: wizardState.selectedIndustry,
-        useCaseData: data,
-        currentSection,
-      });
+      console.log('🔄 [RECALC] ========================================');
+      console.log('🔄 [RECALC] CALCULATION TRIGGER FIRED!');
+      console.log('🔄 [RECALC] Industry:', wizardState.selectedIndustry);
+      console.log('🔄 [RECALC] Current Section:', currentSection);
+      console.log('🔄 [RECALC] Raw useCaseData field names:', Object.keys(data));
+      console.log('🔄 [RECALC] Raw useCaseData values:', data);
+      console.log('🔄 [RECALC] ========================================');
       
       // CALL THE SSOT to calculate power from user inputs
       let peakDemandKW = 0;
@@ -498,14 +500,16 @@ export function useStreamlinedWizard({
         dailyKWh = peakDemandKW * 24 * 0.4;
         monthlyKWh = dailyKWh * 30;
         
-        console.log('✅ [SSOT] Calculated power from user inputs:', {
-          industry: wizardState.selectedIndustry,
-          rawData: Object.keys(data),
-          normalizedData: Object.keys(normalizedData),
-          peakKW: peakDemandKW,
-          powerMW: powerResult.powerMW,
-          method: powerResult.calculationMethod,
-        });
+        console.log('✅ [SSOT] ========================================');
+        console.log('✅ [SSOT] CALCULATION SUCCESSFUL!');
+        console.log('✅ [SSOT] Industry:', wizardState.selectedIndustry);
+        console.log('✅ [SSOT] Raw field names:', Object.keys(data));
+        console.log('✅ [SSOT] Normalized field names:', Object.keys(normalizedData));
+        console.log('✅ [SSOT] Normalized values:', normalizedData);
+        console.log('✅ [SSOT] Peak Demand (kW):', peakDemandKW);
+        console.log('✅ [SSOT] Power (MW):', powerResult.powerMW);
+        console.log('✅ [SSOT] Method:', powerResult.calculationMethod);
+        console.log('✅ [SSOT] ========================================');
       } catch (error) {
         console.error('❌ [SSOT] Power calculation failed:', error);
         // Fallback to any values in useCaseData
@@ -540,12 +544,15 @@ export function useStreamlinedWizard({
         },
       }));
       
-      console.log('✅ [RECALC] Updated centralizedState.calculated:', {
-        totalPeakDemandKW: peakDemandKW,
-        recommendedBatteryKW,
-        recommendedBatteryKWh,
-        recommendedSolarKW,
-      });
+      console.log('💾 [RECALC] ========================================');
+      console.log('💾 [RECALC] UPDATED centralizedState.calculated:');
+      console.log('💾 [RECALC] Total Peak Demand (kW):', peakDemandKW);
+      console.log('💾 [RECALC] Recommended Battery (kW):', recommendedBatteryKW);
+      console.log('💾 [RECALC] Recommended Battery (kWh):', recommendedBatteryKWh);
+      console.log('💾 [RECALC] Recommended Solar (kW):', recommendedSolarKW);
+      console.log('💾 [RECALC] Daily kWh:', dailyKWh);
+      console.log('💾 [RECALC] Monthly kWh:', monthlyKWh);
+      console.log('💾 [RECALC] ========================================');
     }
   }, [currentSection, wizardState.useCaseData, wizardState.selectedIndustry, wizardState.solarKW, setCentralizedState]);
   

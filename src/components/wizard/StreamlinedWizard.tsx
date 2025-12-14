@@ -142,13 +142,11 @@ export default function StreamlinedWizard({
         peakKW: calc.totalPeakDemandKW || calc.recommendedBatteryKW || 0,
       });
       
-      // Small delay so the section transition completes first
-      const timer = setTimeout(() => {
-        setShowMerlinRecommendation(true);
-        setHasSeenRecommendation(true);
-        setShowMerlinBanner(true); // Enable persistent banner
-      }, 500);
-      return () => clearTimeout(timer);
+      // Dec 14, 2025 - DISABLED intermediate Merlin's Insight modal
+      // User will see full recommendation in AcceptCustomizeModal after Section 3
+      // This reduces noise - one clear decision point instead of multiple popups
+      setHasSeenRecommendation(true);
+      setShowMerlinBanner(false); // Disable banner too
     }
     return undefined;
   }, [wizard.currentSection, hasSeenRecommendation, wizard.centralizedState?.calculated]);
@@ -496,6 +494,9 @@ export default function StreamlinedWizard({
               systemSize={wizard.wizardState.batteryKW}
               systemKWh={wizard.wizardState.batteryKWh}
               durationHours={wizard.wizardState.durationHours}
+              neededPowerKW={wizard.centralizedState?.calculated?.recommendedBatteryKW || 0}
+              neededEnergyKWh={wizard.centralizedState?.calculated?.recommendedBatteryKWh || 0}
+              neededDurationHours={4}
             />
           </div>
         </aside>
@@ -565,8 +566,11 @@ export default function StreamlinedWizard({
                   sectionRef={(el) => { sectionRefs.current[3] = el; }}
                   onBack={() => wizard.advanceToSection(2)}
                   onContinue={() => {
+                    // Dec 14, 2025 - CRITICAL FIX: Show AcceptCustomizeModal instead of auto-advancing
+                    // This creates single clear decision point per user request to "reduce noise"
+                    console.log('🎯 [GOALS] Continue clicked - triggering generateQuote() for AcceptCustomizeModal');
                     wizard.completeSection('goals');
-                    wizard.advanceToSection(4);
+                    wizard.generateQuote(); // This will show AcceptCustomizeModal
                   }}
                   powerCoverage={powerCoverage}
                 />
