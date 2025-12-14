@@ -1049,10 +1049,10 @@ export default function StreamlinedWizard({
                 const basePeakKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 0;
                 const peakKW = basePeakKW;
                 
-                // Calculate battery based on current wizard state (matches GoalsSection logic)
-                const recBatteryKW = wizard.wizardState.batteryKW || calc.recommendedBatteryKW || Math.round(peakKW * 0.4);
-                const recBatteryKWh = wizard.wizardState.batteryKWh || calc.recommendedBatteryKWh || recBatteryKW * 4;
-                const recSolarKW = wizard.wizardState.solarKW || calc.recommendedSolarKW || 0;
+                // ALWAYS show recommended values in modal, not current config
+                const recBatteryKW = calc.recommendedBatteryKW || Math.round(peakKW * 0.4);
+                const recBatteryKWh = calc.recommendedBatteryKWh || recBatteryKW * 4;
+                const recSolarKW = calc.recommendedSolarKW || 0;
                 const solarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 5;
                 
                 return (
