@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// GOALS SECTION (Section 3)
-// Extracted from StreamlinedWizard.tsx - Dec 2025 Refactor
+// GOALS SECTION (Section 4 - Dec 2025)
+// Now comes AFTER Scenarios (Section 3) where user picks optimization strategy
 // Updated Dec 12, 2025: Replaced Power Gap panel with Merlin Recommendation Panel
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -206,10 +206,11 @@ export function GoalsSection({
     alert(summary);
   }, [setWizardState]);
 
+  // GoalsSection is now Section 4 (Dec 2025 - Scenarios come first as Section 3)
   return (
     <div
       ref={sectionRef}
-      className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 3 ? 'hidden' : ''}`}
+      className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 4 ? 'hidden' : ''}`}
     >
       <div className="max-w-3xl mx-auto">
         {/* Section Navigation */}
@@ -219,9 +220,9 @@ export function GoalsSection({
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Details
+            Back to Scenarios
           </button>
-          <div className="text-sm text-gray-400">Step 4 of 6</div>
+          <div className="text-sm text-gray-400">Step 5 of 6</div>
         </div>
 
         {/* Progress badges */}

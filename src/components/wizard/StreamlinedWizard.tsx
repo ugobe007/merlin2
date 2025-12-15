@@ -33,7 +33,9 @@ import {
   ConfigurationSection,
   QuoteResultsSection,
   ScenarioComparison,
+  ScenarioSection,
 } from './sections';
+import { ConfigurationConfirmModal } from './modals';
 import PowerProfileTracker from './PowerProfileTracker';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
@@ -86,6 +88,9 @@ export default function StreamlinedWizard({
   const [merlinRecommendation, setMerlinRecommendation] = useState<{batteryKW: number; batteryKWh: number; solarKW: number; peakKW: number} | null>(null);
   const [showSidebarMenu, setShowSidebarMenu] = useState(false);
   const [showCalculations, setShowCalculations] = useState(false); // Collapsible calculations widget
+  
+  // Confirmation Modal state (Dec 2025 - Phase 3)
+  const [showConfigConfirmModal, setShowConfigConfirmModal] = useState(false);
 
   // Section refs for scrolling
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -511,12 +516,52 @@ export default function StreamlinedWizard({
               onBack={() => wizard.advanceToSection(1)}
               onContinue={() => {
                 wizard.completeSection('facility');
+                // Now go to Scenarios (Section 3) - auto-generates scenarios
                 wizard.advanceToSection(3);
               }}
             />
 
-            {/* Section 3: Goals & Preferences */}
-            {/* Calculate power coverage and pass SSOT calculated values */}
+            {/* ═══════════════════════════════════════════════════════════════
+                NEW FLOW (Dec 2025 - Phase 3):
+                Section 3: SCENARIOS - Choose optimization strategy FIRST
+                Section 4: GOALS - Fine-tune after selecting a strategy
+                Section 5: QUOTE RESULTS - Final quote
+            ═══════════════════════════════════════════════════════════════ */}
+            
+            {/* Section 3: SCENARIOS (BEFORE Goals) */}
+            {/* Shows 3 configuration options with pop-up explainer */}
+            {(() => {
+              const calc = wizard.centralizedState?.calculated || {};
+              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
+              const batteryKW = wizard.wizardState.batteryKW || 0;
+              const solarKW = wizard.wizardState.solarKW || 0;
+              const generatorKW = wizard.wizardState.generatorKW || 0;
+              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
+              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
+              
+              return (
+                <ScenarioSection
+                  wizardState={wizard.wizardState}
+                  setWizardState={wizard.setWizardState}
+                  currentSection={wizard.currentSection}
+                  sectionRef={(el) => { sectionRefs.current[3] = el; }}
+                  onBack={() => wizard.advanceToSection(2)}
+                  onContinue={() => {
+                    // After selecting a scenario, go to Goals (Section 4)
+                    wizard.completeSection('scenarios');
+                    wizard.advanceToSection(4);
+                  }}
+                  scenarioResult={wizard.wizardState.scenarioResult}
+                  isGenerating={wizard.isGeneratingScenarios}
+                  onGenerateScenarios={wizard.generateAllScenarios}
+                  peakDemandKW={peakDemandKW}
+                  powerCoverage={powerCoverage}
+                />
+              );
+            })()}
+
+            {/* Section 4: Goals & Preferences (AFTER Scenarios) */}
+            {/* Now user fine-tunes based on their selected strategy */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
               const peakDemandKW = calc.totalPeakDemandKW || 0;
@@ -545,19 +590,19 @@ export default function StreamlinedWizard({
                 currency: 'USD',
               } : undefined;
               
-              return (
+              // Show Goals section (Section 4 in new flow)
+              return wizard.currentSection === 4 ? (
                 <GoalsSection
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
-                  currentSection={wizard.currentSection}
-                  sectionRef={(el) => { sectionRefs.current[3] = el; }}
-                  onBack={() => wizard.advanceToSection(2)}
+                  currentSection={4}
+                  sectionRef={(el) => { sectionRefs.current[4] = el; }}
+                  onBack={() => wizard.advanceToSection(3)}
                   onContinue={() => {
-                    // Dec 14, 2025 - CRITICAL FIX: Show AcceptCustomizeModal instead of auto-advancing
-                    // This creates single clear decision point per user request to "reduce noise"
-                    console.log('🎯 [GOALS] Continue clicked - triggering generateQuote() for AcceptCustomizeModal');
+                    // After goals, show confirmation modal before final quote
+                    console.log('🎯 [GOALS] Continue clicked - showing confirmation modal');
                     wizard.completeSection('goals');
-                    wizard.generateQuote(); // This will show AcceptCustomizeModal
+                    setShowConfigConfirmModal(true);
                   }}
                   onGenerateScenarios={wizard.generateAllScenarios}
                   isGeneratingScenarios={wizard.isGeneratingScenarios}
@@ -565,57 +610,8 @@ export default function StreamlinedWizard({
                   peakDemandKW={peakDemandKW}
                   merlinRecommendation={merlinRecommendation}
                 />
-              );
+              ) : null;
             })()}
-
-            {/* Section 4: Scenario Comparison OR Configuration
-                - If showScenarios=true and scenarioResult exists → Show 3 options
-                - Otherwise → Show configuration sliders
-            */}
-            {wizard.currentSection === 4 && wizard.wizardState.showScenarios && wizard.wizardState.scenarioResult ? (
-              <div className="min-h-[calc(100vh-120px)] p-4 md:p-8">
-                <div className="max-w-5xl mx-auto">
-                  {/* Back button */}
-                  <button
-                    onClick={() => wizard.advanceToSection(3)}
-                    className="flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
-                  >
-                    <span>←</span> Back to Goals
-                  </button>
-                  
-                  <ScenarioComparison
-                    result={wizard.wizardState.scenarioResult}
-                    onSelectScenario={(scenario) => {
-                      wizard.selectScenario(scenario);
-                      wizard.advanceToSection(5); // Go to final quote
-                    }}
-                    isLoading={wizard.isGeneratingScenarios}
-                  />
-                  
-                  {/* Option to customize instead */}
-                  <div className="mt-8 text-center">
-                    <button
-                      onClick={() => {
-                        wizard.setWizardState(prev => ({ ...prev, showScenarios: false }));
-                      }}
-                      className="text-gray-400 hover:text-gray-200 text-sm underline"
-                    >
-                      I want to customize my own configuration
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <ConfigurationSection
-                wizardState={wizard.wizardState}
-                setWizardState={wizard.setWizardState}
-                centralizedState={wizard.centralizedState}
-                onBack={() => wizard.advanceToSection(3)}
-                onGenerateQuote={wizard.generateQuote}
-                onShowPowerProfileExplainer={() => setShowPowerProfileExplainer(true)}
-                isHidden={wizard.currentSection !== 4}
-              />
-            )}
 
             {/* Section 5: Quote Results */}
             <QuoteResultsSection
@@ -635,6 +631,37 @@ export default function StreamlinedWizard({
           </div>
         </main>
       </div>
+      
+      {/* Configuration Confirm Modal - Shows before advancing to final quote */}
+      {(() => {
+        const calc = wizard.centralizedState?.calculated || {};
+        const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
+        const batteryKW = wizard.wizardState.batteryKW || 0;
+        const totalConfiguredKW = batteryKW + (wizard.wizardState.solarKW || 0) + (wizard.wizardState.generatorKW || 0);
+        const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 100;
+        
+        return (
+          <ConfigurationConfirmModal
+            isOpen={showConfigConfirmModal}
+            onClose={() => setShowConfigConfirmModal(false)}
+            onConfirm={async () => {
+              setShowConfigConfirmModal(false);
+              // Generate the final quote and advance to Section 5
+              await wizard.generateQuote();
+              wizard.advanceToSection(5);
+            }}
+            onAdjust={() => {
+              setShowConfigConfirmModal(false);
+              // Go back to scenarios to pick a different strategy
+              wizard.advanceToSection(3);
+            }}
+            wizardState={wizard.wizardState}
+            selectedScenario={wizard.wizardState.selectedScenario}
+            powerCoverage={powerCoverage}
+            peakDemandKW={peakDemandKW}
+          />
+        );
+      })()}
       
       {/* Power Profile Explainer Modal */}
       {showPowerProfileExplainer && (
