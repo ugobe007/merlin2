@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // QUOTE RESULTS SECTION (Section 5)
 // Extracted from StreamlinedWizard.tsx - Dec 2025 Refactor
+// Updated Dec 15, 2025: Added Solar Sizing Modal (Universal Pattern)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React, { useState } from 'react';
@@ -20,15 +21,17 @@ import {
   Phone,
   Settings,
   Shield,
+  Sun,
   TrendingDown,
   X,
   Zap,
 } from 'lucide-react';
 import { FACILITY_PRESETS } from '../constants/wizardConstants';
-import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState } from '../types/wizardTypes';
+import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState, PhysicalConstraints } from '../types/wizardTypes';
 import { TrueQuoteBadge, TrueQuoteBanner } from '@/components/shared/TrueQuoteBadge';
 import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
 import { QuoteLineItemWithSource } from '@/components/quotes';
+import { SolarSizingModal } from '../modals';
 import { 
   AUTHORITATIVE_SOURCES, 
   PRICING_BENCHMARKS,
@@ -68,6 +71,7 @@ export function QuoteResultsSection({
 }: QuoteResultsSectionProps) {
   const [showPremiumView, setShowPremiumView] = useState(false);
   const [showRFQModal, setShowRFQModal] = useState(false);
+  const [showSolarSizingModal, setShowSolarSizingModal] = useState(false);
   const [rfqForm, setRfqForm] = useState<RFQFormState>({
     projectName: '',
     customerName: '',
@@ -78,6 +82,18 @@ export function QuoteResultsSection({
   const [rfqSubmitting, setRfqSubmitting] = useState(false);
   const [rfqSuccess, setRfqSuccess] = useState<string | null>(null);
   const [rfqType, setRfqType] = useState<'standard' | 'premium'>('standard');
+  
+  // Handle solar sizing constraints update
+  const handleSolarConstraintsSave = (constraints: PhysicalConstraints) => {
+    setWizardState(prev => ({
+      ...prev,
+      physicalConstraints: constraints,
+      // Cap solar to max if it exceeds the constraint
+      solarKW: constraints.maxSolarKW && prev.solarKW > constraints.maxSolarKW 
+        ? constraints.maxSolarKW 
+        : prev.solarKW,
+    }));
+  };
 
   const handleSubmitRFQ = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,7 +294,10 @@ export function QuoteResultsSection({
                   setShowRFQModal(true);
                 }}
               />
-              <SystemSpecs wizardState={wizardState} />
+              <SystemSpecs 
+                wizardState={wizardState} 
+                onRefineSolar={() => setShowSolarSizingModal(true)}
+              />
             </div>
 
             {/* CTA Buttons */}
@@ -352,6 +371,17 @@ export function QuoteResultsSection({
           onClose={() => { setShowRFQModal(false); setRfqSuccess(null); }}
         />
       )}
+      
+      {/* Solar Sizing Modal (Dec 2025 - Universal Pattern) */}
+      <SolarSizingModal
+        show={showSolarSizingModal}
+        onClose={() => setShowSolarSizingModal(false)}
+        onSave={handleSolarConstraintsSave}
+        currentConstraints={wizardState.physicalConstraints}
+        facilityType={wizardState.selectedIndustry}
+        facilityName={wizardState.industryName}
+        currentSolarKW={wizardState.solarKW}
+      />
     </div>
   );
 }
@@ -590,7 +620,11 @@ function InvestmentSummary({
   );
 }
 
-function SystemSpecs({ wizardState }: { wizardState: WizardState }) {
+function SystemSpecs({ wizardState, onRefineSolar }: { wizardState: WizardState; onRefineSolar?: () => void }) {
+  const hasPhysicalConstraints = wizardState.physicalConstraints?.isRefined;
+  const maxSolarKW = wizardState.physicalConstraints?.maxSolarKW;
+  const isCapped = maxSolarKW && wizardState.solarKW >= maxSolarKW;
+  
   return (
     <div className="bg-white rounded-2xl p-6 border border-blue-200 shadow-md">
       <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg">
@@ -601,7 +635,34 @@ function SystemSpecs({ wizardState }: { wizardState: WizardState }) {
         <div className="flex justify-between"><span className="text-gray-600">Battery Power</span><span className="text-gray-900 font-semibold text-lg">{wizardState.batteryKW.toLocaleString()} kW</span></div>
         <div className="flex justify-between"><span className="text-gray-600">Storage Capacity</span><span className="text-gray-900 font-semibold text-lg">{wizardState.batteryKWh.toLocaleString()} kWh</span></div>
         <div className="flex justify-between"><span className="text-gray-600">Duration</span><span className="text-gray-900 font-semibold text-lg">{wizardState.durationHours} hours</span></div>
-        {wizardState.solarKW > 0 && <div className="flex justify-between"><span className="text-gray-600">Solar Capacity</span><span className="text-amber-600 font-semibold text-lg">{wizardState.solarKW.toLocaleString()} kW</span></div>}
+        
+        {/* Solar with Refine button */}
+        {wizardState.solarKW > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Solar Capacity</span>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 font-semibold text-lg">{wizardState.solarKW.toLocaleString()} kW</span>
+              {onRefineSolar && (
+                <button
+                  onClick={onRefineSolar}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors"
+                >
+                  <Sun className="w-3 h-3" />
+                  Refine
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Show constraint badge if solar was capped */}
+        {hasPhysicalConstraints && isCapped && (
+          <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+            <Sun className="w-4 h-4" />
+            <span>Solar sized to your {wizardState.physicalConstraints.roofSpaceSqFt?.toLocaleString()} sq ft roof</span>
+          </div>
+        )}
+        
         <div className="flex justify-between"><span className="text-gray-600">Location</span><span className="text-gray-900 font-semibold text-lg">{wizardState.state}</span></div>
         <div className="flex justify-between"><span className="text-gray-600">Electricity Rate</span><span className="text-gray-900 font-semibold text-lg">${wizardState.electricityRate.toFixed(2)}/kWh</span></div>
       </div>

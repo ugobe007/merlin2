@@ -14,3 +14,5 @@ export {
 // BESS Configuration Optimizer Phase 3 (Dec 2025)
 export { ScenarioExplainerModal } from './ScenarioExplainerModal';
 export { ConfigurationConfirmModal } from './ConfigurationConfirmModal';
+// Solar Sizing Modal (Dec 2025 - Universal Pattern)
+export { SolarSizingModal } from './SolarSizingModal';
