@@ -15,7 +15,7 @@
  * Updated: Dec 15, 2025 - Added "Smart Sizing" and "Pro Mode" escape hatch
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, Building } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import type { ScenarioConfig, ScenarioGeneratorResult } from '@/services/scenarioGenerator';
@@ -58,6 +58,10 @@ export function ScenarioSection({
   const [selectedType, setSelectedType] = useState<string | null>(
     wizardState.selectedScenario?.type || null
   );
+  
+  // Track if scenarios have been generated for this session
+  // This prevents re-generation when state changes (clicking a scenario card)
+  const scenariosGeneratedRef = useRef(false);
 
   // Show explainer on first visit and auto-generate scenarios
   // ScenarioSection is now Section 4 - comes AFTER Goals
@@ -67,12 +71,26 @@ export function ScenarioSection({
     }
   }, [currentSection, hasSeenExplainer]);
 
-  // Auto-generate scenarios when entering section
+  // Auto-generate scenarios when entering section (ONCE per session)
+  // Dec 16, 2025 - Fixed: Used ref to prevent re-generation when wizardState changes
   useEffect(() => {
-    if (currentSection === 4 && !scenarioResult && !isGenerating) {
+    // Only generate if:
+    // 1. We're on section 4
+    // 2. No scenarios exist yet
+    // 3. Not currently generating
+    // 4. Haven't already generated this session (ref check)
+    if (currentSection === 4 && !scenarioResult && !isGenerating && !scenariosGeneratedRef.current) {
+      scenariosGeneratedRef.current = true;
       onGenerateScenarios();
     }
   }, [currentSection, scenarioResult, isGenerating, onGenerateScenarios]);
+  
+  // Reset the ref when leaving section (so scenarios regenerate if user goes back)
+  useEffect(() => {
+    if (currentSection !== 4) {
+      scenariosGeneratedRef.current = false;
+    }
+  }, [currentSection]);
 
   const handleExplainerContinue = () => {
     setShowExplainer(false);
