@@ -45,8 +45,9 @@ import {
   Calendar,
 } from 'lucide-react';
 import { FACILITY_PRESETS } from '../constants/wizardConstants';
-import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState } from '../types/wizardTypes';
+import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState, PhysicalConstraints } from '../types/wizardTypes';
 import { TrueQuoteModal } from '../modals/StepTransitionModal';
+import { SolarSizingModal } from '../modals/SolarSizingModal';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -77,6 +78,7 @@ export function QuoteResultsSection({
 }: QuoteResultsSectionProps) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const [showRFQModal, setShowRFQModal] = useState(false);
+  const [showSolarSizingModal, setShowSolarSizingModal] = useState(false);
   const [rfqForm, setRfqForm] = useState<RFQFormState>({
     projectName: '',
     customerName: '',
@@ -334,13 +336,29 @@ export function QuoteResultsSection({
                     
                     {/* Solar if applicable */}
                     {wizardState.solarKW > 0 && (
-                      <CostLineItem
-                        icon={Sun}
-                        iconColor="amber"
-                        label="Solar Array"
-                        description={`${formatKW(wizardState.solarKW)} peak capacity`}
-                        amount={Math.round(wizardState.solarKW * 850)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <CostLineItem
+                            icon={Sun}
+                            iconColor="amber"
+                            label="Solar Array"
+                            description={`${formatKW(wizardState.solarKW)} peak capacity${wizardState.physicalConstraints?.isRefined ? ' (constrained)' : ''}`}
+                            amount={Math.round(wizardState.solarKW * 850)}
+                          />
+                        </div>
+                        <button
+                          onClick={() => setShowSolarSizingModal(true)}
+                          className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-600 hover:bg-amber-500/30 rounded-lg transition-colors"
+                          title="Refine solar sizing based on roof space"
+                        >
+                          Refine
+                        </button>
+                        {wizardState.physicalConstraints?.isRefined && (
+                          <span className="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded-full">
+                            Capped
+                          </span>
+                        )}
+                      </div>
                     )}
                     
                     {/* Wind if applicable */}
@@ -605,6 +623,33 @@ export function QuoteResultsSection({
       <TrueQuoteModal 
         isOpen={showTrueQuoteModal} 
         onClose={() => setShowTrueQuoteModal(false)} 
+      />
+
+      {/* Solar Sizing Modal */}
+      <SolarSizingModal
+        show={showSolarSizingModal}
+        onClose={() => setShowSolarSizingModal(false)}
+        currentSolarKW={wizardState.solarKW}
+        facilityType={wizardState.selectedIndustry || 'default'}
+        facilityName={wizardState.industryName || 'Your Facility'}
+        currentConstraints={wizardState.physicalConstraints || {
+          roofSpaceSqFt: null,
+          usableRoofPercent: 60,
+          maxSolarKW: null,
+          groundSpaceAcres: 0,
+          electricalCapacityKW: null,
+          isRefined: false,
+        }}
+        onSave={(constraints: PhysicalConstraints) => {
+          setWizardState(prev => ({
+            ...prev,
+            physicalConstraints: constraints,
+            // Cap solar if needed
+            solarKW: constraints.maxSolarKW && prev.solarKW > constraints.maxSolarKW 
+              ? constraints.maxSolarKW 
+              : prev.solarKW,
+          }));
+        }}
       />
 
       {/* RFQ Modal */}
