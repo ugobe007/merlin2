@@ -32,6 +32,7 @@ import {
   GoalsSection,
   ConfigurationSection,
   QuoteResultsSection,
+  ScenarioComparison,
 } from './sections';
 import PowerProfileTracker from './PowerProfileTracker';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -567,16 +568,54 @@ export default function StreamlinedWizard({
               );
             })()}
 
-            {/* Section 4: System Configuration */}
-            <ConfigurationSection
-              wizardState={wizard.wizardState}
-              setWizardState={wizard.setWizardState}
-              centralizedState={wizard.centralizedState}
-              onBack={() => wizard.advanceToSection(3)}
-              onGenerateQuote={wizard.generateQuote}
-              onShowPowerProfileExplainer={() => setShowPowerProfileExplainer(true)}
-              isHidden={wizard.currentSection !== 4}
-            />
+            {/* Section 4: Scenario Comparison OR Configuration
+                - If showScenarios=true and scenarioResult exists → Show 3 options
+                - Otherwise → Show configuration sliders
+            */}
+            {wizard.currentSection === 4 && wizard.wizardState.showScenarios && wizard.wizardState.scenarioResult ? (
+              <div className="min-h-[calc(100vh-120px)] p-4 md:p-8">
+                <div className="max-w-5xl mx-auto">
+                  {/* Back button */}
+                  <button
+                    onClick={() => wizard.advanceToSection(3)}
+                    className="flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
+                  >
+                    <span>←</span> Back to Goals
+                  </button>
+                  
+                  <ScenarioComparison
+                    result={wizard.wizardState.scenarioResult}
+                    onSelectScenario={(scenario) => {
+                      wizard.selectScenario(scenario);
+                      wizard.advanceToSection(5); // Go to final quote
+                    }}
+                    isLoading={wizard.isGeneratingScenarios}
+                  />
+                  
+                  {/* Option to customize instead */}
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={() => {
+                        wizard.setWizardState(prev => ({ ...prev, showScenarios: false }));
+                      }}
+                      className="text-gray-400 hover:text-gray-200 text-sm underline"
+                    >
+                      I want to customize my own configuration
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ConfigurationSection
+                wizardState={wizard.wizardState}
+                setWizardState={wizard.setWizardState}
+                centralizedState={wizard.centralizedState}
+                onBack={() => wizard.advanceToSection(3)}
+                onGenerateQuote={wizard.generateQuote}
+                onShowPowerProfileExplainer={() => setShowPowerProfileExplainer(true)}
+                isHidden={wizard.currentSection !== 4}
+              />
+            )}
 
             {/* Section 5: Quote Results */}
             <QuoteResultsSection
@@ -592,7 +631,6 @@ export default function StreamlinedWizard({
                 wizard.setCompletedSections([]);
                 wizard.setTotalPoints(0);
               }}
-              onSelectScenario={wizard.selectScenario}
             />
           </div>
         </main>

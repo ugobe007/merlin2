@@ -1041,8 +1041,8 @@ export function useStreamlinedWizard({
       
       completeSection('goals');
       
-      // Navigate to section 5 (Quote Results) to show scenarios
-      advanceToSection(5);
+      // Navigate to section 4 (Scenario Comparison) - NOT section 5
+      advanceToSection(4);
       
     } catch (error) {
       console.error('[generateAllScenarios] Failed:', error);
