@@ -187,6 +187,13 @@ export function useStreamlinedWizard({
   // ═══════════════════════════════════════════════════════════════
   const [wizardState, setWizardState] = useState<WizardState>(DEFAULT_WIZARD_STATE);
   
+  // Ref to access current wizardState in callbacks without triggering re-renders
+  // Dec 16, 2025 - Fixes "Accept button changes values" bug
+  const wizardStateRef = useRef(wizardState);
+  useEffect(() => {
+    wizardStateRef.current = wizardState;
+  }, [wizardState]);
+  
   // ═══════════════════════════════════════════════════════════════
   // USE CASES FROM DATABASE
   // ═══════════════════════════════════════════════════════════════
@@ -1056,29 +1063,32 @@ export function useStreamlinedWizard({
   // CALLBACK: Generate All Scenarios (Dec 2025 - Phase 3)
   // ═══════════════════════════════════════════════════════════════
   // NOTE: This is called from ScenarioSection (Section 3) which now comes BEFORE Goals
+  // Dec 16, 2025 - Fixed: Use refs to prevent callback identity changing when state updates
   const generateAllScenarios = useCallback(async () => {
     console.log('🎯 [generateAllScenarios] Generating 3 scenario configurations...');
     setIsGeneratingScenarios(true);
     setWizardState(prev => ({ ...prev, isCalculating: true }));
     
     try {
-      // Calculate peak demand and daily kWh from wizard state
+      // Use ref to get current state without adding to dependency array
+      // This prevents the callback from regenerating when wizardState changes
+      const currentState = wizardStateRef.current;
       const calc = centralizedState?.calculated || {};
-      const peakDemandKW = wizardState.peakDemandKW || calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
+      const peakDemandKW = currentState.peakDemandKW || calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
       const dailyKWh = peakDemandKW * 10; // Estimate daily consumption
       
       // Build scenario generator input
       const input: ScenarioGeneratorInput = {
         peakDemandKW,
         dailyKWh,
-        industryType: wizardState.selectedIndustry || 'commercial',
-        state: wizardState.state || 'California',
-        electricityRate: wizardState.electricityRate || 0.12,
-        goals: wizardState.goals || [],
-        wantsSolar: wizardState.wantsSolar,
-        wantsGenerator: wizardState.wantsGenerator || wizardState.wantsBackupPower,
-        gridConnection: wizardState.gridConnection === 'off-grid' ? 'off-grid' :
-                        wizardState.gridConnection === 'limited' ? 'limited' : 'on-grid',
+        industryType: currentState.selectedIndustry || 'commercial',
+        state: currentState.state || 'California',
+        electricityRate: currentState.electricityRate || 0.12,
+        goals: currentState.goals || [],
+        wantsSolar: currentState.wantsSolar,
+        wantsGenerator: currentState.wantsGenerator || currentState.wantsBackupPower,
+        gridConnection: currentState.gridConnection === 'off-grid' ? 'off-grid' :
+                        currentState.gridConnection === 'limited' ? 'limited' : 'on-grid',
       };
       
       console.log('🎯 [generateAllScenarios] Input:', input);
@@ -1104,7 +1114,7 @@ export function useStreamlinedWizard({
     } finally {
       setIsGeneratingScenarios(false);
     }
-  }, [wizardState, centralizedState]);
+  }, [centralizedState?.calculated]); // Only recalculate when calculated values change
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Select a Scenario (Dec 2025 - Phase 3)
