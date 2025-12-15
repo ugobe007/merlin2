@@ -4,6 +4,9 @@
 // 
 // Purpose: Handle industry-specific custom questions from database
 // with fallback to facility size presets
+// 
+// Updated Dec 15, 2025: Added Facility Subtype + Equipment Tier selectors
+// per Vineet feedback (Universal Pattern)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
@@ -16,10 +19,12 @@ import {
   Info, 
   Minus, 
   Plus,
-  Sparkles
+  Sparkles,
+  Settings,
+  Star
 } from 'lucide-react';
-import { FACILITY_PRESETS } from '../constants/wizardConstants';
-import type { WizardState, FacilityDetailsSectionProps } from '../types/wizardTypes';
+import { FACILITY_PRESETS, EQUIPMENT_TIER_OPTIONS, FACILITY_SUBTYPES } from '../constants/wizardConstants';
+import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '../types/wizardTypes';
 
 export function FacilityDetailsSection({
   wizardState,
@@ -145,6 +150,99 @@ export function FacilityDetailsSection({
               : 'This helps Merlin size your system accurately'
             }
           </p>
+        </div>
+        
+        {/* ═══════════════════════════════════════════════════════════════════
+            FACILITY SUBTYPE SELECTOR (Dec 2025 - Universal Pattern)
+            First question for all use cases - determines power profile
+            ═══════════════════════════════════════════════════════════════════ */}
+        {(() => {
+          const subtypes = FACILITY_SUBTYPES[wizardState.selectedIndustry] || FACILITY_SUBTYPES['default'];
+          // Only show if there are meaningful subtypes (more than just "standard")
+          if (subtypes.length <= 1 && subtypes[0]?.id === 'standard') return null;
+          
+          return (
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-amber-200 shadow-xl mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-amber-700">What type of {wizardState.industryName || 'facility'}?</h3>
+                  <p className="text-sm text-gray-500">This affects power requirements and sizing</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {subtypes.map((subtype) => (
+                  <button
+                    key={subtype.id}
+                    onClick={() => setWizardState(prev => ({ ...prev, facilitySubtype: subtype.id }))}
+                    className={`p-4 rounded-xl text-left transition-all ${
+                      wizardState.facilitySubtype === subtype.id
+                        ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                        : 'bg-amber-50 border-2 border-amber-200 text-gray-700 hover:border-amber-400 hover:bg-amber-100'
+                    }`}
+                  >
+                    <div className="font-bold">{subtype.label}</div>
+                    <div className={`text-sm mt-1 ${wizardState.facilitySubtype === subtype.id ? 'text-amber-100' : 'text-gray-500'}`}>
+                      {subtype.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* ═══════════════════════════════════════════════════════════════════
+            EQUIPMENT TIER SELECTOR (Dec 2025 - Simplified Two-Tier System)
+            Standard vs Premium - per Vineet feedback
+            ═══════════════════════════════════════════════════════════════════ */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-indigo-200 shadow-xl mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+              <Settings className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-indigo-700">Equipment Grade</h3>
+              <p className="text-sm text-gray-500">Standard meets needs; Premium maximizes efficiency</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {EQUIPMENT_TIER_OPTIONS.map((tier) => (
+              <button
+                key={tier.id}
+                onClick={() => setWizardState(prev => ({ ...prev, equipmentTier: tier.id as EquipmentTier }))}
+                className={`p-5 rounded-xl text-left transition-all relative overflow-hidden ${
+                  wizardState.equipmentTier === tier.id
+                    ? tier.id === 'premium'
+                      ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30'
+                    : 'bg-gray-50 border-2 border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50'
+                }`}
+              >
+                {tier.id === 'premium' && wizardState.equipmentTier !== 'premium' && (
+                  <div className="absolute top-2 right-2">
+                    <Star className="w-4 h-4 text-amber-500" />
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{tier.icon}</span>
+                  <div className="font-bold">{tier.label}</div>
+                </div>
+                <div className={`text-sm mt-2 ${wizardState.equipmentTier === tier.id ? 'text-white/90' : 'text-gray-500'}`}>
+                  {tier.description}
+                </div>
+                {tier.id === 'premium' && (
+                  <div className={`text-xs mt-2 font-medium ${wizardState.equipmentTier === tier.id ? 'text-white/80' : 'text-amber-600'}`}>
+                    +30% capacity, +25% cost
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
         
         {/* Dynamic Custom Questions from Database */}

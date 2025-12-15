@@ -48,6 +48,25 @@ export interface EstimatedCost {
   total: number;
 }
 
+// ============================================
+// EQUIPMENT TIER TYPE
+// ============================================
+
+export type EquipmentTier = 'standard' | 'premium';
+
+// ============================================
+// PHYSICAL CONSTRAINTS
+// ============================================
+
+export interface PhysicalConstraints {
+  roofSpaceSqFt: number | null;      // Available roof space for solar
+  usableRoofPercent: number;         // % of roof usable (default 60%)
+  maxSolarKW: number | null;         // Calculated max solar (auto or user-specified)
+  groundSpaceAcres: number | null;   // Available ground space for ground-mount solar/wind
+  electricalCapacityKW: number | null; // Max interconnection capacity
+  isRefined: boolean;                // User has explicitly refined these values
+}
+
 export interface WizardState {
   // Section 1: Location
   zipCode: string;
@@ -64,6 +83,18 @@ export interface WizardState {
   customQuestions: any[]; // Fetched from custom_questions table
   useCaseData: Record<string, any>; // Answers to custom questions
   facilitySize: number; // sq ft or rooms or kW depending on industry
+  
+  // NEW: Facility Subtype (Dec 2025 - Universal Pattern)
+  // First question for all use cases - determines power profile multiplier
+  facilitySubtype: string; // e.g., 'tunnel', 'fullservice', 'selfservice' for car wash
+  
+  // NEW: Equipment Tier (Dec 2025 - Simplified from per-equipment selection)
+  // Two-tier system: Standard = industry baseline, Premium = high-performance
+  equipmentTier: EquipmentTier;
+  
+  // NEW: Physical Constraints (Dec 2025 - TrueQuote™ requirement)
+  // Prevents recommending solar that won't fit on the building
+  physicalConstraints: PhysicalConstraints;
   
   // Section 4: Goals
   goals: string[];
@@ -274,6 +305,23 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
   customQuestions: [],
   useCaseData: {},
   facilitySize: 25000,
+  
+  // NEW: Facility Subtype (Dec 2025)
+  facilitySubtype: '',  // Will be set by first question in FacilityDetailsSection
+  
+  // NEW: Equipment Tier (Dec 2025) - Standard by default
+  equipmentTier: 'standard',
+  
+  // NEW: Physical Constraints (Dec 2025)
+  physicalConstraints: {
+    roofSpaceSqFt: null,
+    usableRoofPercent: 60,  // Industry standard: ~60% of roof is usable
+    maxSolarKW: null,
+    groundSpaceAcres: null,
+    electricalCapacityKW: null,
+    isRefined: false,
+  },
+  
   goals: [],
   wantsSolar: false,
   wantsWind: false,

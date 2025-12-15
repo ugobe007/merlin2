@@ -33,6 +33,106 @@ export const GOAL_OPTIONS: GoalOption[] = [
 ];
 
 // ============================================
+// EQUIPMENT TIER OPTIONS (Dec 2025)
+// Simplified two-tier system per Vineet feedback
+// ============================================
+
+export interface EquipmentTierOption {
+  id: 'standard' | 'premium';
+  label: string;
+  description: string;
+  powerMultiplier: number;  // Applied to power calculations
+  costMultiplier: number;   // Applied to equipment costs
+  icon: string;             // Emoji for quick visual
+}
+
+export const EQUIPMENT_TIER_OPTIONS: EquipmentTierOption[] = [
+  { 
+    id: 'standard', 
+    label: 'Standard Equipment', 
+    description: 'Industry-standard, reliable equipment', 
+    powerMultiplier: 1.0,
+    costMultiplier: 1.0,
+    icon: '⚙️'
+  },
+  { 
+    id: 'premium', 
+    label: 'Premium Equipment', 
+    description: 'High-performance, energy-efficient', 
+    powerMultiplier: 1.3,  // 30% more power capacity
+    costMultiplier: 1.25,  // 25% higher cost
+    icon: '⭐'
+  },
+];
+
+// ============================================
+// FACILITY SUBTYPES BY INDUSTRY (Dec 2025)
+// First question for all use cases - determines power profile
+// ============================================
+
+export interface FacilitySubtype {
+  id: string;
+  label: string;
+  description: string;
+  powerMultiplier: number;  // Relative to industry baseline
+}
+
+export const FACILITY_SUBTYPES: Record<string, FacilitySubtype[]> = {
+  'car-wash': [
+    { id: 'tunnel', label: 'Express Tunnel', description: 'High-volume automated tunnel (30-60 cars/hr)', powerMultiplier: 1.0 },
+    { id: 'fullservice', label: 'Full-Service', description: 'Tunnel + detailing (50-100 cars/hr)', powerMultiplier: 1.2 },
+    { id: 'inbay', label: 'In-Bay Automatic', description: 'Single bay automatic (6-10 cars/hr)', powerMultiplier: 0.6 },
+    { id: 'selfservice', label: 'Self-Service', description: 'Customer-operated bays (2-4 per bay/hr)', powerMultiplier: 0.15 },
+  ],
+  'hotel': [
+    { id: 'economy', label: 'Economy/Budget', description: 'Basic amenities, limited services', powerMultiplier: 0.6 },
+    { id: 'midscale', label: 'Midscale', description: 'Standard amenities, breakfast included', powerMultiplier: 0.8 },
+    { id: 'upscale', label: 'Upscale', description: 'Full amenities, restaurant, pool', powerMultiplier: 1.0 },
+    { id: 'luxury', label: 'Luxury Resort', description: 'Premium amenities, spa, multiple restaurants', powerMultiplier: 1.4 },
+  ],
+  'ev-charging': [
+    { id: 'destination', label: 'Destination Charging', description: 'L2 chargers for hotels, retail (7-22 kW)', powerMultiplier: 0.5 },
+    { id: 'fasthub', label: 'Fast Charging Hub', description: 'DCFC for highway, retail (50-150 kW)', powerMultiplier: 1.0 },
+    { id: 'ultrafast', label: 'Ultra-Fast Hub', description: 'HPC for highway, fleet (250-350 kW)', powerMultiplier: 1.5 },
+    { id: 'fleet', label: 'Fleet Depot', description: 'Mixed charging for fleet vehicles', powerMultiplier: 1.2 },
+  ],
+  'hospital': [
+    { id: 'criticalcare', label: 'Critical Care', description: 'ICU, surgical, emergency services', powerMultiplier: 1.5 },
+    { id: 'general', label: 'General Hospital', description: 'Standard inpatient/outpatient services', powerMultiplier: 1.0 },
+    { id: 'outpatient', label: 'Outpatient Clinic', description: 'Clinic, urgent care, no inpatient', powerMultiplier: 0.5 },
+  ],
+  'office': [
+    { id: 'classa', label: 'Class A', description: 'Premium high-rise, full amenities', powerMultiplier: 1.2 },
+    { id: 'classb', label: 'Class B', description: 'Standard office space', powerMultiplier: 1.0 },
+    { id: 'classc', label: 'Class C', description: 'Basic office, minimal amenities', powerMultiplier: 0.7 },
+  ],
+  'data-center': [
+    { id: 'tier4', label: 'Tier IV', description: 'Fault tolerant, 99.995% uptime', powerMultiplier: 1.5 },
+    { id: 'tier3', label: 'Tier III', description: 'Concurrent maintainable, 99.982% uptime', powerMultiplier: 1.0 },
+    { id: 'tier2', label: 'Tier II', description: 'Redundant capacity, 99.749% uptime', powerMultiplier: 0.6 },
+  ],
+  'retail': [
+    { id: 'bigbox', label: 'Big Box', description: 'Large format retail (50K+ sq ft)', powerMultiplier: 1.3 },
+    { id: 'stripmall', label: 'Strip Mall', description: 'Multi-tenant retail center', powerMultiplier: 1.0 },
+    { id: 'standalone', label: 'Standalone Store', description: 'Single-tenant retail', powerMultiplier: 0.7 },
+  ],
+  'manufacturing': [
+    { id: 'heavy', label: 'Heavy Manufacturing', description: 'Foundry, steel, heavy machinery', powerMultiplier: 2.0 },
+    { id: 'medium', label: 'Medium Manufacturing', description: 'Assembly, fabrication', powerMultiplier: 1.0 },
+    { id: 'light', label: 'Light Manufacturing', description: 'Packaging, light assembly', powerMultiplier: 0.4 },
+  ],
+  'warehouse': [
+    { id: 'coldchain', label: 'Cold Storage', description: 'Refrigerated/frozen warehouse', powerMultiplier: 2.0 },
+    { id: 'distribution', label: 'Distribution Center', description: 'High-volume logistics, automation', powerMultiplier: 1.0 },
+    { id: 'storage', label: 'Standard Warehouse', description: 'Basic storage facility', powerMultiplier: 0.5 },
+  ],
+  // Default for industries without specific subtypes
+  'default': [
+    { id: 'standard', label: 'Standard', description: 'Typical facility of this type', powerMultiplier: 1.0 },
+  ],
+};
+
+// ============================================
 // FACILITY SIZE PRESETS BY INDUSTRY
 // ============================================
 
