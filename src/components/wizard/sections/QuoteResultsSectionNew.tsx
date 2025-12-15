@@ -45,11 +45,12 @@ import {
   Calendar,
 } from 'lucide-react';
 import { FACILITY_PRESETS } from '../constants/wizardConstants';
-import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState } from '../types/wizardTypes';
+import type { WizardState, PremiumConfiguration, PremiumComparison, RFQFormState, ScenarioConfig, ScenarioGeneratorResult } from '../types/wizardTypes';
 import { TrueQuoteModal } from '../modals/StepTransitionModal';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
 import merlinImage from '@/assets/images/new_Merlin.png';
+import { ScenarioComparison } from './ScenarioComparison';
 
 interface QuoteResultsSectionProps {
   wizardState: WizardState;
@@ -60,6 +61,8 @@ interface QuoteResultsSectionProps {
   premiumComparison: PremiumComparison | null;
   onBack: () => void;
   onStartNew: () => void;
+  /** Callback when user selects a scenario (Dec 2025 - Phase 3) */
+  onSelectScenario?: (scenario: ScenarioConfig) => void;
 }
 
 export function QuoteResultsSection({
@@ -71,6 +74,7 @@ export function QuoteResultsSection({
   premiumComparison,
   onBack,
   onStartNew,
+  onSelectScenario,
 }: QuoteResultsSectionProps) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const [showRFQModal, setShowRFQModal] = useState(false);
@@ -181,12 +185,26 @@ export function QuoteResultsSection({
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Configuration
+            {wizardState.showScenarios ? 'Back to Goals' : 'Back to Configuration'}
           </button>
-          <div className="text-sm text-gray-400">Final Quote</div>
+          <div className="text-sm text-gray-400">
+            {wizardState.showScenarios ? 'Choose Your Configuration' : 'Final Quote'}
+          </div>
         </div>
 
-        {wizardState.quoteResult ? (
+        {/* ════════════════════════════════════════════════════════════════
+            SCENARIO COMPARISON VIEW (Dec 2025 - Phase 3)
+            Shows 3 options: Savings / Balanced / Resilient
+        ════════════════════════════════════════════════════════════════ */}
+        {wizardState.showScenarios && wizardState.scenarioResult && onSelectScenario ? (
+          <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+            <ScenarioComparison
+              result={wizardState.scenarioResult}
+              onSelectScenario={onSelectScenario}
+              isLoading={false}
+            />
+          </div>
+        ) : wizardState.quoteResult ? (
           <div className="space-y-6">
             
             {/* ════════════════════════════════════════════════════════════════

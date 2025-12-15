@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { WizardState, RFQFormState, PremiumComparison } from '../types/wizardTypes';
+import type { WizardState, RFQFormState, PremiumComparison, ScenarioConfig } from '../types/wizardTypes';
 import { DEFAULT_WIZARD_STATE } from '../types/wizardTypes';
 import { 
   FACILITY_PRESETS, 
@@ -23,6 +23,7 @@ import {
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCaseService } from '@/services/useCaseService';
+import { generateScenarios, type ScenarioGeneratorInput } from '@/services/scenarioGenerator';
 import { 
   getGeographicRecommendations, 
   getStateFromZipCode,
@@ -107,6 +108,9 @@ export interface UseStreamlinedWizardReturn {
   setShowAcceptCustomizeModal: React.Dispatch<React.SetStateAction<boolean>>;
   userQuoteChoice: 'accept' | 'customize' | null;
   
+  // Scenario comparison (Dec 2025 - Phase 3)
+  isGeneratingScenarios: boolean;
+  
   // Callbacks
   completeSection: (sectionId: string) => void;
   advanceToSection: (index: number) => void;
@@ -115,6 +119,8 @@ export interface UseStreamlinedWizardReturn {
   handleInternationalSelect: (regionCode: string) => void;
   handleIndustrySelect: (slug: string, name: string, useCaseId?: string) => Promise<void>;
   generateQuote: () => Promise<void>;
+  generateAllScenarios: () => Promise<void>;
+  selectScenario: (scenario: ScenarioConfig) => void;
   generatePremiumQuote: () => void;
   handleAcceptAI: () => void;
   handleCustomize: () => void;
@@ -197,6 +203,11 @@ export function useStreamlinedWizard({
   // ═══════════════════════════════════════════════════════════════
   const [showAcceptCustomizeModal, setShowAcceptCustomizeModal] = useState(false);
   const [userQuoteChoice, setUserQuoteChoice] = useState<'accept' | 'customize' | null>(null);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // SCENARIO COMPARISON STATE (Dec 2025 - Phase 3)
+  // ═══════════════════════════════════════════════════════════════
+  const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false);
   
   // ═══════════════════════════════════════════════════════════════
   // CENTRALIZED STATE INTEGRATION
@@ -985,6 +996,88 @@ export function useStreamlinedWizard({
     advanceToSection(4);
   }, [advanceToSection]);
   
+  // ═══════════════════════════════════════════════════════════════
+  // CALLBACK: Generate All Scenarios (Dec 2025 - Phase 3)
+  // ═══════════════════════════════════════════════════════════════
+  const generateAllScenarios = useCallback(async () => {
+    console.log('🎯 [generateAllScenarios] Generating 3 scenario configurations...');
+    setIsGeneratingScenarios(true);
+    setWizardState(prev => ({ ...prev, isCalculating: true }));
+    
+    try {
+      // Calculate peak demand and daily kWh from wizard state
+      const calc = centralizedState?.calculated || {};
+      const peakDemandKW = wizardState.peakDemandKW || calc.recommendedBatteryKW || 500;
+      const dailyKWh = peakDemandKW * 10; // Estimate daily consumption
+      
+      // Build scenario generator input
+      const input: ScenarioGeneratorInput = {
+        peakDemandKW,
+        dailyKWh,
+        industryType: wizardState.selectedIndustry || 'commercial',
+        state: wizardState.state || 'California',
+        electricityRate: wizardState.electricityRate || 0.12,
+        goals: wizardState.goals || [],
+        wantsSolar: wizardState.wantsSolar,
+        wantsGenerator: wizardState.wantsGenerator || wizardState.wantsBackupPower,
+        gridConnection: wizardState.gridConnection === 'off-grid' ? 'off-grid' :
+                        wizardState.gridConnection === 'limited' ? 'limited' : 'on-grid',
+      };
+      
+      console.log('🎯 [generateAllScenarios] Input:', input);
+      
+      // Generate 3 scenarios
+      const result = await generateScenarios(input);
+      
+      console.log('🎯 [generateAllScenarios] Generated scenarios:', result);
+      
+      // Update wizard state with scenarios
+      setWizardState(prev => ({
+        ...prev,
+        scenarioResult: result,
+        showScenarios: true,
+        isCalculating: false,
+      }));
+      
+      completeSection('goals');
+      
+      // Navigate to section 5 (Quote Results) to show scenarios
+      advanceToSection(5);
+      
+    } catch (error) {
+      console.error('[generateAllScenarios] Failed:', error);
+      alert('Failed to generate scenarios. Please try again.');
+      setWizardState(prev => ({ ...prev, isCalculating: false }));
+    } finally {
+      setIsGeneratingScenarios(false);
+    }
+  }, [wizardState, centralizedState, completeSection, advanceToSection]);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // CALLBACK: Select a Scenario (Dec 2025 - Phase 3)
+  // ═══════════════════════════════════════════════════════════════
+  const selectScenario = useCallback((scenario: ScenarioConfig) => {
+    console.log('✅ [selectScenario] User selected:', scenario.name);
+    
+    // Update wizard state with selected scenario
+    setWizardState(prev => ({
+      ...prev,
+      selectedScenario: scenario,
+      showScenarios: false,
+      // Populate equipment values from scenario
+      batteryKW: scenario.batteryKW,
+      batteryKWh: scenario.batteryKWh,
+      durationHours: scenario.durationHours,
+      solarKW: scenario.solarKW,
+      generatorKW: scenario.generatorKW,
+      // Use the scenario's quote result
+      quoteResult: scenario.quoteResult,
+    }));
+    
+    // Stay on section 5 but switch to detailed view
+    completeSection('quote');
+  }, [completeSection]);
+  
   const generatePremiumQuote = useCallback(() => {
     if (!wizardState.quoteResult) return;
     
@@ -1071,6 +1164,9 @@ export function useStreamlinedWizard({
     setShowAcceptCustomizeModal,
     userQuoteChoice,
     
+    // Scenario comparison (Dec 2025 - Phase 3)
+    isGeneratingScenarios,
+    
     // Callbacks
     completeSection,
     advanceToSection,
@@ -1079,6 +1175,8 @@ export function useStreamlinedWizard({
     handleInternationalSelect,
     handleIndustrySelect,
     generateQuote,
+    generateAllScenarios,
+    selectScenario,
     generatePremiumQuote,
     handleAcceptAI,
     handleCustomize,
