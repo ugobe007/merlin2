@@ -7,7 +7,7 @@
  */
 
 import {
-  TrendingDown, Shield, Leaf, Zap, Gauge,
+  TrendingDown, Shield, Leaf, Zap, Gauge, Banknote,
   Droplets, Car, Hotel, Battery, Building2, Settings, DollarSign
 } from 'lucide-react';
 import type React from 'react';
@@ -29,6 +29,7 @@ export const GOAL_OPTIONS: GoalOption[] = [
   { id: 'sustainability', label: 'Sustainability', icon: Leaf, description: 'Meet ESG goals & reduce carbon footprint' },
   { id: 'grid-independence', label: 'Grid Independence', icon: Zap, description: 'Reduce reliance on utility grid' },
   { id: 'demand-management', label: 'Peak Shaving', icon: Gauge, description: 'Flatten peak demand spikes' },
+  { id: 'generate-revenue', label: 'Generate Revenue', icon: Banknote, description: 'Sell excess energy back to utility' },
 ];
 
 // ============================================

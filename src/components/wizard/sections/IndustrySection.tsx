@@ -57,7 +57,7 @@ export function IndustrySection({
           <div className="text-sm text-gray-400">Step 2 of 6</div>
         </div>
         
-        {/* Header */}
+        {/* Header - SIMPLIFIED per Vineet feedback */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-5 py-2 mb-4">
             <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -65,10 +65,10 @@ export function IndustrySection({
           </div>
           
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            What type of <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-300">facility</span>?
+            Select your industry
           </h2>
           <p className="text-gray-300">
-            Select your industry for tailored recommendations
+            We'll customize your quote based on your facility type
           </p>
         </div>
         
