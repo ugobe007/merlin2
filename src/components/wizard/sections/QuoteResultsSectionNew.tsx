@@ -60,6 +60,8 @@ interface QuoteResultsSectionProps {
   premiumComparison: PremiumComparison | null;
   onBack: () => void;
   onStartNew: () => void;
+  /** Navigate to Advanced Quote Builder for pro users */
+  onOpenAdvanced?: () => void;
 }
 
 export function QuoteResultsSection({
@@ -71,6 +73,7 @@ export function QuoteResultsSection({
   premiumComparison,
   onBack,
   onStartNew,
+  onOpenAdvanced,
 }: QuoteResultsSectionProps) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const [showRFQModal, setShowRFQModal] = useState(false);
@@ -571,6 +574,22 @@ export function QuoteResultsSection({
               <p className="text-gray-500 text-xs mt-2">
                 Quote Reference: {wizardState.selectedIndustry?.toUpperCase()}-{Date.now().toString(36).toUpperCase()}
               </p>
+              
+              {/* Pro Mode Link */}
+              {onOpenAdvanced && (
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <p className="text-gray-500 text-sm mb-2">
+                    Want to customize every detail?
+                  </p>
+                  <button
+                    onClick={onOpenAdvanced}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Open Advanced Quote Builder
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (

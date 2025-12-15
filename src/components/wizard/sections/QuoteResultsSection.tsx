@@ -51,6 +51,8 @@ interface QuoteResultsSectionProps {
   premiumComparison: PremiumComparison | null;
   onBack: () => void;
   onStartNew: () => void;
+  /** Navigate to Advanced Quote Builder for pro users */
+  onOpenAdvanced?: () => void;
 }
 
 export function QuoteResultsSection({
@@ -62,6 +64,7 @@ export function QuoteResultsSection({
   premiumComparison,
   onBack,
   onStartNew,
+  onOpenAdvanced,
 }: QuoteResultsSectionProps) {
   const [showPremiumView, setShowPremiumView] = useState(false);
   const [showRFQModal, setShowRFQModal] = useState(false);
