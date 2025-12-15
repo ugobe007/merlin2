@@ -427,6 +427,72 @@ export const BESS_POWER_RATIOS = {
 };
 
 /**
+ * Industry-Specific BESS Sizing Ratios
+ * 
+ * Different industries have different optimal BESS-to-peak ratios based on:
+ * - Load profile variability (hotels spike at check-in/check-out)
+ * - Critical load requirements (hospitals need higher coverage)
+ * - Revenue model (data centers = uptime, hotels = guest experience)
+ * 
+ * | Industry          | Ratio | Rationale                              |
+ * |-------------------|-------|----------------------------------------|
+ * | hotel             | 0.50  | Peak shaving for check-in/out spikes   |
+ * | hospital          | 0.60  | Higher coverage for life safety        |
+ * | data-center       | 0.70  | N+1 redundancy expectations            |
+ * | manufacturing     | 0.45  | Process continuity, predictable loads  |
+ * | warehouse         | 0.35  | Low criticality, simple loads          |
+ * | retail            | 0.40  | Standard peak shaving                  |
+ * | car-wash          | 0.45  | High peak spikes, short duration       |
+ * | ev-charging       | 0.55  | Demand charge mitigation critical      |
+ * | casino            | 0.55  | 24/7 operations, gaming floor peaks    |
+ * | airport           | 0.50  | Mixed loads, security requirements     |
+ * | office            | 0.40  | Standard commercial profile            |
+ * 
+ * Source: Industry load profiles, ASHRAE data, Merlin customer data
+ */
+export const INDUSTRY_BESS_RATIOS: Record<string, number> = {
+  // Hospitality & Lodging
+  'hotel': 0.50,           // Check-in/check-out peaks, amenity spikes
+  'casino': 0.55,          // 24/7 gaming floor, security systems
+  
+  // Healthcare & Critical
+  'hospital': 0.60,        // Life safety systems, higher coverage
+  'data-center': 0.70,     // Uptime critical, N+1 redundancy
+  
+  // Industrial
+  'manufacturing': 0.45,   // Process loads, shift patterns
+  'warehouse': 0.35,       // Low criticality, refrigeration if any
+  'cold-storage': 0.50,    // Temperature-critical inventory
+  
+  // Commercial
+  'retail': 0.40,          // Standard peak shaving
+  'shopping-center': 0.45, // Larger peaks from anchor stores
+  'office': 0.40,          // Standard commercial profile
+  
+  // Transportation & Automotive
+  'car-wash': 0.45,        // High peak spikes, short wash cycles
+  'ev-charging': 0.55,     // Demand charge mitigation critical
+  'gas-station': 0.40,     // Modest peaks, refrigeration
+  'airport': 0.50,         // Mixed critical loads
+  
+  // Education & Institutional
+  'college': 0.45,         // Varied schedules, some critical research
+  'government': 0.50,      // Essential services
+  
+  // Agriculture
+  'agriculture': 0.40,     // Irrigation pumps, seasonal
+  'agricultural': 0.40,    // Alias
+  'indoor-farm': 0.50,     // Climate control critical
+  
+  // Residential
+  'apartment': 0.35,       // Common areas, basic coverage
+  'residential': 0.30,     // Minimal critical
+  
+  // Default
+  'default': 0.40,         // Standard peak shaving
+};
+
+/**
  * Critical Load Percentages by Industry
  * 
  * Generator sizing = criticalLoad × 1.25 (reserve margin)
@@ -552,6 +618,18 @@ export const SIZING_VALIDATION = {
 export function getBESSPowerRatio(useCase: string): number {
   return BESS_POWER_RATIOS[useCase as keyof typeof BESS_POWER_RATIOS] 
     || BESS_POWER_RATIOS.default;
+}
+
+/**
+ * Get the industry-specific BESS sizing ratio
+ * @param industryType - Industry slug (e.g., 'hotel', 'data-center')
+ * @returns Optimal BESS-to-peak demand ratio for the industry
+ */
+export function getIndustryBESSRatio(industryType: string): number {
+  // Normalize slug (handle both dash and underscore variants)
+  const normalized = industryType.toLowerCase().replace(/_/g, '-');
+  return INDUSTRY_BESS_RATIOS[normalized] 
+    || INDUSTRY_BESS_RATIOS['default'];
 }
 
 /**

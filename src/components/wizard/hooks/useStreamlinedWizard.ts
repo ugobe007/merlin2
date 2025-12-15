@@ -15,7 +15,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { WizardState, RFQFormState, PremiumComparison } from '../types/wizardTypes';
 import { DEFAULT_WIZARD_STATE } from '../types/wizardTypes';
-import { FACILITY_PRESETS, INTERNATIONAL_REGIONS } from '../constants/wizardConstants';
+import { 
+  FACILITY_PRESETS, 
+  INTERNATIONAL_REGIONS, 
+  getIndustryBESSRatio 
+} from '../constants/wizardConstants';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { useCaseService } from '@/services/useCaseService';
@@ -464,8 +468,10 @@ export function useStreamlinedWizard({
       const dailyKWh = peakDemandKW * 24 * 0.4;
       const monthlyKWh = dailyKWh * 30;
       
-      // Calculate recommended BESS size (70% of peak)
-      const targetReduction = 0.7;
+      // Calculate recommended BESS size using INDUSTRY-SPECIFIC ratio
+      // Dec 2025: Uses getIndustryBESSRatio() instead of hardcoded 0.70
+      // Hotel=0.50, Hospital=0.60, Data Center=0.70, etc.
+      const targetReduction = getIndustryBESSRatio(wizardState.selectedIndustry);
       const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
       const recommendedBatteryKWh = recommendedBatteryKW * 4;
       
@@ -622,8 +628,10 @@ export function useStreamlinedWizard({
         monthlyKWh = data.monthlyKWh || dailyKWh * 30;
       }
       
-      // Calculate recommended BESS size (70% of peak for peak shaving)
-      const targetReduction = 0.7;
+      // Calculate recommended BESS size using INDUSTRY-SPECIFIC ratio
+      // Dec 2025: Uses getIndustryBESSRatio() instead of hardcoded 0.70
+      // Hotel=0.50, Hospital=0.60, Data Center=0.70, etc.
+      const targetReduction = getIndustryBESSRatio(wizardState.selectedIndustry);
       const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
       const recommendedBatteryKWh = recommendedBatteryKW * 4; // 4-hour duration
       
