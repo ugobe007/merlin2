@@ -55,7 +55,7 @@ export function WelcomeLocationSection({
       className={`min-h-[calc(100vh-120px)] p-8 ${isHidden ? 'hidden' : ''}`}
     >
       <div className="max-w-4xl mx-auto">
-        {/* Welcome Hero */}
+        {/* Welcome Hero - SIMPLIFIED per Vineet feedback */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-purple-100 border border-purple-300 rounded-full px-5 py-2 mb-6">
             <Sparkles className="w-5 h-5 text-purple-600" />
@@ -63,15 +63,38 @@ export function WelcomeLocationSection({
           </div>
           
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600">Merlin</span>
+            Start Saving on Energy
           </h1>
           
           <p className="text-xl text-purple-200 mb-2">
-            Let's build your PERFECT energy solution and start SAVING!!!
+            Get a custom energy storage quote in minutes
           </p>
-          <p className="text-gray-400">
-            Just answer a few questions • Get instant results • No credit card required
-          </p>
+        </div>
+        
+        {/* USA / INTERNATIONAL TOGGLE - PROMINENT (Vineet feedback) */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => setShowInternational(false)}
+            className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
+              !showInternational 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
+            }`}
+          >
+            <span className="text-2xl">🇺🇸</span>
+            United States
+          </button>
+          <button
+            onClick={() => setShowInternational(true)}
+            className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
+              showInternational 
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg scale-105'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
+            }`}
+          >
+            <Globe className="w-6 h-6" />
+            International
+          </button>
         </div>
         
         {/* Location Input Card */}
@@ -81,22 +104,18 @@ export function WelcomeLocationSection({
               <MapPin className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Where's your project?</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                {showInternational ? 'Select your country' : "Where's your project?"}
+              </h2>
               <p className="text-sm text-gray-500">We'll customize recommendations for your area</p>
             </div>
             
-            {/* International Toggle */}
-            <button
-              onClick={() => setShowInternational(!showInternational)}
-              className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                showInternational 
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-              }`}
-            >
-              <Globe className="w-4 h-4" />
-              {showInternational ? 'Show US States' : 'International'}
-            </button>
+            {/* Selected Location Display - PROMINENT (Vineet feedback) */}
+            {wizardState.state && (
+              <div className="ml-auto px-4 py-2 bg-emerald-100 border-2 border-emerald-400 rounded-xl">
+                <p className="text-emerald-800 font-bold text-lg">{wizardState.state}</p>
+              </div>
+            )}
           </div>
           
           {!showInternational ? (
