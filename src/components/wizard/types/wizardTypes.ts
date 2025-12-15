@@ -111,6 +111,9 @@ export interface WizardState {
   
   // Real-time cost estimates
   estimatedCost: EstimatedCost;
+  
+  // Daily consumption (calculated from facility details, used by scenario generator)
+  dailyKWh: number;
 }
 
 // ============================================
@@ -308,6 +311,8 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
     installation: 0,
     total: 0,
   },
+  // Phase 3 Scenario Generator fields (Dec 2025)
+  dailyKWh: 0,
 };
 
 export const DEFAULT_RFQ_FORM: RFQFormState = {
