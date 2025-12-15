@@ -493,6 +493,536 @@ export const INDUSTRY_BESS_RATIOS: Record<string, number> = {
 };
 
 /**
+ * Industry Peak Load Distribution by Time Period
+ * 
+ * Different industries have different load profiles throughout the day.
+ * This determines what % of daily energy consumption occurs during peak vs off-peak.
+ * 
+ * Used for:
+ * - More accurate arbitrage savings calculations
+ * - Optimal BESS discharge scheduling
+ * - TOU rate impact analysis
+ * 
+ * | Industry          | Peak % | Peak Hours    | Notes                           |
+ * |-------------------|--------|---------------|----------------------------------|
+ * | hotel             | 0.55   | Evening       | Check-in/dinner/evening amenities|
+ * | office            | 0.70   | Daytime       | 9-5 operations, lunch HVAC peak  |
+ * | hospital          | 0.60   | Daytime       | Surgery schedules, consistent    |
+ * | data-center       | 0.50   | 24/7          | Flat load profile                |
+ * | manufacturing     | 0.65   | Shift-based   | First/second shift peaks         |
+ * | retail            | 0.60   | Afternoon     | Shopping hours 12-8pm            |
+ * | restaurant        | 0.70   | Meal times    | Lunch + dinner peaks             |
+ * | warehouse         | 0.55   | Morning       | Shipping/receiving activity      |
+ * | ev-charging       | 0.45   | Variable      | Overnight possible, fleet varies |
+ * | car-wash          | 0.75   | Midday        | Weekend/lunch peaks              |
+ * | airport           | 0.55   | Variable      | Flight schedule dependent        |
+ * | casino            | 0.50   | 24/7          | Evening slightly higher          |
+ * 
+ * Source: CBECS 2018, ASHRAE load profiles, industry surveys
+ */
+export interface IndustryLoadProfile {
+  peakLoadFactor: number;     // % of daily energy during peak hours (0-1)
+  typicalPeakStart: number;   // Hour of day (0-23) when peak typically starts
+  typicalPeakEnd: number;     // Hour of day (0-23) when peak typically ends
+  loadShape: 'daytime' | 'evening' | 'flat' | 'variable';
+  description: string;
+}
+
+export const INDUSTRY_LOAD_PROFILES: Record<string, IndustryLoadProfile> = {
+  // Evening-heavy loads
+  'hotel': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 16, 
+    typicalPeakEnd: 22, 
+    loadShape: 'evening',
+    description: 'Evening peak: check-in, dinner, amenities'
+  },
+  'casino': { 
+    peakLoadFactor: 0.50, 
+    typicalPeakStart: 18, 
+    typicalPeakEnd: 2, 
+    loadShape: 'evening',
+    description: 'Evening/night: gaming floor activity'
+  },
+  'apartment': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 17, 
+    typicalPeakEnd: 22, 
+    loadShape: 'evening',
+    description: 'Evening: residents home from work'
+  },
+  'residential': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 17, 
+    typicalPeakEnd: 21, 
+    loadShape: 'evening',
+    description: 'Evening: cooking, HVAC, entertainment'
+  },
+  
+  // Daytime-heavy loads
+  'office': { 
+    peakLoadFactor: 0.70, 
+    typicalPeakStart: 9, 
+    typicalPeakEnd: 17, 
+    loadShape: 'daytime',
+    description: 'Business hours: HVAC, lighting, computers'
+  },
+  'retail': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 11, 
+    typicalPeakEnd: 20, 
+    loadShape: 'daytime',
+    description: 'Shopping hours: HVAC, lighting, POS'
+  },
+  'shopping-center': { 
+    peakLoadFactor: 0.65, 
+    typicalPeakStart: 10, 
+    typicalPeakEnd: 21, 
+    loadShape: 'daytime',
+    description: 'Extended retail hours, common areas'
+  },
+  'hospital': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 7, 
+    typicalPeakEnd: 19, 
+    loadShape: 'daytime',
+    description: 'Surgery schedules, daytime procedures'
+  },
+  'college': { 
+    peakLoadFactor: 0.65, 
+    typicalPeakStart: 8, 
+    typicalPeakEnd: 22, 
+    loadShape: 'daytime',
+    description: 'Classes, labs, evening activities'
+  },
+  'government': { 
+    peakLoadFactor: 0.70, 
+    typicalPeakStart: 8, 
+    typicalPeakEnd: 17, 
+    loadShape: 'daytime',
+    description: 'Standard business hours'
+  },
+  
+  // Morning/midday peaks
+  'car-wash': { 
+    peakLoadFactor: 0.75, 
+    typicalPeakStart: 10, 
+    typicalPeakEnd: 14, 
+    loadShape: 'variable',
+    description: 'Weekend/lunch peaks, short intense cycles'
+  },
+  'warehouse': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 6, 
+    typicalPeakEnd: 14, 
+    loadShape: 'variable',
+    description: 'Shipping/receiving, forklift charging'
+  },
+  'manufacturing': { 
+    peakLoadFactor: 0.65, 
+    typicalPeakStart: 6, 
+    typicalPeakEnd: 18, 
+    loadShape: 'variable',
+    description: 'First + second shift, process-dependent'
+  },
+  'cold-storage': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 8, 
+    typicalPeakEnd: 16, 
+    loadShape: 'variable',
+    description: 'Dock activity, defrost cycles'
+  },
+  
+  // Flat/24-7 loads
+  'data-center': { 
+    peakLoadFactor: 0.50, 
+    typicalPeakStart: 0, 
+    typicalPeakEnd: 24, 
+    loadShape: 'flat',
+    description: '24/7 operations, very flat profile'
+  },
+  'indoor-farm': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 6, 
+    typicalPeakEnd: 22, 
+    loadShape: 'flat',
+    description: 'Grow lights on fixed schedule'
+  },
+  
+  // Variable/EV loads
+  'ev-charging': { 
+    peakLoadFactor: 0.45, 
+    typicalPeakStart: 11, 
+    typicalPeakEnd: 19, 
+    loadShape: 'variable',
+    description: 'Varies: fleet overnight, public daytime'
+  },
+  'gas-station': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 7, 
+    typicalPeakEnd: 19, 
+    loadShape: 'variable',
+    description: 'Commute hours, convenience store'
+  },
+  'airport': { 
+    peakLoadFactor: 0.55, 
+    typicalPeakStart: 5, 
+    typicalPeakEnd: 22, 
+    loadShape: 'variable',
+    description: 'Flight schedule dependent'
+  },
+  
+  // Agriculture
+  'agriculture': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 5, 
+    typicalPeakEnd: 20, 
+    loadShape: 'variable',
+    description: 'Irrigation pumps, seasonal variation'
+  },
+  'agricultural': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 5, 
+    typicalPeakEnd: 20, 
+    loadShape: 'variable',
+    description: 'Irrigation pumps, seasonal variation'
+  },
+  
+  // Default
+  'default': { 
+    peakLoadFactor: 0.60, 
+    typicalPeakStart: 9, 
+    typicalPeakEnd: 18, 
+    loadShape: 'daytime',
+    description: 'Standard commercial profile'
+  },
+};
+
+/**
+ * Regional TOU (Time of Use) Schedules
+ * 
+ * Utility peak rate windows vary by region. This data helps:
+ * - Calculate accurate arbitrage savings
+ * - Recommend optimal BESS discharge timing
+ * - Show users when rates are highest
+ * 
+ * | Region           | Summer Peak    | Winter Peak    | Rate Multiplier |
+ * |------------------|----------------|----------------|-----------------|
+ * | California       | 4pm-9pm        | 4pm-9pm        | 1.5-2.0x        |
+ * | Texas (ERCOT)    | 1pm-7pm        | 6am-10am/6pm-9pm| 1.3-1.5x       |
+ * | Northeast (ISO)  | 12pm-8pm       | 6am-10am       | 1.4-1.6x        |
+ * | Southeast        | 12pm-9pm       | 6am-10am       | 1.2-1.4x        |
+ * | Midwest          | 12pm-8pm       | 6am-10am       | 1.3-1.5x        |
+ * 
+ * Source: Utility rate schedules (PG&E, SCE, SDGE, ERCOT, PJM, ISO-NE, MISO)
+ */
+export interface TOUSchedule {
+  summerPeakStart: number;  // Hour (0-23)
+  summerPeakEnd: number;
+  winterPeakStart: number;
+  winterPeakEnd: number;
+  peakRateMultiplier: number;  // Multiplier vs standard rate
+  offPeakRateMultiplier: number;
+  superOffPeakMultiplier?: number;  // Night rates if available
+  superOffPeakHours?: string;
+  notes: string;
+}
+
+export const REGIONAL_TOU_SCHEDULES: Record<string, TOUSchedule> = {
+  // California - Most aggressive TOU
+  'California': {
+    summerPeakStart: 16,  // 4pm
+    summerPeakEnd: 21,    // 9pm
+    winterPeakStart: 16,
+    winterPeakEnd: 21,
+    peakRateMultiplier: 1.6,
+    offPeakRateMultiplier: 0.7,
+    superOffPeakMultiplier: 0.5,
+    superOffPeakHours: '12am-6am',
+    notes: 'Evening peak due to solar duck curve'
+  },
+  
+  // Texas - ERCOT market
+  'Texas': {
+    summerPeakStart: 13,  // 1pm
+    summerPeakEnd: 19,    // 7pm
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.4,
+    offPeakRateMultiplier: 0.75,
+    notes: 'Summer afternoon heat, winter morning demand'
+  },
+  
+  // Arizona - Similar to California
+  'Arizona': {
+    summerPeakStart: 15,  // 3pm
+    summerPeakEnd: 20,    // 8pm
+    winterPeakStart: 15,
+    winterPeakEnd: 20,
+    peakRateMultiplier: 1.5,
+    offPeakRateMultiplier: 0.7,
+    notes: 'Extreme summer AC demand'
+  },
+  
+  // Nevada
+  'Nevada': {
+    summerPeakStart: 13,
+    summerPeakEnd: 19,
+    winterPeakStart: 13,
+    winterPeakEnd: 19,
+    peakRateMultiplier: 1.4,
+    offPeakRateMultiplier: 0.75,
+    notes: 'Gaming/hospitality 24/7 loads'
+  },
+  
+  // Hawaii - Highest rates, island grid
+  'Hawaii': {
+    summerPeakStart: 17,
+    summerPeakEnd: 21,
+    winterPeakStart: 17,
+    winterPeakEnd: 21,
+    peakRateMultiplier: 1.3,
+    offPeakRateMultiplier: 0.85,
+    notes: 'Evening peak, solar midday abundance'
+  },
+  
+  // Northeast states (ISO-NE, NYISO, PJM)
+  'Massachusetts': {
+    summerPeakStart: 12,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.5,
+    offPeakRateMultiplier: 0.7,
+    notes: 'Summer afternoon, winter morning heat'
+  },
+  'New York': {
+    summerPeakStart: 12,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.6,
+    offPeakRateMultiplier: 0.65,
+    superOffPeakMultiplier: 0.5,
+    superOffPeakHours: '12am-6am',
+    notes: 'NYISO pricing, high summer demand'
+  },
+  'Connecticut': {
+    summerPeakStart: 12,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.5,
+    offPeakRateMultiplier: 0.7,
+    notes: 'ISO-NE region'
+  },
+  'New Jersey': {
+    summerPeakStart: 12,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.45,
+    offPeakRateMultiplier: 0.72,
+    notes: 'PJM region'
+  },
+  'Pennsylvania': {
+    summerPeakStart: 12,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.4,
+    offPeakRateMultiplier: 0.75,
+    notes: 'PJM region'
+  },
+  
+  // Southeast
+  'Florida': {
+    summerPeakStart: 12,
+    summerPeakEnd: 21,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.35,
+    offPeakRateMultiplier: 0.78,
+    notes: 'High AC demand, tourism patterns'
+  },
+  'Georgia': {
+    summerPeakStart: 13,
+    summerPeakEnd: 19,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.3,
+    offPeakRateMultiplier: 0.8,
+    notes: 'Southern Company territory'
+  },
+  
+  // Midwest (MISO)
+  'Illinois': {
+    summerPeakStart: 12,
+    summerPeakEnd: 18,
+    winterPeakStart: 7,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.35,
+    offPeakRateMultiplier: 0.78,
+    notes: 'MISO region'
+  },
+  'Michigan': {
+    summerPeakStart: 11,
+    summerPeakEnd: 19,
+    winterPeakStart: 7,
+    winterPeakEnd: 11,
+    peakRateMultiplier: 1.4,
+    offPeakRateMultiplier: 0.75,
+    notes: 'DTE, Consumers Energy'
+  },
+  'Ohio': {
+    summerPeakStart: 12,
+    summerPeakEnd: 18,
+    winterPeakStart: 7,
+    winterPeakEnd: 11,
+    peakRateMultiplier: 1.35,
+    offPeakRateMultiplier: 0.78,
+    notes: 'PJM region'
+  },
+  
+  // Mountain West
+  'Colorado': {
+    summerPeakStart: 14,
+    summerPeakEnd: 19,
+    winterPeakStart: 6,
+    winterPeakEnd: 9,
+    peakRateMultiplier: 1.3,
+    offPeakRateMultiplier: 0.8,
+    notes: 'Xcel Energy'
+  },
+  'Utah': {
+    summerPeakStart: 13,
+    summerPeakEnd: 20,
+    winterPeakStart: 7,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.25,
+    offPeakRateMultiplier: 0.82,
+    notes: 'Rocky Mountain Power'
+  },
+  
+  // Pacific Northwest
+  'Washington': {
+    summerPeakStart: 14,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.2,
+    offPeakRateMultiplier: 0.85,
+    notes: 'Hydro-heavy, low rates overall'
+  },
+  'Oregon': {
+    summerPeakStart: 14,
+    summerPeakEnd: 20,
+    winterPeakStart: 6,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.25,
+    offPeakRateMultiplier: 0.82,
+    notes: 'PGE, PacifiCorp'
+  },
+  
+  // Default for states not listed
+  'default': {
+    summerPeakStart: 12,
+    summerPeakEnd: 18,
+    winterPeakStart: 7,
+    winterPeakEnd: 10,
+    peakRateMultiplier: 1.35,
+    offPeakRateMultiplier: 0.78,
+    notes: 'National average TOU structure'
+  },
+};
+
+/**
+ * Get industry-specific peak load factor
+ * @param industryType - Industry slug
+ * @returns Peak load factor (0-1) representing % of daily energy during peak hours
+ */
+export function getIndustryLoadProfile(industryType: string): IndustryLoadProfile {
+  const normalized = industryType.toLowerCase().replace(/_/g, '-');
+  return INDUSTRY_LOAD_PROFILES[normalized] || INDUSTRY_LOAD_PROFILES['default'];
+}
+
+/**
+ * Get regional TOU schedule for a state
+ * @param state - US state name
+ * @returns TOU schedule with peak hours and rate multipliers
+ */
+export function getRegionalTOUSchedule(state: string): TOUSchedule {
+  return REGIONAL_TOU_SCHEDULES[state] || REGIONAL_TOU_SCHEDULES['default'];
+}
+
+/**
+ * Calculate optimal arbitrage savings using industry load profile + regional TOU
+ * 
+ * @param dailyKWh - Total daily energy consumption
+ * @param industryType - Industry slug
+ * @param state - US state
+ * @param baseRate - Base electricity rate ($/kWh)
+ * @returns Monthly arbitrage savings potential
+ */
+export function calculateArbitrageSavings(
+  dailyKWh: number,
+  industryType: string,
+  state: string,
+  baseRate: number
+): { 
+  monthlySavings: number;
+  peakEnergyKWh: number;
+  offPeakEnergyKWh: number;
+  shiftableKWh: number;
+  peakRate: number;
+  offPeakRate: number;
+  touOverlapScore: number;
+} {
+  const loadProfile = getIndustryLoadProfile(industryType);
+  const touSchedule = getRegionalTOUSchedule(state);
+  
+  // Split daily energy into peak/off-peak based on industry profile
+  const peakEnergyKWh = dailyKWh * loadProfile.peakLoadFactor;
+  const offPeakEnergyKWh = dailyKWh * (1 - loadProfile.peakLoadFactor);
+  
+  // Calculate rate differential
+  const peakRate = baseRate * touSchedule.peakRateMultiplier;
+  const offPeakRate = baseRate * touSchedule.offPeakRateMultiplier;
+  const rateDifferential = peakRate - offPeakRate;
+  
+  // Calculate TOU overlap: how much does facility peak align with utility peak?
+  // Higher overlap = more arbitrage opportunity
+  const facilityPeakHours = loadProfile.typicalPeakEnd - loadProfile.typicalPeakStart;
+  const utilityPeakHours = touSchedule.summerPeakEnd - touSchedule.summerPeakStart;
+  
+  // Calculate overlap hours
+  const overlapStart = Math.max(loadProfile.typicalPeakStart, touSchedule.summerPeakStart);
+  const overlapEnd = Math.min(loadProfile.typicalPeakEnd, touSchedule.summerPeakEnd);
+  const overlapHours = Math.max(0, overlapEnd - overlapStart);
+  
+  // Overlap score: 1.0 = perfect alignment, 0.0 = no overlap
+  const touOverlapScore = Math.min(overlapHours / Math.min(facilityPeakHours, utilityPeakHours), 1.0);
+  
+  // BESS can shift 70-85% of peak energy, scaled by overlap
+  const shiftEfficiency = 0.75 * touOverlapScore + 0.10; // Min 10%, max 85%
+  const shiftableKWh = peakEnergyKWh * shiftEfficiency;
+  
+  // Daily arbitrage savings
+  const dailySavings = shiftableKWh * rateDifferential;
+  const monthlySavings = Math.round(dailySavings * 30);
+  
+  return {
+    monthlySavings,
+    peakEnergyKWh: Math.round(peakEnergyKWh),
+    offPeakEnergyKWh: Math.round(offPeakEnergyKWh),
+    shiftableKWh: Math.round(shiftableKWh),
+    peakRate: Math.round(peakRate * 100) / 100,
+    offPeakRate: Math.round(offPeakRate * 100) / 100,
+    touOverlapScore: Math.round(touOverlapScore * 100) / 100,
+  };
+}
+
+/**
  * Critical Load Percentages by Industry
  * 
  * Generator sizing = criticalLoad × 1.25 (reserve margin)

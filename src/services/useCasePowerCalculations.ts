@@ -2987,11 +2987,14 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
   
   // ════════════════════════════════════════════════════════════════
   // PEAK HOURS ANALYSIS - BESS discharge opportunity
+  // Dec 2025: Now uses industry-specific load profile (hotels = 0.55 evening peak)
   // ════════════════════════════════════════════════════════════════
   const peakHoursDuration = input.operations.peakHoursEnd - input.operations.peakHoursStart;
   
-  // Hotels use ~65% of daily energy during peak hours
-  const peakHoursLoadFactor = 0.65;
+  // Hotels: 55% of daily energy during peak hours (evening check-in/dinner)
+  // This is lower than daytime businesses like offices (70%)
+  // Source: CBECS 2018 hospitality load profiles, ASHRAE
+  const peakHoursLoadFactor = 0.55; // Hotel-specific (was 0.65 generic)
   const peakEnergyKWh = Math.round(weightedDailyKWh * peakHoursLoadFactor);
   const offPeakEnergyKWh = Math.round(weightedDailyKWh * (1 - peakHoursLoadFactor));
   
