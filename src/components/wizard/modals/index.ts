@@ -11,3 +11,6 @@ export {
   Step4to5Modal, 
   TrueQuoteModal 
 } from './StepTransitionModal';
+// BESS Configuration Optimizer Phase 3 (Dec 2025)
+export { ScenarioExplainerModal } from './ScenarioExplainerModal';
+export { ConfigurationConfirmModal } from './ConfigurationConfirmModal';

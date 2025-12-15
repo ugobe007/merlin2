@@ -999,6 +999,7 @@ export function useStreamlinedWizard({
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Generate All Scenarios (Dec 2025 - Phase 3)
   // ═══════════════════════════════════════════════════════════════
+  // NOTE: This is called from ScenarioSection (Section 3) which now comes BEFORE Goals
   const generateAllScenarios = useCallback(async () => {
     console.log('🎯 [generateAllScenarios] Generating 3 scenario configurations...');
     setIsGeneratingScenarios(true);
@@ -1007,7 +1008,7 @@ export function useStreamlinedWizard({
     try {
       // Calculate peak demand and daily kWh from wizard state
       const calc = centralizedState?.calculated || {};
-      const peakDemandKW = wizardState.peakDemandKW || calc.recommendedBatteryKW || 500;
+      const peakDemandKW = wizardState.peakDemandKW || calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
       const dailyKWh = peakDemandKW * 10; // Estimate daily consumption
       
       // Build scenario generator input
@@ -1032,17 +1033,13 @@ export function useStreamlinedWizard({
       console.log('🎯 [generateAllScenarios] Generated scenarios:', result);
       
       // Update wizard state with scenarios
+      // Don't navigate here - let ScenarioSection handle the UI
       setWizardState(prev => ({
         ...prev,
         scenarioResult: result,
         showScenarios: true,
         isCalculating: false,
       }));
-      
-      completeSection('goals');
-      
-      // Navigate to section 4 (Scenario Comparison) - NOT section 5
-      advanceToSection(4);
       
     } catch (error) {
       console.error('[generateAllScenarios] Failed:', error);
@@ -1051,7 +1048,7 @@ export function useStreamlinedWizard({
     } finally {
       setIsGeneratingScenarios(false);
     }
-  }, [wizardState, centralizedState, completeSection, advanceToSection]);
+  }, [wizardState, centralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Select a Scenario (Dec 2025 - Phase 3)

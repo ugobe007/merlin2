@@ -18,5 +18,8 @@ export { QuoteResultsSection } from './QuoteResultsSectionNew';
 // Scenario comparison (Dec 2025 - Phase 3)
 export { ScenarioComparison, ScenarioCompact } from './ScenarioComparison';
 
+// Scenario Section - Step 3 (Dec 2025 - shows BEFORE goals)
+export { ScenarioSection } from './ScenarioSection';
+
 // Shared panels
 export { MerlinRecommendationPanel } from './MerlinRecommendationPanel';

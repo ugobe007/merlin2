@@ -59,8 +59,8 @@ export const WIZARD_SECTIONS: WizardSection[] = [
   { id: 'location', title: 'Location & Goals', icon: MapPin, description: 'Where + what you want', pointsAwarded: 20 },
   { id: 'industry', title: 'Industry', icon: Building2, description: 'What type of facility?', pointsAwarded: 15 },
   { id: 'details', title: 'Details', icon: ClipboardList, description: 'Facility specifications', pointsAwarded: 25 },
-  { id: 'addons', title: 'Add-ons', icon: Target, description: 'Additional equipment', pointsAwarded: 10 },
-  { id: 'configuration', title: 'System', icon: Settings, description: 'Battery + solar sizing', pointsAwarded: 20 },
+  { id: 'scenarios', title: 'Scenarios', icon: Target, description: 'Choose your strategy', pointsAwarded: 20 },
+  { id: 'goals', title: 'Goals', icon: Settings, description: 'Fine-tune preferences', pointsAwarded: 15 },
   { id: 'quote', title: 'Quote', icon: FileText, description: 'Your custom quote', pointsAwarded: 10 },
 ];
 
