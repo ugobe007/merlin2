@@ -426,7 +426,7 @@ export default function HeroSection({
                   50% { transform: scale(1.1) rotate(180deg); opacity: 0.9; }
                 }
                 .gradient-button {
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
+                  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 20%, #22d3ee 50%, #10b981 80%, #5b21b6 100%);
                   background-size: 300% 300%;
                   animation: gradientShift 3s ease infinite;
                 }
@@ -449,7 +449,7 @@ export default function HeroSection({
                 }}
               >
                 {/* Floating glow ring */}
-                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full blur-xl opacity-60" />
+                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-600 via-cyan-400 to-emerald-500 rounded-full blur-xl opacity-60" />
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
                 <span className="relative flex items-center justify-center gap-2 text-white">
@@ -459,14 +459,14 @@ export default function HeroSection({
                 </span>
               </button>
 
-              {/* Advanced Builder - MATCHING WIDTH */}
+              {/* Advanced Builder - Smaller secondary button */}
               <button 
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="group flex items-center justify-center gap-3 mb-4 w-full max-w-md px-8 py-4 rounded-full border-2 border-purple-400/50 hover:border-amber-400 hover:bg-purple-800/30 transition-all"
+                className="group flex items-center justify-center gap-2 mb-4 px-6 py-2.5 rounded-full border border-purple-400/50 hover:border-amber-400 hover:bg-purple-800/30 transition-all"
               >
-                <span className="text-xl">⚡</span>
-                <span className="text-white font-semibold text-lg">Advanced Quote Builder</span>
-                <span className="text-purple-300 group-hover:text-amber-300 group-hover:translate-x-1 transition-all">→</span>
+                <span className="text-sm">⚡</span>
+                <span className="text-white font-medium text-sm">Advanced Quote Builder</span>
+                <span className="text-purple-300 group-hover:text-amber-300 group-hover:translate-x-1 transition-all text-sm">→</span>
               </button>
 
               {/* TrueQuote™ Badge - Clickable for marketing modal */}
