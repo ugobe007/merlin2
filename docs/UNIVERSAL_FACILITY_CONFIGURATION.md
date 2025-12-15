@@ -1,8 +1,55 @@
 # Universal Facility Configuration Pattern
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Created:** December 15, 2025  
-**Status:** PROPOSAL - Pending Vineet Feedback
+**Updated:** December 15, 2025  
+**Status:** APPROVED - Ready for Implementation
+
+---
+
+## Vineet's Answers (Dec 15, 2025)
+
+| Question | Answer | Implementation |
+|----------|--------|----------------|
+| **1. Quick Estimate** | The landing page teaser calculator (CarWashEnergy style), NOT Magic Fit | ✅ Keep landing page simple; Magic Fit is optimization engine |
+| **2. 200% oversized** | Context-dependent - some use cases need it, others excessive | ✅ Magic Fit scenarios adapt to use case requirements |
+| **3. Roof space/Solar** | Auto-estimate first, then popup for specific sizing | ✅ Default based on use case, modal for refinement |
+| **4. Equipment variants** | Standard/Premium tiers only; Advanced for granular | ✅ Two-tier system, not per-equipment selection |
+
+---
+
+## Two-Track System (Confirmed)
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    LANDING PAGE TEASER CALCULATOR                        │
+│              (CarWashEnergy, HotelEnergy, EVChargingEnergy)              │
+│                                                                          │
+│  ✓ 2 questions only (Type + Size)                                        │
+│  ✓ Instant savings estimate as user interacts                            │
+│  ✓ "Get Full Quote" button → StreamlinedWizard                           │
+│                                                                          │
+│  Example: CarWashEnergy Quick Estimate                                   │
+│  • Question 1: Wash Type (Express/Full-Service/Self-Service/In-Bay)     │
+│  • Question 2: Number of Bays (slider)                                   │
+│  • Result: Annual savings + Payback years (instant)                      │
+└────────────────────────────────┬─────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      STREAMLINED WIZARD + MAGIC FIT                      │
+│                     (Full quote with optimization)                       │
+│                                                                          │
+│  Section 1: Location                                                     │
+│  Section 2: Industry Selection (pre-filled from landing page)            │
+│  Section 3: Facility Details                                             │
+│       • Subtype (Tunnel/In-Bay/Self-Service)                             │
+│       • Size (bays, pumps, etc.)                                         │
+│       • Equipment Tier: Standard / Premium (TWO TIERS ONLY)              │
+│  Section 4: Goals → Magic Fit generates 3 optimized scenarios            │
+│  Section 5: Results + "Refine Solar Size" popup (auto-estimate first)    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -313,55 +360,116 @@ function calculateQuote(input: QuoteInput): QuoteResult {
 
 ---
 
-## Questions for Vineet (Before Implementation)
+## ✅ CONFIRMED: Vineet's Answers (Dec 15, 2025)
 
 ### 1. Quick Estimate vs Magic Fit
-> Is the "quick estimate" screen that Vineet wants removed the same as our Magic Fit 3-scenario view? Or is there a separate "quick estimate" that appears before Magic Fit?
+> **ANSWER:** Quick Estimate = The landing page teaser calculator (CarWashEnergy style). Magic Fit = The optimization engine in StreamlinedWizard.
 
-**Context:** Magic Fit already shows 3 scenarios with different savings/payback profiles. If this IS the "quick estimate," we're already aligned.
+**Implementation:** Keep landing page calculators simple (2 questions, instant results). Magic Fit remains as the 3-scenario optimization engine in the full wizard.
 
 ### 2. "200% Power Oversizing"
-> Which option is oversized - the base recommendation or the "Maximum Protection" scenario?
+> **ANSWER:** Context-dependent. Some use cases need it, others it's excessive.
 
-**Possible interpretations:**
-- **Base recommendation is oversized** → Need to reduce BESS_POWER_RATIOS in scenarioGenerator.ts
-- **Maximum Protection is oversized** → The 1.3x multiplier may be too aggressive
-- **Solar recommendation is oversized** → Need to apply roof space constraints
+**Implementation:** Magic Fit scenarios should adapt to use case requirements. Don't apply blanket 200% oversizing.
 
 ### 3. Roof Space Question Placement
-> Should we ask about roof space BEFORE showing solar options, or calculate it automatically from building size?
+> **ANSWER:** Provide estimates based on use case, then popup window for specific sizing.
 
-**Option A:** Add explicit "Available roof space" question for all use cases
-**Option B:** Auto-calculate from building footprint using industry-specific ratios
-**Option C:** Hybrid - auto-calculate but allow override
+**Implementation:** Auto-estimate solar first, offer "Refine Solar Size" modal for users who want specific square footage sizing.
 
 ### 4. Equipment Variants
-> For equipment with Standard vs High Performance variants (like car wash blowers), should we:
-- Ask about each piece of equipment separately?
-- Offer a single "Equipment Grade" toggle (Standard / Premium / Custom)?
-- Auto-detect based on facility subtype (Tunnel = High Performance by default)?
+> **ANSWER:** Standard/Premium tiers only. If users want granular equipment selection, use Advanced Quote Builder.
+
+**Implementation:** Two-tier system (Standard / Premium), not per-equipment selection.
 
 ---
 
-## Implementation Phases
+## Implementation Plan (Ready to Execute)
 
-### Phase 1: Data Model (Week 1)
+### Phase 1: Equipment Tier System (Immediate)
+- [ ] Add `equipmentTier` field to WizardState: `'standard' | 'premium'`
+- [ ] Add Standard/Premium selector to FacilityDetailsSection
+- [ ] Update equipment calculations to use tier multiplier
+- [ ] Remove per-equipment questions (blowers, pumps, etc.) from wizard
+
+### Phase 2: Facility Subtype (Immediate)
 - [ ] Add `facilitySubtype` to WizardState
-- [ ] Add `physicalConstraints` to WizardState
-- [ ] Create migration to add these fields to custom_questions for ALL use cases
+- [ ] Make subtype the FIRST question in FacilityDetailsSection
+- [ ] Create database migration for car wash subtypes
+- [ ] Apply subtype power multipliers in SSOT calculations
 
-### Phase 2: Solar Constraints (Week 1)
-- [ ] Add roof space calculation to SSOT
-- [ ] Cap solar recommendations based on physical constraints
+### Phase 3: Solar Refinement Modal (Week 1)
+- [ ] Create `SolarSizingModal.tsx` component
+- [ ] Auto-estimate solar based on use case defaults
+- [ ] Add "Refine Solar Size" button to Results section
+- [ ] Apply roof space constraints to cap recommendations
+
+### Phase 4: Physical Constraints (Week 1)
+- [ ] Add `physicalConstraints` to WizardState
+- [ ] Calculate max solar based on roof formula: `Max kW = (Roof SqFt × Usable%) / 100`
 - [ ] Add TrueQuote™ notes when constraints apply
 
-### Phase 3: UI Updates (Week 2)
-- [ ] Update FacilityDetailsSection to render subtype as first question
-- [ ] Replace range selectors with sliders
-- [ ] Show real-time peak demand calculation
+---
 
-### Phase 4: Car Wash Specific (Week 2)
-- [ ] Add car wash subtypes to database
+## Car Wash Specific Implementation
+
+Based on Vineet's feedback document, here's the car wash implementation:
+
+### Facility Subtypes
+```typescript
+const CAR_WASH_SUBTYPES = [
+  { id: 'tunnel', label: 'Express Tunnel', powerMultiplier: 1.0, description: '30-60 cars/hr' },
+  { id: 'fullservice', label: 'Full-Service', powerMultiplier: 1.2, description: '50-100 cars/hr' },
+  { id: 'inbay', label: 'In-Bay Automatic', powerMultiplier: 0.6, description: '6-10 cars/hr' },
+  { id: 'selfservice', label: 'Self-Service', powerMultiplier: 0.15, description: '2-4 per bay/hr' },
+];
+```
+
+### Equipment Tiers
+```typescript
+const CAR_WASH_EQUIPMENT_TIERS = {
+  standard: {
+    label: 'Standard Equipment',
+    description: 'Industry-standard pumps, blowers, and dryers',
+    powerMultiplier: 1.0,
+  },
+  premium: {
+    label: 'Premium Equipment',
+    description: 'High-performance pumps, blowers, and dryers',
+    powerMultiplier: 1.3,
+  },
+};
+```
+
+### Solar Defaults (Auto-Estimate)
+- **Typical car wash roof:** 5,000 - 8,000 sq ft
+- **Usable roof %:** 60% (equipment, HVAC on roof)
+- **Default max solar:** ~30-50 kW
+- **Popup allows:** Exact roof sq ft input
+
+---
+
+## Implementation Phases (UPDATED)
+
+### Phase 1: Data Model (Immediate)
+- [ ] Add `facilitySubtype` to WizardState
+- [ ] Add `equipmentTier` to WizardState (`'standard' | 'premium'`)
+- [ ] Add `physicalConstraints` to WizardState
+
+### Phase 2: UI Updates (Immediate)
+- [ ] Add subtype selector to FacilityDetailsSection (FIRST question)
+- [ ] Add Standard/Premium tier selector
+- [ ] Remove granular equipment questions
+
+### Phase 3: Solar Modal (Week 1)
+- [ ] Create SolarSizingModal.tsx
+- [ ] Auto-estimate based on facility type
+- [ ] "Refine" button for specific sizing
+
+### Phase 4: Database (Week 1)
+- [ ] Migration for car wash subtypes
+- [ ] Migration for equipment tiers
+- [ ] Apply to all use cases
 - [ ] Add equipment profile questions (pumps, blowers, vacuums)
 - [ ] Add EV charger question after vacuums
 
