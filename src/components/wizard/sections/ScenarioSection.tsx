@@ -1,21 +1,22 @@
 /**
- * SCENARIO SECTION (Section 3)
- * =============================
+ * SCENARIO SECTION (Section 4) - MAGIC FIT™
+ * ==========================================
  * 
- * Shows 3 configuration scenarios BEFORE goals.
- * User selects their preferred optimization strategy, then moves to goals.
+ * Shows 3 optimized savings options AFTER user preferences (Goals).
+ * User sees personalized configurations based on what they told us.
  * 
  * Flow:
- * 1. Pop-up explains scenarios (on first visit)
- * 2. User sees Merlin's initial recommendation
- * 3. User can select one of 3 scenario cards
- * 4. User proceeds to Goals section
+ * 1. Pop-up explains Magic Fit (on first visit)
+ * 2. "We understood your situation" summary shows our analysis
+ * 3. User sees 3 personalized savings options
+ * 4. Pro users can escape to Advanced Quote Builder
+ * 5. User selects and proceeds to final quote
  * 
- * Created: Dec 2025
+ * Updated: Dec 15, 2025 - Added "Smart Sizing" and "Pro Mode" escape hatch
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Zap, DollarSign, Clock, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, Building } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import type { ScenarioConfig, ScenarioGeneratorResult } from '@/services/scenarioGenerator';
 import { ScenarioExplainerModal } from '../modals/ScenarioExplainerModal';
@@ -34,6 +35,8 @@ interface ScenarioSectionProps {
   peakDemandKW: number;
   /** Power coverage percentage */
   powerCoverage: number;
+  /** Navigate to Advanced Quote Builder for pro users */
+  onOpenAdvanced?: () => void;
 }
 
 export function ScenarioSection({
@@ -48,6 +51,7 @@ export function ScenarioSection({
   onGenerateScenarios,
   peakDemandKW,
   powerCoverage,
+  onOpenAdvanced,
 }: ScenarioSectionProps) {
   const [showExplainer, setShowExplainer] = useState(false);
   const [hasSeenExplainer, setHasSeenExplainer] = useState(false);
@@ -56,15 +60,16 @@ export function ScenarioSection({
   );
 
   // Show explainer on first visit and auto-generate scenarios
+  // ScenarioSection is now Section 4 - comes AFTER Goals
   useEffect(() => {
-    if (currentSection === 3 && !hasSeenExplainer) {
+    if (currentSection === 4 && !hasSeenExplainer) {
       setShowExplainer(true);
     }
   }, [currentSection, hasSeenExplainer]);
 
   // Auto-generate scenarios when entering section
   useEffect(() => {
-    if (currentSection === 3 && !scenarioResult && !isGenerating) {
+    if (currentSection === 4 && !scenarioResult && !isGenerating) {
       onGenerateScenarios();
     }
   }, [currentSection, scenarioResult, isGenerating, onGenerateScenarios]);
@@ -101,7 +106,8 @@ export function ScenarioSection({
   const formatPower = (kw: number) => kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${Math.round(kw)} kW`;
   const formatEnergy = (kwh: number) => kwh >= 1000 ? `${(kwh / 1000).toFixed(1)} MWh` : `${Math.round(kwh)} kWh`;
 
-  if (currentSection !== 3) return null;
+  // ScenarioSection is now Section 4 (after Goals)
+  if (currentSection !== 4) return null;
 
   return (
     <>
@@ -124,7 +130,7 @@ export function ScenarioSection({
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Facility Details
+              Back to Preferences
             </button>
             <button
               onClick={() => setShowExplainer(true)}
@@ -139,33 +145,88 @@ export function ScenarioSection({
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
               <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 font-medium">Step 3 of 5</span>
+              <span className="text-purple-300 font-medium">Step 5 of 6</span>
             </div>
             <h2 className="text-3xl font-bold text-white mb-2">
-              Choose Your Optimization Strategy
+              Your Savings Options
             </h2>
             <p className="text-gray-400">
-              Merlin has calculated 3 configurations based on your {wizardState.industryName || 'facility'}
+              Based on your {wizardState.industryName || 'facility'} and preferences, here are 3 ways to save
             </p>
           </div>
 
-          {/* Power Profile Summary */}
-          <div className="bg-slate-800/50 rounded-xl p-4 mb-6 border border-slate-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Zap className={`w-6 h-6 ${powerCoverage >= 100 ? 'text-emerald-400' : 'text-amber-400'}`} />
-                <div>
-                  <p className="text-white font-medium">Your Peak Demand: {formatPower(peakDemandKW)}</p>
-                  <p className="text-sm text-gray-400">Based on your facility details</p>
-                </div>
+          {/* ════════════════════════════════════════════════════════════════
+              SMART SIZING SUMMARY - "We Understand Your Situation"
+              This shows users that Merlin KNOWS their specific scenario
+          ════════════════════════════════════════════════════════════════ */}
+          <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/50 rounded-2xl p-5 mb-6 border border-slate-600">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                <Building className="w-5 h-5 text-emerald-400" />
               </div>
-              <div className="text-right">
-                <p className={`text-lg font-bold ${powerCoverage >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {powerCoverage}% Coverage
-                </p>
-                <p className="text-xs text-gray-500">Current configuration</p>
+              <div>
+                <h3 className="text-white font-bold">We Sized This for YOUR {wizardState.industryName || 'Facility'}</h3>
+                <p className="text-sm text-gray-400">Based on what you told us, here's what we calculated</p>
               </div>
             </div>
+            
+            {/* Key Metrics Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {/* Peak Demand */}
+              <div className="bg-slate-900/50 rounded-lg p-3 text-center">
+                <Zap className={`w-5 h-5 mx-auto mb-1 ${powerCoverage >= 100 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                <p className="text-lg font-bold text-white">{formatPower(peakDemandKW)}</p>
+                <p className="text-xs text-gray-500">Peak Demand</p>
+              </div>
+              
+              {/* Coverage */}
+              <div className="bg-slate-900/50 rounded-lg p-3 text-center">
+                <Shield className={`w-5 h-5 mx-auto mb-1 ${powerCoverage >= 100 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                <p className={`text-lg font-bold ${powerCoverage >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>{powerCoverage}%</p>
+                <p className="text-xs text-gray-500">Coverage</p>
+              </div>
+              
+              {/* Location Rate */}
+              <div className="bg-slate-900/50 rounded-lg p-3 text-center">
+                <DollarSign className="w-5 h-5 mx-auto mb-1 text-blue-400" />
+                <p className="text-lg font-bold text-white">${wizardState.electricityRate?.toFixed(2) || '0.12'}</p>
+                <p className="text-xs text-gray-500">{wizardState.state} Rate/kWh</p>
+              </div>
+              
+              {/* Duration */}
+              <div className="bg-slate-900/50 rounded-lg p-3 text-center">
+                <Clock className="w-5 h-5 mx-auto mb-1 text-purple-400" />
+                <p className="text-lg font-bold text-white">{wizardState.durationHours || 4}hr</p>
+                <p className="text-xs text-gray-500">Backup Time</p>
+              </div>
+            </div>
+            
+            {/* Selected Add-ons Display */}
+            {(wizardState.solarKW > 0 || wizardState.windTurbineKW > 0 || wizardState.generatorKW > 0) && (
+              <div className="bg-slate-900/30 rounded-lg p-3 border border-slate-700">
+                <p className="text-xs text-gray-500 mb-2">Your Selected Add-ons:</p>
+                <div className="flex flex-wrap gap-2">
+                  {wizardState.solarKW > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-sm">
+                      <Sun className="w-4 h-4" />
+                      {formatPower(wizardState.solarKW)} Solar
+                    </span>
+                  )}
+                  {wizardState.windTurbineKW > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-500/20 text-sky-300 rounded-full text-sm">
+                      <Wind className="w-4 h-4" />
+                      {formatPower(wizardState.windTurbineKW)} Wind
+                    </span>
+                  )}
+                  {wizardState.generatorKW > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-500/20 text-slate-300 rounded-full text-sm">
+                      <Zap className="w-4 h-4" />
+                      {formatPower(wizardState.generatorKW)} Generator
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Loading State */}
@@ -312,11 +373,11 @@ export function ScenarioSection({
                 >
                   {wizardState.selectedScenario ? (
                     <>
-                      Continue to Goals
+                      See My Quote
                       <ArrowRight className="w-5 h-5" />
                     </>
                   ) : (
-                    'Select a Strategy to Continue'
+                    'Select an Option to Continue'
                   )}
                 </button>
               </div>
@@ -325,6 +386,31 @@ export function ScenarioSection({
               <p className="text-center text-sm text-gray-500 mt-4">
                 Don't worry - you can adjust your configuration after selecting goals
               </p>
+              
+              {/* ════════════════════════════════════════════════════════════════
+                  PRO MODE ESCAPE HATCH
+                  For professional energy people who want full control
+              ════════════════════════════════════════════════════════════════ */}
+              {onOpenAdvanced && (
+                <div className="mt-8 pt-6 border-t border-slate-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500 mb-3">
+                      Want more control? Our Advanced Quote Builder lets you customize every detail.
+                    </p>
+                    <button
+                      onClick={onOpenAdvanced}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white rounded-lg font-medium transition-colors border border-slate-600"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Switch to Advanced Mode
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Best for energy professionals and detailed customization
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

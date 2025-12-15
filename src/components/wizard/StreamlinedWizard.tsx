@@ -516,52 +516,23 @@ export default function StreamlinedWizard({
               onBack={() => wizard.advanceToSection(1)}
               onContinue={() => {
                 wizard.completeSection('facility');
-                // Now go to Scenarios (Section 3) - auto-generates scenarios
+                // Go to Goals/Preferences (Section 3) FIRST
                 wizard.advanceToSection(3);
               }}
             />
 
             {/* ═══════════════════════════════════════════════════════════════
-                NEW FLOW (Dec 2025 - Phase 3):
-                Section 3: SCENARIOS - Choose optimization strategy FIRST
-                Section 4: GOALS - Fine-tune after selecting a strategy
-                Section 5: QUOTE RESULTS - Final quote
+                MAGIC FIT FLOW (Dec 2025):
+                Section 3: GOALS/PREFERENCES - User tells us what matters
+                Section 4: SAVINGS OPTIONS - Magic Fit generates tailored scenarios
+                Section 5: QUOTE RESULTS - Final savings estimate
+                
+                Why this order? User's preferences INFORM the scenario generation.
+                "What matters to you?" → "Here are 3 ways to save based on YOUR priorities"
             ═══════════════════════════════════════════════════════════════ */}
             
-            {/* Section 3: SCENARIOS (BEFORE Goals) */}
-            {/* Shows 3 configuration options with pop-up explainer */}
-            {(() => {
-              const calc = wizard.centralizedState?.calculated || {};
-              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
-              const batteryKW = wizard.wizardState.batteryKW || 0;
-              const solarKW = wizard.wizardState.solarKW || 0;
-              const generatorKW = wizard.wizardState.generatorKW || 0;
-              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
-              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
-              
-              return (
-                <ScenarioSection
-                  wizardState={wizard.wizardState}
-                  setWizardState={wizard.setWizardState}
-                  currentSection={wizard.currentSection}
-                  sectionRef={(el) => { sectionRefs.current[3] = el; }}
-                  onBack={() => wizard.advanceToSection(2)}
-                  onContinue={() => {
-                    // After selecting a scenario, go to Goals (Section 4)
-                    wizard.completeSection('scenarios');
-                    wizard.advanceToSection(4);
-                  }}
-                  scenarioResult={wizard.wizardState.scenarioResult}
-                  isGenerating={wizard.isGeneratingScenarios}
-                  onGenerateScenarios={wizard.generateAllScenarios}
-                  peakDemandKW={peakDemandKW}
-                  powerCoverage={powerCoverage}
-                />
-              );
-            })()}
-
-            {/* Section 4: Goals & Preferences (AFTER Scenarios) */}
-            {/* Now user fine-tunes based on their selected strategy */}
+            {/* Section 3: GOALS/PREFERENCES (BEFORE Magic Fit) */}
+            {/* User tells us what matters: savings, backup, solar, etc. */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
               const peakDemandKW = calc.totalPeakDemandKW || 0;
@@ -571,7 +542,7 @@ export default function StreamlinedWizard({
               const totalConfiguredKW = batteryKW + solarKW + generatorKW;
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 100;
               
-              // Dec 14, 2025 - CRITICAL FIX: Pass calculated recommendation from SSOT
+              // Pass calculated recommendation from SSOT
               const merlinRecommendation = calc.recommendedBatteryKW ? {
                 batteryKW: calc.recommendedBatteryKW || 0,
                 batteryKWh: calc.recommendedBatteryKWh || 0,
@@ -590,19 +561,19 @@ export default function StreamlinedWizard({
                 currency: 'USD',
               } : undefined;
               
-              // Show Goals section (Section 4 in new flow)
-              return wizard.currentSection === 4 ? (
+              // Show Goals section (Section 3 - user tells us what matters)
+              return wizard.currentSection === 3 ? (
                 <GoalsSection
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
-                  currentSection={4}
-                  sectionRef={(el) => { sectionRefs.current[4] = el; }}
-                  onBack={() => wizard.advanceToSection(3)}
+                  currentSection={3}
+                  sectionRef={(el) => { sectionRefs.current[3] = el; }}
+                  onBack={() => wizard.advanceToSection(2)}
                   onContinue={() => {
-                    // After goals, show confirmation modal before final quote
-                    console.log('🎯 [GOALS] Continue clicked - showing confirmation modal');
-                    wizard.completeSection('goals');
-                    setShowConfigConfirmModal(true);
+                    // After user tells us preferences, generate tailored scenarios
+                    console.log('🎯 [GOALS] Continue clicked - generating Magic Fit scenarios');
+                    wizard.completeSection('preferences');
+                    wizard.advanceToSection(4); // Go to Magic Fit (Scenarios)
                   }}
                   onGenerateScenarios={wizard.generateAllScenarios}
                   isGeneratingScenarios={wizard.isGeneratingScenarios}
@@ -611,6 +582,39 @@ export default function StreamlinedWizard({
                   merlinRecommendation={merlinRecommendation}
                 />
               ) : null;
+            })()}
+
+            {/* Section 4: MAGIC FIT - Savings Options (AFTER Goals) */}
+            {/* Shows 3 tailored scenarios based on user's preferences */}
+            {(() => {
+              const calc = wizard.centralizedState?.calculated || {};
+              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
+              const batteryKW = wizard.wizardState.batteryKW || 0;
+              const solarKW = wizard.wizardState.solarKW || 0;
+              const generatorKW = wizard.wizardState.generatorKW || 0;
+              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
+              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
+              
+              return (
+                <ScenarioSection
+                  wizardState={wizard.wizardState}
+                  setWizardState={wizard.setWizardState}
+                  currentSection={wizard.currentSection}
+                  sectionRef={(el) => { sectionRefs.current[4] = el; }}
+                  onBack={() => wizard.advanceToSection(3)}
+                  onContinue={() => {
+                    // After selecting a scenario, show confirmation before quote
+                    wizard.completeSection('savings');
+                    setShowConfigConfirmModal(true);
+                  }}
+                  scenarioResult={wizard.wizardState.scenarioResult}
+                  isGenerating={wizard.isGeneratingScenarios}
+                  onGenerateScenarios={wizard.generateAllScenarios}
+                  peakDemandKW={peakDemandKW}
+                  powerCoverage={powerCoverage}
+                  onOpenAdvanced={onOpenAdvanced}
+                />
+              );
             })()}
 
             {/* Section 5: Quote Results */}
@@ -627,6 +631,7 @@ export default function StreamlinedWizard({
                 wizard.setCompletedSections([]);
                 wizard.setTotalPoints(0);
               }}
+              onOpenAdvanced={onOpenAdvanced}
             />
           </div>
         </main>

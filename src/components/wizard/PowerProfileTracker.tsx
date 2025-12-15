@@ -56,12 +56,12 @@ export interface PowerProfileTrackerProps {
 // ============================================
 
 export const WIZARD_SECTIONS: WizardSection[] = [
-  { id: 'location', title: 'Location & Goals', icon: MapPin, description: 'Where + what you want', pointsAwarded: 20 },
+  { id: 'location', title: 'Location', icon: MapPin, description: 'Where is your facility?', pointsAwarded: 20 },
   { id: 'industry', title: 'Industry', icon: Building2, description: 'What type of facility?', pointsAwarded: 15 },
-  { id: 'details', title: 'Details', icon: ClipboardList, description: 'Facility specifications', pointsAwarded: 25 },
-  { id: 'scenarios', title: 'Scenarios', icon: Target, description: 'Choose your strategy', pointsAwarded: 20 },
-  { id: 'goals', title: 'Goals', icon: Settings, description: 'Fine-tune preferences', pointsAwarded: 15 },
-  { id: 'quote', title: 'Quote', icon: FileText, description: 'Your custom quote', pointsAwarded: 10 },
+  { id: 'details', title: 'Facility', icon: ClipboardList, description: 'Size & specifications', pointsAwarded: 25 },
+  { id: 'preferences', title: 'Preferences', icon: Target, description: 'What matters to you?', pointsAwarded: 15 },
+  { id: 'savings', title: 'Savings Options', icon: Settings, description: 'Your Magic Fit results', pointsAwarded: 20 },
+  { id: 'quote', title: 'Your Quote', icon: FileText, description: 'Final savings estimate', pointsAwarded: 10 },
 ];
 
 export const POWER_LEVELS = [
