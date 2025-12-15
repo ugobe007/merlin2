@@ -558,6 +558,8 @@ export default function StreamlinedWizard({
                     wizard.completeSection('goals');
                     wizard.generateQuote(); // This will show AcceptCustomizeModal
                   }}
+                  onGenerateScenarios={wizard.generateAllScenarios}
+                  isGeneratingScenarios={wizard.isGeneratingScenarios}
                   powerCoverage={powerCoverage}
                   peakDemandKW={peakDemandKW}
                   merlinRecommendation={merlinRecommendation}
@@ -590,6 +592,7 @@ export default function StreamlinedWizard({
                 wizard.setCompletedSections([]);
                 wizard.setTotalPoints(0);
               }}
+              onSelectScenario={wizard.selectScenario}
             />
           </div>
         </main>

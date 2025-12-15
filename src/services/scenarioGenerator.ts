@@ -1,21 +1,15 @@
 /**
  * SCENARIO GENERATOR SERVICE
- * ==========================
+ * ===========================
  * 
- * Generates 3 configuration scenarios based on user inputs:
- * 1. SAVINGS - Best ROI, minimal investment
- * 2. BALANCED - Recommended, optimal value
- * 3. RESILIENT - Maximum capability, premium value
+ * Generates 3 configuration scenarios for BESS projects:
+ * 1. Savings Optimized - Best ROI, minimal investment
+ * 2. Balanced (Recommended) - Optimal balance of savings and resilience
+ * 3. Resilient - Maximum value, longer backup, more solar
  * 
- * Each scenario varies:
- * - BESS size (kW/kWh)
- * - Solar integration
- * - Generator backup
- * - Duration hours
+ * Each scenario is a complete configuration with pricing and financials.
  * 
- * Uses industry load profiles and regional TOU schedules for accuracy.
- * 
- * December 2025
+ * Created: Dec 2025 - Phase 3 of Optimizer implementation
  */
 
 import { calculateQuote, type QuoteResult } from './unifiedQuoteCalculator';
@@ -24,8 +18,7 @@ import {
   getIndustryLoadProfile,
   getRegionalTOUSchedule,
   calculateArbitrageSavings,
-  type IndustryLoadProfile,
-  type TOUSchedule,
+  INDUSTRY_BESS_RATIOS,
 } from '@/components/wizard/constants/wizardConstants';
 
 // ============================================
@@ -39,131 +32,84 @@ export interface ScenarioConfig {
   name: string;
   tagline: string;
   icon: string;
-  bessMultiplier: number;      // Multiplier vs base BESS sizing
-  durationHours: number;       // Battery duration
-  includeSolar: boolean;       // Whether to include solar
-  solarMultiplier: number;     // Solar size vs BESS size
-  includeGenerator: boolean;   // Backup generator
-  generatorMultiplier: number; // Generator size vs critical load
-  priorityFocus: 'roi' | 'value' | 'capability';
-}
-
-export interface GeneratedScenario {
-  type: ScenarioType;
-  name: string;
-  tagline: string;
-  icon: string;
-  isRecommended: boolean;
+  color: string;
   
-  // Configuration
-  config: {
-    bessKW: number;
-    bessKWh: number;
-    solarKW: number;
-    generatorKW: number;
-    durationHours: number;
-  };
+  // Equipment sizing
+  batteryKW: number;
+  batteryKWh: number;
+  durationHours: number;
+  solarKW: number;
+  generatorKW: number;
   
-  // Costs
-  costs: {
-    totalProjectCost: number;
-    netCost: number;          // After ITC
-    taxCredit: number;
-    equipmentCost: number;
-    installationCost: number;
-  };
+  // Calculated results
+  quoteResult: QuoteResult | null;
   
-  // Financial Metrics
-  financials: {
-    annualSavings: number;
-    paybackYears: number;
-    roi10Year: number;
-    roi25Year: number;
-    npv?: number;
-    irr?: number;
-  };
+  // Key metrics for display
+  totalCost: number;
+  netCost: number;           // After incentives
+  annualSavings: number;
+  paybackYears: number;
+  roi25Year: number;
+  backupHours: number;
   
-  // Value Propositions
-  benefits: string[];
-  
-  // Confidence & Sources
-  confidence: number;         // 0-100
-  confidenceReason: string;
+  // Confidence and notes
+  confidenceScore: number;   // 0-100
+  highlights: string[];      // Key selling points
+  tradeoffs: string[];       // What you give up
 }
 
 export interface ScenarioGeneratorInput {
   // Facility
   peakDemandKW: number;
+  dailyKWh: number;
   industryType: string;
+  
+  // Location
   state: string;
   electricityRate: number;
   
-  // User Preferences
-  goals: string[];            // 'cost-savings', 'backup-power', 'sustainability', etc.
+  // User preferences
+  goals: string[];           // ['cost-savings', 'backup-power', etc.]
   wantsSolar: boolean;
   wantsGenerator: boolean;
   
-  // Optional overrides
-  monthlyBill?: number;       // If user provided actual bill
-  dailyKWh?: number;          // If we have actual consumption
+  // Grid status
+  gridConnection: 'on-grid' | 'off-grid' | 'limited';
 }
 
-export interface ScenarioGeneratorOutput {
-  scenarios: GeneratedScenario[];
-  recommendedIndex: number;   // Which scenario is recommended (0-2)
-  inputSummary: {
-    peakDemandKW: number;
-    industryType: string;
-    state: string;
-    loadProfile: IndustryLoadProfile;
-    touSchedule: TOUSchedule;
-  };
+export interface ScenarioGeneratorResult {
+  scenarios: ScenarioConfig[];
+  recommendedIndex: number;  // Which scenario is best for this user
+  recommendationReason: string;
   generatedAt: string;
 }
 
 // ============================================
-// SCENARIO CONFIGURATIONS
+// SCENARIO MULTIPLIERS
 // ============================================
 
-const SCENARIO_CONFIGS: Record<ScenarioType, ScenarioConfig> = {
+/**
+ * Multipliers for each scenario type
+ * Applied to the base industry BESS ratio
+ */
+const SCENARIO_MULTIPLIERS = {
   savings: {
-    type: 'savings',
-    name: 'Cost Saver',
-    tagline: 'Best ROI, minimal investment',
-    icon: '💰',
-    bessMultiplier: 0.75,       // 75% of recommended BESS
-    durationHours: 2,           // Shorter duration for pure peak shaving
-    includeSolar: false,        // No solar for pure savings focus
-    solarMultiplier: 0,
-    includeGenerator: false,
-    generatorMultiplier: 0,
-    priorityFocus: 'roi',
+    bessRatioMultiplier: 0.8,    // 80% of standard - smaller system, faster payback
+    durationMultiplier: 0.75,    // 3hr instead of 4hr
+    solarMultiplier: 0.5,        // Less solar, focus on BESS ROI
+    generatorMultiplier: 0,      // No generator
   },
   balanced: {
-    type: 'balanced',
-    name: 'Balanced',
-    tagline: 'Recommended for most businesses',
-    icon: '⚡',
-    bessMultiplier: 1.0,        // 100% of recommended BESS
-    durationHours: 4,           // Standard 4-hour duration
-    includeSolar: true,         // Include solar if user wants
-    solarMultiplier: 0.6,       // 60% of peak demand
-    includeGenerator: false,
-    generatorMultiplier: 0,
-    priorityFocus: 'value',
+    bessRatioMultiplier: 1.0,    // Standard sizing
+    durationMultiplier: 1.0,     // 4hr standard
+    solarMultiplier: 0.8,        // Moderate solar if wanted
+    generatorMultiplier: 0.5,    // Half-size backup generator
   },
   resilient: {
-    type: 'resilient',
-    name: 'Resilient',
-    tagline: 'Maximum backup & capability',
-    icon: '🛡️',
-    bessMultiplier: 1.4,        // 140% of recommended BESS
-    durationHours: 6,           // Extended backup duration
-    includeSolar: true,
-    solarMultiplier: 0.8,       // Larger solar array
-    includeGenerator: true,     // Include backup generator
-    generatorMultiplier: 0.5,   // 50% of peak for critical load
-    priorityFocus: 'capability',
+    bessRatioMultiplier: 1.3,    // 130% - larger system for more coverage
+    durationMultiplier: 1.5,     // 6hr extended backup
+    solarMultiplier: 1.2,        // More solar for energy independence
+    generatorMultiplier: 1.0,    // Full backup generator
   },
 };
 
@@ -172,57 +118,48 @@ const SCENARIO_CONFIGS: Record<ScenarioType, ScenarioConfig> = {
 // ============================================
 
 /**
- * Generate 3 configuration scenarios based on user inputs
+ * Generate 3 configuration scenarios based on facility data and user preferences
  */
 export async function generateScenarios(
   input: ScenarioGeneratorInput
-): Promise<ScenarioGeneratorOutput> {
-  const { peakDemandKW, industryType, state, electricityRate, goals, wantsSolar, wantsGenerator } = input;
+): Promise<ScenarioGeneratorResult> {
+  console.log('🎯 [ScenarioGenerator] Generating 3 scenarios for:', input.industryType);
   
-  // Get industry-specific data
-  const industryBESSRatio = getIndustryBESSRatio(industryType);
-  const loadProfile = getIndustryLoadProfile(industryType);
-  const touSchedule = getRegionalTOUSchedule(state);
+  // Get industry-specific parameters
+  const baseRatio = getIndustryBESSRatio(input.industryType);
+  const loadProfile = getIndustryLoadProfile(input.industryType);
+  const touSchedule = getRegionalTOUSchedule(input.state);
   
-  // Calculate base BESS size using industry-specific ratio
-  const baseBESSKW = Math.round(peakDemandKW * industryBESSRatio);
+  // Calculate arbitrage potential for this location/industry combo
+  const arbitrageResult = calculateArbitrageSavings(
+    input.dailyKWh,
+    input.industryType,
+    input.state,
+    input.electricityRate
+  );
   
-  // Calculate daily energy (estimated from peak)
-  const dailyKWh = input.dailyKWh || Math.round(peakDemandKW * 24 * 0.4); // 40% avg load factor
-  
-  // Generate each scenario
-  const scenarioPromises = Object.values(SCENARIO_CONFIGS).map(async (config) => {
-    return generateSingleScenario(config, {
-      baseBESSKW,
-      peakDemandKW,
-      dailyKWh,
-      industryType,
-      state,
-      electricityRate,
-      goals,
-      wantsSolar,
-      wantsGenerator,
-      loadProfile,
-      touSchedule,
-    });
+  console.log('📊 [ScenarioGenerator] Base parameters:', {
+    peakDemandKW: input.peakDemandKW,
+    dailyKWh: input.dailyKWh,
+    baseRatio,
+    loadProfile: loadProfile.peakLoadFactor,
+    touOverlap: arbitrageResult.touOverlapScore,
   });
   
-  const scenarios = await Promise.all(scenarioPromises);
+  // Generate all 3 scenarios
+  const scenarios: ScenarioConfig[] = await Promise.all([
+    generateSingleScenario(input, 'savings', baseRatio, arbitrageResult),
+    generateSingleScenario(input, 'balanced', baseRatio, arbitrageResult),
+    generateSingleScenario(input, 'resilient', baseRatio, arbitrageResult),
+  ]);
   
-  // Determine recommended scenario based on user goals
-  const recommendedIndex = determineRecommendedScenario(scenarios, goals);
-  scenarios[recommendedIndex].isRecommended = true;
+  // Determine which scenario to recommend based on user goals
+  const { recommendedIndex, reason } = determineRecommendation(scenarios, input.goals);
   
   return {
     scenarios,
     recommendedIndex,
-    inputSummary: {
-      peakDemandKW,
-      industryType,
-      state,
-      loadProfile,
-      touSchedule,
-    },
+    recommendationReason: reason,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -231,139 +168,100 @@ export async function generateScenarios(
 // SINGLE SCENARIO GENERATOR
 // ============================================
 
-interface SingleScenarioInput {
-  baseBESSKW: number;
-  peakDemandKW: number;
-  dailyKWh: number;
-  industryType: string;
-  state: string;
-  electricityRate: number;
-  goals: string[];
-  wantsSolar: boolean;
-  wantsGenerator: boolean;
-  loadProfile: IndustryLoadProfile;
-  touSchedule: TOUSchedule;
-}
-
 async function generateSingleScenario(
-  config: ScenarioConfig,
-  input: SingleScenarioInput
-): Promise<GeneratedScenario> {
-  const {
-    baseBESSKW,
-    peakDemandKW,
-    dailyKWh,
-    industryType,
-    state,
-    electricityRate,
-    goals,
-    wantsSolar,
-    wantsGenerator,
-    loadProfile,
-    touSchedule,
-  } = input;
+  input: ScenarioGeneratorInput,
+  type: ScenarioType,
+  baseRatio: number,
+  arbitrageResult: ReturnType<typeof calculateArbitrageSavings>
+): Promise<ScenarioConfig> {
+  const multipliers = SCENARIO_MULTIPLIERS[type];
+  const metadata = getScenarioMetadata(type);
   
-  // Calculate scenario-specific sizing
-  const bessKW = Math.round(baseBESSKW * config.bessMultiplier);
-  const bessKWh = bessKW * config.durationHours;
+  // Calculate equipment sizes
+  const bessRatio = baseRatio * multipliers.bessRatioMultiplier;
+  const batteryKW = Math.round(input.peakDemandKW * bessRatio);
+  const baseDuration = 4; // Standard 4-hour duration
+  const durationHours = Math.round(baseDuration * multipliers.durationMultiplier);
+  const batteryKWh = batteryKW * durationHours;
   
-  // Solar: Only if user wants it AND scenario includes it
-  const includeSolar = wantsSolar && config.includeSolar;
-  const solarKW = includeSolar ? Math.round(peakDemandKW * config.solarMultiplier) : 0;
+  // Solar sizing (if user wants it)
+  let solarKW = 0;
+  if (input.wantsSolar) {
+    // Base solar at 60% of peak demand, adjusted by scenario
+    solarKW = Math.round(input.peakDemandKW * 0.6 * multipliers.solarMultiplier);
+  }
   
-  // Generator: Only if user wants it OR scenario requires it (resilient)
-  const includeGenerator = (wantsGenerator || config.includeGenerator) && config.type === 'resilient';
-  const generatorKW = includeGenerator ? Math.round(peakDemandKW * config.generatorMultiplier) : 0;
+  // Generator sizing (if user wants it)
+  let generatorKW = 0;
+  if (input.wantsGenerator) {
+    // Base generator at 50% of peak (critical loads)
+    generatorKW = Math.round(input.peakDemandKW * 0.5 * multipliers.generatorMultiplier);
+  }
   
   // Generate quote using SSOT
   let quoteResult: QuoteResult | null = null;
   try {
     quoteResult = await calculateQuote({
-      storageSizeMW: bessKW / 1000,
-      durationHours: config.durationHours,
-      location: state,
-      electricityRate,
-      useCase: industryType,
+      storageSizeMW: Math.max(0.05, batteryKW / 1000),
+      durationHours,
+      location: input.state,
+      electricityRate: input.electricityRate,
+      useCase: input.industryType,
       solarMW: solarKW / 1000,
       generatorMW: generatorKW / 1000,
       generatorFuelType: 'natural-gas',
-      gridConnection: 'on-grid',
+      gridConnection: input.gridConnection,
     });
   } catch (error) {
-    console.error(`[ScenarioGenerator] Failed to calculate quote for ${config.type}:`, error);
+    console.error(`[ScenarioGenerator] Failed to generate quote for ${type}:`, error);
   }
   
-  // Extract costs from quote result or estimate
-  const totalProjectCost = quoteResult?.costs.totalProjectCost || estimateCost(bessKWh, solarKW, generatorKW);
-  const taxCredit = quoteResult?.costs.taxCredit || Math.round(totalProjectCost * 0.30);
-  const netCost = quoteResult?.costs.netCost || totalProjectCost - taxCredit;
-  const equipmentCost = quoteResult?.costs.equipmentCost || Math.round(totalProjectCost * 0.80);
-  const installationCost = quoteResult?.costs.installationCost || Math.round(totalProjectCost * 0.20);
+  // Extract key metrics
+  const totalCost = quoteResult?.costs?.totalProjectCost || 0;
+  const netCost = quoteResult?.costs?.netCost || totalCost * 0.7; // Assume 30% ITC
+  const annualSavings = quoteResult?.financials?.annualSavings || 0;
+  const paybackYears = quoteResult?.financials?.paybackYears || 0;
+  const roi25Year = quoteResult?.financials?.roi25Year || 0;
   
-  // Calculate arbitrage savings using new function
-  const arbitrageData = calculateArbitrageSavings(dailyKWh, industryType, state, electricityRate);
-  
-  // Financial metrics
-  const annualSavings = quoteResult?.financials.annualSavings || calculateEstimatedSavings(
-    bessKW, 
-    solarKW, 
-    electricityRate, 
-    arbitrageData.monthlySavings
-  );
-  const paybackYears = quoteResult?.financials.paybackYears || (netCost / annualSavings);
-  const roi10Year = quoteResult?.financials.roi10Year || ((annualSavings * 10 - netCost) / netCost * 100);
-  const roi25Year = quoteResult?.financials.roi25Year || ((annualSavings * 25 - netCost) / netCost * 100);
-  
-  // Generate benefits based on scenario type
-  const benefits = generateBenefits(config, {
-    annualSavings,
-    paybackYears,
-    bessKWh,
-    solarKW,
-    generatorKW,
-    loadProfile,
-    touSchedule,
-    arbitrageData,
-  });
+  // Calculate backup hours (how long can BESS run critical loads)
+  const criticalLoadKW = input.peakDemandKW * 0.5; // 50% is critical
+  const backupHours = Math.round((batteryKWh / criticalLoadKW) * 10) / 10;
   
   // Calculate confidence score
-  const { confidence, reason } = calculateConfidence(input, config, quoteResult !== null);
+  const confidenceScore = calculateConfidenceScore(input, quoteResult);
+  
+  // Generate highlights and tradeoffs
+  const { highlights, tradeoffs } = generateHighlightsAndTradeoffs(
+    type, 
+    { batteryKW, batteryKWh, solarKW, generatorKW, durationHours },
+    { totalCost, annualSavings, paybackYears, backupHours }
+  );
   
   return {
-    type: config.type,
-    name: config.name,
-    tagline: config.tagline,
-    icon: config.icon,
-    isRecommended: false, // Set later in main function
+    type,
+    name: metadata.name,
+    tagline: metadata.tagline,
+    icon: metadata.icon,
+    color: metadata.color,
     
-    config: {
-      bessKW,
-      bessKWh,
-      solarKW,
-      generatorKW,
-      durationHours: config.durationHours,
-    },
+    batteryKW,
+    batteryKWh,
+    durationHours,
+    solarKW,
+    generatorKW,
     
-    costs: {
-      totalProjectCost,
-      netCost,
-      taxCredit,
-      equipmentCost,
-      installationCost,
-    },
+    quoteResult,
     
-    financials: {
-      annualSavings,
-      paybackYears: Math.round(paybackYears * 10) / 10,
-      roi10Year: Math.round(roi10Year),
-      roi25Year: Math.round(roi25Year),
-      npv: quoteResult?.financials.npv,
-      irr: quoteResult?.financials.irr,
-    },
+    totalCost,
+    netCost,
+    annualSavings,
+    paybackYears,
+    roi25Year,
+    backupHours,
     
-    benefits,
-    confidence,
-    confidenceReason: reason,
+    confidenceScore,
+    highlights,
+    tradeoffs,
   };
 }
 
@@ -371,164 +269,165 @@ async function generateSingleScenario(
 // HELPER FUNCTIONS
 // ============================================
 
-/**
- * Estimate cost when quote calculation fails
- */
-function estimateCost(bessKWh: number, solarKW: number, generatorKW: number): number {
-  // BESS: $125/kWh (Dec 2025 market)
-  const bessCost = bessKWh * 125;
-  // Solar: $0.85/W commercial
-  const solarCost = solarKW * 850;
-  // Generator: $700/kW natural gas
-  const generatorCost = generatorKW * 700;
-  // Installation: 20% of equipment
-  const installationCost = (bessCost + solarCost + generatorCost) * 0.20;
-  
-  return Math.round(bessCost + solarCost + generatorCost + installationCost);
+function getScenarioMetadata(type: ScenarioType): {
+  name: string;
+  tagline: string;
+  icon: string;
+  color: string;
+} {
+  switch (type) {
+    case 'savings':
+      return {
+        name: 'Savings Optimized',
+        tagline: 'Best ROI, fastest payback',
+        icon: '💰',
+        color: 'emerald',
+      };
+    case 'balanced':
+      return {
+        name: 'Balanced',
+        tagline: 'Recommended for most businesses',
+        icon: '⚡',
+        color: 'blue',
+      };
+    case 'resilient':
+      return {
+        name: 'Maximum Resilience',
+        tagline: 'Full protection, maximum value',
+        icon: '🛡️',
+        color: 'purple',
+      };
+  }
 }
 
-/**
- * Estimate annual savings when quote calculation fails
- */
-function calculateEstimatedSavings(
-  bessKW: number,
-  solarKW: number,
-  electricityRate: number,
-  monthlyArbitrage: number
+function determineRecommendation(
+  scenarios: ScenarioConfig[],
+  goals: string[]
+): { recommendedIndex: number; reason: string } {
+  // Default to balanced (index 1)
+  let recommendedIndex = 1;
+  let reason = 'Best balance of savings and reliability for your business';
+  
+  // Check user priorities
+  const wantsCostSavings = goals.includes('cost-savings') || goals.includes('demand-management');
+  const wantsBackup = goals.includes('backup-power') || goals.includes('grid-independence');
+  const wantsSustainability = goals.includes('sustainability');
+  
+  if (wantsBackup && !wantsCostSavings) {
+    // Prioritize resilience
+    recommendedIndex = 2;
+    reason = 'Maximum protection based on your backup power priority';
+  } else if (wantsCostSavings && !wantsBackup) {
+    // Prioritize savings
+    recommendedIndex = 0;
+    reason = 'Fastest payback based on your cost savings priority';
+  } else if (wantsSustainability) {
+    // Sustainability = more solar = resilient option
+    recommendedIndex = 2;
+    reason = 'Maximum solar coverage for your sustainability goals';
+  }
+  
+  // Override if one scenario has dramatically better payback
+  const savingsPayback = scenarios[0].paybackYears;
+  const balancedPayback = scenarios[1].paybackYears;
+  
+  if (savingsPayback > 0 && savingsPayback < balancedPayback * 0.7) {
+    // Savings option is 30%+ faster payback
+    recommendedIndex = 0;
+    reason = `${Math.round((1 - savingsPayback/balancedPayback) * 100)}% faster payback with optimized sizing`;
+  }
+  
+  return { recommendedIndex, reason };
+}
+
+function calculateConfidenceScore(
+  input: ScenarioGeneratorInput,
+  quoteResult: QuoteResult | null
 ): number {
-  // Demand charge savings: BESS kW × $15/kW × 12 months
-  const demandSavings = bessKW * 15 * 12;
-  // Arbitrage savings: from TOU calculation
-  const arbitrageSavings = monthlyArbitrage * 12;
-  // Solar savings: kW × 5 peak hours × 365 × rate × 0.25 (self-consumption factor)
-  const solarSavings = solarKW * 5 * 365 * electricityRate * 0.25;
+  let score = 70; // Base confidence
   
-  return Math.round(demandSavings + arbitrageSavings + solarSavings);
+  // Add points for having data
+  if (input.dailyKWh > 0) score += 10;
+  if (input.electricityRate > 0) score += 5;
+  if (quoteResult?.financials?.annualSavings) score += 10;
+  
+  // Subtract for missing data
+  if (!input.dailyKWh) score -= 15;
+  
+  return Math.min(95, Math.max(50, score));
 }
 
-/**
- * Generate benefit statements for a scenario
- */
-function generateBenefits(
-  config: ScenarioConfig,
-  data: {
-    annualSavings: number;
-    paybackYears: number;
-    bessKWh: number;
+function generateHighlightsAndTradeoffs(
+  type: ScenarioType,
+  equipment: {
+    batteryKW: number;
+    batteryKWh: number;
     solarKW: number;
     generatorKW: number;
-    loadProfile: IndustryLoadProfile;
-    touSchedule: TOUSchedule;
-    arbitrageData: ReturnType<typeof calculateArbitrageSavings>;
+    durationHours: number;
+  },
+  metrics: {
+    totalCost: number;
+    annualSavings: number;
+    paybackYears: number;
+    backupHours: number;
   }
-): string[] {
-  const benefits: string[] = [];
+): { highlights: string[]; tradeoffs: string[] } {
+  const highlights: string[] = [];
+  const tradeoffs: string[] = [];
   
-  switch (config.type) {
+  switch (type) {
     case 'savings':
-      benefits.push(`Fastest payback at ${data.paybackYears.toFixed(1)} years`);
-      benefits.push(`Save $${Math.round(data.annualSavings / 1000)}K+ per year on demand charges`);
-      benefits.push('Lowest upfront investment');
-      benefits.push('Pure peak shaving focus');
+      highlights.push(`${metrics.paybackYears.toFixed(1)} year payback`);
+      highlights.push('Lowest upfront investment');
+      highlights.push('Focused on demand charge reduction');
+      tradeoffs.push(`${equipment.durationHours}hr backup (shorter)`)
+      tradeoffs.push('Minimal solar included');
+      if (equipment.generatorKW === 0) tradeoffs.push('No backup generator');
       break;
       
     case 'balanced':
-      benefits.push('Optimal balance of cost and capability');
-      benefits.push(`${data.bessKWh} kWh covers 4 hours of backup`);
-      if (data.solarKW > 0) {
-        benefits.push(`${data.solarKW} kW solar reduces grid dependence`);
-      }
-      benefits.push(`${Math.round(data.arbitrageData.touOverlapScore * 100)}% TOU rate optimization`);
+      highlights.push('Best value for most businesses');
+      highlights.push(`${metrics.backupHours}hr backup coverage`);
+      highlights.push('Peak shaving + arbitrage');
+      if (equipment.solarKW > 0) highlights.push(`${equipment.solarKW} kW solar included`);
+      tradeoffs.push('Moderate upfront investment');
       break;
       
     case 'resilient':
-      benefits.push(`Extended ${config.durationHours}-hour backup capability`);
-      benefits.push(`${data.bessKWh} kWh handles extended outages`);
-      if (data.generatorKW > 0) {
-        benefits.push(`${data.generatorKW} kW generator for unlimited runtime`);
-      }
-      benefits.push('Maximum energy independence');
+      highlights.push(`${metrics.backupHours}hr extended backup`);
+      highlights.push('Maximum solar + storage');
+      highlights.push('Full critical load coverage');
+      if (equipment.generatorKW > 0) highlights.push('Backup generator included');
+      tradeoffs.push('Higher upfront cost');
+      tradeoffs.push('Longer payback period');
       break;
   }
   
-  return benefits;
-}
-
-/**
- * Determine which scenario to recommend based on user goals
- */
-function determineRecommendedScenario(
-  scenarios: GeneratedScenario[],
-  goals: string[]
-): number {
-  // Default to balanced (index 1)
-  let recommendedIndex = 1;
-  
-  // Check for specific goal priorities
-  if (goals.includes('backup-power') || goals.includes('grid-independence')) {
-    // Prioritize resilience
-    recommendedIndex = 2;
-  } else if (goals.includes('cost-savings') && !goals.includes('sustainability')) {
-    // Pure cost focus - check if savings scenario has significantly better ROI
-    const savingsPayback = scenarios[0].financials.paybackYears;
-    const balancedPayback = scenarios[1].financials.paybackYears;
-    
-    // Only recommend savings if payback is 20%+ faster
-    if (savingsPayback < balancedPayback * 0.8) {
-      recommendedIndex = 0;
-    }
-  } else if (goals.includes('sustainability')) {
-    // Sustainability goals benefit from solar in balanced/resilient
-    recommendedIndex = scenarios[1].config.solarKW > 0 ? 1 : 2;
-  }
-  
-  return recommendedIndex;
-}
-
-/**
- * Calculate confidence score for a scenario
- */
-function calculateConfidence(
-  input: SingleScenarioInput,
-  config: ScenarioConfig,
-  quoteCalculated: boolean
-): { confidence: number; reason: string } {
-  let confidence = 70; // Base confidence
-  const reasons: string[] = [];
-  
-  // Boost confidence if quote calculation succeeded
-  if (quoteCalculated) {
-    confidence += 15;
-    reasons.push('SSOT quote calculated');
-  }
-  
-  // Boost if we have actual bill data
-  if (input.dailyKWh && input.dailyKWh > 0) {
-    confidence += 10;
-    reasons.push('actual consumption data');
-  }
-  
-  // Regional TOU data available
-  if (input.touSchedule.peakRateMultiplier > 1.0) {
-    confidence += 5;
-    reasons.push('regional TOU rates');
-  }
-  
-  // Cap at 95% (never 100% without site assessment)
-  confidence = Math.min(confidence, 95);
-  
-  const reason = reasons.length > 0 
-    ? `Based on ${reasons.join(', ')}`
-    : 'Based on industry benchmarks';
-  
-  return { confidence, reason };
+  return { highlights, tradeoffs };
 }
 
 // ============================================
-// EXPORTS
+// UTILITY EXPORTS
 // ============================================
 
-export {
-  SCENARIO_CONFIGS,
-  generateSingleScenario,
-};
+export function formatCurrency(amount: number): string {
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(2)}M`;
+  }
+  return `$${Math.round(amount).toLocaleString()}`;
+}
+
+export function formatPower(kw: number): string {
+  if (kw >= 1000) {
+    return `${(kw / 1000).toFixed(1)} MW`;
+  }
+  return `${kw} kW`;
+}
+
+export function formatEnergy(kwh: number): string {
+  if (kwh >= 1000) {
+    return `${(kwh / 1000).toFixed(1)} MWh`;
+  }
+  return `${kwh} kWh`;
+}

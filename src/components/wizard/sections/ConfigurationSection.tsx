@@ -20,8 +20,6 @@ import type { WizardState } from '../types/wizardTypes';
 import PowerGapIndicator from '../PowerGapIndicator';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { MerlinWizardModal } from '../guided-flow/MerlinWizardModal';
-import { ScenarioComparisonSection } from './ScenarioComparisonSection';
-import type { GeneratedScenario } from '@/services/scenarioGenerator';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 interface ConfigurationSectionProps {
@@ -47,7 +45,6 @@ export function ConfigurationSection({
 }: ConfigurationSectionProps) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const [showMerlinWizard, setShowMerlinWizard] = useState(false);
-  const [showScenarioComparison, setShowScenarioComparison] = useState(false);
   
   // Calculate current peak demand from centralizedState
   const peakDemandKW = centralizedState?.calculated?.totalPeakDemandKW || wizardState.batteryKW * 1.5 || 500;
@@ -183,7 +180,6 @@ export function ConfigurationSection({
         <GenerateQuoteButton 
           isCalculating={wizardState.isCalculating}
           onClick={onGenerateQuote}
-          onCompareOptions={() => setShowScenarioComparison(true)}
         />
       </div>
       
@@ -207,42 +203,6 @@ export function ConfigurationSection({
           location={wizardState.state || 'US'}
           powerCoverage={powerCoverage}
         />
-      )}
-      
-      {/* Scenario Comparison Modal - Phase 3 Dec 2025 */}
-      {showScenarioComparison && (
-        <div className="fixed inset-0 z-[10000] bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 overflow-auto">
-          <div className="min-h-screen">
-            {/* Close button */}
-            <button
-              onClick={() => setShowScenarioComparison(false)}
-              className="fixed top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
-            
-            <ScenarioComparisonSection
-              wizardState={wizardState}
-              onSelectScenario={(scenario: GeneratedScenario) => {
-                // Apply selected scenario to wizard state
-                setWizardState(prev => ({
-                  ...prev,
-                  batteryKW: scenario.config.bessKW,
-                  batteryKWh: scenario.config.bessKWh,
-                  solarKW: scenario.config.solarKW,
-                  generatorKW: scenario.config.generatorKW,
-                  durationHours: scenario.config.durationHours,
-                  wantsSolar: scenario.config.solarKW > 0,
-                  wantsGenerator: scenario.config.generatorKW > 0,
-                }));
-                setShowScenarioComparison(false);
-                // Optionally auto-generate quote after selection
-                // onGenerateQuote();
-              }}
-              onBack={() => setShowScenarioComparison(false)}
-            />
-          </div>
-        </div>
       )}
     </div>
   );
@@ -858,31 +818,9 @@ function GridStatusNotice({ wizardState, centralizedState }: { wizardState: Wiza
   );
 }
 
-function GenerateQuoteButton({ 
-  isCalculating, 
-  onClick,
-  onCompareOptions,
-}: { 
-  isCalculating: boolean; 
-  onClick: () => Promise<void>;
-  onCompareOptions?: () => void;
-}) {
+function GenerateQuoteButton({ isCalculating, onClick }: { isCalculating: boolean; onClick: () => Promise<void> }) {
   return (
     <div className="sticky bottom-4 z-20 mt-8">
-      {/* Compare Options Button - Show 3 Scenarios */}
-      {onCompareOptions && (
-        <button
-          onClick={onCompareOptions}
-          disabled={isCalculating}
-          className="w-full mb-3 py-3 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 border border-slate-600"
-        >
-          <span className="text-xl">📊</span>
-          <span>Compare 3 Options</span>
-          <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full ml-2">New!</span>
-        </button>
-      )}
-      
-      {/* Main Generate Quote Button */}
       <button
         onClick={onClick}
         disabled={isCalculating}

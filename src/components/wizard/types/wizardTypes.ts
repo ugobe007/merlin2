@@ -9,9 +9,10 @@
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import type { GeographicRecommendation } from '@/services/geographicIntelligenceService';
 import type { PremiumConfiguration } from '@/services/premiumConfigurationService';
+import type { ScenarioConfig, ScenarioGeneratorResult } from '@/services/scenarioGenerator';
 
 // Re-export imported types for convenience
-export type { PremiumConfiguration };
+export type { PremiumConfiguration, ScenarioConfig, ScenarioGeneratorResult };
 
 // ============================================
 // PROPS INTERFACES
@@ -109,11 +110,13 @@ export interface WizardState {
   quoteResult: QuoteResult | null;
   isCalculating: boolean;
   
+  // Scenario comparison (Phase 3 - Dec 2025)
+  scenarioResult: ScenarioGeneratorResult | null;
+  selectedScenario: ScenarioConfig | null;
+  showScenarios: boolean; // Toggle between scenarios view and single quote
+  
   // Real-time cost estimates
   estimatedCost: EstimatedCost;
-  
-  // Daily consumption (calculated from facility details, used by scenario generator)
-  dailyKWh: number;
 }
 
 // ============================================
@@ -298,6 +301,9 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
   evChargersHPC: 0,
   quoteResult: null,
   isCalculating: false,
+  scenarioResult: null,
+  selectedScenario: null,
+  showScenarios: true, // Default to showing scenarios view
   estimatedCost: {
     battery: 0,
     solar: 0,
@@ -311,8 +317,6 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
     installation: 0,
     total: 0,
   },
-  // Phase 3 Scenario Generator fields (Dec 2025)
-  dailyKWh: 0,
 };
 
 export const DEFAULT_RFQ_FORM: RFQFormState = {
