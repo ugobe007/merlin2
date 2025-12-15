@@ -18,7 +18,9 @@ import { DEFAULT_WIZARD_STATE } from '../types/wizardTypes';
 import { 
   FACILITY_PRESETS, 
   INTERNATIONAL_REGIONS, 
-  getIndustryBESSRatio 
+  getIndustryBESSRatio,
+  EQUIPMENT_TIER_OPTIONS,
+  FACILITY_SUBTYPES,
 } from '../constants/wizardConstants';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
@@ -37,6 +39,23 @@ import {
 } from '@/services/premiumConfigurationService';
 import { useWizardState } from '@/hooks/useWizardState';
 import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
+
+// ============================================
+// HELPER: Get facility subtype multiplier
+// ============================================
+function getSubtypeMultiplier(industrySlug: string, subtypeId: string): number {
+  const subtypes = FACILITY_SUBTYPES[industrySlug] || FACILITY_SUBTYPES['default'];
+  const subtype = subtypes.find(s => s.id === subtypeId);
+  return subtype?.powerMultiplier ?? 1.0;
+}
+
+// ============================================
+// HELPER: Get equipment tier multiplier
+// ============================================
+function getEquipmentTierMultiplier(tier: 'standard' | 'premium'): number {
+  const tierOption = EQUIPMENT_TIER_OPTIONS.find(t => t.id === tier);
+  return tierOption?.powerMultiplier ?? 1.0;
+}
 
 // ============================================
 // HOOK PROPS & RETURN TYPES
@@ -475,7 +494,28 @@ export function useStreamlinedWizard({
       // The SSOT handles: level2Chargers, dcfc50kwChargers, dcfc150kwChargers, dcfc350kwChargers, megawattChargers
       
       const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
-      const peakDemandKW = (powerResult.powerMW || 0) * 1000;
+      let peakDemandKW = (powerResult.powerMW || 0) * 1000;
+      
+      // ═══════════════════════════════════════════════════════════════
+      // MULTIPLIERS (Dec 2025 - Universal Facility Configuration)
+      // Apply facility subtype and equipment tier multipliers
+      // ═══════════════════════════════════════════════════════════════
+      const subtypeMultiplier = getSubtypeMultiplier(wizardState.selectedIndustry, wizardState.facilitySubtype);
+      const tierMultiplier = getEquipmentTierMultiplier(wizardState.equipmentTier);
+      
+      // Apply multipliers: Subtype affects base load, Tier affects equipment capacity
+      peakDemandKW = Math.round(peakDemandKW * subtypeMultiplier * tierMultiplier);
+      
+      if (import.meta.env.DEV && (subtypeMultiplier !== 1.0 || tierMultiplier !== 1.0)) {
+        console.log('📊 [MULTIPLIERS] Applied:', {
+          subtype: wizardState.facilitySubtype,
+          subtypeMultiplier,
+          tier: wizardState.equipmentTier,
+          tierMultiplier,
+          adjustedPeakKW: peakDemandKW,
+        });
+      }
+      
       const dailyKWh = peakDemandKW * 24 * 0.4;
       const monthlyKWh = dailyKWh * 30;
       
@@ -490,6 +530,18 @@ export function useStreamlinedWizard({
       let recommendedSolarKW = 0;
       if (wizardState.wantsSolar) {
         recommendedSolarKW = Math.round(peakDemandKW * 0.6);
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SOLAR CAP (Dec 2025 - Physical Constraints)
+        // Cap solar to max capacity if user has refined physical constraints
+        // ═══════════════════════════════════════════════════════════════
+        const maxSolarKW = wizardState.physicalConstraints?.maxSolarKW;
+        if (maxSolarKW && recommendedSolarKW > maxSolarKW) {
+          if (import.meta.env.DEV) {
+            console.log('☀️ [SOLAR CAP] Capping solar from', recommendedSolarKW, 'to', maxSolarKW, 'kW (roof constraint)');
+          }
+          recommendedSolarKW = maxSolarKW;
+        }
       }
       
       // Update both wizardState AND centralizedState for Power Profile
@@ -520,6 +572,9 @@ export function useStreamlinedWizard({
           batteryKW: recommendedBatteryKW,
           batteryKWh: recommendedBatteryKWh,
           solarKW: recommendedSolarKW,
+          subtypeMultiplier,
+          tierMultiplier,
+          solarCapped: recommendedSolarKW < (wizardState.physicalConstraints?.maxSolarKW || Infinity),
         });
       }
     } catch (error) {
@@ -528,7 +583,8 @@ export function useStreamlinedWizard({
     // CRITICAL FIX (Dec 14, 2025): Use JSON.stringify to detect nested object changes
     // Without this, changing useCaseData.level2Chargers doesn't trigger recalculation
     // because React does shallow comparison and sees same object reference
-  }, [JSON.stringify(wizardState.useCaseData), wizardState.selectedIndustry, wizardState.wantsSolar, currentSection, setWizardState, setCentralizedState]);
+    // Added Dec 15, 2025: facilitySubtype, equipmentTier, physicalConstraints for Universal Facility Configuration
+  }, [JSON.stringify(wizardState.useCaseData), wizardState.selectedIndustry, wizardState.wantsSolar, currentSection, wizardState.facilitySubtype, wizardState.equipmentTier, JSON.stringify(wizardState.physicalConstraints), setWizardState, setCentralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
   // EFFECT: CRITICAL FIX - Recalculate when user completes Section 2
