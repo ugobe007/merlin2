@@ -455,62 +455,37 @@ export function MerlinRecommendationPanel({
                 type="button"
                 onClick={() => {
                   console.log('🧙‍♂️ Accept button clicked!');
-                  console.log('🧙‍♂️ onAcceptRecommendation function:', onAcceptRecommendation);
-                  console.log('🧙‍♂️ typeof onAcceptRecommendation:', typeof onAcceptRecommendation);
                   onAcceptRecommendation();
                 }}
-                className="py-6 px-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/60 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:via-indigo-600 hover:to-purple-700 text-white transition-all duration-200 hover:scale-105"
+                className="py-4 px-3 rounded-xl font-bold shadow-lg hover:shadow-purple-500/40 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 hover:from-purple-500 hover:via-indigo-400 hover:to-cyan-400 text-white transition-all duration-200 hover:scale-[1.02]"
               >
-                <div className="flex flex-col items-center gap-2">
-                  <CheckCircle className="w-8 h-8" />
-                  <div className="text-center">
-                    <div className="text-xl font-black mb-1">
-                      🧙‍♂️ Accept
-                    </div>
-                    <div className="text-xs font-normal text-white/90">
-                      Auto-apply settings
-                    </div>
-                  </div>
-                  {/* SAVINGS */}
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30 mt-1">
-                    <div className="text-xs font-bold uppercase text-white/90">💰 Save</div>
-                    <div className="text-lg font-black">
-                      {formatCurrency(displaySavings, recommendation.currency)}<span className="text-xs">/yr</span>
-                    </div>
+                <div className="flex items-center justify-center gap-3">
+                  <CheckCircle className="w-6 h-6" />
+                  <div className="text-left">
+                    <div className="text-lg font-black">🧙‍♂️ Accept</div>
+                    <div className="text-xs font-normal text-white/80">Save {formatCurrency(displaySavings, recommendation.currency)}/yr</div>
                   </div>
                 </div>
               </button>
               
-              {/* SCROLL TO CONFIGURATION BUTTON */}
+              {/* CUSTOMIZE BUTTON */}
               <button
                 type="button"
                 onClick={() => {
-                  console.log('⚙️ Configure button clicked! Scrolling to configuration sections...');
-                  // Find the first configuration section (Solar, Wind, Generator, or BESS sliders)
-                  // These sections are below the recommendation panel in GoalsSection
                   const configSection = document.querySelector('[data-section="solar-config"], [data-section="wind-config"], [data-section="generator-config"], [data-section="bess-config"]');
                   if (configSection) {
                     configSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   } else {
-                    // Fallback: scroll down 800px if sections not found
                     window.scrollBy({ top: 800, behavior: 'smooth' });
                   }
                 }}
-                className="py-6 px-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/80 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:via-blue-400 hover:to-indigo-500 text-white transition-all duration-200 hover:scale-105"
+                className="py-4 px-3 rounded-xl font-bold shadow-lg hover:shadow-amber-500/40 bg-gradient-to-r from-slate-400 via-amber-400 to-orange-400 hover:from-slate-300 hover:via-amber-300 hover:to-orange-300 text-gray-800 transition-all duration-200 hover:scale-[1.02]"
               >
-                <div className="flex flex-col items-center gap-2">
-                  <Settings className="w-10 h-10" />
-                  <div className="text-center">
-                    <div className="text-2xl font-black mb-1">
-                      ⚙️ CUSTOMIZE
-                    </div>
-                    <div className="text-sm font-bold text-cyan-100">
-                      Fine-tune your system
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-white bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mt-1">
-                    <ArrowDown className="w-4 h-4" />
-                    <span className="font-semibold">Scroll to Tools</span>
+                <div className="flex items-center justify-center gap-3">
+                  <Settings className="w-6 h-6" />
+                  <div className="text-left">
+                    <div className="text-lg font-black">⚙️ Customize</div>
+                    <div className="text-xs font-normal text-gray-700">Fine-tune settings</div>
                   </div>
                 </div>
               </button>
