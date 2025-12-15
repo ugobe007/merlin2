@@ -1786,24 +1786,52 @@ export function calculateOfficePower(sqFt: number): PowerCalculationResult {
 }
 
 /**
+ * Hotel Power Calculation Options
+ * Allows specifying amenities for more accurate power calculation
+ */
+export interface HotelPowerOptions {
+  hotelClass?: string;
+  amenities?: {
+    pool?: boolean;
+    restaurant?: boolean;
+    spa?: boolean;
+    fitnessCenter?: boolean;
+    evCharging?: boolean;
+    laundry?: boolean;
+    conferenceCenter?: boolean;
+  };
+}
+
+/**
  * Calculate power requirement for Hotel
  * Now uses comprehensive equipment-based calculation from BESS Sizing Questionnaire
+ * 
+ * UPDATED Dec 2025: Now includes amenities in calculation!
+ * - Pool: +50 kW (pumps, heating, lighting)
+ * - Restaurant: +75 kW (kitchen equipment, walk-in coolers)
+ * - Spa: +40 kW (saunas, steam, massage equipment)
+ * - Fitness Center: +15 kW (treadmills, lighting)
+ * - EV Charging: +60 kW (default 8 Level 2 ports)
+ * - Laundry: +40 kW (washers, dryers, ironers)
+ * - Conference Center: +30 kW (AV, lighting, HVAC)
  * 
  * For detailed calculations with amenities, use calculateHotelPowerDetailed()
  * For full equipment breakdown, use calculateHotelPowerFromEquipment()
  * 
- * @param roomCount - Number of hotel rooms
- * @param hotelClass - Optional: 'economy' | 'midscale' | 'upscale' | 'luxury' (determines facility type)
+ * @param roomCount - Number of hotel rooms (exact count for precise calculation)
+ * @param options - Optional: hotelClass and amenities configuration
  * @returns Power in MW
  */
 export function calculateHotelPower(
   roomCount: number,
-  hotelClass?: string
+  options?: string | HotelPowerOptions
 ): PowerCalculationResult {
   // ═══════════════════════════════════════════════════════════════════════════
   // HOTEL POWER CALCULATION - SSOT using validated benchmarks
   // 
-  // Validated Dec 2025: Marriott Lancaster 133 rooms = 384 kW = 2.89 kW/room
+  // UPDATED Dec 2025: Now includes amenities!
+  // 
+  // Validated: Marriott Lancaster 133 rooms = 384 kW = 2.89 kW/room
   // 
   // Using HOTEL_CLASS_PROFILES peakKWPerRoom × 0.75 diversity:
   // - economy: 2.5 × 0.75 = 1.875 kW/room actual
@@ -1811,8 +1839,19 @@ export function calculateHotelPower(
   // - upscale: 5.0 × 0.75 = 3.75 kW/room actual
   // - luxury: 7.0 × 0.75 = 5.25 kW/room actual
   // 
-  // For unknown class, default to midscale (most common)
+  // Plus amenity loads from HOTEL_AMENITY_SPECS
   // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Handle backward compatibility: options can be string (hotelClass) or object
+  let hotelClass: string | undefined;
+  let amenities: HotelPowerOptions['amenities'] = {};
+  
+  if (typeof options === 'string') {
+    hotelClass = options;
+  } else if (options) {
+    hotelClass = options.hotelClass;
+    amenities = options.amenities || {};
+  }
   
   // Determine hotel class from room count if not specified
   let effectiveClass = hotelClass?.toLowerCase() || 'midscale';
@@ -1855,19 +1894,68 @@ export function calculateHotelPower(
   const profile = HOTEL_CLASS_PROFILES[effectiveClass as keyof typeof HOTEL_CLASS_PROFILES] 
                   || HOTEL_CLASS_PROFILES.midscale;
   
-  // Calculate peak demand: rooms × peakKWPerRoom × 0.75 diversity
+  // Calculate base peak demand: rooms × peakKWPerRoom × 0.75 diversity
   const diversityFactor = 0.75;
-  const peakDemandKW = roomCount * profile.peakKWPerRoom * diversityFactor;
+  const basePeakKW = roomCount * profile.peakKWPerRoom * diversityFactor;
+  
+  // Calculate amenity loads from HOTEL_AMENITY_SPECS
+  let amenityPeakKW = 0;
+  const amenityDetails: string[] = [];
+  
+  if (amenities?.pool) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.pool.peakKW;
+    amenityDetails.push(`Pool +${HOTEL_AMENITY_SPECS.pool.peakKW}kW`);
+  }
+  if (amenities?.restaurant) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.restaurant.peakKW;
+    amenityDetails.push(`Restaurant +${HOTEL_AMENITY_SPECS.restaurant.peakKW}kW`);
+  }
+  if (amenities?.spa) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.spa.peakKW;
+    amenityDetails.push(`Spa +${HOTEL_AMENITY_SPECS.spa.peakKW}kW`);
+  }
+  if (amenities?.fitnessCenter) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.fitnessCenter.peakKW;
+    amenityDetails.push(`Fitness +${HOTEL_AMENITY_SPECS.fitnessCenter.peakKW}kW`);
+  }
+  if (amenities?.evCharging) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.evCharging.peakKW;
+    amenityDetails.push(`EV Charging +${HOTEL_AMENITY_SPECS.evCharging.peakKW}kW`);
+  }
+  if (amenities?.laundry) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.laundry.peakKW;
+    amenityDetails.push(`Laundry +${HOTEL_AMENITY_SPECS.laundry.peakKW}kW`);
+  }
+  if (amenities?.conferenceCenter) {
+    amenityPeakKW += HOTEL_AMENITY_SPECS.conferenceCenter.peakKW;
+    amenityDetails.push(`Conference +${HOTEL_AMENITY_SPECS.conferenceCenter.peakKW}kW`);
+  }
+  
+  // Apply 0.6 diversity to amenities (not all run at peak simultaneously)
+  const amenityDiversity = 0.6;
+  const diversifiedAmenityKW = amenityPeakKW * amenityDiversity;
+  
+  // Total peak demand
+  const peakDemandKW = basePeakKW + diversifiedAmenityKW;
   const powerMW = peakDemandKW / 1000;
   
-  const description = `${profile.name} Hotel (${roomCount} rooms): ${Math.round(peakDemandKW)} kW peak demand`;
+  // Build description
+  let description = `${profile.name} Hotel (${roomCount} rooms): ${Math.round(basePeakKW)} kW base`;
+  if (amenityDetails.length > 0) {
+    description += ` + ${Math.round(diversifiedAmenityKW)} kW amenities (${amenityDetails.join(', ')})`;
+  }
+  description += ` = ${Math.round(peakDemandKW)} kW total`;
   
-  console.log('🏨 [calculateHotelPower] SSOT calculation:', {
+  console.log('🏨 [calculateHotelPower] SSOT calculation with amenities:', {
     roomCount,
     hotelClass: effectiveClass,
     peakKWPerRoom: profile.peakKWPerRoom,
     diversityFactor,
-    peakDemandKW: Math.round(peakDemandKW),
+    basePeakKW: Math.round(basePeakKW),
+    amenities: amenityDetails,
+    amenityPeakKW,
+    diversifiedAmenityKW: Math.round(diversifiedAmenityKW),
+    totalPeakKW: Math.round(peakDemandKW),
     powerMW: Math.round(powerMW * 100) / 100,
   });
   
@@ -1875,8 +1963,16 @@ export function calculateHotelPower(
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
     durationHrs: 4, // Standard hotel backup duration
     description,
-    calculationMethod: 'SSOT: HOTEL_CLASS_PROFILES validated against Marriott benchmarks',
-    inputs: { roomCount, hotelClass: effectiveClass, peakKWPerRoom: profile.peakKWPerRoom, diversityFactor },
+    calculationMethod: 'SSOT: HOTEL_CLASS_PROFILES + HOTEL_AMENITY_SPECS (validated Dec 2025)',
+    inputs: { 
+      roomCount, 
+      hotelClass: effectiveClass, 
+      peakKWPerRoom: profile.peakKWPerRoom, 
+      diversityFactor,
+      amenities,
+      basePeakKW: Math.round(basePeakKW),
+      amenityPeakKW: Math.round(diversifiedAmenityKW),
+    },
   };
 }
 
