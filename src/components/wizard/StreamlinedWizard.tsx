@@ -35,7 +35,7 @@ import {
   ScenarioComparison,
   ScenarioSection,
 } from './sections';
-import ScenarioSectionV2 from './sections/ScenarioSectionV2';
+// ScenarioSectionV2 (two-column) replaced with ScenarioSection (3 cards) - Dec 15, 2025
 import { ConfigurationConfirmModal } from './modals';
 import PowerProfileTracker from './PowerProfileTracker';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -585,8 +585,8 @@ export default function StreamlinedWizard({
               ) : null;
             })()}
 
-            {/* Section 4: TWO-COLUMN COMPARISON (AFTER Goals) */}
-            {/* Dec 15, 2025 - Redesigned: Merlin's Recommendation vs User Configuration */}
+            {/* Section 4: MAGIC FIT - 3 Scenario Cards (AFTER Goals) */}
+            {/* Dec 15, 2025 - CORRECT: 3 scenario cards (Savings, Balanced, Resilient) */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
               const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
@@ -597,14 +597,14 @@ export default function StreamlinedWizard({
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
               
               return (
-                <ScenarioSectionV2
+                <ScenarioSection
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
                   currentSection={wizard.currentSection}
                   sectionRef={(el) => { sectionRefs.current[4] = el; }}
                   onBack={() => wizard.advanceToSection(3)}
                   onContinue={() => {
-                    // After selecting config, show confirmation before quote
+                    // After selecting scenario, show confirmation before quote
                     wizard.completeSection('savings');
                     setShowConfigConfirmModal(true);
                   }}
