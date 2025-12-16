@@ -395,15 +395,15 @@ END $$;
 -- VERIFICATION: Show new hotel questions
 -- ============================================================================
 SELECT 
-    display_order,
-    field_name,
-    question_type,
-    question_text,
+    cq.display_order,
+    cq.field_name,
+    cq.question_type,
+    cq.question_text,
     CASE 
-        WHEN options IS NOT NULL THEN jsonb_array_length(options)::text || ' options'
+        WHEN cq.options IS NOT NULL THEN jsonb_array_length(cq.options)::text || ' options'
         ELSE 'N/A'
     END as option_count
 FROM custom_questions cq
 JOIN use_cases uc ON cq.use_case_id = uc.id
 WHERE uc.slug = 'hotel'
-ORDER BY display_order;
+ORDER BY cq.display_order;
