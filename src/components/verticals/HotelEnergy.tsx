@@ -617,15 +617,15 @@ export default function HotelEnergy() {
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16 lg:py-20">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            {/* Left: Copy & CTA */}
-            <div className="lg:pr-8">
+            {/* Left: Copy & CTA - with translucent background for readability */}
+            <div className="lg:pr-8 bg-gradient-to-br from-slate-900/80 via-indigo-950/70 to-purple-950/60 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-purple-500/30 shadow-2xl shadow-purple-900/30">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 border border-indigo-400/40 rounded-full px-5 py-2 mb-6 shadow-lg">
                 <Building2 className="w-5 h-5 text-indigo-300" />
                 <span className="text-indigo-200 text-sm font-semibold">Hotels Save 25-40% on Energy Costs</span>
               </div>
               
               {/* Headline with TrueQuote button at end */}
-              <h1 className="text-4xl md:text-5xl lg:text-5xl font-black text-white mb-6 leading-[1.1] flex flex-wrap items-center gap-3">
+              <h1 className="text-4xl md:text-5xl lg:text-5xl font-black text-white mb-6 leading-[1.1] flex flex-wrap items-center gap-3 drop-shadow-lg">
                 <span>Protect Guest Experience</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300">& Cut Costs</span>
                 <button 
@@ -638,23 +638,23 @@ export default function HotelEnergy() {
                 </button>
               </h1>
               
-              <p className="text-lg text-indigo-100/90 mb-6 leading-relaxed">
+              <p className="text-lg text-indigo-100 mb-6 leading-relaxed drop-shadow-md">
                 HVAC, pools, kitchens, and laundry spike your energy bills.
-                <span className="text-indigo-300 font-medium"> Battery storage cuts peak demand and provides backup power.</span>
+                <span className="text-indigo-200 font-semibold"> Battery storage cuts peak demand and provides backup power.</span>
               </p>
               
               <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
                 <div className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                  <span className="font-medium">Never lose power to guests</span>
+                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0 drop-shadow-md" />
+                  <span className="font-semibold drop-shadow-md">Never lose power to guests</span>
                 </div>
                 <div className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                  <span className="font-medium">30% federal tax credit</span>
+                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0 drop-shadow-md" />
+                  <span className="font-semibold drop-shadow-md">30% federal tax credit</span>
                 </div>
                 <div className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                  <span className="font-medium">Sustainability credentials</span>
+                  <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0 drop-shadow-md" />
+                  <span className="font-semibold drop-shadow-md">Sustainability credentials</span>
                 </div>
               </div>
               
