@@ -435,6 +435,160 @@ export function FacilityDetailsSection({
                         </div>
                       </div>
                     )}
+                    
+                    {/* ═══════════════════════════════════════════════════════════════════
+                        MULTISELECT INPUT (Dec 2025) - Phase 1 Hotel Questionnaire
+                        Renders checkboxes for multiple selection (amenities, F&B, etc.)
+                        Stores selected values as JSON array in useCaseData
+                        ═══════════════════════════════════════════════════════════════════ */}
+                    {(question.question_type === 'multiselect' || question.question_type === 'multi-select') && question.options && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {(Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]')).map((option: any) => {
+                          const optionValue = typeof option === 'string' ? option : option.value;
+                          const optionLabel = typeof option === 'string' ? option : option.label;
+                          const optionPower = typeof option === 'object' ? option.powerKw : null;
+                          
+                          // Get current selections as array
+                          const currentSelections: string[] = Array.isArray(wizardState.useCaseData[question.field_name])
+                            ? wizardState.useCaseData[question.field_name]
+                            : (wizardState.useCaseData[question.field_name] ? JSON.parse(wizardState.useCaseData[question.field_name]) : []);
+                          const isSelected = currentSelections.includes(optionValue);
+                          
+                          return (
+                            <label
+                              key={optionValue}
+                              className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all border-2 ${
+                                isSelected
+                                  ? 'bg-purple-100 border-purple-400 shadow-sm'
+                                  : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  const newSelections = e.target.checked
+                                    ? [...currentSelections, optionValue]
+                                    : currentSelections.filter(v => v !== optionValue);
+                                  setWizardState(prev => ({
+                                    ...prev,
+                                    useCaseData: { ...prev.useCaseData, [question.field_name]: newSelections }
+                                  }));
+                                }}
+                                className="w-5 h-5 mt-0.5 rounded accent-purple-500 flex-shrink-0"
+                              />
+                              <div className="flex-1">
+                                <span className={`font-medium ${isSelected ? 'text-purple-800' : 'text-gray-700'}`}>
+                                  {optionLabel}
+                                </span>
+                                {optionPower && (
+                                  <span className="block text-xs text-gray-500 mt-0.5">
+                                    +{optionPower} kW
+                                  </span>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    {/* ═══════════════════════════════════════════════════════════════════
+                        COMPOUND INPUT (Dec 2025) - Phase 1 Hotel Questionnaire
+                        Renders nested questions (e.g., F&B with seat counts, EV with charger counts)
+                        Each sub-question has enable checkbox + optional numeric input
+                        Stores as JSON object in useCaseData
+                        ═══════════════════════════════════════════════════════════════════ */}
+                    {question.question_type === 'compound' && question.options && (
+                      <div className="space-y-3">
+                        {(Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]')).map((subQ: any) => {
+                          // Get current compound state as object
+                          const compoundData: Record<string, any> = typeof wizardState.useCaseData[question.field_name] === 'object'
+                            ? wizardState.useCaseData[question.field_name]
+                            : (wizardState.useCaseData[question.field_name] ? JSON.parse(wizardState.useCaseData[question.field_name]) : {});
+                          
+                          const subValue = subQ.value;
+                          const isEnabled = compoundData[subValue]?.enabled ?? false;
+                          const subAmount = compoundData[subValue]?.amount ?? (subQ.defaultAmount || 0);
+                          
+                          return (
+                            <div 
+                              key={subValue}
+                              className={`p-4 rounded-xl border-2 transition-all ${
+                                isEnabled 
+                                  ? 'bg-purple-50 border-purple-300' 
+                                  : 'bg-gray-50 border-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-4">
+                                <label className="flex items-center gap-3 cursor-pointer flex-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={isEnabled}
+                                    onChange={(e) => {
+                                      const newCompound = {
+                                        ...compoundData,
+                                        [subValue]: { 
+                                          enabled: e.target.checked, 
+                                          amount: subAmount 
+                                        }
+                                      };
+                                      setWizardState(prev => ({
+                                        ...prev,
+                                        useCaseData: { ...prev.useCaseData, [question.field_name]: newCompound }
+                                      }));
+                                    }}
+                                    className="w-5 h-5 rounded accent-purple-500"
+                                  />
+                                  <div>
+                                    <span className={`font-medium ${isEnabled ? 'text-purple-800' : 'text-gray-600'}`}>
+                                      {subQ.label}
+                                    </span>
+                                    {subQ.powerKw && (
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        (+{subQ.powerKw} kW base)
+                                      </span>
+                                    )}
+                                  </div>
+                                </label>
+                                
+                                {/* Optional numeric input for sub-question */}
+                                {isEnabled && subQ.hasAmount && (
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      min={subQ.minAmount || 0}
+                                      max={subQ.maxAmount || 9999}
+                                      value={subAmount}
+                                      onChange={(e) => {
+                                        const newCompound = {
+                                          ...compoundData,
+                                          [subValue]: { 
+                                            enabled: true, 
+                                            amount: parseInt(e.target.value) || 0 
+                                          }
+                                        };
+                                        setWizardState(prev => ({
+                                          ...prev,
+                                          useCaseData: { ...prev.useCaseData, [question.field_name]: newCompound }
+                                        }));
+                                      }}
+                                      className="w-24 px-3 py-2 bg-white border-2 border-purple-300 rounded-lg text-center font-bold text-purple-700 focus:border-purple-500"
+                                    />
+                                    <span className="text-sm text-gray-500">{subQ.amountUnit || ''}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Help text for sub-question */}
+                              {isEnabled && subQ.helpText && (
+                                <p className="text-xs text-gray-500 mt-2 ml-8">{subQ.helpText}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   );
                 })}
