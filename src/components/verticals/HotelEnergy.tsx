@@ -50,54 +50,71 @@ import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 // TYPES
 // ============================================
 
+// Hotel class categories as user specified
+type HotelClassCategory = 'luxury' | 'economy' | 'commercial-chain' | 'brand-hotel' | 'boutique';
+
 interface HotelInputs {
+  // STEP 1: Building basics (first inputs)
+  squareFootage: number;        // Total building square footage
+  hotelClass: HotelClassCategory; // User-selected from dropdown
   numberOfRooms: number;
-  hotelClass: HotelClassSimple;
-  // Expanded amenities list (Dec 2025)
-  hasPool: boolean;        // Indoor or outdoor
-  hasIndoorPool: boolean;  // Indoor pool/jacuzzi specifically
-  hasOutdoorPool: boolean; // Outdoor pool
-  hasRestaurant: boolean;  // Has restaurant
-  restaurantCount: number; // How many restaurants (MGM has several)
+  
+  // STEP 2: Parking
+  parkingLotSize: number;       // Number of parking spaces
+  hasParkingCanopy: boolean;    // Solar parking canopy checkbox
+  
+  // STEP 3: Amenities (CHECKBOXES - not buttons)
+  hasConferenceCenter: boolean; // Conference center checkbox
+  hasEventCenter: boolean;      // Event center checkbox
+  hasRestaurant: boolean;       // Restaurant checkbox
+  restaurantCount: number;      // If yes, how many restaurants
+  hasPool: boolean;             // Pool checkbox
+  hasIndoorPool: boolean;       // Indoor pool option
+  hasOutdoorPool: boolean;      // Outdoor pool option
+  
+  // STEP 4: Resort-only features (shown only for Luxury)
+  hasClubhouse: boolean;        // Club house (luxury/resort only)
+  hasGolfCourse: boolean;       // Golf course (luxury/resort only)
+  golfCartCount: number;
+  
+  // STEP 5: Additional amenities
   hasSpa: boolean;
   hasFitnessCenter: boolean;
   hasEVCharging: boolean;
-  evChargerCount: number;  // How many EV chargers
-  hasParkingCanopy: boolean; // Solar parking canopy
-  parkingSpaces: number;   // Number of parking spaces for canopy solar
-  hasMeetingRoom: boolean;
-  hasConferenceCenter: boolean;
+  evChargerCount: number;
   hasLaundry: boolean;
-  laundryMachineCount: number; // How many machines
-  // Building specs
-  elevatorCount: number;   // Number of elevators (slider input)
-  // Resort features
-  isResort: boolean;
-  hasClubhouse: boolean;
-  hasGolfCourse: boolean;
-  golfCartCount: number;
+  laundryMachineCount: number;
+  elevatorCount: number;
+  
+  // STEP 6: Storage preferences (slider before recommendation)
+  storageHours: number;         // 2, 4, 6, or 8 hours
+  
   // Location & billing
   state: string;
   currentMonthlyBill: number;
-  squareFootage: number;   // For utility estimation
 }
 
-// Helper: Auto-determine hotel class from room count
-function getHotelClassFromRooms(rooms: number): HotelClassSimple {
-  if (rooms < 75) return 'economy';
-  if (rooms < 150) return 'midscale';
-  if (rooms < 300) return 'upscale';
-  return 'luxury';
+// Helper: Map user-facing hotel class to SSOT class for calculations
+function mapToSSOTClass(hotelClass: HotelClassCategory): HotelClassSimple {
+  switch (hotelClass) {
+    case 'luxury': return 'luxury';
+    case 'economy': return 'economy';
+    case 'commercial-chain': return 'midscale';
+    case 'brand-hotel': return 'upscale';
+    case 'boutique': return 'midscale';
+    default: return 'midscale';
+  }
 }
 
 // Helper: Estimate monthly utility bill from square footage
-function estimateMonthlyBill(sqft: number, hotelClass: HotelClassSimple): number {
+function estimateMonthlyBill(sqft: number, hotelClass: HotelClassCategory): number {
   // Industry average: $0.80-1.50 per sq ft per month for hotels
-  const ratePerSqFt: Record<HotelClassSimple, number> = {
-    economy: 0.80,
-    midscale: 1.00,
-    upscale: 1.25,
-    luxury: 1.50,
+  const ratePerSqFt: Record<HotelClassCategory, number> = {
+    'economy': 0.80,
+    'boutique': 0.90,
+    'commercial-chain': 1.00,
+    'brand-hotel': 1.25,
+    'luxury': 1.50,
   };
   return Math.round(sqft * ratePerSqFt[hotelClass]);
 }
@@ -114,13 +131,23 @@ interface LeadInfo {
 // CONSTANTS (UI display only - calculations use SSOT)
 // ============================================
 
-// Hotel class descriptions for UI display
-const HOTEL_CLASS_DISPLAY = {
-  economy: { name: 'Economy/Budget', description: 'Basic amenities' },
-  midscale: { name: 'Midscale', description: 'Standard amenities + breakfast' },
-  upscale: { name: 'Upscale', description: 'Full-service hotel' },
-  luxury: { name: 'Luxury/Resort', description: 'Premium experience' },
-};
+// Hotel class descriptions for UI dropdown
+const HOTEL_CLASS_OPTIONS: { value: HotelClassCategory; label: string; description: string }[] = [
+  { value: 'luxury', label: 'Luxury / Resort', description: 'Premium amenities, spa, golf' },
+  { value: 'economy', label: 'Economy / Budget', description: 'Basic amenities, limited service' },
+  { value: 'commercial-chain', label: 'Commercial Chain', description: 'Standard chain hotels (Holiday Inn, etc.)' },
+  { value: 'brand-hotel', label: 'Brand Hotel (Marriott, Hilton)', description: 'Full-service branded properties' },
+  { value: 'boutique', label: 'Small / Boutique Hotel', description: 'Unique, independent properties' },
+];
+
+// Similar hotel configurations for display
+const SIMILAR_HOTEL_CONFIGS = [
+  { name: 'Marriott Lancaster', rooms: 133, peakKW: 384, bessKW: 192, durationHrs: 4, savingsPerYear: 52000, class: 'brand-hotel' as HotelClassCategory },
+  { name: 'Hilton Hawaii Resort', rooms: 800, peakKW: 3700, bessKW: 1850, durationHrs: 4, savingsPerYear: 180000, class: 'luxury' as HotelClassCategory },
+  { name: 'Holiday Inn Express', rooms: 120, peakKW: 320, bessKW: 160, durationHrs: 4, savingsPerYear: 38000, class: 'commercial-chain' as HotelClassCategory },
+  { name: 'Boutique Inn Portland', rooms: 45, peakKW: 135, bessKW: 68, durationHrs: 4, savingsPerYear: 18000, class: 'boutique' as HotelClassCategory },
+  { name: 'Budget Lodge Texas', rooms: 60, peakKW: 150, bessKW: 75, durationHrs: 2, savingsPerYear: 14000, class: 'economy' as HotelClassCategory },
+];
 
 // Amenity names for UI display (values from SSOT)
 const AMENITY_DISPLAY = {
@@ -273,8 +300,6 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
   const { numberOfRooms, hotelClass, state } = inputs;
   
   // Map local amenity booleans to SSOT amenity keys
-  // Note: SSOT currently supports: pool, restaurant, spa, fitness, evCharging
-  // Additional amenities add estimated power manually
   const amenities: HotelAmenitySimple[] = [];
   if (inputs.hasPool || inputs.hasIndoorPool || inputs.hasOutdoorPool) amenities.push('pool');
   if (inputs.hasRestaurant) amenities.push('restaurant');
@@ -284,10 +309,13 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
   
   const stateData = STATE_RATES[state] || STATE_RATES['Other'];
   
+  // Map user-facing class to SSOT class
+  const ssotClass = mapToSSOTClass(hotelClass);
+  
   // Call SSOT calculator
   const result = calculateHotelPowerSimple({
     rooms: numberOfRooms,
-    hotelClass,
+    hotelClass: ssotClass,
     amenities,
     electricityRate: stateData.rate,
   });
@@ -300,14 +328,14 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
     additionalPowerKW += (inputs.restaurantCount - 1) * 50;
   }
   
-  // Conference center (100kW base + 0.5kW per 100 sqft)
+  // Conference center (100kW base)
   if (inputs.hasConferenceCenter) {
     additionalPowerKW += 100;
   }
   
-  // Meeting rooms (25kW per room estimate)
-  if (inputs.hasMeetingRoom) {
-    additionalPowerKW += 25;
+  // Event center (150kW base)
+  if (inputs.hasEventCenter) {
+    additionalPowerKW += 150;
   }
   
   // Laundry (5kW per machine)
@@ -320,12 +348,10 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
     additionalPowerKW += (inputs.evChargerCount - 8) * 11;
   }
   
-  // Parking canopy solar (reduces peak, not adds - skip for now)
-  
   // Resort features
   if (inputs.hasClubhouse) additionalPowerKW += 75;
   if (inputs.hasGolfCourse) additionalPowerKW += 50;
-  if (inputs.golfCartCount > 0) additionalPowerKW += inputs.golfCartCount * 2; // Charging stations
+  if (inputs.golfCartCount > 0) additionalPowerKW += inputs.golfCartCount * 2;
   
   const totalPeakKW = result.peakKW + additionalPowerKW;
   
@@ -347,48 +373,47 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
 // ============================================
 
 export default function HotelEnergy() {
-  // Calculator inputs - expanded for Dec 2025
+  // Calculator inputs - restructured per user requirements (Dec 2025)
   const [inputs, setInputs] = useState<HotelInputs>({
+    // STEP 1: Building basics
+    squareFootage: 75000,
+    hotelClass: 'commercial-chain', // User selects from dropdown
     numberOfRooms: 150,
-    hotelClass: 'midscale', // Auto-determined from room count
-    // Pools
+    
+    // STEP 2: Parking
+    parkingLotSize: 100,
+    hasParkingCanopy: false,
+    
+    // STEP 3: Amenities (checkboxes)
+    hasConferenceCenter: false,
+    hasEventCenter: false,
+    hasRestaurant: true,
+    restaurantCount: 1,
     hasPool: true,
     hasIndoorPool: false,
     hasOutdoorPool: true,
-    // Dining
-    hasRestaurant: true,
-    restaurantCount: 1,
-    // Amenities
+    
+    // STEP 4: Resort-only features
+    hasClubhouse: false,
+    hasGolfCourse: false,
+    golfCartCount: 0,
+    
+    // STEP 5: Additional amenities
     hasSpa: false,
     hasFitnessCenter: true,
     hasEVCharging: false,
     evChargerCount: 4,
-    hasParkingCanopy: false,
-    parkingSpaces: 100,
-    hasMeetingRoom: true,
-    hasConferenceCenter: false,
     hasLaundry: true,
     laundryMachineCount: 6,
-    // Building specs
     elevatorCount: 2,
-    // Resort features
-    isResort: false,
-    hasClubhouse: false,
-    hasGolfCourse: false,
-    golfCartCount: 0,
+    
+    // STEP 6: Storage preferences
+    storageHours: 4,
+    
     // Location & billing
     state: 'Florida',
     currentMonthlyBill: 25000,
-    squareFootage: 75000, // ~500 sqft per room average
   });
-  
-  // Auto-update hotel class when room count changes
-  useEffect(() => {
-    const newClass = getHotelClassFromRooms(inputs.numberOfRooms);
-    if (newClass !== inputs.hotelClass) {
-      setInputs(prev => ({ ...prev, hotelClass: newClass }));
-    }
-  }, [inputs.numberOfRooms]);
   
   // Auto-estimate utility bill from square footage if user hasn't manually set it
   const [userSetBill, setUserSetBill] = useState(false);
@@ -435,18 +460,18 @@ export default function HotelEnergy() {
   
   // Hero inline estimate - calculated from room count (Dec 2025 - removed popup)
   const heroEstimate = React.useMemo(() => {
-    const savingsPerRoom: Record<HotelClassSimple, number> = {
-      'economy': 200,
-      'midscale': 350,
-      'upscale': 500,
+    const savingsPerRoom: Record<HotelClassCategory, number> = {
       'luxury': 800,
+      'brand-hotel': 500,
+      'commercial-chain': 350,
+      'boutique': 300,
+      'economy': 200,
     };
-    const hotelClass = getHotelClassFromRooms(inputs.numberOfRooms);
-    const baseSavings = (savingsPerRoom[hotelClass] || 350) * inputs.numberOfRooms;
+    const baseSavings = (savingsPerRoom[inputs.hotelClass] || 350) * inputs.numberOfRooms;
     const savings = Math.round(baseSavings);
-    const payback = hotelClass === 'luxury' ? 3.5 : hotelClass === 'upscale' ? 4.0 : hotelClass === 'midscale' ? 4.5 : 5.0;
-    return { savings, payback, hotelClass };
-  }, [inputs.numberOfRooms]);
+    const payback = inputs.hotelClass === 'luxury' ? 3.5 : inputs.hotelClass === 'brand-hotel' ? 4.0 : inputs.hotelClass === 'commercial-chain' ? 4.5 : inputs.hotelClass === 'boutique' ? 4.5 : 5.0;
+    return { savings, payback, hotelClass: inputs.hotelClass };
+  }, [inputs.numberOfRooms, inputs.hotelClass]);
   
   // Calculate quote when inputs change
   useEffect(() => {
@@ -464,10 +489,9 @@ export default function HotelEnergy() {
       const stateData = STATE_RATES[inputs.state] || STATE_RATES['Other'];
       
       // Size battery: 0.50 ratio (arbitrage - balanced cost savings + backup capability)
-      // Ratio per SSOT standards: peak_shaving=0.40, arbitrage=0.50, resilience=0.70, microgrid=1.00
-      const bessRatio = 0.50; // Arbitrage use case (cost optimization + backup)
+      const bessRatio = 0.50;
       const storageSizeMW = (peakKW * bessRatio) / 1000;
-      const durationHours = 4;
+      const durationHours = inputs.storageHours; // User-selected storage hours
       
       const result = await QuoteEngine.generateQuote({
         storageSizeMW: Math.max(0.1, storageSizeMW),
@@ -662,183 +686,289 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* Right: Quick Estimate Calculator (Step 0) */}
-            <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30">
+            {/* Right: Quick Estimate Calculator (Step 0) - REDESIGNED Dec 2025 */}
+            <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30 max-h-[85vh] overflow-y-auto">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-emerald-500 rounded-xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Quick Savings Estimate</h3>
-                  <p className="text-indigo-300 text-xs">Play with the numbers, then build your quote</p>
+                  <p className="text-indigo-300 text-xs">Enter your property details below</p>
                 </div>
               </div>
               
-              {/* State + Rooms + Sq Ft Row */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {/* State Selector */}
-                <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
-                  <select
-                    value={inputs.state}
-                    onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
-                  >
-                    {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
-                      <option key={state} value={state}>{state}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* === SECTION 1: Building Basics === */}
+              <div className="mb-4 pb-4 border-b border-indigo-500/30">
+                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Building Info</p>
                 
-                {/* Number of Rooms - Data Entry */}
-                <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Rooms</label>
-                  <input
-                    type="number"
-                    value={inputs.numberOfRooms}
-                    onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
-                    min="1"
-                    max="2000"
-                    placeholder="150"
-                  />
-                </div>
-                
-                {/* Square Footage - Data Entry */}
-                <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Sq Ft</label>
+                {/* Square Footage - FIRST INPUT */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Total Building Square Footage</label>
                   <input
                     type="number"
                     value={inputs.squareFootage}
                     onChange={(e) => setInputs(prev => ({ ...prev, squareFootage: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                    className="w-full px-3 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold focus:border-indigo-400 transition-all"
                     min="1000"
                     max="2000000"
                     step="1000"
                     placeholder="75000"
                   />
                 </div>
+                
+                {/* Hotel Class - DROPDOWN (not auto-detected) */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Class of Hotel</label>
+                  <select
+                    value={inputs.hotelClass}
+                    onChange={(e) => setInputs(prev => ({ ...prev, hotelClass: e.target.value as HotelClassCategory }))}
+                    className="w-full px-3 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-medium focus:border-indigo-400 transition-all"
+                  >
+                    {HOTEL_CLASS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-indigo-400 mt-1">{HOTEL_CLASS_OPTIONS.find(o => o.value === inputs.hotelClass)?.description}</p>
+                </div>
+                
+                {/* State + Rooms Row */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
+                    <select
+                      value={inputs.state}
+                      onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
+                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
+                    >
+                      {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
+                        <option key={state} value={state}>{state}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-indigo-200 mb-1">🛏️ # of Rooms</label>
+                    <input
+                      type="number"
+                      value={inputs.numberOfRooms}
+                      onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                      min="1"
+                      max="2000"
+                      placeholder="150"
+                    />
+                  </div>
+                </div>
               </div>
               
-              {/* Hotel Class Display - Auto-determined */}
-              <div className="bg-emerald-500/20 rounded-lg px-3 py-1.5 text-center mb-3 border border-emerald-400/30">
-                <span className="text-xs text-emerald-200 mr-2">Auto-detected:</span>
-                <span className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)} Class Hotel</span>
+              {/* === SECTION 2: Parking === */}
+              <div className="mb-4 pb-4 border-b border-indigo-500/30">
+                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Parking</p>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="block text-xs font-medium text-indigo-200 mb-1">🅿️ Parking Lot Size</label>
+                    <input
+                      type="number"
+                      value={inputs.parkingLotSize}
+                      onChange={(e) => setInputs(prev => ({ ...prev, parkingLotSize: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                      min="0"
+                      max="5000"
+                      placeholder="100"
+                    />
+                    <p className="text-xs text-indigo-400 mt-0.5">spaces</p>
+                  </div>
+                  <div className="flex items-center mt-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.hasParkingCanopy}
+                        onChange={(e) => setInputs(prev => ({ ...prev, hasParkingCanopy: e.target.checked }))}
+                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-white">☀️ Solar Parking Canopy</span>
+                    </label>
+                  </div>
+                </div>
               </div>
               
-              {/* Elevators Slider */}
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-indigo-200 mb-1">🛗 Number of Elevators</label>
+              {/* === SECTION 3: Amenities (CHECKBOXES) === */}
+              <div className="mb-4 pb-4 border-b border-indigo-500/30">
+                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Amenities</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasConferenceCenter}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasConferenceCenter: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">🎤 Conference Center</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasEventCenter}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasEventCenter: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">🎉 Event Center</span>
+                  </label>
+                  
+                  {/* Restaurant with count */}
+                  <div className="col-span-2 flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.hasRestaurant}
+                        onChange={(e) => setInputs(prev => ({ ...prev, hasRestaurant: e.target.checked, restaurantCount: e.target.checked ? Math.max(1, prev.restaurantCount) : 0 }))}
+                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-white">🍽️ Restaurant</span>
+                    </label>
+                    {inputs.hasRestaurant && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-indigo-300">How many?</span>
+                        <input
+                          type="number"
+                          value={inputs.restaurantCount}
+                          onChange={(e) => setInputs(prev => ({ ...prev, restaurantCount: Math.max(1, parseInt(e.target.value) || 1) }))}
+                          className="w-14 px-2 py-1 bg-slate-800/80 border border-indigo-500/40 rounded text-white text-sm text-center"
+                          min="1"
+                          max="20"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Pool options */}
+                  <div className="col-span-2">
+                    <label className="flex items-center gap-2 cursor-pointer mb-1">
+                      <input
+                        type="checkbox"
+                        checked={inputs.hasPool}
+                        onChange={(e) => setInputs(prev => ({ ...prev, hasPool: e.target.checked, hasIndoorPool: e.target.checked ? prev.hasIndoorPool : false, hasOutdoorPool: e.target.checked ? prev.hasOutdoorPool : false }))}
+                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-white">🏊 Pool</span>
+                    </label>
+                    {inputs.hasPool && (
+                      <div className="ml-6 flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={inputs.hasIndoorPool}
+                            onChange={(e) => setInputs(prev => ({ ...prev, hasIndoorPool: e.target.checked }))}
+                            className="w-3 h-3 rounded border border-indigo-400 bg-slate-800 text-emerald-500"
+                          />
+                          <span className="text-xs text-indigo-200">Indoor</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={inputs.hasOutdoorPool}
+                            onChange={(e) => setInputs(prev => ({ ...prev, hasOutdoorPool: e.target.checked }))}
+                            className="w-3 h-3 rounded border border-indigo-400 bg-slate-800 text-emerald-500"
+                          />
+                          <span className="text-xs text-indigo-200">Outdoor</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasSpa}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasSpa: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">💆 Spa</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasFitnessCenter}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasFitnessCenter: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">🏋️ Fitness Center</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasLaundry}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasLaundry: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">👕 Laundry</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inputs.hasEVCharging}
+                      onChange={(e) => setInputs(prev => ({ ...prev, hasEVCharging: e.target.checked }))}
+                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-white">🔌 EV Charging</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* === SECTION 4: Resort Features (Luxury only) === */}
+              {inputs.hotelClass === 'luxury' && (
+                <div className="mb-4 pb-4 border-b border-indigo-500/30">
+                  <p className="text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">⭐ Resort Features</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.hasClubhouse}
+                        onChange={(e) => setInputs(prev => ({ ...prev, hasClubhouse: e.target.checked }))}
+                        className="w-4 h-4 rounded border-2 border-amber-400 bg-slate-800 text-amber-500 focus:ring-amber-500"
+                      />
+                      <span className="text-sm text-white">🏛️ Club House</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.hasGolfCourse}
+                        onChange={(e) => setInputs(prev => ({ ...prev, hasGolfCourse: e.target.checked }))}
+                        className="w-4 h-4 rounded border-2 border-amber-400 bg-slate-800 text-amber-500 focus:ring-amber-500"
+                      />
+                      <span className="text-sm text-white">⛳ Golf Course</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+              
+              {/* === SECTION 5: Storage Hours Slider (BEFORE recommendation) === */}
+              <div className="mb-4 pb-4 border-b border-indigo-500/30">
+                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Battery Storage Duration</p>
+                <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Storage Hours (backup duration)</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min={0}
-                    max={12}
-                    value={inputs.elevatorCount}
-                    onChange={(e) => setInputs(prev => ({ ...prev, elevatorCount: parseInt(e.target.value) }))}
-                    className="flex-1 h-2 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    min={2}
+                    max={8}
+                    step={2}
+                    value={inputs.storageHours}
+                    onChange={(e) => setInputs(prev => ({ ...prev, storageHours: parseInt(e.target.value) }))}
+                    className="flex-1 h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
-                  <span className="text-white font-bold text-lg min-w-[40px] text-center">{inputs.elevatorCount}</span>
+                  <span className="text-white font-bold text-lg min-w-[50px] text-center">{inputs.storageHours} hrs</span>
+                </div>
+                <div className="flex justify-between text-xs text-indigo-400 mt-1 px-1">
+                  <span>2 hrs</span>
+                  <span>4 hrs</span>
+                  <span>6 hrs</span>
+                  <span>8 hrs</span>
                 </div>
               </div>
               
-              {/* Key Amenities - 6 toggles including parking canopy */}
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Key Energy Drivers</label>
-                <div className="grid grid-cols-6 gap-1.5">
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasPool: !prev.hasPool }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasPool 
-                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
-                    }`}
-                  >
-                    <Waves className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">Pool</span>
-                  </button>
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasRestaurant: !prev.hasRestaurant }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasRestaurant 
-                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
-                    }`}
-                  >
-                    <Utensils className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">F&B</span>
-                  </button>
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasSpa: !prev.hasSpa }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasSpa 
-                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
-                    }`}
-                  >
-                    <Droplets className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">Spa</span>
-                  </button>
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasLaundry: !prev.hasLaundry }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasLaundry 
-                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
-                    }`}
-                  >
-                    <Shirt className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">Laundry</span>
-                  </button>
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasEVCharging: !prev.hasEVCharging }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasEVCharging 
-                        ? 'bg-emerald-500/30 border-emerald-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-emerald-500/50'
-                    }`}
-                  >
-                    <Car className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">EV</span>
-                  </button>
-                  <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasParkingCanopy: !prev.hasParkingCanopy }))}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
-                      inputs.hasParkingCanopy 
-                        ? 'bg-emerald-500/30 border-emerald-400 text-white' 
-                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-emerald-500/50'
-                    }`}
-                  >
-                    <Sun className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5">Solar</span>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Monthly Bill Slider */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-indigo-200 mb-2">💡 Monthly Electric Bill</label>
-                <input
-                  type="range"
-                  min={5000}
-                  max={200000}
-                  step={1000}
-                  value={inputs.currentMonthlyBill}
-                  onChange={(e) => {
-                    setUserSetBill(true);
-                    setInputs(prev => ({ ...prev, currentMonthlyBill: parseInt(e.target.value) }));
-                  }}
-                  className="w-full h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                />
-                <div className="flex justify-between text-xs text-indigo-400 mt-1">
-                  <span>$5K</span>
-                  <span className="text-base font-bold text-white">${inputs.currentMonthlyBill.toLocaleString()}/mo</span>
-                  <span>$200K</span>
-                </div>
-              </div>
-              
-              {/* Live Results */}
+              {/* === SECTION 6: Live Results === */}
               <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-4 border border-emerald-400/30 mb-4">
+                <p className="text-xs text-emerald-300 font-semibold mb-2 uppercase tracking-wider">💡 Merlin's Recommendation</p>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <p className="text-2xl font-black text-white">${heroEstimate.savings.toLocaleString()}</p>
@@ -855,10 +985,35 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* Build My Quote CTA - Deep Purple to Emerald Green Gradient */}
+              {/* === SECTION 7: Similar Configurations === */}
+              <div className="mb-4">
+                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">🏨 Similar Hotel Configurations</p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {SIMILAR_HOTEL_CONFIGS
+                    .filter(h => h.class === inputs.hotelClass)
+                    .slice(0, 3)
+                    .map((hotel, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-slate-800/50 rounded-lg px-3 py-2 border border-indigo-500/20">
+                        <div>
+                          <p className="text-sm text-white font-medium">{hotel.name}</p>
+                          <p className="text-xs text-indigo-300">{hotel.rooms} rooms · {hotel.bessKW} kW BESS</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-emerald-400 font-bold">${(hotel.savingsPerYear / 1000).toFixed(0)}K/yr</p>
+                        </div>
+                      </div>
+                    ))}
+                  {SIMILAR_HOTEL_CONFIGS.filter(h => h.class === inputs.hotelClass).length === 0 && (
+                    <div className="text-center py-2 text-indigo-400 text-xs">
+                      Select a hotel class to see similar configurations
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* === Build My Quote CTA === */}
               <button
                 onClick={() => {
-                  // Pass Step 0 values to wizard
                   setShowWizard(true);
                 }}
                 className="w-full py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/40 flex items-center justify-center gap-2 border-2 border-emerald-400/30"
@@ -1091,14 +1246,14 @@ export default function HotelEnergy() {
                       )}
                     </div>
                     <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
-                      <input type="checkbox" checked={inputs.hasMeetingRoom} onChange={(e) => setInputs({ ...inputs, hasMeetingRoom: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                      <input type="checkbox" checked={inputs.hasConferenceCenter} onChange={(e) => setInputs({ ...inputs, hasConferenceCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
                       <Users className="w-4 h-4 text-purple-400" />
-                      <span className="text-white text-sm">Meeting Room</span>
+                      <span className="text-white text-sm">Meeting / Conference</span>
                     </label>
                     <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
-                      <input type="checkbox" checked={inputs.hasConferenceCenter} onChange={(e) => setInputs({ ...inputs, hasConferenceCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                      <input type="checkbox" checked={inputs.hasEventCenter} onChange={(e) => setInputs({ ...inputs, hasEventCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
                       <Briefcase className="w-4 h-4 text-indigo-400" />
-                      <span className="text-white text-sm">Conference Center</span>
+                      <span className="text-white text-sm">Event Center</span>
                     </label>
                   </div>
                 </div>
@@ -1176,22 +1331,21 @@ export default function HotelEnergy() {
                   </div>
                 </div>
                 
-                {/* Resort Features */}
+                {/* Resort Features - Only show for Luxury class */}
+                {inputs.hotelClass === 'luxury' && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-indigo-200 mb-3 cursor-pointer">
-                    <input type="checkbox" checked={inputs.isResort} onChange={(e) => setInputs({ ...inputs, isResort: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                    <span>🏝️ Resort Features</span>
+                  <label className="block text-sm font-medium text-amber-200 mb-3">
+                    🏝️ Resort Features
                   </label>
-                  {inputs.isResort && (
-                    <div className="grid grid-cols-2 gap-3 bg-indigo-500/10 rounded-xl p-3 border border-indigo-400/30">
+                    <div className="grid grid-cols-2 gap-3 bg-amber-500/10 rounded-xl p-3 border border-amber-400/30">
                       <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
-                        <input type="checkbox" checked={inputs.hasClubhouse} onChange={(e) => setInputs({ ...inputs, hasClubhouse: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                        <Building2 className="w-4 h-4 text-indigo-400" />
+                        <input type="checkbox" checked={inputs.hasClubhouse} onChange={(e) => setInputs({ ...inputs, hasClubhouse: e.target.checked })} className="w-4 h-4 accent-amber-500" />
+                        <Building2 className="w-4 h-4 text-amber-400" />
                         <span className="text-white text-sm">Clubhouse</span>
                       </label>
                       <div className="bg-white/5 rounded-xl p-3">
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={inputs.hasGolfCourse} onChange={(e) => setInputs({ ...inputs, hasGolfCourse: e.target.checked, golfCartCount: e.target.checked ? Math.max(20, inputs.golfCartCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                          <input type="checkbox" checked={inputs.hasGolfCourse} onChange={(e) => setInputs({ ...inputs, hasGolfCourse: e.target.checked, golfCartCount: e.target.checked ? Math.max(20, inputs.golfCartCount) : 0 })} className="w-4 h-4 accent-amber-500" />
                           <Flag className="w-4 h-4 text-green-400" />
                           <span className="text-white text-sm">Golf Course</span>
                         </label>
@@ -1210,8 +1364,8 @@ export default function HotelEnergy() {
                         )}
                       </div>
                     </div>
-                  )}
                 </div>
+                )}
                 
                 {/* State */}
                 <div>
