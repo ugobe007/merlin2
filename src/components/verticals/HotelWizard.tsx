@@ -1457,7 +1457,7 @@ export default function HotelWizard({
             </div>
           )}
           
-          {/* Step 1: YOUR HOTEL (Facility Details - Hotel Class & Rooms already provided from landing page) */}
+          {/* Step 1: YOUR HOTEL (Facility Details) */}
           {currentStep === 1 && (
             <div className="space-y-6">
               {/* Step Help */}
@@ -1466,27 +1466,22 @@ export default function HotelWizard({
                 colorScheme="purple"
               />
               
-              {/* Summary of Pre-filled Data from Landing Page */}
-              <div className="bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-pink-600/20 rounded-2xl p-5 border-2 border-purple-500/40 shadow-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-lg font-black text-white flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-purple-400" />
-                    Your Hotel Profile
-                  </h4>
-                  <span className="text-xs text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">Pre-filled from calculator</span>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-gray-800/50 rounded-xl p-3 border border-purple-500/30">
-                    <p className="text-2xl font-black text-purple-400">{hotelDetails.numberOfRooms}</p>
-                    <p className="text-sm text-gray-400">Rooms</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-xl p-3 border border-indigo-500/30">
-                    <p className="text-lg font-black text-indigo-400">{HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name}</p>
-                    <p className="text-sm text-gray-400">Hotel Class</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-xl p-3 border border-pink-500/30">
-                    <p className="text-lg font-black text-pink-400">{hotelDetails.state}</p>
-                    <p className="text-sm text-gray-400">Location</p>
+              {/* Number of Rooms - Editable */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
+                <h4 className="text-xl font-black text-white mb-4">🏨 Number of Rooms</h4>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={25}
+                    max={1000}
+                    step={25}
+                    value={hotelDetails.numberOfRooms}
+                    onChange={(e) => setHotelDetails({...hotelDetails, numberOfRooms: parseInt(e.target.value)})}
+                    className="flex-1 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                  <div className="bg-gray-800/80 rounded-xl px-5 py-3 text-center min-w-[120px] border-2 border-purple-500/40">
+                    <span className="text-4xl font-black text-purple-400">{hotelDetails.numberOfRooms}</span>
+                    <span className="text-purple-300 text-base ml-2 font-medium">rooms</span>
                   </div>
                 </div>
               </div>
