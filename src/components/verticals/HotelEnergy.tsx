@@ -64,10 +64,13 @@ interface HotelInputs {
   hasEVCharging: boolean;
   evChargerCount: number;  // How many EV chargers
   hasParkingCanopy: boolean; // Solar parking canopy
+  parkingSpaces: number;   // Number of parking spaces for canopy solar
   hasMeetingRoom: boolean;
   hasConferenceCenter: boolean;
   hasLaundry: boolean;
   laundryMachineCount: number; // How many machines
+  // Building specs
+  elevatorCount: number;   // Number of elevators (slider input)
   // Resort features
   isResort: boolean;
   hasClubhouse: boolean;
@@ -359,12 +362,15 @@ export default function HotelEnergy() {
     hasSpa: false,
     hasFitnessCenter: true,
     hasEVCharging: false,
-    evChargerCount: 0,
+    evChargerCount: 4,
     hasParkingCanopy: false,
+    parkingSpaces: 100,
     hasMeetingRoom: true,
     hasConferenceCenter: false,
     hasLaundry: true,
     laundryMachineCount: 6,
+    // Building specs
+    elevatorCount: 2,
     // Resort features
     isResort: false,
     hasClubhouse: false,
@@ -560,7 +566,7 @@ export default function HotelEnergy() {
               alt=""
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/95 via-purple-900/85 to-indigo-900/90" />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/60 via-indigo-900/40 to-slate-900/50" />
           </div>
         ))}
         
@@ -668,15 +674,15 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* State + Rooms Row */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* State + Rooms + Sq Ft Row */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
                 {/* State Selector */}
                 <div>
                   <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
                   <select
                     value={inputs.state}
                     onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
-                    className="w-full px-3 py-2.5 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-sm font-medium focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
                   >
                     {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
                       <option key={state} value={state}>{state}</option>
@@ -684,75 +690,127 @@ export default function HotelEnergy() {
                   </select>
                 </div>
                 
-                {/* Number of Rooms */}
+                {/* Number of Rooms - Data Entry */}
                 <div>
                   <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Rooms</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={inputs.numberOfRooms}
-                      onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2.5 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-lg font-bold text-center focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                      min="1"
-                      max="2000"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    value={inputs.numberOfRooms}
+                    onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                    min="1"
+                    max="2000"
+                    placeholder="150"
+                  />
+                </div>
+                
+                {/* Square Footage - Data Entry */}
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Sq Ft</label>
+                  <input
+                    type="number"
+                    value={inputs.squareFootage}
+                    onChange={(e) => setInputs(prev => ({ ...prev, squareFootage: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                    min="1000"
+                    max="2000000"
+                    step="1000"
+                    placeholder="75000"
+                  />
                 </div>
               </div>
               
-              {/* Hotel Class Display */}
-              <div className="bg-indigo-500/20 rounded-lg px-3 py-2 text-center mb-3">
-                <span className="text-xs text-indigo-300 mr-2">Auto-detected:</span>
-                <span className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)} Class</span>
+              {/* Hotel Class Display - Auto-determined */}
+              <div className="bg-emerald-500/20 rounded-lg px-3 py-1.5 text-center mb-3 border border-emerald-400/30">
+                <span className="text-xs text-emerald-200 mr-2">Auto-detected:</span>
+                <span className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)} Class Hotel</span>
               </div>
               
-              {/* Key Amenities Row */}
+              {/* Elevators Slider */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-indigo-200 mb-1">🛗 Number of Elevators</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={12}
+                    value={inputs.elevatorCount}
+                    onChange={(e) => setInputs(prev => ({ ...prev, elevatorCount: parseInt(e.target.value) }))}
+                    className="flex-1 h-2 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <span className="text-white font-bold text-lg min-w-[40px] text-center">{inputs.elevatorCount}</span>
+                </div>
+              </div>
+              
+              {/* Key Amenities - 6 toggles including parking canopy */}
               <div className="mb-3">
                 <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Key Energy Drivers</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-6 gap-1.5">
                   <button
                     onClick={() => setInputs(prev => ({ ...prev, hasPool: !prev.hasPool }))}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
                       inputs.hasPool 
                         ? 'bg-indigo-500/30 border-indigo-400 text-white' 
                         : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
                     }`}
                   >
-                    <Waves className="w-4 h-4 mb-1" />
-                    <span className="text-xs">Pool</span>
+                    <Waves className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">Pool</span>
                   </button>
                   <button
                     onClick={() => setInputs(prev => ({ ...prev, hasRestaurant: !prev.hasRestaurant }))}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
                       inputs.hasRestaurant 
                         ? 'bg-indigo-500/30 border-indigo-400 text-white' 
                         : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
                     }`}
                   >
-                    <Utensils className="w-4 h-4 mb-1" />
-                    <span className="text-xs">F&B</span>
+                    <Utensils className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">F&B</span>
                   </button>
                   <button
                     onClick={() => setInputs(prev => ({ ...prev, hasSpa: !prev.hasSpa }))}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
                       inputs.hasSpa 
                         ? 'bg-indigo-500/30 border-indigo-400 text-white' 
                         : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
                     }`}
                   >
-                    <Droplets className="w-4 h-4 mb-1" />
-                    <span className="text-xs">Spa</span>
+                    <Droplets className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">Spa</span>
                   </button>
                   <button
-                    onClick={() => setInputs(prev => ({ ...prev, hasEVCharging: !prev.hasEVCharging }))}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
-                      inputs.hasEVCharging 
+                    onClick={() => setInputs(prev => ({ ...prev, hasLaundry: !prev.hasLaundry }))}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
+                      inputs.hasLaundry 
                         ? 'bg-indigo-500/30 border-indigo-400 text-white' 
                         : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
                     }`}
                   >
-                    <Car className="w-4 h-4 mb-1" />
-                    <span className="text-xs">EV</span>
+                    <Shirt className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">Laundry</span>
+                  </button>
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasEVCharging: !prev.hasEVCharging }))}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
+                      inputs.hasEVCharging 
+                        ? 'bg-emerald-500/30 border-emerald-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-emerald-500/50'
+                    }`}
+                  >
+                    <Car className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">EV</span>
+                  </button>
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasParkingCanopy: !prev.hasParkingCanopy }))}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all ${
+                      inputs.hasParkingCanopy 
+                        ? 'bg-emerald-500/30 border-emerald-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-emerald-500/50'
+                    }`}
+                  >
+                    <Sun className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5">Solar</span>
                   </button>
                 </div>
               </div>
