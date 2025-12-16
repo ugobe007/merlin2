@@ -535,31 +535,30 @@ export default function HotelEnergy() {
       </header>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          HERO SECTION - Edge-Bleeding Image Design
+          HERO SECTION - Quick Estimate Calculator (Step 0) - Dec 2025 Redesign
           ═══════════════════════════════════════════════════════════════════════ */}
       <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzgxODJmNCIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
         
-        {/* Left content - contained */}
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-24 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Copy */}
-            <div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            {/* Left: Copy & CTA */}
+            <div className="lg:pr-8">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 border border-indigo-400/40 rounded-full px-5 py-2 mb-6 shadow-lg">
                 <Building2 className="w-5 h-5 text-indigo-300" />
                 <span className="text-indigo-200 text-sm font-semibold">Hotels Save 25-40% on Energy Costs</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[1.1]">
+              <h1 className="text-4xl md:text-5xl lg:text-5xl font-black text-white mb-6 leading-[1.1]">
                 Protect Guest Experience <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300">& Cut Costs</span>
               </h1>
               
-              <p className="text-xl text-indigo-100/90 mb-8 leading-relaxed">
+              <p className="text-lg text-indigo-100/90 mb-6 leading-relaxed">
                 HVAC, pools, kitchens, and laundry spike your energy bills.
                 <span className="text-indigo-300 font-medium"> Battery storage cuts peak demand and provides backup power.</span>
               </p>
               
-              <div className="flex flex-wrap gap-x-6 gap-y-3 mb-8">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
                 <div className="flex items-center gap-2 text-white">
                   <CheckCircle className="w-5 h-5 text-indigo-400 flex-shrink-0" />
                   <span className="font-medium">Never lose power to guests</span>
@@ -574,31 +573,22 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              <button 
-                onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-              >
-                Calculate My Savings
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              
-              {/* Inline Savings Preview */}
-              <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-indigo-400/30 inline-flex items-center gap-3">
-                <div className="text-center">
-                  <p className="text-sm text-indigo-200">Based on {inputs.numberOfRooms} rooms</p>
-                  <p className="text-xl font-bold text-white">
-                    ~${heroEstimate.savings.toLocaleString()}<span className="text-sm text-indigo-300">/year</span>
+              {/* Annual Savings Display - Large & Prominent */}
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm rounded-2xl p-6 border border-emerald-400/40 mb-6">
+                <p className="text-sm text-emerald-200 mb-1">Estimated Annual Savings</p>
+                <div className="flex items-end gap-3">
+                  <p className="text-5xl font-black text-white">
+                    ${heroEstimate.savings.toLocaleString()}
                   </p>
+                  <p className="text-emerald-300 text-lg font-medium mb-2">/year</p>
                 </div>
-                <div className="w-px h-10 bg-indigo-400/30" />
-                <div className="text-center">
-                  <p className="text-sm text-indigo-200">Payback</p>
-                  <p className="text-xl font-bold text-purple-300">{heroEstimate.payback} yrs</p>
-                </div>
+                <p className="text-emerald-200 text-sm mt-2">
+                  Based on {inputs.numberOfRooms} rooms ({heroEstimate.hotelClass} class) · {heroEstimate.payback} year payback
+                </p>
               </div>
               
-              {/* TrueQuote Badge - Trust signal */}
-              <div className="flex items-center gap-2 mt-4">
+              {/* TrueQuote Badge + How It Works */}
+              <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="hover:scale-105 transition-transform cursor-pointer"
@@ -607,105 +597,168 @@ export default function HotelEnergy() {
                 </button>
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
-                  className="text-indigo-300 text-xs hover:text-white transition-colors cursor-pointer"
+                  className="text-indigo-300 text-sm hover:text-white transition-colors cursor-pointer"
                 >
                   Every number sourced →
                 </button>
-              </div>
-              
-              {/* Down arrow indicator */}
-              <div className="flex flex-col items-center mt-6 animate-bounce">
-                <ChevronDown className="w-6 h-6 text-indigo-400" />
-                <span className="text-xs text-indigo-300 font-medium">See Your Savings ↓</span>
+                <span className="text-indigo-500">|</span>
+                <button 
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center gap-2 text-indigo-300 text-sm hover:text-white transition-colors"
+                >
+                  <img src={merlinImage} alt="" className="w-5 h-5" />
+                  How Merlin Works
+                </button>
               </div>
             </div>
             
-            {/* Right side placeholder for mobile only - actual content is absolutely positioned */}
-            <div className="lg:hidden">
-              <ImageCarousel />
-              
-              {/* Stats cards - mobile only */}
-              <div className="grid grid-cols-3 gap-3 mt-6">
-                <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-indigo-400/30 shadow-lg">
-                  <p className="text-3xl font-black text-indigo-400">$52K</p>
-                  <p className="text-xs text-indigo-200 font-medium">Avg Savings/Year</p>
+            {/* Right: Quick Estimate Calculator (Step 0) */}
+            <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-purple-400/30 shadow-lg">
-                  <p className="text-3xl font-black text-purple-400">4.5<span className="text-lg">yr</span></p>
-                  <p className="text-xs text-purple-200 font-medium">Payback Period</p>
-                </div>
-                <div className="bg-gradient-to-br from-pink-500/20 to-pink-600/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-pink-400/30 shadow-lg">
-                  <p className="text-3xl font-black text-pink-400">4hr</p>
-                  <p className="text-xs text-pink-200 font-medium">Backup Power</p>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Quick Savings Estimate</h3>
+                  <p className="text-indigo-300 text-xs">Play with the numbers, then build your quote</p>
                 </div>
               </div>
+              
+              {/* State Selector */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-indigo-200 mb-2">📍 State</label>
+                <select
+                  value={inputs.state}
+                  onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
+                  className="w-full px-4 py-3 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white font-medium focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                >
+                  {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Number of Rooms */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-indigo-200 mb-2">🏨 Number of Rooms</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={inputs.numberOfRooms}
+                    onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
+                    className="flex-1 px-4 py-3 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-xl font-bold text-center focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    min="1"
+                    max="2000"
+                  />
+                  <div className="bg-indigo-500/20 rounded-lg px-3 py-2 text-center min-w-[100px]">
+                    <p className="text-xs text-indigo-300">Class</p>
+                    <p className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Monthly Bill Slider */}
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-indigo-200 mb-2">💡 Monthly Electric Bill</label>
+                <input
+                  type="range"
+                  min={5000}
+                  max={200000}
+                  step={1000}
+                  value={inputs.currentMonthlyBill}
+                  onChange={(e) => {
+                    setUserSetBill(true);
+                    setInputs(prev => ({ ...prev, currentMonthlyBill: parseInt(e.target.value) }));
+                  }}
+                  className="w-full h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                />
+                <div className="flex justify-between text-xs text-indigo-400 mt-1">
+                  <span>$5,000</span>
+                  <span className="text-lg font-bold text-white">${inputs.currentMonthlyBill.toLocaleString()}/mo</span>
+                  <span>$200,000</span>
+                </div>
+              </div>
+              
+              {/* Live Results */}
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-4 border border-emerald-400/30 mb-5">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-2xl font-black text-white">${heroEstimate.savings.toLocaleString()}</p>
+                    <p className="text-xs text-emerald-300">Annual Savings</p>
+                  </div>
+                  <div className="border-x border-emerald-400/30 px-2">
+                    <p className="text-2xl font-black text-purple-300">{heroEstimate.payback}yr</p>
+                    <p className="text-xs text-emerald-300">Payback</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-amber-300">30%</p>
+                    <p className="text-xs text-emerald-300">Tax Credit</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Build My Quote CTA */}
+              <button
+                onClick={() => {
+                  // Pass Step 0 values to wizard
+                  setShowWizard(true);
+                }}
+                className="w-full py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/40 flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                Build My Full Quote
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              
+              <p className="text-center text-xs text-indigo-400 mt-3">
+                Free • 5 minutes • No commitment
+              </p>
             </div>
           </div>
         </div>
-        
-        {/* ========== RIGHT HALF - Edge-Bleeding Image (Desktop Only) ========== */}
-        <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-1/2">
-          <div className="relative w-full h-full">
+      </section>
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SUCCESS STORIES CAROUSEL - Moved below hero (Dec 2025 Redesign)
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-12 bg-gradient-to-b from-indigo-900/30 via-purple-900/20 to-indigo-900/30 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-white mb-2">Real Hotel Success Stories</h2>
+            <p className="text-indigo-300 text-sm">Click any card to see their full case study</p>
+          </div>
+          
+          {/* Horizontal scroll carousel */}
+          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-indigo-900/30">
             {CAROUSEL_IMAGES.map((image, index) => (
-              <div
+              <div 
                 key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === heroImageIndex ? 'opacity-100' : 'opacity-0'
-                }`}
+                className="flex-shrink-0 w-72 bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 rounded-2xl overflow-hidden border border-indigo-500/30 hover:border-indigo-400/50 transition-all hover:scale-[1.02] cursor-pointer group"
+                onClick={() => {
+                  // Could open a case study modal or navigate to wizard
+                  setShowWizard(true);
+                }}
               >
-                {/* Full-bleed image - no rounded corners on right edge */}
-                <img 
-                  src={image.src} 
-                  alt={image.alt}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Gradient overlay - fades into background on left */}
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(to right, rgba(49,46,129,1) 0%, rgba(49,46,129,0.7) 15%, transparent 40%), linear-gradient(to top, rgba(30,15,60,0.9) 0%, transparent 50%)'
-                  }}
-                />
+                <div className="h-40 overflow-hidden">
+                  <img 
+                    src={image.src} 
+                    alt={image.alt} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-white font-bold mb-1">{image.alt}</h3>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-indigo-300">Savings:</span>
+                    <span className="text-emerald-400 font-bold">$47K/yr</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-indigo-300">Payback:</span>
+                    <span className="text-purple-300 font-bold">4.2 years</span>
+                  </div>
+                </div>
               </div>
             ))}
-            
-            {/* Financial overlay card */}
-            <div className="absolute bottom-8 left-8 right-8">
-              <div className="backdrop-blur-xl rounded-3xl p-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                <div className="flex items-center gap-3 mb-4">
-                  <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
-                  <div>
-                    <p className="text-white font-bold">Powered by Merlin</p>
-                    <p className="text-indigo-300 text-sm">AI-Optimized Battery Storage</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-black text-indigo-400">$52K</div>
-                    <div className="text-xs text-indigo-300/70 mt-1">Annual Savings</div>
-                  </div>
-                  <div className="text-center border-x border-white/10 px-2">
-                    <div className="text-3xl font-black text-purple-300">4.5yr</div>
-                    <div className="text-xs text-indigo-300/70 mt-1">Payback</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-black text-pink-400">4hr</div>
-                    <div className="text-xs text-indigo-300/70 mt-1">Backup</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Energy cost badge */}
-            <div className="absolute top-8 right-8">
-              <div className="bg-purple-500/90 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
-                <p className="text-xs font-bold text-purple-100">ENERGY COSTS</p>
-                <p className="text-2xl font-black text-white">6-8%</p>
-                <p className="text-xs text-purple-200">of revenue</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -1430,10 +1483,15 @@ export default function HotelEnergy() {
           initialUseCase="hotel"
           initialState={inputs.state}
           initialData={{
+            // Step 0 values from Quick Estimate Calculator
             roomCount: inputs.numberOfRooms,
             hotelClass: inputs.hotelClass,
             hasPool: inputs.hasPool,
             hasRestaurant: inputs.hasRestaurant,
+            currentMonthlyBill: inputs.currentMonthlyBill,
+            // Estimated from Step 0
+            estimatedAnnualSavings: heroEstimate.savings,
+            estimatedPayback: heroEstimate.payback,
           }}
           onClose={() => setShowWizard(false)}
           onFinish={() => {
