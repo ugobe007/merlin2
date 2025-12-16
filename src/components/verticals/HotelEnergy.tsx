@@ -686,346 +686,190 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* Right: Quick Estimate Calculator (Step 0) - REDESIGNED Dec 2025 */}
-            <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30 max-h-[85vh] overflow-y-auto">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-emerald-500 rounded-xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
+            {/* Right: Quick Estimate Calculator - COMPACT DESIGN */}
+            <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-5 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-emerald-500 rounded-xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Quick Savings Estimate</h3>
-                  <p className="text-indigo-300 text-xs">Enter your property details below</p>
+                  <p className="text-indigo-300 text-xs">See your potential savings in seconds</p>
                 </div>
               </div>
               
-              {/* === SECTION 1: Building Basics === */}
-              <div className="mb-4 pb-4 border-b border-indigo-500/30">
-                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Building Info</p>
-                
-                {/* Square Footage - FIRST INPUT */}
-                <div className="mb-3">
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Total Building Square Footage</label>
+              {/* === ROW 1: Sq Ft + Hotel Class === */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Square Feet</label>
                   <input
                     type="number"
                     value={inputs.squareFootage}
                     onChange={(e) => setInputs(prev => ({ ...prev, squareFootage: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold focus:border-indigo-400 transition-all"
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
                     min="1000"
-                    max="2000000"
-                    step="1000"
                     placeholder="75000"
                   />
                 </div>
-                
-                {/* Hotel Class - DROPDOWN (not auto-detected) */}
-                <div className="mb-3">
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Class of Hotel</label>
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Hotel Class</label>
                   <select
                     value={inputs.hotelClass}
                     onChange={(e) => setInputs(prev => ({ ...prev, hotelClass: e.target.value as HotelClassCategory }))}
-                    className="w-full px-3 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-medium focus:border-indigo-400 transition-all"
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
                   >
                     {HOTEL_CLASS_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-indigo-400 mt-1">{HOTEL_CLASS_OPTIONS.find(o => o.value === inputs.hotelClass)?.description}</p>
-                </div>
-                
-                {/* State + Rooms Row */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
-                    <select
-                      value={inputs.state}
-                      onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
-                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
-                    >
-                      {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
-                        <option key={state} value={state}>{state}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-indigo-200 mb-1">🛏️ # of Rooms</label>
-                    <input
-                      type="number"
-                      value={inputs.numberOfRooms}
-                      onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
-                      min="1"
-                      max="2000"
-                      placeholder="150"
-                    />
-                  </div>
                 </div>
               </div>
               
-              {/* === SECTION 2: Parking === */}
-              <div className="mb-4 pb-4 border-b border-indigo-500/30">
-                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Parking</p>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div>
-                    <label className="block text-xs font-medium text-indigo-200 mb-1">🅿️ Parking Lot Size</label>
-                    <input
-                      type="number"
-                      value={inputs.parkingLotSize}
-                      onChange={(e) => setInputs(prev => ({ ...prev, parkingLotSize: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
-                      min="0"
-                      max="5000"
-                      placeholder="100"
-                    />
-                    <p className="text-xs text-indigo-400 mt-0.5">spaces</p>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inputs.hasParkingCanopy}
-                        onChange={(e) => setInputs(prev => ({ ...prev, hasParkingCanopy: e.target.checked }))}
-                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="text-sm text-white">☀️ Solar Parking Canopy</span>
-                    </label>
-                  </div>
+              {/* === ROW 2: State + Rooms === */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
+                  <select
+                    value={inputs.state}
+                    onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
+                  >
+                    {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-              
-              {/* === SECTION 3: Amenities (CHECKBOXES) === */}
-              <div className="mb-4 pb-4 border-b border-indigo-500/30">
-                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Amenities</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasConferenceCenter}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasConferenceCenter: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">🎤 Conference Center</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasEventCenter}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasEventCenter: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">🎉 Event Center</span>
-                  </label>
-                  
-                  {/* Restaurant with count */}
-                  <div className="col-span-2 flex items-center gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inputs.hasRestaurant}
-                        onChange={(e) => setInputs(prev => ({ ...prev, hasRestaurant: e.target.checked, restaurantCount: e.target.checked ? Math.max(1, prev.restaurantCount) : 0 }))}
-                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="text-sm text-white">🍽️ Restaurant</span>
-                    </label>
-                    {inputs.hasRestaurant && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-indigo-300">How many?</span>
-                        <input
-                          type="number"
-                          value={inputs.restaurantCount}
-                          onChange={(e) => setInputs(prev => ({ ...prev, restaurantCount: Math.max(1, parseInt(e.target.value) || 1) }))}
-                          className="w-14 px-2 py-1 bg-slate-800/80 border border-indigo-500/40 rounded text-white text-sm text-center"
-                          min="1"
-                          max="20"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Pool options */}
-                  <div className="col-span-2">
-                    <label className="flex items-center gap-2 cursor-pointer mb-1">
-                      <input
-                        type="checkbox"
-                        checked={inputs.hasPool}
-                        onChange={(e) => setInputs(prev => ({ ...prev, hasPool: e.target.checked, hasIndoorPool: e.target.checked ? prev.hasIndoorPool : false, hasOutdoorPool: e.target.checked ? prev.hasOutdoorPool : false }))}
-                        className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="text-sm text-white">🏊 Pool</span>
-                    </label>
-                    {inputs.hasPool && (
-                      <div className="ml-6 flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={inputs.hasIndoorPool}
-                            onChange={(e) => setInputs(prev => ({ ...prev, hasIndoorPool: e.target.checked }))}
-                            className="w-3 h-3 rounded border border-indigo-400 bg-slate-800 text-emerald-500"
-                          />
-                          <span className="text-xs text-indigo-200">Indoor</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={inputs.hasOutdoorPool}
-                            onChange={(e) => setInputs(prev => ({ ...prev, hasOutdoorPool: e.target.checked }))}
-                            className="w-3 h-3 rounded border border-indigo-400 bg-slate-800 text-emerald-500"
-                          />
-                          <span className="text-xs text-indigo-200">Outdoor</span>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasSpa}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasSpa: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">💆 Spa</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasFitnessCenter}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasFitnessCenter: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">🏋️ Fitness Center</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasLaundry}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasLaundry: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">👕 Laundry</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.hasEVCharging}
-                      onChange={(e) => setInputs(prev => ({ ...prev, hasEVCharging: e.target.checked }))}
-                      className="w-4 h-4 rounded border-2 border-indigo-400 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm text-white">🔌 EV Charging</span>
-                  </label>
-                </div>
-              </div>
-              
-              {/* === SECTION 4: Resort Features (Luxury only) === */}
-              {inputs.hotelClass === 'luxury' && (
-                <div className="mb-4 pb-4 border-b border-indigo-500/30">
-                  <p className="text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">⭐ Resort Features</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inputs.hasClubhouse}
-                        onChange={(e) => setInputs(prev => ({ ...prev, hasClubhouse: e.target.checked }))}
-                        className="w-4 h-4 rounded border-2 border-amber-400 bg-slate-800 text-amber-500 focus:ring-amber-500"
-                      />
-                      <span className="text-sm text-white">🏛️ Club House</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inputs.hasGolfCourse}
-                        onChange={(e) => setInputs(prev => ({ ...prev, hasGolfCourse: e.target.checked }))}
-                        className="w-4 h-4 rounded border-2 border-amber-400 bg-slate-800 text-amber-500 focus:ring-amber-500"
-                      />
-                      <span className="text-sm text-white">⛳ Golf Course</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-              
-              {/* === SECTION 5: Storage Hours Slider (BEFORE recommendation) === */}
-              <div className="mb-4 pb-4 border-b border-indigo-500/30">
-                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">Battery Storage Duration</p>
-                <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Storage Hours (backup duration)</label>
-                <div className="flex items-center gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🛏️ # of Rooms</label>
                   <input
-                    type="range"
-                    min={2}
-                    max={8}
-                    step={2}
+                    type="number"
+                    value={inputs.numberOfRooms}
+                    onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                    min="1"
+                    max="2000"
+                    placeholder="150"
+                  />
+                </div>
+              </div>
+              
+              {/* === ROW 3: Amenities DROPDOWN + Storage Hours === */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">⚡ Key Amenities</label>
+                  <select
+                    multiple
+                    size={1}
+                    value={[
+                      inputs.hasPool ? 'pool' : '',
+                      inputs.hasRestaurant ? 'restaurant' : '',
+                      inputs.hasSpa ? 'spa' : '',
+                      inputs.hasFitnessCenter ? 'fitness' : '',
+                      inputs.hasConferenceCenter ? 'conference' : '',
+                      inputs.hasEVCharging ? 'ev' : '',
+                      inputs.hasLaundry ? 'laundry' : '',
+                    ].filter(Boolean)}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+                      setInputs(prev => ({
+                        ...prev,
+                        hasPool: selected.includes('pool'),
+                        hasRestaurant: selected.includes('restaurant'),
+                        hasSpa: selected.includes('spa'),
+                        hasFitnessCenter: selected.includes('fitness'),
+                        hasConferenceCenter: selected.includes('conference'),
+                        hasEVCharging: selected.includes('ev'),
+                        hasLaundry: selected.includes('laundry'),
+                      }));
+                    }}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all cursor-pointer"
+                    onClick={(e) => {
+                      // Toggle dropdown expansion
+                      const target = e.target as HTMLSelectElement;
+                      target.size = target.size === 1 ? 7 : 1;
+                    }}
+                    onBlur={(e) => {
+                      (e.target as HTMLSelectElement).size = 1;
+                    }}
+                  >
+                    <option value="pool">🏊 Pool</option>
+                    <option value="restaurant">🍽️ Restaurant</option>
+                    <option value="spa">💆 Spa</option>
+                    <option value="fitness">🏋️ Fitness Center</option>
+                    <option value="conference">🎤 Conference</option>
+                    <option value="ev">🔌 EV Charging</option>
+                    <option value="laundry">👕 Laundry</option>
+                  </select>
+                  <p className="text-[10px] text-indigo-400 mt-0.5">Click to select multiple</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🔋 Storage Hours</label>
+                  <select
                     value={inputs.storageHours}
                     onChange={(e) => setInputs(prev => ({ ...prev, storageHours: parseInt(e.target.value) }))}
-                    className="flex-1 h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                  />
-                  <span className="text-white font-bold text-lg min-w-[50px] text-center">{inputs.storageHours} hrs</span>
-                </div>
-                <div className="flex justify-between text-xs text-indigo-400 mt-1 px-1">
-                  <span>2 hrs</span>
-                  <span>4 hrs</span>
-                  <span>6 hrs</span>
-                  <span>8 hrs</span>
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold focus:border-indigo-400 transition-all"
+                  >
+                    <option value={2}>2 hours</option>
+                    <option value={4}>4 hours</option>
+                    <option value={6}>6 hours</option>
+                    <option value={8}>8 hours</option>
+                  </select>
+                  <p className="text-[10px] text-indigo-400 mt-0.5">Backup duration</p>
                 </div>
               </div>
               
-              {/* === SECTION 6: Live Results === */}
+              {/* === RESULTS BOX === */}
               <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-4 border border-emerald-400/30 mb-4">
-                <p className="text-xs text-emerald-300 font-semibold mb-2 uppercase tracking-wider">💡 Merlin's Recommendation</p>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
                     <p className="text-2xl font-black text-white">${heroEstimate.savings.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-300">Annual Savings</p>
+                    <p className="text-[10px] text-emerald-300">Annual Savings</p>
                   </div>
-                  <div className="border-x border-emerald-400/30 px-2">
+                  <div className="border-x border-emerald-400/30">
                     <p className="text-2xl font-black text-purple-300">{heroEstimate.payback}yr</p>
-                    <p className="text-xs text-emerald-300">Payback</p>
+                    <p className="text-[10px] text-emerald-300">Payback</p>
                   </div>
                   <div>
                     <p className="text-2xl font-black text-amber-300">30%</p>
-                    <p className="text-xs text-emerald-300">Tax Credit</p>
+                    <p className="text-[10px] text-emerald-300">Tax Credit</p>
                   </div>
                 </div>
               </div>
               
-              {/* === SECTION 7: Similar Configurations === */}
-              <div className="mb-4">
-                <p className="text-xs text-indigo-400 font-semibold mb-2 uppercase tracking-wider">🏨 Similar Hotel Configurations</p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {SIMILAR_HOTEL_CONFIGS
-                    .filter(h => h.class === inputs.hotelClass)
-                    .slice(0, 3)
-                    .map((hotel, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-slate-800/50 rounded-lg px-3 py-2 border border-indigo-500/20">
-                        <div>
-                          <p className="text-sm text-white font-medium">{hotel.name}</p>
-                          <p className="text-xs text-indigo-300">{hotel.rooms} rooms · {hotel.bessKW} kW BESS</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-emerald-400 font-bold">${(hotel.savingsPerYear / 1000).toFixed(0)}K/yr</p>
-                        </div>
-                      </div>
-                    ))}
-                  {SIMILAR_HOTEL_CONFIGS.filter(h => h.class === inputs.hotelClass).length === 0 && (
-                    <div className="text-center py-2 text-indigo-400 text-xs">
-                      Select a hotel class to see similar configurations
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* === Build My Quote CTA === */}
+              {/* === CTA BUTTON - Always Visible === */}
               <button
-                onClick={() => {
-                  setShowWizard(true);
-                }}
-                className="w-full py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/40 flex items-center justify-center gap-2 border-2 border-emerald-400/30"
+                onClick={() => setShowWizard(true)}
+                className="w-full py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/40 flex items-center justify-center gap-2 border-2 border-emerald-400/30 mb-2"
               >
                 <Sparkles className="w-5 h-5" />
                 Build My Full Quote
                 <ArrowRight className="w-5 h-5" />
               </button>
               
-              <p className="text-center text-xs text-indigo-400 mt-3">
+              <p className="text-center text-xs text-indigo-400">
                 Free • 5 minutes • No commitment
               </p>
+              
+              {/* === Similar Hotels - Collapsible === */}
+              <details className="mt-3">
+                <summary className="text-xs text-indigo-400 cursor-pointer hover:text-indigo-300">
+                  🏨 View similar hotel configurations...
+                </summary>
+                <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto">
+                  {SIMILAR_HOTEL_CONFIGS
+                    .filter(h => h.class === inputs.hotelClass)
+                    .slice(0, 3)
+                    .map((hotel, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-slate-800/50 rounded-lg px-2 py-1.5 border border-indigo-500/20">
+                        <div>
+                          <p className="text-xs text-white font-medium">{hotel.name}</p>
+                          <p className="text-[10px] text-indigo-300">{hotel.rooms} rooms · {hotel.bessKW} kW</p>
+                        </div>
+                        <p className="text-xs text-emerald-400 font-bold">${(hotel.savingsPerYear / 1000).toFixed(0)}K/yr</p>
+                      </div>
+                    ))}
+                </div>
+              </details>
             </div>
           </div>
         </div>
