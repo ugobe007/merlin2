@@ -424,6 +424,21 @@ export default function HotelEnergy() {
     }
   }, [inputs.squareFootage, inputs.hotelClass, userSetBill]);
   
+  // Auto-determine hotel class based on room count (for calculation purposes)
+  useEffect(() => {
+    let autoClass: HotelClassCategory = 'economy';
+    if (inputs.numberOfRooms >= 300) {
+      autoClass = 'luxury';
+    } else if (inputs.numberOfRooms >= 150) {
+      autoClass = 'brand-hotel'; // Maps to upscale
+    } else if (inputs.numberOfRooms >= 75) {
+      autoClass = 'commercial-chain'; // Maps to midscale
+    }
+    if (inputs.hotelClass !== autoClass) {
+      setInputs(prev => ({ ...prev, hotelClass: autoClass }));
+    }
+  }, [inputs.numberOfRooms]);
+  
   // Quote result
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -698,34 +713,7 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* === ROW 1: Sq Ft + Hotel Class === */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Square Feet</label>
-                  <input
-                    type="number"
-                    value={inputs.squareFootage}
-                    onChange={(e) => setInputs(prev => ({ ...prev, squareFootage: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
-                    min="1000"
-                    placeholder="75000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Hotel Class</label>
-                  <select
-                    value={inputs.hotelClass}
-                    onChange={(e) => setInputs(prev => ({ ...prev, hotelClass: e.target.value as HotelClassCategory }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all"
-                  >
-                    {HOTEL_CLASS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              {/* === ROW 2: State + Rooms === */}
+              {/* === ROW 1: State + Rooms === */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
                   <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
@@ -753,69 +741,95 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* === ROW 3: Amenities DROPDOWN + Storage Hours === */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              {/* === ROW 2: Sq Ft + Auto Hotel Class Badge === */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">⚡ Key Amenities</label>
-                  <select
-                    multiple
-                    size={1}
-                    value={[
-                      inputs.hasPool ? 'pool' : '',
-                      inputs.hasRestaurant ? 'restaurant' : '',
-                      inputs.hasSpa ? 'spa' : '',
-                      inputs.hasFitnessCenter ? 'fitness' : '',
-                      inputs.hasConferenceCenter ? 'conference' : '',
-                      inputs.hasEVCharging ? 'ev' : '',
-                      inputs.hasLaundry ? 'laundry' : '',
-                    ].filter(Boolean)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-                      setInputs(prev => ({
-                        ...prev,
-                        hasPool: selected.includes('pool'),
-                        hasRestaurant: selected.includes('restaurant'),
-                        hasSpa: selected.includes('spa'),
-                        hasFitnessCenter: selected.includes('fitness'),
-                        hasConferenceCenter: selected.includes('conference'),
-                        hasEVCharging: selected.includes('ev'),
-                        hasLaundry: selected.includes('laundry'),
-                      }));
-                    }}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-xs font-medium focus:border-indigo-400 transition-all cursor-pointer"
-                    onClick={(e) => {
-                      // Toggle dropdown expansion
-                      const target = e.target as HTMLSelectElement;
-                      target.size = target.size === 1 ? 7 : 1;
-                    }}
-                    onBlur={(e) => {
-                      (e.target as HTMLSelectElement).size = 1;
-                    }}
-                  >
-                    <option value="pool">🏊 Pool</option>
-                    <option value="restaurant">🍽️ Restaurant</option>
-                    <option value="spa">💆 Spa</option>
-                    <option value="fitness">🏋️ Fitness Center</option>
-                    <option value="conference">🎤 Conference</option>
-                    <option value="ev">🔌 EV Charging</option>
-                    <option value="laundry">👕 Laundry</option>
-                  </select>
-                  <p className="text-[10px] text-indigo-400 mt-0.5">Click to select multiple</p>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📐 Square Feet</label>
+                  <input
+                    type="number"
+                    value={inputs.squareFootage}
+                    onChange={(e) => setInputs(prev => ({ ...prev, squareFootage: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold text-center focus:border-indigo-400 transition-all"
+                    min="1000"
+                    placeholder="75000"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">🔋 Storage Hours</label>
-                  <select
-                    value={inputs.storageHours}
-                    onChange={(e) => setInputs(prev => ({ ...prev, storageHours: parseInt(e.target.value) }))}
-                    className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold focus:border-indigo-400 transition-all"
-                  >
-                    <option value={2}>2 hours</option>
-                    <option value={4}>4 hours</option>
-                    <option value={6}>6 hours</option>
-                    <option value={8}>8 hours</option>
-                  </select>
-                  <p className="text-[10px] text-indigo-400 mt-0.5">Backup duration</p>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Hotel Class</label>
+                  <div className={`w-full px-2 py-2 rounded-lg text-center text-sm font-bold border-2 ${
+                    inputs.numberOfRooms >= 300 ? 'bg-amber-500/30 border-amber-400/50 text-amber-300' :
+                    inputs.numberOfRooms >= 150 ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                    inputs.numberOfRooms >= 75 ? 'bg-blue-500/30 border-blue-400/50 text-blue-300' :
+                    'bg-emerald-500/30 border-emerald-400/50 text-emerald-300'
+                  }`}>
+                    {inputs.numberOfRooms >= 300 ? '✨ Luxury Class' :
+                     inputs.numberOfRooms >= 150 ? '⭐ Upscale Class' :
+                     inputs.numberOfRooms >= 75 ? '🏨 Midscale Class' :
+                     '💚 Economy Class'}
+                  </div>
                 </div>
+              </div>
+              
+              {/* === ROW 3: Elevators Slider === */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-indigo-200 mb-1">🛗 Elevators</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={12}
+                    value={inputs.elevatorCount}
+                    onChange={(e) => setInputs(prev => ({ ...prev, elevatorCount: parseInt(e.target.value) }))}
+                    className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <span className="text-lg font-bold text-indigo-300 w-8 text-center">{inputs.elevatorCount}</span>
+                </div>
+              </div>
+              
+              {/* === ROW 4: 6 Amenity Toggles (Checkboxes) === */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Key Amenities</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasPool} onChange={(e) => setInputs(prev => ({ ...prev, hasPool: e.target.checked }))} className="w-4 h-4 accent-cyan-500 rounded" />
+                    <span className="text-white text-xs">🏊 Pool</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasRestaurant} onChange={(e) => setInputs(prev => ({ ...prev, hasRestaurant: e.target.checked }))} className="w-4 h-4 accent-amber-500 rounded" />
+                    <span className="text-white text-xs">🍽️ F&B</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasSpa} onChange={(e) => setInputs(prev => ({ ...prev, hasSpa: e.target.checked }))} className="w-4 h-4 accent-pink-500 rounded" />
+                    <span className="text-white text-xs">💆 Spa</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasLaundry} onChange={(e) => setInputs(prev => ({ ...prev, hasLaundry: e.target.checked }))} className="w-4 h-4 accent-blue-500 rounded" />
+                    <span className="text-white text-xs">👕 Laundry</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasEVCharging} onChange={(e) => setInputs(prev => ({ ...prev, hasEVCharging: e.target.checked }))} className="w-4 h-4 accent-emerald-500 rounded" />
+                    <span className="text-white text-xs">🔌 EV</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-slate-800/60 rounded-lg px-2 py-1.5 border border-slate-600 hover:border-indigo-400 transition-all">
+                    <input type="checkbox" checked={inputs.hasParkingCanopy} onChange={(e) => setInputs(prev => ({ ...prev, hasParkingCanopy: e.target.checked }))} className="w-4 h-4 accent-yellow-500 rounded" />
+                    <span className="text-white text-xs">☀️ Canopy</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* === ROW 5: Storage Hours === */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-indigo-200 mb-1">🔋 Storage Hours</label>
+                <select
+                  value={inputs.storageHours}
+                  onChange={(e) => setInputs(prev => ({ ...prev, storageHours: parseInt(e.target.value) }))}
+                  className="w-full px-2 py-2 bg-slate-800/80 border-2 border-indigo-500/40 rounded-lg text-white text-sm font-bold focus:border-indigo-400 transition-all"
+                >
+                  <option value={2}>2 hours</option>
+                  <option value={4}>4 hours (recommended)</option>
+                  <option value={6}>6 hours</option>
+                  <option value={8}>8 hours</option>
+                </select>
               </div>
               
               {/* === RESULTS BOX === */}
