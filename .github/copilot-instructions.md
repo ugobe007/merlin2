@@ -935,10 +935,10 @@ const result = await calculateQuote({
 ```
 
 ### Wizard Files Location
-- `src/components/verticals/HotelWizard.tsx` - **REFERENCE** (most complete)
-- `src/components/verticals/CarWashWizard.tsx` - ✅ Now has mode selector + gridConnection state
-- `src/components/verticals/EVChargingWizard.tsx` - ✅ Now has mode selector + gridConnection state
+- `src/components/wizard/StreamlinedWizard.tsx` - **PRODUCTION WIZARD** (modular, SSOT-compliant)
 - `src/components/wizard/shared/` - Shared components (WizardPowerProfile, WizardStepHelp, etc.)
+- `src/components/verticals/_deprecated/` - Legacy vertical wizards (NOT USED - archived Dec 2025)
+  - HotelWizard.tsx, CarWashWizard.tsx, EVChargingWizard.tsx
 
 ---
 

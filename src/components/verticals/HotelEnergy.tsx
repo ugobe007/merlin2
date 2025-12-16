@@ -424,20 +424,8 @@ export default function HotelEnergy() {
     }
   }, [inputs.squareFootage, inputs.hotelClass, userSetBill]);
   
-  // Auto-determine hotel class based on room count (for calculation purposes)
-  useEffect(() => {
-    let autoClass: HotelClassCategory = 'economy';
-    if (inputs.numberOfRooms >= 300) {
-      autoClass = 'luxury';
-    } else if (inputs.numberOfRooms >= 150) {
-      autoClass = 'brand-hotel'; // Maps to upscale
-    } else if (inputs.numberOfRooms >= 75) {
-      autoClass = 'commercial-chain'; // Maps to midscale
-    }
-    if (inputs.hotelClass !== autoClass) {
-      setInputs(prev => ({ ...prev, hotelClass: autoClass }));
-    }
-  }, [inputs.numberOfRooms]);
+  // Hotel class is determined by SSOT (useCasePowerCalculations.calculateHotelPowerSimple)
+  // Thresholds: ≤75=economy, ≤200=midscale, ≤400=upscale, >400=luxury
   
   // Quote result
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
@@ -755,16 +743,16 @@ export default function HotelEnergy() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Hotel Class</label>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Hotel Class (SSOT)</label>
                   <div className={`w-full px-2 py-2 rounded-lg text-center text-sm font-bold border-2 ${
-                    inputs.numberOfRooms >= 300 ? 'bg-amber-500/30 border-amber-400/50 text-amber-300' :
-                    inputs.numberOfRooms >= 150 ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                    inputs.numberOfRooms >= 75 ? 'bg-blue-500/30 border-blue-400/50 text-blue-300' :
+                    inputs.numberOfRooms > 400 ? 'bg-amber-500/30 border-amber-400/50 text-amber-300' :
+                    inputs.numberOfRooms > 200 ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                    inputs.numberOfRooms > 75 ? 'bg-blue-500/30 border-blue-400/50 text-blue-300' :
                     'bg-emerald-500/30 border-emerald-400/50 text-emerald-300'
                   }`}>
-                    {inputs.numberOfRooms >= 300 ? '✨ Luxury Class' :
-                     inputs.numberOfRooms >= 150 ? '⭐ Upscale Class' :
-                     inputs.numberOfRooms >= 75 ? '🏨 Midscale Class' :
+                    {inputs.numberOfRooms > 400 ? '✨ Luxury Class' :
+                     inputs.numberOfRooms > 200 ? '⭐ Upscale Class' :
+                     inputs.numberOfRooms > 75 ? '🏨 Midscale Class' :
                      '💚 Economy Class'}
                   </div>
                 </div>
