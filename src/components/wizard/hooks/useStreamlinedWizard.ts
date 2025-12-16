@@ -38,7 +38,8 @@ import {
   type PremiumConfiguration 
 } from '@/services/premiumConfigurationService';
 import { useWizardState } from '@/hooks/useWizardState';
-import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
+import { calculateUseCasePower, calculateHotelPower } from '@/services/useCasePowerCalculations';
+import { mapHotelQuestionnaire, type HotelQuestionnaireAnswers } from '@/services/questionnaireMapper';
 
 // ============================================
 // HELPER: Get facility subtype multiplier
@@ -466,42 +467,63 @@ export function useStreamlinedWizard({
     try {
       // Normalize field names for SSOT compatibility
       const normalizedData = { ...wizardState.useCaseData };
+      let peakDemandKW = 0;
       
-      // Industry-specific field normalization (same as useRealtimePowerCalculation)
-      if (wizardState.selectedIndustry === 'hotel') {
-        if (!normalizedData.roomCount) {
-          normalizedData.roomCount = normalizedData.numberOfRooms || normalizedData.rooms || normalizedData.facilitySize;
+      // ═══════════════════════════════════════════════════════════════
+      // HOTEL: Use questionnaireMapper for SSOT compliance (Dec 15, 2025)
+      // ═══════════════════════════════════════════════════════════════
+      if (wizardState.selectedIndustry === 'hotel' || wizardState.selectedIndustry === 'hotel-hospitality') {
+        const hotelMapped = mapHotelQuestionnaire(normalizedData as HotelQuestionnaireAnswers);
+        const hotelPowerResult = calculateHotelPower(
+          hotelMapped.ssotInput.roomCount,
+          {
+            hotelClass: hotelMapped.ssotInput.hotelClass,
+            amenities: hotelMapped.ssotInput.amenities,
+          }
+        );
+        peakDemandKW = (hotelPowerResult.powerMW || 0) * 1000;
+        
+        if (import.meta.env.DEV) {
+          console.log('🏨 [REAL-TIME HOTEL] Power calculated via mapper:', {
+            rooms: hotelMapped.ssotInput.roomCount,
+            class: hotelMapped.ssotInput.hotelClass,
+            amenities: Object.keys(hotelMapped.ssotInput.amenities),
+            peakKW: peakDemandKW,
+          });
         }
-      } else if (wizardState.selectedIndustry === 'office') {
-        if (!normalizedData.squareFeet) {
-          normalizedData.squareFeet = normalizedData.officeSqFt || normalizedData.buildingSqFt || normalizedData.sqFt || normalizedData.facilitySize;
+      } else {
+        // Industry-specific field normalization for non-hotel use cases
+        if (wizardState.selectedIndustry === 'office') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = normalizedData.officeSqFt || normalizedData.buildingSqFt || normalizedData.sqFt || normalizedData.facilitySize;
+          }
+        } else if (wizardState.selectedIndustry === 'hospital') {
+          if (!normalizedData.bedCount) {
+            normalizedData.bedCount = normalizedData.beds || normalizedData.numberOfBeds || normalizedData.facilitySize;
+          }
+        } else if (wizardState.selectedIndustry === 'warehouse') {
+          if (!normalizedData.squareFeet) {
+            normalizedData.squareFeet = normalizedData.warehouseSqFt || normalizedData.sqFt || normalizedData.facilitySize;
+          }
+        } else if (wizardState.selectedIndustry === 'car-wash') {
+          if (!normalizedData.bayCount) {
+            normalizedData.bayCount = normalizedData.washBays || normalizedData.numBays || normalizedData.bays || normalizedData.facilitySize;
+          }
+        } else if (wizardState.selectedIndustry === 'airport') {
+          if (!normalizedData.annualPassengers) {
+            normalizedData.annualPassengers = normalizedData.totalPassengers || normalizedData.passengers || normalizedData.facilitySize;
+          }
+        } else if (wizardState.selectedIndustry === 'casino') {
+          if (!normalizedData.gamingFloorSqFt) {
+            normalizedData.gamingFloorSqFt = normalizedData.gamingFloorSize || normalizedData.gamingSpaceSqFt || normalizedData.facilitySize;
+          }
         }
-      } else if (wizardState.selectedIndustry === 'hospital') {
-        if (!normalizedData.bedCount) {
-          normalizedData.bedCount = normalizedData.beds || normalizedData.numberOfBeds || normalizedData.facilitySize;
-        }
-      } else if (wizardState.selectedIndustry === 'warehouse') {
-        if (!normalizedData.squareFeet) {
-          normalizedData.squareFeet = normalizedData.warehouseSqFt || normalizedData.sqFt || normalizedData.facilitySize;
-        }
-      } else if (wizardState.selectedIndustry === 'car-wash') {
-        if (!normalizedData.bayCount) {
-          normalizedData.bayCount = normalizedData.washBays || normalizedData.numBays || normalizedData.bays || normalizedData.facilitySize;
-        }
-      } else if (wizardState.selectedIndustry === 'airport') {
-        if (!normalizedData.annualPassengers) {
-          normalizedData.annualPassengers = normalizedData.totalPassengers || normalizedData.passengers || normalizedData.facilitySize;
-        }
-      } else if (wizardState.selectedIndustry === 'casino') {
-        if (!normalizedData.gamingFloorSqFt) {
-          normalizedData.gamingFloorSqFt = normalizedData.gamingFloorSize || normalizedData.gamingSpaceSqFt || normalizedData.facilitySize;
-        }
+        // EV Charging: Pass through all charger fields directly
+        // The SSOT handles: level2Chargers, dcfc50kwChargers, dcfc150kwChargers, dcfc350kwChargers, megawattChargers
+        
+        const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
+        peakDemandKW = (powerResult.powerMW || 0) * 1000;
       }
-      // EV Charging: Pass through all charger fields directly
-      // The SSOT handles: level2Chargers, dcfc50kwChargers, dcfc150kwChargers, dcfc350kwChargers, megawattChargers
-      
-      const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
-      let peakDemandKW = (powerResult.powerMW || 0) * 1000;
       
       // ═══════════════════════════════════════════════════════════════
       // MULTIPLIERS (Dec 2025 - Universal Facility Configuration)
@@ -623,77 +645,122 @@ export function useStreamlinedWizard({
         const normalizedData = { ...data };
         
         // For ALL use cases: Try to extract the primary sizing field
-        // Hotel: roomCount
-        if (wizardState.selectedIndustry === 'hotel') {
-          if (!normalizedData.roomCount) {
-            normalizedData.roomCount = data.numberOfRooms || data.rooms || data.facilitySize;
+        // Hotel: Use questionnaireMapper for SSOT compliance (Dec 15, 2025)
+        if (wizardState.selectedIndustry === 'hotel' || wizardState.selectedIndustry === 'hotel-hospitality') {
+          // Use the new questionnaire mapper for hotels
+          const hotelMapped = mapHotelQuestionnaire(data as HotelQuestionnaireAnswers);
+          
+          // Calculate power using SSOT function with mapped inputs
+          const hotelPowerResult = calculateHotelPower(
+            hotelMapped.ssotInput.roomCount,
+            {
+              hotelClass: hotelMapped.ssotInput.hotelClass,
+              amenities: hotelMapped.ssotInput.amenities,
+            }
+          );
+          
+          peakDemandKW = (hotelPowerResult.powerMW || 0) * 1000;
+          dailyKWh = peakDemandKW * 24 * 0.4;
+          monthlyKWh = dailyKWh * 30;
+          
+          // Store extracted data for quote generation (solar, EV, backup, etc.)
+          setWizardState(prev => ({
+            ...prev,
+            // Solar from questionnaire
+            existingSolarKW: hotelMapped.extractedData.existingSolarKW,
+            wantsSolar: hotelMapped.extractedData.wantsSolar,
+            targetSolarKW: hotelMapped.extractedData.targetSolarKW,
+            // EV from questionnaire
+            existingEVChargers: hotelMapped.extractedData.existingEVChargers,
+            wantsEVCharging: hotelMapped.extractedData.wantsEVCharging,
+            targetEVChargers: hotelMapped.extractedData.targetEVChargers,
+            // Backup from questionnaire
+            durationHours: hotelMapped.extractedData.backupDurationHours,
+            hasExistingGenerator: hotelMapped.extractedData.hasExistingGenerator,
+            existingGeneratorKW: hotelMapped.extractedData.existingGeneratorKW,
+            // Financial from questionnaire
+            monthlyBill: hotelMapped.extractedData.monthlyBill,
+            peakDemandKW: hotelMapped.extractedData.peakDemandKW > 0 
+              ? hotelMapped.extractedData.peakDemandKW 
+              : peakDemandKW,
+          }));
+          
+          console.log('🏨 [HOTEL MAPPER] Questionnaire mapped successfully:', {
+            ssotInput: hotelMapped.ssotInput,
+            extractedData: hotelMapped.extractedData,
+            calculatedPeakKW: peakDemandKW,
+          });
+          
+          // Skip generic calculateUseCasePower for hotel - already calculated
+        } else {
+          // Non-hotel use cases: Use generic field normalization
+          // Office: squareFeet
+          if (wizardState.selectedIndustry === 'office') {
+            if (!normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.officeSqFt || data.buildingSqFt || data.sqFt || data.facilitySize;
+            }
           }
-        }
-        // Office: squareFeet
-        else if (wizardState.selectedIndustry === 'office') {
-          if (!normalizedData.squareFeet) {
-            normalizedData.squareFeet = data.officeSqFt || data.buildingSqFt || data.sqFt || data.facilitySize;
+          // Hospital: bedCount
+          else if (wizardState.selectedIndustry === 'hospital') {
+            if (!normalizedData.bedCount) {
+              normalizedData.bedCount = data.beds || data.numberOfBeds || data.facilitySize;
+            }
           }
-        }
-        // Hospital: bedCount
-        else if (wizardState.selectedIndustry === 'hospital') {
-          if (!normalizedData.bedCount) {
-            normalizedData.bedCount = data.beds || data.numberOfBeds || data.facilitySize;
+          // Warehouse: squareFeet
+          else if (wizardState.selectedIndustry === 'warehouse') {
+            if (!normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.warehouseSqFt || data.sqFt || data.facilitySize;
+            }
           }
-        }
-        // Warehouse: squareFeet
-        else if (wizardState.selectedIndustry === 'warehouse') {
-          if (!normalizedData.squareFeet) {
-            normalizedData.squareFeet = data.warehouseSqFt || data.sqFt || data.facilitySize;
+          // Manufacturing: squareFeet
+          else if (wizardState.selectedIndustry === 'manufacturing') {
+            if (!normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.facilitySqFt || data.squareFeet || data.sqFt || data.facilitySize;
+            }
           }
-        }
-        // Manufacturing: squareFeet
-        else if (wizardState.selectedIndustry === 'manufacturing') {
-          if (!normalizedData.squareFeet) {
-            normalizedData.squareFeet = data.facilitySqFt || data.squareFeet || data.sqFt || data.facilitySize;
+          // Retail: squareFeet
+          else if (wizardState.selectedIndustry === 'retail') {
+            if (!normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.retailSqFt || data.sqFt || data.facilitySize;
+            }
           }
-        }
-        // Retail: squareFeet
-        else if (wizardState.selectedIndustry === 'retail') {
-          if (!normalizedData.squareFeet) {
-            normalizedData.squareFeet = data.retailSqFt || data.sqFt || data.facilitySize;
+          // Airport: annualPassengers
+          else if (wizardState.selectedIndustry === 'airport') {
+            if (!normalizedData.annualPassengers) {
+              normalizedData.annualPassengers = data.totalPassengers || data.passengers || data.facilitySize;
+            }
           }
-        }
-        // Airport: annualPassengers
-        else if (wizardState.selectedIndustry === 'airport') {
-          if (!normalizedData.annualPassengers) {
-            normalizedData.annualPassengers = data.totalPassengers || data.passengers || data.facilitySize;
+          // Casino: gamingFloorSqFt
+          else if (wizardState.selectedIndustry === 'casino') {
+            if (!normalizedData.gamingFloorSqFt) {
+              normalizedData.gamingFloorSqFt = data.gamingFloorSize || data.gamingSpaceSqFt || data.facilitySize;
+            }
           }
-        }
-        // Casino: gamingFloorSqFt
-        else if (wizardState.selectedIndustry === 'casino') {
-          if (!normalizedData.gamingFloorSqFt) {
-            normalizedData.gamingFloorSqFt = data.gamingFloorSize || data.gamingSpaceSqFt || data.facilitySize;
+          // Car Wash: bayCount
+          else if (wizardState.selectedIndustry === 'car-wash') {
+            if (!normalizedData.bayCount) {
+              normalizedData.bayCount = data.washBays || data.numBays || data.bays || data.facilitySize;
+            }
           }
+          
+          // Generic SSOT calculation for non-hotel use cases
+          const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
+          peakDemandKW = (powerResult.powerMW || 0) * 1000; // Convert MW to kW
+          // Estimate daily/monthly from peak (assumes 40% capacity factor)
+          dailyKWh = peakDemandKW * 24 * 0.4;
+          monthlyKWh = dailyKWh * 30;
+          
+          console.log('✅ [SSOT] ========================================');
+          console.log('✅ [SSOT] CALCULATION SUCCESSFUL!');
+          console.log('✅ [SSOT] Industry:', wizardState.selectedIndustry);
+          console.log('✅ [SSOT] Raw field names:', Object.keys(data));
+          console.log('✅ [SSOT] Normalized field names:', Object.keys(normalizedData));
+          console.log('✅ [SSOT] Normalized values:', normalizedData);
+          console.log('✅ [SSOT] Peak Demand (kW):', peakDemandKW);
+          console.log('✅ [SSOT] Power (MW):', powerResult.powerMW);
+          console.log('✅ [SSOT] Method:', powerResult.calculationMethod);
+          console.log('✅ [SSOT] ========================================');
         }
-        // Car Wash: bayCount
-        else if (wizardState.selectedIndustry === 'car-wash') {
-          if (!normalizedData.bayCount) {
-            normalizedData.bayCount = data.washBays || data.numBays || data.bays || data.facilitySize;
-          }
-        }
-        
-        const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
-        peakDemandKW = (powerResult.powerMW || 0) * 1000; // Convert MW to kW
-        // Estimate daily/monthly from peak (assumes 40% capacity factor)
-        dailyKWh = peakDemandKW * 24 * 0.4;
-        monthlyKWh = dailyKWh * 30;
-        
-        console.log('✅ [SSOT] ========================================');
-        console.log('✅ [SSOT] CALCULATION SUCCESSFUL!');
-        console.log('✅ [SSOT] Industry:', wizardState.selectedIndustry);
-        console.log('✅ [SSOT] Raw field names:', Object.keys(data));
-        console.log('✅ [SSOT] Normalized field names:', Object.keys(normalizedData));
-        console.log('✅ [SSOT] Normalized values:', normalizedData);
-        console.log('✅ [SSOT] Peak Demand (kW):', peakDemandKW);
-        console.log('✅ [SSOT] Power (MW):', powerResult.powerMW);
-        console.log('✅ [SSOT] Method:', powerResult.calculationMethod);
-        console.log('✅ [SSOT] ========================================');
       } catch (error) {
         console.error('❌ [SSOT] Power calculation failed:', error);
         // Fallback to any values in useCaseData
