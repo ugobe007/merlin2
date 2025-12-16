@@ -282,15 +282,30 @@ export default function HotelWizard({
     hvacType: 'ptac' as 'ptac' | 'central' | 'vrf' | 'chiller',
   });
   
-  // Step 1 continued: Amenities
+  // Step 1 continued: Amenities (expanded for detailed facility profile)
   const [amenities, setAmenities] = useState({
+    // Basic amenities
     pool: true,
+    indoorPool: false,          // Indoor vs outdoor pool option
     restaurant: true,
+    restaurantCount: 1,         // How many restaurants if enabled
     spa: false,
     fitnessCenter: true,
     evCharging: false,
     laundry: true,
-    conferenceCenter: false,
+    
+    // Meeting/Event spaces
+    conferenceCenter: false,    // Conference center
+    eventCenter: false,         // Event center (banquets, weddings)
+    meetingCenter: false,       // Meeting rooms/business center
+    
+    // Luxury/Resort amenities
+    golfCourse: false,          // Golf course (luxury only)
+    clubhouse: false,           // Clubhouse (luxury only)
+    golfCartCount: 0,           // Number of golf carts
+    
+    // Building features
+    elevatorCount: 2,           // Number of elevators
   });
   
   // EV Charging Configuration - only used when evCharging amenity is enabled
@@ -1442,7 +1457,7 @@ export default function HotelWizard({
             </div>
           )}
           
-          {/* Step 1: YOUR HOTEL (Type, Size, Amenities) */}
+          {/* Step 1: YOUR HOTEL (Facility Details - Hotel Class & Rooms already provided from landing page) */}
           {currentStep === 1 && (
             <div className="space-y-6">
               {/* Step Help */}
@@ -1451,48 +1466,27 @@ export default function HotelWizard({
                 colorScheme="purple"
               />
               
-              {/* Hotel Class - HIGH CONTRAST */}
-              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-purple-500/40 shadow-xl shadow-purple-500/10">
-                <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-purple-500/20 rounded-xl">
-                    <Building2 className="w-6 h-6 text-purple-400" />
-                  </div>
-                  Hotel Class
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(HOTEL_CLASS_PROFILES).map(([key, profile]) => (
-                    <button
-                      key={key}
-                      onClick={() => setHotelDetails({...hotelDetails, hotelClass: key as any})}
-                      className={`p-5 rounded-2xl text-left transition-all transform hover:scale-[1.02] ${
-                        hotelDetails.hotelClass === key
-                          ? 'bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border-2 border-purple-400 shadow-lg shadow-purple-500/20'
-                          : 'bg-gray-800/60 border-2 border-gray-600 hover:border-gray-500'
-                      }`}
-                    >
-                      <p className="font-black text-white text-lg">{profile.name}</p>
-                      <p className="text-sm text-gray-300 mt-1">{profile.kWhPerRoom} kWh/room/day</p>
-                    </button>
-                  ))}
+              {/* Summary of Pre-filled Data from Landing Page */}
+              <div className="bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-pink-600/20 rounded-2xl p-5 border-2 border-purple-500/40 shadow-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-lg font-black text-white flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-purple-400" />
+                    Your Hotel Profile
+                  </h4>
+                  <span className="text-xs text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">Pre-filled from calculator</span>
                 </div>
-              </div>
-              
-              {/* Number of Rooms - HIGH CONTRAST */}
-              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-indigo-500/40 shadow-xl shadow-indigo-500/10">
-                <h4 className="text-xl font-black text-white mb-4">🏨 Number of Rooms</h4>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={25}
-                    max={500}
-                    step={25}
-                    value={hotelDetails.numberOfRooms}
-                    onChange={(e) => setHotelDetails({...hotelDetails, numberOfRooms: parseInt(e.target.value)})}
-                    className="flex-1 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                  />
-                  <div className="bg-gray-800/80 rounded-xl px-5 py-3 text-center min-w-[120px] border-2 border-indigo-500/40">
-                    <span className="text-4xl font-black text-indigo-400">{hotelDetails.numberOfRooms}</span>
-                    <span className="text-indigo-300 text-base ml-2 font-medium">rooms</span>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-gray-800/50 rounded-xl p-3 border border-purple-500/30">
+                    <p className="text-2xl font-black text-purple-400">{hotelDetails.numberOfRooms}</p>
+                    <p className="text-sm text-gray-400">Rooms</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 border border-indigo-500/30">
+                    <p className="text-lg font-black text-indigo-400">{HOTEL_CLASS_PROFILES[hotelDetails.hotelClass].name}</p>
+                    <p className="text-sm text-gray-400">Hotel Class</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 border border-pink-500/30">
+                    <p className="text-lg font-black text-pink-400">{hotelDetails.state}</p>
+                    <p className="text-sm text-gray-400">Location</p>
                   </div>
                 </div>
               </div>
@@ -1522,6 +1516,27 @@ export default function HotelWizard({
                 </div>
               </div>
               
+              {/* Number of Elevators - SLIDER */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-indigo-500/40 shadow-xl shadow-indigo-500/10">
+                <h4 className="text-xl font-black text-white mb-4">🛗 Number of Elevators</h4>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={0}
+                    max={20}
+                    step={1}
+                    value={amenities.elevatorCount}
+                    onChange={(e) => setAmenities({...amenities, elevatorCount: parseInt(e.target.value)})}
+                    className="flex-1 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <div className="bg-gray-800/80 rounded-xl px-5 py-3 text-center min-w-[100px] border-2 border-indigo-500/40">
+                    <span className="text-4xl font-black text-indigo-400">{amenities.elevatorCount}</span>
+                    <span className="text-indigo-300 text-sm ml-1">elev.</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Each elevator adds ~15-25 kW to peak demand during high-traffic periods</p>
+              </div>
+              
               {/* Power Summary - HIGH CONTRAST */}
               <div className="bg-gradient-to-r from-purple-600/20 via-indigo-600/20 to-pink-600/20 rounded-2xl p-5 border-2 border-purple-500/40 shadow-xl">
                 <div className="flex items-center justify-between">
@@ -1540,42 +1555,274 @@ export default function HotelWizard({
                 </div>
               </div>
               
-              {/* Amenity Selection - HIGH CONTRAST */}
+              {/* Food & Beverage Section */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-amber-500/40 shadow-xl shadow-amber-500/10">
+                <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded-xl">
+                    <Coffee className="w-6 h-6 text-amber-400" />
+                  </div>
+                  Food & Beverage
+                </h4>
+                
+                {/* Restaurant Toggle + Count */}
+                <div className="space-y-4">
+                  <label className="flex items-center gap-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={amenities.restaurant}
+                      onChange={(e) => setAmenities({...amenities, restaurant: e.target.checked, restaurantCount: e.target.checked ? 1 : 0})}
+                      className="w-6 h-6 accent-amber-500 rounded"
+                    />
+                    <div className="flex-1">
+                      <span className="text-lg font-bold text-white">🍽️ Restaurant(s)</span>
+                      <p className="text-sm text-gray-400">Full-service dining facilities</p>
+                    </div>
+                  </label>
+                  
+                  {/* Restaurant Count - Only show if restaurant is enabled */}
+                  {amenities.restaurant && (
+                    <div className="ml-10 p-4 bg-gray-800/50 rounded-xl border border-amber-500/30">
+                      <label className="text-sm text-amber-200 font-medium mb-2 block">How many restaurants?</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={1}
+                          max={10}
+                          value={amenities.restaurantCount}
+                          onChange={(e) => setAmenities({...amenities, restaurantCount: parseInt(e.target.value)})}
+                          className="flex-1 h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                        />
+                        <span className="text-2xl font-black text-amber-400 w-10 text-right">{amenities.restaurantCount}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Each restaurant adds ~40-80 kW (kitchens, HVAC, lighting)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Meeting & Event Spaces Section */}
+              <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/40 shadow-xl shadow-blue-500/10">
+                <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-xl">
+                    <Users className="w-6 h-6 text-blue-400" />
+                  </div>
+                  Meeting & Event Spaces
+                </h4>
+                
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Conference Center */}
+                  <button
+                    onClick={() => setAmenities({...amenities, conferenceCenter: !amenities.conferenceCenter})}
+                    className={`p-4 rounded-xl text-center transition-all border-2 ${
+                      amenities.conferenceCenter
+                        ? 'bg-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20'
+                        : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    <span className="text-3xl">🎤</span>
+                    <p className="font-bold text-white text-sm mt-2">Conference Center</p>
+                    <p className="text-xs text-gray-400">Large presentations, seminars</p>
+                    {amenities.conferenceCenter && <p className="text-xs text-blue-400 mt-1">+50-100 kW</p>}
+                  </button>
+                  
+                  {/* Event Center */}
+                  <button
+                    onClick={() => setAmenities({...amenities, eventCenter: !amenities.eventCenter})}
+                    className={`p-4 rounded-xl text-center transition-all border-2 ${
+                      amenities.eventCenter
+                        ? 'bg-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20'
+                        : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    <span className="text-3xl">🎉</span>
+                    <p className="font-bold text-white text-sm mt-2">Event Center</p>
+                    <p className="text-xs text-gray-400">Banquets, weddings, galas</p>
+                    {amenities.eventCenter && <p className="text-xs text-blue-400 mt-1">+75-150 kW</p>}
+                  </button>
+                  
+                  {/* Meeting Center */}
+                  <button
+                    onClick={() => setAmenities({...amenities, meetingCenter: !amenities.meetingCenter})}
+                    className={`p-4 rounded-xl text-center transition-all border-2 ${
+                      amenities.meetingCenter
+                        ? 'bg-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20'
+                        : 'bg-gray-800/60 border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    <span className="text-3xl">💼</span>
+                    <p className="font-bold text-white text-sm mt-2">Meeting Rooms</p>
+                    <p className="text-xs text-gray-400">Business center, board rooms</p>
+                    {amenities.meetingCenter && <p className="text-xs text-blue-400 mt-1">+20-40 kW</p>}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Golf & Luxury Amenities - Only show for luxury/upscale hotels */}
+              {(hotelDetails.hotelClass === 'luxury' || hotelDetails.hotelClass === 'upscale') && (
+                <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-green-500/40 shadow-xl shadow-green-500/10">
+                  <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
+                    <div className="p-2 bg-green-500/20 rounded-xl">
+                      <span className="text-xl">⛳</span>
+                    </div>
+                    Resort / Luxury Amenities
+                  </h4>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Golf Course */}
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={amenities.golfCourse}
+                          onChange={(e) => setAmenities({...amenities, golfCourse: e.target.checked, golfCartCount: e.target.checked ? 20 : 0})}
+                          className="w-6 h-6 accent-green-500 rounded"
+                        />
+                        <div className="flex-1">
+                          <span className="text-lg font-bold text-white">⛳ Golf Course</span>
+                          <p className="text-sm text-gray-400">+100-200 kW for clubhouse, irrigation</p>
+                        </div>
+                      </label>
+                      
+                      {/* Golf Cart Count */}
+                      {amenities.golfCourse && (
+                        <div className="ml-10 p-3 bg-gray-800/50 rounded-lg border border-green-500/30">
+                          <label className="text-sm text-green-200 font-medium mb-2 block">Electric Golf Carts</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={amenities.golfCartCount}
+                              onChange={(e) => setAmenities({...amenities, golfCartCount: parseInt(e.target.value)})}
+                              className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                            <span className="text-xl font-black text-green-400 w-12 text-right">{amenities.golfCartCount}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">Overnight charging: ~{(amenities.golfCartCount * 2.5).toFixed(0)} kW (2.5 kW per cart)</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Clubhouse */}
+                    <div>
+                      <label className="flex items-center gap-4 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={amenities.clubhouse}
+                          onChange={(e) => setAmenities({...amenities, clubhouse: e.target.checked})}
+                          className="w-6 h-6 accent-green-500 rounded"
+                        />
+                        <div className="flex-1">
+                          <span className="text-lg font-bold text-white">🏛️ Clubhouse</span>
+                          <p className="text-sm text-gray-400">+50-100 kW for restaurant, pro shop, lounge</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Standard Amenities Section */}
               <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 rounded-2xl p-6 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10">
                 <h4 className="text-xl font-black text-white mb-4 flex items-center gap-3">
                   <div className="p-2 bg-emerald-500/20 rounded-xl">
                     <Sparkles className="w-6 h-6 text-emerald-400" />
                   </div>
-                  Select Your Amenities
+                  Standard Amenities
                 </h4>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {Object.entries(HOTEL_AMENITY_SPECS).map(([key, spec]) => {
-                    const Icon = AMENITY_ICONS[key as HotelAmenity];
-                    const isEnabled = amenities[key as keyof typeof amenities];
-                    
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setAmenities({...amenities, [key]: !isEnabled})}
-                        className={`p-4 rounded-xl text-left transition-all flex items-center gap-4 transform hover:scale-[1.01] ${
-                          isEnabled
-                            ? 'bg-gradient-to-r from-emerald-600/30 to-cyan-600/30 border-2 border-emerald-400 shadow-lg shadow-emerald-500/20'
-                            : 'bg-gray-800/60 border-2 border-gray-600 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-gray-700'}`}>
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-white text-base">{spec.name}</p>
-                          <p className="text-sm text-gray-400">+{spec.peakKW} kW peak</p>
-                        </div>
-                        <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${isEnabled ? 'border-emerald-400 bg-emerald-500' : 'border-gray-500 bg-gray-700'}`}>
-                          {isEnabled && <Check className="w-5 h-5 text-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {/* Pool */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl bg-gray-800/60 border-2 border-gray-600 hover:border-emerald-500/50 transition-all">
+                      <input
+                        type="checkbox"
+                        checked={amenities.pool}
+                        onChange={(e) => setAmenities({...amenities, pool: e.target.checked})}
+                        className="w-6 h-6 accent-emerald-500 rounded"
+                      />
+                      <Waves className="w-6 h-6 text-cyan-400" />
+                      <div className="flex-1">
+                        <span className="text-base font-bold text-white">Swimming Pool</span>
+                        <p className="text-xs text-gray-400">+{HOTEL_AMENITY_SPECS.pool.peakKW} kW</p>
+                      </div>
+                    </label>
+                    {amenities.pool && (
+                      <div className="ml-6 flex gap-2">
+                        <button
+                          onClick={() => setAmenities({...amenities, indoorPool: !amenities.indoorPool})}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium ${amenities.indoorPool ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Indoor
+                        </button>
+                        <button
+                          onClick={() => setAmenities({...amenities, indoorPool: false})}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium ${!amenities.indoorPool ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Outdoor
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Spa */}
+                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl bg-gray-800/60 border-2 border-gray-600 hover:border-emerald-500/50 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={amenities.spa}
+                      onChange={(e) => setAmenities({...amenities, spa: e.target.checked})}
+                      className="w-6 h-6 accent-emerald-500 rounded"
+                    />
+                    <Thermometer className="w-6 h-6 text-pink-400" />
+                    <div className="flex-1">
+                      <span className="text-base font-bold text-white">Spa / Wellness</span>
+                      <p className="text-xs text-gray-400">+{HOTEL_AMENITY_SPECS.spa.peakKW} kW</p>
+                    </div>
+                  </label>
+                  
+                  {/* Fitness Center */}
+                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl bg-gray-800/60 border-2 border-gray-600 hover:border-emerald-500/50 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={amenities.fitnessCenter}
+                      onChange={(e) => setAmenities({...amenities, fitnessCenter: e.target.checked})}
+                      className="w-6 h-6 accent-emerald-500 rounded"
+                    />
+                    <Dumbbell className="w-6 h-6 text-orange-400" />
+                    <div className="flex-1">
+                      <span className="text-base font-bold text-white">Fitness Center</span>
+                      <p className="text-xs text-gray-400">+{HOTEL_AMENITY_SPECS.fitnessCenter.peakKW} kW</p>
+                    </div>
+                  </label>
+                  
+                  {/* Laundry */}
+                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl bg-gray-800/60 border-2 border-gray-600 hover:border-emerald-500/50 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={amenities.laundry}
+                      onChange={(e) => setAmenities({...amenities, laundry: e.target.checked})}
+                      className="w-6 h-6 accent-emerald-500 rounded"
+                    />
+                    <Wind className="w-6 h-6 text-blue-400" />
+                    <div className="flex-1">
+                      <span className="text-base font-bold text-white">Laundry Facility</span>
+                      <p className="text-xs text-gray-400">+{HOTEL_AMENITY_SPECS.laundry.peakKW} kW</p>
+                    </div>
+                  </label>
+                  
+                  {/* EV Charging */}
+                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl bg-gray-800/60 border-2 border-gray-600 hover:border-emerald-500/50 transition-all md:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={amenities.evCharging}
+                      onChange={(e) => setAmenities({...amenities, evCharging: e.target.checked})}
+                      className="w-6 h-6 accent-emerald-500 rounded"
+                    />
+                    <Car className="w-6 h-6 text-green-400" />
+                    <div className="flex-1">
+                      <span className="text-base font-bold text-white">EV Charging Stations</span>
+                      <p className="text-xs text-gray-400">Configure below if enabled</p>
+                    </div>
+                  </label>
                 </div>
                 
                 {/* ═══════════════════════════════════════════════════════════════
