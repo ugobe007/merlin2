@@ -323,34 +323,15 @@ export default function CarWashEnergy() {
   // TrueQuote Modal
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
-  // Quick Estimate Modal - Progressive Disclosure (Option A)
-  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
-  const [quickBays, setQuickBays] = useState(1);
-  const [quickWashType, setQuickWashType] = useState<'express' | 'fullservice' | 'selfservice' | 'inbay'>('express');
-  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
-  
-  // Quick estimate calculation
-  const calculateQuickEstimate = (bays: number, washType: string) => {
-    // Simplified savings based on wash type and bay count
-    const savingsPerBay: Record<string, number> = {
-      'express': 12000,    // Express tunnels: high volume, high savings
-      'fullservice': 15000, // Full service: more equipment
-      'selfservice': 3000,  // Self-service: lower usage
-      'inbay': 8000,        // In-bay automatic: moderate
-    };
-    const baseSavings = (savingsPerBay[washType] || 10000) * bays;
-    // Add some variance for realism
-    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
-    const payback = 2.5 + Math.random() * 1.5; // 2.5-4 years
-    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
-  };
-  
-  // Auto-calculate when quick estimate inputs change
-  useEffect(() => {
-    if (showQuickEstimate) {
-      calculateQuickEstimate(quickBays, quickWashType);
-    }
-  }, [quickBays, quickWashType, showQuickEstimate]);
+  // Hero inline estimate - calculated from inputs (Dec 2025 - removed popup)
+  const heroEstimate = React.useMemo(() => {
+    // Car washes: average $10,000-12,000 savings per bay per year
+    const bays = inputs.numberOfBays || 1;
+    const savingsPerBay = 11000; // Average across wash types
+    const savings = savingsPerBay * bays;
+    const payback = 3.0; // Average payback
+    return { savings, payback, bays };
+  }, [inputs.numberOfBays]);
   
   // Calculate quote when inputs change (debounced)
   useEffect(() => {
@@ -519,12 +500,23 @@ export default function CarWashEnergy() {
               </div>
               
               <button 
-                onClick={() => setShowQuickEstimate(true)}
+                onClick={() => {
+                  document.getElementById('calculator-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
               >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* Inline savings preview - Dec 2025 */}
+              {heroEstimate.bays > 0 && (
+                <div className="mt-3 text-center lg:text-left">
+                  <p className="text-emerald-300 text-sm font-medium">
+                    Est. ${heroEstimate.savings.toLocaleString()}/year savings · {heroEstimate.payback.toFixed(1)} year payback
+                  </p>
+                </div>
+              )}
               
               {/* TrueQuote Badge - Trust signal */}
               <div className="flex items-center gap-2 mt-4">
@@ -1251,166 +1243,6 @@ export default function CarWashEnergy() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-      
-      {/* ═══════════════════════════════════════════════════════════════════════
-          QUICK ESTIMATE MODAL - Progressive Disclosure (Option A)
-          Shows instant value with minimal input, then offers detailed wizard
-          HIGH CONTRAST DESIGN - Matching CarWashWizard styling
-          ═══════════════════════════════════════════════════════════════════════ */}
-      {showQuickEstimate && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
-          onClick={() => setShowQuickEstimate(false)}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-          
-          {/* Modal - DEEP PURPLE GRADIENT theme */}
-          <div 
-            className="relative bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 rounded-3xl shadow-2xl shadow-purple-500/40 max-w-lg w-full max-h-[90vh] overflow-y-auto border-2 border-purple-500/50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button - PURPLE THEME */}
-            <button
-              onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-4 right-4 p-2 bg-purple-900/80 hover:bg-red-500/30 rounded-xl text-purple-300 hover:text-white transition-all z-10 border border-purple-700 hover:border-red-500/50"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            {/* Header with Merlin - PURPLE THEME */}
-            <div className="relative px-8 pt-8 pb-4">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-purple-500/20 rounded-2xl border-2 border-purple-500/40 shadow-lg shadow-purple-500/20">
-                  <img src={merlinImage} alt="Merlin" className="w-14 h-14" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-white">Quick Savings Estimate</h2>
-                  <p className="text-cyan-400 text-sm font-medium">Answer 2 questions, get instant results</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Questions - HIGH CONTRAST */}
-            <div className="px-8 pb-6 space-y-6">
-              {/* Question 1: Wash Type - HIGH CONTRAST CARDS */}
-              <div className="bg-gradient-to-br from-slate-800/80 to-gray-800/80 rounded-2xl p-5 border-2 border-gray-700">
-                <label className="block text-white font-bold text-lg mb-4">What type of car wash?</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'express', label: 'Express Tunnel', desc: '30-60 cars/hr' },
-                    { id: 'fullservice', label: 'Full-Service', desc: '50-100 cars/hr' },
-                    { id: 'selfservice', label: 'Self-Service', desc: '2-4 per bay/hr' },
-                    { id: 'inbay', label: 'In-Bay Auto', desc: '6-10 cars/hr' },
-                  ].map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setQuickWashType(type.id as typeof quickWashType)}
-                      className={`p-4 rounded-xl text-left transition-all ${
-                        quickWashType === type.id
-                          ? 'bg-gradient-to-br from-cyan-600/40 to-emerald-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20'
-                          : 'bg-gray-800/60 border-2 border-gray-700 hover:border-cyan-500/50 hover:bg-gray-700/60'
-                      }`}
-                    >
-                      <p className={`font-bold text-base ${quickWashType === type.id ? 'text-white' : 'text-gray-200'}`}>{type.label}</p>
-                      <p className={`text-sm mt-1 ${quickWashType === type.id ? 'text-cyan-300' : 'text-gray-400'}`}>{type.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Question 2: Number of Bays - HIGH CONTRAST PROMINENT */}
-              <div className="bg-gradient-to-br from-cyan-600/20 to-emerald-600/20 rounded-2xl p-5 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/10">
-                <label className="block text-white font-black text-xl mb-4">
-                  🏢 How many {quickWashType === 'express' || quickWashType === 'fullservice' ? 'tunnel bays' : 'wash bays'}?
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={1}
-                    max={quickWashType === 'selfservice' ? 20 : 8}
-                    value={quickBays}
-                    onChange={(e) => setQuickBays(parseInt(e.target.value))}
-                    className="flex-1 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                  />
-                  <div className="bg-gray-800/80 rounded-xl px-5 py-3 text-center min-w-[100px] border-2 border-cyan-500/40">
-                    <span className="text-5xl font-black text-cyan-400">{quickBays}</span>
-                    <span className="text-cyan-300 text-base ml-2 font-medium">bays</span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-3 text-center font-medium">Slide to adjust • More bays = more savings</p>
-              </div>
-            </div>
-            
-            {/* Results - HIGH CONTRAST Always visible */}
-            <div className="bg-gradient-to-br from-emerald-600/20 via-cyan-600/20 to-blue-600/20 px-8 py-8 border-t-2 border-cyan-500/30">
-              <div className="text-center mb-6">
-                <p className="text-cyan-300 text-base font-bold mb-2">Your Estimated Annual Savings</p>
-                <p className="text-6xl font-black text-white drop-shadow-lg">
-                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
-                </p>
-                <p className="text-emerald-400 text-lg font-bold mt-2">
-                  {quickEstimateResult && `~${quickEstimateResult.payback} year payback`}
-                </p>
-              </div>
-              
-              {/* What's included - HIGH CONTRAST */}
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-amber-500/30">
-                  <Zap className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                  <p className="text-sm text-white font-medium">Peak Shaving</p>
-                </div>
-                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-emerald-500/30">
-                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-sm text-white font-medium">Demand Cut</p>
-                </div>
-                <div className="text-center p-3 bg-gray-800/60 rounded-xl border-2 border-purple-500/30">
-                  <Shield className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                  <p className="text-sm text-white font-medium">Backup Power</p>
-                </div>
-              </div>
-              
-              {/* CTAs - HIGH CONTRAST */}
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    setInputs(prev => ({ ...prev, numberOfBays: quickBays }));
-                    setShowWizard(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-xl shadow-2xl shadow-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/60 transition-all flex items-center justify-center gap-3 border-2 border-purple-300/60 animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900 hover:scale-[1.03]"
-                >
-                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
-                  Get Detailed Quote
-                  <ArrowRight className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    // Scroll to calculator section
-                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full bg-gray-800/60 hover:bg-gray-700/80 text-white px-6 py-4 rounded-xl font-bold transition-all text-base border-2 border-gray-700 hover:border-cyan-500/50"
-                >
-                  Or try our simple calculator below
-                </button>
-              </div>
-              
-              {/* Trust signal + Methodology */}
-              <div className="text-center mt-4 space-y-3">
-                <p className="text-gray-400 text-sm font-medium">
-                  2 minute detailed quote • No commitment required
-                </p>
-                <MethodologyStatement 
-                  variant="compact" 
-                  darkMode={true}
-                  message="NREL ATB 2024 & DOE methodology"
-                />
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -286,32 +286,21 @@ export default function EVChargingEnergy() {
   // TrueQuote Modal
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
-  // Quick Estimate Modal - Progressive Disclosure
-  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
-  const [quickChargerType, setQuickChargerType] = useState<'level2' | 'dcfc' | 'hpc' | 'mixed'>('dcfc');
-  const [quickPorts, setQuickPorts] = useState(1);
-  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
-  
-  // Quick estimate calculation
-  const calculateQuickEstimate = (ports: number, chargerType: string) => {
+  // Hero inline estimate - calculated from inputs (Dec 2025 - removed popup)
+  const heroEstimate = React.useMemo(() => {
     const savingsPerPort: Record<string, number> = {
-      'level2': 2000,    // Level 2: Lower demand, lower savings
-      'dcfc': 15000,     // DCFC: High demand spikes
-      'hpc': 25000,      // HPC: Very high demand
-      'mixed': 12000,    // Mixed: Average
+      'level2': 2000,
+      'dcfc': 15000,
+      'hpc': 25000,
     };
-    const baseSavings = (savingsPerPort[chargerType] || 12000) * ports;
-    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
-    const payback = 2 + Math.random() * 2; // 2-4 years
-    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
-  };
-  
-  // Auto-calculate when quick estimate inputs change
-  useEffect(() => {
-    if (showQuickEstimate) {
-      calculateQuickEstimate(quickPorts, quickChargerType);
-    }
-  }, [quickPorts, quickChargerType, showQuickEstimate]);
+    const totalPorts = inputs.level2Ports + inputs.dcfcPorts + inputs.hpcPorts;
+    const savings = 
+      inputs.level2Ports * savingsPerPort.level2 +
+      inputs.dcfcPorts * savingsPerPort.dcfc +
+      inputs.hpcPorts * savingsPerPort.hpc;
+    const payback = totalPorts > 10 ? 2.5 : totalPorts > 5 ? 3.0 : 3.5;
+    return { savings, payback, totalPorts };
+  }, [inputs.level2Ports, inputs.dcfcPorts, inputs.hpcPorts]);
   
   // Calculate quote when inputs change (debounced)
   useEffect(() => {
@@ -454,12 +443,27 @@ export default function EVChargingEnergy() {
               </div>
               
               <button 
-                onClick={() => setShowQuickEstimate(true)}
+                onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
               >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* Inline Savings Preview */}
+              <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-emerald-400/30 inline-flex items-center gap-3">
+                <div className="text-center">
+                  <p className="text-sm text-emerald-200">Based on {heroEstimate.totalPorts} ports</p>
+                  <p className="text-xl font-bold text-white">
+                    ~${heroEstimate.savings.toLocaleString()}<span className="text-sm text-emerald-300">/year</span>
+                  </p>
+                </div>
+                <div className="w-px h-10 bg-emerald-400/30" />
+                <div className="text-center">
+                  <p className="text-sm text-emerald-200">Payback</p>
+                  <p className="text-xl font-bold text-teal-300">{heroEstimate.payback} yrs</p>
+                </div>
+              </div>
               
               {/* TrueQuote Badge - Trust signal */}
               <div className="flex items-center gap-2 mt-4">
@@ -1102,178 +1106,6 @@ export default function EVChargingEnergy() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-      
-      {/* ═══════════════════════════════════════════════════════════════════════
-          QUICK ESTIMATE MODAL - Progressive Disclosure
-          ═══════════════════════════════════════════════════════════════════════ */}
-      {showQuickEstimate && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
-          onClick={() => setShowQuickEstimate(false)}
-        >
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-          
-          {/* Modal - Floating with responsive sizing */}
-          <div 
-            className="relative bg-gradient-to-br from-slate-900 via-emerald-900/70 to-teal-900/80 rounded-3xl shadow-2xl shadow-emerald-500/40 max-w-lg w-full max-h-[90vh] overflow-y-auto border-3 border-emerald-400/60"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Decorative elements */}
-            <div className="absolute top-3 left-3 text-2xl animate-pulse">⚡</div>
-            <button
-              onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-emerald-500/30 rounded-xl transition-all border border-transparent hover:border-emerald-400/50 z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="relative px-8 pt-8 pb-4 bg-gradient-to-b from-emerald-600/20 to-transparent">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="relative">
-                  <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
-                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1"><Bolt className="w-3 h-3 text-white" /></div>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300">Quick Savings Estimate</h2>
-                  <p className="text-emerald-200 text-sm font-medium">⏱️ Answer 2 questions, get instant results</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="px-8 pb-6 space-y-6">
-              {/* Question 1: Charger Type */}
-              <div>
-                <label className="block text-emerald-200 font-medium mb-3">What type of chargers?</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'level2', label: 'Level 2', desc: '7-22 kW' },
-                    { id: 'dcfc', label: 'DC Fast', desc: '50-150 kW' },
-                    { id: 'hpc', label: 'High Power', desc: '250-350 kW' },
-                    { id: 'mixed', label: 'Mixed', desc: 'Combination' },
-                  ].map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setQuickChargerType(type.id as typeof quickChargerType)}
-                      className={`p-3 rounded-xl text-left transition-all ${
-                        quickChargerType === type.id
-                          ? 'bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border-2 border-emerald-400'
-                          : 'bg-white/5 border border-white/10 hover:border-emerald-400/50'
-                      }`}
-                    >
-                      <p className="font-semibold text-white text-sm">{type.label}</p>
-                      <p className="text-emerald-300/70 text-xs">{type.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Question 2: Number of Ports - Prominent styling */}
-              <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl p-4 border-2 border-emerald-400/50">
-                <label className="block text-white font-bold text-lg mb-3">
-                  ⚡ How many charging ports?
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={1}
-                    max={quickChargerType === 'level2' ? 200 : quickChargerType === 'hpc' ? 50 : 100}
-                    value={Math.min(quickPorts, quickChargerType === 'level2' ? 200 : quickChargerType === 'hpc' ? 50 : 100)}
-                    onChange={(e) => setQuickPorts(parseInt(e.target.value))}
-                    className="flex-1 h-3 bg-white/30 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                  />
-                  <div className="bg-white/10 rounded-xl px-3 py-2 text-center min-w-[100px]">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={quickPorts || ''}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        setQuickPorts(Math.min(500, Math.max(1, parseInt(val) || 1)));
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      className="w-16 bg-transparent text-4xl font-black text-emerald-400 text-right outline-none"
-                    />
-                    <span className="text-emerald-300 text-sm ml-1">ports</span>
-                  </div>
-                </div>
-                <p className="text-xs text-emerald-200/70 mt-2 text-center">Large stations? Type up to 500 • More ports = more savings</p>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-r from-emerald-600/30 via-teal-600/30 to-cyan-600/30 px-8 py-6 border-t-2 border-emerald-400/40">
-              <div className="text-center mb-5 bg-slate-900/50 rounded-2xl p-5 border-2 border-emerald-400/40">
-                <p className="text-emerald-200 text-sm font-bold mb-2 tracking-wide">💰 YOUR ESTIMATED ANNUAL SAVINGS</p>
-                <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 drop-shadow-lg">
-                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
-                </p>
-                <p className="text-teal-300 text-sm mt-2 font-semibold">
-                  {quickEstimateResult && <><span className="text-cyan-400">⚡</span> ~{quickEstimateResult.payback} year payback</>}
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="text-center p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 hover:scale-105 transition-transform">
-                  <Zap className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Peak Shaving</p>
-                </div>
-                <div className="text-center p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/40 hover:scale-105 transition-transform">
-                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">50%+ Cut</p>
-                </div>
-                <div className="text-center p-3 bg-teal-500/20 rounded-xl border border-teal-400/40 hover:scale-105 transition-transform">
-                  <Battery className="w-6 h-6 text-teal-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">More Capacity</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    // Map to inputs
-                    if (quickChargerType === 'level2') {
-                      setInputs(prev => ({ ...prev, level2Ports: quickPorts, dcfcPorts: 0, hpcPorts: 0 }));
-                    } else if (quickChargerType === 'dcfc') {
-                      setInputs(prev => ({ ...prev, level2Ports: 0, dcfcPorts: quickPorts, hpcPorts: 0 }));
-                    } else if (quickChargerType === 'hpc') {
-                      setInputs(prev => ({ ...prev, level2Ports: 0, dcfcPorts: 0, hpcPorts: quickPorts }));
-                    } else {
-                      setInputs(prev => ({ ...prev, level2Ports: Math.floor(quickPorts/2), dcfcPorts: Math.ceil(quickPorts/2), hpcPorts: 0 }));
-                    }
-                    setShowWizard(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-lg shadow-2xl shadow-purple-500/50 transition-all flex items-center justify-center gap-2 border-2 border-purple-300/60 hover:scale-[1.03] animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900"
-                >
-                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
-                  Get Detailed Quote
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full bg-slate-800/60 hover:bg-slate-700/60 border-2 border-emerald-400/40 hover:border-emerald-300/60 text-emerald-100 px-6 py-3 rounded-xl font-semibold transition-all text-sm"
-                >
-                  Or try our simple calculator below
-                </button>
-              </div>
-              
-              <div className="text-center mt-4 space-y-3">
-                <p className="text-emerald-200 text-xs font-medium">
-                  ✓ 2 minute detailed quote • ✓ No commitment required
-                </p>
-                <MethodologyStatement 
-                  variant="compact" 
-                  darkMode={true}
-                  message="NREL ATB 2024 & DOE methodology"
-                />
-              </div>
-            </div>
           </div>
         </div>
       )}
