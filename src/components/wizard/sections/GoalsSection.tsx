@@ -310,6 +310,15 @@ export function GoalsSection({
           <SolarToggle wizardState={wizardState} setWizardState={setWizardState} highlightForPower={needsMorePower} />
         </div>
 
+        {/* Solar Canopy Toggle - SECTION 3B (Dec 2025) */}
+        <div className="mb-4" data-section="solar-canopy-config">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-green-500 text-white flex items-center justify-center font-bold text-sm">3B</div>
+            <h3 className="text-lg font-bold text-white">Solar Parking Canopy</h3>
+          </div>
+          <SolarCanopyToggle wizardState={wizardState} setWizardState={setWizardState} />
+        </div>
+
         {/* Wind Toggle - SECTION 4 */}
         <div className="mb-4" data-section="wind-config">
           <div className="flex items-center gap-3 mb-4">
@@ -751,6 +760,99 @@ function SolarToggle({ wizardState, setWizardState, highlightForPower = false }:
               <div className="text-xs text-gray-500">Est. Cost</div>
               <div className="font-bold text-amber-700">${((wizardState.solarKW || 0) * 1200).toLocaleString()}</div>
             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Solar Canopy Toggle (Dec 2025) - Solar panels on parking canopy structure
+function SolarCanopyToggle({ wizardState, setWizardState }: SubComponentProps) {
+  // Calculate canopy kW from parking spaces (approx 3.5 kW per parking space)
+  const canopyKW = (wizardState.solarCanopySpaces || 0) * 3.5;
+  
+  return (
+    <div className={`rounded-2xl p-6 border-2 mb-4 transition-all ${
+      wizardState.wantsSolarCanopy
+        ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-400 shadow-lg shadow-green-500/20'
+        : 'bg-gradient-to-br from-green-50/50 to-emerald-50/50 border-green-200'
+    }`}>
+      <label className="flex items-center gap-4 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={wizardState.wantsSolarCanopy}
+          onChange={(e) => {
+            setWizardState(prev => ({
+              ...prev,
+              wantsSolarCanopy: e.target.checked,
+              solarCanopySpaces: e.target.checked ? 20 : 0  // Default 20 spaces
+            }));
+          }}
+          className="w-6 h-6 rounded accent-green-500"
+        />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <Car className="w-5 h-5 text-green-500" />
+            <Sun className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-gray-800">Add Solar Parking Canopy</span>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">Shade vehicles + generate power (~3.5 kW per space)</p>
+        </div>
+      </label>
+
+      {wizardState.wantsSolarCanopy && (
+        <div className="mt-4 pt-4 border-t border-green-200 space-y-4">
+          {/* Parking spaces slider */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Number of covered parking spaces
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min={5}
+                max={200}
+                step={5}
+                value={wizardState.solarCanopySpaces || 20}
+                onChange={(e) => setWizardState(prev => ({
+                  ...prev,
+                  solarCanopySpaces: parseInt(e.target.value)
+                }))}
+                className="flex-1 h-3 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+              />
+              <div className="bg-green-100 rounded-xl px-4 py-2 min-w-[100px] text-center border-2 border-green-300">
+                <span className="text-2xl font-black text-green-600">{wizardState.solarCanopySpaces || 20}</span>
+                <span className="text-green-500 text-sm ml-1">spaces</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Canopy stats */}
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="bg-white/60 rounded-lg p-2">
+              <div className="text-xs text-gray-500">Solar Capacity</div>
+              <div className="font-bold text-green-700">{canopyKW.toFixed(0)} kW</div>
+            </div>
+            <div className="bg-white/60 rounded-lg p-2">
+              <div className="text-xs text-gray-500">Annual Gen</div>
+              <div className="font-bold text-green-700">
+                {Math.round(canopyKW * 5 * 365 / 1000)} MWh
+              </div>
+            </div>
+            <div className="bg-white/60 rounded-lg p-2">
+              <div className="text-xs text-gray-500">Est. Cost</div>
+              <div className="font-bold text-green-700">${(canopyKW * 2500).toLocaleString()}</div>
+            </div>
+          </div>
+
+          {/* Tip */}
+          <div className="flex items-start gap-2 p-3 bg-green-100 rounded-lg">
+            <Info className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-green-700">
+              Solar canopies provide shade, weather protection, and generate clean energy. 
+              Great for EV charging stations and customer parking areas.
+            </p>
           </div>
         </div>
       )}
