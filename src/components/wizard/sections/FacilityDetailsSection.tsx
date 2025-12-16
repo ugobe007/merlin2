@@ -403,6 +403,38 @@ export function FacilityDetailsSection({
                         <span className="text-gray-700">Yes</span>
                       </label>
                     )}
+                    
+                    {/* Slider input (Dec 2025) - for elevator count, bill estimates */}
+                    {question.question_type === 'slider' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="range"
+                            min={question.min_value || 0}
+                            max={question.max_value || 100}
+                            step={question.step_value || 1}
+                            value={wizardState.useCaseData[question.field_name] ?? question.default_value ?? 0}
+                            onChange={(e) => setWizardState(prev => ({
+                              ...prev,
+                              useCaseData: { ...prev.useCaseData, [question.field_name]: parseFloat(e.target.value) }
+                            }))}
+                            className="flex-1 h-3 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                          />
+                          <div className="bg-purple-100 rounded-xl px-4 py-2 min-w-[100px] text-center border-2 border-purple-300">
+                            <span className="text-2xl font-black text-purple-600">
+                              {question.field_name.includes('bill') || question.field_name.includes('cost') 
+                                ? `$${(wizardState.useCaseData[question.field_name] ?? question.default_value ?? 0).toLocaleString()}`
+                                : (wizardState.useCaseData[question.field_name] ?? question.default_value ?? 0).toLocaleString()
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 px-1">
+                          <span>{question.min_value || 0}{question.field_name.includes('bill') || question.field_name.includes('cost') ? '' : ''}</span>
+                          <span>{question.max_value || 100}{question.field_name.includes('bill') || question.field_name.includes('cost') ? '' : ''}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   );
                 })}
