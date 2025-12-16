@@ -20,7 +20,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, 
   Sun, TrendingDown, Shield, Sparkles, X, Battery, ChevronDown,
-  Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell
+  Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell,
+  Users, Briefcase, Utensils, Shirt, TreePine, Flag, Droplets
 } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
@@ -48,13 +49,50 @@ import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 interface HotelInputs {
   numberOfRooms: number;
   hotelClass: HotelClassSimple;
-  hasPool: boolean;
-  hasRestaurant: boolean;
+  // Expanded amenities list (Dec 2025)
+  hasPool: boolean;        // Indoor or outdoor
+  hasIndoorPool: boolean;  // Indoor pool/jacuzzi specifically
+  hasOutdoorPool: boolean; // Outdoor pool
+  hasRestaurant: boolean;  // Has restaurant
+  restaurantCount: number; // How many restaurants (MGM has several)
   hasSpa: boolean;
   hasFitnessCenter: boolean;
   hasEVCharging: boolean;
+  evChargerCount: number;  // How many EV chargers
+  hasParkingCanopy: boolean; // Solar parking canopy
+  hasMeetingRoom: boolean;
+  hasConferenceCenter: boolean;
+  hasLaundry: boolean;
+  laundryMachineCount: number; // How many machines
+  // Resort features
+  isResort: boolean;
+  hasClubhouse: boolean;
+  hasGolfCourse: boolean;
+  golfCartCount: number;
+  // Location & billing
   state: string;
   currentMonthlyBill: number;
+  squareFootage: number;   // For utility estimation
+}
+
+// Helper: Auto-determine hotel class from room count
+function getHotelClassFromRooms(rooms: number): HotelClassSimple {
+  if (rooms < 75) return 'economy';
+  if (rooms < 150) return 'midscale';
+  if (rooms < 300) return 'upscale';
+  return 'luxury';
+}
+
+// Helper: Estimate monthly utility bill from square footage
+function estimateMonthlyBill(sqft: number, hotelClass: HotelClassSimple): number {
+  // Industry average: $0.80-1.50 per sq ft per month for hotels
+  const ratePerSqFt: Record<HotelClassSimple, number> = {
+    economy: 0.80,
+    midscale: 1.00,
+    upscale: 1.25,
+    luxury: 1.50,
+  };
+  return Math.round(sqft * ratePerSqFt[hotelClass]);
 }
 
 interface LeadInfo {
@@ -217,18 +255,21 @@ function ImageCarousel() {
 
 // ============================================
 // CALCULATOR LOGIC (uses SSOT from useCasePowerCalculations)
+// Dec 2025: Expanded amenities support
 // ============================================
 
 function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: number; demandChargeImpact: number } {
-  const { numberOfRooms, hotelClass, hasPool, hasRestaurant, hasSpa, hasFitnessCenter, hasEVCharging, state } = inputs;
+  const { numberOfRooms, hotelClass, state } = inputs;
   
   // Map local amenity booleans to SSOT amenity keys
+  // Note: SSOT currently supports: pool, restaurant, spa, fitness, evCharging
+  // Additional amenities add estimated power manually
   const amenities: HotelAmenitySimple[] = [];
-  if (hasPool) amenities.push('pool');
-  if (hasRestaurant) amenities.push('restaurant');
-  if (hasSpa) amenities.push('spa');
-  if (hasFitnessCenter) amenities.push('fitness');
-  if (hasEVCharging) amenities.push('evCharging');
+  if (inputs.hasPool || inputs.hasIndoorPool || inputs.hasOutdoorPool) amenities.push('pool');
+  if (inputs.hasRestaurant) amenities.push('restaurant');
+  if (inputs.hasSpa) amenities.push('spa');
+  if (inputs.hasFitnessCenter) amenities.push('fitness');
+  if (inputs.hasEVCharging) amenities.push('evCharging');
   
   const stateData = STATE_RATES[state] || STATE_RATES['Other'];
   
@@ -240,15 +281,51 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
     electricityRate: stateData.rate,
   });
   
-  // Calculate dailyKWh from SSOT annualEnergyCost / electricityRate / 365
-  // Or use a simpler estimate based on peak with 40% capacity factor
-  const dailyKWh = Math.round(result.peakKW * 24 * 0.4);
+  // Add power for expanded amenities not in SSOT
+  let additionalPowerKW = 0;
+  
+  // Multiple restaurants (each adds ~50kW)
+  if (inputs.restaurantCount > 1) {
+    additionalPowerKW += (inputs.restaurantCount - 1) * 50;
+  }
+  
+  // Conference center (100kW base + 0.5kW per 100 sqft)
+  if (inputs.hasConferenceCenter) {
+    additionalPowerKW += 100;
+  }
+  
+  // Meeting rooms (25kW per room estimate)
+  if (inputs.hasMeetingRoom) {
+    additionalPowerKW += 25;
+  }
+  
+  // Laundry (5kW per machine)
+  if (inputs.hasLaundry && inputs.laundryMachineCount > 0) {
+    additionalPowerKW += inputs.laundryMachineCount * 5;
+  }
+  
+  // Additional EV chargers beyond base (11kW per L2)
+  if (inputs.evChargerCount > 8) {
+    additionalPowerKW += (inputs.evChargerCount - 8) * 11;
+  }
+  
+  // Parking canopy solar (reduces peak, not adds - skip for now)
+  
+  // Resort features
+  if (inputs.hasClubhouse) additionalPowerKW += 75;
+  if (inputs.hasGolfCourse) additionalPowerKW += 50;
+  if (inputs.golfCartCount > 0) additionalPowerKW += inputs.golfCartCount * 2; // Charging stations
+  
+  const totalPeakKW = result.peakKW + additionalPowerKW;
+  
+  // Calculate dailyKWh based on total peak with 40% capacity factor
+  const dailyKWh = Math.round(totalPeakKW * 24 * 0.4);
   
   // Demand charge impact using state-specific rates
-  const demandChargeImpact = result.peakKW * stateData.demandCharge;
+  const demandChargeImpact = totalPeakKW * stateData.demandCharge;
   
   return { 
-    peakKW: result.peakKW, 
+    peakKW: totalPeakKW, 
     dailyKWh, 
     demandChargeImpact: Math.round(demandChargeImpact) 
   };
@@ -259,18 +336,54 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
 // ============================================
 
 export default function HotelEnergy() {
-  // Calculator inputs
+  // Calculator inputs - expanded for Dec 2025
   const [inputs, setInputs] = useState<HotelInputs>({
     numberOfRooms: 150,
-    hotelClass: 'midscale',
+    hotelClass: 'midscale', // Auto-determined from room count
+    // Pools
     hasPool: true,
+    hasIndoorPool: false,
+    hasOutdoorPool: true,
+    // Dining
     hasRestaurant: true,
+    restaurantCount: 1,
+    // Amenities
     hasSpa: false,
     hasFitnessCenter: true,
     hasEVCharging: false,
+    evChargerCount: 0,
+    hasParkingCanopy: false,
+    hasMeetingRoom: true,
+    hasConferenceCenter: false,
+    hasLaundry: true,
+    laundryMachineCount: 6,
+    // Resort features
+    isResort: false,
+    hasClubhouse: false,
+    hasGolfCourse: false,
+    golfCartCount: 0,
+    // Location & billing
     state: 'Florida',
     currentMonthlyBill: 25000,
+    squareFootage: 75000, // ~500 sqft per room average
   });
+  
+  // Auto-update hotel class when room count changes
+  useEffect(() => {
+    const newClass = getHotelClassFromRooms(inputs.numberOfRooms);
+    if (newClass !== inputs.hotelClass) {
+      setInputs(prev => ({ ...prev, hotelClass: newClass }));
+    }
+  }, [inputs.numberOfRooms]);
+  
+  // Auto-estimate utility bill from square footage if user hasn't manually set it
+  const [userSetBill, setUserSetBill] = useState(false);
+  useEffect(() => {
+    if (!userSetBill && inputs.squareFootage > 0) {
+      const estimated = estimateMonthlyBill(inputs.squareFootage, inputs.hotelClass);
+      setInputs(prev => ({ ...prev, currentMonthlyBill: estimated }));
+    }
+  }, [inputs.squareFootage, inputs.hotelClass, userSetBill]);
   
   // Quote result
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
@@ -306,32 +419,20 @@ export default function HotelEnergy() {
   // TrueQuote Modal
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
-  // Quick Estimate Modal - Progressive Disclosure
-  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
-  const [quickRooms, setQuickRooms] = useState(150);
-  const [quickClass, setQuickClass] = useState<'economy' | 'midscale' | 'upscale' | 'luxury'>('midscale');
-  const [quickEstimateResult, setQuickEstimateResult] = useState<{ savings: number; payback: number } | null>(null);
-  
-  // Quick estimate calculation
-  const calculateQuickEstimate = (rooms: number, hotelClass: string) => {
-    const savingsPerRoom: Record<string, number> = {
+  // Hero inline estimate - calculated from room count (Dec 2025 - removed popup)
+  const heroEstimate = React.useMemo(() => {
+    const savingsPerRoom: Record<HotelClassSimple, number> = {
       'economy': 200,
       'midscale': 350,
       'upscale': 500,
       'luxury': 800,
     };
-    const baseSavings = (savingsPerRoom[hotelClass] || 350) * rooms;
-    const savings = Math.round(baseSavings * (0.9 + Math.random() * 0.2));
-    const payback = 3.5 + Math.random() * 2; // 3.5-5.5 years
-    setQuickEstimateResult({ savings, payback: Math.round(payback * 10) / 10 });
-  };
-  
-  // Auto-calculate when quick estimate inputs change
-  useEffect(() => {
-    if (showQuickEstimate) {
-      calculateQuickEstimate(quickRooms, quickClass);
-    }
-  }, [quickRooms, quickClass, showQuickEstimate]);
+    const hotelClass = getHotelClassFromRooms(inputs.numberOfRooms);
+    const baseSavings = (savingsPerRoom[hotelClass] || 350) * inputs.numberOfRooms;
+    const savings = Math.round(baseSavings);
+    const payback = hotelClass === 'luxury' ? 3.5 : hotelClass === 'upscale' ? 4.0 : hotelClass === 'midscale' ? 4.5 : 5.0;
+    return { savings, payback, hotelClass };
+  }, [inputs.numberOfRooms]);
   
   // Calculate quote when inputs change
   useEffect(() => {
@@ -474,12 +575,27 @@ export default function HotelEnergy() {
               </div>
               
               <button 
-                onClick={() => setShowQuickEstimate(true)}
+                onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
               >
                 Calculate My Savings
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
+              {/* Inline Savings Preview */}
+              <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-indigo-400/30 inline-flex items-center gap-3">
+                <div className="text-center">
+                  <p className="text-sm text-indigo-200">Based on {inputs.numberOfRooms} rooms</p>
+                  <p className="text-xl font-bold text-white">
+                    ~${heroEstimate.savings.toLocaleString()}<span className="text-sm text-indigo-300">/year</span>
+                  </p>
+                </div>
+                <div className="w-px h-10 bg-indigo-400/30" />
+                <div className="text-center">
+                  <p className="text-sm text-indigo-200">Payback</p>
+                  <p className="text-xl font-bold text-purple-300">{heroEstimate.payback} yrs</p>
+                </div>
+              </div>
               
               {/* TrueQuote Badge - Trust signal */}
               <div className="flex items-center gap-2 mt-4">
@@ -629,66 +745,118 @@ export default function HotelEnergy() {
               </h3>
               
               <div className="space-y-6">
-                {/* Number of Rooms */}
+                {/* Number of Rooms - Text Input */}
                 <div>
                   <label className="block text-sm font-medium text-indigo-200 mb-2">
                     Number of Rooms
                   </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={10}
+                      max={2000}
+                      value={inputs.numberOfRooms}
+                      onChange={(e) => setInputs({ ...inputs, numberOfRooms: Math.max(10, parseInt(e.target.value) || 10) })}
+                      className="flex-1 bg-white/10 border-2 border-indigo-400/50 rounded-xl px-4 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Enter number of rooms"
+                    />
+                    <div className="bg-indigo-500/30 border border-indigo-400/50 rounded-xl px-3 py-3 text-center min-w-[100px]">
+                      <p className="text-xs text-indigo-200">Auto Class</p>
+                      <p className="text-sm font-bold text-indigo-300 capitalize">{inputs.hotelClass}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-indigo-300/70 mt-2">
+                    💡 Hotel class auto-determined: &lt;75 = Economy, &lt;150 = Midscale, &lt;300 = Upscale, 300+ = Luxury
+                  </p>
+                </div>
+                
+                {/* Square Footage for Utility Estimation */}
+                <div>
+                  <label className="block text-sm font-medium text-indigo-200 mb-2">
+                    Building Square Footage <span className="text-indigo-300/60">(optional)</span>
+                  </label>
                   <input
-                    type="range"
-                    min={25}
-                    max={500}
-                    step={25}
-                    value={inputs.numberOfRooms}
-                    onChange={(e) => setInputs({ ...inputs, numberOfRooms: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    type="number"
+                    min={5000}
+                    max={1000000}
+                    step={1000}
+                    value={inputs.squareFootage}
+                    onChange={(e) => {
+                      setUserSetBill(false);
+                      setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 50000 });
+                    }}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="e.g. 75000"
                   />
-                  <div className="flex justify-between text-sm text-indigo-300 mt-1">
-                    <span>25</span>
-                    <span className="font-bold text-lg">{inputs.numberOfRooms} rooms</span>
-                    <span>500</span>
+                  <p className="text-xs text-indigo-300/70 mt-1">
+                    📊 Average: ~500 sqft per room × {inputs.numberOfRooms} rooms = {(inputs.numberOfRooms * 500).toLocaleString()} sqft
+                  </p>
+                </div>
+                
+                {/* Pool Types */}
+                <div>
+                  <label className="block text-sm font-medium text-indigo-200 mb-3">
+                    Pool Facilities
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                      <input type="checkbox" checked={inputs.hasIndoorPool} onChange={(e) => setInputs({ ...inputs, hasIndoorPool: e.target.checked, hasPool: e.target.checked || inputs.hasOutdoorPool })} className="w-4 h-4 accent-indigo-500" />
+                      <Droplets className="w-4 h-4 text-blue-400" />
+                      <span className="text-white text-sm">Indoor Pool/Jacuzzi</span>
+                    </label>
+                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                      <input type="checkbox" checked={inputs.hasOutdoorPool} onChange={(e) => setInputs({ ...inputs, hasOutdoorPool: e.target.checked, hasPool: e.target.checked || inputs.hasIndoorPool })} className="w-4 h-4 accent-indigo-500" />
+                      <Waves className="w-4 h-4 text-cyan-400" />
+                      <span className="text-white text-sm">Outdoor Pool</span>
+                    </label>
                   </div>
                 </div>
                 
-                {/* Hotel Class */}
+                {/* Dining & Events */}
                 <div>
-                  <label className="block text-sm font-medium text-indigo-200 mb-2">
-                    Hotel Class
+                  <label className="block text-sm font-medium text-indigo-200 mb-3">
+                    Dining & Events
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(HOTEL_CLASS_DISPLAY).map(([key, profile]) => (
-                      <button
-                        key={key}
-                        onClick={() => setInputs({ ...inputs, hotelClass: key as HotelClassSimple })}
-                        className={`p-3 rounded-xl text-left transition-all ${
-                          inputs.hotelClass === key
-                            ? 'bg-indigo-500/30 border-2 border-indigo-400'
-                            : 'bg-white/5 border-2 border-transparent hover:border-white/20'
-                        }`}
-                      >
-                        <p className="font-medium text-white text-sm">{profile.name}</p>
-                        <p className="text-xs text-indigo-200/60">{profile.description}</p>
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={inputs.hasRestaurant} onChange={(e) => setInputs({ ...inputs, hasRestaurant: e.target.checked, restaurantCount: e.target.checked ? Math.max(1, inputs.restaurantCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                        <Utensils className="w-4 h-4 text-amber-400" />
+                        <span className="text-white text-sm">Restaurant(s)</span>
+                      </label>
+                      {inputs.hasRestaurant && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-indigo-300">How many?</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={inputs.restaurantCount}
+                            onChange={(e) => setInputs({ ...inputs, restaurantCount: parseInt(e.target.value) || 1 })}
+                            className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                      <input type="checkbox" checked={inputs.hasMeetingRoom} onChange={(e) => setInputs({ ...inputs, hasMeetingRoom: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                      <Users className="w-4 h-4 text-purple-400" />
+                      <span className="text-white text-sm">Meeting Room</span>
+                    </label>
+                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                      <input type="checkbox" checked={inputs.hasConferenceCenter} onChange={(e) => setInputs({ ...inputs, hasConferenceCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                      <Briefcase className="w-4 h-4 text-indigo-400" />
+                      <span className="text-white text-sm">Conference Center</span>
+                    </label>
                   </div>
                 </div>
                 
                 {/* Amenities */}
                 <div>
                   <label className="block text-sm font-medium text-indigo-200 mb-3">
-                    Amenities
+                    Additional Amenities
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
-                      <input type="checkbox" checked={inputs.hasPool} onChange={(e) => setInputs({ ...inputs, hasPool: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                      <Waves className="w-4 h-4 text-blue-400" />
-                      <span className="text-white text-sm">Pool/Hot Tub</span>
-                    </label>
-                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
-                      <input type="checkbox" checked={inputs.hasRestaurant} onChange={(e) => setInputs({ ...inputs, hasRestaurant: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                      <Coffee className="w-4 h-4 text-amber-400" />
-                      <span className="text-white text-sm">Restaurant</span>
-                    </label>
                     <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
                       <input type="checkbox" checked={inputs.hasSpa} onChange={(e) => setInputs({ ...inputs, hasSpa: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
                       <Sparkles className="w-4 h-4 text-pink-400" />
@@ -699,12 +867,98 @@ export default function HotelEnergy() {
                       <Dumbbell className="w-4 h-4 text-green-400" />
                       <span className="text-white text-sm">Fitness Center</span>
                     </label>
-                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all col-span-2">
-                      <input type="checkbox" checked={inputs.hasEVCharging} onChange={(e) => setInputs({ ...inputs, hasEVCharging: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                      <Car className="w-4 h-4 text-emerald-400" />
-                      <span className="text-white text-sm">EV Charging for Guests</span>
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={inputs.hasLaundry} onChange={(e) => setInputs({ ...inputs, hasLaundry: e.target.checked, laundryMachineCount: e.target.checked ? Math.max(4, inputs.laundryMachineCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                        <Shirt className="w-4 h-4 text-blue-300" />
+                        <span className="text-white text-sm">Laundry</span>
+                      </label>
+                      {inputs.hasLaundry && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-indigo-300">Machines:</span>
+                          <input
+                            type="number"
+                            min={2}
+                            max={50}
+                            value={inputs.laundryMachineCount}
+                            onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value) || 4 })}
+                            className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* EV & Parking */}
+                <div>
+                  <label className="block text-sm font-medium text-indigo-200 mb-3">
+                    EV & Parking
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={inputs.hasEVCharging} onChange={(e) => setInputs({ ...inputs, hasEVCharging: e.target.checked, evChargerCount: e.target.checked ? Math.max(2, inputs.evChargerCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                        <Car className="w-4 h-4 text-emerald-400" />
+                        <span className="text-white text-sm">EV Chargers</span>
+                      </label>
+                      {inputs.hasEVCharging && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-indigo-300">How many?</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={inputs.evChargerCount}
+                            onChange={(e) => setInputs({ ...inputs, evChargerCount: parseInt(e.target.value) || 2 })}
+                            className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                      <input type="checkbox" checked={inputs.hasParkingCanopy} onChange={(e) => setInputs({ ...inputs, hasParkingCanopy: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                      <Sun className="w-4 h-4 text-amber-400" />
+                      <span className="text-white text-sm">Solar Canopy</span>
                     </label>
                   </div>
+                </div>
+                
+                {/* Resort Features */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-indigo-200 mb-3 cursor-pointer">
+                    <input type="checkbox" checked={inputs.isResort} onChange={(e) => setInputs({ ...inputs, isResort: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                    <span>🏝️ Resort Features</span>
+                  </label>
+                  {inputs.isResort && (
+                    <div className="grid grid-cols-2 gap-3 bg-indigo-500/10 rounded-xl p-3 border border-indigo-400/30">
+                      <label className="flex items-center gap-2 bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
+                        <input type="checkbox" checked={inputs.hasClubhouse} onChange={(e) => setInputs({ ...inputs, hasClubhouse: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
+                        <Building2 className="w-4 h-4 text-indigo-400" />
+                        <span className="text-white text-sm">Clubhouse</span>
+                      </label>
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={inputs.hasGolfCourse} onChange={(e) => setInputs({ ...inputs, hasGolfCourse: e.target.checked, golfCartCount: e.target.checked ? Math.max(20, inputs.golfCartCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                          <Flag className="w-4 h-4 text-green-400" />
+                          <span className="text-white text-sm">Golf Course</span>
+                        </label>
+                        {inputs.hasGolfCourse && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs text-indigo-300">Golf Carts:</span>
+                            <input
+                              type="number"
+                              min={10}
+                              max={200}
+                              value={inputs.golfCartCount}
+                              onChange={(e) => setInputs({ ...inputs, golfCartCount: parseInt(e.target.value) || 20 })}
+                              className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* State */}
@@ -1163,149 +1417,6 @@ export default function HotelEnergy() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-      
-      {/* ═══════════════════════════════════════════════════════════════════════
-          QUICK ESTIMATE MODAL - Progressive Disclosure
-          ═══════════════════════════════════════════════════════════════════════ */}
-      {showQuickEstimate && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden"
-          onClick={() => setShowQuickEstimate(false)}
-        >
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-          
-          <div 
-            className="relative bg-gradient-to-br from-slate-900 via-indigo-900/70 to-purple-900/80 rounded-3xl shadow-2xl shadow-indigo-500/40 max-w-lg w-full overflow-y-auto border-3 border-indigo-400/60"
-            style={{ maxHeight: 'calc(100vh - 16px)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Decorative elements */}
-            <div className="absolute top-3 left-3 text-2xl animate-pulse">⚡</div>
-            <button
-              onClick={() => setShowQuickEstimate(false)}
-              className="absolute top-3 right-3 p-2 text-white/70 hover:text-white hover:bg-indigo-500/30 rounded-xl transition-all border border-transparent hover:border-indigo-400/50 z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="relative px-8 pt-8 pb-4 bg-gradient-to-b from-indigo-600/20 to-transparent">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="relative">
-                  <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
-                  <div className="absolute -bottom-1 -right-1 bg-indigo-500 rounded-full p-1"><Sparkles className="w-3 h-3 text-white" /></div>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Quick Savings Estimate</h2>
-                  <p className="text-indigo-200 text-sm font-medium">⏱️ Answer 2 questions, get instant results</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="px-8 pb-6 space-y-6">
-              {/* Question 1: Hotel Class */}
-              <div>
-                <label className="block text-indigo-200 font-medium mb-3">What class of hotel?</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'economy', label: 'Economy', desc: 'Budget-friendly' },
-                    { id: 'midscale', label: 'Midscale', desc: 'Standard amenities' },
-                    { id: 'upscale', label: 'Upscale', desc: 'Full-service' },
-                    { id: 'luxury', label: 'Luxury', desc: 'Premium resort' },
-                  ].map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setQuickClass(type.id as typeof quickClass)}
-                      className={`p-3 rounded-xl text-left transition-all ${
-                        quickClass === type.id
-                          ? 'bg-gradient-to-r from-indigo-500/30 to-purple-500/30 border-2 border-indigo-400'
-                          : 'bg-white/5 border border-white/10 hover:border-indigo-400/50'
-                      }`}
-                    >
-                      <p className="font-semibold text-white text-sm">{type.label}</p>
-                      <p className="text-indigo-300/70 text-xs">{type.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Question 2: Number of Rooms */}
-              <div>
-                <label className="block text-indigo-200 font-medium mb-3">How many rooms?</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={20}
-                    max={500}
-                    step={10}
-                    value={quickRooms}
-                    onChange={(e) => setQuickRooms(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                  />
-                  <div className="w-20 text-center">
-                    <span className="text-3xl font-black text-indigo-400">{quickRooms}</span>
-                    <span className="text-indigo-300 text-sm ml-1">rooms</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 px-8 py-6 border-t-2 border-indigo-400/40">
-              <div className="text-center mb-5 bg-slate-900/50 rounded-2xl p-5 border-2 border-indigo-400/40">
-                <p className="text-indigo-200 text-sm font-bold mb-2 tracking-wide">💰 YOUR ESTIMATED ANNUAL SAVINGS</p>
-                <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 drop-shadow-lg">
-                  ${quickEstimateResult ? quickEstimateResult.savings.toLocaleString() : '---'}
-                </p>
-                <p className="text-purple-300 text-sm mt-2 font-semibold">
-                  {quickEstimateResult && <><span className="text-pink-400">⚡</span> ~{quickEstimateResult.payback} year payback</>}
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="text-center p-3 bg-indigo-500/20 rounded-xl border border-indigo-400/40 hover:scale-105 transition-transform">
-                  <Battery className="w-6 h-6 text-indigo-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Backup Power</p>
-                </div>
-                <div className="text-center p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/40 hover:scale-105 transition-transform">
-                  <TrendingDown className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Demand Cut</p>
-                </div>
-                <div className="text-center p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 hover:scale-105 transition-transform">
-                  <Sun className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Green Creds</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    setInputs(prev => ({ ...prev, numberOfRooms: quickRooms, hotelClass: quickClass }));
-                    setShowWizard(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white px-6 py-5 rounded-xl font-black text-lg shadow-2xl shadow-purple-500/50 transition-all flex items-center justify-center gap-2 border-2 border-purple-300/60 hover:scale-[1.03] animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none ring-2 ring-purple-400/30 ring-offset-2 ring-offset-slate-900"
-                >
-                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
-                  Get Detailed Quote
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    setShowQuickEstimate(false);
-                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full bg-slate-800/60 hover:bg-slate-700/60 border-2 border-indigo-400/40 hover:border-indigo-300/60 text-indigo-100 px-6 py-3 rounded-xl font-semibold transition-all text-sm"
-                >
-                  Or try our simple calculator below
-                </button>
-              </div>
-              
-              <p className="text-center text-indigo-200 text-xs mt-4 font-medium">
-                ✓ 2 minute detailed quote • ✓ No commitment required
-              </p>
-            </div>
           </div>
         </div>
       )}
