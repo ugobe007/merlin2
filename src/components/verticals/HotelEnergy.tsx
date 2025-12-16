@@ -35,6 +35,10 @@ import {
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_Merlin.png';
 import hotelImage from '@/assets/images/hotel_1.jpg';
+import hotelImage2 from '@/assets/images/hotel_motel_holidayinn_1.jpg';
+import hotelImage3 from '@/assets/images/hotel_motel_holidayinn_2.jpg';
+import hotelImage4 from '@/assets/images/hotel_motel_holidayinn_3.jpg';
+import hotelImage5 from '@/assets/images/hotel_motel_holidayinn_4.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // REFACTORED: Use StreamlinedWizard instead of HotelWizard
 import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
@@ -184,8 +188,12 @@ const STATE_RATES: Record<string, { rate: number; demandCharge: number }> = {
 // ============================================
 
 const CAROUSEL_IMAGES = [
-  { src: hotelImage, alt: 'Luxury Hotel', caption: 'Premium Hospitality', subcaption: 'Energy costs 6-8% of revenue' },
-  { src: evChargingHotelImage, alt: 'Hotel EV Charging', caption: 'Guest Amenities', subcaption: 'EV charging differentiator' },
+  { src: hotelImage, alt: 'Luxury Hotel & Resort', caption: 'Premium Hospitality', subcaption: 'Save $47K+/year', savings: 47000, payback: 4.2 },
+  { src: hotelImage2, alt: 'Boutique Hotel', caption: 'Mid-Scale Hotels', subcaption: 'Save $28K+/year', savings: 28000, payback: 3.8 },
+  { src: hotelImage3, alt: 'Business Hotel', caption: 'Conference Centers', subcaption: 'Save $62K+/year', savings: 62000, payback: 4.5 },
+  { src: hotelImage4, alt: 'Resort & Spa', caption: 'Resort Properties', subcaption: 'Save $85K+/year', savings: 85000, payback: 5.2 },
+  { src: hotelImage5, alt: 'Extended Stay', caption: 'Long-Term Stays', subcaption: 'Save $35K+/year', savings: 35000, payback: 3.5 },
+  { src: evChargingHotelImage, alt: 'Hotel EV Charging', caption: 'Guest Amenities', subcaption: 'EV attracts guests', savings: 52000, payback: 4.0 },
 ];
 
 function ImageCarousel() {
@@ -536,9 +544,43 @@ export default function HotelEnergy() {
       
       {/* ═══════════════════════════════════════════════════════════════════════
           HERO SECTION - Quick Estimate Calculator (Step 0) - Dec 2025 Redesign
+          Rotating hotel images as background for visual appeal
           ═══════════════════════════════════════════════════════════════════════ */}
       <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzgxODJmNCIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
+        {/* Rotating Background Images */}
+        {CAROUSEL_IMAGES.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === heroImageIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={image.src}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/95 via-purple-900/85 to-indigo-900/90" />
+          </div>
+        ))}
+        
+        {/* Image indicator dots */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+          {CAROUSEL_IMAGES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setHeroImageIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === heroImageIndex 
+                  ? 'bg-white w-6' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+            />
+          ))}
+        </div>
+        
+        {/* Pattern overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtNi42MjcgMC0xMiA1LjM3My0xMiAxMnM1LjM3MyAxMiAxMiAxMiAxMi01LjM3MyAxMi0xMi01LjM3My0xMi0xMi0xMnoiIHN0cm9rZT0iIzgxODJmNCIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-30 z-10" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16 lg:py-20">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
@@ -549,8 +591,18 @@ export default function HotelEnergy() {
                 <span className="text-indigo-200 text-sm font-semibold">Hotels Save 25-40% on Energy Costs</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-5xl font-black text-white mb-6 leading-[1.1]">
-                Protect Guest Experience <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300">& Cut Costs</span>
+              {/* Headline with TrueQuote button at end */}
+              <h1 className="text-4xl md:text-5xl lg:text-5xl font-black text-white mb-6 leading-[1.1] flex flex-wrap items-center gap-3">
+                <span>Protect Guest Experience</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300">& Cut Costs</span>
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 hover:from-emerald-500/40 hover:to-teal-500/40 border-2 border-emerald-400/50 hover:border-emerald-300 rounded-full px-4 py-2 transition-all hover:scale-105 shadow-lg shadow-emerald-500/20"
+                  title="Every number is verified"
+                >
+                  <Shield className="w-5 h-5 text-emerald-400" />
+                  <span className="text-emerald-300 font-bold text-sm">TrueQuote™</span>
+                </button>
               </h1>
               
               <p className="text-lg text-indigo-100/90 mb-6 leading-relaxed">
@@ -587,35 +639,27 @@ export default function HotelEnergy() {
                 </p>
               </div>
               
-              {/* TrueQuote Badge + How It Works */}
+              {/* How Merlin Works Link */}
               <div className="flex items-center gap-4">
                 <button 
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  className="hover:scale-105 transition-transform cursor-pointer"
-                >
-                  <TrueQuoteBadge size="sm" />
-                </button>
-                <button 
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  className="text-indigo-300 text-sm hover:text-white transition-colors cursor-pointer"
-                >
-                  Every number sourced →
-                </button>
-                <span className="text-indigo-500">|</span>
-                <button 
                   onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex items-center gap-2 text-indigo-300 text-sm hover:text-white transition-colors"
+                  className="flex items-center gap-2 text-indigo-300 text-sm hover:text-white transition-colors bg-indigo-500/10 hover:bg-indigo-500/20 px-4 py-2 rounded-lg"
                 >
                   <img src={merlinImage} alt="" className="w-5 h-5" />
                   How Merlin Works
                 </button>
+                <span className="text-indigo-300 text-sm">|</span>
+                <span className="text-indigo-200 text-sm flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  Financing Available
+                </span>
               </div>
             </div>
             
             {/* Right: Quick Estimate Calculator (Step 0) */}
             <div className="bg-gradient-to-br from-slate-900/95 via-indigo-900/80 to-slate-900/95 backdrop-blur-xl rounded-3xl p-6 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/30">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-emerald-500 rounded-xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -624,42 +668,98 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* State Selector */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-indigo-200 mb-2">📍 State</label>
-                <select
-                  value={inputs.state}
-                  onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
-                  className="w-full px-4 py-3 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white font-medium focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                >
-                  {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Number of Rooms */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-indigo-200 mb-2">🏨 Number of Rooms</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={inputs.numberOfRooms}
-                    onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
-                    className="flex-1 px-4 py-3 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-xl font-bold text-center focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                    min="1"
-                    max="2000"
-                  />
-                  <div className="bg-indigo-500/20 rounded-lg px-3 py-2 text-center min-w-[100px]">
-                    <p className="text-xs text-indigo-300">Class</p>
-                    <p className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)}</p>
+              {/* State + Rooms Row */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {/* State Selector */}
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">📍 State</label>
+                  <select
+                    value={inputs.state}
+                    onChange={(e) => setInputs(prev => ({ ...prev, state: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-sm font-medium focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  >
+                    {Object.keys(STATE_RATES).filter(s => s !== 'Other').map((state) => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Number of Rooms */}
+                <div>
+                  <label className="block text-xs font-medium text-indigo-200 mb-1">🏨 Rooms</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={inputs.numberOfRooms}
+                      onChange={(e) => setInputs(prev => ({ ...prev, numberOfRooms: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2.5 bg-slate-800/80 border-2 border-indigo-500/40 rounded-xl text-white text-lg font-bold text-center focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                      min="1"
+                      max="2000"
+                    />
                   </div>
                 </div>
               </div>
               
+              {/* Hotel Class Display */}
+              <div className="bg-indigo-500/20 rounded-lg px-3 py-2 text-center mb-3">
+                <span className="text-xs text-indigo-300 mr-2">Auto-detected:</span>
+                <span className="text-white font-bold capitalize">{getHotelClassFromRooms(inputs.numberOfRooms)} Class</span>
+              </div>
+              
+              {/* Key Amenities Row */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-indigo-200 mb-2">⚡ Key Energy Drivers</label>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasPool: !prev.hasPool }))}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                      inputs.hasPool 
+                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <Waves className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Pool</span>
+                  </button>
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasRestaurant: !prev.hasRestaurant }))}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                      inputs.hasRestaurant 
+                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <Utensils className="w-4 h-4 mb-1" />
+                    <span className="text-xs">F&B</span>
+                  </button>
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasSpa: !prev.hasSpa }))}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                      inputs.hasSpa 
+                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <Droplets className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Spa</span>
+                  </button>
+                  <button
+                    onClick={() => setInputs(prev => ({ ...prev, hasEVCharging: !prev.hasEVCharging }))}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                      inputs.hasEVCharging 
+                        ? 'bg-indigo-500/30 border-indigo-400 text-white' 
+                        : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <Car className="w-4 h-4 mb-1" />
+                    <span className="text-xs">EV</span>
+                  </button>
+                </div>
+              </div>
+              
               {/* Monthly Bill Slider */}
-              <div className="mb-5">
-                <label className="block text-sm font-medium text-indigo-200 mb-2">💡 Monthly Electric Bill</label>
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-indigo-200 mb-2">💡 Monthly Electric Bill</label>
                 <input
                   type="range"
                   min={5000}
@@ -670,17 +770,17 @@ export default function HotelEnergy() {
                     setUserSetBill(true);
                     setInputs(prev => ({ ...prev, currentMonthlyBill: parseInt(e.target.value) }));
                   }}
-                  className="w-full h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-3 bg-indigo-900/50 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                 />
                 <div className="flex justify-between text-xs text-indigo-400 mt-1">
-                  <span>$5,000</span>
-                  <span className="text-lg font-bold text-white">${inputs.currentMonthlyBill.toLocaleString()}/mo</span>
-                  <span>$200,000</span>
+                  <span>$5K</span>
+                  <span className="text-base font-bold text-white">${inputs.currentMonthlyBill.toLocaleString()}/mo</span>
+                  <span>$200K</span>
                 </div>
               </div>
               
               {/* Live Results */}
-              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-4 border border-emerald-400/30 mb-5">
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl p-4 border border-emerald-400/30 mb-4">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <p className="text-2xl font-black text-white">${heroEstimate.savings.toLocaleString()}</p>
@@ -697,13 +797,13 @@ export default function HotelEnergy() {
                 </div>
               </div>
               
-              {/* Build My Quote CTA */}
+              {/* Build My Quote CTA - Deep Purple to Emerald Green Gradient */}
               <button
                 onClick={() => {
                   // Pass Step 0 values to wizard
                   setShowWizard(true);
                 }}
-                className="w-full py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/40 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/40 flex items-center justify-center gap-2 border-2 border-emerald-400/30"
               >
                 <Sparkles className="w-5 h-5" />
                 Build My Full Quote
@@ -719,46 +819,87 @@ export default function HotelEnergy() {
       </section>
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          SUCCESS STORIES CAROUSEL - Moved below hero (Dec 2025 Redesign)
+          USE CASES SHOWCASE - Expanded with larger images (Dec 2025 Redesign)
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-12 bg-gradient-to-b from-indigo-900/30 via-purple-900/20 to-indigo-900/30 overflow-hidden">
+      <section className="py-16 bg-gradient-to-b from-black/40 via-indigo-900/30 to-purple-900/30 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Real Hotel Success Stories</h2>
-            <p className="text-indigo-300 text-sm">Click any card to see their full case study</p>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/40 rounded-full px-5 py-2 mb-4">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-emerald-300 text-sm font-semibold">Success Stories</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              Hotels Like Yours Are <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Saving Big</span>
+            </h2>
+            <p className="text-indigo-200 text-lg max-w-2xl mx-auto">
+              From boutique hotels to luxury resorts, see how properties are cutting energy costs while improving guest experience
+            </p>
           </div>
           
-          {/* Horizontal scroll carousel */}
-          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-indigo-900/30">
+          {/* Use Cases Grid - Large Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {CAROUSEL_IMAGES.map((image, index) => (
               <div 
                 key={index}
-                className="flex-shrink-0 w-72 bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 rounded-2xl overflow-hidden border border-indigo-500/30 hover:border-indigo-400/50 transition-all hover:scale-[1.02] cursor-pointer group"
-                onClick={() => {
-                  // Could open a case study modal or navigate to wizard
-                  setShowWizard(true);
-                }}
+                className="bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 rounded-3xl overflow-hidden border-2 border-indigo-500/30 hover:border-emerald-400/50 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 cursor-pointer group"
+                onClick={() => setShowWizard(true)}
               >
-                <div className="h-40 overflow-hidden">
+                {/* Large Image */}
+                <div className="h-52 md:h-64 overflow-hidden relative">
                   <img 
                     src={image.src} 
                     alt={image.alt} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent" />
+                  
+                  {/* Floating badge */}
+                  <div className="absolute top-4 right-4 bg-emerald-500/90 backdrop-blur-sm rounded-full px-3 py-1">
+                    <span className="text-white text-xs font-bold">${(image.savings / 1000).toFixed(0)}K/yr Savings</span>
+                  </div>
+                  
+                  {/* Caption overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="text-white/80 text-sm font-medium">{image.caption}</p>
+                    <h3 className="text-white text-xl font-bold">{image.alt}</h3>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-white font-bold mb-1">{image.alt}</h3>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-indigo-300">Savings:</span>
-                    <span className="text-emerald-400 font-bold">$47K/yr</span>
+                
+                {/* Card Content */}
+                <div className="p-5">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-black text-emerald-400">${(image.savings / 1000).toFixed(0)}K</p>
+                      <p className="text-xs text-emerald-300">Annual Savings</p>
+                    </div>
+                    <div className="bg-purple-500/10 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-black text-purple-400">{image.payback}yr</p>
+                      <p className="text-xs text-purple-300">Payback Period</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-indigo-300">Payback:</span>
-                    <span className="text-purple-300 font-bold">4.2 years</span>
-                  </div>
+                  
+                  <button className="w-full py-3 bg-gradient-to-r from-purple-700/50 to-emerald-600/50 hover:from-purple-600 hover:to-emerald-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-emerald-500/30">
+                    <span>See How They Did It</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
+          </div>
+          
+          {/* CTA Banner */}
+          <div className="bg-gradient-to-r from-purple-900/50 via-indigo-900/50 to-emerald-900/50 rounded-2xl p-8 border border-indigo-500/30 text-center">
+            <h3 className="text-2xl font-bold text-white mb-2">Your Hotel Could Be Next</h3>
+            <p className="text-indigo-200 mb-6">Get a custom quote based on your property's specific needs</p>
+            <button
+              onClick={() => setShowWizard(true)}
+              className="px-8 py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/30 inline-flex items-center gap-2"
+            >
+              <Calculator className="w-5 h-5" />
+              Get My Custom Quote
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </section>
