@@ -42,12 +42,30 @@ export interface CustomQuestion {
   id: string;
   question?: string;
   label?: string; // Alternative to question (for compatibility)
-  type: 'number' | 'select' | 'multiselect' | 'multi-select' | 'boolean' | 'percentage';
-  default: string | number | boolean | string[];
+  type: 'number' | 'select' | 'multiselect' | 'multi-select' | 'boolean' | 'percentage' | 'slider' | 'compound' | 'text';
+  default: string | number | boolean | string[] | Record<string, any>;
   unit?: string; // e.g., "sq ft", "rooms", "kW"
   suffix?: string; // Alternative to unit (for compatibility)
   placeholder?: string;
-  options?: (string | { value: string; label: string; powerKw?: number })[]; // Support power values in options
+  
+  // Options for select, multiselect, and compound types
+  options?: (string | { 
+    value: string; 
+    label: string; 
+    powerKw?: number;
+    // Compound-specific fields
+    hasAmount?: boolean;      // Show numeric input when enabled
+    amountUnit?: string;      // Unit label for amount (e.g., "seats", "chargers")
+    defaultAmount?: number;   // Default amount value
+    minAmount?: number;       // Min for amount input
+    maxAmount?: number;       // Max for amount input
+    helpText?: string;        // Help text shown when enabled
+  })[];
+  
+  // Slider-specific fields
+  min_value?: number;
+  max_value?: number;
+  step_value?: number;
   
   // Conditional logic
   conditional?: {
