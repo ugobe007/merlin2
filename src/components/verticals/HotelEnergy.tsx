@@ -852,380 +852,308 @@ export default function HotelEnergy() {
             </div>
           </div>
           
-          {/* Two-Panel Calculator Layout - Equal Height */}
-          <div id="hero-panel" className="grid lg:grid-cols-2 gap-6 items-stretch">
+          {/* Two-Panel Calculator Layout - COMPACT & BALANCED */}
+          <div id="hero-panel" className="grid lg:grid-cols-2 gap-4 items-stretch">
             
-            {/* LEFT PANEL: Hotel Details Calculator - Steel Blue Slate */}
-            <div className="bg-slate-800/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-slate-500/30 shadow-2xl flex flex-col">
-              <div className="flex items-center gap-3 mb-5">
-                {/* High-quality gradient icon container */}
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                  <Building2 className="w-6 h-6 text-white" />
+            {/* LEFT PANEL: Hotel Details - COMPACT */}
+            <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-slate-500/30 shadow-xl">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-2xl font-black text-white">Your Hotel Details</h3>
+                <h3 className="text-xl font-bold text-white">Your Hotel Details</h3>
               </div>
-              
-              {/* Row 0: STATE SELECTION - NOW AT TOP */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">State Location</label>
+
+              {/* Location - Full Width */}
+              <div className="mb-3">
+                <label className="text-gray-400 text-xs mb-1 block">📍 Location</label>
                 <select
                   value={inputs.state}
                   onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
-                  className="w-full bg-slate-700/60 border-2 border-indigo-400/40 rounded-xl px-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
                 >
                   {Object.keys(STATE_RATES).map((state) => (
                     <option key={state} value={state} className="bg-slate-800">{state}</option>
                   ))}
                 </select>
-                <p className="text-xs text-indigo-300/70 mt-1.5">
-                  💡 Electricity rate: ${(STATE_RATES[inputs.state]?.rate || 0.12).toFixed(2)}/kWh • Demand: ${STATE_RATES[inputs.state]?.demandCharge || 12}/kW
+                <p className="text-xs text-gray-500 mt-1">
+                  ${(STATE_RATES[inputs.state]?.rate || 0.12).toFixed(2)}/kWh • ${STATE_RATES[inputs.state]?.demandCharge || 12}/kW demand
                 </p>
               </div>
-              
-              {/* Row 1: Rooms + Auto Class */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">Number of Rooms</label>
-                <div className="flex items-center gap-3">
+
+              {/* Rooms & Square Feet - TWO COLUMNS */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">🛏️ Guest Rooms</label>
                   <input
                     type="number"
                     value={inputs.numberOfRooms}
                     onChange={(e) => setInputs({ ...inputs, numberOfRooms: parseInt(e.target.value) || 0 })}
-                    className="flex-1 bg-slate-700/60 border-2 border-indigo-400/40 rounded-xl px-4 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
                     placeholder="150"
                   />
-                  <div className={`px-4 py-3 rounded-xl text-center min-w-[120px] font-bold border ${
-                    inputs.numberOfRooms > 400 ? 'bg-amber-500/20 border-amber-400/50 text-amber-300' :
-                    inputs.numberOfRooms > 200 ? 'bg-purple-500/20 border-purple-400/50 text-purple-300' :
-                    inputs.numberOfRooms > 75 ? 'bg-indigo-500/20 border-indigo-400/50 text-indigo-300' :
-                    'bg-slate-600/50 border-slate-400/50 text-slate-300'
-                  }`}>
-                    <p className="text-xs text-slate-300 mb-0.5">Auto Class</p>
-                    {inputs.numberOfRooms > 400 ? '✨ Luxury' :
-                     inputs.numberOfRooms > 200 ? '⭐ Upscale' :
-                     inputs.numberOfRooms > 75 ? '🏨 Midscale' :
-                     'Budget'}
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">📐 Sq Footage</label>
+                  <input
+                    type="number"
+                    value={inputs.squareFootage}
+                    onChange={(e) => {
+                      setUserSetBill(false);
+                      setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 0 });
+                    }}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
+                    placeholder="75000"
+                  />
+                </div>
+              </div>
+
+              {/* Auto Class Badge */}
+              <div className={`text-center py-1.5 px-3 rounded-lg mb-3 text-xs font-bold ${
+                inputs.numberOfRooms > 400 ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' :
+                inputs.numberOfRooms > 200 ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' :
+                inputs.numberOfRooms > 75 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30' :
+                'bg-slate-600/50 text-slate-300 border border-slate-500/30'
+              }`}>
+                {inputs.numberOfRooms > 400 ? '✨ Luxury Class' :
+                 inputs.numberOfRooms > 200 ? '⭐ Upscale Class' :
+                 inputs.numberOfRooms > 75 ? '🏨 Midscale Class' :
+                 '🏨 Budget Class'}
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-white/10 my-3"></div>
+
+              {/* Equipment Section Header */}
+              <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
+                <Zap className="w-3 h-3" /> Equipment & Efficiency
+              </p>
+
+              {/* HVAC & Lighting - TWO COLUMNS, COMPACT SLIDERS */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-400">HVAC Age</span>
+                    <span className="text-white font-bold">{inputs.hvacRating}/10</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={inputs.hvacRating}
+                    onChange={(e) => setInputs({ ...inputs, hvacRating: parseInt(e.target.value) })}
+                    className="w-full h-2 accent-cyan-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>Old</span>
+                    <span>New</span>
                   </div>
                 </div>
-                <p className="text-xs text-indigo-300/70 mt-1.5">
-                  💡 Hotel class auto-determined: &lt;75 = Economy, &lt;150 = Midscale, &lt;300 = Upscale, 300+ = Luxury
-                </p>
-              </div>
-              
-              {/* Row 2: Square Footage */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">
-                  Building Square Footage <span className="text-indigo-400/60">(optional)</span>
-                </label>
-                <input
-                  type="number"
-                  value={inputs.squareFootage}
-                  onChange={(e) => {
-                    setUserSetBill(false);
-                    setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 0 });
-                  }}
-                  className="w-full bg-slate-700/60 border border-indigo-400/30 rounded-xl px-4 py-3 text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="75000"
-                />
-                <p className="text-xs text-indigo-300/70 mt-1">
-                  📊 Average: ~500 sqft per room × {inputs.numberOfRooms} rooms = {(inputs.numberOfRooms * 500).toLocaleString()} sqft
-                </p>
-              </div>
-              
-              {/* Row 3: Pool Facilities */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">Pool Facilities</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasIndoorPool} onChange={(e) => setInputs({ ...inputs, hasIndoorPool: e.target.checked, hasPool: e.target.checked || inputs.hasOutdoorPool })} className="w-4 h-4 accent-indigo-500" />
-                    <Droplets className="w-4 h-4 text-blue-400" />
-                    <span className="text-white text-sm">Indoor Pool/Jacuzzi</span>
-                  </label>
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasOutdoorPool} onChange={(e) => setInputs({ ...inputs, hasOutdoorPool: e.target.checked, hasPool: e.target.checked || inputs.hasIndoorPool })} className="w-4 h-4 accent-indigo-500" />
-                    <Waves className="w-4 h-4 text-cyan-400" />
-                    <span className="text-white text-sm">Outdoor Pool</span>
-                  </label>
-                </div>
-              </div>
-              
-              {/* Row 4: Dining & Events */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">Dining & Events</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-700/40 rounded-xl p-3 border border-transparent hover:border-indigo-400/30">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={inputs.hasRestaurant} onChange={(e) => setInputs({ ...inputs, hasRestaurant: e.target.checked, restaurantCount: e.target.checked ? Math.max(1, inputs.restaurantCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
-                      <Utensils className="w-4 h-4 text-amber-400" />
-                      <span className="text-white text-sm">Restaurant(s)</span>
-                    </label>
-                    {inputs.hasRestaurant && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-indigo-300">How many?</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={inputs.restaurantCount}
-                          onChange={(e) => setInputs({ ...inputs, restaurantCount: parseInt(e.target.value) || 1 })}
-                          className="w-16 bg-slate-600/50 border border-indigo-400/30 rounded px-2 py-1 text-white text-sm"
-                        />
-                      </div>
-                    )}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-400">Lighting</span>
+                    <span className="text-white font-bold">{inputs.lightingEfficiency}/5</span>
                   </div>
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasConferenceCenter} onChange={(e) => setInputs({ ...inputs, hasConferenceCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                    <Users className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm">Meeting / Conference</span>
-                  </label>
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasEventCenter} onChange={(e) => setInputs({ ...inputs, hasEventCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                    <Briefcase className="w-4 h-4 text-indigo-400" />
-                    <span className="text-white text-sm">Event Center</span>
-                  </label>
-                </div>
-              </div>
-              
-              {/* Row 5: Additional Amenities */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">Additional Amenities</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasSpa} onChange={(e) => setInputs({ ...inputs, hasSpa: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                    <Sparkles className="w-4 h-4 text-pink-400" />
-                    <span className="text-white text-sm">Spa/Sauna</span>
-                  </label>
-                  <label className="flex items-center gap-2 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-indigo-400/30">
-                    <input type="checkbox" checked={inputs.hasFitnessCenter} onChange={(e) => setInputs({ ...inputs, hasFitnessCenter: e.target.checked })} className="w-4 h-4 accent-indigo-500" />
-                    <Dumbbell className="w-4 h-4 text-green-400" />
-                    <span className="text-white text-sm">Fitness Center</span>
-                  </label>
-                  <div className="bg-slate-700/40 rounded-xl p-3 border border-transparent hover:border-indigo-400/30">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={inputs.hasLaundry} onChange={(e) => setInputs({ ...inputs, hasLaundry: e.target.checked, laundryMachineCount: e.target.checked ? Math.max(1, inputs.laundryMachineCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
-                      <Shirt className="w-4 h-4 text-blue-300" />
-                      <span className="text-white text-sm">Laundry</span>
-                    </label>
-                    {inputs.hasLaundry && (
-                      <div className="mt-2 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-indigo-300">Machines:</span>
-                          <input
-                            type="number"
-                            value={inputs.laundryMachineCount}
-                            onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value) || 0 })}
-                            className="w-16 bg-slate-600/50 border border-indigo-400/30 rounded px-2 py-1 text-white text-sm"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setInputs({ ...inputs, laundryType: 'commercial' })}
-                            className={`flex-1 text-xs py-1 rounded ${inputs.laundryType === 'commercial' ? 'bg-indigo-500 text-white' : 'bg-slate-600/50 text-slate-300 hover:bg-slate-500/50'}`}
-                          >
-                            Commercial
-                          </button>
-                          <button
-                            onClick={() => setInputs({ ...inputs, laundryType: 'regular' })}
-                            className={`flex-1 text-xs py-1 rounded ${inputs.laundryType === 'regular' ? 'bg-indigo-500 text-white' : 'bg-slate-600/50 text-slate-300 hover:bg-slate-500/50'}`}
-                          >
-                            Regular
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    value={inputs.lightingEfficiency}
+                    onChange={(e) => setInputs({ ...inputs, lightingEfficiency: parseInt(e.target.value) })}
+                    className="w-full h-2 accent-amber-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>Bulbs</span>
+                    <span>LED</span>
                   </div>
                 </div>
               </div>
-              
-              {/* Row 6: Energy Efficiency Ratings - NEW */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">Energy Efficiency</label>
-                <div className="space-y-3">
-                  {/* HVAC Rating 1-10 */}
-                  <div className="bg-slate-700/40 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-sm flex items-center gap-2">
-                        <Gauge className="w-4 h-4 text-cyan-400" />
-                        HVAC System Age/Efficiency
-                      </span>
-                      <span className="text-indigo-300 text-sm font-bold">{inputs.hvacRating}/10</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={inputs.hvacRating}
-                      onChange={(e) => setInputs({ ...inputs, hvacRating: parseInt(e.target.value) })}
-                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                    />
-                    <div className="flex justify-between text-xs text-indigo-300/60 mt-1">
-                      <span>Old (20+ yrs)</span>
-                      <span>New/High-Eff</span>
-                    </div>
+
+              {/* Laundry - TWO COLUMNS */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-400">Laundry</span>
+                    <span className="text-white font-bold">{inputs.laundryMachineCount}</span>
                   </div>
-                  
-                  {/* Lighting Efficiency 1-5 */}
-                  <div className="bg-slate-700/40 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-sm flex items-center gap-2">
-                        <Sun className="w-4 h-4 text-amber-400" />
-                        Lighting Efficiency
-                      </span>
-                      <span className="text-indigo-300 text-sm font-bold">{inputs.lightingEfficiency}/5</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1}
-                      max={5}
-                      value={inputs.lightingEfficiency}
-                      onChange={(e) => setInputs({ ...inputs, lightingEfficiency: parseInt(e.target.value) })}
-                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                    />
-                    <div className="flex justify-between text-xs text-indigo-300/60 mt-1">
-                      <span>Incandescent</span>
-                      <span>All LED</span>
-                    </div>
-                  </div>
-                  
-                  {/* Energy Efficient Certification */}
-                  <label className="flex items-center gap-3 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-emerald-400/30">
-                    <input 
-                      type="checkbox" 
-                      checked={inputs.isEnergyEfficient} 
-                      onChange={(e) => setInputs({ ...inputs, isEnergyEfficient: e.target.checked })} 
-                      className="w-5 h-5 accent-emerald-500" 
-                    />
-                    <div className="flex items-center gap-2">
-                      <Leaf className="w-4 h-4 text-emerald-400" />
-                      <span className="text-white text-sm font-medium">Energy Star / Green Certified</span>
-                    </div>
-                    {inputs.isEnergyEfficient && (
-                      <span className="ml-auto text-xs text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded">✓ Lower baseline</span>
-                    )}
-                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={20}
+                    value={inputs.laundryMachineCount}
+                    onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value), hasLaundry: parseInt(e.target.value) > 0 })}
+                    className="w-full h-2 accent-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">Type</label>
+                  <select
+                    value={inputs.laundryType}
+                    onChange={(e) => setInputs({ ...inputs, laundryType: e.target.value as 'commercial' | 'regular' })}
+                    className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs"
+                  >
+                    <option value="commercial">Commercial</option>
+                    <option value="regular">Regular</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Energy Efficient - Compact Toggle */}
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Energy Star Certified?</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setInputs({ ...inputs, isEnergyEfficient: true })}
+                    className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                      inputs.isEnergyEfficient 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                    }`}
+                  >
+                    ✓ Yes
+                  </button>
+                  <button
+                    onClick={() => setInputs({ ...inputs, isEnergyEfficient: false })}
+                    className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                      !inputs.isEnergyEfficient 
+                        ? 'bg-slate-600 text-white' 
+                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                    }`}
+                  >
+                    No
+                  </button>
                 </div>
               </div>
             </div>
             
-            {/* RIGHT PANEL: Your Estimated Savings - Deep Purple */}
-            <div className="bg-purple-900/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-purple-500/30 shadow-2xl flex flex-col">
-              {/* Header with TrueQuote Badge INSIDE the panel */}
-              <div className="flex items-center justify-between mb-5">
+            {/* RIGHT PANEL: Your Estimated Savings - EXPANDED */}
+            <div className="bg-purple-900/40 backdrop-blur-sm rounded-2xl p-5 border border-purple-500/30 shadow-xl flex flex-col">
+              {/* Header with TrueQuote */}
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  {/* High-quality gradient icon container */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                    <TrendingDown className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                    <TrendingDown className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-emerald-400">Your Estimated Savings</h3>
+                  <h3 className="text-xl font-bold text-emerald-400">Your Estimated Savings</h3>
                 </div>
-                
-                {/* TrueQuote Badge - NOW INSIDE THE PANEL */}
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
-                  className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-amber-400/50 hover:bg-white/20 transition-all"
-                  title="Every number is verified"
+                  className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-amber-400/50 hover:bg-white/20 transition-all"
                 >
-                  <CheckCircle className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm font-bold text-amber-400">TrueQuote™</span>
+                  <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-amber-400">TrueQuote™</span>
                 </button>
               </div>
-              
-              {/* Main Annual Savings Display */}
-              <div className="bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-emerald-500/5 rounded-2xl p-6 text-center border border-emerald-400/30 mb-5">
-                <p className="text-sm text-emerald-200 uppercase tracking-[0.2em] mb-2 font-semibold">
-                  ⚡ ANNUAL SAVINGS ⚡
-                </p>
-                <p className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-300">
+
+              {/* Hero Savings Number */}
+              <div className="text-center py-4 bg-slate-800/40 rounded-xl mb-4">
+                <p className="text-gray-400 text-xs mb-1">⚡ ANNUAL SAVINGS ⚡</p>
+                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
                   ${heroEstimate.savings.toLocaleString()}
                 </p>
-                <p className="text-emerald-200 mt-2 font-medium">per year</p>
+                <p className="text-gray-400 text-sm">per year</p>
               </div>
-              
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
-                <div className="bg-indigo-500/20 rounded-xl p-4 text-center border border-indigo-400/30">
-                  <p className="text-3xl font-bold text-indigo-300">{heroEstimate.payback}</p>
-                  <p className="text-sm text-indigo-200">Year Payback</p>
+
+              {/* Battery / Solar / Net Cost - THREE COLUMNS */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                  <Battery className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-white">{Math.round(peakKW * 0.4 * inputs.storageHours)}</p>
+                  <p className="text-[10px] text-gray-400">kWh Battery</p>
                 </div>
-                <div className="bg-purple-500/20 rounded-xl p-4 text-center border border-purple-400/30">
-                  <p className="text-3xl font-bold text-purple-300">{Math.round(heroEstimate.savings * 25 / (heroEstimate.savings * heroEstimate.payback) * 100)}%</p>
-                  <p className="text-sm text-purple-200">25-Year ROI</p>
+                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                  <Sun className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-white">{Math.round(peakKW * 0.3)}</p>
+                  <p className="text-[10px] text-gray-400">kW Solar</p>
                 </div>
-                <div className="bg-violet-500/20 rounded-xl p-4 text-center border border-violet-400/30">
-                  <p className="text-3xl font-bold text-violet-300">{Math.round(peakKW * 0.4)} kW</p>
-                  <p className="text-sm text-violet-200">Battery Size</p>
-                </div>
-                <div className="bg-pink-500/20 rounded-xl p-4 text-center border border-pink-400/30">
-                  <p className="text-3xl font-bold text-pink-300">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7).toLocaleString()}</p>
-                  <p className="text-sm text-pink-200">Net Cost (after ITC)</p>
+                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                  <DollarSign className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-white">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7 / 1000)}K</p>
+                  <p className="text-[10px] text-gray-400">Net Cost</p>
                 </div>
               </div>
-              
-              {/* TrueQuote™ Verification with Glow */}
-              <div className="relative bg-emerald-500/10 rounded-xl p-4 border border-emerald-400/30 mb-5">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-emerald-500/20 rounded-xl blur-sm animate-pulse" />
-                <div className="relative flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-bold text-emerald-300">TrueQuote™ Verified</span>
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+
+              {/* Financial Metrics - THREE COLUMNS */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <p className="text-xl font-bold text-purple-300">{heroEstimate.payback}</p>
+                  <p className="text-[10px] text-gray-400">Yr Payback</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <p className="text-xl font-bold text-purple-300">{Math.round(25 / heroEstimate.payback * 100)}%</p>
+                  <p className="text-[10px] text-gray-400">25-Yr ROI</p>
+                </div>
+                <div className="text-center p-2 bg-white/5 rounded-lg">
+                  <p className="text-xl font-bold text-amber-400">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.3 / 1000)}K</p>
+                  <p className="text-[10px] text-gray-400">Incentives</p>
+                </div>
+              </div>
+
+              {/* Savings Breakdown - Progress Bars */}
+              <div className="mb-4">
+                <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
+                  <Receipt className="w-3 h-3" /> Savings Breakdown
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Demand Charges', percent: 55, color: 'bg-emerald-500' },
+                    { label: 'Energy Arbitrage', percent: 24, color: 'bg-cyan-500' },
+                    { label: 'Peak Shaving', percent: 16, color: 'bg-purple-500' },
+                    { label: 'TOU Optimization', percent: 5, color: 'bg-amber-500' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400 w-24 truncate">{item.label}</span>
+                      <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${item.color} rounded-full`} 
+                          style={{ width: `${item.percent}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-white font-medium w-10 text-right">
+                        ${Math.round(heroEstimate.savings * item.percent / 100 / 1000)}K
+                      </span>
                     </div>
-                    <p className="text-xs text-emerald-200/80">
-                      All costs traceable to 12+ authoritative sources
-                    </p>
-                    <button
-                      onClick={() => setShowTrueQuoteModal(true)}
-                      className="text-xs text-emerald-300 hover:text-emerald-200 underline flex items-center gap-1 mt-1"
-                    >
-                      View Source Attribution
-                      <ChevronDown className="w-3 h-3" />
-                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Environmental Impact */}
+              <div className="bg-emerald-500/10 rounded-xl p-3 mb-4 border border-emerald-500/20">
+                <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
+                  <Leaf className="w-3 h-3 text-emerald-400" /> Environmental Impact
+                </p>
+                <div className="flex items-center justify-around">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-emerald-400">{Math.round(heroEstimate.savings / 600)}</p>
+                    <p className="text-[10px] text-gray-400">tons CO₂/yr</p>
+                  </div>
+                  <div className="text-gray-600">|</div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-emerald-400">{Math.round(heroEstimate.savings / 600 / 4.6)}</p>
+                    <p className="text-[10px] text-gray-400">cars off road</p>
                   </div>
                 </div>
               </div>
-              
-              {/* Benefits Pills - Zero Guest, 30% Fed, State Credits */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                <div className="flex items-center gap-1.5 text-white bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-500/40">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                  <span className="font-medium text-xs">Zero guest disruptions</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-white bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-500/40">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                  <span className="font-medium text-xs">30% federal tax credit</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-white bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-500/40">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                  <span className="font-medium text-xs">State credits available</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-white bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-500/40">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                  <span className="font-medium text-xs">ESG & sustainability</span>
-                </div>
-              </div>
-              
-              {/* CTA Buttons */}
-              <div className="flex flex-col gap-3 mt-auto">
+
+              {/* CTA Button - Push to Bottom */}
+              <div className="mt-auto">
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="group relative w-full bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 hover:from-purple-500 hover:via-indigo-400 hover:to-cyan-400 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border border-purple-300/50"
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                 >
-                  <Wand2 className="w-6 h-6" />
-                  <span>Build My Custom Quote</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <Wand2 className="w-5 h-5" />
+                  Build My Custom Quote
+                  <ArrowRight className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setShowLeadForm(true)}
-                  className="w-full bg-slate-800/70 hover:bg-slate-700/80 border border-indigo-400/40 hover:border-indigo-300/60 text-indigo-100 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                  className="w-full mt-2 py-2 bg-slate-800/70 hover:bg-slate-700/80 border border-indigo-400/40 text-indigo-100 text-sm rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <Phone className="w-5 h-5" />
-                  Talk to an Expert
+                  <Phone className="w-4 h-4" />
+                  Talk to Expert
                 </button>
               </div>
-              
-              <p className="text-center text-indigo-200/60 text-xs font-medium mt-3">
-                ✓ Free consultation • ✓ No obligation • ✓ Takes 2 minutes
-              </p>
             </div>
           </div>
           
