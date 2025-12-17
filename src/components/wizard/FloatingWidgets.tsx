@@ -98,29 +98,11 @@ export function FloatingWidgets({
   return (
     <>
       {/* ═══════════════════════════════════════════════════════════════════
-          FLOATING ACTION BUTTONS (Fixed right edge)
+          FLOATING ACTION BUTTONS - LEFT SIDE (Only Help button)
+          Savings Scout and Config removed - they are in navbar now
           ═══════════════════════════════════════════════════════════════════ */}
       
-      {/* Savings Scout Widget */}
-      <FloatingWidget
-        icon={<Telescope className="w-5 h-5" />}
-        label="Savings Scout"
-        badge={opportunityCount > 0 ? opportunityCount : undefined}
-        onClick={() => setSavingsScoutOpen(true)}
-        position={2}
-        variant="default"
-      />
-      
-      {/* Config Summary Widget */}
-      <FloatingWidget
-        icon={<BarChart3 className="w-5 h-5" />}
-        label="Your Config"
-        onClick={() => setConfigSummaryOpen(true)}
-        position={1}
-        variant={hasConfig ? 'success' : 'default'}
-      />
-      
-      {/* Help Widget */}
+      {/* Help Widget - Only floating button (LEFT side) */}
       <FloatingWidget
         icon={<HelpCircle className="w-5 h-5" />}
         label="Help"
