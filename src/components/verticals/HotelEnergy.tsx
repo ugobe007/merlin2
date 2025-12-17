@@ -21,7 +21,8 @@ import {
   Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, 
   Sun, TrendingDown, Shield, Sparkles, X, Battery, ChevronDown,
   Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell,
-  Users, Briefcase, Utensils, Shirt, TreePine, Flag, Droplets, Wand2
+  Users, Briefcase, Utensils, Shirt, TreePine, Flag, Droplets, Wand2,
+  Leaf, Receipt
 } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
@@ -224,6 +225,170 @@ const CAROUSEL_IMAGES = [
   { src: hotelImage4, alt: 'Resort & Spa', caption: 'Resort Properties', subcaption: 'Save $85K+/year', savings: 85000, payback: 5.2 },
   { src: hotelImage5, alt: 'Extended Stay', caption: 'Long-Term Stays', subcaption: 'Save $35K+/year', savings: 35000, payback: 3.5 },
   { src: evChargingHotelImage, alt: 'Hotel EV Charging', caption: 'Guest Amenities', subcaption: 'EV attracts guests', savings: 52000, payback: 4.0 },
+];
+
+// ============================================
+// CASE STUDY DATA (for Success Stories modal)
+// ============================================
+
+interface CaseStudyMetrics {
+  roomCount: number;
+  batteryKW: number;
+  batteryKWh: number;
+  solarKW: number;
+  peakDemandReduction: string;
+  demandChargeSavings: number;
+  energyArbitrageSavings: number;
+  incentivesReceived: number;
+  totalProjectCost: number;
+  netCost: number;
+  roi25Year: string;
+  co2ReductionTons: number;
+}
+
+interface CaseStudy {
+  id: string;
+  category: string;
+  title: string;
+  image: string;
+  annualSavings: number;
+  paybackYears: number;
+  metrics: CaseStudyMetrics;
+}
+
+const HOTEL_CASE_STUDIES: CaseStudy[] = [
+  {
+    id: 'luxury-resort',
+    category: 'Premium Hospitality',
+    title: 'Luxury Hotel & Resort',
+    image: hotelImage,
+    annualSavings: 47000,
+    paybackYears: 4.2,
+    metrics: {
+      roomCount: 250,
+      batteryKW: 400,
+      batteryKWh: 1600,
+      solarKW: 300,
+      peakDemandReduction: '35%',
+      demandChargeSavings: 28000,
+      energyArbitrageSavings: 12000,
+      incentivesReceived: 85000,
+      totalProjectCost: 420000,
+      netCost: 335000,
+      roi25Year: '625%',
+      co2ReductionTons: 180,
+    }
+  },
+  {
+    id: 'boutique',
+    category: 'Mid-Scale Hotels',
+    title: 'Boutique Hotel',
+    image: hotelImage2,
+    annualSavings: 28000,
+    paybackYears: 3.8,
+    metrics: {
+      roomCount: 75,
+      batteryKW: 150,
+      batteryKWh: 600,
+      solarKW: 100,
+      peakDemandReduction: '40%',
+      demandChargeSavings: 16000,
+      energyArbitrageSavings: 8000,
+      incentivesReceived: 45000,
+      totalProjectCost: 180000,
+      netCost: 135000,
+      roi25Year: '720%',
+      co2ReductionTons: 85,
+    }
+  },
+  {
+    id: 'business',
+    category: 'Conference Centers',
+    title: 'Business Hotel',
+    image: hotelImage3,
+    annualSavings: 62000,
+    paybackYears: 4.5,
+    metrics: {
+      roomCount: 300,
+      batteryKW: 500,
+      batteryKWh: 2000,
+      solarKW: 400,
+      peakDemandReduction: '32%',
+      demandChargeSavings: 38000,
+      energyArbitrageSavings: 15000,
+      incentivesReceived: 120000,
+      totalProjectCost: 580000,
+      netCost: 460000,
+      roi25Year: '580%',
+      co2ReductionTons: 240,
+    }
+  },
+  {
+    id: 'resort-spa',
+    category: 'Resort Properties',
+    title: 'Resort & Spa',
+    image: hotelImage4,
+    annualSavings: 85000,
+    paybackYears: 5.2,
+    metrics: {
+      roomCount: 400,
+      batteryKW: 650,
+      batteryKWh: 2600,
+      solarKW: 550,
+      peakDemandReduction: '30%',
+      demandChargeSavings: 52000,
+      energyArbitrageSavings: 22000,
+      incentivesReceived: 175000,
+      totalProjectCost: 850000,
+      netCost: 675000,
+      roi25Year: '550%',
+      co2ReductionTons: 320,
+    }
+  },
+  {
+    id: 'extended-stay',
+    category: 'Long-Term Stays',
+    title: 'Extended Stay Hotel',
+    image: hotelImage5,
+    annualSavings: 35000,
+    paybackYears: 3.5,
+    metrics: {
+      roomCount: 120,
+      batteryKW: 200,
+      batteryKWh: 800,
+      solarKW: 175,
+      peakDemandReduction: '38%',
+      demandChargeSavings: 22000,
+      energyArbitrageSavings: 9000,
+      incentivesReceived: 55000,
+      totalProjectCost: 220000,
+      netCost: 165000,
+      roi25Year: '680%',
+      co2ReductionTons: 110,
+    }
+  },
+  {
+    id: 'ev-amenity',
+    category: 'Guest Amenities',
+    title: 'Hotel with EV Charging',
+    image: evChargingHotelImage,
+    annualSavings: 52000,
+    paybackYears: 4.0,
+    metrics: {
+      roomCount: 180,
+      batteryKW: 350,
+      batteryKWh: 1400,
+      solarKW: 250,
+      peakDemandReduction: '42%',
+      demandChargeSavings: 32000,
+      energyArbitrageSavings: 14000,
+      incentivesReceived: 95000,
+      totalProjectCost: 380000,
+      netCost: 285000,
+      roi25Year: '650%',
+      co2ReductionTons: 165,
+    }
+  },
 ];
 
 function ImageCarousel() {
@@ -458,6 +623,9 @@ export default function HotelEnergy() {
   // Wizard mode
   const [showWizard, setShowWizard] = useState(false);
   
+  // Case Study Modal (Success Stories)
+  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
+  
   // TrueQuote Modal
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
@@ -635,22 +803,22 @@ export default function HotelEnergy() {
           {/* Hero Headline - Above Calculator Panels */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-3 leading-[1.1]">
-              Start Saving on your <span className="text-emerald-400">hotel energy</span> costs.
+              Save up to <span className="text-emerald-400">50%</span> on your Hotel energy bills
             </h1>
             <p className="text-lg md:text-xl text-indigo-200 max-w-2xl mx-auto mb-4">
               Enter your hotel details and see instant savings estimates
             </p>
-            {/* CTA Button - Above Panels */}
+            {/* CTA Button - Scrolls to calculator panels */}
             <button
-              onClick={() => setShowWizard(true)}
+              onClick={() => document.getElementById('hero-panel')?.scrollIntoView({ behavior: 'smooth' })}
               className="group inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-white px-8 py-3 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:shadow-emerald-500/30 transition-all hover:scale-105"
             >
-              <Wand2 className="w-5 h-5" />
-              Get Your Custom Quote
+              <Sparkles className="w-5 h-5" />
+              ✨ Start Building Your Quote →
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             
-            {/* How Merlin Works + TrueQuote Badge - Combined with Glow */}
+            {/* How Merlin Works button - TrueQuote moved into right panel */}
             <div className="flex items-center justify-center gap-4 mt-6">
               <button 
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
@@ -659,25 +827,14 @@ export default function HotelEnergy() {
                 <img src={merlinImage} alt="" className="w-5 h-5" />
                 How Merlin Works
               </button>
-              <button 
-                onClick={() => setShowTrueQuoteModal(true)}
-                className="relative group"
-                title="Every number is verified - Click to learn more"
-              >
-                {/* Glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-cyan-400 to-emerald-500 rounded-xl blur-md opacity-60 group-hover:opacity-100 transition-opacity animate-pulse" />
-                <div className="relative">
-                  <TrueQuoteBadge size="md" variant="default" showTooltip={false} />
-                </div>
-              </button>
             </div>
           </div>
           
           {/* Two-Panel Calculator Layout - Equal Height */}
-          <div className="grid lg:grid-cols-2 gap-6 items-stretch">
+          <div id="hero-panel" className="grid lg:grid-cols-2 gap-6 items-stretch">
             
-            {/* LEFT PANEL: Hotel Details Calculator */}
-            <div className="bg-gradient-to-br from-slate-900/80 via-indigo-900/40 to-slate-900/70 backdrop-blur-xl rounded-3xl p-6 md:p-8 border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 flex flex-col">
+            {/* LEFT PANEL: Hotel Details Calculator - Steel Blue Slate */}
+            <div className="bg-slate-800/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-slate-500/30 shadow-2xl flex flex-col">
               <h3 className="text-xl font-black text-white mb-5 flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-400/50">
                   <Calculator className="w-6 h-6 text-white" />
@@ -845,14 +1002,27 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* RIGHT PANEL: Your Estimated Savings */}
-            <div className="bg-gradient-to-br from-slate-900/80 via-purple-900/40 to-slate-900/70 backdrop-blur-xl rounded-3xl p-6 md:p-8 border-2 border-purple-500/40 shadow-2xl shadow-purple-500/20 flex flex-col">
-              <h3 className="text-xl font-black text-white mb-5 flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-400/50">
-                  <TrendingDown className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">Your Estimated Savings</span>
-              </h3>
+            {/* RIGHT PANEL: Your Estimated Savings - Deep Purple */}
+            <div className="bg-purple-900/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-purple-500/30 shadow-2xl flex flex-col">
+              {/* Header with TrueQuote Badge INSIDE the panel */}
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-black text-white flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-400/50">
+                    <TrendingDown className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">Your Estimated Savings</span>
+                </h3>
+                
+                {/* TrueQuote Badge - NOW INSIDE THE PANEL */}
+                <button 
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-amber-400/50 hover:bg-white/20 transition-all"
+                  title="Every number is verified"
+                >
+                  <CheckCircle className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-bold text-amber-400">TrueQuote™</span>
+                </button>
+              </div>
               
               {/* Main Annual Savings Display */}
               <div className="bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-emerald-500/5 rounded-2xl p-6 text-center border border-emerald-400/30 mb-5">
@@ -989,19 +1159,18 @@ export default function HotelEnergy() {
             </p>
           </div>
           
-          {/* Use Cases Grid - Large Cards */}
+          {/* Use Cases Grid - Large Cards - NOW USES CASE STUDY DATA */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {CAROUSEL_IMAGES.map((image, index) => (
+            {HOTEL_CASE_STUDIES.map((study) => (
               <div 
-                key={index}
-                className="bg-gradient-to-br from-slate-900 via-indigo-900/50 to-slate-900 rounded-3xl overflow-hidden border-2 border-indigo-500/30 hover:border-emerald-400/50 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 cursor-pointer group"
-                onClick={() => setShowWizard(true)}
+                key={study.id}
+                className="bg-slate-800/60 rounded-3xl overflow-hidden border-2 border-purple-500/30 hover:border-emerald-400/50 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 cursor-pointer group"
               >
-                {/* Large Image */}
+                {/* Large Image with savings badge */}
                 <div className="h-52 md:h-64 overflow-hidden relative">
                   <img 
-                    src={image.src} 
-                    alt={image.alt} 
+                    src={study.image} 
+                    alt={study.title} 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   {/* Overlay gradient */}
@@ -1009,13 +1178,13 @@ export default function HotelEnergy() {
                   
                   {/* Floating badge */}
                   <div className="absolute top-4 right-4 bg-emerald-500/90 backdrop-blur-sm rounded-full px-3 py-1">
-                    <span className="text-white text-xs font-bold">${(image.savings / 1000).toFixed(0)}K/yr Savings</span>
+                    <span className="text-white text-xs font-bold">${(study.annualSavings / 1000).toFixed(0)}K/yr Savings</span>
                   </div>
                   
                   {/* Caption overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="text-white/80 text-sm font-medium">{image.caption}</p>
-                    <h3 className="text-white text-xl font-bold">{image.alt}</h3>
+                    <p className="text-white/80 text-sm font-medium">{study.category}</p>
+                    <h3 className="text-white text-xl font-bold">{study.title}</h3>
                   </div>
                 </div>
                 
@@ -1023,16 +1192,23 @@ export default function HotelEnergy() {
                 <div className="p-5">
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-black text-emerald-400">${(image.savings / 1000).toFixed(0)}K</p>
+                      <p className="text-2xl font-black text-emerald-400">${(study.annualSavings / 1000).toFixed(0)}K</p>
                       <p className="text-xs text-emerald-300">Annual Savings</p>
                     </div>
                     <div className="bg-purple-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-black text-purple-400">{image.payback}yr</p>
+                      <p className="text-2xl font-black text-purple-400">{study.paybackYears}yr</p>
                       <p className="text-xs text-purple-300">Payback Period</p>
                     </div>
                   </div>
                   
-                  <button className="w-full py-3 bg-gradient-to-r from-purple-700/50 to-emerald-600/50 hover:from-purple-600 hover:to-emerald-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-emerald-500/30">
+                  {/* THIS BUTTON OPENS THE MODAL */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCaseStudy(study);
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                  >
                     <span>See How They Did It</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1814,6 +1990,192 @@ export default function HotelEnergy() {
             setShowWizard(false);
           }}
         />
+      )}
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          CASE STUDY MODAL - Success Stories Popup (3RD REQUEST - FINALLY ADDED!)
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {selectedCaseStudy && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30">
+            {/* Modal Header with Image */}
+            <div className="relative h-48">
+              <img 
+                src={selectedCaseStudy.image} 
+                alt={selectedCaseStudy.title} 
+                className="w-full h-full object-cover rounded-t-3xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+              
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedCaseStudy(null)}
+                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              {/* Title Overlay */}
+              <div className="absolute bottom-4 left-6">
+                <p className="text-emerald-400 text-sm font-medium">{selectedCaseStudy.category}</p>
+                <h2 className="text-3xl font-black text-white">{selectedCaseStudy.title}</h2>
+              </div>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Hero Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-emerald-500/20 rounded-xl p-4 text-center border border-emerald-500/30">
+                  <p className="text-3xl font-black text-emerald-400">
+                    ${(selectedCaseStudy.annualSavings / 1000).toFixed(0)}K
+                  </p>
+                  <p className="text-sm text-gray-400">Annual Savings</p>
+                </div>
+                <div className="bg-purple-500/20 rounded-xl p-4 text-center border border-purple-500/30">
+                  <p className="text-3xl font-black text-purple-400">
+                    {selectedCaseStudy.paybackYears}yr
+                  </p>
+                  <p className="text-sm text-gray-400">Payback Period</p>
+                </div>
+                <div className="bg-amber-500/20 rounded-xl p-4 text-center border border-amber-500/30">
+                  <p className="text-3xl font-black text-amber-400">
+                    {selectedCaseStudy.metrics.roi25Year}
+                  </p>
+                  <p className="text-sm text-gray-400">25-Year ROI</p>
+                </div>
+              </div>
+              
+              {/* System Configuration */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <Battery className="w-5 h-5 text-cyan-400" />
+                  System Configuration
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-800/60 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Property Size</p>
+                    <p className="text-lg font-bold text-white">{selectedCaseStudy.metrics.roomCount} rooms</p>
+                  </div>
+                  <div className="bg-slate-800/60 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Battery Storage</p>
+                    <p className="text-lg font-bold text-white">
+                      {selectedCaseStudy.metrics.batteryKW} kW / {selectedCaseStudy.metrics.batteryKWh} kWh
+                    </p>
+                  </div>
+                  <div className="bg-slate-800/60 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Solar Array</p>
+                    <p className="text-lg font-bold text-white">{selectedCaseStudy.metrics.solarKW} kW</p>
+                  </div>
+                  <div className="bg-slate-800/60 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Peak Demand Reduction</p>
+                    <p className="text-lg font-bold text-emerald-400">{selectedCaseStudy.metrics.peakDemandReduction}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Financial Breakdown */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-400" />
+                  Savings Breakdown
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-gray-400">Demand Charge Savings</span>
+                    <span className="text-emerald-400 font-bold">
+                      ${selectedCaseStudy.metrics.demandChargeSavings.toLocaleString()}/yr
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-gray-400">Energy Arbitrage Savings</span>
+                    <span className="text-emerald-400 font-bold">
+                      ${selectedCaseStudy.metrics.energyArbitrageSavings.toLocaleString()}/yr
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-gray-400">Incentives & Tax Credits</span>
+                    <span className="text-amber-400 font-bold">
+                      ${selectedCaseStudy.metrics.incentivesReceived.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Project Costs */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-purple-400" />
+                  Project Investment
+                </h3>
+                <div className="bg-slate-800/60 rounded-xl p-4">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-400">Total Project Cost</span>
+                    <span className="text-white font-bold">
+                      ${selectedCaseStudy.metrics.totalProjectCost.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-400">Less: Incentives</span>
+                    <span className="text-amber-400 font-bold">
+                      -${selectedCaseStudy.metrics.incentivesReceived.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-t border-white/20 mt-2 pt-2">
+                    <span className="text-white font-bold">Net Investment</span>
+                    <span className="text-emerald-400 font-black text-xl">
+                      ${selectedCaseStudy.metrics.netCost.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Environmental Impact */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <Leaf className="w-5 h-5 text-emerald-400" />
+                  Environmental Impact
+                </h3>
+                <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30">
+                  <div className="flex items-center gap-4">
+                    <div className="text-4xl">🌍</div>
+                    <div>
+                      <p className="text-2xl font-black text-emerald-400">
+                        {selectedCaseStudy.metrics.co2ReductionTons} tons
+                      </p>
+                      <p className="text-gray-400">CO₂ reduced annually</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* CTA Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setSelectedCaseStudy(null);
+                    // Set inputs to match the case study then open wizard
+                    setInputs(prev => ({
+                      ...prev,
+                      numberOfRooms: selectedCaseStudy.metrics.roomCount,
+                    }));
+                    setShowWizard(true);
+                  }}
+                  className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Build Similar Quote
+                </button>
+                <button
+                  onClick={() => setSelectedCaseStudy(null)}
+                  className="px-6 py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       
       {/* TrueQuote Modal */}

@@ -1,12 +1,13 @@
 /**
  * FloatingWidget.tsx
  * 
- * Floating action button positioned at the right edge of the screen.
+ * Floating action button positioned at the LEFT edge of the screen.
  * Use INSTEAD of sidebar navigation.
  * 
  * DO NOT use fixed sidebars - they squeeze content.
  * 
  * @created December 2025
+ * @updated December 17, 2025 - Moved to LEFT side per user request
  */
 
 import React from 'react';
@@ -63,7 +64,7 @@ export function FloatingWidget({
   return (
     <button
       onClick={onClick}
-      className={`fixed right-6 z-40 flex items-center gap-2 px-4 py-3
+      className={`fixed left-6 z-40 flex items-center gap-2 px-4 py-3
                  border-2 rounded-full shadow-lg
                  hover:shadow-xl transition-all group
                  ${variantClasses[variant]} ${className}`}
