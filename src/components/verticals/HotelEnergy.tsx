@@ -85,9 +85,15 @@ interface HotelInputs {
   evChargerCount: number;
   hasLaundry: boolean;
   laundryMachineCount: number;
+  laundryType: 'commercial' | 'regular';
   elevatorCount: number;
   
-  // STEP 6: Storage preferences (slider before recommendation)
+  // STEP 6: Energy Efficiency Ratings
+  hvacRating: number;           // 1-10 scale (10 = newest/most efficient)
+  lightingEfficiency: number;   // 1-5 scale (5 = all LED)
+  isEnergyEfficient: boolean;   // Energy Star or equivalent certification
+  
+  // STEP 7: Storage preferences (slider before recommendation)
   storageHours: number;         // 2, 4, 6, or 8 hours
   
   // Location & billing
@@ -570,9 +576,15 @@ export default function HotelEnergy() {
     evChargerCount: 4,
     hasLaundry: true,
     laundryMachineCount: 6,
+    laundryType: 'commercial',
     elevatorCount: 2,
     
-    // STEP 6: Storage preferences
+    // STEP 6: Energy Efficiency Ratings
+    hvacRating: 5,           // Default to mid-range
+    lightingEfficiency: 3,   // Default to mixed
+    isEnergyEfficient: false,
+    
+    // STEP 7: Storage preferences
     storageHours: 4,
     
     // Location & billing
@@ -664,6 +676,18 @@ export default function HotelEnergy() {
     const backupMultiplier = inputs.storageHours >= 6 ? 1.15 : inputs.storageHours >= 4 ? 1.0 : 0.9;
     baseSavings *= backupMultiplier;
     
+    // Adjust for energy efficiency (Dec 2025 - HVAC/Lighting/Certification)
+    // Less efficient buildings have higher baseline load = more savings opportunity
+    const hvacMultiplier = 1 + (10 - inputs.hvacRating) * 0.03; // Older HVAC = 3% more savings per point
+    const lightingMultiplier = 1 + (5 - inputs.lightingEfficiency) * 0.02; // Older lighting = 2% more per point
+    const certificationMultiplier = inputs.isEnergyEfficient ? 0.85 : 1.0; // Certified = 15% lower baseline
+    baseSavings *= hvacMultiplier * lightingMultiplier * certificationMultiplier;
+    
+    // Adjust for laundry type (commercial = higher power = more savings)
+    if (inputs.hasLaundry && inputs.laundryType === 'commercial') {
+      baseSavings += inputs.laundryMachineCount * 200; // Commercial machines add more savings
+    }
+    
     const savings = Math.round(baseSavings);
     
     // Payback affected by system size and class
@@ -673,7 +697,7 @@ export default function HotelEnergy() {
     else if (savings > 50000) payback -= 0.2;
     
     return { savings, payback: Math.round(payback * 10) / 10, hotelClass: derivedClass };
-  }, [inputs.numberOfRooms, inputs.squareFootage, inputs.hasPool, inputs.hasRestaurant, inputs.hasSpa, inputs.hasLaundry, inputs.hasEVCharging, inputs.elevatorCount, inputs.storageHours]);
+  }, [inputs.numberOfRooms, inputs.squareFootage, inputs.hasPool, inputs.hasRestaurant, inputs.hasSpa, inputs.hasLaundry, inputs.hasEVCharging, inputs.elevatorCount, inputs.storageHours, inputs.hvacRating, inputs.lightingEfficiency, inputs.isEnergyEfficient, inputs.laundryType, inputs.laundryMachineCount]);
   
   // Calculate quote when inputs change
   useEffect(() => {
@@ -841,16 +865,31 @@ export default function HotelEnergy() {
                 <h3 className="text-2xl font-black text-white">Your Hotel Details</h3>
               </div>
               
+              {/* Row 0: STATE SELECTION - NOW AT TOP */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-indigo-200 mb-2">State Location</label>
+                <select
+                  value={inputs.state}
+                  onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
+                  className="w-full bg-slate-700/60 border-2 border-indigo-400/40 rounded-xl px-4 py-3 text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  {Object.keys(STATE_RATES).map((state) => (
+                    <option key={state} value={state} className="bg-slate-800">{state}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-indigo-300/70 mt-1.5">
+                  💡 Electricity rate: ${(STATE_RATES[inputs.state]?.rate || 0.12).toFixed(2)}/kWh • Demand: ${STATE_RATES[inputs.state]?.demandCharge || 12}/kW
+                </p>
+              </div>
+              
               {/* Row 1: Rooms + Auto Class */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-indigo-200 mb-2">Number of Rooms</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
-                    min={10}
-                    max={2000}
                     value={inputs.numberOfRooms}
-                    onChange={(e) => setInputs({ ...inputs, numberOfRooms: Math.max(10, parseInt(e.target.value) || 10) })}
+                    onChange={(e) => setInputs({ ...inputs, numberOfRooms: parseInt(e.target.value) || 0 })}
                     className="flex-1 bg-slate-700/60 border-2 border-indigo-400/40 rounded-xl px-4 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     placeholder="150"
                   />
@@ -879,13 +918,10 @@ export default function HotelEnergy() {
                 </label>
                 <input
                   type="number"
-                  min={5000}
-                  max={1000000}
-                  step={1000}
                   value={inputs.squareFootage}
                   onChange={(e) => {
                     setUserSetBill(false);
-                    setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 50000 });
+                    setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 0 });
                   }}
                   className="w-full bg-slate-700/60 border border-indigo-400/30 rounded-xl px-4 py-3 text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="75000"
@@ -965,39 +1001,108 @@ export default function HotelEnergy() {
                   </label>
                   <div className="bg-slate-700/40 rounded-xl p-3 border border-transparent hover:border-indigo-400/30">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={inputs.hasLaundry} onChange={(e) => setInputs({ ...inputs, hasLaundry: e.target.checked, laundryMachineCount: e.target.checked ? Math.max(4, inputs.laundryMachineCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
+                      <input type="checkbox" checked={inputs.hasLaundry} onChange={(e) => setInputs({ ...inputs, hasLaundry: e.target.checked, laundryMachineCount: e.target.checked ? Math.max(1, inputs.laundryMachineCount) : 0 })} className="w-4 h-4 accent-indigo-500" />
                       <Shirt className="w-4 h-4 text-blue-300" />
                       <span className="text-white text-sm">Laundry</span>
                     </label>
                     {inputs.hasLaundry && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-indigo-300">Machines:</span>
-                        <input
-                          type="number"
-                          min={2}
-                          max={50}
-                          value={inputs.laundryMachineCount}
-                          onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value) || 4 })}
-                          className="w-16 bg-slate-600/50 border border-indigo-400/30 rounded px-2 py-1 text-white text-sm"
-                        />
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-indigo-300">Machines:</span>
+                          <input
+                            type="number"
+                            value={inputs.laundryMachineCount}
+                            onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value) || 0 })}
+                            className="w-16 bg-slate-600/50 border border-indigo-400/30 rounded px-2 py-1 text-white text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setInputs({ ...inputs, laundryType: 'commercial' })}
+                            className={`flex-1 text-xs py-1 rounded ${inputs.laundryType === 'commercial' ? 'bg-indigo-500 text-white' : 'bg-slate-600/50 text-slate-300 hover:bg-slate-500/50'}`}
+                          >
+                            Commercial
+                          </button>
+                          <button
+                            onClick={() => setInputs({ ...inputs, laundryType: 'regular' })}
+                            className={`flex-1 text-xs py-1 rounded ${inputs.laundryType === 'regular' ? 'bg-indigo-500 text-white' : 'bg-slate-600/50 text-slate-300 hover:bg-slate-500/50'}`}
+                          >
+                            Regular
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
               
-              {/* Row 6: State Selection */}
-              <div className="mt-auto">
-                <label className="block text-sm font-semibold text-indigo-200 mb-2">State</label>
-                <select
-                  value={inputs.state}
-                  onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
-                  className="w-full bg-slate-700/60 border border-indigo-400/30 rounded-xl px-4 py-3 text-white font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  {Object.keys(STATE_RATES).map((state) => (
-                    <option key={state} value={state} className="bg-slate-800">{state}</option>
-                  ))}
-                </select>
+              {/* Row 6: Energy Efficiency Ratings - NEW */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-indigo-200 mb-2">Energy Efficiency</label>
+                <div className="space-y-3">
+                  {/* HVAC Rating 1-10 */}
+                  <div className="bg-slate-700/40 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white text-sm flex items-center gap-2">
+                        <Gauge className="w-4 h-4 text-cyan-400" />
+                        HVAC System Age/Efficiency
+                      </span>
+                      <span className="text-indigo-300 text-sm font-bold">{inputs.hvacRating}/10</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={inputs.hvacRating}
+                      onChange={(e) => setInputs({ ...inputs, hvacRating: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                    <div className="flex justify-between text-xs text-indigo-300/60 mt-1">
+                      <span>Old (20+ yrs)</span>
+                      <span>New/High-Eff</span>
+                    </div>
+                  </div>
+                  
+                  {/* Lighting Efficiency 1-5 */}
+                  <div className="bg-slate-700/40 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white text-sm flex items-center gap-2">
+                        <Sun className="w-4 h-4 text-amber-400" />
+                        Lighting Efficiency
+                      </span>
+                      <span className="text-indigo-300 text-sm font-bold">{inputs.lightingEfficiency}/5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={inputs.lightingEfficiency}
+                      onChange={(e) => setInputs({ ...inputs, lightingEfficiency: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    />
+                    <div className="flex justify-between text-xs text-indigo-300/60 mt-1">
+                      <span>Incandescent</span>
+                      <span>All LED</span>
+                    </div>
+                  </div>
+                  
+                  {/* Energy Efficient Certification */}
+                  <label className="flex items-center gap-3 bg-slate-700/40 rounded-xl p-3 cursor-pointer hover:bg-slate-600/50 transition-all border border-transparent hover:border-emerald-400/30">
+                    <input 
+                      type="checkbox" 
+                      checked={inputs.isEnergyEfficient} 
+                      onChange={(e) => setInputs({ ...inputs, isEnergyEfficient: e.target.checked })} 
+                      className="w-5 h-5 accent-emerald-500" 
+                    />
+                    <div className="flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-emerald-400" />
+                      <span className="text-white text-sm font-medium">Energy Star / Green Certified</span>
+                    </div>
+                    {inputs.isEnergyEfficient && (
+                      <span className="ml-auto text-xs text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded">✓ Lower baseline</span>
+                    )}
+                  </label>
+                </div>
               </div>
             </div>
             
