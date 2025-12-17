@@ -221,26 +221,30 @@ export function FacilityDetailsSectionV2({
     }
   }, [getSizeCategory, wizardState.useCaseData?.propertyType]);
   
-  // Check if form is complete for auto-advance
+  // Check if form is complete for enabling Continue button
   const isFormComplete = useCallback(() => {
     const hasLocation = !!wizardState.state;
     const hasRoomCount = (wizardState.useCaseData?.roomCount || 0) > 0 || wizardState.facilitySize > 0;
     const hasPropertyType = getSizeCategory() === 'small' || !!wizardState.useCaseData?.propertyType;
     
+    // Debug logging
+    console.log('📋 [FacilityV2] isFormComplete check:', {
+      hasLocation,
+      hasRoomCount,
+      hasPropertyType,
+      state: wizardState.state,
+      roomCount: wizardState.useCaseData?.roomCount || wizardState.facilitySize,
+      propertyType: wizardState.useCaseData?.propertyType,
+      sizeCategory: getSizeCategory(),
+    });
+    
     return hasLocation && hasRoomCount && hasPropertyType;
   }, [wizardState.state, wizardState.useCaseData?.roomCount, wizardState.useCaseData?.propertyType, wizardState.facilitySize, getSizeCategory]);
   
-  // Auto-advance when form is complete
-  useEffect(() => {
-    if (currentSection === 2 && isFormComplete() && selectedAmenities.length > 0) {
-      // Small delay to let user see their selections
-      const timer = setTimeout(() => {
-        onContinue();
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [currentSection, isFormComplete, selectedAmenities.length, onContinue]);
+  // Dec 17, 2025 - DISABLED AUTO-ADVANCE
+  // Auto-advance was causing issues when user came from vertical landing page
+  // with pre-populated data. User should ALWAYS click Continue to proceed.
+  // This gives them a chance to review/modify their selections.
   
   // Toggle amenity selection
   const toggleAmenity = (amenityId: string) => {
@@ -528,34 +532,44 @@ export function FacilityDetailsSectionV2({
           </div>
           
           {/* ════════════════════════════════════════════════════════════════
-              PROGRESS INDICATOR & AUTO-ADVANCE MESSAGE
+              PROGRESS INDICATOR & CONTINUE BUTTON
+              Dec 17, 2025 - Removed auto-advance, always show Continue button
           ════════════════════════════════════════════════════════════════ */}
           <div className="mt-8 pt-6 border-t border-gray-200">
-            {isFormComplete() && selectedAmenities.length > 0 ? (
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 border border-emerald-300 rounded-full text-emerald-700">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">Great! Moving to next step...</span>
-                  <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              </div>
-            ) : (
-              <div className="text-center">
+            <div className="text-center">
+              {/* Validation messages */}
+              {!isFormComplete() && (
                 <p className="text-gray-500 text-sm mb-4">
                   {!wizardState.state && '📍 Select your state'}
-                  {wizardState.state && !(wizardState.useCaseData?.roomCount || wizardState.facilitySize) && '🏨 Select property size'}
+                  {wizardState.state && !(wizardState.useCaseData?.roomCount || wizardState.facilitySize) && '🏨 Enter property size'}
                   {wizardState.state && (wizardState.useCaseData?.roomCount || wizardState.facilitySize > 0) && selectedAmenities.length === 0 && '✨ Select at least one amenity'}
                 </p>
-                {/* Manual continue button as fallback */}
-                <button
-                  onClick={onContinue}
-                  disabled={!isFormComplete()}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all"
-                >
-                  Continue →
-                </button>
-              </div>
-            )}
+              )}
+              
+              {/* Success message when form is complete */}
+              {isFormComplete() && selectedAmenities.length > 0 && (
+                <p className="text-emerald-600 text-sm mb-4 flex items-center justify-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Looking good! Click Continue when ready.
+                </p>
+              )}
+              
+              {/* Continue button - ALWAYS visible, disabled when form incomplete */}
+              <button
+                onClick={() => {
+                  console.log('🚀 [FacilityV2] Continue clicked!', { 
+                    currentSection,
+                    isFormComplete: isFormComplete(),
+                    amenities: selectedAmenities.length,
+                  });
+                  onContinue();
+                }}
+                disabled={!isFormComplete()}
+                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+              >
+                Continue →
+              </button>
+            </div>
           </div>
         </div>
       </div>
