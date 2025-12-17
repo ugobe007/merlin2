@@ -19,18 +19,20 @@
  */
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Flame, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator } from 'lucide-react';
+import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator, Search } from 'lucide-react';
 
 // Modular components
 import { useStreamlinedWizard } from './hooks';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
 import { AcceptCustomizeModal } from './shared';
+import { SavingsScoutNavbar } from './indicators/SavingsScoutWidget';
 import {
   WelcomeLocationSection,
   IndustrySection,
   FacilityDetailsSection,
   FacilityDetailsSectionV2,
   GoalsSection,
+  GoalsSectionV2,
   QuoteResultsSection,
   ScenarioComparison,
   ScenarioSection,
@@ -38,7 +40,7 @@ import {
 } from './sections';
 import ScenarioSectionV2 from './sections/ScenarioSectionV2';
 import { ConfigurationConfirmModal } from './modals';
-import PowerProfileTracker from './PowerProfileTracker';
+import FloatingWidgets from './FloatingWidgets';
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================
@@ -82,7 +84,6 @@ export default function StreamlinedWizard({
   // Local UI state
   const [showPowerProfileExplainer, setShowPowerProfileExplainer] = useState(false);
   const [showSolarOpportunity, setShowSolarOpportunity] = useState(false);
-  const [showEnergyOpportunity, setShowEnergyOpportunity] = useState(false);
   const [showTrueQuoteExplainer, setShowTrueQuoteExplainer] = useState(false);
   const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
   const [hasSeenRecommendation, setHasSeenRecommendation] = useState(false);
@@ -380,57 +381,28 @@ export default function StreamlinedWizard({
               {(() => {
                 const geo = wizard.wizardState.geoRecommendations;
                 const calc = wizard.centralizedState?.calculated || {};
-                const hasData = geo || calc.totalPeakDemandKW > 0;
+                const hasData = wizard.wizardState.state && (geo || calc.totalPeakDemandKW > 0);
                 
-                // Determine opportunities based on location and facility
-                const opportunities: { name: string; active: boolean; reason: string }[] = [
-                  {
-                    name: 'Peak Shaving',
-                    active: (geo?.profile?.avgDemandCharge || 0) > 10 || calc.totalPeakDemandKW > 100,
-                    reason: geo?.profile?.avgDemandCharge 
-                      ? `$${geo.profile.avgDemandCharge}/kW demand charge - save 20-40%`
-                      : 'Reduce demand charges during peak periods'
-                  },
-                  {
-                    name: 'Arbitrage',
-                    active: (geo?.profile?.avgElectricityRate || 0) > 0.12,
-                    reason: geo?.profile?.avgElectricityRate 
-                      ? `$${geo.profile.avgElectricityRate.toFixed(3)}/kWh rate - TOU optimization`
-                      : 'Buy low, use high with time-of-use rates'
-                  },
-                  {
-                    name: 'Grid Stability',
-                    active: (geo?.profile?.gridReliabilityScore || 100) < 80,
-                    reason: geo?.profile?.gridReliabilityScore
-                      ? `${geo.profile.gridReliabilityScore}% reliability - backup recommended`
-                      : 'Protect against outages'
-                  },
-                ];
-                
-                const activeCount = opportunities.filter(o => o.active).length;
+                if (!hasData) return null;
                 
                 return (
-                  <button
-                    onClick={() => setShowEnergyOpportunity(true)}
-                    className="hidden lg:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/40 rounded-xl hover:from-orange-500/30 hover:to-red-500/30 transition-all"
-                    title="Energy Opportunities"
-                  >
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3].map((i) => (
-                        <Flame 
-                          key={i}
-                          className={`w-3.5 h-3.5 transition-all ${
-                            i <= activeCount 
-                              ? 'text-orange-400 fill-orange-400' 
-                              : 'text-orange-400/30'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-orange-300/80 font-medium">
-                      {hasData ? `${activeCount} hot` : '—'}
-                    </span>
-                  </button>
+                  <div className="hidden lg:block">
+                    <SavingsScoutNavbar
+                      state={wizard.wizardState.state}
+                      industryProfile={wizard.wizardState.selectedIndustry || 'hotel'}
+                      peakDemandKW={calc.totalPeakDemandKW || 200}
+                      facilityDetails={{
+                        rooms: wizard.wizardState.useCaseData?.rooms || wizard.wizardState.useCaseData?.roomCount || 100,
+                        hasEVChargers: wizard.wizardState.useCaseData?.hasEVChargers || false,
+                        evChargerCount: wizard.wizardState.useCaseData?.evChargerCount || 0,
+                        evChargersL2: wizard.wizardState.evChargersL2 || 0,
+                        evChargersDCFC: wizard.wizardState.evChargersDCFC || 0,
+                        gridConnection: wizard.wizardState.gridConnection as any || 'on-grid',
+                      }}
+                      onGetQuote={() => wizard.setCurrentSection(5)}
+                      onFullAnalysis={() => wizard.setCurrentSection(3)}
+                    />
+                  </div>
                 );
               })()}
               
@@ -454,32 +426,12 @@ export default function StreamlinedWizard({
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex h-full pt-16">
-        {/* Power Profile Sidebar */}
-        <aside className="hidden xl:block w-80 border-r border-white/10 bg-slate-900/50 overflow-y-auto">
-          <div className="p-4">
-            <PowerProfileTracker
-              currentSection={wizard.currentSection}
-              completedSections={wizard.completedSections}
-              totalPoints={wizard.totalPoints}
-              level={Math.floor(wizard.totalPoints / 100) + 1}
-              selectedIndustry={wizard.wizardState.industryName}
-              selectedLocation={wizard.wizardState.state}
-              systemSize={wizard.wizardState.batteryKW}
-              systemKWh={wizard.wizardState.batteryKWh}
-              durationHours={wizard.wizardState.durationHours}
-              neededPowerKW={wizard.centralizedState?.calculated?.recommendedBatteryKW || 0}
-              neededEnergyKWh={wizard.centralizedState?.calculated?.recommendedBatteryKWh || 0}
-              neededDurationHours={4}
-            />
-          </div>
-        </aside>
-
-        {/* Scrollable Content Area */}
+      {/* Main Content - FULL WIDTH (sidebar removed Dec 17, 2025) */}
+      <div className="h-full pt-16">
+        {/* Scrollable Content Area - Now full width */}
         <main
           ref={containerRef}
-          className="flex-1 overflow-y-auto scroll-smooth"
+          className="h-full overflow-y-auto scroll-smooth"
         >
           <div className={`transition-opacity duration-300 ${wizard.isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {/* Section 0: Welcome + Location + Goals */}
@@ -599,8 +551,9 @@ export default function StreamlinedWizard({
               } : undefined;
               
               // Show Goals section (Section 3 - user tells us what matters)
+              // Dec 17, 2025: Using GoalsSectionV2 with high-fidelity UI components
               return wizard.currentSection === 3 ? (
-                <GoalsSection
+                <GoalsSectionV2
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
                   currentSection={3}
@@ -723,6 +676,39 @@ export default function StreamlinedWizard({
           </div>
         </main>
       </div>
+      
+      {/* ═══════════════════════════════════════════════════════════════════
+          FLOATING WIDGETS (Dec 17, 2025)
+          Replaces sidebar with floating action buttons + overlay panels
+          ═══════════════════════════════════════════════════════════════════ */}
+      <FloatingWidgets
+        peakDemandKW={wizard.centralizedState?.calculated?.totalPeakDemandKW || 200}
+        state={wizard.wizardState.state}
+        industryProfile={wizard.wizardState.selectedIndustry || 'hotel'}
+        industryName={wizard.wizardState.industryName}
+        currentConfig={wizard.wizardState.batteryKW > 0 ? {
+          batteryKW: wizard.wizardState.batteryKW,
+          batteryKWh: wizard.wizardState.batteryKWh,
+          solarKW: wizard.wizardState.solarKW || 0,
+          generatorKW: wizard.wizardState.generatorKW || 0,
+          annualSavings: wizard.centralizedState?.calculated?.estimatedAnnualSavings || 0,
+          paybackYears: wizard.centralizedState?.calculated?.estimatedPaybackYears,
+        } : undefined}
+        onNavigateToSection={(section) => wizard.advanceToSection(section)}
+        merlinRecommendation={wizard.centralizedState?.calculated?.recommendedBatteryKW ? {
+          batteryKW: wizard.centralizedState.calculated.recommendedBatteryKW,
+          batteryKWh: wizard.centralizedState.calculated.recommendedBatteryKWh || 0,
+          solarKW: wizard.centralizedState.calculated.recommendedSolarKW || 0,
+        } : undefined}
+        facilityDetails={{
+          rooms: wizard.wizardState.useCaseData?.rooms || wizard.wizardState.useCaseData?.roomCount || 100,
+          hasEVChargers: wizard.wizardState.useCaseData?.hasEVChargers || false,
+          evChargerCount: wizard.wizardState.useCaseData?.evChargerCount || 0,
+          evChargersL2: wizard.wizardState.evChargersL2 || 0,
+          evChargersDCFC: wizard.wizardState.evChargersDCFC || 0,
+          gridConnection: wizard.wizardState.gridConnection as 'on-grid' | 'off-grid' | 'limited' || 'on-grid',
+        }}
+      />
       
       {/* Configuration Confirm Modal - Shows before advancing to final quote */}
       {(() => {
@@ -1006,137 +992,6 @@ export default function StreamlinedWizard({
               <button
                 onClick={() => setShowSolarOpportunity(false)}
                 className="w-full mt-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl font-bold transition-colors hover:from-amber-600 hover:to-yellow-600"
-              >
-                Got it!
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Energy Opportunity Modal */}
-      {showEnergyOpportunity && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                    <Flame className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800">Energy Opportunities</h3>
-                </div>
-                <button
-                  onClick={() => setShowEnergyOpportunity(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-              
-              {(() => {
-                const geo = wizard.wizardState.geoRecommendations;
-                const calc = wizard.centralizedState?.calculated || {};
-                
-                // Define all opportunities
-                const opportunities = [
-                  {
-                    name: 'Peak Shaving',
-                    icon: '⚡',
-                    active: (geo?.profile?.avgDemandCharge || 0) > 10 || calc.totalPeakDemandKW > 100,
-                    value: geo?.profile?.avgDemandCharge ? `$${geo.profile.avgDemandCharge}/kW` : null,
-                    description: 'Reduce demand charges during peak periods',
-                    savings: '20-40% on demand charges',
-                  },
-                  {
-                    name: 'Energy Arbitrage',
-                    icon: '💱',
-                    active: (geo?.profile?.avgElectricityRate || 0) > 0.12,
-                    value: geo?.profile?.avgElectricityRate ? `$${geo.profile.avgElectricityRate.toFixed(3)}/kWh` : null,
-                    description: 'Buy energy at low rates, use during high rates',
-                    savings: '10-25% on energy costs',
-                  },
-                  {
-                    name: 'Grid Stability',
-                    icon: '🔌',
-                    active: (geo?.profile?.gridReliabilityScore || 100) < 80,
-                    value: geo?.profile?.gridReliabilityScore ? `${geo.profile.gridReliabilityScore}% reliable` : null,
-                    description: 'Protect against outages and voltage issues',
-                    savings: 'Avoid $10K-100K+ outage costs',
-                  },
-                  {
-                    name: 'Demand Response',
-                    icon: '📊',
-                    active: (geo?.profile?.avgDemandCharge || 0) > 15,
-                    value: null,
-                    description: 'Earn revenue by reducing load when grid is stressed',
-                    savings: '$50-200/kW/year in DR payments',
-                  },
-                ];
-                
-                const activeOpportunities = opportunities.filter(o => o.active);
-                const inactiveOpportunities = opportunities.filter(o => !o.active);
-                
-                return (
-                  <>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Based on your location and facility, here are your best energy savings opportunities:
-                    </p>
-                    
-                    {/* Active Opportunities */}
-                    {activeOpportunities.length > 0 && (
-                      <div className="space-y-3 mb-4">
-                        <div className="text-xs font-bold text-orange-600 uppercase tracking-wide">🔥 Hot Opportunities</div>
-                        {activeOpportunities.map((opp, i) => (
-                          <div key={i} className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-200">
-                            <div className="flex items-start gap-3">
-                              <Flame className="w-5 h-5 text-orange-500 fill-orange-500 flex-shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-gray-800">{opp.icon} {opp.name}</span>
-                                  {opp.value && (
-                                    <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
-                                      {opp.value}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-600 mt-1">{opp.description}</p>
-                                <p className="text-xs font-medium text-emerald-600 mt-1">💰 {opp.savings}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Inactive/Other Opportunities */}
-                    {inactiveOpportunities.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wide">Other Options</div>
-                        {inactiveOpportunities.map((opp, i) => (
-                          <div key={i} className="p-3 bg-gray-50 rounded-lg flex items-center gap-3">
-                            <Flame className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                            <div className="flex-1">
-                              <span className="text-sm text-gray-600">{opp.icon} {opp.name}</span>
-                              <p className="text-xs text-gray-400">{opp.description}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {activeOpportunities.length === 0 && (
-                      <div className="text-center py-4 text-gray-500">
-                        <p>Select a location to discover your energy opportunities</p>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-              
-              <button
-                onClick={() => setShowEnergyOpportunity(false)}
-                className="w-full mt-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold transition-colors hover:from-orange-600 hover:to-red-600"
               >
                 Got it!
               </button>

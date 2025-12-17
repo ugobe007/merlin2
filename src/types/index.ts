@@ -3,6 +3,35 @@
  * Centralized type definitions for user profiles, authentication, and team management
  */
 
+// Compare & Configure types (Step 3 - December 2025)
+export type {
+  MerlinRecommendation,
+  UserConfiguration,
+  CompareConfigState,
+  SliderConfig,
+  SliderRanges,
+  CompareConfigureSectionProps,
+  BESSApplication,
+  FinancialInputs,
+  FinancialResult,
+} from './compareConfig';
+
+// Magic Fit™ types (Step 4 - December 2025)
+export type {
+  ScenarioType,
+  ScenarioEquipment,
+  ScenarioFinancials,
+  ScenarioConfig,
+  Step3Config,
+  MagicFitSectionProps,
+  ScenarioCardProps,
+  SelectedConfigSummaryProps,
+  TrueQuoteVerificationProps,
+  ScenarioComparison,
+  ScenarioInputs,
+  CurrentConfig,
+} from './magicFit';
+
 export interface User {
   id: string;
   email: string;
@@ -268,3 +297,13 @@ export interface LogEntry {
   userId?: string;
   sessionId?: string;
 }
+
+// Savings Scout™ types
+export type {
+  OpportunityStatus,
+  Opportunity,
+  SavingsScoutProps,
+  StateUtilityData,
+  SolarResourceData,
+  SavingsScoutResult,
+} from './savingsScout';
