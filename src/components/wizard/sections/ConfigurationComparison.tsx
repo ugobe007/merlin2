@@ -24,6 +24,9 @@ import {
   TrendingUp,
   CheckCircle,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Home,
   Sparkles,
   Shield,
   Scale,
@@ -184,11 +187,27 @@ export function ConfigurationComparison({
           </div>
         )}
         
-        {/* Step indicator */}
-        <div className="text-center mb-6">
+        {/* Navigation - Back / Home */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <button
+              onClick={onBack} // Home goes back to hero
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </button>
+          </div>
           <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full text-purple-300 text-sm">
             <Sparkles className="w-4 h-4" />
-            Step 4 of 6
+            Step 3 of 5
           </span>
         </div>
         

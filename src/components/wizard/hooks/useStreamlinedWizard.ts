@@ -1209,25 +1209,25 @@ export function useStreamlinedWizard({
   // Dec 16, 2025 - Updated: Section 6 is now Quote Results
   // ═══════════════════════════════════════════════════════════════
   const handleAcceptAI = useCallback(() => {
-    console.log('✅ [AcceptAI] User accepted Merlin recommendation, skipping to Section 6 (Quote)');
+    console.log('✅ [AcceptAI] User accepted Merlin recommendation, skipping to Section 7 (Quote)');
     setUserQuoteChoice('accept');
     setShowAcceptCustomizeModal(false);
     
-    // Skip Section 5 (two-column sliders), go directly to Section 6 (final quote)
-    advanceToSection(6);
+    // Skip Section 6 (two-column sliders), go directly to Section 7 (final quote)
+    advanceToSection(7);
   }, [advanceToSection]);
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Handle Customize Configuration (Dec 14, 2025)
-  // Dec 16, 2025 - Updated: Section 5 is now Two-Column Comparison
+  // Dec 17, 2025 - FIXED: Section 6 is Two-Column sliders, not Section 5
   // ═══════════════════════════════════════════════════════════════
   const handleCustomize = useCallback(() => {
-    console.log('🎨 [Customize] User wants to customize, going to Section 5 (Two-Column)');
+    console.log('🎨 [Customize] User wants to customize, going to Section 6 (Two-Column Sliders)');
     setUserQuoteChoice('customize');
     setShowAcceptCustomizeModal(false);
     
-    // Go to Section 5 (two-column comparison for fine-tuning)
-    advanceToSection(5);
+    // Go to Section 6 (two-column comparison for fine-tuning with sliders)
+    advanceToSection(6);
   }, [advanceToSection]);
   
   // ═══════════════════════════════════════════════════════════════

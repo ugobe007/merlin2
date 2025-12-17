@@ -8,3 +8,4 @@
 export { WizardProgress, ProgressDot } from './WizardProgress';
 export { WizardNavButtons, BackButton, ContinueButton } from './WizardNavButtons';
 export { WizardTabs } from './WizardTabs';
+export { StepNavigation } from './StepNavigation';

@@ -64,7 +64,7 @@ export function WizardNavButtons({
       {showSkip && onSkip && (
         <button
           onClick={onSkip}
-          className="flex items-center gap-1 px-3 py-2 text-gray-400 hover:text-gray-600 text-sm transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-purple-300 hover:text-white text-sm transition-colors"
         >
           {skipLabel}
           <SkipForward className="w-4 h-4" />
@@ -98,7 +98,7 @@ export function BackButton({ onClick, label = 'Back', className = '' }: BackButt
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-colors ${className}`}
+      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors ${className}`}
     >
       <ArrowLeft className="w-4 h-4" />
       {label}
