@@ -999,30 +999,79 @@ export default function HotelEnergy() {
                 </div>
               </div>
 
-              {/* Energy Efficient - Compact Toggle */}
-              <div>
-                <label className="text-gray-400 text-xs mb-1 block">Energy Star Certified?</label>
-                <div className="flex gap-2">
+              {/* Divider */}
+              <div className="border-t border-white/10 my-3"></div>
+
+              {/* Amenities Section Header */}
+              <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Amenities (tap to toggle)
+              </p>
+
+              {/* Amenity Pills - 3 COLUMNS, COMPACT */}
+              <div className="grid grid-cols-3 gap-1.5 mb-3">
+                {[
+                  { key: 'hasPool', icon: '🏊', label: 'Pool', value: inputs.hasPool },
+                  { key: 'hasRestaurant', icon: '🍽️', label: 'Restaurant', value: inputs.hasRestaurant },
+                  { key: 'hasSpa', icon: '💆', label: 'Spa', value: inputs.hasSpa },
+                  { key: 'hasFitnessCenter', icon: '🏋️', label: 'Gym', value: inputs.hasFitnessCenter },
+                  { key: 'hasConferenceCenter', icon: '👔', label: 'Conf Ctr', value: inputs.hasConferenceCenter },
+                  { key: 'hasEVCharging', icon: '⚡', label: 'EV', value: inputs.hasEVCharging },
+                ].map((amenity) => (
                   <button
-                    onClick={() => setInputs({ ...inputs, isEnergyEfficient: true })}
-                    className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                      inputs.isEnergyEfficient 
-                        ? 'bg-emerald-500 text-white' 
-                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                    key={amenity.key}
+                    onClick={() => setInputs({ ...inputs, [amenity.key]: !amenity.value })}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${
+                      amenity.value 
+                        ? 'bg-emerald-500/80 text-white border border-emerald-400/50' 
+                        : 'bg-slate-700/60 text-gray-400 border border-slate-600/50 hover:bg-slate-600/80'
                     }`}
                   >
-                    ✓ Yes
+                    <span>{amenity.icon}</span>
+                    <span>{amenity.label}</span>
                   </button>
-                  <button
-                    onClick={() => setInputs({ ...inputs, isEnergyEfficient: false })}
-                    className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                      !inputs.isEnergyEfficient 
-                        ? 'bg-slate-600 text-white' 
-                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
-                    }`}
-                  >
-                    No
-                  </button>
+                ))}
+              </div>
+
+              {/* Elevators + Energy Star - TWO COLUMNS */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-400">🛗 Elevators</span>
+                    <span className="text-white font-bold">{inputs.elevatorCount}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    value={inputs.elevatorCount}
+                    onChange={(e) => setInputs({ ...inputs, elevatorCount: parseInt(e.target.value) })}
+                    className="w-full h-2 accent-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">Energy Star?</label>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setInputs({ ...inputs, isEnergyEfficient: true })}
+                      className={`flex-1 py-1 rounded text-xs font-bold transition-all ${
+                        inputs.isEnergyEfficient 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-slate-700 text-gray-400'
+                      }`}
+                    >
+                      ✓ Yes
+                    </button>
+                    <button
+                      onClick={() => setInputs({ ...inputs, isEnergyEfficient: false })}
+                      className={`flex-1 py-1 rounded text-xs font-bold transition-all ${
+                        !inputs.isEnergyEfficient 
+                          ? 'bg-slate-600 text-white' 
+                          : 'bg-slate-700 text-gray-400'
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
