@@ -20,12 +20,15 @@ import {
   Battery,
   CheckCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Crown,
   DollarSign,
   Download,
   FileSpreadsheet,
   FileText,
+  Home,
   Info,
   Mail,
   Phone,
@@ -179,16 +182,25 @@ export function QuoteResultsSection({
       className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${currentSection !== 7 ? 'hidden' : ''}`}
     >
       <div className="max-w-4xl mx-auto">
-        {/* Navigation */}
+        {/* Navigation - Back / Home / Start New */}
         <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Configuration
-          </button>
-          <div className="text-sm text-gray-400">Final Quote</div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <button
+              onClick={onBack} // Home goes back to hero
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </button>
+          </div>
+          <div className="text-sm text-gray-400">TrueQuote™ Results</div>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════

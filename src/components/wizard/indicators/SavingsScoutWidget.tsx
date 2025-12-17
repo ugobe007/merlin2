@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { ChevronDown, X, ExternalLink, Info } from 'lucide-react';
+import { ChevronDown, X, ExternalLink, Info, Wand2 } from 'lucide-react';
 import { getSavingsScoutResult, calculateSavingsOpportunities } from '@/services/savingsScoutCalculations';
 import type { SavingsScoutProps, Opportunity, OpportunityStatus } from '@/types/savingsScout';
 
@@ -142,7 +142,7 @@ export function SavingsScoutNavbar({
                    border-2 border-amber-300 rounded-full hover:shadow-lg transition-all
                    hover:from-amber-200 hover:to-amber-100"
       >
-        <span className="text-lg">🔭</span>
+        <Wand2 className="w-6 h-6 text-purple-600" />
         <span className="font-semibold text-amber-800">Savings Scout™</span>
         {highPriorityCount > 0 && (
           <span className="flex items-center justify-center w-6 h-6 bg-emerald-500 
@@ -173,7 +173,7 @@ export function SavingsScoutNavbar({
             <div className="bg-gradient-to-r from-amber-500 to-amber-400 px-5 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">🔭</span>
+                  <Wand2 className="w-8 h-8 text-white" />
                   <h3 className="font-bold text-white text-lg">Savings Scout™</h3>
                 </div>
                 <button 
@@ -285,7 +285,7 @@ export function SavingsScoutInline({
       <div className="bg-gradient-to-r from-amber-500 to-amber-400 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🔭</span>
+            <Wand2 className="w-10 h-10 text-white" />
             <div>
               <h3 className="font-bold text-white text-xl">Savings Scout™</h3>
               <p className="text-amber-100 text-sm">
@@ -394,7 +394,7 @@ export function SavingsScoutCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🔭</span>
+          <Wand2 className="w-8 h-8 text-purple-600" />
           <h3 className="font-bold text-amber-900 text-lg">Savings Scout™</h3>
         </div>
         {highPriorityCount > 0 && (

@@ -17,6 +17,8 @@ import {
   Building2, 
   CheckCircle, 
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Waves,
   Dumbbell,
   Utensils,
@@ -538,32 +540,51 @@ export function FacilityDetailsSectionV2({
           </div>
           
           {/* ════════════════════════════════════════════════════════════════
-              PROGRESS INDICATOR & CONTINUE BUTTON
-              Dec 17, 2025 - Removed auto-advance, always show Continue button
+              NAVIGATION - Back / Home / Next Step (Dec 17, 2025 Spec)
           ════════════════════════════════════════════════════════════════ */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center">
-              {/* Validation messages */}
-              {!isFormComplete() && (
-                <p className="text-gray-500 text-sm mb-4">
-                  {!wizardState.state && '📍 Select your state'}
-                  {wizardState.state && !(wizardState.useCaseData?.roomCount || wizardState.facilitySize) && '🏨 Enter property size'}
-                  {wizardState.state && (wizardState.useCaseData?.roomCount || wizardState.facilitySize > 0) && selectedAmenities.length === 0 && '✨ Select at least one amenity'}
-                </p>
-              )}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            {/* Validation messages */}
+            {!isFormComplete() && (
+              <p className="text-gray-400 text-sm mb-4 text-center">
+                {!wizardState.state && '📍 Select your state'}
+                {wizardState.state && !(wizardState.useCaseData?.roomCount || wizardState.facilitySize) && '🏨 Enter property size'}
+                {wizardState.state && (wizardState.useCaseData?.roomCount || wizardState.facilitySize > 0) && selectedAmenities.length === 0 && '✨ Select at least one amenity'}
+              </p>
+            )}
+            
+            {/* Success message when form is complete */}
+            {isFormComplete() && selectedAmenities.length > 0 && (
+              <p className="text-emerald-400 text-sm mb-4 flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Looking good! Click Next Step when ready.
+              </p>
+            )}
+            
+            {/* Navigation buttons - Back / Home / Next Step */}
+            <div className="flex items-center justify-between">
+              {/* Left side - Back and Home */}
+              <div className="flex gap-3">
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  Back
+                </button>
+                
+                <button
+                  onClick={onBack} // Home goes back to hero
+                  className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white rounded-xl border border-slate-600 transition-all"
+                >
+                  <Home className="w-5 h-5" />
+                  Home
+                </button>
+              </div>
               
-              {/* Success message when form is complete */}
-              {isFormComplete() && selectedAmenities.length > 0 && (
-                <p className="text-emerald-600 text-sm mb-4 flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Looking good! Click Continue when ready.
-                </p>
-              )}
-              
-              {/* Continue button - ALWAYS visible, disabled when form incomplete */}
+              {/* Right side - Next Step */}
               <button
                 onClick={() => {
-                  console.log('🚀 [FacilityV2] Continue clicked!', { 
+                  console.log('🚀 [FacilityV2] Next Step clicked!', { 
                     currentSection,
                     isFormComplete: isFormComplete(),
                     amenities: selectedAmenities.length,
@@ -571,9 +592,10 @@ export function FacilityDetailsSectionV2({
                   onContinue();
                 }}
                 disabled={!isFormComplete()}
-                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
-                Continue →
+                Next Step
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>

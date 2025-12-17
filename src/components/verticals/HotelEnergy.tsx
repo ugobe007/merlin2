@@ -1066,7 +1066,7 @@ export default function HotelEnergy() {
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
                     </div>
                     <p className="text-xs text-emerald-200/80">
-                      All costs traceable to 2 authoritative sources
+                      All costs traceable to 12+ authoritative sources
                     </p>
                     <button
                       onClick={() => setShowTrueQuoteModal(true)}

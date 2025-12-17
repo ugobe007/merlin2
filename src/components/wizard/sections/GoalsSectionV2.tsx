@@ -14,7 +14,7 @@
  */
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Car, Sun, Wind, Fuel, Zap, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Car, Sun, Wind, Fuel, Zap, Info, Home } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 
 // Import new high-fidelity UI components
@@ -528,50 +528,59 @@ export function GoalsSectionV2({
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
-            NAVIGATION BUTTONS
+            NAVIGATION - Back / Home / Next Step (Dec 17, 2025 Spec)
             ════════════════════════════════════════════════════════════════ */}
-        <div className="pt-6 space-y-3">
-          {/* Primary: Generate Scenarios */}
-          {onGenerateScenarios && (
-            <PrimaryButton
-              onClick={onGenerateScenarios}
+        <div className="mt-8 pt-6 border-t border-white/10">
+          {/* Primary: Generate Scenarios - Now integrated into Next Step */}
+          
+          {/* Navigation buttons - Back / Home / Next Step */}
+          <div className="flex items-center justify-between">
+            {/* Left side - Back and Home */}
+            <div className="flex gap-3">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Back
+              </button>
+              
+              <button
+                onClick={onBack} // Home returns to hotel energy
+                className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white rounded-xl border border-slate-600 transition-all"
+              >
+                <Home className="w-5 h-5" />
+                Home
+              </button>
+            </div>
+            
+            {/* Right side - Next Step (generates scenarios and advances) */}
+            <button
+              onClick={() => {
+                // Generate scenarios if available, then continue
+                if (onGenerateScenarios) {
+                  onGenerateScenarios();
+                }
+                onContinue();
+              }}
               disabled={isGeneratingScenarios}
-              icon={isGeneratingScenarios ? undefined : <Sparkles className="w-5 h-5" />}
-              iconPosition="left"
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
             >
               {isGeneratingScenarios ? (
-                <span className="flex items-center gap-2">
+                <>
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Generating Options...
-                </span>
+                  Processing...
+                </>
               ) : (
-                'See My Options'
+                <>
+                  Next Step
+                  <ChevronRight className="w-5 h-5" />
+                </>
               )}
-            </PrimaryButton>
-          )}
-          
-          {/* Back / Continue buttons */}
-          <div className="flex gap-4">
-            <SecondaryButton
-              onClick={onBack}
-              icon={<ChevronLeft className="w-5 h-5" />}
-              iconPosition="left"
-              className="w-auto"
-            >
-              Back
-            </SecondaryButton>
-            
-            <SecondaryButton
-              onClick={onContinue}
-              icon={<ChevronRight className="w-5 h-5" />}
-              iconPosition="right"
-              className="flex-1"
-            >
-              Skip to Custom Configuration
-            </SecondaryButton>
+            </button>
           </div>
         </div>
       </div>

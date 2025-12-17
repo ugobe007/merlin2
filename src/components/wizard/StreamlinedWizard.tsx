@@ -19,7 +19,7 @@
  */
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator, Search } from 'lucide-react';
+import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator, Search, Home, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Modular components
 import { useStreamlinedWizard } from './hooks';
@@ -425,6 +425,109 @@ export default function StreamlinedWizard({
           </div>
         </div>
       </header>
+
+      {/* HAMBURGER MENU SIDEBAR - Dec 17, 2025 */}
+      {showSidebarMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+            onClick={() => setShowSidebarMenu(false)}
+          />
+          {/* Sidebar Panel */}
+          <div className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 z-[9999] shadow-2xl border-r border-purple-500/30">
+            {/* Header */}
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
+                  <span className="font-bold text-white text-lg">Merlin Energy</span>
+                </div>
+                <button
+                  onClick={() => setShowSidebarMenu(false)}
+                  className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Navigation Links */}
+            <nav className="p-4 space-y-2">
+              {/* Home */}
+              <button
+                onClick={() => {
+                  setShowSidebarMenu(false);
+                  window.location.href = '/';
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-all"
+              >
+                <Home className="w-5 h-5 text-purple-400" />
+                <span className="font-medium">Home</span>
+              </button>
+              
+              {/* Hotel Energy */}
+              <button
+                onClick={() => {
+                  setShowSidebarMenu(false);
+                  window.location.href = '/hotel-energy';
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-all"
+              >
+                <Building2 className="w-5 h-5 text-indigo-400" />
+                <span className="font-medium">Hotel Energy</span>
+              </button>
+              
+              {/* Divider */}
+              <div className="border-t border-white/10 my-4" />
+              
+              {/* Wizard Sections */}
+              <p className="text-xs text-purple-300 uppercase tracking-wider px-4 mb-2">Wizard Steps</p>
+              
+              {['Location', 'Industry', 'Facility Details', 'Goals', 'Configuration', 'Quote'].map((step, index) => (
+                <button
+                  key={step}
+                  onClick={() => {
+                    setShowSidebarMenu(false);
+                    wizard.advanceToSection(index);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all ${
+                    wizard.currentSection === index
+                      ? 'bg-purple-600/40 text-white'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    wizard.currentSection === index
+                      ? 'bg-purple-500 text-white'
+                      : wizard.currentSection > index
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white/20 text-white/60'
+                  }`}>
+                    {wizard.currentSection > index ? '✓' : index + 1}
+                  </span>
+                  <span className="font-medium">{step}</span>
+                </button>
+              ))}
+              
+              {/* Divider */}
+              <div className="border-t border-white/10 my-4" />
+              
+              {/* Close Wizard */}
+              <button
+                onClick={() => {
+                  setShowSidebarMenu(false);
+                  onClose?.();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-red-500/10 rounded-xl transition-all"
+              >
+                <X className="w-5 h-5" />
+                <span className="font-medium">Close Wizard</span>
+              </button>
+            </nav>
+          </div>
+        </>
+      )}
 
       {/* Main Content - FULL WIDTH (sidebar removed Dec 17, 2025) */}
       <div className="h-full pt-16">

@@ -370,12 +370,12 @@ export function GoalsSection({
             </button>
           )}
           
-          {/* Secondary: Skip to custom config */}
+          {/* Secondary: Continue to config */}
           <button
             onClick={onContinue}
-            className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+            className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white/90 hover:text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
           >
-            Skip to Custom Configuration <ArrowRight className="w-4 h-4" />
+            Continue to Configuration <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

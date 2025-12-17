@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, ChevronLeft, Home, Building } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import type { ScenarioConfig, ScenarioGeneratorResult } from '@/services/scenarioGenerator';
 import { ScenarioExplainerModal } from '../modals/ScenarioExplainerModal';
@@ -151,15 +151,24 @@ export function ScenarioSection({
         className="min-h-[calc(100vh-120px)] p-4 md:p-8"
       >
         <div className="max-w-5xl mx-auto">
-          {/* Header */}
+          {/* Header with Back/Home */}
           <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Preferences
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+              <button
+                onClick={onBack} // Home goes back to hero
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </button>
+            </div>
             <button
               onClick={() => setShowExplainer(true)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
@@ -386,7 +395,7 @@ export function ScenarioSection({
                 })}
               </div>
 
-              {/* Continue Button */}
+              {/* Continue Button - Generate TrueQuote™ */}
               <div className="flex justify-center">
                 <button
                   onClick={handleContinue}
@@ -394,15 +403,15 @@ export function ScenarioSection({
                   className={`
                     px-8 py-4 rounded-xl font-bold text-lg transition-all flex items-center gap-2
                     ${wizardState.selectedScenario
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl'
                       : 'bg-slate-700 text-slate-400 cursor-not-allowed'
                     }
                   `}
                 >
                   {wizardState.selectedScenario ? (
                     <>
-                      See My Quote
-                      <ArrowRight className="w-5 h-5" />
+                      Generate TrueQuote™
+                      <ChevronRight className="w-5 h-5" />
                     </>
                   ) : (
                     'Select an Option to Continue'
