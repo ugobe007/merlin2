@@ -37,6 +37,8 @@ interface ScenarioSectionProps {
   powerCoverage: number;
   /** Navigate to Advanced Quote Builder for pro users */
   onOpenAdvanced?: () => void;
+  /** Dec 16, 2025: Callback when user selects a scenario - triggers AcceptCustomizeModal */
+  onSelectScenario?: (scenario: ScenarioConfig) => void;
 }
 
 export function ScenarioSection({
@@ -52,6 +54,7 @@ export function ScenarioSection({
   peakDemandKW,
   powerCoverage,
   onOpenAdvanced,
+  onSelectScenario,
 }: ScenarioSectionProps) {
   const [showExplainer, setShowExplainer] = useState(false);
   const [hasSeenExplainer, setHasSeenExplainer] = useState(false);
@@ -107,7 +110,14 @@ export function ScenarioSection({
       durationHours: scenario.durationHours,
       solarKW: scenario.solarKW,
       generatorKW: scenario.generatorKW,
+      // Also store quoteResult from scenario for AcceptCustomizeModal
+      quoteResult: scenario.quoteResult,
     }));
+    
+    // Dec 16, 2025: Call parent callback to trigger AcceptCustomizeModal
+    if (onSelectScenario) {
+      onSelectScenario(scenario);
+    }
   };
 
   const handleContinue = () => {
@@ -163,7 +173,7 @@ export function ScenarioSection({
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
               <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 font-medium">Step 5 of 6</span>
+              <span className="text-purple-300 font-medium">Step 4 of 5</span>
             </div>
             <h2 className="text-3xl font-bold text-white mb-2">
               Your Savings Options

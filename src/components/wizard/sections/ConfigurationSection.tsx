@@ -17,9 +17,9 @@ import {
   Settings, Clock, Zap, CheckCircle, AlertTriangle, TrendingDown, Info, X, Shield, Wand2
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
-import PowerGapIndicator from '../PowerGapIndicator';
+import PowerGapIndicator from '../indicators/PowerGapIndicator';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
-import { MerlinWizardModal } from '../guided-flow/MerlinWizardModal';
+// MerlinWizardModal removed - file no longer exists
 import merlinImage from '@/assets/images/new_Merlin.png';
 
 interface ConfigurationSectionProps {
@@ -192,7 +192,7 @@ export function ConfigurationSection({
         />
       )}
       
-      {/* Merlin Energy Wizard Modal - Step-by-step guided configuration */}
+      {/* Merlin Energy Wizard Modal - DISABLED: MerlinWizardModal component no longer exists
       {showMerlinWizard && (
         <MerlinWizardModal
           isOpen={showMerlinWizard}
@@ -204,6 +204,7 @@ export function ConfigurationSection({
           powerCoverage={powerCoverage}
         />
       )}
+      */}
     </div>
   );
 }
@@ -222,7 +223,7 @@ function SectionHeader({ onBack }: { onBack: () => void }) {
         <ArrowLeft className="w-4 h-4" />
         Back to Goals
       </button>
-      <div className="text-sm text-gray-400">Step 5 of 6</div>
+      <div className="text-sm text-gray-400">Step 4 of 5</div>
     </div>
   );
 }
@@ -243,7 +244,13 @@ function CostSummaryBar({ wizardState }: { wizardState: WizardState }) {
       
       <div className="relative flex flex-col lg:flex-row items-center justify-between gap-4">
         <div className="text-center lg:text-left">
-          <p className="text-purple-600 text-sm font-semibold uppercase tracking-wider">Estimated Project Cost</p>
+          <div className="flex items-center gap-2 justify-center lg:justify-start">
+            <p className="text-purple-600 text-sm font-semibold uppercase tracking-wider">Estimated Project Cost</p>
+            <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
+              <CheckCircle className="w-3 h-3" />
+              TrueQuote™
+            </span>
+          </div>
           <p className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 drop-shadow-sm">
             ${wizardState.estimatedCost.total >= 1000000 
               ? (wizardState.estimatedCost.total / 1000000).toFixed(2) + 'M' 
@@ -551,40 +558,17 @@ function ReviewCustomizePanel({ wizardState, setWizardState, centralizedState, o
       {centralizedState.calculated.recommendedBatteryKW > 0 && (
         <div className="mt-6">
           <PowerGapIndicator
-            selectedPowerKW={wizardState.batteryKW}
-            selectedEnergyKWh={wizardState.batteryKWh}
-            selectedDurationHours={wizardState.durationHours}
-            neededPowerKW={centralizedState.calculated.recommendedBatteryKW}
-            neededEnergyKWh={centralizedState.calculated.recommendedBatteryKWh}
-            neededDurationHours={centralizedState.calculated.recommendedBackupHours || 4}
+            peakDemandKW={centralizedState.calculated.totalPeakDemandKW || centralizedState.calculated.recommendedBatteryKW * 2}
+            batteryKW={wizardState.batteryKW}
+            solarKW={wizardState.solarKW || 0}
+            generatorKW={wizardState.generatorKW || 0}
+            gridConnection={wizardState.gridConnection as 'on-grid' | 'off-grid' | 'limited'}
             showDetails={true}
-            showResolutionOptions={true}
-            useCaseName={wizardState.industryName || 'your facility'}
-            onAcceptRecommendation={(type) => {
-              if (type === 'optimal_mix' || type === 'upgrade_battery') {
-                setWizardState(prev => ({
-                  ...prev,
-                  batteryKW: centralizedState.calculated.recommendedBatteryKW || prev.batteryKW,
-                  batteryKWh: centralizedState.calculated.recommendedBatteryKWh || prev.batteryKWh,
-                  durationHours: centralizedState.calculated.recommendedBackupHours || prev.durationHours,
-                }));
-              } else if (type === 'add_solar') {
-                const gap = Math.max(0, (centralizedState.calculated.recommendedBatteryKW || 0) - wizardState.batteryKW);
-                setWizardState(prev => ({
-                  ...prev,
-                  wantsSolar: true,
-                  solarKW: Math.round(gap * 1.2),
-                }));
-              } else if (type === 'add_generator') {
-                const gap = Math.max(0, (centralizedState.calculated.recommendedBatteryKW || 0) - wizardState.batteryKW);
-                setWizardState(prev => ({
-                  ...prev,
-                  wantsGenerator: true,
-                  generatorKW: Math.round(gap),
-                }));
-              }
+            onConfigureClick={() => {
+              // Jump to battery configuration
+              const batterySection = document.getElementById('battery-config');
+              batterySection?.scrollIntoView({ behavior: 'smooth' });
             }}
-            onShowExplainer={onShowPowerProfileExplainer}
           />
         </div>
       )}

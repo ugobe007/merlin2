@@ -447,9 +447,10 @@ export default function HeroSection({
                 style={{
                   boxShadow: '0 0 40px rgba(102,126,234,0.6), 0 0 80px rgba(118,75,162,0.4), 0 8px 32px rgba(0,0,0,0.3)'
                 }}
+                aria-label="Start Saving with SmartWizard"
               >
-                {/* Floating glow ring */}
-                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-600 via-cyan-400 to-emerald-500 rounded-full blur-xl opacity-60" />
+                {/* Floating glow ring - sky-300 blue-500 gradient for Three Pillars validation */}
+                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-600 via-sky-300 via-cyan-400 via-blue-500 to-emerald-500 rounded-full blur-xl opacity-60" />
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
                 <span className="relative flex items-center justify-center gap-2 text-white">
@@ -485,10 +486,11 @@ export default function HeroSection({
                 </button>
               </div>
 
-              {/* How it Works - with wizard icon */}
+              {/* How it Works - with wizard icon - Merlin Magic tooltip */}
               <button 
-                onClick={() => setShowHowItWorks(true)}
-                className="flex items-center gap-3 text-purple-300 hover:text-amber-300 transition-colors"
+                onClick={() => setShowAbout(true)}
+                className="flex items-center gap-3 text-purple-300 hover:text-amber-300 transition-colors cursor-pointer"
+                title="Merlin Magic"
               >
                 <img src={merlinImage} alt="" className="w-6 h-6" />
                 <span>See how Merlin works his magic</span>
@@ -1125,7 +1127,7 @@ export default function HeroSection({
             {/* Data Center */}
             <div 
               className="group cursor-pointer"
-              onClick={() => setShowSmartWizard(true)}
+              onClick={() => { console.log('Data Center card clicked'); setShowSmartWizard(true); }}
             >
               <div 
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
@@ -1177,7 +1179,7 @@ export default function HeroSection({
             {/* Hotel */}
             <div 
               className="group cursor-pointer"
-              onClick={() => setShowSmartWizard(true)}
+              onClick={() => { console.log('Hotel card clicked'); setShowSmartWizard(true); }}
             >
               <div 
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
@@ -1225,7 +1227,7 @@ export default function HeroSection({
             {/* EV Charging */}
             <div 
               className="group cursor-pointer"
-              onClick={() => setShowSmartWizard(true)}
+              onClick={() => { console.log('EV Charging card clicked'); setShowSmartWizard(true); }}
             >
               <div 
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"

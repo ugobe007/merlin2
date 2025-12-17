@@ -9,7 +9,13 @@
 
 import React, { useState } from 'react';
 import { Zap, AlertCircle, CheckCircle, X, Info, HelpCircle } from 'lucide-react';
-import { formatPowerMW } from '../steps_v3/modules/PowerCalculations';
+import { formatPower } from '../constants/wizardConstants';
+
+// Helper to format MW values (converts kW input to readable format)
+const formatPowerMW = (mw: number): string => {
+  const kw = mw * 1000;
+  return formatPower(kw);
+};
 
 /**
  * Power Explanation Modal - Explains what the numbers mean

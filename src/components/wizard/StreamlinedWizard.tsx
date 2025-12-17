@@ -29,11 +29,12 @@ import {
   WelcomeLocationSection,
   IndustrySection,
   FacilityDetailsSection,
+  FacilityDetailsSectionV2,
   GoalsSection,
-  ConfigurationSection,
   QuoteResultsSection,
   ScenarioComparison,
   ScenarioSection,
+  ConfigurationComparison,
 } from './sections';
 import ScenarioSectionV2 from './sections/ScenarioSectionV2';
 import { ConfigurationConfirmModal } from './modals';
@@ -508,28 +509,52 @@ export default function StreamlinedWizard({
             />
 
             {/* Section 2: Facility Details */}
-            <FacilityDetailsSection
-              wizardState={wizard.wizardState}
-              setWizardState={wizard.setWizardState}
-              currentSection={wizard.currentSection}
-              initializedFromVertical={wizard.initializedFromVertical}
-              sectionRef={(el) => { sectionRefs.current[2] = el; }}
-              onBack={() => wizard.advanceToSection(1)}
-              onContinue={() => {
-                wizard.completeSection('facility');
-                // Go to Goals/Preferences (Section 3) FIRST
-                wizard.advanceToSection(3);
-              }}
-            />
+            {/* Use V2 for hotel vertical (smart dropdowns + pill buttons) */}
+            {wizard.wizardState.selectedIndustry === 'hotel' ? (
+              <FacilityDetailsSectionV2
+                wizardState={wizard.wizardState}
+                setWizardState={wizard.setWizardState}
+                currentSection={wizard.currentSection}
+                initializedFromVertical={wizard.initializedFromVertical}
+                sectionRef={(el) => { sectionRefs.current[2] = el; }}
+                onBack={() => wizard.advanceToSection(1)}
+                onContinue={() => {
+                  wizard.completeSection('facility');
+                  // Go to Goals/Preferences (Section 3)
+                  wizard.advanceToSection(3);
+                }}
+              />
+            ) : (
+              <FacilityDetailsSection
+                wizardState={wizard.wizardState}
+                setWizardState={wizard.setWizardState}
+                currentSection={wizard.currentSection}
+                initializedFromVertical={wizard.initializedFromVertical}
+                sectionRef={(el) => { sectionRefs.current[2] = el; }}
+                onBack={() => wizard.advanceToSection(1)}
+                onContinue={() => {
+                  wizard.completeSection('facility');
+                  // Go to Goals/Preferences (Section 3)
+                  wizard.advanceToSection(3);
+                }}
+              />
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════
-                MAGIC FIT FLOW (Dec 2025):
-                Section 3: GOALS/PREFERENCES - User tells us what matters
-                Section 4: SAVINGS OPTIONS - Magic Fit generates tailored scenarios
-                Section 5: QUOTE RESULTS - Final savings estimate
+                MAGIC FIT FLOW (Dec 16, 2025 - CORRECTED):
                 
-                Why this order? User's preferences INFORM the scenario generation.
-                "What matters to you?" → "Here are 3 ways to save based on YOUR priorities"
+                Section 3: GOALS/PREFERENCES - User tells us what matters
+                Section 4: MAGIC FIT (3 cards) - "Here are 3 ways to save"
+                    → User picks: Savings Focus, Balanced, or Resilient
+                    → selectScenario() triggers AcceptCustomizeModal
+                Section 5: TWO-COLUMN (if Customize) - Fine-tune the details
+                Section 6: QUOTE RESULTS - Final savings estimate
+                
+                Why this order? 
+                1. User preferences INFORM scenario generation
+                2. Magic Fit presents 3 strategies to CHOOSE from
+                3. AcceptCustomizeModal offers Accept (skip) or Customize (fine-tune)
+                4. Two-column lets user adjust within chosen strategy
             ═══════════════════════════════════════════════════════════════ */}
             
             {/* Section 3: GOALS/PREFERENCES (BEFORE Magic Fit) */}
@@ -543,11 +568,21 @@ export default function StreamlinedWizard({
               const totalConfiguredKW = batteryKW + solarKW + generatorKW;
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 100;
               
-              // Pass calculated recommendation from SSOT
+              // Dec 16, 2025 - SSOT FIX: Use calculated financial estimates instead of hardcoded values
+              // Financial estimates now come from QuoteEngine.quickEstimate() via useWizardState
+              const annualSavings = calc.estimatedAnnualSavings || 0;
+              const paybackYears = calc.estimatedPaybackYears || 0;
+              const estimatedCost = calc.estimatedCost || 0;
+              // ROI = (10yr savings - cost) / cost * 100
+              const roi10Year = estimatedCost > 0 
+                ? Math.round(((annualSavings * 10) - estimatedCost) / estimatedCost * 100)
+                : 0;
+              
+              // Pass calculated recommendation from SSOT (no more hardcoded values!)
               const merlinRecommendation = calc.recommendedBatteryKW ? {
                 batteryKW: calc.recommendedBatteryKW || 0,
                 batteryKWh: calc.recommendedBatteryKWh || 0,
-                durationHours: 4,
+                durationHours: calc.recommendedBackupHours || 4,
                 solarKW: calc.recommendedSolarKW || 0,
                 windKW: 0,
                 generatorKW: Math.round(peakDemandKW * 0.25),
@@ -556,9 +591,10 @@ export default function StreamlinedWizard({
                 totalProductionKW: (calc.recommendedBatteryKW || 0) + (calc.recommendedSolarKW || 0),
                 totalStorageKWh: calc.recommendedBatteryKWh || 0,
                 dailyProductionKWh: Math.round((calc.recommendedSolarKW || 0) * 4.5),
-                annualSavings: Math.round(peakDemandKW * 150),
-                paybackYears: 3.5,
-                roi10Year: 285,
+                // SSOT values - no more hardcoded 3.5 years or 285% ROI!
+                annualSavings: annualSavings,
+                paybackYears: paybackYears,
+                roi10Year: roi10Year,
                 currency: 'USD',
               } : undefined;
               
@@ -571,10 +607,10 @@ export default function StreamlinedWizard({
                   sectionRef={(el) => { sectionRefs.current[3] = el; }}
                   onBack={() => wizard.advanceToSection(2)}
                   onContinue={() => {
-                    // After user tells us preferences, generate tailored scenarios
-                    console.log('🎯 [GOALS] Continue clicked - generating Magic Fit scenarios');
+                    // Dec 16, 2025 - Go to Configuration Comparison (Section 4)
+                    console.log('🎯 [GOALS] Continue clicked - going to Config Comparison');
                     wizard.completeSection('preferences');
-                    wizard.advanceToSection(4); // Go to Magic Fit (Scenarios)
+                    wizard.advanceToSection(4); // Config Comparison (User vs Merlin)
                   }}
                   onGenerateScenarios={wizard.generateAllScenarios}
                   isGeneratingScenarios={wizard.isGeneratingScenarios}
@@ -585,8 +621,24 @@ export default function StreamlinedWizard({
               ) : null;
             })()}
 
-            {/* Section 4: TWO-COLUMN COMPARISON (AFTER Goals) */}
-            {/* Dec 15, 2025 - Redesigned: Merlin's Recommendation vs User Configuration */}
+            {/* Section 4: CONFIGURATION COMPARISON (User vs Merlin) - NEW Dec 16, 2025 */}
+            {/* Shows side-by-side: User's config (from Goals) vs Merlin's AI recommendation */}
+            <ConfigurationComparison
+              wizardState={wizard.wizardState}
+              setWizardState={wizard.setWizardState}
+              centralizedState={wizard.centralizedState}
+              currentSection={wizard.currentSection}
+              sectionRef={(el) => { sectionRefs.current[4] = el; }}
+              onBack={() => wizard.advanceToSection(3)}
+              onContinue={() => {
+                // After selecting a config, go to Scenario Planner (3 cards)
+                console.log('🎯 [CONFIG COMPARISON] Config selected - going to Scenario Planner');
+                wizard.advanceToSection(5);
+              }}
+            />
+
+            {/* Section 5: MAGIC FIT / SCENARIO PLANNER (3 Cards) - Pick your strategy */}
+            {/* Dec 16, 2025 - REPOSITIONED: Now AFTER Config Comparison */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
               const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
@@ -596,17 +648,51 @@ export default function StreamlinedWizard({
               const totalConfiguredKW = batteryKW + solarKW + generatorKW;
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
               
-              return (
+              return wizard.currentSection === 5 ? (
+                <ScenarioSection
+                  wizardState={wizard.wizardState}
+                  setWizardState={wizard.setWizardState}
+                  currentSection={5}
+                  sectionRef={(el) => { sectionRefs.current[5] = el; }}
+                  onBack={() => wizard.advanceToSection(4)}
+                  onContinue={() => {
+                    // After selecting a Magic Fit strategy, go to fine-tuning or quote
+                    console.log('🎯 [SCENARIO PLANNER] Strategy selected');
+                    wizard.advanceToSection(6);
+                  }}
+                  scenarioResult={wizard.wizardState.scenarioResult}
+                  isGenerating={wizard.isGeneratingScenarios}
+                  onGenerateScenarios={wizard.generateAllScenarios}
+                  peakDemandKW={peakDemandKW}
+                  powerCoverage={powerCoverage}
+                  onOpenAdvanced={onOpenAdvanced}
+                  onSelectScenario={wizard.selectScenario}
+                />
+              ) : null;
+            })()}
+
+            {/* Section 6: TWO-COLUMN FINE-TUNING (Optional - if user chose "Customize") */}
+            {/* Dec 16, 2025 - RENUMBERED: Now Section 6 (was Section 5) */}
+            {(() => {
+              const calc = wizard.centralizedState?.calculated || {};
+              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
+              const batteryKW = wizard.wizardState.batteryKW || 0;
+              const solarKW = wizard.wizardState.solarKW || 0;
+              const generatorKW = wizard.wizardState.generatorKW || 0;
+              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
+              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
+              
+              return wizard.currentSection === 6 ? (
                 <ScenarioSectionV2
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
-                  currentSection={wizard.currentSection}
-                  sectionRef={(el) => { sectionRefs.current[4] = el; }}
-                  onBack={() => wizard.advanceToSection(3)}
+                  currentSection={6}
+                  sectionRef={(el) => { sectionRefs.current[6] = el; }}
+                  onBack={() => wizard.advanceToSection(5)}
                   onContinue={() => {
-                    // After selecting config, show confirmation before quote
-                    wizard.completeSection('savings');
-                    setShowConfigConfirmModal(true);
+                    // After fine-tuning, go to final quote
+                    wizard.completeSection('configuration');
+                    wizard.advanceToSection(7);
                   }}
                   scenarioResult={wizard.wizardState.scenarioResult}
                   isGenerating={wizard.isGeneratingScenarios}
@@ -615,18 +701,18 @@ export default function StreamlinedWizard({
                   powerCoverage={powerCoverage}
                   onOpenAdvanced={onOpenAdvanced}
                 />
-              );
+              ) : null;
             })()}
 
-            {/* Section 5: Quote Results */}
+            {/* Section 7: Quote Results - RENUMBERED (was Section 6) */}
             <QuoteResultsSection
               wizardState={wizard.wizardState}
               setWizardState={wizard.setWizardState}
               currentSection={wizard.currentSection}
-              sectionRef={(el) => { sectionRefs.current[5] = el; }}
+              sectionRef={(el) => { sectionRefs.current[7] = el; }}
               premiumConfig={wizard.premiumConfig}
               premiumComparison={wizard.premiumComparison}
-              onBack={() => wizard.advanceToSection(4)}
+              onBack={() => wizard.advanceToSection(wizard.userQuoteChoice === 'customize' ? 6 : 5)}
               onStartNew={() => {
                 wizard.setCurrentSection(0);
                 wizard.setCompletedSections([]);

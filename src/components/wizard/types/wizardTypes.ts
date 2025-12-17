@@ -101,6 +101,10 @@ export interface WizardState {
   wantsSolar: boolean;
   wantsSolarCanopy: boolean;  // Solar parking canopy (Dec 2025)
   solarCanopySpaces: number;  // Number of parking spaces covered by canopy
+  
+  // Existing solar (Dec 2025 - capture before recommending new)
+  hasExistingSolar: boolean | null;
+  existingSolarKW: number;
   wantsWind: boolean;
   wantsGenerator: boolean;
   wantsBackupPower: boolean;
@@ -327,7 +331,11 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
   goals: [],
   wantsSolar: false,
   wantsSolarCanopy: false,  // Solar parking canopy (Dec 2025)
-  solarCanopySpaces: 0,     // Parking spaces covered
+  solarCanopySpaces: 0,
+  
+  // Existing solar (Dec 2025)
+  hasExistingSolar: null,
+  existingSolarKW: 0,     // Parking spaces covered
   wantsWind: false,
   wantsGenerator: false,
   wantsBackupPower: false,

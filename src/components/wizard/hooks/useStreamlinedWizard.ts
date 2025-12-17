@@ -356,6 +356,23 @@ export function useStreamlinedWizard({
         // Load custom questions for this use case
         const questions = await useCaseService.getCustomQuestionsByUseCaseId(useCase.id);
         
+        // Map boolean amenity flags from hero calculator to selectedAmenities array
+        // This ensures FacilityDetailsSectionV2 pill buttons are pre-selected
+        const mappedInitialData = { ...(initialData || {}) };
+        if (initialData && !initialData.selectedAmenities) {
+          const amenities: string[] = [];
+          if (initialData.hasPool) amenities.push('outdoor_pool');
+          if (initialData.hasRestaurant) amenities.push('restaurant');
+          if (initialData.hasSpa) amenities.push('spa');
+          if (initialData.hasFitnessCenter) amenities.push('fitness_center');
+          if (initialData.hasLaundry) amenities.push('laundry');
+          if (initialData.hasEVCharging) amenities.push('ev_charging');
+          if (initialData.hasConferenceCenter) amenities.push('conference_center');
+          if (amenities.length > 0) {
+            mappedInitialData.selectedAmenities = amenities;
+          }
+        }
+        
         setWizardState(prev => ({
           ...prev,
           selectedIndustry: useCase.slug,
@@ -363,7 +380,9 @@ export function useStreamlinedWizard({
           useCaseId: useCase.id,
           customQuestions: questions || [],
           state: initialState || prev.state,
-          useCaseData: initialData || {},
+          useCaseData: mappedInitialData,
+          // Also populate facilitySize for room count
+          facilitySize: initialData?.roomCount || prev.facilitySize,
         }));
         
         // Mark location and industry as complete
@@ -535,6 +554,42 @@ export function useStreamlinedWizard({
       // Apply multipliers: Subtype affects base load, Tier affects equipment capacity
       peakDemandKW = Math.round(peakDemandKW * subtypeMultiplier * tierMultiplier);
       
+      // ═══════════════════════════════════════════════════════════════
+      // EV CHARGER LOAD (Dec 16, 2025 - Add EV load to peak demand)
+      // Include both existing and new EV chargers in the power calculation
+      // Uses 40% concurrency factor (not all chargers run at peak)
+      // ═══════════════════════════════════════════════════════════════
+      const EV_CONCURRENCY_FACTOR = 0.40;
+      const existingEVLoadKW = (
+        (wizardState.existingEVL1 || 0) * 1.4 +
+        (wizardState.existingEVL2 || 0) * 11 +
+        (wizardState.existingEVL3 || 0) * 100
+      ) * EV_CONCURRENCY_FACTOR;
+      
+      const newEVLoadKW = (
+        (wizardState.evChargersL2 || 0) * 11 +
+        (wizardState.evChargersDCFC || 0) * 100 +
+        (wizardState.evChargersHPC || 0) * 350
+      ) * EV_CONCURRENCY_FACTOR;
+      
+      // Add EV load to peak demand
+      peakDemandKW += Math.round(existingEVLoadKW + newEVLoadKW);
+      
+      if (import.meta.env.DEV && (existingEVLoadKW > 0 || newEVLoadKW > 0)) {
+        console.log('⚡🔌 [EV LOAD] Added to peak demand:', {
+          existingEVL1: wizardState.existingEVL1,
+          existingEVL2: wizardState.existingEVL2,
+          existingEVL3: wizardState.existingEVL3,
+          newL2: wizardState.evChargersL2,
+          newDCFC: wizardState.evChargersDCFC,
+          newHPC: wizardState.evChargersHPC,
+          existingEVLoadKW: Math.round(existingEVLoadKW),
+          newEVLoadKW: Math.round(newEVLoadKW),
+          totalAddedKW: Math.round(existingEVLoadKW + newEVLoadKW),
+          finalPeakKW: peakDemandKW,
+        });
+      }
+      
       if (import.meta.env.DEV && (subtypeMultiplier !== 1.0 || tierMultiplier !== 1.0)) {
         console.log('📊 [MULTIPLIERS] Applied:', {
           subtype: wizardState.facilitySubtype,
@@ -584,6 +639,7 @@ export function useStreamlinedWizard({
       setCentralizedState((prev: any) => ({
         ...prev,
         calculated: {
+          ...prev.calculated, // CRITICAL: Preserve financial estimates from useWizardState!
           totalPeakDemandKW: peakDemandKW,
           recommendedBatteryKW,
           recommendedBatteryKWh,
@@ -664,16 +720,24 @@ export function useStreamlinedWizard({
           monthlyKWh = dailyKWh * 30;
           
           // Store extracted data for quote generation (solar, EV, backup, etc.)
+          // Dec 16, 2025 - CRITICAL FIX: Also sync to fields that sync effects read
           setWizardState(prev => ({
             ...prev,
+            // Facility size from questionnaire - FIXES "25,000 rooms" badge bug
+            facilitySize: hotelMapped.ssotInput.roomCount || prev.facilitySize,
             // Solar from questionnaire
             existingSolarKW: hotelMapped.extractedData.existingSolarKW,
             wantsSolar: hotelMapped.extractedData.wantsSolar,
             targetSolarKW: hotelMapped.extractedData.targetSolarKW,
-            // EV from questionnaire
+            solarKW: hotelMapped.extractedData.wantsSolar ? (hotelMapped.extractedData.targetSolarKW || 0) : prev.solarKW,
+            hasExistingSolar: hotelMapped.extractedData.existingSolarKW > 0,
+            // EV from questionnaire - SYNC TO L2 FIELDS for sync effect!
             existingEVChargers: hotelMapped.extractedData.existingEVChargers,
             wantsEVCharging: hotelMapped.extractedData.wantsEVCharging,
             targetEVChargers: hotelMapped.extractedData.targetEVChargers,
+            // Dec 16, 2025 - Map to L2 fields so sync effect can propagate to centralized state
+            existingEVL2: hotelMapped.extractedData.existingEVChargers || 0,
+            evChargersL2: hotelMapped.extractedData.targetEVChargers || 0,
             // Backup from questionnaire
             durationHours: hotelMapped.extractedData.backupDurationHours,
             hasExistingGenerator: hotelMapped.extractedData.hasExistingGenerator,
@@ -769,6 +833,39 @@ export function useStreamlinedWizard({
         monthlyKWh = data.monthlyKWh || dailyKWh * 30;
       }
       
+      // ═══════════════════════════════════════════════════════════════
+      // EV CHARGER LOAD (Dec 16, 2025 - Add EV load to peak demand)
+      // Include both existing and new EV chargers in the power calculation
+      // Uses 40% concurrency factor (not all chargers run at peak)
+      // This is the Section 3 RECALC effect
+      // ═══════════════════════════════════════════════════════════════
+      const EV_CONCURRENCY_FACTOR = 0.40;
+      const existingEVLoadKW = (
+        (wizardState.existingEVL2 || 0) * 11 +  // Level 2 @ 11 kW
+        (wizardState.existingEVL3 || 0) * 100   // DCFC @ 100 kW
+      ) * EV_CONCURRENCY_FACTOR;
+      
+      const newEVLoadKW = (
+        (wizardState.evChargersL2 || 0) * 11 +
+        (wizardState.evChargersDCFC || 0) * 100 +
+        (wizardState.evChargersHPC || 0) * 350
+      ) * EV_CONCURRENCY_FACTOR;
+      
+      // Add EV load to peak demand
+      peakDemandKW += Math.round(existingEVLoadKW + newEVLoadKW);
+      
+      console.log('⚡🔌 [RECALC-EV] EV load calculation:', {
+        existingEVL2: wizardState.existingEVL2,
+        existingEVL3: wizardState.existingEVL3,
+        evChargersL2: wizardState.evChargersL2,
+        evChargersDCFC: wizardState.evChargersDCFC,
+        evChargersHPC: wizardState.evChargersHPC,
+        existingEVLoadKW: Math.round(existingEVLoadKW),
+        newEVLoadKW: Math.round(newEVLoadKW),
+        totalAddedKW: Math.round(existingEVLoadKW + newEVLoadKW),
+        finalPeakKW: peakDemandKW,
+      });
+      
       // Calculate recommended BESS size using INDUSTRY-SPECIFIC ratio
       // Dec 2025: Uses getIndustryBESSRatio() instead of hardcoded 0.70
       // Hotel=0.50, Hospital=0.60, Data Center=0.70, etc.
@@ -787,6 +884,7 @@ export function useStreamlinedWizard({
       setCentralizedState((prev: any) => ({
         ...prev,
         calculated: {
+          ...prev.calculated, // CRITICAL: Preserve financial estimates from useWizardState!
           totalPeakDemandKW: peakDemandKW,
           recommendedBatteryKW,
           recommendedBatteryKWh,
@@ -807,7 +905,11 @@ export function useStreamlinedWizard({
       console.log('💾 [RECALC] Monthly kWh:', monthlyKWh);
       console.log('💾 [RECALC] ========================================');
     }
-  }, [currentSection, wizardState.useCaseData, wizardState.selectedIndustry, wizardState.solarKW, setCentralizedState]);
+  // Dec 16, 2025 - Added EV fields to deps so peak demand recalculates when chargers change
+  }, [currentSection, wizardState.useCaseData, wizardState.selectedIndustry, wizardState.solarKW,
+      wizardState.existingEVL2, wizardState.existingEVL3,
+      wizardState.evChargersL2, wizardState.evChargersDCFC, wizardState.evChargersHPC,
+      setCentralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
   // EFFECT: Sync industry to centralized state
@@ -1104,26 +1206,28 @@ export function useStreamlinedWizard({
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Handle Accept AI Recommendation (Dec 14, 2025)
+  // Dec 16, 2025 - Updated: Section 6 is now Quote Results
   // ═══════════════════════════════════════════════════════════════
   const handleAcceptAI = useCallback(() => {
-    console.log('✅ [AcceptAI] User accepted Merlin recommendation, skipping to Section 5');
+    console.log('✅ [AcceptAI] User accepted Merlin recommendation, skipping to Section 6 (Quote)');
     setUserQuoteChoice('accept');
     setShowAcceptCustomizeModal(false);
     
-    // Skip Section 4 (sliders), go directly to Section 5 (final quote)
-    advanceToSection(5);
+    // Skip Section 5 (two-column sliders), go directly to Section 6 (final quote)
+    advanceToSection(6);
   }, [advanceToSection]);
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Handle Customize Configuration (Dec 14, 2025)
+  // Dec 16, 2025 - Updated: Section 5 is now Two-Column Comparison
   // ═══════════════════════════════════════════════════════════════
   const handleCustomize = useCallback(() => {
-    console.log('🎨 [Customize] User wants to customize, going to Section 4');
+    console.log('🎨 [Customize] User wants to customize, going to Section 5 (Two-Column)');
     setUserQuoteChoice('customize');
     setShowAcceptCustomizeModal(false);
     
-    // Go to Section 4 (configuration sliders)
-    advanceToSection(4);
+    // Go to Section 5 (two-column comparison for fine-tuning)
+    advanceToSection(5);
   }, [advanceToSection]);
   
   // ═══════════════════════════════════════════════════════════════
@@ -1185,6 +1289,7 @@ export function useStreamlinedWizard({
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Select a Scenario (Dec 2025 - Phase 3)
+  // Dec 16, 2025 - Now shows AcceptCustomizeModal instead of going directly to quote
   // ═══════════════════════════════════════════════════════════════
   const selectScenario = useCallback((scenario: ScenarioConfig) => {
     console.log('✅ [selectScenario] User selected:', scenario.name);
@@ -1204,9 +1309,11 @@ export function useStreamlinedWizard({
       quoteResult: scenario.quoteResult,
     }));
     
-    // Stay on section 5 but switch to detailed view
-    completeSection('quote');
-  }, [completeSection]);
+    // Dec 16, 2025 - CRITICAL FIX: Show AcceptCustomizeModal instead of going directly to quote
+    // This lets user Accept (skip to Section 5) or Customize (go to Section 4 sliders)
+    setShowAcceptCustomizeModal(true);
+    // Don't call completeSection('quote') here - let modal callbacks handle navigation
+  }, []);
   
   const generatePremiumQuote = useCallback(() => {
     if (!wizardState.quoteResult) return;

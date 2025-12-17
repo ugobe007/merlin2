@@ -117,6 +117,10 @@ export interface WizardState {
     recommendedBatteryKW: number;
     recommendedSolarKW: number;
     recommendedBackupHours: number;
+    // Financial estimates from SSOT (Dec 16, 2025)
+    estimatedAnnualSavings: number;
+    estimatedPaybackYears: number;
+    estimatedCost: number;
   };
 }
 
@@ -171,6 +175,10 @@ export const INITIAL_WIZARD_STATE: WizardState = {
     recommendedBatteryKW: 0,
     recommendedSolarKW: 0,
     recommendedBackupHours: 4,
+    // Financial estimates from SSOT (Dec 16, 2025)
+    estimatedAnnualSavings: 0,
+    estimatedPaybackYears: 0,
+    estimatedCost: 0,
   },
 };
 

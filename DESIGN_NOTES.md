@@ -1,6 +1,6 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 10, 2025  
+**Last Updated:** December 16, 2025  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
 
@@ -250,15 +250,104 @@ CTA Click → StreamlinedWizard Opens:
   │
   ├─→ 3. USER INPUT (pulls templates from database)
   │
-  ├─→ 4. ADD EXTRAS (Solar, Wind, EV, Generation)
-  │       └─→ AI RECOMMENDS based on location + industry + inputs
+  ├─→ 3b. GOALS & PREFERENCES (what matters to user)
+  │        └─→ Click Continue → Go to Magic Fit (Section 4)
   │
-  ├─→ 5. PRELIMINARY QUOTE (sliders to adjust)
+  ├─→ 4. MAGIC FIT™ (3 Cards) - User PICKS a strategy
+  │       ┌──────────────────────────────────────────────────────────┐
+  │       │  💰 SAVINGS FOCUS    │  ⚖️ BALANCED      │  🛡️ RESILIENT │
+  │       │  Fastest payback     │  AI RECOMMENDED   │  Max backup   │
+  │       │  0.8x sizing         │  1.0x sizing      │  1.3x sizing  │
+  │       │  ~3 year payback     │  ~4 year payback  │  ~5 year ROI  │
+  │       │                      │                   │               │
+  │       │     [SELECT]         │    [SELECT] ✓     │   [SELECT]    │
+  │       └──────────────────────────────────────────────────────────┘
+  │       └─→ User clicks a card → AcceptCustomizeModal appears
   │
-  └─→ 6. FINAL QUOTE + Downloads
+  ├─→ 4b. ACCEPT/CUSTOMIZE MODAL (CRITICAL - Dec 16, 2025)
+  │       └─→ "Accept Merlin AI Setup" → Skip to Quote (Section 6)
+  │       └─→ "Customize Configuration" → Two-Column (Section 5)
+  │
+  ├─→ 5. TWO-COLUMN COMPARISON (ScenarioSectionV2) - Only if Customize
+  │        ┌──────────────────────────────────────────────────────────┐
+  │        │ LEFT: MERLIN'S PICK        │ RIGHT: YOUR CONFIG          │
+  │        │ (Read-Only, Lock icon)     │ (Editable, Unlock icon)     │
+  │        │                             │                             │
+  │        │ ⚡ Battery: 450 kW         │ ⚡ Battery: [───○──] 450 kW │
+  │        │ ⏱️ Duration: 4 hrs          │ ⏱️ Duration: [───○──] 4 hr  │
+  │        │ ☀️ Solar: 200 kW            │ ☀️ Solar: [───○──] 200 kW   │
+  │        │                             │                             │
+  │        │ 📊 Net Cost: $485,000      │ 📊 Est. Cost: $XXX,XXX      │
+  │        │ 💰 Annual: $127,000        │ 💰 vs Merlin: +/-$XX,XXX    │
+  │        │                             │                             │
+  │        │ [Accept Merlin's Config]   │ [Use My Custom Config]      │
+  │        └──────────────────────────────────────────────────────────┘
+  │       ⚠️ NO EV CHARGING in Section 5 - Removed Dec 16, 2025
+  │
+  └─→ 6. QUOTE RESULTS (Final) - QuoteResultsSection
 ```
 
 Located: `src/components/wizard/StreamlinedWizard.tsx`
+
+---
+
+## 🚨 WIZARD FLOW CORRECTED (Dec 16, 2025)
+
+### The Problem We Fixed:
+There were TWO competing flows:
+1. OLD: Goals → generateQuote → AcceptCustomizeModal → Section 4 (sliders)
+2. WRONG: Goals → Section 4 (two-column) directly
+
+### The Correct Flow:
+```
+Section 0: Location
+Section 1: Industry  
+Section 2: Facility Details
+Section 3: Goals/Preferences
+    ↓
+Section 4: MAGIC FIT (3 cards) - ScenarioSection.tsx
+    - Auto-generates 3 scenarios on entry
+    - Shows ScenarioExplainerModal (first visit)
+    - User PICKS: Savings Focus, Balanced, or Resilient
+    - onSelectScenario callback → triggers AcceptCustomizeModal
+    ↓
+AcceptCustomizeModal - shared/AcceptCustomizeModal.tsx
+    - Shows the selected scenario's recommendation
+    - "Accept Merlin AI Setup" → Section 6 (Quote Results)
+    - "Customize Configuration" → Section 5 (Two-Column)
+    ↓
+Section 5: TWO-COLUMN (only if Customize) - ScenarioSectionV2.tsx
+    - Merlin's Pick (read-only) vs User's Config (sliders)
+    - User fine-tunes Battery, Duration, Solar
+    - Continue → Section 6
+    ↓
+Section 6: QUOTE RESULTS - QuoteResultsSection.tsx
+    - Final quote with export options
+```
+
+### Key Components:
+| Section | Component | Purpose |
+|---------|-----------|---------|
+| 4 | `ScenarioSection.tsx` | 3-card Magic Fit selection |
+| 4b | `AcceptCustomizeModal.tsx` | Accept vs Customize choice |
+| 5 | `ScenarioSectionV2.tsx` | Two-column fine-tuning (optional) |
+| 6 | `QuoteResultsSection.tsx` | Final quote + exports |
+
+### What Magic Fit Provides:
+- **3 Optimized Strategies** based on user's goals
+- **Savings Focus (0.8x)** - Fastest payback, smallest system
+- **Balanced (1.0x)** - AI recommended, optimal ROI
+- **Resilient (1.3x)** - Maximum backup, grid independence
+
+### Files:
+| File | Location |
+|------|----------|
+| ScenarioSection | `src/components/wizard/sections/ScenarioSection.tsx` |
+| ScenarioSectionV2 | `src/components/wizard/sections/ScenarioSectionV2.tsx` |
+| AcceptCustomizeModal | `src/components/wizard/shared/AcceptCustomizeModal.tsx` |
+| QuoteResultsSection | `src/components/wizard/sections/QuoteResultsSection.tsx` |
+| StreamlinedWizard | `src/components/wizard/StreamlinedWizard.tsx` |
+| scenarioGenerator | `src/services/scenarioGenerator.ts` |
 
 ---
 
@@ -331,6 +420,168 @@ New admin dashboard for managing calculation variables without code changes.
 ---
 
 ## 📝 CHANGELOG
+
+### December 16, 2025 - Wizard Flow Redesign (Part 2)
+
+#### NEW COMPONENTS CREATED:
+
+**1. FacilityDetailsSectionV2.tsx** (570 lines)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 1: FACILITY DETAILS (Smart Dropdowns + Pill Buttons)      │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─── Smart Dropdowns ────────────────────────────────────────┐ │
+│  │ State Selector → confirms electricity rate                 │ │
+│  │ Room Count Dropdown (10-500+)                              │ │
+│  │ Square Footage Dropdown (10K-1M+)                          │ │
+│  │                                                             │ │
+│  │ 🔮 SMART PROMPT: >500 rooms or >500K sqft triggers:        │ │
+│  │    "This looks like a large property - is this a..."       │ │
+│  │    [Resort] [Casino] [Mega Resort] [Other]                 │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  ┌─── Pill-Style Amenity Buttons ─────────────────────────────┐ │
+│  │ AQUATICS (cyan):   [Pool] [Spa] [Water Park]               │ │
+│  │ WELLNESS (emerald):[Fitness] [Spa Center] [Tennis]         │ │
+│  │ DINING (amber):    [Restaurant] [Bar] [Room Service]       │ │
+│  │ BUSINESS (indigo): [Conference] [Ballroom] [Business Ctr]  │ │
+│  │ SERVICES (purple): [Laundry] [Valet] [EV Charging]         │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  ✨ AUTO-ADVANCE: When isFormComplete() → onContinue()          │
+└─────────────────────────────────────────────────────────────────┘
+```
+- Smart property type detection via `PROPERTY_TYPE_BY_SIZE`
+  - small: <100 rooms
+  - medium: 100-300 rooms  
+  - large: 300-500 rooms
+  - mega: >500 rooms OR >500K sqft
+- `AMENITY_CATEGORIES` with 5 color-coded groups (20 total amenities)
+- Pill buttons match hero calculator design
+- `getSizeCategory()` for conditional UI prompts
+- Auto-advance when form is complete
+
+**2. ConfigurationComparison.tsx** (450 lines)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 4: CONFIGURATION COMPARISON (User vs Merlin)              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐    vs    ┌─────────────────┐              │
+│  │ YOUR CONFIG     │          │ MERLIN'S PICK   │              │
+│  │                 │          │                 │              │
+│  │ 🔋 250 kW/1MWh  │          │ 🔋 250 kW/1MWh  │              │
+│  │ ⏱️  4 hours     │          │ ⏱️  4 hours     │              │
+│  │ ☀️  100 kW      │          │ ☀️  150 kW      │ ← RECOMMENDED │
+│  │ 💨 0 kW        │          │ 💨 0 kW        │              │
+│  │                 │          │                 │              │
+│  │ Annual: $45K    │          │ Annual: $52K    │              │
+│  │ Payback: 5.2 yr │          │ Payback: 4.5 yr │              │
+│  │ ROI: 480%       │          │ ROI: 550%       │              │
+│  │ Net: $475K      │          │ Net: $500K      │              │
+│  │                 │          │                 │              │
+│  │ [Use My Config] │          │ [Accept Merlin] │              │
+│  └─────────────────┘          └─────────────────┘              │
+│                                                                 │
+│  ┌─── Quick Comparison Bar ───────────────────────────────────┐ │
+│  │ Battery: same | Savings: -13% | Payback: +15% | Cost: -5%  │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  ✨ AUTO-ADVANCE: After selection → onContinue() (500ms delay)  │
+└─────────────────────────────────────────────────────────────────┘
+```
+- Two-column card layout with selection highlighting
+- Merlin card has "RECOMMENDED" badge (amber/orange gradient)
+- User card uses emerald accent, Merlin card uses purple accent
+- Selection triggers `setSelectedConfig()` and auto-advances
+- `getComparison()` helper calculates % differences
+- Shows "Why this configuration?" explainer on Merlin's card
+
+#### WIZARD FLOW (IMPLEMENTED - Dec 16, 2025):
+```
+Hero Calculator → Step 0 → Step 1 → Step 2 → Step 3 → Step 4 → Step 5 → Step 6 → Step 7
+     │              │         │        │        │        │        │        │        │
+     │              │         │        │        │        │        │        │        └─ Quote Results
+     │              │         │        │        │        │        │        └─ Fine-Tuning (optional)
+     │              │         │        │        │        │        └─ 3-Card Scenario Planner
+     │              │         │        │        │        └─ User vs Merlin Comparison (NEW!)
+     │              │         │        │        └─ Goals & Power Preferences
+     │              │         │        └─ Facility Details (V2 for hotels)
+     │              │         └─ Industry Selection
+     │              └─ Welcome + Location
+     └─ Pre-populated: rooms, pool, restaurant, state
+```
+
+**Section Numbers (StreamlinedWizard.tsx):**
+| Section | Name | Component |
+|---------|------|-----------|
+| 0 | Welcome + Location | WelcomeLocationSection |
+| 1 | Industry Selection | IndustrySection |
+| 2 | Facility Details | FacilityDetailsSectionV2 (hotel) / FacilityDetailsSection (others) |
+| 3 | Goals & Preferences | GoalsSection |
+| 4 | **Config Comparison** | **ConfigurationComparison** ← NEW |
+| 5 | Scenario Planner (3-card) | ScenarioSection |
+| 6 | Fine-Tuning (optional) | ScenarioSectionV2 |
+| 7 | Quote Results | QuoteResultsSection |
+
+#### FILES MODIFIED (Dec 16, 2025):
+- `src/components/wizard/sections/index.ts` - Added exports for new components
+- `src/components/wizard/StreamlinedWizard.tsx` - Wired V2 + ConfigurationComparison, renumbered sections
+- `src/components/wizard/sections/QuoteResultsSectionNew.tsx` - Updated section check from 5 → 7
+
+#### COMPLETED:
+- ✅ Wire FacilityDetailsSectionV2 into StreamlinedWizard (hotel vertical only)
+- ✅ Reposition ScenarioSection to after ConfigurationComparison  
+- ✅ ConfigurationComparison inserted as new Section 4
+- ✅ All section numbers renumbered (Section 5→6→7)
+- ✅ Build passes
+
+### December 16, 2025 - Hotel Energy Hero Redesign
+- ✅ **HERO SECTION COMPLETE REDESIGN** - Two-panel calculator layout
+- ✅ **Title**: Changed "Hotel Energy Partners" → "Hotel Energy"
+- ✅ **Tagline moved**: "Save 25-40% on Energy Bills" now centered ABOVE the two panels
+- ✅ **CTA Button Above Panels**: "Get Your Custom Quote" button with emerald-teal-cyan gradient, positioned under tagline
+- ✅ **LEFT PANEL**: Interactive Calculator
+  - Guest room count input with slider (10-500 rooms)
+  - Auto-calculated hotel class (Economy → Luxury based on room count)
+  - Square footage input (optional)
+  - Pool facilities checkboxes (indoor/outdoor)
+  - Dining & Events (restaurant count, conference, events)
+  - Additional amenities (spa, fitness, laundry)
+  - State selector for location-based rates
+  - **Colors**: `from-slate-900/80 via-indigo-900/40 to-slate-900/70` (translucent slate-blue)
+  - **Border**: `border-indigo-500/40`
+- ✅ **RIGHT PANEL**: Estimated Savings Display
+  - Large annual savings number ($XX,XXX) in emerald green
+  - Stats grid: Payback years, 25-Year ROI, Battery Size, Net Cost
+  - **Colors**: `from-slate-900/80 via-purple-900/40 to-slate-900/70` (translucent purple)
+  - **Border**: `border-purple-500/40`
+- ✅ **TrueQuote™ Badge**: Added animated glow effect (`animate-pulse`)
+  - Emerald gradient glow around badge
+  - "All costs traceable to authoritative sources" messaging
+  - "View Source Attribution" link
+- ✅ **"How Merlin Works" Button**: Positioned to LEFT of TrueQuote badge
+  - Opens popup with 4-step process explanation
+  - Uses main site's How Merlin Works popup design
+- ✅ **Benefits Pills**: Added "State credits available" alongside existing pills
+  - Zero guest disruptions
+  - 30% federal tax credit  
+  - State credits available (NEW)
+  - ESG & sustainability
+- ✅ **CTA Buttons**:
+  - Primary: "Build My Custom Quote" (purple/indigo/cyan gradient)
+  - Secondary: "Talk to an Expert"
+
+#### Hotel Energy Hero Color Palette:
+| Element | Color Classes |
+|---------|---------------|
+| Left Panel BG | `from-slate-900/80 via-indigo-900/40 to-slate-900/70 backdrop-blur-xl` |
+| Left Panel Border | `border-indigo-500/40` |
+| Right Panel BG | `from-slate-900/80 via-purple-900/40 to-slate-900/70 backdrop-blur-xl` |
+| Right Panel Border | `border-purple-500/40` |
+| Savings Display | `from-emerald-300 via-teal-200 to-emerald-300` (text gradient) |
+| TrueQuote Glow | `from-emerald-500/20 via-cyan-500/20 to-emerald-500/20` |
+| Primary CTA | `from-purple-600 via-indigo-500 to-cyan-500` |
 
 ### December 1, 2025 - Session 3 (HERO REDESIGN)
 - ✅ **COMPLETE HERO REDESIGN** - New two-column layout
