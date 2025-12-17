@@ -222,24 +222,30 @@ export function FacilityDetailsSectionV2({
   }, [getSizeCategory, wizardState.useCaseData?.propertyType]);
   
   // Check if form is complete for enabling Continue button
+  // Dec 17, 2025 FIX: For hotels, property type is AUTO-DETERMINED from room count
+  // Don't block Continue on propertyType - it's informational, not required
   const isFormComplete = useCallback(() => {
     const hasLocation = !!wizardState.state;
     const hasRoomCount = (wizardState.useCaseData?.roomCount || 0) > 0 || wizardState.facilitySize > 0;
-    const hasPropertyType = getSizeCategory() === 'small' || !!wizardState.useCaseData?.propertyType;
+    
+    // FIXED: Property type is OPTIONAL for all industries
+    // Large/mega properties get a PROMPT but it's not required
+    // Hotels auto-determine class from room count anyway
     
     // Debug logging
     console.log('📋 [FacilityV2] isFormComplete check:', {
       hasLocation,
       hasRoomCount,
-      hasPropertyType,
       state: wizardState.state,
       roomCount: wizardState.useCaseData?.roomCount || wizardState.facilitySize,
       propertyType: wizardState.useCaseData?.propertyType,
       sizeCategory: getSizeCategory(),
+      result: hasLocation && hasRoomCount,
     });
     
-    return hasLocation && hasRoomCount && hasPropertyType;
-  }, [wizardState.state, wizardState.useCaseData?.roomCount, wizardState.useCaseData?.propertyType, wizardState.facilitySize, getSizeCategory]);
+    // Only require location + room count - propertyType is optional enhancement
+    return hasLocation && hasRoomCount;
+  }, [wizardState.state, wizardState.useCaseData?.roomCount, wizardState.facilitySize, getSizeCategory]);
   
   // Dec 17, 2025 - DISABLED AUTO-ADVANCE
   // Auto-advance was causing issues when user came from vertical landing page
