@@ -84,12 +84,8 @@ export const FACILITY_SUBTYPES: Record<string, FacilitySubtype[]> = {
     { id: 'inbay', label: 'In-Bay Automatic', description: 'Single bay automatic (6-10 cars/hr)', powerMultiplier: 0.6 },
     { id: 'selfservice', label: 'Self-Service', description: 'Customer-operated bays (2-4 per bay/hr)', powerMultiplier: 0.15 },
   ],
-  'hotel': [
-    { id: 'economy', label: 'Economy/Budget', description: 'Basic amenities, limited services', powerMultiplier: 0.6 },
-    { id: 'midscale', label: 'Midscale', description: 'Standard amenities, breakfast included', powerMultiplier: 0.8 },
-    { id: 'upscale', label: 'Upscale', description: 'Full amenities, restaurant, pool', powerMultiplier: 1.0 },
-    { id: 'luxury', label: 'Luxury Resort', description: 'Premium amenities, spa, multiple restaurants', powerMultiplier: 1.4 },
-  ],
+  // NOTE: Hotel subtypes removed - database question 'hotelClassification' is more comprehensive
+  // and maps to SSOT via ssotClass field. Avoid duplicate questions.
   'ev-charging': [
     { id: 'destination', label: 'Destination Charging', description: 'L2 chargers for hotels, retail (7-22 kW)', powerMultiplier: 0.5 },
     { id: 'fasthub', label: 'Fast Charging Hub', description: 'DCFC for highway, retail (50-150 kW)', powerMultiplier: 1.0 },

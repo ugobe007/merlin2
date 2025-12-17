@@ -176,7 +176,7 @@ export function QuoteResultsSection({
   return (
     <div
       ref={sectionRef}
-      className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${currentSection !== 5 ? 'hidden' : ''}`}
+      className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${currentSection !== 7 ? 'hidden' : ''}`}
     >
       <div className="max-w-4xl mx-auto">
         {/* Navigation */}

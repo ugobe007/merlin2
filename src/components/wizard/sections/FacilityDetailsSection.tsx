@@ -21,10 +21,160 @@ import {
   Plus,
   Sparkles,
   Settings,
-  Star
+  Star,
+  // Icons for amenities/options
+  Waves,
+  Dumbbell,
+  Briefcase,
+  ShoppingBag,
+  Shirt,
+  CircleDot,
+  Utensils,
+  Coffee,
+  Wine,
+  UtensilsCrossed,
+  ChefHat,
+  GlassWater,
+  Users,
+  Presentation,
+  Building,
+  Car,
+  ParkingCircle,
+  Sun,
+  Zap,
+  Battery,
+  Plug,
+  Target,
+  Leaf,
+  Award,
+  Clock,
+  TrendingDown,
+  ShieldCheck,
+  Banknote,
+  CircleOff
 } from 'lucide-react';
 import { FACILITY_PRESETS, EQUIPMENT_TIER_OPTIONS, FACILITY_SUBTYPES } from '../constants/wizardConstants';
 import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '../types/wizardTypes';
+
+// Icon mapping for common amenity/option values
+const OPTION_ICONS: Record<string, React.ElementType> = {
+  // Pool & Spa
+  indoor_pool: Waves,
+  outdoor_pool: Waves,
+  pool_unheated: Waves,
+  hot_tub: GlassWater,
+  spa_full: Sparkles,
+  spa: Sparkles,
+  pool: Waves,
+  // Fitness
+  fitness_small: Dumbbell,
+  fitness_large: Dumbbell,
+  fitness: Dumbbell,
+  // Business
+  business_center: Briefcase,
+  // Retail
+  gift_shop: ShoppingBag,
+  retail: ShoppingBag,
+  // Laundry
+  guest_laundry: Shirt,
+  commercial_laundry: Shirt,
+  laundry: Shirt,
+  // Recreation
+  tennis_courts: CircleDot,
+  // F&B
+  breakfast: Coffee,
+  casual_dining: Utensils,
+  fine_dining: UtensilsCrossed,
+  bar_lounge: Wine,
+  room_service: ChefHat,
+  banquet: Users,
+  coffee_shop: Coffee,
+  pool_bar: GlassWater,
+  restaurant: Utensils,
+  // Meeting (compound values from DB)
+  small: Users,
+  medium: Presentation,
+  large: Building,
+  convention: Building,
+  meeting_small: Users,
+  meeting_medium: Presentation,
+  ballroom: Building,
+  // Parking (compound values from DB)
+  surface: Car,
+  structure: ParkingCircle,
+  valet: Car,
+  surface_lot: Car,
+  parking_garage: ParkingCircle,
+  // Solar (compound values from DB)
+  operational: Sun,
+  not_working: Sun,
+  under_construction: Sun,
+  approved: Sun,
+  active: Sun,
+  exploring: Sun,
+  maybe_solar: Sun,
+  solar_yes: Sun,
+  solar_no: CircleOff,
+  solar_construction: Sun,
+  solar_permitted: Sun,
+  // EV (compound values from DB)
+  level2: Plug,
+  dcfc: Zap,
+  ultrafast: Battery,
+  ev_level2: Plug,
+  ev_dcfc: Zap,
+  ev_ultrafast: Battery,
+  ev_charging: Plug,
+  high_priority: Zap,
+  moderate: Plug,
+  // Goals
+  reduce_costs: Banknote,
+  reduce_demand: TrendingDown,
+  net_zero: Leaf,
+  sustainability: Leaf,
+  green_cert: Award,
+  reduce_grid: ShieldCheck,
+  demand_response: Clock,
+  tou_optimization: Clock,
+  // Generic
+  none: CircleOff,
+  no: CircleOff,
+  yes: CheckCircle,
+  sufficient: CheckCircle,
+};
+
+// Color mapping for option categories
+const getOptionColor = (fieldName: string, isSelected: boolean) => {
+  if (!isSelected) return { bg: 'bg-gray-50 hover:bg-gray-100', text: 'text-gray-600', icon: 'text-gray-400', border: 'border-gray-200' };
+  
+  // Map field names to color schemes
+  if (fieldName.includes('amenities') || fieldName.includes('pool') || fieldName.includes('spa') || fieldName.includes('fitness')) {
+    return { bg: 'bg-cyan-50', text: 'text-cyan-800', icon: 'text-cyan-500', border: 'border-cyan-300' };
+  }
+  if (fieldName.includes('food') || fieldName.includes('beverage') || fieldName.includes('fb') || fieldName.includes('dining')) {
+    return { bg: 'bg-orange-50', text: 'text-orange-800', icon: 'text-orange-500', border: 'border-orange-300' };
+  }
+  if (fieldName.includes('meeting') || fieldName.includes('event') || fieldName.includes('conference')) {
+    return { bg: 'bg-blue-50', text: 'text-blue-800', icon: 'text-blue-500', border: 'border-blue-300' };
+  }
+  if (fieldName.includes('parking')) {
+    return { bg: 'bg-slate-100', text: 'text-slate-800', icon: 'text-slate-500', border: 'border-slate-300' };
+  }
+  if (fieldName.includes('solar')) {
+    return { bg: 'bg-amber-50', text: 'text-amber-800', icon: 'text-amber-500', border: 'border-amber-300' };
+  }
+  if (fieldName.includes('ev') || fieldName.includes('charger')) {
+    return { bg: 'bg-emerald-50', text: 'text-emerald-800', icon: 'text-emerald-500', border: 'border-emerald-300' };
+  }
+  if (fieldName.includes('goal') || fieldName.includes('priority')) {
+    return { bg: 'bg-purple-50', text: 'text-purple-800', icon: 'text-purple-500', border: 'border-purple-300' };
+  }
+  if (fieldName.includes('backup') || fieldName.includes('outage')) {
+    return { bg: 'bg-red-50', text: 'text-red-800', icon: 'text-red-500', border: 'border-red-300' };
+  }
+  // Default purple
+  return { bg: 'bg-purple-50', text: 'text-purple-800', icon: 'text-purple-500', border: 'border-purple-300' };
+};
 
 export function FacilityDetailsSection({
   wizardState,
@@ -121,7 +271,7 @@ export function FacilityDetailsSection({
             </div>
           )}
           <div className="text-sm text-gray-400">
-            {initializedFromVertical ? 'Step 1 of 4' : 'Step 3 of 6'}
+            {initializedFromVertical ? 'Step 1 of 4' : 'Step 2 of 5'}
           </div>
         </div>
         
@@ -260,13 +410,22 @@ export function FacilityDetailsSection({
               </div>
               
               {/* Render each custom question dynamically */}
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {filteredQuestions.map((question: any, index: number) => {
                   // Special styling for primaryBESSApplication
                   const isBESSQuestion = question.field_name === 'primaryBESSApplication';
                   
+                  // Special styling for energy goals
+                  const isGoalsQuestion = question.field_name === 'energyGoals' || question.field_name.includes('goal');
+                  
                   return (
-                  <div key={question.field_name} className={`rounded-xl p-5 border ${isBESSQuestion ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200' : 'bg-purple-50/50 border-purple-100'}`}>
+                  <div key={question.field_name} className={`rounded-2xl p-6 border-2 ${
+                    isBESSQuestion 
+                      ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200' 
+                      : isGoalsQuestion
+                        ? 'bg-gradient-to-br from-purple-50 via-indigo-50 to-violet-50 border-purple-300'
+                        : 'bg-gradient-to-br from-purple-50/60 to-indigo-50/60 border-purple-100'
+                  }`}>
                     {/* Special BESS explanation banner */}
                     {isBESSQuestion && (
                       <div className="mb-4 p-3 bg-emerald-100 rounded-lg border border-emerald-200">
@@ -277,13 +436,25 @@ export function FacilityDetailsSection({
                       </div>
                     )}
                     
-                    <label className={`block font-medium mb-2 ${isBESSQuestion ? 'text-emerald-800 text-lg' : 'text-gray-700'}`}>
+                    <label className={`block font-bold mb-2 ${
+                      isBESSQuestion 
+                        ? 'text-emerald-800 text-xl' 
+                        : isGoalsQuestion
+                          ? 'text-purple-800 text-xl'
+                          : 'text-gray-800 text-lg'
+                    }`}>
                       {question.question_text}
                       {question.is_required && <span className="text-red-500 ml-1">*</span>}
                     </label>
                     
                     {question.help_text && (
-                      <p className={`text-sm mb-3 ${isBESSQuestion ? 'text-emerald-600' : 'text-gray-500'}`}>{question.help_text}</p>
+                      <p className={`text-base mb-4 ${
+                        isBESSQuestion 
+                          ? 'text-emerald-600' 
+                          : isGoalsQuestion
+                            ? 'text-purple-600'
+                            : 'text-gray-500'
+                      }`}>{question.help_text}</p>
                     )}
                     
                     {/* Number input */}
@@ -342,37 +513,87 @@ export function FacilityDetailsSection({
                       </div>
                     )}
                     
-                    {/* Select input */}
-                    {question.question_type === 'select' && question.options && (
-                      <div className={`grid gap-3 ${isBESSQuestion ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
-                        {(Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]')).map((option: any) => {
-                          const optionValue = typeof option === 'string' ? option : option.value;
-                          const optionLabel = typeof option === 'string' ? option : option.label;
-                          const isSelected = wizardState.useCaseData[question.field_name] === optionValue;
-                          
-                          return (
-                            <button
-                              key={optionValue}
-                              onClick={() => setWizardState(prev => ({
-                                ...prev,
-                                useCaseData: { ...prev.useCaseData, [question.field_name]: optionValue }
-                              }))}
-                              className={`py-3 px-4 rounded-xl font-medium transition-all text-left ${
-                                isBESSQuestion
-                                  ? isSelected
-                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                                    : 'bg-white border-2 border-emerald-200 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50'
-                                  : isSelected
-                                    ? 'bg-purple-500 text-white shadow-lg'
-                                    : 'bg-white border-2 border-purple-200 text-gray-700 hover:border-purple-400'
-                              }`}
-                            >
-                              {optionLabel}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                    {/* Select input - Merlin gradient styling */}
+                    {question.question_type === 'select' && question.options && (() => {
+                      const options = Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]');
+                      
+                      // Use dropdown for selects with more than 6 options (increased threshold)
+                      if (options.length > 6 && !isBESSQuestion) {
+                        return (
+                          <select
+                            value={wizardState.useCaseData[question.field_name] ?? question.default_value ?? ''}
+                            onChange={(e) => setWizardState(prev => ({
+                              ...prev,
+                              useCaseData: { ...prev.useCaseData, [question.field_name]: e.target.value }
+                            }))}
+                            className="w-full px-5 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl text-gray-800 text-lg font-semibold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%239333ea%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                          >
+                            <option value="" disabled>Select an option...</option>
+                            {options.map((option: any) => {
+                              const optionValue = typeof option === 'string' ? option : option.value;
+                              const optionLabel = typeof option === 'string' ? option : option.label;
+                              return (
+                                <option key={optionValue} value={optionValue}>{optionLabel}</option>
+                              );
+                            })}
+                          </select>
+                        );
+                      }
+                      
+                      // Use large card buttons for 6 or fewer options
+                      // Gradient colors cycle: purple→indigo→emerald→amber→rose→cyan
+                      const gradients = [
+                        { selected: 'from-purple-600 to-indigo-600', border: 'border-purple-300 hover:border-purple-400', bg: 'from-purple-50 to-indigo-50', shadow: 'shadow-purple-500/20' },
+                        { selected: 'from-indigo-600 to-blue-600', border: 'border-indigo-300 hover:border-indigo-400', bg: 'from-indigo-50 to-blue-50', shadow: 'shadow-indigo-500/20' },
+                        { selected: 'from-emerald-600 to-teal-600', border: 'border-emerald-300 hover:border-emerald-400', bg: 'from-emerald-50 to-teal-50', shadow: 'shadow-emerald-500/20' },
+                        { selected: 'from-amber-500 to-orange-500', border: 'border-amber-300 hover:border-amber-400', bg: 'from-amber-50 to-orange-50', shadow: 'shadow-amber-500/20' },
+                        { selected: 'from-rose-500 to-pink-500', border: 'border-rose-300 hover:border-rose-400', bg: 'from-rose-50 to-pink-50', shadow: 'shadow-rose-500/20' },
+                        { selected: 'from-cyan-500 to-sky-500', border: 'border-cyan-300 hover:border-cyan-400', bg: 'from-cyan-50 to-sky-50', shadow: 'shadow-cyan-500/20' },
+                      ];
+                      
+                      return (
+                        <div className={`grid gap-4 ${
+                          isBESSQuestion 
+                            ? 'grid-cols-1 md:grid-cols-2' 
+                            : options.length <= 3 
+                              ? 'grid-cols-1 sm:grid-cols-3' 
+                              : options.length <= 5
+                                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                        }`}>
+                          {options.map((option: any, optIdx: number) => {
+                            const optionValue = typeof option === 'string' ? option : option.value;
+                            const optionLabel = typeof option === 'string' ? option : option.label;
+                            const isSelected = wizardState.useCaseData[question.field_name] === optionValue;
+                            const gradient = gradients[optIdx % gradients.length];
+                            
+                            return (
+                              <button
+                                key={optionValue}
+                                onClick={() => setWizardState(prev => ({
+                                  ...prev,
+                                  useCaseData: { ...prev.useCaseData, [question.field_name]: optionValue }
+                                }))}
+                                className={`group py-4 px-5 rounded-2xl font-semibold text-base transition-all duration-200 text-left border-2 ${
+                                  isBESSQuestion
+                                    ? isSelected
+                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 border-emerald-400 scale-[1.02]'
+                                      : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 text-gray-700 hover:border-emerald-400 hover:shadow-md'
+                                    : isSelected
+                                      ? `bg-gradient-to-r ${gradient.selected} text-white shadow-lg ${gradient.shadow} border-transparent scale-[1.02]`
+                                      : `bg-gradient-to-r ${gradient.bg} ${gradient.border} text-gray-700 hover:shadow-md`
+                                }`}
+                              >
+                                <span className="flex items-center gap-3">
+                                  {isSelected && <CheckCircle className="w-5 h-5 flex-shrink-0" />}
+                                  <span className="leading-tight">{optionLabel}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     
                     {/* Text input */}
                     {question.question_type === 'text' && (
@@ -437,12 +658,12 @@ export function FacilityDetailsSection({
                     )}
                     
                     {/* ═══════════════════════════════════════════════════════════════════
-                        MULTISELECT INPUT (Dec 2025) - Phase 1 Hotel Questionnaire
-                        Renders checkboxes for multiple selection (amenities, F&B, etc.)
+                        MULTISELECT INPUT (Dec 2025) - Enhanced with icons & colors
+                        Uses large card-style checkboxes with category-specific colors
                         Stores selected values as JSON array in useCaseData
                         ═══════════════════════════════════════════════════════════════════ */}
                     {(question.question_type === 'multiselect' || question.question_type === 'multi-select') && question.options && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {(Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]')).map((option: any) => {
                           const optionValue = typeof option === 'string' ? option : option.value;
                           const optionLabel = typeof option === 'string' ? option : option.label;
@@ -454,37 +675,60 @@ export function FacilityDetailsSection({
                             : (wizardState.useCaseData[question.field_name] ? JSON.parse(wizardState.useCaseData[question.field_name]) : []);
                           const isSelected = currentSelections.includes(optionValue);
                           
+                          // Get icon and colors
+                          const IconComponent = OPTION_ICONS[optionValue] || (optionValue.includes('none') || optionValue.includes('no_') ? CircleOff : CheckCircle);
+                          const colors = getOptionColor(question.field_name, isSelected);
+                          
                           return (
                             <label
                               key={optionValue}
-                              className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all border-2 ${
+                              className={`group flex items-center gap-4 cursor-pointer p-5 rounded-2xl transition-all duration-200 border-2 ${
                                 isSelected
-                                  ? 'bg-purple-100 border-purple-400 shadow-sm'
-                                  : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                                  ? `${colors.bg} ${colors.border} shadow-lg shadow-${colors.border.split('-')[1]}-500/20 scale-[1.02]`
+                                  : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
                               }`}
                             >
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  const newSelections = e.target.checked
-                                    ? [...currentSelections, optionValue]
-                                    : currentSelections.filter(v => v !== optionValue);
-                                  setWizardState(prev => ({
-                                    ...prev,
-                                    useCaseData: { ...prev.useCaseData, [question.field_name]: newSelections }
-                                  }));
-                                }}
-                                className="w-5 h-5 mt-0.5 rounded accent-purple-500 flex-shrink-0"
-                              />
-                              <div className="flex-1">
-                                <span className={`font-medium ${isSelected ? 'text-purple-800' : 'text-gray-700'}`}>
+                              {/* Custom large checkbox */}
+                              <div className={`relative flex-shrink-0 w-7 h-7 rounded-lg border-2 transition-all flex items-center justify-center ${
+                                isSelected 
+                                  ? `${colors.border} ${colors.bg}` 
+                                  : 'border-gray-300 bg-white group-hover:border-gray-400'
+                              }`}>
+                                {isSelected && (
+                                  <CheckCircle className={`w-6 h-6 ${colors.icon}`} />
+                                )}
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    const newSelections = e.target.checked
+                                      ? [...currentSelections, optionValue]
+                                      : currentSelections.filter(v => v !== optionValue);
+                                    setWizardState(prev => ({
+                                      ...prev,
+                                      useCaseData: { ...prev.useCaseData, [question.field_name]: newSelections }
+                                    }));
+                                  }}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                              </div>
+                              
+                              {/* Icon - larger and more prominent */}
+                              <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                                isSelected ? `${colors.bg} ring-2 ring-offset-2 ring-${colors.border.split('-')[1]}-300` : 'bg-gray-100 group-hover:bg-gray-200'
+                              }`}>
+                                <IconComponent className={`w-6 h-6 ${isSelected ? colors.icon : 'text-gray-400 group-hover:text-gray-500'}`} />
+                              </div>
+                              
+                              {/* Label and power - larger fonts */}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-base font-semibold leading-tight ${isSelected ? colors.text : 'text-gray-700 group-hover:text-gray-900'}`}>
                                   {optionLabel}
-                                </span>
-                                {optionPower && (
-                                  <span className="block text-xs text-gray-500 mt-0.5">
-                                    +{optionPower} kW
-                                  </span>
+                                </p>
+                                {optionPower !== null && optionPower !== undefined && (
+                                  <p className={`text-sm font-medium mt-1 ${isSelected ? colors.icon : 'text-gray-400'}`}>
+                                    {optionPower > 0 ? `+${optionPower} kW` : optionPower === 0 ? '0 kW' : `${optionPower} kW`}
+                                  </p>
                                 )}
                               </div>
                             </label>
@@ -494,13 +738,13 @@ export function FacilityDetailsSection({
                     )}
                     
                     {/* ═══════════════════════════════════════════════════════════════════
-                        COMPOUND INPUT (Dec 2025) - Phase 1 Hotel Questionnaire
+                        COMPOUND INPUT (Dec 2025) - Compact checklist with inline amounts
                         Renders nested questions (e.g., F&B with seat counts, EV with charger counts)
                         Each sub-question has enable checkbox + optional numeric input
                         Stores as JSON object in useCaseData
                         ═══════════════════════════════════════════════════════════════════ */}
                     {question.question_type === 'compound' && question.options && (
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {(Array.isArray(question.options) ? question.options : JSON.parse(question.options || '[]')).map((subQ: any) => {
                           // Get current compound state as object
                           const compoundData: Record<string, any> = typeof wizardState.useCaseData[question.field_name] === 'object'
@@ -511,17 +755,29 @@ export function FacilityDetailsSection({
                           const isEnabled = compoundData[subValue]?.enabled ?? false;
                           const subAmount = compoundData[subValue]?.amount ?? (subQ.defaultAmount || 0);
                           
+                          // Get icon for this option
+                          const IconComponent = OPTION_ICONS[subValue] || (subValue.includes('none') || subValue.includes('no') ? CircleOff : CheckCircle);
+                          const colors = getOptionColor(question.field_name, isEnabled);
+                          
                           return (
-                            <div 
+                            <label 
                               key={subValue}
-                              className={`p-4 rounded-xl border-2 transition-all ${
+                              className={`group flex flex-col cursor-pointer p-5 rounded-2xl transition-all duration-200 border-2 ${
                                 isEnabled 
-                                  ? 'bg-purple-50 border-purple-300' 
-                                  : 'bg-gray-50 border-gray-200'
+                                  ? `${colors.bg} ${colors.border} shadow-lg scale-[1.02]`
+                                  : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
                               }`}
                             >
-                              <div className="flex items-center justify-between gap-4">
-                                <label className="flex items-center gap-3 cursor-pointer flex-1">
+                              <div className="flex items-center gap-4">
+                                {/* Custom large checkbox */}
+                                <div className={`relative flex-shrink-0 w-7 h-7 rounded-lg border-2 transition-all flex items-center justify-center ${
+                                  isEnabled 
+                                    ? `${colors.border} ${colors.bg}` 
+                                    : 'border-gray-300 bg-white group-hover:border-gray-400'
+                                }`}>
+                                  {isEnabled && (
+                                    <CheckCircle className={`w-6 h-6 ${colors.icon}`} />
+                                  )}
                                   <input
                                     type="checkbox"
                                     checked={isEnabled}
@@ -538,53 +794,59 @@ export function FacilityDetailsSection({
                                         useCaseData: { ...prev.useCaseData, [question.field_name]: newCompound }
                                       }));
                                     }}
-                                    className="w-5 h-5 rounded accent-purple-500"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
                                   />
-                                  <div>
-                                    <span className={`font-medium ${isEnabled ? 'text-purple-800' : 'text-gray-600'}`}>
-                                      {subQ.label}
-                                    </span>
-                                    {subQ.powerKw && (
-                                      <span className="text-xs text-gray-500 ml-2">
-                                        (+{subQ.powerKw} kW base)
-                                      </span>
-                                    )}
-                                  </div>
-                                </label>
+                                </div>
                                 
-                                {/* Optional numeric input for sub-question */}
-                                {isEnabled && subQ.hasAmount && (
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min={subQ.minAmount || 0}
-                                      max={subQ.maxAmount || 9999}
-                                      value={subAmount}
-                                      onChange={(e) => {
-                                        const newCompound = {
-                                          ...compoundData,
-                                          [subValue]: { 
-                                            enabled: true, 
-                                            amount: parseInt(e.target.value) || 0 
-                                          }
-                                        };
-                                        setWizardState(prev => ({
-                                          ...prev,
-                                          useCaseData: { ...prev.useCaseData, [question.field_name]: newCompound }
-                                        }));
-                                      }}
-                                      className="w-24 px-3 py-2 bg-white border-2 border-purple-300 rounded-lg text-center font-bold text-purple-700 focus:border-purple-500"
-                                    />
-                                    <span className="text-sm text-gray-500">{subQ.amountUnit || ''}</span>
-                                  </div>
-                                )}
+                                {/* Icon */}
+                                <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                                  isEnabled ? `${colors.bg} ring-2 ring-offset-2` : 'bg-gray-100 group-hover:bg-gray-200'
+                                }`}>
+                                  <IconComponent className={`w-6 h-6 ${isEnabled ? colors.icon : 'text-gray-400 group-hover:text-gray-500'}`} />
+                                </div>
+                                
+                                {/* Label */}
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-base font-semibold leading-tight ${isEnabled ? colors.text : 'text-gray-700 group-hover:text-gray-900'}`}>
+                                    {subQ.label}
+                                  </p>
+                                  {subQ.powerKw > 0 && (
+                                    <p className={`text-sm font-medium mt-1 ${isEnabled ? colors.icon : 'text-gray-400'}`}>
+                                      +{subQ.powerKw} kW
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               
-                              {/* Help text for sub-question */}
-                              {isEnabled && subQ.helpText && (
-                                <p className="text-xs text-gray-500 mt-2 ml-8">{subQ.helpText}</p>
+                              {/* Inline numeric input for sub-question - expanded */}
+                              {isEnabled && subQ.hasAmount && (
+                                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+                                  <span className="text-sm text-gray-600 font-medium">Amount:</span>
+                                  <input
+                                    type="number"
+                                    min={subQ.minAmount || 0}
+                                    max={subQ.maxAmount || 9999}
+                                    value={subAmount}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => {
+                                      const newCompound = {
+                                        ...compoundData,
+                                        [subValue]: { 
+                                          enabled: true, 
+                                          amount: parseInt(e.target.value) || 0 
+                                        }
+                                      };
+                                      setWizardState(prev => ({
+                                        ...prev,
+                                        useCaseData: { ...prev.useCaseData, [question.field_name]: newCompound }
+                                      }));
+                                    }}
+                                    className={`flex-1 px-4 py-2 ${colors.bg} border-2 ${colors.border} rounded-xl text-center text-lg font-bold ${colors.text} focus:ring-2 focus:ring-offset-1`}
+                                  />
+                                  <span className={`text-sm font-medium ${colors.text} min-w-[60px]`}>{subQ.amountUnit || ''}</span>
+                                </div>
                               )}
-                            </div>
+                            </label>
                           );
                         })}
                       </div>

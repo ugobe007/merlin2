@@ -54,8 +54,12 @@ export function ScenarioSectionV2({
   powerCoverage,
   onOpenAdvanced,
 }: ScenarioSectionProps) {
+  // NOTE: Dec 16, 2025 - ScenarioExplainerModal removed from auto-show
+  // The AcceptCustomizeModal now appears BEFORE Section 4 (in StreamlinedWizard)
+  // Users can still click "How does this work?" to see the explainer
+  // We no longer auto-show explainer since AcceptCustomizeModal covers the choice
   const [showExplainer, setShowExplainer] = useState(false);
-  const [hasSeenExplainer, setHasSeenExplainer] = useState(false);
+  const [hasSeenExplainer, setHasSeenExplainer] = useState(true); // Default to true - don't auto-show
   const [useCustomConfig, setUseCustomConfig] = useState(false);
   
   // User's custom configuration (separate from Merlin's recommendation)
@@ -66,16 +70,22 @@ export function ScenarioSectionV2({
   // Track if scenarios have been generated for this session
   const scenariosGeneratedRef = useRef(false);
 
-  // Show explainer on first visit
+  // Dec 16, 2025: ScenarioSectionV2 is now Section 5 (after Magic Fit)
+  // It only renders when currentSection matches what's passed from parent
+  const SECTION_NUMBER = 5; // This component is Section 5 in the wizard flow
+  
+  // Show explainer on first visit (disabled - AcceptCustomizeModal already explained)
   useEffect(() => {
-    if (currentSection === 4 && !hasSeenExplainer) {
-      setShowExplainer(true);
+    if (currentSection === SECTION_NUMBER && !hasSeenExplainer) {
+      // Don't auto-show explainer - AcceptCustomizeModal already explained
+      // setShowExplainer(true);
     }
   }, [currentSection, hasSeenExplainer]);
 
   // Auto-generate scenarios when entering section (ONCE per session)
+  // Note: Scenarios should already be generated from Magic Fit (Section 4)
   useEffect(() => {
-    if (currentSection === 4 && !scenarioResult && !isGenerating && !scenariosGeneratedRef.current) {
+    if (currentSection === SECTION_NUMBER && !scenarioResult && !isGenerating && !scenariosGeneratedRef.current) {
       scenariosGeneratedRef.current = true;
       onGenerateScenarios();
     }
@@ -83,7 +93,7 @@ export function ScenarioSectionV2({
   
   // Reset the ref when leaving section
   useEffect(() => {
-    if (currentSection !== 4) {
+    if (currentSection !== SECTION_NUMBER) {
       scenariosGeneratedRef.current = false;
     }
   }, [currentSection]);
@@ -164,7 +174,7 @@ export function ScenarioSectionV2({
 
   const userCosts = estimateUserCost();
 
-  if (currentSection !== 4) return null;
+  if (currentSection !== SECTION_NUMBER) return null;
 
   const recommended = scenarioResult?.scenarios[scenarioResult.recommendedIndex];
 
@@ -201,7 +211,7 @@ export function ScenarioSectionV2({
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
               <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 font-medium">Step 5 of 6</span>
+              <span className="text-purple-300 font-medium">Step 4 of 5 • Fine-tune</span>
             </div>
             <h2 className="text-3xl font-bold text-white mb-2">
               Compare & Choose

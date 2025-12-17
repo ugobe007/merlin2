@@ -219,10 +219,13 @@ export function QuoteResultsSection({
     })() : undefined,
   };
 
+  // Dec 16, 2025: QuoteResultsSection is now Section 6
+  const SECTION_NUMBER = 6;
+
   return (
     <div
       ref={sectionRef}
-      className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 5 ? 'hidden' : ''}`}
+      className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== SECTION_NUMBER ? 'hidden' : ''}`}
     >
       <div className="max-w-5xl mx-auto">
         {/* Navigation */}
@@ -234,7 +237,7 @@ export function QuoteResultsSection({
             <ArrowLeft className="w-4 h-4" />
             Back to Configuration
           </button>
-          <div className="text-sm text-gray-400">Step 6 of 6 • Final Quote</div>
+          <div className="text-sm text-gray-400">Step 5 of 5 • Final Quote</div>
         </div>
 
         {wizardState.quoteResult ? (

@@ -1,0 +1,566 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// FACILITY DETAILS SECTION V2 (Section 1 for Vertical Landing Pages)
+// Complete redesign - Dec 16, 2025
+// 
+// Features:
+// 1. Smart dropdowns with conditional prompts (1M sqft → resort/casino prompt)
+// 2. Pill-shaped amenity buttons (matching hero calculator style)
+// 3. Pre-populated values from hero calculator
+// 4. State selector visible (in case user missed it on hero)
+// 5. Auto-advance when all required fields complete
+// 6. Removes duplicate questions already answered on hero calculator
+// ═══════════════════════════════════════════════════════════════════════════
+
+import React, { useEffect, useState, useCallback } from 'react';
+import { 
+  MapPin, 
+  Building2, 
+  CheckCircle, 
+  ChevronDown,
+  Waves,
+  Dumbbell,
+  Utensils,
+  Users,
+  Sparkles,
+  Car,
+  Sun,
+  Coffee,
+  Shirt,
+  Wifi,
+  Wind,
+  TreePine,
+  Star,
+  Briefcase,
+  Hotel,
+  Castle,
+  Landmark,
+  Building,
+  Home,
+  Crown,
+  Tent,
+  Palmtree,
+} from 'lucide-react';
+import type { WizardState } from '../types/wizardTypes';
+
+// US States for the state selector
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+  'Wisconsin', 'Wyoming'
+];
+
+// Smart property type suggestions based on size
+const PROPERTY_TYPE_BY_SIZE = {
+  small: { // < 100 rooms
+    types: [
+      { id: 'boutique', label: 'Boutique Hotel', icon: Home, description: 'Intimate, unique character' },
+      { id: 'motel', label: 'Motel / Inn', icon: Hotel, description: 'Roadside or budget accommodation' },
+      { id: 'bed_breakfast', label: 'Bed & Breakfast', icon: Coffee, description: 'Small, personalized service' },
+    ]
+  },
+  medium: { // 100-300 rooms
+    types: [
+      { id: 'business', label: 'Business Hotel', icon: Briefcase, description: 'Meeting rooms, business center' },
+      { id: 'extended_stay', label: 'Extended Stay', icon: Building, description: 'Kitchenettes, longer stays' },
+      { id: 'full_service', label: 'Full-Service Hotel', icon: Hotel, description: 'Restaurant, amenities, services' },
+    ]
+  },
+  large: { // 300-500 rooms
+    types: [
+      { id: 'convention', label: 'Convention Hotel', icon: Users, description: 'Large event spaces, ballrooms' },
+      { id: 'resort', label: 'Resort Hotel', icon: Palmtree, description: 'Destination amenities, recreation' },
+      { id: 'luxury', label: 'Luxury Hotel', icon: Star, description: 'Premium service, high-end amenities' },
+    ]
+  },
+  mega: { // > 500 rooms OR > 500,000 sqft
+    types: [
+      { id: 'mega_resort', label: 'Mega Resort', icon: Castle, description: 'Multiple venues, entertainment' },
+      { id: 'casino_resort', label: 'Casino Resort', icon: Crown, description: 'Gaming, entertainment complex' },
+      { id: 'convention_center', label: 'Convention Center Hotel', icon: Landmark, description: 'Massive event capacity' },
+      { id: 'integrated_resort', label: 'Integrated Resort', icon: Tent, description: 'Mixed-use destination' },
+    ]
+  }
+};
+
+// Amenity categories with pill-style buttons
+const AMENITY_CATEGORIES = {
+  aquatics: {
+    label: 'Pool & Aquatics',
+    icon: Waves,
+    color: 'cyan',
+    options: [
+      { id: 'indoor_pool', label: 'Indoor Pool', icon: Waves },
+      { id: 'outdoor_pool', label: 'Outdoor Pool', icon: Waves },
+      { id: 'hot_tub', label: 'Hot Tub / Jacuzzi', icon: Sparkles },
+      { id: 'water_park', label: 'Water Park', icon: Waves },
+    ]
+  },
+  wellness: {
+    label: 'Wellness & Fitness',
+    icon: Dumbbell,
+    color: 'emerald',
+    options: [
+      { id: 'fitness_center', label: 'Fitness Center', icon: Dumbbell },
+      { id: 'spa', label: 'Full Spa', icon: Sparkles },
+      { id: 'sauna', label: 'Sauna / Steam', icon: Wind },
+      { id: 'golf', label: 'Golf Course', icon: TreePine },
+    ]
+  },
+  dining: {
+    label: 'Food & Beverage',
+    icon: Utensils,
+    color: 'amber',
+    options: [
+      { id: 'restaurant', label: 'Restaurant(s)', icon: Utensils },
+      { id: 'bar_lounge', label: 'Bar / Lounge', icon: Coffee },
+      { id: 'room_service', label: 'Room Service', icon: Hotel },
+      { id: 'banquet', label: 'Banquet Facilities', icon: Users },
+    ]
+  },
+  business: {
+    label: 'Business & Events',
+    icon: Briefcase,
+    color: 'indigo',
+    options: [
+      { id: 'meeting_rooms', label: 'Meeting Rooms', icon: Users },
+      { id: 'conference_center', label: 'Conference Center', icon: Briefcase },
+      { id: 'ballroom', label: 'Ballroom', icon: Star },
+      { id: 'business_center', label: 'Business Center', icon: Wifi },
+    ]
+  },
+  services: {
+    label: 'Guest Services',
+    icon: Star,
+    color: 'purple',
+    options: [
+      { id: 'laundry', label: 'On-Site Laundry', icon: Shirt },
+      { id: 'ev_charging', label: 'EV Charging', icon: Car },
+      { id: 'parking_garage', label: 'Parking Garage', icon: Building },
+      { id: 'solar_existing', label: 'Existing Solar', icon: Sun },
+    ]
+  }
+};
+
+// Color classes for amenity pills
+const AMENITY_COLORS: Record<string, { selected: string; unselected: string; border: string }> = {
+  cyan: {
+    selected: 'bg-cyan-500 text-white border-cyan-600',
+    unselected: 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300',
+    border: 'border-cyan-300'
+  },
+  emerald: {
+    selected: 'bg-emerald-500 text-white border-emerald-600',
+    unselected: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300',
+    border: 'border-emerald-300'
+  },
+  amber: {
+    selected: 'bg-amber-500 text-white border-amber-600',
+    unselected: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
+    border: 'border-amber-300'
+  },
+  indigo: {
+    selected: 'bg-indigo-500 text-white border-indigo-600',
+    unselected: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300',
+    border: 'border-indigo-300'
+  },
+  purple: {
+    selected: 'bg-purple-500 text-white border-purple-600',
+    unselected: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300',
+    border: 'border-purple-300'
+  }
+};
+
+interface FacilityDetailsSectionV2Props {
+  wizardState: WizardState;
+  setWizardState: React.Dispatch<React.SetStateAction<WizardState>>;
+  currentSection: number;
+  initializedFromVertical?: boolean;
+  sectionRef?: (el: HTMLDivElement | null) => void;
+  onBack: () => void;
+  onContinue: () => void;
+}
+
+export function FacilityDetailsSectionV2({
+  wizardState,
+  setWizardState,
+  currentSection,
+  initializedFromVertical = false,
+  sectionRef,
+  onBack,
+  onContinue,
+}: FacilityDetailsSectionV2Props) {
+  // Local state for expanded sections
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [showPropertyTypePrompt, setShowPropertyTypePrompt] = useState(false);
+  
+  // Get selected amenities from useCaseData
+  const selectedAmenities = wizardState.useCaseData?.selectedAmenities || [];
+  
+  // Determine size category based on room count or square footage
+  const getSizeCategory = useCallback(() => {
+    const rooms = wizardState.useCaseData?.roomCount || wizardState.facilitySize || 0;
+    const sqft = wizardState.useCaseData?.squareFootage || 0;
+    
+    // Check for mega properties first
+    if (rooms > 500 || sqft > 500000) return 'mega';
+    if (rooms > 300 || sqft > 300000) return 'large';
+    if (rooms > 100 || sqft > 100000) return 'medium';
+    return 'small';
+  }, [wizardState.useCaseData?.roomCount, wizardState.useCaseData?.squareFootage, wizardState.facilitySize]);
+  
+  // Show property type prompt when entering large/mega territory
+  useEffect(() => {
+    const category = getSizeCategory();
+    if ((category === 'large' || category === 'mega') && !wizardState.useCaseData?.propertyType) {
+      setShowPropertyTypePrompt(true);
+    }
+  }, [getSizeCategory, wizardState.useCaseData?.propertyType]);
+  
+  // Check if form is complete for auto-advance
+  const isFormComplete = useCallback(() => {
+    const hasLocation = !!wizardState.state;
+    const hasRoomCount = (wizardState.useCaseData?.roomCount || 0) > 0 || wizardState.facilitySize > 0;
+    const hasPropertyType = getSizeCategory() === 'small' || !!wizardState.useCaseData?.propertyType;
+    
+    return hasLocation && hasRoomCount && hasPropertyType;
+  }, [wizardState.state, wizardState.useCaseData?.roomCount, wizardState.useCaseData?.propertyType, wizardState.facilitySize, getSizeCategory]);
+  
+  // Auto-advance when form is complete
+  useEffect(() => {
+    if (currentSection === 2 && isFormComplete() && selectedAmenities.length > 0) {
+      // Small delay to let user see their selections
+      const timer = setTimeout(() => {
+        onContinue();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentSection, isFormComplete, selectedAmenities.length, onContinue]);
+  
+  // Toggle amenity selection
+  const toggleAmenity = (amenityId: string) => {
+    setWizardState(prev => {
+      const current = prev.useCaseData?.selectedAmenities || [];
+      const updated = current.includes(amenityId)
+        ? current.filter((id: string) => id !== amenityId)
+        : [...current, amenityId];
+      
+      return {
+        ...prev,
+        useCaseData: {
+          ...prev.useCaseData,
+          selectedAmenities: updated,
+          // Also update individual flags for backwards compatibility
+          hasPool: updated.some((id: string) => id.includes('pool')),
+          hasRestaurant: updated.includes('restaurant'),
+          hasSpa: updated.includes('spa'),
+          hasFitnessCenter: updated.includes('fitness_center'),
+          hasConferenceCenter: updated.includes('conference_center') || updated.includes('meeting_rooms'),
+          hasLaundry: updated.includes('laundry'),
+        }
+      };
+    });
+  };
+  
+  // Update property type
+  const setPropertyType = (typeId: string) => {
+    setWizardState(prev => ({
+      ...prev,
+      useCaseData: {
+        ...prev.useCaseData,
+        propertyType: typeId,
+      }
+    }));
+    setShowPropertyTypePrompt(false);
+  };
+  
+  // Update state selection
+  const updateState = (newState: string) => {
+    setWizardState(prev => ({
+      ...prev,
+      state: newState,
+    }));
+  };
+  
+  // Update room count
+  const updateRoomCount = (count: number) => {
+    setWizardState(prev => ({
+      ...prev,
+      facilitySize: count,
+      useCaseData: {
+        ...prev.useCaseData,
+        roomCount: count,
+      }
+    }));
+  };
+  
+  // Update square footage
+  const updateSquareFootage = (sqft: number) => {
+    setWizardState(prev => ({
+      ...prev,
+      useCaseData: {
+        ...prev.useCaseData,
+        squareFootage: sqft,
+      }
+    }));
+  };
+  
+  const sizeCategory = getSizeCategory();
+  const propertyTypes = PROPERTY_TYPE_BY_SIZE[sizeCategory];
+  
+  // Don't render if not on this section
+  if (currentSection !== 2) return null;
+  
+  return (
+    <div 
+      ref={sectionRef}
+      className="min-h-[calc(100vh-120px)] p-4 md:p-8"
+    >
+      <div className="max-w-3xl mx-auto">
+        {/* Welcome Banner for Vertical Users */}
+        {initializedFromVertical && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/20 border border-emerald-400/40 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h4 className="font-bold text-white text-lg">Welcome! Your details are pre-filled</h4>
+                <p className="text-sm text-emerald-200">
+                  Review and add any additional amenities, then we'll continue automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Step indicator */}
+        <div className="text-center mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full text-purple-300 text-sm">
+            <Sparkles className="w-4 h-4" />
+            {initializedFromVertical ? 'Step 1 of 4' : 'Step 2 of 5'}
+          </span>
+        </div>
+        
+        {/* Section Title */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Confirm Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Property Details</span>
+          </h2>
+          <p className="text-gray-400">This helps Merlin size your energy system accurately</p>
+        </div>
+        
+        {/* MAIN FORM CARD */}
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-purple-200/50 shadow-2xl">
+          
+          {/* ════════════════════════════════════════════════════════════════
+              SECTION 1: LOCATION (State Selector with Dropdown)
+          ════════════════════════════════════════════════════════════════ */}
+          <div className="mb-8">
+            <label className="flex items-center gap-2 text-gray-800 font-bold text-lg mb-3">
+              <MapPin className="w-5 h-5 text-purple-500" />
+              Location
+            </label>
+            <div className="relative">
+              <select
+                value={wizardState.state || ''}
+                onChange={(e) => updateState(e.target.value)}
+                className="w-full px-5 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl text-gray-800 text-lg font-semibold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer appearance-none pr-12"
+              >
+                <option value="" disabled>Select your state...</option>
+                {US_STATES.map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400 pointer-events-none" />
+            </div>
+            {wizardState.state && (
+              <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                {wizardState.state} electricity rates applied
+              </p>
+            )}
+          </div>
+          
+          {/* ════════════════════════════════════════════════════════════════
+              SECTION 2: PROPERTY SIZE (Smart Dropdown with Conditional)
+          ════════════════════════════════════════════════════════════════ */}
+          <div className="mb-8">
+            <label className="flex items-center gap-2 text-gray-800 font-bold text-lg mb-3">
+              <Building2 className="w-5 h-5 text-indigo-500" />
+              Property Size
+            </label>
+            
+            {/* Room Count - Number input for pre-populated values, dropdown for selecting */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="relative">
+                <label className="block text-sm text-gray-500 mb-1.5">Guest Rooms</label>
+                {/* Show number input when pre-populated, allowing direct editing */}
+                <input
+                  type="number"
+                  min="1"
+                  max="5000"
+                  value={wizardState.useCaseData?.roomCount || wizardState.facilitySize || ''}
+                  onChange={(e) => updateRoomCount(parseInt(e.target.value) || 0)}
+                  placeholder="e.g., 150"
+                  className="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl text-gray-800 font-semibold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                />
+                {(wizardState.useCaseData?.roomCount || wizardState.facilitySize) > 0 && (
+                  <span className="absolute right-3 bottom-3.5 text-sm text-indigo-500 font-medium">
+                    rooms
+                  </span>
+                )}
+              </div>
+              
+              <div className="relative">
+                <label className="block text-sm text-gray-500 mb-1.5">Square Footage (optional)</label>
+                <input
+                  type="number"
+                  min="1000"
+                  max="5000000"
+                  step="1000"
+                  value={wizardState.useCaseData?.squareFootage || ''}
+                  onChange={(e) => updateSquareFootage(parseInt(e.target.value) || 0)}
+                  placeholder="e.g., 100,000"
+                  className="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl text-gray-800 font-semibold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                />
+                {wizardState.useCaseData?.squareFootage > 0 && (
+                  <span className="absolute right-3 bottom-3.5 text-sm text-indigo-500 font-medium">
+                    sqft
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* Smart Property Type Prompt - Shows for large/mega properties */}
+            {showPropertyTypePrompt && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl animate-pulse">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="w-5 h-5 text-amber-500" />
+                  <span className="font-bold text-amber-800">
+                    {sizeCategory === 'mega' ? '🏰 Mega Property Detected!' : '⭐ Large Property Detected!'}
+                  </span>
+                </div>
+                <p className="text-sm text-amber-700 mb-4">
+                  Properties this size often have unique energy needs. What type best describes your property?
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {propertyTypes.types.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setPropertyType(type.id)}
+                      className={`p-4 rounded-xl text-left transition-all border-2 ${
+                        wizardState.useCaseData?.propertyType === type.id
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-600 shadow-lg'
+                          : 'bg-white border-amber-200 hover:border-amber-400 hover:bg-amber-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <type.icon className={`w-5 h-5 ${wizardState.useCaseData?.propertyType === type.id ? 'text-white' : 'text-amber-500'}`} />
+                        <span className="font-bold">{type.label}</span>
+                      </div>
+                      <p className={`text-xs mt-1 ${wizardState.useCaseData?.propertyType === type.id ? 'text-amber-100' : 'text-gray-500'}`}>
+                        {type.description}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* ════════════════════════════════════════════════════════════════
+              SECTION 3: AMENITIES (Pill-Style Buttons like Hero Calculator)
+          ════════════════════════════════════════════════════════════════ */}
+          <div className="mb-6">
+            <label className="flex items-center gap-2 text-gray-800 font-bold text-lg mb-4">
+              <Sparkles className="w-5 h-5 text-purple-500" />
+              Property Amenities
+            </label>
+            <p className="text-sm text-gray-500 mb-4">Select all that apply (affects energy sizing)</p>
+            
+            {/* Amenity Categories */}
+            <div className="space-y-5">
+              {Object.entries(AMENITY_CATEGORIES).map(([categoryKey, category]) => {
+                const colors = AMENITY_COLORS[category.color];
+                const categorySelected = category.options.some(opt => selectedAmenities.includes(opt.id));
+                
+                return (
+                  <div key={categoryKey} className={`p-4 rounded-xl border-2 transition-all ${
+                    categorySelected ? colors.border : 'border-gray-200'
+                  } bg-gray-50/50`}>
+                    {/* Category Header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <category.icon className={`w-4 h-4 ${categorySelected ? `text-${category.color}-500` : 'text-gray-400'}`} />
+                      <span className={`text-sm font-semibold ${categorySelected ? `text-${category.color}-700` : 'text-gray-600'}`}>
+                        {category.label}
+                      </span>
+                    </div>
+                    
+                    {/* Pill Buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      {category.options.map((option) => {
+                        const isSelected = selectedAmenities.includes(option.id);
+                        return (
+                          <button
+                            key={option.id}
+                            onClick={() => toggleAmenity(option.id)}
+                            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
+                              isSelected ? colors.selected : colors.unselected
+                            }`}
+                          >
+                            <option.icon className="w-4 h-4" />
+                            {option.label}
+                            {isSelected && <CheckCircle className="w-3.5 h-3.5 ml-1" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* ════════════════════════════════════════════════════════════════
+              PROGRESS INDICATOR & AUTO-ADVANCE MESSAGE
+          ════════════════════════════════════════════════════════════════ */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            {isFormComplete() && selectedAmenities.length > 0 ? (
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 border border-emerald-300 rounded-full text-emerald-700">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-semibold">Great! Moving to next step...</span>
+                  <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-gray-500 text-sm mb-4">
+                  {!wizardState.state && '📍 Select your state'}
+                  {wizardState.state && !(wizardState.useCaseData?.roomCount || wizardState.facilitySize) && '🏨 Select property size'}
+                  {wizardState.state && (wizardState.useCaseData?.roomCount || wizardState.facilitySize > 0) && selectedAmenities.length === 0 && '✨ Select at least one amenity'}
+                </p>
+                {/* Manual continue button as fallback */}
+                <button
+                  onClick={onContinue}
+                  disabled={!isFormComplete()}
+                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all"
+                >
+                  Continue →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default FacilityDetailsSectionV2;

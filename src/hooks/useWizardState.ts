@@ -23,6 +23,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { WizardState } from '@/types/wizardState';
 import { INITIAL_WIZARD_STATE } from '@/types/wizardState';
 import { calculateUseCasePower } from '@/services/useCasePowerCalculations';
+import { QuoteEngine } from '@/core/calculations/QuoteEngine';
 import {
   BESS_POWER_RATIOS,
   getBESSPowerRatio,
@@ -515,6 +516,10 @@ export function useWizardState() {
       recommendedBatteryKW,
       recommendedSolarKW,
       recommendedBackupHours,
+      // Financial estimates will be updated asynchronously via SSOT
+      estimatedAnnualSavings: 0,
+      estimatedPaybackYears: 0,
+      estimatedCost: 0,
     };
   }, [calculateBuildingLoad, calculateEVLoad, calculateNewEVLoad, getRecommendedBackupHours]);
 
@@ -556,6 +561,58 @@ export function useWizardState() {
     wizardState.existingInfrastructure,
     wizardState.goals,
     recalculate,
+  ]);
+
+  // ────────────────────────────────────────────
+  // ASYNC FINANCIAL ESTIMATION (SSOT - Dec 16, 2025)
+  // Uses QuoteEngine.quickEstimate for accurate preview numbers
+  // ────────────────────────────────────────────
+  useEffect(() => {
+    const { recommendedBatteryKW, recommendedBackupHours } = wizardState.calculated;
+    
+    // Skip if no battery recommendation yet
+    if (recommendedBatteryKW <= 0) return;
+    
+    const storageSizeMW = recommendedBatteryKW / 1000;
+    const electricityRate = wizardState.location.utilityRate || 0.15;
+    
+    // Debounce: only run after values stabilize
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💰 [useWizardState] Calculating financial estimates via SSOT:', {
+          storageSizeMW,
+          durationHours: recommendedBackupHours,
+          electricityRate,
+        });
+        
+        const estimate = await QuoteEngine.quickEstimate(
+          storageSizeMW,
+          recommendedBackupHours,
+          electricityRate
+        );
+        
+        console.log('💰 [useWizardState] SSOT financial estimate:', estimate);
+        
+        setWizardState(prev => ({
+          ...prev,
+          calculated: {
+            ...prev.calculated,
+            estimatedAnnualSavings: Math.round(estimate.annualSavings),
+            estimatedPaybackYears: Math.round(estimate.paybackYears * 10) / 10,
+            estimatedCost: Math.round(estimate.estimatedCost),
+          },
+        }));
+      } catch (error) {
+        console.error('💰 [useWizardState] Financial estimation failed:', error);
+        // Keep previous values on error
+      }
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [
+    wizardState.calculated.recommendedBatteryKW,
+    wizardState.calculated.recommendedBackupHours,
+    wizardState.location.utilityRate,
   ]);
 
   // ────────────────────────────────────────────

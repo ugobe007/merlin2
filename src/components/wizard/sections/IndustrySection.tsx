@@ -54,7 +54,7 @@ export function IndustrySection({
             <ArrowLeft className="w-4 h-4" />
             Back to Location
           </button>
-          <div className="text-sm text-gray-400">Step 2 of 6</div>
+          <div className="text-sm text-gray-400">Step 1 of 5</div>
         </div>
         
         {/* Header - SIMPLIFIED per Vineet feedback */}
