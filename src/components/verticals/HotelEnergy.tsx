@@ -802,30 +802,28 @@ export default function HotelEnergy() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-8 md:py-12">
           {/* Hero Headline - Above Calculator Panels */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-3 leading-[1.1]">
-              Save up to <span className="text-emerald-400">50%</span> on your Hotel energy bills
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-3">
+              Save up to{' '}
+              <span className="text-6xl md:text-7xl lg:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                50%
+              </span>
+              <br />
+              <span className="text-4xl md:text-5xl lg:text-6xl text-gray-300">
+                on Hotel energy costs
+              </span>
             </h1>
-            <p className="text-lg md:text-xl text-indigo-200 max-w-2xl mx-auto mb-4">
+            <p className="text-lg md:text-xl text-indigo-200 max-w-2xl mx-auto mb-6">
               Enter your hotel details and see instant savings estimates
             </p>
-            {/* CTA Button - Scrolls to calculator panels */}
-            <button
-              onClick={() => document.getElementById('hero-panel')?.scrollIntoView({ behavior: 'smooth' })}
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-white px-8 py-3 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:shadow-emerald-500/30 transition-all hover:scale-105"
-            >
-              <Sparkles className="w-5 h-5" />
-              ✨ Start Building Your Quote →
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
             
-            {/* How Merlin Works button - TrueQuote moved into right panel */}
-            <div className="flex items-center justify-center gap-4 mt-6">
+            {/* How Merlin Works button - LARGER (removed Start Building Your Quote button) */}
+            <div className="flex items-center justify-center gap-4">
               <button 
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-2 text-slate-200 text-sm hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-700/70 px-4 py-2 rounded-xl border border-slate-500/40 hover:border-indigo-400/50"
+                className="flex items-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-2xl border border-white/20 transition-all hover:scale-105 shadow-lg"
               >
-                <img src={merlinImage} alt="" className="w-5 h-5" />
-                How Merlin Works
+                <img src={merlinImage} alt="" className="w-6 h-6" />
+                <span>How Merlin Works</span>
               </button>
             </div>
           </div>
@@ -835,12 +833,13 @@ export default function HotelEnergy() {
             
             {/* LEFT PANEL: Hotel Details Calculator - Steel Blue Slate */}
             <div className="bg-slate-800/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-slate-500/30 shadow-2xl flex flex-col">
-              <h3 className="text-xl font-black text-white mb-5 flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-400/50">
-                  <Calculator className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-3 mb-5">
+                {/* High-quality gradient icon container */}
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                  <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Your Hotel Details</span>
-              </h3>
+                <h3 className="text-2xl font-black text-white">Your Hotel Details</h3>
+              </div>
               
               {/* Row 1: Rooms + Auto Class */}
               <div className="mb-4">
@@ -1006,12 +1005,13 @@ export default function HotelEnergy() {
             <div className="bg-purple-900/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-purple-500/30 shadow-2xl flex flex-col">
               {/* Header with TrueQuote Badge INSIDE the panel */}
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-xl font-black text-white flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-400/50">
+                <div className="flex items-center gap-3">
+                  {/* High-quality gradient icon container */}
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
                     <TrendingDown className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">Your Estimated Savings</span>
-                </h3>
+                  <h3 className="text-2xl font-black text-emerald-400">Your Estimated Savings</h3>
+                </div>
                 
                 {/* TrueQuote Badge - NOW INSIDE THE PANEL */}
                 <button 
