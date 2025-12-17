@@ -1187,8 +1187,8 @@ export default function StreamlinedWizard({
         </div>
       )}
 
-      {/* SIDEBAR TRUEQUOTE BUTTON - Vertically centered on left */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[9998] flex flex-col gap-3">
+      {/* SIDEBAR TRUEQUOTE BUTTON - Higher on left side */}
+      <div className="fixed left-4 top-32 z-[9998] flex flex-col gap-3">
         {/* TrueQuote Logo Button - Exact replica from image */}
         <button
           onClick={() => {

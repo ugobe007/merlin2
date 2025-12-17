@@ -15,7 +15,7 @@
  */
 
 import React, { useState } from 'react';
-import { Telescope, BarChart3, HelpCircle, Battery, Sun, Zap, DollarSign, Clock, ChevronRight } from 'lucide-react';
+import { Wand2, BarChart3, HelpCircle, Battery, Sun, Zap, DollarSign, Clock, ChevronRight } from 'lucide-react';
 import { FloatingWidget, FloatingPanel } from './ui';
 import { SavingsScoutNavbar } from './indicators/SavingsScoutWidget';
 
@@ -190,7 +190,7 @@ export function FloatingWidgets({
             </>
           ) : (
             <div className="text-center py-8">
-              <Telescope className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <Wand2 className="w-16 h-16 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">
                 Select a location to see savings opportunities in your area.
               </p>
