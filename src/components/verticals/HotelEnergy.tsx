@@ -840,62 +840,65 @@ export default function HotelEnergy() {
               Enter your hotel details and see instant savings estimates
             </p>
             
-            {/* How Merlin Works button - LARGER (removed Start Building Your Quote button) */}
+            {/* How Merlin Works button - GLOWING EFFECT */}
             <div className="flex items-center justify-center gap-4">
               <button 
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-2xl border border-white/20 transition-all hover:scale-105 shadow-lg"
+                className="group relative flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-600 via-violet-500 to-cyan-500 hover:from-purple-500 hover:via-violet-400 hover:to-cyan-400 text-white font-black text-xl rounded-2xl border-2 border-white/30 transition-all hover:scale-110 shadow-2xl shadow-purple-500/50 hover:shadow-cyan-400/60 animate-pulse"
               >
-                <img src={merlinImage} alt="" className="w-6 h-6" />
-                <span>How Merlin Works</span>
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 via-violet-400 to-cyan-400 blur-xl opacity-50 group-hover:opacity-80 transition-opacity -z-10" />
+                <img src={merlinImage} alt="" className="w-10 h-10 drop-shadow-lg" />
+                <span className="drop-shadow-lg">🪄 How Merlin Works</span>
+                <Sparkles className="w-6 h-6 text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} />
               </button>
             </div>
           </div>
           
-          {/* Two-Panel Calculator Layout - COMPACT & BALANCED */}
-          <div id="hero-panel" className="grid lg:grid-cols-2 gap-4 items-stretch">
+          {/* Two-Panel Calculator Layout - LARGER & BALANCED */}
+          <div id="hero-panel" className="grid lg:grid-cols-2 gap-5 items-stretch">
             
-            {/* LEFT PANEL: Hotel Details - COMPACT */}
-            <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-slate-500/30 shadow-xl">
+            {/* LEFT PANEL: Hotel Details - LARGER INPUTS */}
+            <div className="bg-slate-800/50 backdrop-blur-md rounded-3xl p-6 border border-slate-500/40 shadow-2xl">
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Building2 className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                  <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Your Hotel Details</h3>
+                <h3 className="text-2xl font-black text-white">Your Hotel Details</h3>
               </div>
 
               {/* Location - Full Width */}
-              <div className="mb-3">
-                <label className="text-gray-400 text-xs mb-1 block">📍 Location</label>
+              <div className="mb-4">
+                <label className="text-gray-300 text-sm font-semibold mb-1.5 block">📍 Location</label>
                 <select
                   value={inputs.state}
                   onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
+                  className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-base font-semibold focus:border-cyan-400 transition-colors"
                 >
                   {Object.keys(STATE_RATES).map((state) => (
                     <option key={state} value={state} className="bg-slate-800">{state}</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-sm text-cyan-400 mt-1.5 font-medium">
                   ${(STATE_RATES[inputs.state]?.rate || 0.12).toFixed(2)}/kWh • ${STATE_RATES[inputs.state]?.demandCharge || 12}/kW demand
                 </p>
               </div>
 
               {/* Rooms & Square Feet - TWO COLUMNS */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">🛏️ Guest Rooms</label>
+                  <label className="text-gray-300 text-sm font-semibold mb-1.5 block">🛏️ Guest Rooms</label>
                   <input
                     type="number"
                     value={inputs.numberOfRooms}
                     onChange={(e) => setInputs({ ...inputs, numberOfRooms: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-cyan-400 transition-colors"
                     placeholder="150"
                   />
                 </div>
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">📐 Sq Footage</label>
+                  <label className="text-gray-300 text-sm font-semibold mb-1.5 block">📐 Sq Footage</label>
                   <input
                     type="number"
                     value={inputs.squareFootage}
@@ -903,141 +906,120 @@ export default function HotelEnergy() {
                       setUserSetBill(false);
                       setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 0 });
                     }}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm font-medium"
+                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-cyan-400 transition-colors"
                     placeholder="75000"
                   />
                 </div>
               </div>
 
               {/* Auto Class Badge */}
-              <div className={`text-center py-1.5 px-3 rounded-lg mb-3 text-xs font-bold ${
-                inputs.numberOfRooms > 400 ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' :
-                inputs.numberOfRooms > 200 ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' :
-                inputs.numberOfRooms > 75 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30' :
-                'bg-slate-600/50 text-slate-300 border border-slate-500/30'
+              <div className={`text-center py-2 px-4 rounded-xl mb-4 text-sm font-black ${
+                inputs.numberOfRooms > 400 ? 'bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-300 border-2 border-amber-400/50 shadow-lg shadow-amber-500/20' :
+                inputs.numberOfRooms > 200 ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-purple-300 border-2 border-purple-400/50 shadow-lg shadow-purple-500/20' :
+                inputs.numberOfRooms > 75 ? 'bg-gradient-to-r from-indigo-500/30 to-blue-500/30 text-indigo-300 border-2 border-indigo-400/50 shadow-lg shadow-indigo-500/20' :
+                'bg-slate-600/50 text-slate-300 border-2 border-slate-500/50'
               }`}>
-                {inputs.numberOfRooms > 400 ? '✨ Luxury Class' :
-                 inputs.numberOfRooms > 200 ? '⭐ Upscale Class' :
-                 inputs.numberOfRooms > 75 ? '🏨 Midscale Class' :
-                 '🏨 Budget Class'}
+                {inputs.numberOfRooms > 400 ? '✨ Luxury Class Hotel' :
+                 inputs.numberOfRooms > 200 ? '⭐ Upscale Class Hotel' :
+                 inputs.numberOfRooms > 75 ? '🏨 Midscale Class Hotel' :
+                 '🏨 Budget Class Hotel'}
               </div>
 
               {/* Divider */}
-              <div className="border-t border-white/10 my-3"></div>
+              <div className="border-t-2 border-white/10 my-4"></div>
 
-              {/* Equipment Section Header */}
-              <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
-                <Zap className="w-3 h-3" /> Equipment & Efficiency
+              {/* Amenities with Dropdowns - Pool, Restaurant, EV */}
+              <p className="text-gray-300 text-sm font-semibold mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" /> Amenities
               </p>
 
-              {/* HVAC & Lighting - TWO COLUMNS, COMPACT SLIDERS */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* Pool Dropdown */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">HVAC Age</span>
-                    <span className="text-white font-bold">{inputs.hvacRating}/10</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={inputs.hvacRating}
-                    onChange={(e) => setInputs({ ...inputs, hvacRating: parseInt(e.target.value) })}
-                    className="w-full h-2 accent-cyan-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-500">
-                    <span>Old</span>
-                    <span>New</span>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">Lighting</span>
-                    <span className="text-white font-bold">{inputs.lightingEfficiency}/5</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={5}
-                    value={inputs.lightingEfficiency}
-                    onChange={(e) => setInputs({ ...inputs, lightingEfficiency: parseInt(e.target.value) })}
-                    className="w-full h-2 accent-amber-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-500">
-                    <span>Bulbs</span>
-                    <span>LED</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Laundry - TWO COLUMNS */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">Laundry</span>
-                    <span className="text-white font-bold">{inputs.laundryMachineCount}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={20}
-                    value={inputs.laundryMachineCount}
-                    onChange={(e) => setInputs({ ...inputs, laundryMachineCount: parseInt(e.target.value), hasLaundry: parseInt(e.target.value) > 0 })}
-                    className="w-full h-2 accent-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Type</label>
+                  <label className="text-gray-400 text-xs font-medium mb-1 block">🏊 Pool</label>
                   <select
-                    value={inputs.laundryType}
-                    onChange={(e) => setInputs({ ...inputs, laundryType: e.target.value as 'commercial' | 'regular' })}
-                    className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs"
+                    value={inputs.hasIndoorPool && inputs.hasOutdoorPool ? 'both' : inputs.hasIndoorPool ? 'indoor' : inputs.hasOutdoorPool ? 'outdoor' : 'none'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setInputs({ 
+                        ...inputs, 
+                        hasPool: val !== 'none',
+                        hasIndoorPool: val === 'indoor' || val === 'both',
+                        hasOutdoorPool: val === 'outdoor' || val === 'both'
+                      });
+                    }}
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
                   >
-                    <option value="commercial">Commercial</option>
-                    <option value="regular">Regular</option>
+                    <option value="none">None</option>
+                    <option value="indoor">Indoor</option>
+                    <option value="outdoor">Outdoor</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs font-medium mb-1 block">🍽️ Restaurants</label>
+                  <select
+                    value={inputs.restaurantCount}
+                    onChange={(e) => {
+                      const count = parseInt(e.target.value);
+                      setInputs({ ...inputs, restaurantCount: count, hasRestaurant: count > 0 });
+                    }}
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
+                  >
+                    <option value={0}>None</option>
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3+</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs font-medium mb-1 block">⚡ EV Chargers</label>
+                  <select
+                    value={inputs.evChargerCount}
+                    onChange={(e) => {
+                      const count = parseInt(e.target.value);
+                      setInputs({ ...inputs, evChargerCount: count, hasEVCharging: count > 0 });
+                    }}
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
+                  >
+                    <option value={0}>None</option>
+                    <option value={4}>4 (L2)</option>
+                    <option value={8}>8 (L2)</option>
+                    <option value={12}>12 (L2+DCFC)</option>
+                    <option value={20}>20+ (Hub)</option>
                   </select>
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-white/10 my-3"></div>
-
-              {/* Amenities Section Header */}
-              <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Amenities (tap to toggle)
-              </p>
-
-              {/* Amenity Pills - 3 COLUMNS, COMPACT */}
-              <div className="grid grid-cols-3 gap-1.5 mb-3">
+              {/* Amenity Toggle Pills - 2x2 Grid */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 {[
-                  { key: 'hasPool', icon: '🏊', label: 'Pool', value: inputs.hasPool },
-                  { key: 'hasRestaurant', icon: '🍽️', label: 'Restaurant', value: inputs.hasRestaurant },
-                  { key: 'hasSpa', icon: '💆', label: 'Spa', value: inputs.hasSpa },
-                  { key: 'hasFitnessCenter', icon: '🏋️', label: 'Gym', value: inputs.hasFitnessCenter },
-                  { key: 'hasConferenceCenter', icon: '👔', label: 'Conf Ctr', value: inputs.hasConferenceCenter },
-                  { key: 'hasEVCharging', icon: '⚡', label: 'EV', value: inputs.hasEVCharging },
+                  { key: 'hasSpa', icon: '💆', label: 'Spa & Wellness', value: inputs.hasSpa },
+                  { key: 'hasFitnessCenter', icon: '🏋️', label: 'Fitness Center', value: inputs.hasFitnessCenter },
+                  { key: 'hasConferenceCenter', icon: '👔', label: 'Conference Center', value: inputs.hasConferenceCenter },
+                  { key: 'hasLaundry', icon: '👕', label: 'On-Site Laundry', value: inputs.hasLaundry },
                 ].map((amenity) => (
                   <button
                     key={amenity.key}
                     onClick={() => setInputs({ ...inputs, [amenity.key]: !amenity.value })}
-                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${
+                    className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
                       amenity.value 
-                        ? 'bg-emerald-500/80 text-white border border-emerald-400/50' 
-                        : 'bg-slate-700/60 text-gray-400 border border-slate-600/50 hover:bg-slate-600/80'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30' 
+                        : 'bg-slate-700/60 text-gray-300 border-2 border-slate-500/50 hover:bg-slate-600/80 hover:border-slate-400/50'
                     }`}
                   >
-                    <span>{amenity.icon}</span>
+                    <span className="text-lg">{amenity.icon}</span>
                     <span>{amenity.label}</span>
                   </button>
                 ))}
               </div>
 
               {/* Elevators + Energy Star - TWO COLUMNS */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">🛗 Elevators</span>
-                    <span className="text-white font-bold">{inputs.elevatorCount}</span>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-300 font-semibold">🛗 Elevators</span>
+                    <span className="text-white font-black text-lg">{inputs.elevatorCount}</span>
                   </div>
                   <input
                     type="range"
@@ -1045,28 +1027,28 @@ export default function HotelEnergy() {
                     max={10}
                     value={inputs.elevatorCount}
                     onChange={(e) => setInputs({ ...inputs, elevatorCount: parseInt(e.target.value) })}
-                    className="w-full h-2 accent-indigo-500"
+                    className="w-full h-3 accent-indigo-500 cursor-pointer"
                   />
                 </div>
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Energy Star?</label>
-                  <div className="flex gap-1">
+                  <label className="text-gray-300 text-sm font-semibold mb-2 block">⭐ Energy Star?</label>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setInputs({ ...inputs, isEnergyEfficient: true })}
-                      className={`flex-1 py-1 rounded text-xs font-bold transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all ${
                         inputs.isEnergyEfficient 
-                          ? 'bg-emerald-500 text-white' 
-                          : 'bg-slate-700 text-gray-400'
+                          ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30' 
+                          : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
                       }`}
                     >
                       ✓ Yes
                     </button>
                     <button
                       onClick={() => setInputs({ ...inputs, isEnergyEfficient: false })}
-                      className={`flex-1 py-1 rounded text-xs font-bold transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all ${
                         !inputs.isEnergyEfficient 
                           ? 'bg-slate-600 text-white' 
-                          : 'bg-slate-700 text-gray-400'
+                          : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
                       }`}
                     >
                       No
@@ -1076,131 +1058,111 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* RIGHT PANEL: Your Estimated Savings - EXPANDED */}
-            <div className="bg-purple-900/40 backdrop-blur-sm rounded-2xl p-5 border border-purple-500/30 shadow-xl flex flex-col">
+            {/* RIGHT PANEL: Your Estimated Savings - EXPANDED with POP */}
+            <div className="bg-gradient-to-br from-purple-900/60 via-indigo-900/50 to-slate-900/60 backdrop-blur-md rounded-3xl p-6 border-2 border-purple-500/40 shadow-2xl shadow-purple-500/20 flex flex-col">
               {/* Header with TrueQuote */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                    <TrendingDown className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                    <TrendingDown className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-emerald-400">Your Estimated Savings</h3>
+                  <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Your Savings</h3>
                 </div>
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
-                  className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-amber-400/50 hover:bg-white/20 transition-all"
+                  className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 px-4 py-2 rounded-full border-2 border-amber-400/60 hover:border-amber-300 transition-all hover:scale-105 shadow-lg shadow-amber-500/20"
                 >
-                  <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-xs font-bold text-amber-400">TrueQuote™</span>
+                  <CheckCircle className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-black text-amber-400">TrueQuote™</span>
                 </button>
               </div>
 
-              {/* Hero Savings Number */}
-              <div className="text-center py-4 bg-slate-800/40 rounded-xl mb-4">
-                <p className="text-gray-400 text-xs mb-1">⚡ ANNUAL SAVINGS ⚡</p>
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+              {/* Hero Savings Number - BIGGER & GLOWING */}
+              <div className="relative text-center py-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl mb-5 border border-emerald-500/30 overflow-hidden">
+                {/* Glow background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 animate-pulse" />
+                <p className="relative text-gray-400 text-sm mb-2 font-semibold">⚡ ESTIMATED ANNUAL SAVINGS ⚡</p>
+                <p className="relative text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 drop-shadow-lg animate-pulse" style={{ animationDuration: '2s' }}>
                   ${heroEstimate.savings.toLocaleString()}
                 </p>
-                <p className="text-gray-400 text-sm">per year</p>
+                <p className="relative text-gray-300 text-base font-medium mt-1">per year</p>
               </div>
 
-              {/* Battery / Solar / Net Cost - THREE COLUMNS */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-                  <Battery className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">{Math.round(peakKW * 0.4 * inputs.storageHours)}</p>
-                  <p className="text-[10px] text-gray-400">kWh Battery</p>
+              {/* System Specs - THREE COLUMNS with GLOW */}
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl p-4 text-center border border-cyan-400/40 shadow-lg shadow-cyan-500/20">
+                  <Battery className="w-7 h-7 text-cyan-400 mx-auto mb-2" />
+                  <p className="text-2xl font-black text-white">{Math.round(peakKW * 0.4 * inputs.storageHours)}</p>
+                  <p className="text-xs text-cyan-300 font-semibold">kWh Battery</p>
                 </div>
-                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-                  <Sun className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">{Math.round(peakKW * 0.3)}</p>
-                  <p className="text-[10px] text-gray-400">kW Solar</p>
+                <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl p-4 text-center border border-amber-400/40 shadow-lg shadow-amber-500/20">
+                  <Sun className="w-7 h-7 text-amber-400 mx-auto mb-2" />
+                  <p className="text-2xl font-black text-white">{Math.round(peakKW * 0.3)}</p>
+                  <p className="text-xs text-amber-300 font-semibold">kW Solar</p>
                 </div>
-                <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-                  <DollarSign className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7 / 1000)}K</p>
-                  <p className="text-[10px] text-gray-400">Net Cost</p>
-                </div>
-              </div>
-
-              {/* Financial Metrics - THREE COLUMNS */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <p className="text-xl font-bold text-purple-300">{heroEstimate.payback}</p>
-                  <p className="text-[10px] text-gray-400">Yr Payback</p>
-                </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <p className="text-xl font-bold text-purple-300">{Math.round(25 / heroEstimate.payback * 100)}%</p>
-                  <p className="text-[10px] text-gray-400">25-Yr ROI</p>
-                </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
-                  <p className="text-xl font-bold text-amber-400">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.3 / 1000)}K</p>
-                  <p className="text-[10px] text-gray-400">Incentives</p>
+                <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-xl p-4 text-center border border-emerald-400/40 shadow-lg shadow-emerald-500/20">
+                  <DollarSign className="w-7 h-7 text-emerald-400 mx-auto mb-2" />
+                  <p className="text-2xl font-black text-white">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7 / 1000)}K</p>
+                  <p className="text-xs text-emerald-300 font-semibold">Net Cost</p>
                 </div>
               </div>
 
-              {/* Savings Breakdown - Progress Bars */}
-              <div className="mb-4">
-                <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
-                  <Receipt className="w-3 h-3" /> Savings Breakdown
+              {/* Financial Metrics - 4 COLUMNS with BIG NUMBERS */}
+              <div className="grid grid-cols-4 gap-2 mb-5">
+                <div className="text-center p-3 bg-white/5 rounded-xl border border-purple-400/30">
+                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-purple-300 to-purple-500">{heroEstimate.payback}</p>
+                  <p className="text-[11px] text-gray-400 font-semibold">Yr Payback</p>
+                </div>
+                <div className="text-center p-3 bg-white/5 rounded-xl border border-cyan-400/30">
+                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-cyan-500">{Math.round(25 / heroEstimate.payback * 100)}%</p>
+                  <p className="text-[11px] text-gray-400 font-semibold">25-Yr ROI</p>
+                </div>
+                <div className="text-center p-3 bg-white/5 rounded-xl border border-amber-400/30">
+                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-500">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.3 / 1000)}K</p>
+                  <p className="text-[11px] text-gray-400 font-semibold">Incentives</p>
+                </div>
+                <div className="text-center p-3 bg-white/5 rounded-xl border border-emerald-400/30">
+                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-emerald-300 to-emerald-500">${Math.round(heroEstimate.savings * 25 / 1000)}K</p>
+                  <p className="text-[11px] text-gray-400 font-semibold">25-Yr Save</p>
+                </div>
+              </div>
+
+              {/* Energy & Financial Metrics - Replaces Environmental Impact */}
+              <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-cyan-500/10 rounded-xl p-4 mb-5 border border-indigo-400/30">
+                <p className="text-gray-300 text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" /> Energy & Financial Metrics
                 </p>
-                <div className="space-y-2">
-                  {[
-                    { label: 'Demand Charges', percent: 55, color: 'bg-emerald-500' },
-                    { label: 'Energy Arbitrage', percent: 24, color: 'bg-cyan-500' },
-                    { label: 'Peak Shaving', percent: 16, color: 'bg-purple-500' },
-                    { label: 'TOU Optimization', percent: 5, color: 'bg-amber-500' },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-400 w-24 truncate">{item.label}</span>
-                      <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${item.color} rounded-full`} 
-                          style={{ width: `${item.percent}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-white font-medium w-10 text-right">
-                        ${Math.round(heroEstimate.savings * item.percent / 100 / 1000)}K
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Environmental Impact */}
-              <div className="bg-emerald-500/10 rounded-xl p-3 mb-4 border border-emerald-500/20">
-                <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">
-                  <Leaf className="w-3 h-3 text-emerald-400" /> Environmental Impact
-                </p>
-                <div className="flex items-center justify-around">
+                <div className="grid grid-cols-4 gap-2">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-emerald-400">{Math.round(heroEstimate.savings / 600)}</p>
-                    <p className="text-[10px] text-gray-400">tons CO₂/yr</p>
+                    <p className="text-2xl font-black text-yellow-400">{Math.round(peakKW)}</p>
+                    <p className="text-[10px] text-gray-400">kW Peak</p>
                   </div>
-                  <div className="text-gray-600">|</div>
                   <div className="text-center">
-                    <p className="text-lg font-bold text-emerald-400">{Math.round(heroEstimate.savings / 600 / 4.6)}</p>
-                    <p className="text-[10px] text-gray-400">cars off road</p>
+                    <p className="text-2xl font-black text-cyan-400">{Math.round(peakKW * 0.4 * 100)}%</p>
+                    <p className="text-[10px] text-gray-400">Peak Shave</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-black text-purple-400">${Math.round(demandChargeImpact / 1000)}K</p>
+                    <p className="text-[10px] text-gray-400">$/yr Demand</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-black text-emerald-400">{Math.round(heroEstimate.savings / 600)}</p>
+                    <p className="text-[10px] text-gray-400">tons CO₂</p>
                   </div>
                 </div>
               </div>
 
-              {/* CTA Button - Push to Bottom */}
+              {/* CTA Button - GLOWING GRADIENT - Push to Bottom */}
               <div className="mt-auto">
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  className="group relative w-full py-5 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 hover:from-purple-500 hover:via-indigo-400 hover:to-cyan-400 text-white font-black text-xl rounded-2xl transition-all flex items-center justify-center gap-3 shadow-2xl hover:shadow-cyan-500/50 hover:scale-[1.02] border-2 border-white/20"
                 >
-                  <Wand2 className="w-5 h-5" />
-                  Build My Custom Quote
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setShowLeadForm(true)}
-                  className="w-full mt-2 py-2 bg-slate-800/70 hover:bg-slate-700/80 border border-indigo-400/40 text-indigo-100 text-sm rounded-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-4 h-4" />
-                  Talk to Expert
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-400 blur-xl opacity-50 group-hover:opacity-80 transition-opacity -z-10" />
+                  <Wand2 className="w-7 h-7" />
+                  <span>Build My Custom Quote</span>
+                  <ArrowRight className="w-7 h-7 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
