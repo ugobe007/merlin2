@@ -56,6 +56,9 @@ import {
 import { FACILITY_PRESETS, EQUIPMENT_TIER_OPTIONS, FACILITY_SUBTYPES } from '../constants/wizardConstants';
 import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '../types/wizardTypes';
 
+// Import new high-fidelity UI components
+import { StepExplanation, PrimaryButton, SecondaryButton } from '../ui';
+
 // Icon mapping for common amenity/option values
 const OPTION_ICONS: Record<string, React.ElementType> = {
   // Pool & Spa
@@ -257,13 +260,14 @@ export function FacilityDetailsSection({
         {/* Section Navigation - Hide "Back" for vertical users on first visit */}
         <div className="flex items-center justify-between mb-6">
           {!initializedFromVertical ? (
-            <button
+            <SecondaryButton
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
+              icon={<ArrowLeft className="w-4 h-4" />}
+              iconPosition="left"
+              className="w-auto"
             >
-              <ArrowLeft className="w-4 h-4" />
               Back to Industry
-            </button>
+            </SecondaryButton>
           ) : (
             <div className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600">
               <Sparkles className="w-4 h-4" />
@@ -275,6 +279,21 @@ export function FacilityDetailsSection({
           </div>
         </div>
         
+        {/* Step Explanation - High fidelity header */}
+        <StepExplanation
+          stepNumber={initializedFromVertical ? 1 : 2}
+          totalSteps={initializedFromVertical ? 4 : 5}
+          title={initializedFromVertical 
+            ? `Confirm Your ${wizardState.industryName || 'Facility'} Details`
+            : `Tell Us About Your ${wizardState.industryName || 'Facility'}`
+          }
+          description={initializedFromVertical 
+            ? "We've pre-filled some values based on your calculator inputs. Review and adjust as needed, then continue to configure your energy system."
+            : "Answer a few industry-specific questions to help Merlin accurately size your battery storage system and maximize your savings."
+          }
+          estimatedTime="2 minutes"
+        />
+        
         {/* Progress badges */}
         <div className="flex flex-wrap gap-2 justify-center mb-6">
           <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-4 py-1.5">
@@ -285,21 +304,6 @@ export function FacilityDetailsSection({
             <Building2 className="w-4 h-4 text-purple-600" />
             <span className="text-purple-700 text-sm">{wizardState.industryName}</span>
           </div>
-        </div>
-        
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            {initializedFromVertical 
-              ? <>Confirm your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-500">{wizardState.industryName || 'facility'}</span> details</>
-              : <>Tell us about your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-500">{wizardState.industryName || 'facility'}</span></>
-            }
-          </h2>
-          <p className="text-gray-300">
-            {initializedFromVertical 
-              ? 'Review the values below - adjust if needed, then continue'
-              : 'This helps Merlin size your system accurately'
-            }
-          </p>
         </div>
         
         {/* ═══════════════════════════════════════════════════════════════════
@@ -928,13 +932,15 @@ export function FacilityDetailsSection({
           )}
           
           {/* Continue button */}
-          <button
+          <PrimaryButton
             onClick={onContinue}
             disabled={!isFormValid}
-            className="w-full mt-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2"
+            icon={<ArrowRight className="w-5 h-5" />}
+            iconPosition="right"
+            className="mt-6"
           >
-            Continue <ArrowRight className="w-5 h-5" />
-          </button>
+            Continue
+          </PrimaryButton>
         </div>
       </div>
     </div>
