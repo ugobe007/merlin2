@@ -1,15 +1,17 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION COMPARISON SECTION (Step 4)
 // Complete redesign - Dec 16, 2025
+// Updated Dec 17, 2025 - Added sliders with smart guidance for user config
 // 
 // The "Mind Twist" - User's configuration vs Merlin's recommendation
 // 
 // Features:
-// 1. Shows user's configuration based on their power choices
-// 2. Shows Merlin's AI-optimized recommendation (FIXED - doesn't change)
-// 3. Side-by-side comparison with key metrics
-// 4. User can accept either configuration
-// 5. Auto-advances to scenario planner (Step 5) after selection
+// 1. User can ADJUST their configuration with sliders
+// 2. Smart guidance shows when user exceeds recommended capacity
+// 3. Merlin's AI-optimized recommendation (FIXED - doesn't change)
+// 4. Side-by-side comparison with key metrics
+// 5. User can accept either configuration
+// 6. Auto-advances to scenario planner (Step 5) after selection
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -35,6 +37,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
+  HelpCircle,
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import merlinImage from '@/assets/images/new_Merlin.png';
@@ -63,6 +67,10 @@ export function ConfigurationComparison({
   const [selectedConfig, setSelectedConfig] = useState<'user' | 'merlin' | null>(null);
   const [showExplanation, setShowExplanation] = useState(true);
   
+  // Get peak demand for guidance
+  const peakDemandKW = centralizedState?.calculated?.totalPeakDemandKW || 450;
+  const industryName = wizardState.industryName || wizardState.selectedIndustry || 'your facility';
+  
   // Get Merlin's recommendation from centralized calculations
   const merlinConfig = {
     batteryKW: centralizedState?.calculated?.recommendedBatteryKW || 250,
@@ -77,29 +85,64 @@ export function ConfigurationComparison({
     netCost: centralizedState?.calculated?.estimatedCost || 500000,
   };
   
-  // Get user's configuration from their choices in Goals section
-  // Note: Financial estimates will be calculated when quote runs
-  // For now we use estimates from the equipment sizing
-  const userConfig = {
-    batteryKW: wizardState.batteryKW || 0,
-    batteryKWh: wizardState.batteryKWh || 0,
-    durationHours: wizardState.durationHours || 4,
-    solarKW: wizardState.solarKW || 0,
-    windKW: wizardState.windTurbineKW || 0,
-    generatorKW: wizardState.generatorKW || 0,
-    // Calculate estimated savings from equipment (rough estimate for comparison display)
-    annualSavings: Math.round((wizardState.batteryKWh || 0) * 0.12 * 365 * 0.4), // Rough estimate: kWh * rate * days * utilization
-    paybackYears: wizardState.estimatedCost?.total 
-      ? wizardState.estimatedCost.total / Math.max(1, Math.round((wizardState.batteryKWh || 0) * 0.12 * 365 * 0.4))
-      : 5,
-    roi25Year: 0, // Will be calculated
-    netCost: wizardState.estimatedCost?.total || 0,
+  // ═══════════════════════════════════════════════════════════════
+  // SMART CAPACITY RECOMMENDATIONS
+  // These are based on peak demand and industry standards
+  // ═══════════════════════════════════════════════════════════════
+  const recommendations = {
+    // Battery: 50-100% of peak demand for most commercial
+    minBatteryKW: Math.round(peakDemandKW * 0.5),
+    maxBatteryKW: Math.round(peakDemandKW * 1.5),
+    recommendedBatteryKW: merlinConfig.batteryKW,
+    // Solar: 50-150% of peak demand (NREL commercial solar sizing)
+    minSolarKW: Math.round(peakDemandKW * 0.5),
+    maxSolarKW: Math.round(peakDemandKW * 2.0),
+    recommendedSolarKW: Math.round(peakDemandKW * 1.2), // 1.2x peak is optimal
+    // Wind: typically 10-50% of peak for commercial (less common)
+    minWindKW: 0,
+    maxWindKW: Math.round(peakDemandKW * 0.5),
+    recommendedWindKW: 0, // Wind rarely recommended for commercial
+    // Generator: 25-50% of peak for backup
+    minGeneratorKW: Math.round(peakDemandKW * 0.25),
+    maxGeneratorKW: Math.round(peakDemandKW * 0.75),
+    recommendedGeneratorKW: Math.round(peakDemandKW * 0.25),
   };
   
-  // Calculate ROI after payback is known
-  userConfig.roi25Year = userConfig.paybackYears > 0 
-    ? Math.round((25 / userConfig.paybackYears) * 100) 
-    : 0;
+  // User's current config (editable via sliders)
+  const [userBatteryKW, setUserBatteryKW] = useState(wizardState.batteryKW || merlinConfig.batteryKW);
+  const [userSolarKW, setUserSolarKW] = useState(wizardState.solarKW || 0);
+  const [userWindKW, setUserWindKW] = useState(wizardState.windTurbineKW || 0);
+  const [userGeneratorKW, setUserGeneratorKW] = useState(wizardState.generatorKW || 0);
+  const [userDurationHours, setUserDurationHours] = useState(wizardState.durationHours || 4);
+  
+  // Sync local state to wizard state
+  useEffect(() => {
+    setWizardState(prev => ({
+      ...prev,
+      batteryKW: userBatteryKW,
+      batteryKWh: userBatteryKW * userDurationHours,
+      solarKW: userSolarKW,
+      windTurbineKW: userWindKW,
+      generatorKW: userGeneratorKW,
+      durationHours: userDurationHours,
+    }));
+  }, [userBatteryKW, userSolarKW, userWindKW, userGeneratorKW, userDurationHours, setWizardState]);
+  
+  // Calculate user config financials (rough estimate)
+  const userConfig = {
+    batteryKW: userBatteryKW,
+    batteryKWh: userBatteryKW * userDurationHours,
+    durationHours: userDurationHours,
+    solarKW: userSolarKW,
+    windKW: userWindKW,
+    generatorKW: userGeneratorKW,
+    annualSavings: Math.round((userBatteryKW * userDurationHours) * 0.12 * 365 * 0.4),
+    paybackYears: 0,
+    roi25Year: 0,
+    netCost: Math.round((userBatteryKW * userDurationHours * 150) + (userSolarKW * 850) + (userGeneratorKW * 800)),
+  };
+  userConfig.paybackYears = userConfig.annualSavings > 0 ? userConfig.netCost / userConfig.annualSavings : 10;
+  userConfig.roi25Year = userConfig.paybackYears > 0 ? Math.round((25 / userConfig.paybackYears) * 100) : 0;
   
   // Calculate comparison percentages
   const getComparison = useCallback((userVal: number, merlinVal: number) => {
@@ -252,59 +295,146 @@ export function ConfigurationComparison({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Your Configuration</h3>
-                <p className="text-sm text-gray-400">Based on your power preferences</p>
+                <p className="text-sm text-gray-400">Customize your energy system</p>
               </div>
             </div>
             
-            {/* Equipment Summary */}
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                <div className="flex items-center gap-2">
-                  <Battery className="w-5 h-5 text-blue-400" />
-                  <span className="text-gray-300">Battery Storage</span>
+            {/* ═══════════════════════════════════════════
+                INTERACTIVE SLIDERS WITH GUIDANCE
+            ═══════════════════════════════════════════ */}
+            <div className="space-y-4 mb-6">
+              
+              {/* Battery Slider */}
+              <div className="bg-slate-800/50 rounded-xl p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <Battery className="w-5 h-5 text-blue-400" />
+                    <span className="text-gray-300 font-medium">Battery Power</span>
+                  </div>
+                  <span className="font-bold text-white">{formatPower(userBatteryKW)}</span>
                 </div>
-                <span className="font-bold text-white">
-                  {formatPower(userConfig.batteryKW)} / {formatEnergy(userConfig.batteryKWh)}
-                </span>
+                <input
+                  type="range"
+                  min={recommendations.minBatteryKW}
+                  max={recommendations.maxBatteryKW}
+                  value={userBatteryKW}
+                  onChange={(e) => setUserBatteryKW(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>{formatPower(recommendations.minBatteryKW)}</span>
+                  <span className="text-blue-400">Recommended: {formatPower(recommendations.recommendedBatteryKW)}</span>
+                  <span>{formatPower(recommendations.maxBatteryKW)}</span>
+                </div>
               </div>
               
-              <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-purple-400" />
-                  <span className="text-gray-300">Backup Duration</span>
+              {/* Duration Slider */}
+              <div className="bg-slate-800/50 rounded-xl p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-400" />
+                    <span className="text-gray-300 font-medium">Backup Duration</span>
+                  </div>
+                  <span className="font-bold text-white">{userDurationHours} hours</span>
                 </div>
-                <span className="font-bold text-white">{userConfig.durationHours} hours</span>
+                <input
+                  type="range"
+                  min={2}
+                  max={8}
+                  value={userDurationHours}
+                  onChange={(e) => setUserDurationHours(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>2 hrs</span>
+                  <span className="text-purple-400">Recommended: 4 hrs</span>
+                  <span>8 hrs</span>
+                </div>
               </div>
               
-              {userConfig.solarKW > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-slate-700">
+              {/* Solar Slider with Smart Guidance */}
+              <div className={`rounded-xl p-4 ${userSolarKW > recommendations.recommendedSolarKW ? 'bg-amber-900/30 border border-amber-500/40' : 'bg-slate-800/50'}`}>
+                <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <Sun className="w-5 h-5 text-amber-400" />
-                    <span className="text-gray-300">Solar</span>
+                    <span className="text-gray-300 font-medium">Solar Power</span>
+                    {userSolarKW > recommendations.recommendedSolarKW && (
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                    )}
                   </div>
-                  <span className="font-bold text-amber-400">{formatPower(userConfig.solarKW)}</span>
+                  <span className={`font-bold ${userSolarKW > recommendations.recommendedSolarKW ? 'text-amber-400' : 'text-white'}`}>
+                    {formatPower(userSolarKW)}
+                  </span>
                 </div>
-              )}
-              
-              {userConfig.windKW > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <Wind className="w-5 h-5 text-sky-400" />
-                    <span className="text-gray-300">Wind</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={recommendations.maxSolarKW}
+                  value={userSolarKW}
+                  onChange={(e) => setUserSolarKW(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0 kW</span>
+                  <span className="text-amber-400">Optimal: {formatPower(recommendations.recommendedSolarKW)}</span>
+                  <span>{formatPower(recommendations.maxSolarKW)}</span>
+                </div>
+                
+                {/* Smart Guidance Message */}
+                {userSolarKW > recommendations.recommendedSolarKW && (
+                  <div className="mt-3 p-3 bg-amber-900/40 rounded-lg border border-amber-500/30">
+                    <div className="flex items-start gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-200">
+                        <strong className="text-amber-300">For {industryName}</strong>, we recommend ~{formatPower(recommendations.recommendedSolarKW)} of solar 
+                        (1.2x your {formatPower(peakDemandKW)} peak demand). 
+                        You've selected {formatPower(userSolarKW)} which exceeds your facility's typical needs. 
+                        This will increase costs without proportional savings.
+                      </div>
+                    </div>
                   </div>
-                  <span className="font-bold text-sky-400">{formatPower(userConfig.windKW)}</span>
-                </div>
-              )}
+                )}
+                
+                {/* Optimal indicator */}
+                {userSolarKW > 0 && userSolarKW <= recommendations.recommendedSolarKW && (
+                  <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Good choice! Solar sized appropriately for your facility.</span>
+                  </div>
+                )}
+              </div>
               
-              {userConfig.generatorKW > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-slate-700">
+              {/* Generator Slider */}
+              <div className="bg-slate-800/50 rounded-xl p-4">
+                <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <Fuel className="w-5 h-5 text-slate-400" />
-                    <span className="text-gray-300">Generator</span>
+                    <span className="text-gray-300 font-medium">Backup Generator</span>
                   </div>
-                  <span className="font-bold text-white">{formatPower(userConfig.generatorKW)}</span>
+                  <span className="font-bold text-white">{formatPower(userGeneratorKW)}</span>
                 </div>
-              )}
+                <input
+                  type="range"
+                  min={0}
+                  max={recommendations.maxGeneratorKW}
+                  value={userGeneratorKW}
+                  onChange={(e) => setUserGeneratorKW(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0 kW</span>
+                  <span className="text-gray-400">Optional: {formatPower(recommendations.recommendedGeneratorKW)}</span>
+                  <span>{formatPower(recommendations.maxGeneratorKW)}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Storage Summary */}
+            <div className="bg-blue-900/20 rounded-xl p-3 mb-4 border border-blue-500/20">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-blue-300">Total Storage Capacity</span>
+                <span className="font-bold text-white">{formatEnergy(userConfig.batteryKWh)}</span>
+              </div>
             </div>
             
             {/* Financial Metrics */}
