@@ -375,7 +375,7 @@ export default function StreamlinedWizard({
                             style={{ width: hasData ? `${Math.min(100, coverage)}%` : showWarning ? '5%' : '0%' }}
                           />
                         </div>
-                        <span className={`text-2xl font-black ${
+                        <span className={`text-2xl font-black transition-all duration-300 ease-out ${
                           !hasData && !showWarning ? 'text-slate-300' : showWarning ? 'text-amber-300' : isCovered ? 'text-emerald-300' : isPartial ? 'text-amber-300' : 'text-red-300'
                         }`}>
                           {hasData ? `${coverage}%` : showWarning ? '0%' : '—'}

@@ -433,7 +433,7 @@ export function ConfigurationComparison({
             <div className="bg-blue-900/20 rounded-xl p-3 mb-4 border border-blue-500/20">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-blue-300">Total Storage Capacity</span>
-                <span className="font-bold text-white">{formatEnergy(userConfig.batteryKWh)}</span>
+                <span className="font-bold text-white transition-all duration-300 ease-out">{formatEnergy(userConfig.batteryKWh)}</span>
               </div>
             </div>
             
@@ -441,20 +441,20 @@ export function ConfigurationComparison({
             <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Annual Savings</span>
-                <span className="text-xl font-bold text-emerald-400">{formatMoney(userConfig.annualSavings)}</span>
+                <span className="text-xl font-bold text-emerald-400 transition-all duration-300 ease-out">{formatMoney(userConfig.annualSavings)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Payback Period</span>
-                <span className="text-xl font-bold text-white">{userConfig.paybackYears.toFixed(1)} years</span>
+                <span className="text-xl font-bold text-white transition-all duration-300 ease-out">{userConfig.paybackYears.toFixed(1)} years</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">25-Year ROI</span>
-                <span className="text-xl font-bold text-purple-400">{userConfig.roi25Year}%</span>
+                <span className="text-xl font-bold text-purple-400 transition-all duration-300 ease-out">{userConfig.roi25Year}%</span>
               </div>
               <div className="pt-2 border-t border-slate-700">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300 font-semibold">Net Investment</span>
-                  <span className="text-2xl font-black text-white">{formatMoney(userConfig.netCost)}</span>
+                  <span className="text-2xl font-black text-white transition-all duration-300 ease-out">{formatMoney(userConfig.netCost)}</span>
                 </div>
               </div>
             </div>
@@ -529,7 +529,7 @@ export function ConfigurationComparison({
                   <Battery className="w-5 h-5 text-blue-400" />
                   <span className="text-purple-200">Battery Storage</span>
                 </div>
-                <span className="font-bold text-white">
+                <span className="font-bold text-white transition-all duration-300 ease-out">
                   {formatPower(merlinConfig.batteryKW)} / {formatEnergy(merlinConfig.batteryKWh)}
                 </span>
               </div>
@@ -539,7 +539,7 @@ export function ConfigurationComparison({
                   <Clock className="w-5 h-5 text-purple-400" />
                   <span className="text-purple-200">Backup Duration</span>
                 </div>
-                <span className="font-bold text-white">{merlinConfig.durationHours} hours</span>
+                <span className="font-bold text-white transition-all duration-300 ease-out">{merlinConfig.durationHours} hours</span>
               </div>
               
               {merlinConfig.solarKW > 0 && (
@@ -548,7 +548,7 @@ export function ConfigurationComparison({
                     <Sun className="w-5 h-5 text-amber-400" />
                     <span className="text-purple-200">Solar</span>
                   </div>
-                  <span className="font-bold text-amber-400">{formatPower(merlinConfig.solarKW)}</span>
+                  <span className="font-bold text-amber-400 transition-all duration-300 ease-out">{formatPower(merlinConfig.solarKW)}</span>
                 </div>
               )}
               
@@ -580,20 +580,20 @@ export function ConfigurationComparison({
             <div className="bg-purple-800/30 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-purple-300">Annual Savings</span>
-                <span className="text-xl font-bold text-emerald-400">{formatMoney(merlinConfig.annualSavings)}</span>
+                <span className="text-xl font-bold text-emerald-400 transition-all duration-300 ease-out">{formatMoney(merlinConfig.annualSavings)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-purple-300">Payback Period</span>
-                <span className="text-xl font-bold text-white">{merlinConfig.paybackYears.toFixed(1)} years</span>
+                <span className="text-xl font-bold text-white transition-all duration-300 ease-out">{merlinConfig.paybackYears.toFixed(1)} years</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-purple-300">25-Year ROI</span>
-                <span className="text-xl font-bold text-purple-400">{merlinConfig.roi25Year}%</span>
+                <span className="text-xl font-bold text-purple-400 transition-all duration-300 ease-out">{merlinConfig.roi25Year}%</span>
               </div>
               <div className="pt-2 border-t border-purple-500/30">
                 <div className="flex justify-between items-center">
                   <span className="text-purple-200 font-semibold">Net Investment</span>
-                  <span className="text-2xl font-black text-white">{formatMoney(merlinConfig.netCost)}</span>
+                  <span className="text-2xl font-black text-white transition-all duration-300 ease-out">{formatMoney(merlinConfig.netCost)}</span>
                 </div>
               </div>
             </div>
