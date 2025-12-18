@@ -357,12 +357,16 @@ export function GoalsSectionV2({
             helpText="Solar can significantly reduce your electricity costs and pairs well with battery storage."
             value={wizardState.wantsSolar}
             onChange={(value) => {
+              console.log('[Solar YesNo] onChange triggered with value:', value, 'current wantsSolar:', wizardState.wantsSolar);
               const recommendedSolar = Math.round(peakDemandKW * 0.6);
-              setWizardState(prev => ({
-                ...prev,
-                wantsSolar: value,
-                solarKW: value ? (prev.solarKW || recommendedSolar) : 0
-              }));
+              setWizardState(prev => {
+                console.log('[Solar YesNo] Setting new state, prev.wantsSolar:', prev.wantsSolar, '→ new:', value);
+                return {
+                  ...prev,
+                  wantsSolar: value,
+                  solarKW: value ? (prev.solarKW || recommendedSolar) : 0
+                };
+              });
             }}
           />
 

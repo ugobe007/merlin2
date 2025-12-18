@@ -47,6 +47,20 @@ export function YesNoButtons({
   error,
   className = '',
 }: YesNoButtonsProps) {
+  const handleYesClick = () => {
+    console.log('[YesNoButtons] YES clicked, current value:', value, '→ setting true');
+    if (!disabled) {
+      onChange(true);
+    }
+  };
+  
+  const handleNoClick = () => {
+    console.log('[YesNoButtons] NO clicked, current value:', value, '→ setting false');
+    if (!disabled) {
+      onChange(false);
+    }
+  };
+  
   return (
     <div className={`w-full ${className}`}>
       {/* Label */}
@@ -64,10 +78,10 @@ export function YesNoButtons({
         {/* YES Button */}
         <button
           type="button"
-          onClick={() => !disabled && onChange(true)}
+          onClick={handleYesClick}
           disabled={disabled}
           className={`h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 
-                     transition-all ${
+                     transition-all cursor-pointer ${
             disabled
               ? 'cursor-not-allowed opacity-50'
               : value === true
@@ -86,10 +100,10 @@ export function YesNoButtons({
         {/* NO Button */}
         <button
           type="button"
-          onClick={() => !disabled && onChange(false)}
+          onClick={handleNoClick}
           disabled={disabled}
           className={`h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 
-                     transition-all ${
+                     transition-all cursor-pointer ${
             disabled
               ? 'cursor-not-allowed opacity-50'
               : value === false
