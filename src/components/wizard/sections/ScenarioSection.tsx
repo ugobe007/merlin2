@@ -154,19 +154,40 @@ export function ScenarioSection({
           </div>
         </div>
 
-        {/* Section Title */}
+        {/* Section Title with Merlin Explanation */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
             <Sparkles className="w-5 h-5 text-purple-400" />
-            <span className="text-purple-300 font-medium">Choose Your Savings Plan</span>
+            <span className="text-purple-300 font-medium">Optional: Optimize Your Savings</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">
-            Your Savings Options
+            Explore Alternative Configurations
           </h2>
-          <p className="text-gray-400">
-            Based on your {wizardState.industryName || 'facility'} and preferences, here are 3 ways to save
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Based on your {wizardState.industryName || 'facility'} profile, I've created 3 optimized variations. 
+            <strong className="text-purple-300"> This step is optional</strong> — you can keep your current configuration or explore these alternatives.
           </p>
+        </div>
+        
+        {/* Skip Option - Users can continue without selecting a scenario */}
+        <div className="bg-gradient-to-r from-emerald-900/40 to-emerald-800/30 border border-emerald-500/40 rounded-xl p-4 mb-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-emerald-400" />
+              <div>
+                <p className="font-semibold text-emerald-300">Happy with your configuration?</p>
+                <p className="text-sm text-emerald-200/70">Skip this step and generate your TrueQuote™ with your current settings</p>
+              </div>
+            </div>
+            <button
+              onClick={onContinue}
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors whitespace-nowrap"
+            >
+              Keep My Configuration
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
+        </div>
 
           {/* ════════════════════════════════════════════════════════════════
               SMART SIZING SUMMARY - "We Understand Your Situation"
