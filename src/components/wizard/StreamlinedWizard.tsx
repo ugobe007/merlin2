@@ -689,20 +689,22 @@ export default function StreamlinedWizard({
 
             {/* Section 4: CONFIGURATION COMPARISON (User vs Merlin) - NEW Dec 16, 2025 */}
             {/* Shows side-by-side: User's config (from Goals) vs Merlin's AI recommendation */}
-            <ConfigurationComparison
-              wizardState={wizard.wizardState}
-              setWizardState={wizard.setWizardState}
-              centralizedState={wizard.centralizedState}
-              currentSection={wizard.currentSection}
-              sectionRef={(el) => { sectionRefs.current[4] = el; }}
-              onBack={() => wizard.advanceToSection(3)}
-              onHome={handleGoHome}
-              onContinue={() => {
-                // After selecting a config, go to Scenario Planner (3 cards)
-                console.log('🎯 [CONFIG COMPARISON] Config selected - going to Scenario Planner');
-                wizard.advanceToSection(5);
-              }}
-            />
+            {wizard.currentSection === 4 && (
+              <ConfigurationComparison
+                wizardState={wizard.wizardState}
+                setWizardState={wizard.setWizardState}
+                centralizedState={wizard.centralizedState}
+                currentSection={wizard.currentSection}
+                sectionRef={(el) => { sectionRefs.current[4] = el; }}
+                onBack={() => wizard.advanceToSection(3)}
+                onHome={handleGoHome}
+                onContinue={() => {
+                  // After selecting a config, go to Scenario Planner (3 cards)
+                  console.log('🎯 [CONFIG COMPARISON] Config selected - going to Scenario Planner');
+                  wizard.advanceToSection(5);
+                }}
+              />
+            )}
 
             {/* Section 5: MAGIC FIT / SCENARIO PLANNER (3 Cards) - Pick your strategy */}
             {/* Dec 16, 2025 - REPOSITIONED: Now AFTER Config Comparison */}
