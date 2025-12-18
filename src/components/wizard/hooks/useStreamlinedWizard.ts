@@ -741,11 +741,21 @@ export function useStreamlinedWizard({
           
           // Store extracted data for quote generation (solar, EV, backup, etc.)
           // Dec 16, 2025 - CRITICAL FIX: Also sync to fields that sync effects read
-          // Dec 17, 2025 - DON'T OVERWRITE solar if user has already set it in GoalsSectionV2
+          // Dec 17, 2025 - DON'T OVERWRITE solar/EV if user has already modified in Goals
+          // Dec 17, 2025 - FIX SLIDER BUG: Only set these values ONCE on initial Section 3 entry
           setWizardState(prev => {
-            // Only use questionnaire solar data if:
-            // 1. User hasn't already set wantsSolar to true (their choice takes priority)
-            // 2. OR user is still in Section 2 (questionnaire phase)
+            // CRITICAL: Don't overwrite if user has already interacted with Goals section
+            // Check if any Goals-modifiable values have been set by user
+            const userHasModifiedGoals = prev.wantsSolar || prev.wantsEVCharging || prev.wantsWind || prev.wantsGenerator || 
+              prev.solarKW > 0 || prev.evChargersL2 > 0 || prev.evChargersDCFC > 0 || prev.generatorKW > 0 || prev.windTurbineKW > 0;
+            
+            // If user has modified Goals, don't overwrite their settings
+            if (userHasModifiedGoals) {
+              console.log('🛡️ [HOTEL MAPPER] User has modified Goals - preserving their settings');
+              return prev; // Don't change anything
+            }
+            
+            // Only use questionnaire solar data if user hasn't set it
             const useQuestionnaireSolar = !prev.wantsSolar && currentSection <= 2;
             
             return {
