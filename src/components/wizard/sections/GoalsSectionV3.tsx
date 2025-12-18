@@ -33,6 +33,7 @@ import {
   Minus
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
+import { StepExplanation } from '../ui/StepExplanation';
 
 // ============================================================================
 // CONSTANTS
@@ -199,7 +200,7 @@ function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, r
                 </span>
               )}
             </div>
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
           </div>
         </div>
         
@@ -316,19 +317,27 @@ export function GoalsSectionV3({
     <div ref={sectionRef} className="min-h-[calc(100vh-120px)] p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-purple-600 mb-2">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-medium">Step 3 of 7</span>
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Configure Your Energy System
-          </h2>
-          <p className="text-gray-600">
-            Select the equipment you want to include. Merlin will optimize sizing based on your facility.
-          </p>
-        </div>
+        {/* Merlin's Guidance Header */}
+        <StepExplanation
+          stepNumber={3}
+          totalSteps={7}
+          title="Configure Your Energy System"
+          description="Tell me about your existing equipment and what you'd like to add. I'll analyze your facility data to recommend the perfect energy solution."
+          estimatedTime="2-3 min"
+          showMerlin={true}
+          tips={[
+            "Toggle on the equipment you have or want - I'll optimize the sizing",
+            "Existing EV chargers add to your current load",
+            "Solar and wind can offset your electricity costs",
+            "Generator backup provides resilience during outages"
+          ]}
+          outcomes={[
+            "EV Charging",
+            "Solar Power",
+            "Wind Power",
+            "Generator Backup"
+          ]}
+        />
 
         {/* Equipment Cards */}
         <div className="space-y-4">
