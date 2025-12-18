@@ -95,7 +95,7 @@ const AMENITY_CATEGORIES = {
   aquatics: {
     label: 'Pool & Aquatics',
     icon: Waves,
-    color: 'cyan',
+    color: 'purple', // Merlin theme
     options: [
       { id: 'indoor_pool', label: 'Indoor Pool', icon: Waves },
       { id: 'outdoor_pool', label: 'Outdoor Pool', icon: Waves },
@@ -106,7 +106,7 @@ const AMENITY_CATEGORIES = {
   wellness: {
     label: 'Wellness & Fitness',
     icon: Dumbbell,
-    color: 'emerald',
+    color: 'purple', // Merlin theme
     options: [
       { id: 'fitness_center', label: 'Fitness Center', icon: Dumbbell },
       { id: 'spa', label: 'Full Spa', icon: Sparkles },
@@ -117,7 +117,7 @@ const AMENITY_CATEGORIES = {
   dining: {
     label: 'Food & Beverage',
     icon: Utensils,
-    color: 'amber',
+    color: 'purple', // Merlin theme
     options: [
       { id: 'restaurant', label: 'Restaurant(s)', icon: Utensils },
       { id: 'bar_lounge', label: 'Bar / Lounge', icon: Coffee },
@@ -128,7 +128,7 @@ const AMENITY_CATEGORIES = {
   business: {
     label: 'Business & Events',
     icon: Briefcase,
-    color: 'indigo',
+    color: 'purple', // Merlin theme
     options: [
       { id: 'meeting_rooms', label: 'Meeting Rooms', icon: Users },
       { id: 'conference_center', label: 'Conference Center', icon: Briefcase },
@@ -139,7 +139,7 @@ const AMENITY_CATEGORIES = {
   services: {
     label: 'Guest Services',
     icon: Star,
-    color: 'purple',
+    color: 'purple', // Merlin theme
     options: [
       { id: 'laundry', label: 'On-Site Laundry', icon: Shirt },
       { id: 'ev_charging', label: 'EV Charging', icon: Car },
