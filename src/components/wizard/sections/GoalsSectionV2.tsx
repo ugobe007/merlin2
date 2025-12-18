@@ -195,14 +195,27 @@ export function GoalsSectionV2({
     >
       <div className="max-w-3xl mx-auto space-y-6">
         {/* ════════════════════════════════════════════════════════════════
-            STEP EXPLANATION HEADER
+            STEP EXPLANATION HEADER - Enhanced with Merlin's guidance
             ════════════════════════════════════════════════════════════════ */}
         <StepExplanation
           stepNumber={3}
           totalSteps={5}
           title="Configure Your Energy System"
-          description="Tell us what equipment you have and what you want to add. Merlin will optimize your battery storage quote based on these preferences."
-          estimatedTime="3 minutes"
+          description="This is where you tell me about your existing equipment and what you'd like to add. I'll use this information to build a custom battery storage quote that maximizes your savings while meeting your power needs."
+          estimatedTime="2-3 minutes"
+          tips={[
+            "Answer 'Yes' to any equipment you want included in your quote",
+            "Use the sliders to adjust sizes - I'll show you recommended values",
+            "Solar + Battery = Maximum savings (they work great together!)",
+            "Backup generators provide extended outage protection beyond battery duration"
+          ]}
+          outcomes={[
+            "EV Chargers",
+            "Solar Panels", 
+            "Wind Turbines",
+            "Backup Generator",
+            "Grid Connection"
+          ]}
         />
 
         {/* Merlin Recommendation Summary */}
@@ -356,11 +369,6 @@ export function GoalsSectionV2({
                 RECOMMENDED
               </span>
             )}
-          </div>
-          
-          {/* DEBUG: Show current state */}
-          <div className="mb-2 p-2 bg-gray-100 rounded text-xs font-mono">
-            wantsSolar: {String(wizardState.wantsSolar)} | solarKW: {wizardState.solarKW} | peakDemand: {peakDemandKW}
           </div>
           
           <YesNoButtons

@@ -1,16 +1,18 @@
 /**
  * StepExplanation.tsx
  * 
- * Step header with progress indicator and explanation box.
+ * Step header with progress indicator and Merlin's guidance.
  * REQUIRED at the top of every wizard step.
  * 
  * DO NOT skip step explanations - users need guidance.
  * 
  * @created December 2025
+ * @updated December 17, 2025 - Enhanced with Merlin guidance and tips
  */
 
 import React from 'react';
-import { Lightbulb, Clock } from 'lucide-react';
+import { Lightbulb, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
+import merlinImage from '@/assets/images/new_Merlin.png';
 
 // ============================================================================
 // TYPES
@@ -25,6 +27,12 @@ export interface StepExplanationProps {
   icon?: React.ReactNode;
   showProgress?: boolean;
   className?: string;
+  /** Merlin's helpful tips for this step */
+  tips?: string[];
+  /** What user will accomplish in this step */
+  outcomes?: string[];
+  /** Show Merlin avatar */
+  showMerlin?: boolean;
 }
 
 // ============================================================================
@@ -40,6 +48,9 @@ export function StepExplanation({
   icon,
   showProgress = true,
   className = '',
+  tips = [],
+  outcomes = [],
+  showMerlin = true,
 }: StepExplanationProps) {
   const progressPercentage = (stepNumber / totalSteps) * 100;
   
@@ -68,20 +79,71 @@ export function StepExplanation({
         {title}
       </h1>
       
-      {/* Explanation Box - Semi-transparent for dark background */}
-      <div className="bg-white/10 backdrop-blur-sm border-2 border-purple-400/40 rounded-xl p-4 flex items-start gap-4">
-        <div className="p-2 bg-purple-500/30 rounded-lg flex-shrink-0">
-          {icon || <Lightbulb className="w-6 h-6 text-purple-300" />}
-        </div>
-        <div className="flex-1">
-          <p className="text-purple-100 leading-relaxed">{description}</p>
-          {estimatedTime && (
-            <p className="text-sm text-purple-300 mt-2 font-medium flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              Estimated time: {estimatedTime}
-            </p>
+      {/* Merlin's Guidance Box - Enhanced with avatar and tips */}
+      <div className="bg-gradient-to-br from-purple-900/60 to-indigo-900/60 backdrop-blur-sm border-2 border-purple-400/40 rounded-2xl p-5 shadow-xl">
+        {/* Header with Merlin */}
+        <div className="flex items-start gap-4 mb-4">
+          {showMerlin && (
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <img src={merlinImage} alt="Merlin" className="w-14 h-14" />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-purple-900">
+                  <Lightbulb className="w-3 h-3 text-white" />
+                </div>
+              </div>
+            </div>
           )}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-emerald-400 font-bold text-sm">Merlin says:</span>
+              {estimatedTime && (
+                <span className="text-purple-300/70 text-xs flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {estimatedTime}
+                </span>
+              )}
+            </div>
+            <p className="text-white/90 leading-relaxed">{description}</p>
+          </div>
         </div>
+        
+        {/* Tips Section */}
+        {tips.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-purple-400/20">
+            <h4 className="text-purple-300 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+              <Lightbulb className="w-3 h-3" />
+              Pro Tips
+            </h4>
+            <ul className="space-y-1.5">
+              {tips.map((tip, index) => (
+                <li key={index} className="flex items-start gap-2 text-sm text-purple-200/80">
+                  <ArrowRight className="w-3 h-3 mt-1 text-emerald-400 flex-shrink-0" />
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {/* Outcomes Section */}
+        {outcomes.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-purple-400/20">
+            <h4 className="text-purple-300 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              What You'll Configure
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {outcomes.map((outcome, index) => (
+                <span 
+                  key={index} 
+                  className="px-3 py-1 bg-white/10 rounded-full text-xs text-white/80 border border-white/10"
+                >
+                  {outcome}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
