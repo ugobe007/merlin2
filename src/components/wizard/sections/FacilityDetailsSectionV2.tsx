@@ -43,6 +43,7 @@ import {
   Palmtree,
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
+import { StepExplanation } from '../ui';
 
 // US States for the state selector
 const US_STATES = [
@@ -338,21 +339,27 @@ export function FacilityDetailsSectionV2({
       <div className="max-w-3xl mx-auto">
         {/* Welcome Banner removed - was redundant */}
         
-        {/* Step indicator */}
-        <div className="text-center mb-6">
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full text-purple-300 text-sm">
-            <Sparkles className="w-4 h-4" />
-            {initializedFromVertical ? 'Step 1 of 4' : 'Step 2 of 5'}
-          </span>
-        </div>
-        
-        {/* Section Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Confirm Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Property Details</span>
-          </h2>
-          <p className="text-gray-400">This helps Merlin size your energy system accurately</p>
-        </div>
+        {/* ════════════════════════════════════════════════════════════════
+            STEP EXPLANATION HEADER - Enhanced with Merlin's guidance
+            ════════════════════════════════════════════════════════════════ */}
+        <StepExplanation
+          stepNumber={initializedFromVertical ? 1 : 2}
+          totalSteps={initializedFromVertical ? 4 : 5}
+          title="Confirm Your Property Details"
+          description="I need a few details about your property to calculate accurate power requirements. The more detail you provide, the more precise your energy quote will be!"
+          estimatedTime="1-2 minutes"
+          tips={[
+            "Larger properties typically benefit more from battery storage",
+            "Select all amenities that apply - each one affects power calculations",
+            "Don't worry about exact numbers - estimates work great!"
+          ]}
+          outcomes={[
+            "Location",
+            "Property Size", 
+            "Property Type",
+            "Amenities"
+          ]}
+        />
         
         {/* MAIN FORM CARD */}
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-purple-200/50 shadow-2xl">
