@@ -2,20 +2,25 @@
  * STREAMLINED SMART WIZARD (Refactored)
  * ======================================
  * 
- * December 2025 Refactor: Lean orchestrator using modular components.
+ * December 18, 2025 SIMPLIFICATION: Reduced from 8 confusing steps to 5 clear steps.
  * 
  * Architecture:
  * - useStreamlinedWizard hook manages all state
  * - Section components render UI
- * - This file is now ~350 lines (down from 4,677)
  * 
- * Flow:
- * 1. Welcome + Location (Section 0) - auto-advances when location selected
- * 2. Industry Selection (Section 1) - auto-advances when industry selected
- * 3. Facility Details (Section 2) - custom questions per industry
- * 4. Goals & Add-ons (Section 3) - what user wants to achieve
- * 5. System Configuration (Section 4) - battery + solar sizing
- * 6. Quote Results (Section 5) - final quote with downloads
+ * SIMPLIFIED FLOW (5 steps):
+ * 0. Welcome + Location - Select your state/region
+ * 1. Industry Selection - What type of facility?
+ * 2. Facility Details - Custom questions per industry
+ * 3. Goals & Configuration - Set preferences (solar, backup, etc.)
+ * 4. Quote Results - Final TrueQuote™ with option to fine-tune
+ * 
+ * REMOVED (redundant steps that confused users):
+ * - ConfigurationComparison (User vs Merlin) - REMOVED
+ * - ScenarioSection (3 strategy cards) - REMOVED  
+ * - ScenarioSectionV2 (fine-tuning) - REMOVED
+ * 
+ * User now goes directly from Goals → Quote Results
  */
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
@@ -491,10 +496,10 @@ export default function StreamlinedWizard({
               {/* Divider */}
               <div className="border-t border-white/10 my-4" />
               
-              {/* Wizard Sections */}
+              {/* Wizard Sections - SIMPLIFIED to 5 steps (Dec 18, 2025) */}
               <p className="text-xs text-purple-300 uppercase tracking-wider px-4 mb-2">Wizard Steps</p>
               
-              {['Location', 'Industry', 'Facility Details', 'Goals', 'Configuration', 'Quote'].map((step, index) => (
+              {['Location', 'Industry', 'Facility Details', 'Goals & Config', 'Your Quote'].map((step, index) => (
                 <button
                   key={step}
                   onClick={() => {
@@ -666,6 +671,7 @@ export default function StreamlinedWizard({
               
               // Show Goals section (Section 3 - user tells us what matters)
               // Dec 17, 2025: Using GoalsSectionV3 - Clean refactor with stable slider interactions
+              // Dec 18, 2025: SIMPLIFIED - Goes directly to Quote Results (Section 4)
               return wizard.currentSection === 3 ? (
                 <GoalsSectionV3
                   wizardState={wizard.wizardState}
@@ -675,10 +681,12 @@ export default function StreamlinedWizard({
                   onBack={() => wizard.advanceToSection(2)}
                   onHome={handleGoHome}
                   onContinue={() => {
-                    // Dec 16, 2025 - Go to Configuration Comparison (Section 4)
-                    console.log('🎯 [GOALS] Continue clicked - going to Config Comparison');
+                    // Dec 18, 2025 - SIMPLIFIED: Go directly to Quote Results (Section 4)
+                    // Removed redundant ConfigurationComparison, ScenarioSection, ScenarioSectionV2
+                    console.log('🎯 [GOALS] Continue clicked - going directly to Quote Results');
                     wizard.completeSection('preferences');
-                    wizard.advanceToSection(4); // Config Comparison (User vs Merlin)
+                    wizard.completeSection('configuration'); // Mark config as complete too
+                    wizard.advanceToSection(4); // Quote Results
                   }}
                   onGenerateScenarios={wizard.generateAllScenarios}
                   isGeneratingScenarios={wizard.isGeneratingScenarios}
@@ -689,102 +697,23 @@ export default function StreamlinedWizard({
               ) : null;
             })()}
 
-            {/* Section 4: CONFIGURATION COMPARISON (User vs Merlin) - NEW Dec 16, 2025 */}
-            {/* Shows side-by-side: User's config (from Goals) vs Merlin's AI recommendation */}
-            {wizard.currentSection === 4 && (
-              <ConfigurationComparison
-                wizardState={wizard.wizardState}
-                setWizardState={wizard.setWizardState}
-                centralizedState={wizard.centralizedState}
-                currentSection={wizard.currentSection}
-                sectionRef={(el) => { sectionRefs.current[4] = el; }}
-                onBack={() => wizard.advanceToSection(3)}
-                onHome={handleGoHome}
-                onContinue={() => {
-                  // After selecting a config, go to Scenario Planner (3 cards)
-                  console.log('🎯 [CONFIG COMPARISON] Config selected - going to Scenario Planner');
-                  wizard.advanceToSection(5);
-                }}
-              />
-            )}
+            {/* ═══════════════════════════════════════════════════════════════
+                SIMPLIFIED FLOW (Dec 18, 2025):
+                - REMOVED ConfigurationComparison (was Section 4)
+                - REMOVED ScenarioSection (was Section 5) 
+                - REMOVED ScenarioSectionV2 (was Section 6)
+                - Now: Goals (Section 3) → Quote Results (Section 4)
+            ═══════════════════════════════════════════════════════════════ */}
 
-            {/* Section 5: MAGIC FIT / SCENARIO PLANNER (3 Cards) - Pick your strategy */}
-            {/* Dec 16, 2025 - REPOSITIONED: Now AFTER Config Comparison */}
-            {(() => {
-              const calc = wizard.centralizedState?.calculated || {};
-              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
-              const batteryKW = wizard.wizardState.batteryKW || 0;
-              const solarKW = wizard.wizardState.solarKW || 0;
-              const generatorKW = wizard.wizardState.generatorKW || 0;
-              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
-              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
-              
-              return wizard.currentSection === 5 ? (
-                <ScenarioSection
-                  wizardState={wizard.wizardState}
-                  setWizardState={wizard.setWizardState}
-                  currentSection={5}
-                  sectionRef={(el) => { sectionRefs.current[5] = el; }}
-                  onBack={() => wizard.advanceToSection(4)}
-                  onHome={handleGoHome}
-                  onContinue={() => {
-                    // After selecting a Magic Fit strategy, go to fine-tuning or quote
-                    console.log('🎯 [SCENARIO PLANNER] Strategy selected');
-                    wizard.advanceToSection(6);
-                  }}
-                  scenarioResult={wizard.wizardState.scenarioResult}
-                  isGenerating={wizard.isGeneratingScenarios}
-                  onGenerateScenarios={wizard.generateAllScenarios}
-                  peakDemandKW={peakDemandKW}
-                  powerCoverage={powerCoverage}
-                  onOpenAdvanced={onOpenAdvanced}
-                  onSelectScenario={wizard.selectScenario}
-                />
-              ) : null;
-            })()}
-
-            {/* Section 6: TWO-COLUMN FINE-TUNING (Optional - if user chose "Customize") */}
-            {/* Dec 16, 2025 - RENUMBERED: Now Section 6 (was Section 5) */}
-            {(() => {
-              const calc = wizard.centralizedState?.calculated || {};
-              const peakDemandKW = calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
-              const batteryKW = wizard.wizardState.batteryKW || 0;
-              const solarKW = wizard.wizardState.solarKW || 0;
-              const generatorKW = wizard.wizardState.generatorKW || 0;
-              const totalConfiguredKW = batteryKW + solarKW + generatorKW;
-              const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 0;
-              
-              return wizard.currentSection === 6 ? (
-                <ScenarioSectionV2
-                  wizardState={wizard.wizardState}
-                  setWizardState={wizard.setWizardState}
-                  currentSection={6}
-                  sectionRef={(el) => { sectionRefs.current[6] = el; }}
-                  onBack={() => wizard.advanceToSection(5)}
-                  onContinue={() => {
-                    // After fine-tuning, go to final quote
-                    wizard.completeSection('configuration');
-                    wizard.advanceToSection(7);
-                  }}
-                  scenarioResult={wizard.wizardState.scenarioResult}
-                  isGenerating={wizard.isGeneratingScenarios}
-                  onGenerateScenarios={wizard.generateAllScenarios}
-                  peakDemandKW={peakDemandKW}
-                  powerCoverage={powerCoverage}
-                  onOpenAdvanced={onOpenAdvanced}
-                />
-              ) : null;
-            })()}
-
-            {/* Section 7: Quote Results - RENUMBERED (was Section 6) */}
+            {/* Section 4: Quote Results - THE FINAL STEP */}
             <QuoteResultsSection
               wizardState={wizard.wizardState}
               setWizardState={wizard.setWizardState}
               currentSection={wizard.currentSection}
-              sectionRef={(el) => { sectionRefs.current[7] = el; }}
+              sectionRef={(el) => { sectionRefs.current[4] = el; }}
               premiumConfig={wizard.premiumConfig}
               premiumComparison={wizard.premiumComparison}
-              onBack={() => wizard.advanceToSection(wizard.userQuoteChoice === 'customize' ? 6 : 5)}
+              onBack={() => wizard.advanceToSection(3)}
               onHome={handleGoHome}
               onStartNew={() => {
                 wizard.setCurrentSection(0);

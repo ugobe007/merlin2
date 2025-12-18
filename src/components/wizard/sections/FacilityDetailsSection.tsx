@@ -275,7 +275,7 @@ export function FacilityDetailsSection({
             </div>
           )}
           <div className="text-sm text-gray-400">
-            {initializedFromVertical ? 'Step 1 of 4' : 'Step 2 of 5'}
+            {initializedFromVertical ? 'Step 1 of 5' : 'Step 3 of 5'}
           </div>
         </div>
         

@@ -465,8 +465,8 @@ export function GoalsSectionV3({
         {/* STEP EXPLANATION - Merlin's Guidance (REQUIRED) */}
         {/* ================================================================= */}
         <StepExplanation
-          stepNumber={3}
-          totalSteps={7}
+          stepNumber={4}
+          totalSteps={5}
           title="Configure Your Energy System"
           description="Tell me about your existing equipment and what you'd like to add. I'll analyze your facility data to recommend the perfect energy solution."
           estimatedTime="2-3 min"

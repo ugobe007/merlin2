@@ -354,8 +354,8 @@ export function FacilityDetailsSectionV2({
             STEP EXPLANATION HEADER - Enhanced with Merlin's guidance
             ════════════════════════════════════════════════════════════════ */}
         <StepExplanation
-          stepNumber={initializedFromVertical ? 1 : 2}
-          totalSteps={initializedFromVertical ? 4 : 5}
+          stepNumber={initializedFromVertical ? 1 : 3}
+          totalSteps={5}
           title="Confirm Your Property Details"
           description="I need a few details about your property to calculate accurate power requirements. The more detail you provide, the more precise your energy quote will be!"
           estimatedTime="1-2 minutes"

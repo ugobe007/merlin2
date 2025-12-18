@@ -82,7 +82,7 @@ export function IndustrySection({
               {/* Step Indicator - LARGE and PROMINENT */}
               <div className="flex items-center gap-3 mb-3">
                 <span className="px-4 py-2 bg-[#ffa600] text-white text-lg font-bold rounded-full shadow-lg">
-                  Step 2 of 6
+                  Step 2 of 5
                 </span>
                 <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
                   <div className="h-full bg-[#ffa600] rounded-full" style={{ width: '33%' }} />

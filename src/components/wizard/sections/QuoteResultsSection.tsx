@@ -220,7 +220,8 @@ export function QuoteResultsSection({
   };
 
   // Dec 17, 2025: QuoteResultsSection is now Section 7
-  const SECTION_NUMBER = 7;
+  // Dec 18, 2025 - SIMPLIFIED: Now Section 4 (was Section 7)
+  const SECTION_NUMBER = 4;
 
   return (
     <div

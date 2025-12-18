@@ -218,7 +218,7 @@ export function GoalsSection({
             <ArrowLeft className="w-4 h-4" />
             Back to Facility Details
           </button>
-          <div className="text-sm text-gray-400">Step 3 of 5 • Configure Add-ons</div>
+          <div className="text-sm text-gray-400">Step 4 of 5 • Configure Add-ons</div>
         </div>
 
         {/* Progress badges */}
