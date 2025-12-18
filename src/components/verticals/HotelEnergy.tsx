@@ -641,6 +641,9 @@ export default function HotelEnergy() {
   // TrueQuote Modal
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
+  // How Merlin Works Modal
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  
   // Hero inline estimate - calculated from ALL inputs (Dec 2025 - comprehensive calculation)
   const heroEstimate = React.useMemo(() => {
     // Derive hotel class from room count (same logic as UI display)
@@ -820,18 +823,10 @@ export default function HotelEnergy() {
               Enter your hotel details and see instant savings estimates
             </p>
             
-            {/* How Merlin Works button - DEEPER PURPLE */}
+            {/* How Merlin Works button - Opens Popup */}
             <div className="flex items-center justify-center gap-4">
               <button 
-                onClick={() => {
-                  const section = document.getElementById('how-it-works');
-                  if (section) {
-                    section.scrollIntoView({ behavior: 'smooth' });
-                  } else {
-                    // Fallback: scroll to bottom of page where section should be
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                  }
-                }}
+                onClick={() => setShowHowItWorks(true)}
                 className="group relative flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-600 hover:to-indigo-600 text-white font-black text-xl rounded-2xl border-2 border-purple-400/50 transition-all hover:scale-110 shadow-2xl shadow-purple-900/70 hover:shadow-purple-700/60"
               >
                 {/* Glow effect */}
@@ -970,13 +965,14 @@ export default function HotelEnergy() {
                   </label>
                   <button
                     onClick={() => setInputs({ ...inputs, hasEVCharging: !inputs.hasEVCharging, evChargerCount: inputs.hasEVCharging ? 0 : 4 })}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${
                       inputs.hasEVCharging 
-                        ? 'bg-emerald-500 text-white' 
-                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40' 
+                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-2 border-emerald-400 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/30 animate-pulse'
                     }`}
+                    style={{ animationDuration: '2s' }}
                   >
-                    {inputs.hasEVCharging ? '✓ Enabled' : 'Add EV'}
+                    {inputs.hasEVCharging ? '✓ EV Enabled' : '⚡ + Add EV'}
                   </button>
                 </div>
                 {inputs.hasEVCharging && (
@@ -1202,27 +1198,39 @@ export default function HotelEnergy() {
                 </div>
               </div>
 
-              {/* Energy & Financial Metrics - Replaces Environmental Impact */}
-              <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-cyan-500/10 rounded-xl p-4 mb-5 border border-indigo-400/30">
+              {/* Guest Experience Benefits - Shows real value to hotel owners */}
+              <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 rounded-xl p-4 mb-5 border border-amber-400/30">
                 <p className="text-gray-300 text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" /> Energy & Financial Metrics
+                  <Sparkles className="w-4 h-4 text-amber-400" /> Guest Experience Benefits
                 </p>
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-yellow-400">{Math.round(peakKW)}</p>
-                    <p className="text-[10px] text-gray-400">kW Peak</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                    <div className="text-xl">⚡</div>
+                    <div>
+                      <p className="text-white text-sm font-bold">Zero Blackouts</p>
+                      <p className="text-[10px] text-gray-400">Seamless backup power</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-cyan-400">{Math.round(peakKW * 0.4 * 100)}%</p>
-                    <p className="text-[10px] text-gray-400">Peak Shave</p>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                    <div className="text-xl">🔌</div>
+                    <div>
+                      <p className="text-white text-sm font-bold">EV Ready</p>
+                      <p className="text-[10px] text-gray-400">Attract modern travelers</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-purple-400">${Math.round(demandChargeImpact / 1000)}K</p>
-                    <p className="text-[10px] text-gray-400">$/yr Demand</p>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                    <div className="text-xl">🌿</div>
+                    <div>
+                      <p className="text-white text-sm font-bold">Green Certified</p>
+                      <p className="text-[10px] text-gray-400">Boost sustainability rating</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-emerald-400">{Math.round(heroEstimate.savings / 600)}</p>
-                    <p className="text-[10px] text-gray-400">tons CO₂</p>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                    <div className="text-xl">📈</div>
+                    <div>
+                      <p className="text-white text-sm font-bold">Higher ADR</p>
+                      <p className="text-[10px] text-gray-400">Premium eco-conscious rates</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1260,180 +1268,7 @@ export default function HotelEnergy() {
         </div>
       </section>
       
-      {/* ═══════════════════════════════════════════════════════════════════════
-          USE CASES SHOWCASE - Expanded with larger images (Dec 2025 Redesign)
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 bg-gradient-to-b from-black/40 via-indigo-900/30 to-purple-900/30 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/40 rounded-full px-5 py-2 mb-4">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-300 text-sm font-semibold">Success Stories</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
-              Hotels Like Yours Are <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Saving Big</span>
-            </h2>
-            <p className="text-indigo-200 text-lg max-w-2xl mx-auto">
-              From boutique hotels to luxury resorts, see how properties are cutting energy costs while improving guest experience
-            </p>
-          </div>
-          
-          {/* Use Cases Grid - Large Cards - NOW USES CASE STUDY DATA */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {HOTEL_CASE_STUDIES.map((study) => (
-              <div 
-                key={study.id}
-                className="bg-slate-800/60 rounded-3xl overflow-hidden border-2 border-purple-500/30 hover:border-emerald-400/50 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 cursor-pointer group"
-              >
-                {/* Large Image with savings badge */}
-                <div className="h-52 md:h-64 overflow-hidden relative">
-                  <img 
-                    src={study.image} 
-                    alt={study.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent" />
-                  
-                  {/* Floating badge */}
-                  <div className="absolute top-4 right-4 bg-emerald-500/90 backdrop-blur-sm rounded-full px-3 py-1">
-                    <span className="text-white text-xs font-bold">${(study.annualSavings / 1000).toFixed(0)}K/yr Savings</span>
-                  </div>
-                  
-                  {/* Caption overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="text-white/80 text-sm font-medium">{study.category}</p>
-                    <h3 className="text-white text-xl font-bold">{study.title}</h3>
-                  </div>
-                </div>
-                
-                {/* Card Content */}
-                <div className="p-5">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-black text-emerald-400">${(study.annualSavings / 1000).toFixed(0)}K</p>
-                      <p className="text-xs text-emerald-300">Annual Savings</p>
-                    </div>
-                    <div className="bg-purple-500/10 rounded-xl p-3 text-center">
-                      <p className="text-2xl font-black text-purple-400">{study.paybackYears}yr</p>
-                      <p className="text-xs text-purple-300">Payback Period</p>
-                    </div>
-                  </div>
-                  
-                  {/* THIS BUTTON OPENS THE MODAL */}
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCaseStudy(study);
-                    }}
-                    className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>See How They Did It</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* CTA Banner */}
-          <div className="bg-gradient-to-r from-purple-900/50 via-indigo-900/50 to-emerald-900/50 rounded-2xl p-8 border border-indigo-500/30 text-center">
-            <h3 className="text-2xl font-bold text-white mb-2">Your Hotel Could Be Next</h3>
-            <p className="text-indigo-200 mb-6">Get a custom quote based on your property's specific needs</p>
-            <button
-              onClick={() => setShowWizard(true)}
-              className="px-8 py-4 bg-gradient-to-r from-purple-700 via-violet-600 to-emerald-500 hover:from-purple-600 hover:via-violet-500 hover:to-emerald-400 text-white rounded-xl font-black text-lg transition-all hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/30 inline-flex items-center gap-2"
-            >
-              <Calculator className="w-5 h-5" />
-              Get My Custom Quote
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-      
-      {/* DELETED: Calculator section and How It Works - redundant with hero */}
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          CASE STUDIES
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 bg-gradient-to-b from-black/30 via-indigo-900/20 to-black/30">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-indigo-500/20 px-4 py-2 rounded-full border border-indigo-400/40 mb-4">
-              <Building2 className="w-5 h-5 text-indigo-400" />
-              <span className="text-indigo-200 text-sm font-bold">🏆 SUCCESS STORIES</span>
-            </div>
-            <h2 className="text-3xl font-black text-white">
-              Hotels <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Saving Big</span>
-            </h2>
-            <p className="text-indigo-200 text-sm mt-2 font-medium">
-              Example savings scenarios based on typical installations
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1 - Midscale */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-indigo-500/50 hover:scale-105 hover:border-indigo-400/70 transition-all shadow-2xl shadow-indigo-500/20 group">
-              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">⭐</div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-300/40">
-                  <Building2 className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-black text-white text-lg">Midscale Hotel</p>
-                  <p className="text-sm text-indigo-200/80 font-medium">120 rooms • Orlando, FL</p>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-500/30 to-purple-500/20 rounded-2xl p-5 text-center mb-4 border border-indigo-400/40">
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">$38,000</p>
-                <p className="text-sm text-indigo-200/80 font-semibold">💰 Annual Savings</p>
-              </div>
-              <p className="text-sm text-indigo-200/70 font-semibold text-center">🔋 150 kW battery • ⏱️ 4.2 year payback</p>
-            </div>
-            
-            {/* Card 2 - Upscale (Featured) */}
-            <div className="bg-gradient-to-br from-slate-900 via-purple-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-purple-400/60 hover:scale-105 hover:border-purple-400/80 transition-all shadow-2xl shadow-purple-500/30 relative group">
-              {/* Featured badge */}
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 px-4 py-1 rounded-full text-xs font-black text-white shadow-lg border border-purple-300/50">🏆 TOP PERFORMER</div>
-              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">✨</div>
-              <div className="flex items-center gap-3 mb-5 mt-2">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-300/40">
-                  <Building2 className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-black text-white text-lg">Upscale Resort</p>
-                  <p className="text-sm text-purple-200/80 font-medium">250 rooms • San Diego, CA</p>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-purple-500/30 to-pink-500/20 rounded-2xl p-5 text-center mb-4 border border-purple-400/40">
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">$72,000</p>
-                <p className="text-sm text-purple-200/80 font-semibold">💰 Annual Savings</p>
-              </div>
-              <p className="text-sm text-purple-200/70 font-semibold text-center">🔋 300 kW battery • ⏱️ 3.8 year payback</p>
-            </div>
-            
-            {/* Card 3 - Boutique */}
-            <div className="bg-gradient-to-br from-slate-900 via-pink-900/40 to-slate-900 backdrop-blur-xl rounded-3xl p-6 border-3 border-pink-500/50 hover:scale-105 hover:border-pink-400/70 transition-all shadow-2xl shadow-pink-500/20 relative group">
-              <div className="absolute -top-3 -right-3 text-2xl group-hover:animate-bounce">💎</div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/40 border-2 border-pink-300/40">
-                  <Building2 className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-black text-white text-lg">Boutique Hotel</p>
-                  <p className="text-sm text-pink-200/80 font-medium">75 rooms • Miami, FL</p>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-pink-500/30 to-rose-500/20 rounded-2xl p-5 text-center mb-4 border border-pink-400/40">
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-rose-300">$28,000</p>
-                <p className="text-sm text-pink-200/80 font-semibold">💰 Annual Savings</p>
-              </div>
-              <p className="text-sm text-pink-200/70 font-semibold text-center">🔋 100 kW battery • ⏱️ 4.5 year payback</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* REMOVED: Success Stories sections - per user request Dec 17 2025 */}
       
       {/* ═══════════════════════════════════════════════════════════════════════
           FINAL CTA
@@ -1845,6 +1680,73 @@ export default function HotelEnergy() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          HOW MERLIN WORKS POPUP - Step-by-step process explanation
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {showHowItWorks && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowHowItWorks(false)}>
+          <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-2xl w-full p-8 shadow-2xl border border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+                <h2 className="text-3xl font-bold text-white">How Merlin Works</h2>
+              </div>
+              <button onClick={() => setShowHowItWorks(false)} className="text-purple-300 hover:text-white text-2xl">×</button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">1</div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Tell Us About Your Hotel</h3>
+                  <p className="text-purple-200/70">Enter your hotel's room count, amenities, and location. Takes about 60 seconds.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">2</div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Merlin Analyzes Your Needs</h3>
+                  <p className="text-purple-200/70">Our AI uses NREL ATB 2024 pricing and DOE-aligned methodology to design the optimal energy solution for your property.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">3</div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Get Your Custom Quote</h3>
+                  <p className="text-purple-200/70">Receive a detailed, bank-ready proposal with ROI projections and equipment specs—all with traceable sources.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">4</div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Start Saving Money</h3>
+                  <p className="text-purple-200/70">Connect with certified installers and start cutting your hotel's energy costs immediately.</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Industry Compliance Statement */}
+            <div className="mt-6 pt-4 border-t border-purple-500/30">
+              <MethodologyStatement 
+                variant="compact" 
+                darkMode={true}
+                message="NREL ATB 2024 & DOE StoreFAST aligned"
+              />
+            </div>
+            
+            <button 
+              onClick={() => { setShowHowItWorks(false); setShowWizard(true); }}
+              className="w-full mt-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
+            >
+              🪄 Start My Free Quote →
+            </button>
           </div>
         </div>
       )}
