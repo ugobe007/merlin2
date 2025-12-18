@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import merlinImage from '@/assets/images/new_Merlin.png';
+import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 interface ConfigurationComparisonProps {
   wizardState: WizardState;
@@ -66,6 +67,7 @@ export function ConfigurationComparison({
 }: ConfigurationComparisonProps) {
   const [selectedConfig, setSelectedConfig] = useState<'user' | 'merlin' | null>(null);
   const [showExplanation, setShowExplanation] = useState(true);
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   
   // Get peak demand for guidance
   const peakDemandKW = centralizedState?.calculated?.totalPeakDemandKW || 450;
@@ -244,27 +246,27 @@ export function ConfigurationComparison({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* User Config explanation */}
-                <div className="bg-white/10 border-2 border-[#68BFFA] rounded-xl p-4">
+                <div className="bg-[#060F76] border-2 border-[#68BFFA] rounded-xl p-4 shadow-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-[#68BFFA] rounded-lg flex items-center justify-center">
                       <Zap className="w-4 h-4 text-white" />
                     </div>
-                    <h4 className="font-bold text-[#68BFFA]">Your Configuration</h4>
+                    <h4 className="font-black text-lg text-[#68BFFA]">Your Configuration</h4>
                   </div>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-white text-sm">
                     Based on your choices in Goals - includes your solar, wind, and generator preferences.
                   </p>
                 </div>
                 
                 {/* Merlin Config explanation */}
-                <div className="bg-white/10 border-2 border-[#ad42ff] rounded-xl p-4">
+                <div className="bg-[#6700b6] border-2 border-[#ffa600] rounded-xl p-4 shadow-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-[#6700b6] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-[#ffa600] rounded-lg flex items-center justify-center">
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
-                    <h4 className="font-bold text-[#ad42ff]">Merlin's Recommendation</h4>
+                    <h4 className="font-black text-lg text-[#ffa600]">Merlin's Recommendation</h4>
                   </div>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-white text-sm">
                     AI-optimized for your peak demand ({formatPower(peakDemandKW)}) using industry benchmarks.
                   </p>
                 </div>
@@ -280,52 +282,29 @@ export function ConfigurationComparison({
           </div>
         </div>
         
-        {/* Navigation - Back / Home */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-[#060F76] hover:bg-[#0815a9] text-white font-medium rounded-lg transition-colors border-2 border-[#4b59f5]"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
-            <button
-              onClick={onHome || onBack} // Home navigates to vertical landing page
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
-            >
-              <Home className="w-4 h-4" />
-              Home
-            </button>
-          </div>
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full text-purple-300 text-sm">
-            <Sparkles className="w-4 h-4" />
-            Step 3 of 5
-          </span>
-        </div>
-        
-        {/* Section Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Your Configuration vs. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Merlin's Recommendation</span>
+        {/* Section Title - large and prominent */}
+        <div className="text-center mb-10">
+          <h2 className="text-4xl font-black text-white mb-3">
+            Your Configuration vs. <span className="text-[#ffa600]">Merlin's Recommendation</span>
           </h2>
-          <p className="text-gray-400">Select the configuration you want to proceed with</p>
+          <p className="text-xl text-white/80 font-medium">Click either card to select it, then hit "Next Step" to continue</p>
         </div>
         
         {/* ════════════════════════════════════════════════════════════════
             SIDE-BY-SIDE COMPARISON - Light backgrounds for contrast
         ════════════════════════════════════════════════════════════════ */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-10">
           {/* ═══════════════════════════════════════════
               USER'S CONFIGURATION (Left) - BLUE/CYAN Theme
               High contrast with the purple Merlin panel
           ═══════════════════════════════════════════ */}
           <div 
-            className={`relative bg-gradient-to-br from-[#68BFFA]/30 to-[#0ea5e9]/20 rounded-3xl p-6 border-2 transition-all shadow-xl ${
+            className={`relative rounded-3xl p-10 border-4 transition-all shadow-2xl ${
               selectedConfig === 'user'
-                ? 'border-[#68BFFA] ring-4 ring-[#68BFFA]/40 scale-[1.02]'
-                : 'border-[#68BFFA]/60 hover:border-[#68BFFA] cursor-pointer'
+                ? 'border-[#ffa600] ring-4 ring-[#ffa600]/40 scale-[1.03] z-10'
+                : 'border-[#68BFFA] hover:border-[#ffa600] cursor-pointer opacity-90'
             }`}
+            style={{background: 'linear-gradient(135deg, #060F76 0%, #68BFFA 60%, #005fa3 100%)'}}
             onClick={() => handleSelectConfig('user')}
           >
             {selectedConfig === 'user' && (
@@ -337,14 +316,13 @@ export function ConfigurationComparison({
               </div>
             )}
             
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#68BFFA] to-[#0ea5e9] rounded-xl flex items-center justify-center shadow-lg">
-                <ThumbsUp className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#ffa600] to-[#68BFFA] rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white drop-shadow-xl">
+                <ThumbsUp className="w-9 h-9 text-white drop-shadow" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#060F76]">Your Configuration</h3>
-                <p className="text-sm text-[#68BFFA]">Customize your energy system</p>
+                <h3 className="text-3xl font-extrabold text-white drop-shadow-lg">Your Configuration</h3>
+                <p className="text-xl text-white font-bold opacity-90">Customize your energy system</p>
               </div>
             </div>
             
@@ -375,10 +353,10 @@ export function ConfigurationComparison({
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#68BFFA] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
-                <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
-                  <span>{formatPower(recommendations.minBatteryKW)}</span>
-                  <span className="text-[#68BFFA] font-medium">Recommended: {formatPower(recommendations.recommendedBatteryKW)}</span>
-                  <span>{formatPower(recommendations.maxBatteryKW)}</span>
+                <div className="flex justify-between text-sm font-semibold mt-1">
+                  <span className="text-[#060F76]/70">{formatPower(recommendations.minBatteryKW)}</span>
+                  <span className="text-[#6700b6] font-bold">Recommended: {formatPower(recommendations.recommendedBatteryKW)}</span>
+                  <span className="text-[#060F76]/70">{formatPower(recommendations.maxBatteryKW)}</span>
                 </div>
               </div>
               
@@ -404,10 +382,10 @@ export function ConfigurationComparison({
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#68BFFA] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
-                <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
-                  <span>2 hrs</span>
-                  <span className="text-[#68BFFA] font-medium">Recommended: 4 hrs</span>
-                  <span>8 hrs</span>
+                <div className="flex justify-between text-sm font-semibold mt-1">
+                  <span className="text-[#060F76]/70">2 hrs</span>
+                  <span className="text-[#6700b6] font-bold">Recommended: 4 hrs</span>
+                  <span className="text-[#060F76]/70">8 hrs</span>
                 </div>
               </div>
               
@@ -438,10 +416,10 @@ export function ConfigurationComparison({
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#ffa600] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
-                <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
-                  <span>0 kW</span>
-                  <span className="text-[#ffa600] font-medium">Optimal: {formatPower(recommendations.recommendedSolarKW)}</span>
-                  <span>{formatPower(recommendations.maxSolarKW)}</span>
+                <div className="flex justify-between text-sm font-semibold mt-1">
+                  <span className="text-[#060F76]/70">0 kW</span>
+                  <span className="text-[#6700b6] font-bold">Optimal: {formatPower(recommendations.recommendedSolarKW)}</span>
+                  <span className="text-[#060F76]/70">{formatPower(recommendations.maxSolarKW)}</span>
                 </div>
                 
                 {/* Smart Guidance Message */}
@@ -490,40 +468,40 @@ export function ConfigurationComparison({
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#060F76] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
-                <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
-                  <span>0 kW</span>
-                  <span className="text-[#68BFFA] font-medium">Optional: {formatPower(recommendations.recommendedGeneratorKW)}</span>
-                  <span>{formatPower(recommendations.maxGeneratorKW)}</span>
+                <div className="flex justify-between text-sm font-semibold mt-1">
+                  <span className="text-[#060F76]/70">0 kW</span>
+                  <span className="text-[#6700b6] font-bold">Optional: {formatPower(recommendations.recommendedGeneratorKW)}</span>
+                  <span className="text-[#060F76]/70">{formatPower(recommendations.maxGeneratorKW)}</span>
                 </div>
               </div>
             </div>
             
             {/* Storage Summary */}
-            <div className="bg-[#68BFFA]/15 rounded-xl p-3 mb-4 border border-[#68BFFA]/40">
+            <div className="bg-white/90 rounded-xl p-4 mb-4 border-2 border-[#ffa600]/60">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#060F76] font-medium">Total Storage Capacity</span>
-                <span className="font-bold text-[#060F76] transition-all duration-300 ease-out">{formatEnergy(userConfig.batteryKWh)}</span>
+                <span className="text-lg text-[#060F76] font-bold">Total Storage Capacity</span>
+                <span className="text-xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatEnergy(userConfig.batteryKWh)}</span>
               </div>
             </div>
             
             {/* Financial Metrics */}
-            <div className="bg-white/80 rounded-xl p-4 space-y-3 border border-[#68BFFA]/30">
+            <div className="bg-white/90 rounded-xl p-5 space-y-4 border-2 border-[#ffa600]/60">
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">Annual Savings</span>
-                <span className="text-xl font-bold text-[#060F76] transition-all duration-300 ease-out">{formatMoney(userConfig.annualSavings)}</span>
+                <span className="text-lg text-[#060F76] font-semibold">Annual Savings</span>
+                <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(userConfig.annualSavings)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">Payback Period</span>
-                <span className="text-xl font-bold text-[#060F76] transition-all duration-300 ease-out">{userConfig.paybackYears.toFixed(1)} years</span>
+                <span className="text-lg text-[#060F76] font-semibold">Payback Period</span>
+                <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{userConfig.paybackYears.toFixed(1)} years</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">25-Year ROI</span>
-                <span className="text-xl font-bold text-[#ffa600] transition-all duration-300 ease-out">{userConfig.roi25Year}%</span>
+                <span className="text-lg text-[#060F76] font-semibold">25-Year ROI</span>
+                <span className="text-2xl font-black text-[#ffa600] transition-all duration-300 ease-out">{userConfig.roi25Year}%</span>
               </div>
-              <div className="pt-2 border-t border-[#68BFFA]/30">
+              <div className="pt-3 border-t-2 border-[#6700b6]/30">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#060F76] font-semibold">Net Investment</span>
-                  <span className="text-2xl font-black text-[#060F76] transition-all duration-300 ease-out">{formatMoney(userConfig.netCost)}</span>
+                  <span className="text-xl text-[#060F76] font-bold">Net Investment</span>
+                  <span className="text-3xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(userConfig.netCost)}</span>
                 </div>
               </div>
             </div>
@@ -531,7 +509,7 @@ export function ConfigurationComparison({
             {/* Select Button - Actually selects this config */}
             <button
               onClick={(e) => { e.stopPropagation(); handleSelectConfig('user'); }}
-              className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
+              className={`w-full mt-4 py-4 rounded-xl font-extrabold text-xl transition-all flex items-center justify-center gap-2 shadow-lg ${
                 selectedConfig === 'user'
                   ? 'bg-[#68BFFA] text-white'
                   : 'bg-[#060F76] hover:bg-[#0815a9] text-white border-2 border-[#68BFFA]'
@@ -556,11 +534,12 @@ export function ConfigurationComparison({
               Click anywhere on card to select
           ═══════════════════════════════════════════ */}
           <div 
-            className={`relative bg-gradient-to-br from-[#6700b6]/30 to-[#cc89ff]/30 rounded-3xl p-6 border-2 transition-all shadow-xl cursor-pointer ${
+            className={`relative rounded-3xl p-10 border-4 transition-all shadow-2xl cursor-pointer ${
               selectedConfig === 'merlin'
-                ? 'border-[#6700b6] ring-4 ring-[#6700b6]/40 scale-[1.02]'
-                : 'border-[#6700b6]/60 hover:border-[#6700b6]'
+                ? 'border-[#ffa600] ring-4 ring-[#ffa600]/40 scale-[1.03] z-10'
+                : 'border-[#6700b6] hover:border-[#ffa600] opacity-90'
             }`}
+            style={{background: 'linear-gradient(135deg, #6700b6 0%, #ffa600 60%, #ff7c00 100%)'}}
             onClick={() => handleSelectConfig('merlin')}
           >
             {/* Recommended Badge */}
@@ -585,11 +564,11 @@ export function ConfigurationComparison({
             </div>
             
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
+            <div className="flex items-center gap-4 mb-8">
+              <img src={merlinImage} alt="Merlin" className="w-16 h-16 rounded-2xl border-4 border-white shadow-2xl drop-shadow-xl" />
               <div>
-                <h3 className="text-xl font-bold text-[#6700b6]">Merlin's Recommendation</h3>
-                <p className="text-sm text-[#060F76]/70">AI-optimized for your facility</p>
+                <h3 className="text-3xl font-extrabold text-white drop-shadow-lg">Merlin's Recommendation</h3>
+                <p className="text-xl text-white font-bold opacity-90">AI-optimized for your facility</p>
               </div>
             </div>
             
@@ -674,26 +653,26 @@ export function ConfigurationComparison({
               </ul>
             </div>
             
-            {/* ROI Analysis */}
-            <div className="bg-[#6700b6]/10 rounded-xl p-4 mb-4 border border-[#6700b6]/30">
+            {/* ROI Analysis - HIGH CONTRAST */}
+            <div className="bg-gradient-to-br from-[#fffbe9] to-[#fff5d6] rounded-xl p-4 mb-4 border-2 border-[#6700b6]">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="w-5 h-5 text-[#6700b6]" />
-                <span className="font-bold text-[#6700b6]">Return on Investment</span>
+                <span className="font-black text-lg text-[#6700b6]">Return on Investment</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/70 rounded-lg p-3 text-center border border-[#6700b6]/20">
-                  <p className="text-xs text-[#060F76]/60 mb-1">10-Year Savings</p>
-                  <p className="text-lg font-bold text-[#6700b6]">{formatMoney(merlinConfig.annualSavings * 10)}</p>
+                <div className="bg-white rounded-lg p-3 text-center border-2 border-[#6700b6]/40 shadow-md">
+                  <p className="text-xs text-[#6700b6] font-semibold mb-1">10-Year Savings</p>
+                  <p className="text-2xl font-black text-[#6700b6]">{formatMoney(merlinConfig.annualSavings * 10)}</p>
                 </div>
-                <div className="bg-white/70 rounded-lg p-3 text-center border border-[#6700b6]/20">
-                  <p className="text-xs text-[#060F76]/60 mb-1">25-Year Savings</p>
-                  <p className="text-lg font-bold text-[#6700b6]">{formatMoney(merlinConfig.annualSavings * 25)}</p>
+                <div className="bg-white rounded-lg p-3 text-center border-2 border-[#6700b6]/40 shadow-md">
+                  <p className="text-xs text-[#6700b6] font-semibold mb-1">25-Year Savings</p>
+                  <p className="text-2xl font-black text-[#6700b6]">{formatMoney(merlinConfig.annualSavings * 25)}</p>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-[#6700b6]/20">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#060F76]">Monthly Savings</span>
-                  <span className="font-bold text-[#ffa600]">{formatMoney(merlinConfig.annualSavings / 12)}/mo</span>
+              <div className="mt-3 pt-3 border-t-2 border-[#6700b6]/30">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#6700b6] font-semibold">Monthly Savings</span>
+                  <span className="font-black text-xl text-[#ffa600]">{formatMoney(merlinConfig.annualSavings / 12)}/mo</span>
                 </div>
               </div>
             </div>
@@ -725,23 +704,23 @@ export function ConfigurationComparison({
             </div>
             
             {/* Financial Metrics */}
-            <div className="bg-white/70 rounded-xl p-4 space-y-3 border border-[#6700b6]/20">
+            <div className="bg-white/90 rounded-xl p-5 space-y-4 border-2 border-[#ffa600]/60">
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">Annual Savings</span>
-                <span className="text-xl font-bold text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(merlinConfig.annualSavings)}</span>
+                <span className="text-lg text-[#060F76] font-semibold">Annual Savings</span>
+                <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(merlinConfig.annualSavings)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">Payback Period</span>
-                <span className="text-xl font-bold text-[#060F76] transition-all duration-300 ease-out">{merlinConfig.paybackYears.toFixed(1)} years</span>
+                <span className="text-lg text-[#060F76] font-semibold">Payback Period</span>
+                <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{merlinConfig.paybackYears.toFixed(1)} years</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#060F76]/70">25-Year ROI</span>
-                <span className="text-xl font-bold text-[#ffa600] transition-all duration-300 ease-out">{merlinConfig.roi25Year}%</span>
+                <span className="text-lg text-[#060F76] font-semibold">25-Year ROI</span>
+                <span className="text-2xl font-black text-[#ffa600] transition-all duration-300 ease-out">{merlinConfig.roi25Year}%</span>
               </div>
-              <div className="pt-2 border-t border-[#6700b6]/20">
+              <div className="pt-3 border-t-2 border-[#6700b6]/30">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#060F76] font-semibold">Net Investment</span>
-                  <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(merlinConfig.netCost)}</span>
+                  <span className="text-xl text-[#060F76] font-bold">Net Investment</span>
+                  <span className="text-3xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(merlinConfig.netCost)}</span>
                 </div>
               </div>
             </div>
@@ -749,10 +728,10 @@ export function ConfigurationComparison({
             {/* Select Button - Actually selects Merlin's config */}
             <button
               onClick={(e) => { e.stopPropagation(); handleSelectConfig('merlin'); }}
-              className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
+              className={`w-full mt-4 py-4 rounded-xl font-extrabold text-xl transition-all flex items-center justify-center gap-2 shadow-lg ${
                 selectedConfig === 'merlin'
-                  ? 'bg-[#6700b6] text-white'
-                  : 'bg-gradient-to-r from-[#ffa600] to-[#ff8c00] hover:from-[#ffb733] hover:to-[#ffa600] text-white border-2 border-[#6700b6]'
+                  ? 'bg-emerald-600 text-white border-2 border-white'
+                  : 'bg-[#060F76] hover:bg-[#0a1a9a] text-white border-2 border-[#6700b6]'
               }`}
             >
               {selectedConfig === 'merlin' ? (
@@ -770,91 +749,65 @@ export function ConfigurationComparison({
           </div>
         </div>
         
-        {/* Comparison Summary - Light background */}
-        {userConfig.batteryKW > 0 && merlinConfig.batteryKW > 0 && (
-          <div className="bg-white/80 rounded-2xl p-5 border border-[#6700b6]/30 shadow-lg">
-            <h4 className="font-bold text-[#6700b6] mb-4 flex items-center gap-2">
-              <Scale className="w-5 h-5 text-[#6700b6]" />
-              Quick Comparison
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-[#060F76]/60 mb-1">Battery Size</p>
-                <p className="text-lg font-bold text-[#060F76]">
-                  {getComparison(userConfig.batteryKWh, merlinConfig.batteryKWh).diff > 0 && (
-                    <span className={getComparison(userConfig.batteryKWh, merlinConfig.batteryKWh).isHigher ? 'text-[#ffa600]' : 'text-[#68BFFA]'}>
-                      {getComparison(userConfig.batteryKWh, merlinConfig.batteryKWh).isHigher ? '+' : '-'}
-                      {getComparison(userConfig.batteryKWh, merlinConfig.batteryKWh).diff.toFixed(0)}%
-                    </span>
-                  )}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-[#060F76]/60 mb-1">Annual Savings</p>
-                <p className="text-lg font-bold">
-                  {getComparison(userConfig.annualSavings, merlinConfig.annualSavings).diff > 0 && (
-                    <span className={getComparison(userConfig.annualSavings, merlinConfig.annualSavings).isHigher ? 'text-[#6700b6]' : 'text-[#ffa600]'}>
-                      {getComparison(userConfig.annualSavings, merlinConfig.annualSavings).isHigher ? '+' : '-'}
-                      {getComparison(userConfig.annualSavings, merlinConfig.annualSavings).diff.toFixed(0)}%
-                    </span>
-                  )}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-[#060F76]/60 mb-1">Payback</p>
-                <p className="text-lg font-bold">
-                  {getComparison(userConfig.paybackYears, merlinConfig.paybackYears).diff > 0 && (
-                    <span className={!getComparison(userConfig.paybackYears, merlinConfig.paybackYears).isHigher ? 'text-[#6700b6]' : 'text-[#ffa600]'}>
-                      {getComparison(userConfig.paybackYears, merlinConfig.paybackYears).isHigher ? '+' : '-'}
-                      {getComparison(userConfig.paybackYears, merlinConfig.paybackYears).diff.toFixed(0)}%
-                    </span>
-                  )}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-[#060F76]/60 mb-1">Investment</p>
-                <p className="text-lg font-bold">
-                  {getComparison(userConfig.netCost, merlinConfig.netCost).diff > 0 && (
-                    <span className={!getComparison(userConfig.netCost, merlinConfig.netCost).isHigher ? 'text-[#6700b6]' : 'text-[#ffa600]'}>
-                      {getComparison(userConfig.netCost, merlinConfig.netCost).isHigher ? '+' : '-'}
-                      {getComparison(userConfig.netCost, merlinConfig.netCost).diff.toFixed(0)}%
-                    </span>
-                  )}
-                </p>
-              </div>
+        {/* Quick Comparison panel removed for clarity and visual hierarchy */}
+        
+        {/* Hint if no selection */}
+        {!selectedConfig && (
+          <div className="mt-10 text-center">
+            <div className="inline-flex items-center gap-3 px-8 py-4 bg-[#ffa600]/20 border-2 border-[#ffa600] rounded-2xl animate-pulse">
+              <span className="text-2xl">👆</span>
+              <p className="text-xl text-white font-bold">
+                Click a card above to select your configuration
+              </p>
             </div>
           </div>
         )}
         
-        {/* Continue Button - Only way to advance */}
-        {selectedConfig && (
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={handleContinueClick}
-              className="group px-8 py-4 bg-gradient-to-r from-[#6700b6] to-[#060F76] hover:from-[#7a00d9] hover:to-[#0b1fa8] text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-[#6700b6]/25 flex items-center gap-3"
-            >
-              Continue to Scenario Planner
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        )}
-        
-        {/* Hint if no selection */}
-        {!selectedConfig && (
-          <div className="mt-8 text-center">
-            <p className="text-[#060F76]/60 text-sm animate-pulse">
-              ☝️ Select a configuration above to continue
-            </p>
-          </div>
-        )}
-        
-        {/* TrueQuote Badge */}
-        <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#6700b6]/10 border border-[#6700b6]/30 rounded-full">
-            <Shield className="w-4 h-4 text-[#6700b6]" />
-            <span className="text-sm text-[#6700b6]">TrueQuote™ - All estimates traceable to authoritative sources</span>
-          </div>
+        {/* TrueQuote Badge - Exact design match: cream bg, orange shield, brown text */}
+        <div className="mt-8 text-center">
+          <button 
+            onClick={() => setShowTrueQuoteModal(true)}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-[#fffbe9] border-2 border-[#6700b6] rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          >
+            {/* Orange shield with checkmark */}
+            <div className="w-8 h-8 bg-[#ffa600] rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-[#5c3d00]">TrueQuote™</span>
+          </button>
         </div>
+      </div>
+      
+      {/* TrueQuote Modal */}
+      <TrueQuoteModal 
+        isOpen={showTrueQuoteModal} 
+        onClose={() => setShowTrueQuoteModal(false)} 
+      />
+      {/* Footer Navigation - LARGER CTA BUTTONS with POP */}
+      <div className="w-full py-8 px-4 flex items-center justify-between mt-12 bg-gradient-to-r from-[#060F76]/30 to-[#6700b6]/20 rounded-2xl border-2 border-[#6700b6]/40">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 px-8 py-4 bg-[#060F76] border-2 border-[#6700b6] rounded-xl text-white font-bold text-xl hover:bg-[#0a1a9a] hover:border-[#ffa600] transition-all shadow-lg hover:shadow-xl hover:shadow-[#6700b6]/30"
+          >
+            <ChevronLeft className="w-6 h-6" />
+            Back
+          </button>
+          <button
+            onClick={onHome || onBack}
+            className="flex items-center justify-center w-14 h-14 bg-[#060F76] border-2 border-[#6700b6] rounded-xl text-white hover:bg-[#0a1a9a] hover:border-[#ffa600] transition-all shadow-lg"
+          >
+            <Home className="w-6 h-6" />
+          </button>
+        </div>
+        <button
+          onClick={handleContinueClick}
+          className="flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#6700b6] to-[#4b00a0] border-4 border-[#ffa600] rounded-2xl text-white font-black text-2xl hover:from-[#7a00d4] hover:to-[#5a00b8] transition-all shadow-2xl hover:shadow-[#ffa600]/40 hover:scale-105 animate-pulse"
+          style={{ animationDuration: '2s' }}
+        >
+          <span>Next Step</span>
+          <ArrowRight className="w-8 h-8 text-[#ffa600]" />
+        </button>
       </div>
     </div>
   );
