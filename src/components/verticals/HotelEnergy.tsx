@@ -760,49 +760,29 @@ export default function HotelEnergy() {
   
   const { peakKW, demandChargeImpact } = calculateHotelPower(inputs);
   
+  // State for solar
+  const [hasSolar, setHasSolar] = useState(false);
+  const [solarKW, setSolarKW] = useState(100);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-violet-900">
       {/* ═══════════════════════════════════════════════════════════════════════
-          HEADER
+          FLOATING MERLIN BUTTON (replaces header)
           ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="bg-gradient-to-r from-slate-900 via-indigo-900/50 to-slate-900 backdrop-blur-xl border-b-2 border-indigo-500/40 sticky top-0 z-40 shadow-lg shadow-indigo-500/10">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          {/* Back to Merlin Button */}
-          <a 
-            href="/"
-            className="flex items-center gap-2 text-indigo-300 hover:text-white transition-colors group mr-4 bg-slate-800/50 hover:bg-slate-700/50 px-3 py-2 rounded-xl border border-indigo-500/30 hover:border-indigo-400/50"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <img src={merlinImage} alt="Merlin" className="w-7 h-7" />
-            <span className="hidden sm:inline text-sm font-semibold">Merlin</span>
-          </a>
-          
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 border-2 border-indigo-400/50">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white tracking-tight">Hotel<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Energy</span></h1>
-              <p className="text-xs text-indigo-300 font-medium">🏨 Battery Storage for Hospitality</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="#calculator" className="hidden md:block text-indigo-200 hover:text-white text-sm font-semibold transition-colors hover:bg-indigo-500/20 px-4 py-2 rounded-lg">
-              Calculator
-            </a>
-            <a href="tel:+18005551234" className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 px-5 py-2.5 rounded-full transition-all shadow-lg shadow-indigo-500/30 border-2 border-indigo-300/50 hover:scale-105">
-              <Phone className="w-4 h-4 text-white" />
-              <span className="text-white font-bold text-sm">Get Quote</span>
-            </a>
-          </div>
-        </div>
-      </header>
+      <a 
+        href="/"
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 bg-slate-900/90 backdrop-blur-xl hover:bg-slate-800/95 px-4 py-3 rounded-2xl border-2 border-purple-500/50 hover:border-purple-400 transition-all hover:scale-105 shadow-2xl shadow-purple-500/30 group"
+      >
+        <span className="group-hover:-translate-x-1 transition-transform text-purple-300">←</span>
+        <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
+        <span className="text-white font-bold text-sm">Back to Merlin</span>
+      </a>
       
       {/* ═══════════════════════════════════════════════════════════════════════
           HERO SECTION - Redesigned Dec 2025
           Calculator-first hero with "Save up to 50%" headline above panels
           ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden">
+      <section className="relative min-h-[85vh] lg:min-h-[90vh] overflow-hidden pt-4">
         {/* Rotating Background Images */}
         {CAROUSEL_IMAGES.map((image, index) => (
           <div
@@ -840,14 +820,22 @@ export default function HotelEnergy() {
               Enter your hotel details and see instant savings estimates
             </p>
             
-            {/* How Merlin Works button - GLOWING EFFECT */}
+            {/* How Merlin Works button - DEEPER PURPLE */}
             <div className="flex items-center justify-center gap-4">
               <button 
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group relative flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-600 via-violet-500 to-cyan-500 hover:from-purple-500 hover:via-violet-400 hover:to-cyan-400 text-white font-black text-xl rounded-2xl border-2 border-white/30 transition-all hover:scale-110 shadow-2xl shadow-purple-500/50 hover:shadow-cyan-400/60 animate-pulse"
+                onClick={() => {
+                  const section = document.getElementById('how-it-works');
+                  if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    // Fallback: scroll to bottom of page where section should be
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                  }
+                }}
+                className="group relative flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-600 hover:to-indigo-600 text-white font-black text-xl rounded-2xl border-2 border-purple-400/50 transition-all hover:scale-110 shadow-2xl shadow-purple-900/70 hover:shadow-purple-700/60"
               >
                 {/* Glow effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 via-violet-400 to-cyan-400 blur-xl opacity-50 group-hover:opacity-80 transition-opacity -z-10" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 blur-xl opacity-40 group-hover:opacity-70 transition-opacity -z-10" />
                 <img src={merlinImage} alt="" className="w-10 h-10 drop-shadow-lg" />
                 <span className="drop-shadow-lg">🪄 How Merlin Works</span>
                 <Sparkles className="w-6 h-6 text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} />
@@ -933,8 +921,8 @@ export default function HotelEnergy() {
                 <Sparkles className="w-4 h-4 text-purple-400" /> Amenities
               </p>
 
-              {/* Pool Dropdown */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* Pool & Restaurants - TWO COLUMNS */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <label className="text-gray-400 text-xs font-medium mb-1 block">🏊 Pool</label>
                   <select
@@ -972,23 +960,110 @@ export default function HotelEnergy() {
                     <option value={3}>3+</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-gray-400 text-xs font-medium mb-1 block">⚡ EV Chargers</label>
-                  <select
-                    value={inputs.evChargerCount}
-                    onChange={(e) => {
-                      const count = parseInt(e.target.value);
-                      setInputs({ ...inputs, evChargerCount: count, hasEVCharging: count > 0 });
-                    }}
-                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
+              </div>
+
+              {/* EV Chargers - Input Fields */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-gray-300 text-sm font-semibold flex items-center gap-2">
+                    <Car className="w-4 h-4 text-emerald-400" /> EV Chargers
+                  </label>
+                  <button
+                    onClick={() => setInputs({ ...inputs, hasEVCharging: !inputs.hasEVCharging, evChargerCount: inputs.hasEVCharging ? 0 : 4 })}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      inputs.hasEVCharging 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                    }`}
                   >
-                    <option value={0}>None</option>
-                    <option value={4}>4 (L2)</option>
-                    <option value={8}>8 (L2)</option>
-                    <option value={12}>12 (L2+DCFC)</option>
-                    <option value={20}>20+ (Hub)</option>
-                  </select>
+                    {inputs.hasEVCharging ? '✓ Enabled' : 'Add EV'}
+                  </button>
                 </div>
+                {inputs.hasEVCharging && (
+                  <div className="grid grid-cols-3 gap-2 bg-slate-700/40 p-3 rounded-xl border border-emerald-500/30">
+                    <div>
+                      <label className="text-gray-400 text-[10px] mb-1 block">Level 2 (11kW)</label>
+                      <input
+                        type="number"
+                        value={inputs.evChargerCount}
+                        onChange={(e) => setInputs({ ...inputs, evChargerCount: parseInt(e.target.value) || 0 })}
+                        className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-400 text-[10px] mb-1 block">DCFC (150kW)</label>
+                      <input
+                        type="number"
+                        defaultValue={0}
+                        className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-400 text-[10px] mb-1 block">HPC (350kW)</label>
+                      <input
+                        type="number"
+                        defaultValue={0}
+                        className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Solar Question - Yes/No with kW Input */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-gray-300 text-sm font-semibold flex items-center gap-2">
+                    <Sun className="w-4 h-4 text-amber-400" /> Add Solar?
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setHasSolar(true)}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                        hasSolar 
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
+                          : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                      }`}
+                    >
+                      ☀️ Yes
+                    </button>
+                    <button
+                      onClick={() => setHasSolar(false)}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                        !hasSolar 
+                          ? 'bg-slate-600 text-white' 
+                          : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+                {hasSolar && (
+                  <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/30">
+                    <label className="text-amber-300 text-xs mb-1 block">How much solar capacity (kW)?</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        value={solarKW}
+                        onChange={(e) => setSolarKW(parseInt(e.target.value) || 0)}
+                        className="flex-1 px-3 py-2 bg-slate-700 border border-amber-500/50 rounded-lg text-white text-lg font-bold"
+                        placeholder="100"
+                        min={0}
+                      />
+                      <span className="text-amber-400 font-bold">kW</span>
+                    </div>
+                    <p className="text-amber-300/70 text-xs mt-1">
+                      Recommended: {Math.round(peakKW * 0.3)} kW based on your hotel size
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Amenity Toggle Pills - 2x2 Grid */}
