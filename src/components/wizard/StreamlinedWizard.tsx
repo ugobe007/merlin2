@@ -157,7 +157,7 @@ export default function StreamlinedWizard({
       <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-900/90 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo & Branding */}
+            {/* Logo & Menu */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowSidebarMenu(!showSidebarMenu)}
@@ -167,23 +167,10 @@ export default function StreamlinedWizard({
                 <Menu className="w-6 h-6" />
               </button>
               
-              {/* Clickable Merlin Assistant */}
-              <button
-                onClick={() => setShowMerlinRecommendation(true)}
-                className="flex items-center gap-3 hover:bg-white/5 rounded-xl px-2 py-1 transition-all group"
-                title="Click for Merlin's help and recommendations"
-              >
-                <div className="relative">
-                  <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-purple-900 animate-pulse" />
-                </div>
-                <div>
-                  <h1 className="text-white font-bold text-lg group-hover:text-purple-200 transition-colors">Merlin Energy</h1>
-                  <p className="text-emerald-400 text-xs font-semibold group-hover:text-emerald-300 transition-colors">
-                    Click for help
-                  </p>
-                </div>
-              </button>
+              {/* Simple Merlin logo - no text */}
+              <div className="flex items-center">
+                <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
+              </div>
             </div>
 
             {/* Actions */}
@@ -419,12 +406,6 @@ export default function StreamlinedWizard({
                 );
               })()}
               
-              {/* Points Badge (smaller now) */}
-              <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-purple-500/20 border border-purple-400/30 rounded-full">
-                <Sparkles className="w-3 h-3 text-purple-400" />
-                <span className="text-purple-300 font-bold text-xs">{wizard.totalPoints}</span>
-              </div>
-
               {/* Close Button */}
               <button
                 onClick={onClose}
