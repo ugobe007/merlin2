@@ -133,29 +133,35 @@ export function GoalsSectionV2({
 
   const recommendationRef = useRef(defaultRecommendation);
   
+  // Track if user has manually interacted with solar (don't overwrite their choice)
+  const userInteractedWithSolar = useRef(false);
+  
   useEffect(() => {
     recommendationRef.current = defaultRecommendation;
   }, [defaultRecommendation]);
 
-  // Auto-populate on first load
+  // Auto-populate on first load ONLY - don't overwrite user selections
   useEffect(() => {
     if (currentSection === 3 && !hasAutoPopulated) {
+      console.log('[GoalsSectionV2] Auto-populating initial values...');
       const rec = recommendationRef.current;
       setWizardState(prev => ({
         ...prev,
-        solarKW: rec.solarKW,
-        wantsSolar: rec.solarKW > 0,
-        windTurbineKW: rec.windKW,
-        wantsWind: rec.windKW > 0,
-        generatorKW: rec.generatorKW,
-        wantsGenerator: rec.generatorKW > 0,
-        batteryKW: rec.batteryKW,
-        batteryKWh: rec.batteryKWh,
-        durationHours: rec.durationHours,
+        // Only set solar if user hasn't interacted AND it's not already set
+        solarKW: prev.solarKW || rec.solarKW,
+        wantsSolar: prev.wantsSolar || rec.solarKW > 0,
+        windTurbineKW: prev.windTurbineKW || rec.windKW,
+        wantsWind: prev.wantsWind || rec.windKW > 0,
+        generatorKW: prev.generatorKW || rec.generatorKW,
+        wantsGenerator: prev.wantsGenerator || rec.generatorKW > 0,
+        batteryKW: prev.batteryKW || rec.batteryKW,
+        batteryKWh: prev.batteryKWh || rec.batteryKWh,
+        durationHours: prev.durationHours || rec.durationHours,
       }));
       setHasAutoPopulated(true);
     }
-  }, [currentSection, hasAutoPopulated, setWizardState]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSection, hasAutoPopulated]); // Remove setWizardState - it's stable
 
   // Format helpers
   const formatKW = (kw: number) => kw >= 1000 ? `${(kw/1000).toFixed(1)} MW` : `${Math.round(kw)} kW`;
@@ -352,19 +358,27 @@ export function GoalsSectionV2({
             )}
           </div>
           
+          {/* DEBUG: Show current state */}
+          <div className="mb-2 p-2 bg-gray-100 rounded text-xs font-mono">
+            wantsSolar: {String(wizardState.wantsSolar)} | solarKW: {wizardState.solarKW} | peakDemand: {peakDemandKW}
+          </div>
+          
           <YesNoButtons
             label="Would you like to add solar panels?"
             helpText="Solar can significantly reduce your electricity costs and pairs well with battery storage."
             value={wizardState.wantsSolar}
             onChange={(value) => {
-              console.log('[Solar YesNo] onChange triggered with value:', value, 'current wantsSolar:', wizardState.wantsSolar);
+              console.log('[Solar YesNo] USER CLICKED! value:', value, 'current wantsSolar:', wizardState.wantsSolar);
+              userInteractedWithSolar.current = true; // Mark that user interacted
               const recommendedSolar = Math.round(peakDemandKW * 0.6);
+              console.log('[Solar YesNo] recommendedSolar:', recommendedSolar);
               setWizardState(prev => {
-                console.log('[Solar YesNo] Setting new state, prev.wantsSolar:', prev.wantsSolar, '→ new:', value);
+                const newSolarKW = value ? (prev.solarKW || recommendedSolar) : 0;
+                console.log('[Solar YesNo] Setting state:', { wantsSolar: value, solarKW: newSolarKW });
                 return {
                   ...prev,
                   wantsSolar: value,
-                  solarKW: value ? (prev.solarKW || recommendedSolar) : 0
+                  solarKW: newSolarKW
                 };
               });
             }}
