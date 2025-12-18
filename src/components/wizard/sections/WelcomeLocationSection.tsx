@@ -57,16 +57,16 @@ export function WelcomeLocationSection({
       <div className="max-w-4xl mx-auto">
         {/* Welcome Hero - SIMPLIFIED per Vineet feedback */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-purple-100 border border-purple-300 rounded-full px-5 py-2 mb-6">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            <span className="text-purple-700 text-sm font-semibold">AI-Powered Quote Builder</span>
+          <div className="inline-flex items-center gap-2 bg-[#6700b6]/20 border-2 border-[#6700b6] rounded-full px-5 py-2 mb-6">
+            <Sparkles className="w-5 h-5 text-[#ffa600]" />
+            <span className="text-white text-sm font-semibold">AI-Powered Quote Builder</span>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
             Start Saving on Energy
           </h1>
           
-          <p className="text-xl text-purple-200 mb-2">
+          <p className="text-xl text-[#cc89ff] mb-2">
             Get a custom energy storage quote in minutes
           </p>
         </div>
@@ -77,7 +77,7 @@ export function WelcomeLocationSection({
             onClick={() => setShowInternational(false)}
             className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
               !showInternational 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                ? 'bg-gradient-to-r from-[#68BFFA] to-[#060F76] text-white shadow-lg scale-105 border-2 border-[#8dcefb]'
                 : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
             }`}
           >
@@ -88,7 +88,7 @@ export function WelcomeLocationSection({
             onClick={() => setShowInternational(true)}
             className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
               showInternational 
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg scale-105'
+                ? 'bg-gradient-to-r from-[#6700b6] to-[#060F76] text-white shadow-lg scale-105 border-2 border-[#ad42ff]'
                 : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
             }`}
           >
@@ -98,9 +98,9 @@ export function WelcomeLocationSection({
         </div>
         
         {/* Location Input Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border border-purple-200 shadow-xl mb-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#68BFFA] shadow-xl mb-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#6700b6] to-[#060F76] rounded-2xl flex items-center justify-center">
               <MapPin className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -112,8 +112,8 @@ export function WelcomeLocationSection({
             
             {/* Selected Location Display - PROMINENT (Vineet feedback) */}
             {wizardState.state && (
-              <div className="ml-auto px-4 py-2 bg-emerald-100 border-2 border-emerald-400 rounded-xl">
-                <p className="text-emerald-800 font-bold text-lg">{wizardState.state}</p>
+              <div className="ml-auto px-4 py-2 bg-[#68BFFA]/20 border-2 border-[#68BFFA] rounded-xl">
+                <p className="text-[#060F76] font-bold text-lg">{wizardState.state}</p>
               </div>
             )}
           </div>
@@ -131,7 +131,7 @@ export function WelcomeLocationSection({
                   value={wizardState.zipCode}
                   onChange={(e) => onZipChange(e.target.value)}
                   placeholder="Enter 5-digit zip"
-                  className="w-full px-5 py-4 bg-purple-50 border-2 border-purple-200 rounded-xl text-gray-800 text-center text-2xl font-mono placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  className="w-full px-5 py-4 bg-[#6700b6]/5 border-2 border-[#6700b6]/30 rounded-xl text-gray-800 text-center text-2xl font-mono placeholder-gray-400 focus:border-[#6700b6] focus:ring-2 focus:ring-[#6700b6]/20 transition-all"
                   maxLength={5}
                 />
               </div>
@@ -144,7 +144,7 @@ export function WelcomeLocationSection({
                 <select
                   value={wizardState.state}
                   onChange={(e) => onStateSelect(e.target.value)}
-                  className="w-full px-5 py-4 bg-purple-50 border-2 border-purple-200 rounded-xl text-gray-800 text-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer"
+                  className="w-full px-5 py-4 bg-[#6700b6]/5 border-2 border-[#6700b6]/30 rounded-xl text-gray-800 text-lg focus:border-[#6700b6] focus:ring-2 focus:ring-[#6700b6]/20 transition-all appearance-none cursor-pointer"
                 >
                   <option value="" className="bg-white">Select your state...</option>
                   {US_STATES.map(state => (
@@ -176,8 +176,8 @@ export function WelcomeLocationSection({
                           onClick={() => onInternationalSelect(region.code)}
                           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all ${
                             wizardState.state === region.name
-                              ? 'bg-purple-100 border-2 border-purple-500 text-purple-700'
-                              : 'bg-gray-50 border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700'
+                              ? 'bg-[#6700b6]/10 border-2 border-[#6700b6] text-[#6700b6]'
+                              : 'bg-gray-50 border border-gray-200 hover:border-[#68BFFA] hover:bg-[#68BFFA]/10 text-gray-700'
                           }`}
                         >
                           <span className="text-xl">{region.flag}</span>
@@ -196,10 +196,10 @@ export function WelcomeLocationSection({
           
           {/* Location Confirmed */}
           {wizardState.state && (
-            <div className="mt-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3">
-              <CheckCircle className="w-6 h-6 text-emerald-500" />
+            <div className="mt-6 flex items-center gap-3 bg-[#68BFFA]/10 border-2 border-[#68BFFA] rounded-xl px-5 py-3">
+              <CheckCircle className="w-6 h-6 text-[#68BFFA]" />
               <div>
-                <span className="text-emerald-700 font-medium">{wizardState.state}</span>
+                <span className="text-[#060F76] font-medium">{wizardState.state}</span>
                 {wizardState.zipCode && (
                   <span className="text-gray-500 ml-2">({wizardState.zipCode})</span>
                 )}
@@ -224,9 +224,9 @@ export function WelcomeLocationSection({
         
         {/* GOALS SECTION - Moved here from Section 3 */}
         {wizardState.state && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border border-amber-200 shadow-xl mb-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#ffa600] shadow-xl mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#ffa600] to-[#fc9420] rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -254,22 +254,22 @@ export function WelcomeLocationSection({
                     }}
                     className={`p-4 rounded-xl border-2 text-left transition-all ${
                       isSelected
-                        ? 'border-amber-400 bg-amber-50 shadow-md shadow-amber-500/20'
-                        : 'border-gray-200 bg-white hover:border-amber-300'
+                        ? 'border-[#ffa600] bg-[#ffa600]/10 shadow-md shadow-[#ffa600]/20'
+                        : 'border-gray-200 bg-white hover:border-[#ffa600]/50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-amber-500' : 'bg-purple-100'}`}>
-                        <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-purple-600'}`} />
+                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#ffa600]' : 'bg-[#6700b6]/10'}`}>
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#6700b6]'}`} />
                       </div>
                       <div className="flex-1">
-                        <h4 className={`font-bold text-sm ${isSelected ? 'text-amber-700' : 'text-gray-800'}`}>
+                        <h4 className={`font-bold text-sm ${isSelected ? 'text-[#9d6200]' : 'text-gray-800'}`}>
                           {goal.label}
                         </h4>
                         <p className="text-xs text-gray-500 mt-0.5">{goal.description}</p>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'border-amber-400 bg-amber-500' : 'border-gray-300'
+                        isSelected ? 'border-[#ffa600] bg-[#ffa600]' : 'border-gray-300'
                       }`}>
                         {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
@@ -281,7 +281,7 @@ export function WelcomeLocationSection({
             
             {/* Selection hint */}
             {wizardState.goals.length === 0 && (
-              <p className="mt-4 text-center text-amber-600 text-sm flex items-center justify-center gap-2">
+              <p className="mt-4 text-center text-[#ffa600] text-sm flex items-center justify-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Please select at least one goal to continue
               </p>
@@ -297,7 +297,7 @@ export function WelcomeLocationSection({
               disabled={!canContinue}
               className={`px-10 py-4 rounded-2xl text-lg font-bold transition-all flex items-center gap-3 ${
                 canContinue
-                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105'
+                  ? 'bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6] text-white shadow-xl shadow-[#6700b6]/30 hover:shadow-[#6700b6]/50 hover:scale-105 border-2 border-[#ad42ff]'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
@@ -309,7 +309,7 @@ export function WelcomeLocationSection({
             {onOpenAdvanced && canContinue && (
               <button
                 onClick={onOpenAdvanced}
-                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-colors"
+                className="text-sm text-[#cc89ff] hover:text-[#ffa600] flex items-center gap-2 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
                 Or skip to Pro Mode for full configuration
@@ -321,9 +321,9 @@ export function WelcomeLocationSection({
         {/* Scroll hint when no location */}
         {!wizardState.state && (
           <div className="text-center mt-12 animate-bounce">
-            <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-2xl border border-purple-400/30">
-              <ChevronDown className="w-10 h-10 text-purple-400" />
-              <span className="text-purple-300 font-medium">Enter your location to continue</span>
+            <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#6700b6]/20 to-[#060F76]/20 rounded-2xl border-2 border-[#6700b6]/40">
+              <ChevronDown className="w-10 h-10 text-[#6700b6]" />
+              <span className="text-[#cc89ff] font-medium">Enter your location to continue</span>
             </div>
           </div>
         )}

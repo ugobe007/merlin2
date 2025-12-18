@@ -232,12 +232,12 @@ export function QuoteResultsSection({
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#060F76] hover:bg-[#0815a9] rounded-lg transition-colors border border-[#4b59f5]"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Configuration
           </button>
-          <div className="text-sm text-gray-400">Step 5 of 5 • Final Quote</div>
+          <div className="px-3 py-1 bg-[#6700b6] text-white text-sm font-medium rounded-full">Step 5 of 5 • Final Quote</div>
         </div>
 
         {wizardState.quoteResult ? (
@@ -245,16 +245,16 @@ export function QuoteResultsSection({
             {/* Header */}
             <div className="text-center mb-10">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="inline-flex items-center gap-2 bg-emerald-100 border border-emerald-300 rounded-full px-5 py-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  <span className="text-emerald-700 font-semibold">Quote Complete!</span>
+                <div className="inline-flex items-center gap-2 bg-[#68BFFA]/20 border-2 border-[#68BFFA] rounded-full px-5 py-2">
+                  <CheckCircle className="w-5 h-5 text-[#68BFFA]" />
+                  <span className="text-white font-semibold">Quote Complete!</span>
                 </div>
                 <TrueQuoteBadge size="md" />
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-500">Custom Quote</span>
+                Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#68BFFA] via-[#6700b6] to-[#ffa600]">Custom Quote</span>
               </h2>
-              <p className="text-gray-500">
+              <p className="text-gray-400">
                 {wizardState.industryName} • {wizardState.state} • {wizardState.facilitySize.toLocaleString()} {FACILITY_PRESETS[wizardState.selectedIndustry]?.unit || 'sq ft'}
               </p>
             </div>
@@ -262,20 +262,20 @@ export function QuoteResultsSection({
             <TrueQuoteBanner variant="compact" />
 
             {/* Main Savings Card */}
-            <div className="bg-gradient-to-br from-emerald-50 via-cyan-50 to-purple-50 rounded-3xl p-8 border-2 border-emerald-300 text-center mb-8 mt-6 shadow-lg">
-              <p className="text-emerald-600 uppercase tracking-widest text-sm font-bold mb-2">💰 Estimated Annual Savings</p>
-              <p className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-500">
+            <div className="bg-gradient-to-br from-[#68BFFA]/20 via-[#6700b6]/20 to-[#ffa600]/20 rounded-3xl p-8 border-4 border-[#68BFFA] text-center mb-8 mt-6 shadow-lg">
+              <p className="text-[#ffa600] uppercase tracking-widest text-sm font-bold mb-2">💰 Estimated Annual Savings</p>
+              <p className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#68BFFA] via-[#6700b6] to-[#ffa600]">
                 ${Math.round(wizardState.quoteResult.financials.annualSavings).toLocaleString()}
               </p>
-              <p className="text-gray-500 mt-2">per year</p>
+              <p className="text-gray-400 mt-2">per year</p>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <StatCard icon={Clock} color="purple" value={wizardState.quoteResult.financials.paybackYears.toFixed(1)} label="Year Payback" />
-              <StatCard icon={TrendingDown} color="emerald" value={`${Math.round(wizardState.quoteResult.financials.roi25Year)}%`} label="25-Year ROI" />
-              <StatCard icon={Battery} color="blue" value={wizardState.batteryKWh.toLocaleString()} label="kWh Storage" />
-              <StatCard icon={DollarSign} color="amber" value={`$${Math.round(wizardState.quoteResult.costs.netCost / 1000)}K`} label="Net Cost" />
+              <StatCard icon={TrendingDown} color="malibu" value={`${Math.round(wizardState.quoteResult.financials.roi25Year)}%`} label="25-Year ROI" />
+              <StatCard icon={Battery} color="arapawa" value={wizardState.batteryKWh.toLocaleString()} label="kWh Storage" />
+              <StatCard icon={DollarSign} color="orange" value={`$${Math.round(wizardState.quoteResult.costs.netCost / 1000)}K`} label="Net Cost" />
             </div>
 
             {/* EV Charger Analysis */}
@@ -312,7 +312,7 @@ export function QuoteResultsSection({
                   setRfqForm(prev => ({ ...prev, projectName: `${wizardState.industryName} - BESS Project` }));
                   setShowRFQModal(true);
                 }}
-                className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white rounded-xl font-bold transition-colors"
+                className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-[#68BFFA] to-[#48b1f8] hover:from-[#48b1f8] hover:to-[#28a1e8] text-white rounded-xl font-bold transition-colors border-2 border-[#8dcefb]"
               >
                 <Mail className="w-5 h-5" />
                 Get Vendor Quotes
@@ -323,14 +323,14 @@ export function QuoteResultsSection({
                   const body = encodeURIComponent(`Hi,\n\nI completed a quote on Merlin Energy.\n\nQuote Details:\n- Industry: ${wizardState.industryName}\n- Location: ${wizardState.state}\n- Battery: ${wizardState.batteryKWh} kWh\n- Annual Savings: $${Math.round(wizardState.quoteResult!.financials.annualSavings).toLocaleString()}\n\nPlease contact me to schedule a consultation.\n\nThank you!`);
                   window.open(`mailto:sales@merlinenergy.com?subject=${subject}&body=${body}`);
                 }}
-                className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-xl font-bold transition-colors"
+                className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-[#6700b6] to-[#060F76] hover:from-[#7900d6] hover:to-[#0815a9] text-white rounded-xl font-bold transition-colors border-2 border-[#ad42ff]"
               >
                 <Phone className="w-5 h-5" />
                 Consultation
               </button>
               <button
                 onClick={onStartNew}
-                className="flex items-center justify-center gap-2 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition-colors"
+                className="flex items-center justify-center gap-2 py-4 bg-[#ffa600]/20 hover:bg-[#ffa600]/40 text-[#ffd689] rounded-xl font-bold transition-colors border-2 border-[#ffa600]"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Start New Quote
@@ -395,16 +395,17 @@ export function QuoteResultsSection({
 
 function StatCard({ icon: Icon, color, value, label }: { icon: any; color: string; value: string; label: string }) {
   const colorMap: Record<string, string> = {
-    purple: 'border-purple-200 text-purple-500',
-    emerald: 'border-emerald-200 text-emerald-500',
-    blue: 'border-blue-200 text-blue-500',
+    purple: 'border-[#6700b6] text-[#ad42ff] bg-[#6700b6]/10',
+    malibu: 'border-[#68BFFA] text-[#68BFFA] bg-[#68BFFA]/10',
+    arapawa: 'border-[#060F76] text-[#4b59f5] bg-[#060F76]/20',
+    orange: 'border-[#ffa600] text-[#ffa600] bg-[#ffa600]/10',
     amber: 'border-amber-200 text-amber-500',
   };
   return (
-    <div className={`bg-white rounded-2xl p-5 text-center border ${colorMap[color]} shadow-md`}>
+    <div className={`bg-slate-800/50 rounded-2xl p-5 text-center border-2 ${colorMap[color]} shadow-md`}>
       <Icon className={`w-8 h-8 ${colorMap[color].split(' ')[1]} mx-auto mb-2`} />
-      <p className="text-3xl font-bold text-gray-800">{value}</p>
-      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-3xl font-bold text-white">{value}</p>
+      <p className="text-sm text-gray-400">{label}</p>
     </div>
   );
 }

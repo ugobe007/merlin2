@@ -119,7 +119,7 @@ function NumberInput({ label, value, onChange, min = 0, max = 100, step = 1, uni
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700">{label}</label>
-        <span className="text-lg font-bold text-purple-600">{formatValue(value)}</span>
+        <span className="text-lg font-bold text-[#6700b6]">{formatValue(value)}</span>
       </div>
       {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
       
@@ -129,9 +129,9 @@ function NumberInput({ label, value, onChange, min = 0, max = 100, step = 1, uni
           type="button"
           onClick={handleDecrement}
           disabled={value <= min}
-          className="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
+          className="w-10 h-10 flex items-center justify-center bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors border border-[#68BFFA]/40"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="w-4 h-4 text-[#060F76]" />
         </button>
         
         <input
@@ -141,16 +141,16 @@ function NumberInput({ label, value, onChange, min = 0, max = 100, step = 1, uni
           step={step}
           value={value}
           onChange={handleSliderChange}
-          className="flex-1 h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-purple-600"
+          className="flex-1 h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#6700b6]"
         />
         
         <button
           type="button"
           onClick={handleIncrement}
           disabled={value >= max}
-          className="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
+          className="w-10 h-10 flex items-center justify-center bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors border border-[#68BFFA]/40"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-[#060F76]" />
         </button>
       </div>
       
@@ -179,7 +179,7 @@ interface EquipmentCardProps {
 function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, recommended }: EquipmentCardProps) {
   return (
     <div className={`rounded-2xl border-2 transition-colors ${
-      isEnabled ? 'border-purple-400 bg-white' : 'border-slate-200 bg-slate-50'
+      isEnabled ? 'border-[#6700b6] bg-white' : 'border-slate-200 bg-slate-50'
     }`}>
       {/* Header - Click to toggle */}
       <button
@@ -188,14 +188,14 @@ function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, r
         className="w-full p-4 flex items-center justify-between text-left"
       >
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${isEnabled ? 'bg-purple-100 text-purple-600' : 'bg-slate-200 text-slate-500'}`}>
+          <div className={`p-2 rounded-lg ${isEnabled ? 'bg-[#6700b6]/10 text-[#6700b6]' : 'bg-slate-200 text-slate-500'}`}>
             {icon}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-gray-900">{title}</h3>
               {recommended && (
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                <span className="px-2 py-0.5 bg-[#ffa600]/20 text-[#9d6200] text-xs font-medium rounded-full border border-[#ffa600]/40">
                   Recommended
                 </span>
               )}
@@ -207,7 +207,7 @@ function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, r
         <div className="flex items-center gap-3">
           {/* Toggle indicator */}
           <div className={`w-12 h-6 rounded-full transition-colors ${
-            isEnabled ? 'bg-purple-600' : 'bg-slate-300'
+            isEnabled ? 'bg-[#6700b6]' : 'bg-slate-300'
           }`}>
             <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mt-0.5 ${
               isEnabled ? 'translate-x-6 ml-0.5' : 'translate-x-0.5'
@@ -215,7 +215,7 @@ function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, r
           </div>
           
           {isEnabled ? (
-            <ChevronUp className="w-5 h-5 text-purple-600" />
+            <ChevronUp className="w-5 h-5 text-[#6700b6]" />
           ) : (
             <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
@@ -255,7 +255,7 @@ function SimpleSelect({ label, value, onChange, options }: SimpleSelectProps) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 bg-white border border-slate-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+        className="w-full p-3 bg-white border border-slate-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#6700b6] focus:border-[#6700b6]"
       >
         {options.map(opt => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -576,9 +576,9 @@ export function GoalsSectionV3({
           {/* ════════════════════════════════════════════════════════════════
               GRID CONNECTION
           ════════════════════════════════════════════════════════════════ */}
-          <div className="rounded-2xl border-2 border-slate-200 bg-white p-4">
+          <div className="rounded-2xl border-2 border-[#060F76]/30 bg-white p-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600">
+              <div className="p-2 rounded-lg bg-[#060F76]/10 text-[#060F76]">
                 <Zap className="w-5 h-5" />
               </div>
               <div>
@@ -600,8 +600,8 @@ export function GoalsSectionV3({
                   onClick={() => setWizardState(prev => ({ ...prev, gridConnection: option.value as any }))}
                   className={`p-3 rounded-lg border-2 text-center transition-all ${
                     wizardState.gridConnection === option.value
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-slate-200 bg-white text-gray-600 hover:border-slate-300'
+                      ? 'border-[#6700b6] bg-[#6700b6]/10 text-[#6700b6]'
+                      : 'border-slate-200 bg-white text-gray-600 hover:border-[#68BFFA]'
                   }`}
                 >
                   <span className="text-xl block mb-1">{option.icon}</span>
@@ -622,7 +622,7 @@ export function GoalsSectionV3({
               <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-medium rounded-xl transition-colors"
+                className="flex items-center gap-2 px-5 py-3 bg-[#060F76] hover:bg-[#0815a9] text-white font-medium rounded-xl transition-colors border-2 border-[#4b59f5]"
               >
                 <ChevronLeft className="w-5 h-5" />
                 Back
@@ -632,7 +632,7 @@ export function GoalsSectionV3({
                 <button
                   type="button"
                   onClick={onHome}
-                  className="flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-medium rounded-xl transition-colors"
+                  className="flex items-center gap-2 px-5 py-3 bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 text-[#060F76] font-medium rounded-xl transition-colors border border-[#68BFFA]"
                 >
                   <Home className="w-5 h-5" />
                   Home
@@ -647,7 +647,7 @@ export function GoalsSectionV3({
                 onContinue();
               }}
               disabled={isGeneratingScenarios}
-              className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold rounded-xl transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[#6700b6] hover:bg-[#7900d6] disabled:bg-[#6700b6]/50 text-white font-semibold rounded-xl transition-colors border-2 border-[#ad42ff]"
             >
               {isGeneratingScenarios ? (
                 <>
