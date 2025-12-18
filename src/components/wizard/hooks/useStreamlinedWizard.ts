@@ -613,7 +613,8 @@ export function useStreamlinedWizard({
       // Calculate solar recommendation
       let recommendedSolarKW = 0;
       if (wizardState.wantsSolar) {
-        recommendedSolarKW = Math.round(peakDemandKW * 0.6);
+        // Use user's configured value if they've set one, otherwise calculate
+        recommendedSolarKW = wizardState.solarKW > 0 ? wizardState.solarKW : Math.round(peakDemandKW * 0.6);
         
         // ═══════════════════════════════════════════════════════════════
         // SOLAR CAP (Dec 2025 - Physical Constraints)
@@ -628,12 +629,13 @@ export function useStreamlinedWizard({
         }
       }
       
-      // Update both wizardState AND centralizedState for Power Profile
+      // Update wizardState - PRESERVE user-set solarKW, only set battery values
+      // Dec 17, 2025 FIX: Don't overwrite solarKW - user controls this in GoalsSectionV2
       setWizardState(prev => ({
         ...prev,
         batteryKW: recommendedBatteryKW,
         batteryKWh: recommendedBatteryKWh,
-        solarKW: recommendedSolarKW,
+        // solarKW is set by user in GoalsSectionV2 - DON'T OVERWRITE HERE
       }));
       
       setCentralizedState((prev: any) => ({
@@ -721,33 +723,43 @@ export function useStreamlinedWizard({
           
           // Store extracted data for quote generation (solar, EV, backup, etc.)
           // Dec 16, 2025 - CRITICAL FIX: Also sync to fields that sync effects read
-          setWizardState(prev => ({
-            ...prev,
-            // Facility size from questionnaire - FIXES "25,000 rooms" badge bug
-            facilitySize: hotelMapped.ssotInput.roomCount || prev.facilitySize,
-            // Solar from questionnaire
-            existingSolarKW: hotelMapped.extractedData.existingSolarKW,
-            wantsSolar: hotelMapped.extractedData.wantsSolar,
-            targetSolarKW: hotelMapped.extractedData.targetSolarKW,
-            solarKW: hotelMapped.extractedData.wantsSolar ? (hotelMapped.extractedData.targetSolarKW || 0) : prev.solarKW,
-            hasExistingSolar: hotelMapped.extractedData.existingSolarKW > 0,
-            // EV from questionnaire - SYNC TO L2 FIELDS for sync effect!
-            existingEVChargers: hotelMapped.extractedData.existingEVChargers,
-            wantsEVCharging: hotelMapped.extractedData.wantsEVCharging,
-            targetEVChargers: hotelMapped.extractedData.targetEVChargers,
-            // Dec 16, 2025 - Map to L2 fields so sync effect can propagate to centralized state
-            existingEVL2: hotelMapped.extractedData.existingEVChargers || 0,
-            evChargersL2: hotelMapped.extractedData.targetEVChargers || 0,
-            // Backup from questionnaire
-            durationHours: hotelMapped.extractedData.backupDurationHours,
-            hasExistingGenerator: hotelMapped.extractedData.hasExistingGenerator,
-            existingGeneratorKW: hotelMapped.extractedData.existingGeneratorKW,
-            // Financial from questionnaire
-            monthlyBill: hotelMapped.extractedData.monthlyBill,
-            peakDemandKW: hotelMapped.extractedData.peakDemandKW > 0 
-              ? hotelMapped.extractedData.peakDemandKW 
-              : peakDemandKW,
-          }));
+          // Dec 17, 2025 - DON'T OVERWRITE solar if user has already set it in GoalsSectionV2
+          setWizardState(prev => {
+            // Only use questionnaire solar data if:
+            // 1. User hasn't already set wantsSolar to true (their choice takes priority)
+            // 2. OR user is still in Section 2 (questionnaire phase)
+            const useQuestionnaireSolar = !prev.wantsSolar && currentSection <= 2;
+            
+            return {
+              ...prev,
+              // Facility size from questionnaire - FIXES "25,000 rooms" badge bug
+              facilitySize: hotelMapped.ssotInput.roomCount || prev.facilitySize,
+              // Solar from questionnaire - ONLY if user hasn't overridden in Goals
+              existingSolarKW: hotelMapped.extractedData.existingSolarKW,
+              wantsSolar: useQuestionnaireSolar ? hotelMapped.extractedData.wantsSolar : prev.wantsSolar,
+              targetSolarKW: hotelMapped.extractedData.targetSolarKW,
+              solarKW: useQuestionnaireSolar 
+                ? (hotelMapped.extractedData.wantsSolar ? (hotelMapped.extractedData.targetSolarKW || 0) : 0)
+                : prev.solarKW,
+              hasExistingSolar: hotelMapped.extractedData.existingSolarKW > 0,
+              // EV from questionnaire - SYNC TO L2 FIELDS for sync effect!
+              existingEVChargers: hotelMapped.extractedData.existingEVChargers,
+              wantsEVCharging: hotelMapped.extractedData.wantsEVCharging,
+              targetEVChargers: hotelMapped.extractedData.targetEVChargers,
+              // Dec 16, 2025 - Map to L2 fields so sync effect can propagate to centralized state
+              existingEVL2: hotelMapped.extractedData.existingEVChargers || 0,
+              evChargersL2: hotelMapped.extractedData.targetEVChargers || 0,
+              // Backup from questionnaire
+              durationHours: hotelMapped.extractedData.backupDurationHours,
+              hasExistingGenerator: hotelMapped.extractedData.hasExistingGenerator,
+              existingGeneratorKW: hotelMapped.extractedData.existingGeneratorKW,
+              // Financial from questionnaire
+              monthlyBill: hotelMapped.extractedData.monthlyBill,
+              peakDemandKW: hotelMapped.extractedData.peakDemandKW > 0 
+                ? hotelMapped.extractedData.peakDemandKW 
+                : peakDemandKW,
+            };
+          });
           
           console.log('🏨 [HOTEL MAPPER] Questionnaire mapped successfully:', {
             ssotInput: hotelMapped.ssotInput,
