@@ -64,6 +64,7 @@ interface GoalsSectionV2Props {
   sectionRef?: (el: HTMLDivElement | null) => void;
   onBack: () => void;
   onContinue: () => void;
+  onHome?: () => void; // Navigate to vertical landing page
   onGenerateScenarios?: () => void;
   isGeneratingScenarios?: boolean;
   powerCoverage?: number;
@@ -82,6 +83,7 @@ export function GoalsSectionV2({
   sectionRef,
   onBack,
   onContinue,
+  onHome,
   onGenerateScenarios,
   isGeneratingScenarios = false,
   powerCoverage = 100,
@@ -546,7 +548,7 @@ export function GoalsSectionV2({
               </button>
               
               <button
-                onClick={onBack} // Home returns to hotel energy
+                onClick={onHome || onBack} // Home navigates to vertical landing page
                 className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white rounded-xl border border-slate-600 transition-all"
               >
                 <Home className="w-5 h-5" />

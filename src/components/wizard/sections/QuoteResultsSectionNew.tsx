@@ -64,6 +64,7 @@ interface QuoteResultsSectionProps {
   premiumComparison: PremiumComparison | null;
   onBack: () => void;
   onStartNew: () => void;
+  onHome?: () => void; // Navigate to vertical landing page
   /** Navigate to Advanced Quote Builder for pro users */
   onOpenAdvanced?: () => void;
 }
@@ -77,6 +78,7 @@ export function QuoteResultsSection({
   premiumComparison,
   onBack,
   onStartNew,
+  onHome,
   onOpenAdvanced,
 }: QuoteResultsSectionProps) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
@@ -193,7 +195,7 @@ export function QuoteResultsSection({
               Back
             </button>
             <button
-              onClick={onBack} // Home goes back to hero
+              onClick={onHome || onBack} // Home navigates to vertical landing page
               className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
             >
               <Home className="w-4 h-4" />

@@ -88,6 +88,20 @@ export default function StreamlinedWizard({
   const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
   const [hasSeenRecommendation, setHasSeenRecommendation] = useState(false);
   const [showMerlinBanner, setShowMerlinBanner] = useState(false); // Persistent recommendation banner
+
+  // Home navigation - navigates to the appropriate vertical landing page
+  const handleGoHome = useCallback(() => {
+    // Map initialUseCase to the correct landing page URL
+    const homeUrls: Record<string, string> = {
+      'hotel': '/hotel-energy',
+      'car-wash': '/carwashenergy',
+      'ev-charging': '/evchargingenergy',
+      'ev_charging': '/evchargingenergy',
+      // Default: main site
+    };
+    const url = homeUrls[initialUseCase || ''] || '/';
+    window.location.href = url;
+  }, [initialUseCase]);
   const [showWizardHelp, setShowWizardHelp] = useState(false); // How to Use wizard help modal
   const [merlinRecommendation, setMerlinRecommendation] = useState<{batteryKW: number; batteryKWh: number; solarKW: number; peakKW: number} | null>(null);
   const [showSidebarMenu, setShowSidebarMenu] = useState(false);
@@ -157,8 +171,8 @@ export default function StreamlinedWizard({
       <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-900/90 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo & Menu */}
-            <div className="flex items-center gap-3">
+            {/* Left: Logo & Menu */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowSidebarMenu(!showSidebarMenu)}
                 className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -173,8 +187,8 @@ export default function StreamlinedWizard({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2">
+            {/* Center: Main Nav Icons - centered in remaining space */}
+            <div className="flex-1 flex items-center justify-center gap-2">
               {/* Solar Opportunity - Clickable sun icons - ALWAYS show if state is selected */}
               {(() => {
                 // Use geo data if available, otherwise estimate from state
@@ -405,8 +419,10 @@ export default function StreamlinedWizard({
                   </div>
                 );
               })()}
+            </div>
               
-              {/* Close Button */}
+            {/* Right: Close Button */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={onClose}
                 className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -565,6 +581,7 @@ export default function StreamlinedWizard({
                 initializedFromVertical={wizard.initializedFromVertical}
                 sectionRef={(el) => { sectionRefs.current[2] = el; }}
                 onBack={() => wizard.advanceToSection(1)}
+                onHome={handleGoHome}
                 onContinue={() => {
                   wizard.completeSection('facility');
                   // Go to Goals/Preferences (Section 3)
@@ -654,6 +671,7 @@ export default function StreamlinedWizard({
                   currentSection={3}
                   sectionRef={(el) => { sectionRefs.current[3] = el; }}
                   onBack={() => wizard.advanceToSection(2)}
+                  onHome={handleGoHome}
                   onContinue={() => {
                     // Dec 16, 2025 - Go to Configuration Comparison (Section 4)
                     console.log('🎯 [GOALS] Continue clicked - going to Config Comparison');
@@ -678,6 +696,7 @@ export default function StreamlinedWizard({
               currentSection={wizard.currentSection}
               sectionRef={(el) => { sectionRefs.current[4] = el; }}
               onBack={() => wizard.advanceToSection(3)}
+              onHome={handleGoHome}
               onContinue={() => {
                 // After selecting a config, go to Scenario Planner (3 cards)
                 console.log('🎯 [CONFIG COMPARISON] Config selected - going to Scenario Planner');
@@ -703,6 +722,7 @@ export default function StreamlinedWizard({
                   currentSection={5}
                   sectionRef={(el) => { sectionRefs.current[5] = el; }}
                   onBack={() => wizard.advanceToSection(4)}
+                  onHome={handleGoHome}
                   onContinue={() => {
                     // After selecting a Magic Fit strategy, go to fine-tuning or quote
                     console.log('🎯 [SCENARIO PLANNER] Strategy selected');
@@ -761,6 +781,7 @@ export default function StreamlinedWizard({
               premiumConfig={wizard.premiumConfig}
               premiumComparison={wizard.premiumComparison}
               onBack={() => wizard.advanceToSection(wizard.userQuoteChoice === 'customize' ? 6 : 5)}
+              onHome={handleGoHome}
               onStartNew={() => {
                 wizard.setCurrentSection(0);
                 wizard.setCompletedSections([]);

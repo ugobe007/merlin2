@@ -47,6 +47,7 @@ interface ConfigurationComparisonProps {
   sectionRef?: (el: HTMLDivElement | null) => void;
   onBack: () => void;
   onContinue: () => void;
+  onHome?: () => void; // Navigate to vertical landing page
 }
 
 export function ConfigurationComparison({
@@ -57,6 +58,7 @@ export function ConfigurationComparison({
   sectionRef,
   onBack,
   onContinue,
+  onHome,
 }: ConfigurationComparisonProps) {
   const [selectedConfig, setSelectedConfig] = useState<'user' | 'merlin' | null>(null);
   const [showExplanation, setShowExplanation] = useState(true);
@@ -198,7 +200,7 @@ export function ConfigurationComparison({
               Back
             </button>
             <button
-              onClick={onBack} // Home goes back to hero
+              onClick={onHome || onBack} // Home navigates to vertical landing page
               className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
             >
               <Home className="w-4 h-4" />

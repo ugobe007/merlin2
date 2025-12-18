@@ -28,6 +28,7 @@ interface ScenarioSectionProps {
   sectionRef?: (el: HTMLDivElement | null) => void;
   onBack: () => void;
   onContinue: () => void;
+  onHome?: () => void; // Navigate to vertical landing page
   scenarioResult: ScenarioGeneratorResult | null;
   isGenerating: boolean;
   onGenerateScenarios: () => Promise<void>;
@@ -48,6 +49,7 @@ export function ScenarioSection({
   sectionRef,
   onBack,
   onContinue,
+  onHome,
   scenarioResult,
   isGenerating,
   onGenerateScenarios,
@@ -162,7 +164,7 @@ export function ScenarioSection({
                 Back
               </button>
               <button
-                onClick={onBack} // Home goes back to hero
+                onClick={onHome || onBack} // Home navigates to vertical landing page
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
               >
                 <Home className="w-4 h-4" />
