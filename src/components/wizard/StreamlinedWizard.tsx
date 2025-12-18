@@ -178,8 +178,8 @@ export default function StreamlinedWizard({
                 </div>
                 <div>
                   <h1 className="text-white font-bold text-lg group-hover:text-purple-200 transition-colors">Merlin Energy</h1>
-                  <p className="text-purple-300 text-xs group-hover:text-purple-200 transition-colors">
-                    Smart Quote Builder <span className="text-emerald-400">• Click for help</span>
+                  <p className="text-emerald-400 text-xs font-semibold group-hover:text-emerald-300 transition-colors">
+                    Click for help
                   </p>
                 </div>
               </button>
@@ -187,26 +187,38 @@ export default function StreamlinedWizard({
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              {/* Solar Opportunity - Clickable sun icons */}
+              {/* Solar Opportunity - Clickable sun icons - ALWAYS show if state is selected */}
               {(() => {
-                const solarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 0;
-                const hasLocation = wizard.wizardState.state && solarHours > 0;
+                // Use geo data if available, otherwise estimate from state
+                const geoSolarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 0;
+                const hasState = !!wizard.wizardState.state;
+                
+                // Default solar hours by region if geo not available
+                const getDefaultSolarHours = (state: string): number => {
+                  const highSolarStates = ['Arizona', 'California', 'Nevada', 'New Mexico', 'Texas', 'Florida', 'Hawaii'];
+                  const medSolarStates = ['Colorado', 'Utah', 'Georgia', 'North Carolina', 'Oklahoma', 'Kansas'];
+                  if (highSolarStates.some(s => state.toLowerCase().includes(s.toLowerCase()))) return 6;
+                  if (medSolarStates.some(s => state.toLowerCase().includes(s.toLowerCase()))) return 5;
+                  return 4.5; // Default for other states
+                };
+                
+                const solarHours = geoSolarHours > 0 ? geoSolarHours : (hasState ? getDefaultSolarHours(wizard.wizardState.state) : 0);
                 
                 // Calculate sun rating (1-5 based on solar hours: 3h=1, 4h=2, 5h=3, 6h=4, 7h+=5)
-                const sunRating = hasLocation ? Math.min(5, Math.max(1, Math.round(solarHours - 2))) : 0;
+                const sunRating = hasState ? Math.min(5, Math.max(1, Math.round(solarHours - 2))) : 0;
                 
-                if (!hasLocation) return null;
+                if (!hasState) return null;
                 
                 return (
                   <button
                     onClick={() => setShowSolarOpportunity(true)}
-                    className="flex items-center gap-1 px-2 py-1 hover:bg-amber-500/10 rounded-lg transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors border border-amber-400/30"
                     title={`${solarHours.toFixed(1)} hours avg solar - Click for details`}
                   >
                     {[1, 2, 3, 4, 5].map((i) => (
                       <Sun 
                         key={i}
-                        className={`w-4 h-4 transition-all ${
+                        className={`w-5 h-5 transition-all ${
                           i <= sunRating 
                             ? 'text-amber-400 fill-amber-400' 
                             : 'text-amber-400/20'
@@ -405,8 +417,6 @@ export default function StreamlinedWizard({
                   </div>
                 );
               })()}
-              
-
               
               {/* Points Badge (smaller now) */}
               <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-purple-500/20 border border-purple-400/30 rounded-full">
@@ -1322,6 +1332,26 @@ export default function StreamlinedWizard({
           <span className="font-bold text-lg text-amber-900">
             TrueQuote<sup className="text-xs">™</sup>
           </span>
+        </button>
+        
+        {/* Merlin Energy Button - Below TrueQuote */}
+        <button
+          onClick={() => setShowMerlinRecommendation(true)}
+          className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full shadow-xl hover:shadow-purple-300/50 hover:scale-105 transition-all border-2 border-purple-300"
+          title="Click for Merlin's help"
+        >
+          <img src={merlinImage} alt="Merlin" className="w-6 h-6" />
+          <span className="font-bold text-sm text-purple-900">Merlin Energy</span>
+        </button>
+        
+        {/* How to Use Button - Below Merlin Energy */}
+        <button
+          onClick={() => setShowMerlinRecommendation(true)}
+          className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg hover:shadow-emerald-300/50 hover:scale-105 transition-all border-2 border-emerald-300"
+          title="Learn how to use the wizard"
+        >
+          <HelpCircle className="w-5 h-5 text-emerald-600" />
+          <span className="font-bold text-sm text-emerald-800">How to Use</span>
         </button>
         
         {/* Real-time Calculations Widget - Only show when toggled */}
