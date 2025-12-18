@@ -69,9 +69,9 @@ export function ScenarioSection({
   const scenariosGeneratedRef = useRef(false);
 
   // Show explainer on first visit and auto-generate scenarios
-  // ScenarioSection is now Section 4 - comes AFTER Goals
+  // ScenarioSection is now Section 5 - comes AFTER ConfigurationComparison (Dec 17, 2025 update)
   useEffect(() => {
-    if (currentSection === 4 && !hasSeenExplainer) {
+    if (currentSection === 5 && !hasSeenExplainer) {
       setShowExplainer(true);
     }
   }, [currentSection, hasSeenExplainer]);
@@ -80,11 +80,11 @@ export function ScenarioSection({
   // Dec 16, 2025 - Fixed: Used ref to prevent re-generation when wizardState changes
   useEffect(() => {
     // Only generate if:
-    // 1. We're on section 4
+    // 1. We're on section 5 (Dec 17, 2025 - updated from section 4)
     // 2. No scenarios exist yet
     // 3. Not currently generating
     // 4. Haven't already generated this session (ref check)
-    if (currentSection === 4 && !scenarioResult && !isGenerating && !scenariosGeneratedRef.current) {
+    if (currentSection === 5 && !scenarioResult && !isGenerating && !scenariosGeneratedRef.current) {
       scenariosGeneratedRef.current = true;
       onGenerateScenarios();
     }
@@ -92,7 +92,7 @@ export function ScenarioSection({
   
   // Reset the ref when leaving section (so scenarios regenerate if user goes back)
   useEffect(() => {
-    if (currentSection !== 4) {
+    if (currentSection !== 5) {
       scenariosGeneratedRef.current = false;
     }
   }, [currentSection]);
@@ -136,8 +136,8 @@ export function ScenarioSection({
   const formatPower = (kw: number) => kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${Math.round(kw)} kW`;
   const formatEnergy = (kwh: number) => kwh >= 1000 ? `${(kwh / 1000).toFixed(1)} MWh` : `${Math.round(kwh)} kWh`;
 
-  // ScenarioSection is now Section 4 (after Goals)
-  if (currentSection !== 4) return null;
+  // ScenarioSection is now Section 5 (after ConfigurationComparison) - Dec 17, 2025
+  if (currentSection !== 5) return null;
 
   return (
     <>
