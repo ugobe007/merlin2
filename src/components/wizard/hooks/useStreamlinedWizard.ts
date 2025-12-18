@@ -252,34 +252,45 @@ export function useStreamlinedWizard({
   // ═══════════════════════════════════════════════════════════════
   // EFFECT: Sync sliders with calculated values when entering Section 4
   // Dec 14, 2025 - Critical Fix #3: "Power profile shows 139%" bug
+  // Dec 17, 2025 - CRITICAL FIX: Only sync battery, NOT solar (prevents feedback loop)
   // NOTE: This MUST come AFTER centralizedState is declared
   // ═══════════════════════════════════════════════════════════════
+  const sliderSyncRef = useRef(false); // Track if we've already synced for this section entry
+  
   useEffect(() => {
-    if (currentSection === 4 && centralizedState?.calculated) {
+    // Only sync ONCE when entering Section 4
+    if (currentSection === 4 && centralizedState?.calculated && !sliderSyncRef.current) {
       const calc = centralizedState.calculated;
       
       // Only update if we have actual calculated values (not defaults)
       // ⚠️ GUARD: Ensure values are finite to prevent Infinity loop bug
       if (calc.recommendedBatteryKW > 0 && Number.isFinite(calc.recommendedBatteryKW)) {
-        // Safety cap: max 50 MW for any single system
-        const MAX_VALUE = 50000; // 50 MW in kW
-        const safeBatteryKW = Math.min(calc.recommendedBatteryKW, MAX_VALUE);
-        const safeBatteryKWh = Math.min(calc.recommendedBatteryKWh, MAX_VALUE * 8);
-        const safeSolarKW = Math.min(calc.recommendedSolarKW || 0, MAX_VALUE);
+        sliderSyncRef.current = true; // Mark as synced - don't sync again!
         
-        console.log('🎚️ [SYNC] Initializing Section 4 sliders from calculated values:', {
+        // Values are already capped by useWizardState.ts safeValue()
+        const safeBatteryKW = calc.recommendedBatteryKW;
+        const safeBatteryKWh = calc.recommendedBatteryKWh;
+        // ⚠️ DO NOT sync solarKW from recommendations - let user control it
+        // This prevents the feedback loop where solar inflates battery
+        
+        console.log('🎚️ [SYNC] Initializing Section 4 sliders (battery only, solar user-controlled):', {
           batteryKW: safeBatteryKW,
           batteryKWh: safeBatteryKWh,
-          solarKW: safeSolarKW,
+          recommendedSolarKW: calc.recommendedSolarKW, // Log but don't auto-set
         });
         
         setWizardState((prev) => ({
           ...prev,
           batteryKW: safeBatteryKW,
           batteryKWh: safeBatteryKWh,
-          solarKW: safeSolarKW || prev.solarKW,
+          // solarKW: NOT synced - user controls this via Goals section
         }));
       }
+    }
+    
+    // Reset sync flag when leaving Section 4
+    if (currentSection !== 4) {
+      sliderSyncRef.current = false;
     }
   }, [currentSection, centralizedState?.calculated]);
   
