@@ -264,10 +264,17 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
   recommended = false,
 }) => {
   const handleHeaderClick = useCallback(() => {
-    if (alwaysEnabled || enabled) {
+    if (alwaysEnabled) {
+      // BESS card - always enabled, just toggle expand
+      onExpand();
+    } else if (enabled) {
+      // Card is enabled - toggle expand to show/hide config
       onExpand();
     } else {
+      // Card is disabled - ENABLE IT AND EXPAND IT
+      // This is the fix: clicking a disabled card should enable AND expand
       onToggle();
+      onExpand(); // Also expand to show configuration immediately
     }
   }, [alwaysEnabled, enabled, onExpand, onToggle]);
 
