@@ -367,14 +367,14 @@ export function FacilityDetailsSectionV2({
               <select
                 value={wizardState.state || ''}
                 onChange={(e) => updateState(e.target.value)}
-                className="w-full px-5 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl text-gray-800 text-lg font-semibold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer appearance-none pr-12"
+                className="w-full px-5 py-4 bg-gradient-to-br from-purple-100 to-indigo-100 border-2 border-purple-300 rounded-full text-purple-900 text-lg font-bold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all cursor-pointer appearance-none pr-12 shadow-lg hover:shadow-purple-200/50"
               >
                 <option value="" disabled>Select your state...</option>
                 {US_STATES.map((state) => (
                   <option key={state} value={state}>{state}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400 pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-600 pointer-events-none" />
             </div>
             {wizardState.state && (
               <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
@@ -405,10 +405,10 @@ export function FacilityDetailsSectionV2({
                   value={wizardState.useCaseData?.roomCount || wizardState.facilitySize || ''}
                   onChange={(e) => updateRoomCount(parseInt(e.target.value) || 0)}
                   placeholder="e.g., 150"
-                  className="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl text-gray-800 font-semibold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className="w-full px-4 py-3 bg-gradient-to-br from-emerald-100 to-teal-100 border-2 border-emerald-300 rounded-full text-emerald-800 font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition-all shadow-lg hover:shadow-emerald-200/50"
                 />
                 {(wizardState.useCaseData?.roomCount || wizardState.facilitySize) > 0 && (
-                  <span className="absolute right-3 bottom-3.5 text-sm text-indigo-500 font-medium">
+                  <span className="absolute right-4 bottom-3.5 text-sm text-emerald-600 font-bold">
                     rooms
                   </span>
                 )}
@@ -424,10 +424,10 @@ export function FacilityDetailsSectionV2({
                   value={wizardState.useCaseData?.squareFootage || ''}
                   onChange={(e) => updateSquareFootage(parseInt(e.target.value) || 0)}
                   placeholder="e.g., 100,000"
-                  className="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl text-gray-800 font-semibold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className="w-full px-4 py-3 bg-gradient-to-br from-amber-100 to-yellow-100 border-2 border-amber-300 rounded-full text-amber-800 font-bold focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all shadow-lg hover:shadow-amber-200/50"
                 />
                 {wizardState.useCaseData?.squareFootage > 0 && (
-                  <span className="absolute right-3 bottom-3.5 text-sm text-indigo-500 font-medium">
+                  <span className="absolute right-4 bottom-3.5 text-sm text-amber-600 font-bold">
                     sqft
                   </span>
                 )}
