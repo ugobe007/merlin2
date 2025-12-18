@@ -88,6 +88,7 @@ export default function StreamlinedWizard({
   const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
   const [hasSeenRecommendation, setHasSeenRecommendation] = useState(false);
   const [showMerlinBanner, setShowMerlinBanner] = useState(false); // Persistent recommendation banner
+  const [showWizardHelp, setShowWizardHelp] = useState(false); // How to Use wizard help modal
   const [merlinRecommendation, setMerlinRecommendation] = useState<{batteryKW: number; batteryKWh: number; solarKW: number; peakKW: number} | null>(null);
   const [showSidebarMenu, setShowSidebarMenu] = useState(false);
   const [showCalculations, setShowCalculations] = useState(false); // Collapsible calculations widget
@@ -1346,7 +1347,7 @@ export default function StreamlinedWizard({
         
         {/* How to Use Button - Below Merlin Energy */}
         <button
-          onClick={() => setShowMerlinRecommendation(true)}
+          onClick={() => setShowWizardHelp(true)}
           className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg hover:shadow-emerald-300/50 hover:scale-105 transition-all border-2 border-emerald-300"
           title="Learn how to use the wizard"
         >
@@ -1594,6 +1595,90 @@ export default function StreamlinedWizard({
                 Got it - Show Me My Quote!
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* How to Use Wizard Help Modal */}
+      {showWizardHelp && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowWizardHelp(false)} />
+          <div className="relative bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-cyan-900/95 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-emerald-400/30 animate-in zoom-in duration-200">
+            <button
+              onClick={() => setShowWizardHelp(false)}
+              className="absolute top-4 right-4 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                <HelpCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">How to Use This Wizard</h3>
+                <p className="text-sm text-emerald-300">Get the best results in 5 easy steps</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center text-purple-300 font-bold">1</div>
+                <div>
+                  <p className="text-white font-semibold">Select Your Location</p>
+                  <p className="text-sm text-gray-300">Choose your state for accurate electricity rates</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center text-purple-300 font-bold">2</div>
+                <div>
+                  <p className="text-white font-semibold">Choose Your Industry</p>
+                  <p className="text-sm text-gray-300">Pick the type that best matches your facility</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center text-purple-300 font-bold">3</div>
+                <div>
+                  <p className="text-white font-semibold">Enter Facility Details</p>
+                  <p className="text-sm text-gray-300">Merlin calculates your energy needs in real-time</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center text-purple-300 font-bold">4</div>
+                <div>
+                  <p className="text-white font-semibold">Set Your Goals</p>
+                  <p className="text-sm text-gray-300">Tell us what you want to achieve with energy storage</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                <div className="w-8 h-8 bg-emerald-500/30 rounded-lg flex items-center justify-center text-emerald-300 font-bold">5</div>
+                <div>
+                  <p className="text-white font-semibold">Get Your Quote</p>
+                  <p className="text-sm text-gray-300">Review Merlin's recommendation or customize your system</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl border border-amber-400/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-5 h-5 text-amber-400" />
+                <p className="font-bold text-amber-300">Pro Tip</p>
+              </div>
+              <p className="text-sm text-amber-100">
+                Click the <strong>TrueQuote™</strong> button on the left to see exactly how we calculate your quote - every number is backed by industry sources!
+              </p>
+            </div>
+            
+            <button
+              onClick={() => setShowWizardHelp(false)}
+              className="w-full mt-4 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white rounded-xl font-bold transition-colors hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-700"
+            >
+              Got It!
+            </button>
           </div>
         </div>
       )}
