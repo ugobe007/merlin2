@@ -469,22 +469,34 @@ export function useWizardState() {
     
     // ⚠️ SOLAR STORAGE: If user adds solar, increase battery to capture solar energy
     // Rule: Battery should be able to store 4-6 hours of solar generation for evening use
+    // ⚠️ CRITICAL FIX (Dec 17, 2025): Cap solar influence to prevent feedback loop
+    // Solar should NOT inflate battery beyond 2x the building load-based sizing
     const solarHours = state.location.solarHours || 5;
-    // ⚠️ GUARD: Ensure solarKW is finite to prevent Infinity propagation
-    const safeSolarKW = (state.goals.addSolar && Number.isFinite(state.goals.solarKW)) ? state.goals.solarKW : 0;
+    
+    // ⚠️ GUARD: Ensure solarKW is finite AND reasonable (max 3x peak demand for commercial)
+    const maxReasonableSolarKW = totalPeakDemandKW * 3; // Industry standard: solar rarely exceeds 3x peak
+    const userSolarKW = (state.goals.addSolar && Number.isFinite(state.goals.solarKW)) ? state.goals.solarKW : 0;
+    const safeSolarKW = Math.min(userSolarKW, maxReasonableSolarKW);
+    
     if (safeSolarKW > 0) {
       const solarDailyKWh = safeSolarKW * solarHours;
       const solarStorageKWh = Math.round(solarDailyKWh * 0.6); // Store 60% of daily solar
       
-      // Take the larger of: peak demand backup OR solar storage
-      recommendedBatteryKWh = Math.max(recommendedBatteryKWh, solarStorageKWh);
+      // Cap battery increase from solar to max 2x the original load-based sizing
+      const maxBatteryKWh = recommendedBatteryKWh * 2;
+      const maxBatteryKW = recommendedBatteryKW * 2;
       
-      // Battery power should handle solar input rate
+      // Take the larger of: peak demand backup OR solar storage (capped)
+      recommendedBatteryKWh = Math.min(Math.max(recommendedBatteryKWh, solarStorageKWh), maxBatteryKWh);
+      
+      // Battery power should handle solar input rate (capped)
       const solarInputKW = Math.round(safeSolarKW * 0.8); // 80% of solar capacity
-      recommendedBatteryKW = Math.max(recommendedBatteryKW, solarInputKW);
+      recommendedBatteryKW = Math.min(Math.max(recommendedBatteryKW, solarInputKW), maxBatteryKW);
       
       console.log('🔋 [recalculate] Solar storage adjustment:', {
-        solarKW: safeSolarKW,
+        userSolarKW,
+        safeSolarKW,
+        maxReasonableSolarKW,
         solarDailyKWh,
         solarStorageKWh,
         finalBatteryKWh: recommendedBatteryKWh,
@@ -492,10 +504,10 @@ export function useWizardState() {
       });
     }
     
-    // Solar recommendation: Size solar relative to BESS capacity
-    // NREL ILR (Inverter Loading Ratio) guidance: 1.3-1.5x for DC-coupled systems
-    // Using 1.4x allows solar to fully charge BESS while serving load
-    const recommendedSolarKW = Math.round(recommendedBatteryKW * SOLAR_TO_BESS_RATIO);
+    // Solar recommendation: Size solar relative to peak demand (NOT battery capacity)
+    // Industry standard: Commercial solar = 0.5x to 1.5x peak demand
+    // Using 1.2x to provide meaningful solar offset without oversizing
+    const recommendedSolarKW = Math.round(totalPeakDemandKW * 1.2);
     
     // ⚠️ SAFETY CAP: Prevent any Infinity/NaN from escaping (max 50 MW systems)
     const MAX_KW = 50000; // 50 MW
