@@ -98,18 +98,8 @@ export function FloatingWidgets({
   return (
     <>
       {/* ═══════════════════════════════════════════════════════════════════
-          FLOATING ACTION BUTTONS - LEFT SIDE (Only Help button)
-          Savings Scout and Config removed - they are in navbar now
+          FLOATING ACTION BUTTONS - Removed (Help is in sidebar now)
           ═══════════════════════════════════════════════════════════════════ */}
-      
-      {/* Help Widget - Only floating button (LEFT side) */}
-      <FloatingWidget
-        icon={<HelpCircle className="w-5 h-5" />}
-        label="Help"
-        onClick={() => setHelpOpen(true)}
-        position={0}
-        variant="default"
-      />
       
       {/* ═══════════════════════════════════════════════════════════════════
           SLIDE-OUT PANELS

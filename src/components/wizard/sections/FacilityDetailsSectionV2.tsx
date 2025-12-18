@@ -334,22 +334,7 @@ export function FacilityDetailsSectionV2({
       className="min-h-[calc(100vh-120px)] p-4 md:p-8"
     >
       <div className="max-w-3xl mx-auto">
-        {/* Welcome Banner for Vertical Users */}
-        {initializedFromVertical && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/20 border border-emerald-400/40 rounded-2xl backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h4 className="font-bold text-white text-lg">Welcome! Your details are pre-filled</h4>
-                <p className="text-sm text-emerald-200">
-                  Review and add any additional amenities, then we'll continue automatically.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Welcome Banner removed - was redundant */}
         
         {/* Step indicator */}
         <div className="text-center mb-6">
