@@ -168,11 +168,11 @@ export function ConfigurationComparison({
     return `${Math.round(kwh)} kWh`;
   };
   
-  // Handle config selection
+  // Handle config selection - NO auto-advance, user must click button
   const handleSelectConfig = (config: 'user' | 'merlin') => {
     setSelectedConfig(config);
     
-    // Apply the selected configuration
+    // Apply the selected configuration to state
     if (config === 'merlin') {
       setWizardState(prev => ({
         ...prev,
@@ -190,11 +190,16 @@ export function ConfigurationComparison({
         selectedConfigSource: 'user',
       }));
     }
-    
-    // Auto-advance after selection
-    setTimeout(() => {
-      onContinue();
-    }, 500);
+    // NO auto-advance - user must click "Continue" button to proceed
+  };
+  
+  // Handle continue button click - only way to advance to next step
+  const handleContinueClick = () => {
+    if (!selectedConfig) {
+      // Auto-select user config if they haven't selected anything
+      setSelectedConfig('user');
+    }
+    onContinue();
   };
   
   // Don't render if not on this section
@@ -270,13 +275,13 @@ export function ConfigurationComparison({
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* ═══════════════════════════════════════════
               USER'S CONFIGURATION (Left)
+              NOTE: No onClick on card - sliders need to work without triggering advance
           ═══════════════════════════════════════════ */}
           <div 
-            onClick={() => handleSelectConfig('user')}
-            className={`relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl p-6 border-2 cursor-pointer transition-all ${
+            className={`relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl p-6 border-2 transition-all ${
               selectedConfig === 'user'
                 ? 'border-emerald-400 ring-4 ring-emerald-500/30 scale-[1.02]'
-                : 'border-slate-600 hover:border-slate-500'
+                : 'border-slate-600'
             }`}
           >
             {selectedConfig === 'user' && (
@@ -459,8 +464,9 @@ export function ConfigurationComparison({
               </div>
             </div>
             
-            {/* Select Button */}
+            {/* Select Button - Actually selects this config */}
             <button
+              onClick={() => handleSelectConfig('user')}
               className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
                 selectedConfig === 'user'
                   ? 'bg-emerald-500 text-white'
@@ -483,13 +489,13 @@ export function ConfigurationComparison({
           
           {/* ═══════════════════════════════════════════
               MERLIN'S RECOMMENDATION (Right)
+              NOTE: No onClick on card - button handles selection
           ═══════════════════════════════════════════ */}
           <div 
-            onClick={() => handleSelectConfig('merlin')}
-            className={`relative bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-6 border-2 cursor-pointer transition-all ${
+            className={`relative bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-3xl p-6 border-2 transition-all ${
               selectedConfig === 'merlin'
                 ? 'border-purple-400 ring-4 ring-purple-500/30 scale-[1.02]'
-                : 'border-purple-500/40 hover:border-purple-400/60'
+                : 'border-purple-500/40'
             }`}
           >
             {/* Recommended Badge */}
@@ -598,8 +604,9 @@ export function ConfigurationComparison({
               </div>
             </div>
             
-            {/* Select Button */}
+            {/* Select Button - Actually selects Merlin's config */}
             <button
+              onClick={() => handleSelectConfig('merlin')}
               className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
                 selectedConfig === 'merlin'
                   ? 'bg-purple-500 text-white'
@@ -674,6 +681,28 @@ export function ConfigurationComparison({
                 </p>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* Continue Button - Only way to advance */}
+        {selectedConfig && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={handleContinueClick}
+              className="group px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-emerald-500/25 flex items-center gap-3"
+            >
+              Continue to Scenario Planner
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
+        
+        {/* Hint if no selection */}
+        {!selectedConfig && (
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm animate-pulse">
+              ☝️ Select a configuration above to continue
+            </p>
           </div>
         )}
         
