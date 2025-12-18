@@ -1,8 +1,60 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 16, 2025  
+**Last Updated:** December 17, 2025  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
+
+---
+
+## 🎨 OFFICIAL MERLIN COLOR PALETTE (December 17, 2025)
+
+### Primary Brand Colors
+Use these exact hex values for all new components:
+
+| Color Name | Hex Code | Usage | Tailwind Class |
+|------------|----------|-------|----------------|
+| **Merlin Purple** | `#6700b6` | Primary brand, CTAs, selected states | `bg-[#6700b6]` |
+| **Web Orange** | `#ffa600` | Accents, highlights, badges | `bg-[#ffa600]` |
+| **Malibu Blue** | `#68BFFA` | Success states, info boxes | `bg-[#68BFFA]` |
+| **Arapawa Navy** | `#060F76` | Dark backgrounds, contrast | `bg-[#060F76]` |
+| **Peach Orange** | `#FED19F` | Soft accents, light fills | `bg-[#FED19F]` |
+
+### Purple Gradient Shades (Light → Dark)
+```
+#cc89ff → #bc66ff → #ad42ff → #9d1eff → #8d00f9 → #6700b6 → #580097 → #490078 → #390058 → #280047
+```
+
+### Orange Gradient Shades (Light → Dark)
+```
+#ffd689 → #ffc966 → #ffbb42 → #ffad1f → #ffa600 → #d98d00 → #b37400 → #8c5b00 → #664200 → #472e00
+```
+
+### Malibu Blue Gradient Shades (Light → Dark)
+```
+#8dcefb → #6ac0fa → #47b2f9 → #24a4f8 → #68BFFA → #0489e6 → #0373c0 → #025d9a → #024774 → #022a45
+```
+
+### Arapawa Navy Gradient Shades (Light → Dark)
+```
+#8f97f9 → #6d78f7 → #4b59f5 → #293af3 → #060F76 → #0610a9 → #050e8c → #040b70 → #030953 → #030843
+```
+
+### Usage Guidelines:
+
+**Buttons:**
+- Primary CTA: `bg-gradient-to-r from-[#6700b6] to-[#060F76]` with `border-2 border-[#ad42ff]`
+- Secondary: `bg-[#060F76]` with `border border-[#4b59f5]`
+- Accent: `bg-[#68BFFA]` for success/info actions
+- Warning: `bg-[#ffa600]` for selected/highlighted states
+
+**Cards & Panels:**
+- Light fills: Use `/20` or `/30` opacity (e.g., `bg-[#6700b6]/20`)
+- Borders: Use `border-4` for emphasis, `border-2` for standard
+- Dark backgrounds: `bg-slate-800/50` with colored borders
+
+**Text Colors:**
+- On dark backgrounds: `text-white`, `text-[#cc89ff]` (light purple), `text-[#ffd689]` (light orange)
+- On light backgrounds: `text-[#6700b6]`, `text-[#060F76]`, `text-gray-800`
 
 ---
 

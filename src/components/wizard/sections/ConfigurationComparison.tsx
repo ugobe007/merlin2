@@ -211,38 +211,81 @@ export function ConfigurationComparison({
       className="min-h-[calc(100vh-120px)] p-4 md:p-8"
     >
       <div className="max-w-6xl mx-auto">
-        {/* Explanation Banner */}
-        {showExplanation && (
-          <div className="mb-6 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-indigo-500/20 border border-indigo-400/40 rounded-2xl p-5 backdrop-blur-sm">
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                <Scale className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white mb-1">Compare Your Options</h3>
-                  <button
-                    onClick={() => setShowExplanation(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <ChevronUp className="w-5 h-5" />
-                  </button>
+        {/* ═══════════════════════════════════════════════════════════════
+            MERLIN GUIDANCE BANNER - Large, visible, branded
+            Using Merlin palette: Light purple #cc89ff background
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-8 bg-gradient-to-br from-[#cc89ff]/30 via-[#bc66ff]/20 to-[#8dcefb]/20 border-4 border-[#6700b6] rounded-3xl p-6 shadow-2xl">
+          <div className="flex items-start gap-5">
+            {/* Merlin Avatar */}
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#6700b6] to-[#060F76] rounded-2xl flex items-center justify-center shadow-xl border-2 border-[#ad42ff]">
+                  <img src={merlinImage} alt="Merlin" className="w-16 h-16" />
                 </div>
-                <p className="text-indigo-200 leading-relaxed">
-                  Based on your power preferences (solar, wind, generator), we've calculated your configuration on the left.
-                  Merlin's AI-optimized recommendation is on the right. <strong>Compare the savings and choose which to proceed with.</strong>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#ffa600] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                  <Scale className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Guidance Content */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-white">Compare Your Options</h2>
+                <span className="px-3 py-1 bg-[#ffa600] text-white text-sm font-bold rounded-full">
+                  Step 4 of 7
+                </span>
+              </div>
+              
+              <p className="text-lg text-white/90 leading-relaxed mb-4">
+                I've prepared <strong className="text-[#ffd689]">two configurations</strong> for your {industryName}:
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* User Config explanation */}
+                <div className="bg-white/10 border-2 border-[#68BFFA] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-[#68BFFA] rounded-lg flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="font-bold text-[#68BFFA]">Your Configuration</h4>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    Based on your choices in Goals - includes your solar, wind, and generator preferences.
+                  </p>
+                </div>
+                
+                {/* Merlin Config explanation */}
+                <div className="bg-white/10 border-2 border-[#ad42ff] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-[#6700b6] rounded-lg flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="font-bold text-[#ad42ff]">Merlin's Recommendation</h4>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    AI-optimized for your peak demand ({formatPower(peakDemandKW)}) using industry benchmarks.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-[#ffd689]">
+                <Lightbulb className="w-5 h-5" />
+                <p className="text-sm font-medium">
+                  Click either card to select it, then hit "Continue" to see your TrueQuote™
                 </p>
               </div>
             </div>
           </div>
-        )}
+        </div>
         
         {/* Navigation - Back / Home */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#060F76] hover:bg-[#0815a9] text-white font-medium rounded-lg transition-colors border-2 border-[#4b59f5]"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
