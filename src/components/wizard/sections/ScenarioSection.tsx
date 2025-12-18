@@ -16,10 +16,9 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Sparkles, Info, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, ChevronLeft, Home, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Battery, Sun, Wind, Zap, DollarSign, Clock, Shield, CheckCircle, Settings, ChevronRight, ChevronLeft, Home, Building } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import type { ScenarioConfig, ScenarioGeneratorResult } from '@/services/scenarioGenerator';
-import { ScenarioExplainerModal } from '../modals/ScenarioExplainerModal';
 
 interface ScenarioSectionProps {
   wizardState: WizardState;
@@ -58,8 +57,7 @@ export function ScenarioSection({
   onOpenAdvanced,
   onSelectScenario,
 }: ScenarioSectionProps) {
-  const [showExplainer, setShowExplainer] = useState(false);
-  const [hasSeenExplainer, setHasSeenExplainer] = useState(false);
+  // Removed popup modal - show cards directly (Dec 17, 2025)
   const [selectedType, setSelectedType] = useState<string | null>(
     wizardState.selectedScenario?.type || null
   );
@@ -67,14 +65,6 @@ export function ScenarioSection({
   // Track if scenarios have been generated for this session
   // This prevents re-generation when state changes (clicking a scenario card)
   const scenariosGeneratedRef = useRef(false);
-
-  // Show explainer on first visit and auto-generate scenarios
-  // ScenarioSection is now Section 5 - comes AFTER ConfigurationComparison (Dec 17, 2025 update)
-  useEffect(() => {
-    if (currentSection === 5 && !hasSeenExplainer) {
-      setShowExplainer(true);
-    }
-  }, [currentSection, hasSeenExplainer]);
 
   // Auto-generate scenarios when entering section (ONCE per session)
   // Dec 16, 2025 - Fixed: Used ref to prevent re-generation when wizardState changes
@@ -96,11 +86,6 @@ export function ScenarioSection({
       scenariosGeneratedRef.current = false;
     }
   }, [currentSection]);
-
-  const handleExplainerContinue = () => {
-    setShowExplainer(false);
-    setHasSeenExplainer(true);
-  };
 
   const handleSelectScenario = (scenario: ScenarioConfig) => {
     setSelectedType(scenario.type);
@@ -140,58 +125,47 @@ export function ScenarioSection({
   if (currentSection !== 5) return null;
 
   return (
-    <>
-      {/* Explainer Modal */}
-      <ScenarioExplainerModal
-        isOpen={showExplainer}
-        onClose={() => { setShowExplainer(false); setHasSeenExplainer(true); }}
-        onContinue={handleExplainerContinue}
-      />
-
-      <div
-        ref={sectionRef}
-        className="min-h-[calc(100vh-120px)] p-4 md:p-8"
-      >
-        <div className="max-w-5xl mx-auto">
-          {/* Header with Back/Home */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </button>
-              <button
-                onClick={onHome || onBack} // Home navigates to vertical landing page
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
-              >
-                <Home className="w-4 h-4" />
-                Home
-              </button>
-            </div>
+    <div
+      ref={sectionRef}
+      className="min-h-[calc(100vh-120px)] p-4 md:p-8"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Header with Back/Home */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowExplainer(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 rounded-lg transition-colors"
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
             >
-              <Info className="w-4 h-4" />
-              What are these options?
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <button
+              onClick={onHome || onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              Home
             </button>
           </div>
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span>Step 5 of 7</span>
+          </div>
+        </div>
 
-          {/* Section Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 font-medium">Step 4 of 5</span>
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Your Savings Options
-            </h2>
-            <p className="text-gray-400">
-              Based on your {wizardState.industryName || 'facility'} and preferences, here are 3 ways to save
-            </p>
+        {/* Section Title */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full mb-4">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="text-purple-300 font-medium">Choose Your Savings Plan</span>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Your Savings Options
+          </h2>
+          <p className="text-gray-400">
+            Based on your {wizardState.industryName || 'facility'} and preferences, here are 3 ways to save
+          </p>
           </div>
 
           {/* ════════════════════════════════════════════════════════════════
@@ -454,7 +428,6 @@ export function ScenarioSection({
           )}
         </div>
       </div>
-    </>
   );
 }
 

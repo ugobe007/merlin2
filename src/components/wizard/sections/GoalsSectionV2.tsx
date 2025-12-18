@@ -255,8 +255,13 @@ export function GoalsSectionV2({
             }))}
           />
 
-          {wizardState.hasExistingEV && (
-            <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+          {/* Existing EV Chargers Details - Smoothly animated */}
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              wizardState.hasExistingEV ? 'max-h-[500px] opacity-100 mt-4 pt-4 border-t border-slate-200' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-4">
               <SliderInput
                 label="Level 1 Chargers (1.4 kW each)"
                 helpText="Standard 120V outlets - typically for employee parking"
@@ -298,7 +303,7 @@ export function GoalsSectionV2({
                 </div>
               )}
             </div>
-          )}
+          </div>
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -321,8 +326,13 @@ export function GoalsSectionV2({
             }))}
           />
 
-          {wizardState.wantsEVCharging && (
-            <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+          {/* New EV Chargers Details - Smoothly animated */}
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              wizardState.wantsEVCharging ? 'max-h-[400px] opacity-100 mt-4 pt-4 border-t border-slate-200' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-4">
               <SliderInput
                 label="Level 2 Chargers (7-19 kW each)"
                 min={0}
@@ -354,7 +364,7 @@ export function GoalsSectionV2({
                 unit="units"
               />
             </div>
-          )}
+          </div>
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -392,8 +402,13 @@ export function GoalsSectionV2({
             }}
           />
 
-          {wizardState.wantsSolar && (
-            <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+          {/* Solar Details - Smoothly animated */}
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              wizardState.wantsSolar ? 'max-h-96 opacity-100 mt-4 pt-4 border-t border-slate-200' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-4">
               <SliderInput
                 label="Solar System Size"
                 helpText={`Merlin recommends ${formatKW(Math.round(peakDemandKW * 0.6))} for your facility.`}
@@ -413,7 +428,7 @@ export function GoalsSectionV2({
                 onChange={(value) => setWizardState(prev => ({ ...prev, wantsSolarCanopy: value }))}
               />
             </div>
-          )}
+          </div>
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -437,19 +452,22 @@ export function GoalsSectionV2({
             }))}
           />
 
-          {wizardState.wantsWind && (
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <SliderInput
-                label="Wind Turbine Capacity"
-                min={0}
-                max={Math.max(500, Math.round(peakDemandKW * 0.5))}
-                step={10}
-                value={wizardState.windTurbineKW}
-                onChange={(v) => setWizardState(prev => ({ ...prev, windTurbineKW: v }))}
-                unit="kW"
-              />
-            </div>
-          )}
+          {/* Wind Details - Smoothly animated */}
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              wizardState.wantsWind ? 'max-h-48 opacity-100 mt-4 pt-4 border-t border-slate-200' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <SliderInput
+              label="Wind Turbine Capacity"
+              min={0}
+              max={Math.max(500, Math.round(peakDemandKW * 0.5))}
+              step={10}
+              value={wizardState.windTurbineKW}
+              onChange={(v) => setWizardState(prev => ({ ...prev, windTurbineKW: v }))}
+              unit="kW"
+            />
+          </div>
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -480,8 +498,13 @@ export function GoalsSectionV2({
             }}
           />
 
-          {wizardState.wantsGenerator && (
-            <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+          {/* Generator Details - Smoothly animated */}
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              wizardState.wantsGenerator ? 'max-h-[600px] opacity-100 mt-4 pt-4 border-t border-slate-200' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-4">
               {/* Generator Type */}
               <SegmentedControl
                 label="Generator Type"
@@ -517,7 +540,7 @@ export function GoalsSectionV2({
                 unit="kW"
               />
             </div>
-          )}
+          </div>
         </QuestionCard>
 
         {/* ════════════════════════════════════════════════════════════════
