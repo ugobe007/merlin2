@@ -317,19 +317,20 @@ export function ConfigurationComparison({
         ════════════════════════════════════════════════════════════════ */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* ═══════════════════════════════════════════
-              USER'S CONFIGURATION (Left) - Light Cream Background
-              NOTE: No onClick on card - sliders need to work without triggering advance
+              USER'S CONFIGURATION (Left) - BLUE/CYAN Theme
+              High contrast with the purple Merlin panel
           ═══════════════════════════════════════════ */}
           <div 
-            className={`relative bg-gradient-to-br from-[#FED19F]/80 to-[#ffd689]/70 rounded-3xl p-6 border-2 transition-all shadow-xl ${
+            className={`relative bg-gradient-to-br from-[#68BFFA]/30 to-[#0ea5e9]/20 rounded-3xl p-6 border-2 transition-all shadow-xl ${
               selectedConfig === 'user'
-                ? 'border-[#6700b6] ring-4 ring-[#6700b6]/30 scale-[1.02]'
-                : 'border-[#ffa600]/50'
+                ? 'border-[#68BFFA] ring-4 ring-[#68BFFA]/40 scale-[1.02]'
+                : 'border-[#68BFFA]/60 hover:border-[#68BFFA] cursor-pointer'
             }`}
+            onClick={() => handleSelectConfig('user')}
           >
             {selectedConfig === 'user' && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-[#6700b6] text-white text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                <span className="bg-[#68BFFA] text-white text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
                   <CheckCircle className="w-4 h-4" />
                   SELECTED
                 </span>
@@ -338,12 +339,12 @@ export function ConfigurationComparison({
             
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#6700b6] to-[#060F76] rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#68BFFA] to-[#0ea5e9] rounded-xl flex items-center justify-center shadow-lg">
                 <ThumbsUp className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#6700b6]">Your Configuration</h3>
-                <p className="text-sm text-[#060F76]/70">Customize your energy system</p>
+                <h3 className="text-xl font-bold text-[#060F76]">Your Configuration</h3>
+                <p className="text-sm text-[#68BFFA]">Customize your energy system</p>
               </div>
             </div>
             
@@ -353,13 +354,13 @@ export function ConfigurationComparison({
             <div className="space-y-4 mb-6">
               
               {/* Battery Slider */}
-              <div className="bg-white/60 rounded-xl p-4 border border-[#6700b6]/20 shadow-sm">
+              <div className="bg-white/70 rounded-xl p-4 border border-[#68BFFA]/30 shadow-sm">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
-                    <Battery className="w-5 h-5 text-[#6700b6]" />
+                    <Battery className="w-5 h-5 text-[#68BFFA]" />
                     <span className="text-[#060F76] font-semibold">Battery Power</span>
                   </div>
-                  <span className="font-bold text-[#6700b6]">{formatPower(userBatteryKW)}</span>
+                  <span className="font-bold text-[#060F76]">{formatPower(userBatteryKW)}</span>
                 </div>
                 <input
                   type="range"
@@ -369,26 +370,26 @@ export function ConfigurationComparison({
                   onChange={(e) => setUserBatteryKW(Number(e.target.value))}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="w-full h-3 bg-[#FED19F]/70 rounded-lg appearance-none cursor-pointer accent-[#6700b6]
+                  className="w-full h-3 bg-[#68BFFA]/30 rounded-lg appearance-none cursor-pointer accent-[#68BFFA]
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
-                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#6700b6] [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#68BFFA] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
                 <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
                   <span>{formatPower(recommendations.minBatteryKW)}</span>
-                  <span className="text-[#6700b6] font-medium">Recommended: {formatPower(recommendations.recommendedBatteryKW)}</span>
+                  <span className="text-[#68BFFA] font-medium">Recommended: {formatPower(recommendations.recommendedBatteryKW)}</span>
                   <span>{formatPower(recommendations.maxBatteryKW)}</span>
                 </div>
               </div>
               
               {/* Duration Slider */}
-              <div className="bg-white/60 rounded-xl p-4 border border-[#6700b6]/20 shadow-sm">
+              <div className="bg-white/70 rounded-xl p-4 border border-[#68BFFA]/30 shadow-sm">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[#6700b6]" />
+                    <Clock className="w-5 h-5 text-[#68BFFA]" />
                     <span className="text-[#060F76] font-semibold">Backup Duration</span>
                   </div>
-                  <span className="font-bold text-[#6700b6]">{userDurationHours} hours</span>
+                  <span className="font-bold text-[#060F76]">{userDurationHours} hours</span>
                 </div>
                 <input
                   type="range"
@@ -398,20 +399,20 @@ export function ConfigurationComparison({
                   onChange={(e) => setUserDurationHours(Number(e.target.value))}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="w-full h-3 bg-[#FED19F]/70 rounded-lg appearance-none cursor-pointer accent-[#6700b6]
+                  className="w-full h-3 bg-[#68BFFA]/30 rounded-lg appearance-none cursor-pointer accent-[#68BFFA]
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
-                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#6700b6] [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#68BFFA] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
                 <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
                   <span>2 hrs</span>
-                  <span className="text-[#6700b6] font-medium">Recommended: 4 hrs</span>
+                  <span className="text-[#68BFFA] font-medium">Recommended: 4 hrs</span>
                   <span>8 hrs</span>
                 </div>
               </div>
               
               {/* Solar Slider with Smart Guidance */}
-              <div className={`rounded-xl p-4 border shadow-sm ${userSolarKW > recommendations.recommendedSolarKW ? 'bg-[#ffa600]/20 border-[#ffa600]/50' : 'bg-white/60 border-[#6700b6]/20'}`}>
+              <div className={`rounded-xl p-4 border shadow-sm ${userSolarKW > recommendations.recommendedSolarKW ? 'bg-[#ffa600]/20 border-[#ffa600]/50' : 'bg-white/70 border-[#68BFFA]/30'}`}>
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <Sun className="w-5 h-5 text-[#ffa600]" />
@@ -420,7 +421,7 @@ export function ConfigurationComparison({
                       <AlertTriangle className="w-4 h-4 text-[#ffa600]" />
                     )}
                   </div>
-                  <span className={`font-bold ${userSolarKW > recommendations.recommendedSolarKW ? 'text-[#ffa600]' : 'text-[#6700b6]'}`}>
+                  <span className={`font-bold ${userSolarKW > recommendations.recommendedSolarKW ? 'text-[#ffa600]' : 'text-[#060F76]'}`}>
                     {formatPower(userSolarKW)}
                   </span>
                 </div>
@@ -432,7 +433,7 @@ export function ConfigurationComparison({
                   onChange={(e) => setUserSolarKW(Number(e.target.value))}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="w-full h-3 bg-[#FED19F]/70 rounded-lg appearance-none cursor-pointer accent-[#ffa600]
+                  className="w-full h-3 bg-[#68BFFA]/30 rounded-lg appearance-none cursor-pointer accent-[#ffa600]
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#ffa600] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
@@ -468,13 +469,13 @@ export function ConfigurationComparison({
               </div>
               
               {/* Generator Slider */}
-              <div className="bg-white/60 rounded-xl p-4 border border-[#6700b6]/20 shadow-sm">
+              <div className="bg-white/70 rounded-xl p-4 border border-[#68BFFA]/30 shadow-sm">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <Fuel className="w-5 h-5 text-[#060F76]" />
                     <span className="text-[#060F76] font-semibold">Backup Generator</span>
                   </div>
-                  <span className="font-bold text-[#6700b6]">{formatPower(userGeneratorKW)}</span>
+                  <span className="font-bold text-[#060F76]">{formatPower(userGeneratorKW)}</span>
                 </div>
                 <input
                   type="range"
@@ -484,32 +485,32 @@ export function ConfigurationComparison({
                   onChange={(e) => setUserGeneratorKW(Number(e.target.value))}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="w-full h-3 bg-[#FED19F]/70 rounded-lg appearance-none cursor-pointer accent-[#060F76]
+                  className="w-full h-3 bg-[#68BFFA]/30 rounded-lg appearance-none cursor-pointer accent-[#060F76]
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#060F76] [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                 />
                 <div className="flex justify-between text-xs text-[#060F76]/60 mt-1">
                   <span>0 kW</span>
-                  <span className="text-[#060F76]/80 font-medium">Optional: {formatPower(recommendations.recommendedGeneratorKW)}</span>
+                  <span className="text-[#68BFFA] font-medium">Optional: {formatPower(recommendations.recommendedGeneratorKW)}</span>
                   <span>{formatPower(recommendations.maxGeneratorKW)}</span>
                 </div>
               </div>
             </div>
             
             {/* Storage Summary */}
-            <div className="bg-[#6700b6]/10 rounded-xl p-3 mb-4 border border-[#6700b6]/30">
+            <div className="bg-[#68BFFA]/15 rounded-xl p-3 mb-4 border border-[#68BFFA]/40">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#6700b6] font-medium">Total Storage Capacity</span>
+                <span className="text-sm text-[#060F76] font-medium">Total Storage Capacity</span>
                 <span className="font-bold text-[#060F76] transition-all duration-300 ease-out">{formatEnergy(userConfig.batteryKWh)}</span>
               </div>
             </div>
             
             {/* Financial Metrics */}
-            <div className="bg-white/70 rounded-xl p-4 space-y-3 border border-[#6700b6]/20">
+            <div className="bg-white/80 rounded-xl p-4 space-y-3 border border-[#68BFFA]/30">
               <div className="flex justify-between items-center">
                 <span className="text-[#060F76]/70">Annual Savings</span>
-                <span className="text-xl font-bold text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(userConfig.annualSavings)}</span>
+                <span className="text-xl font-bold text-[#060F76] transition-all duration-300 ease-out">{formatMoney(userConfig.annualSavings)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#060F76]/70">Payback Period</span>
@@ -519,21 +520,21 @@ export function ConfigurationComparison({
                 <span className="text-[#060F76]/70">25-Year ROI</span>
                 <span className="text-xl font-bold text-[#ffa600] transition-all duration-300 ease-out">{userConfig.roi25Year}%</span>
               </div>
-              <div className="pt-2 border-t border-[#6700b6]/20">
+              <div className="pt-2 border-t border-[#68BFFA]/30">
                 <div className="flex justify-between items-center">
                   <span className="text-[#060F76] font-semibold">Net Investment</span>
-                  <span className="text-2xl font-black text-[#6700b6] transition-all duration-300 ease-out">{formatMoney(userConfig.netCost)}</span>
+                  <span className="text-2xl font-black text-[#060F76] transition-all duration-300 ease-out">{formatMoney(userConfig.netCost)}</span>
                 </div>
               </div>
             </div>
             
             {/* Select Button - Actually selects this config */}
             <button
-              onClick={() => handleSelectConfig('user')}
+              onClick={(e) => { e.stopPropagation(); handleSelectConfig('user'); }}
               className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
                 selectedConfig === 'user'
-                  ? 'bg-[#6700b6] text-white'
-                  : 'bg-[#ffa600] hover:bg-[#ffa600]/90 text-white'
+                  ? 'bg-[#68BFFA] text-white'
+                  : 'bg-[#060F76] hover:bg-[#0815a9] text-white border-2 border-[#68BFFA]'
               }`}
             >
               {selectedConfig === 'user' ? (
@@ -551,15 +552,16 @@ export function ConfigurationComparison({
           </div>
           
           {/* ═══════════════════════════════════════════
-              MERLIN'S RECOMMENDATION (Right) - Light Purple/Cream Background
-              NOTE: No onClick on card - button handles selection
+              MERLIN'S RECOMMENDATION (Right) - PURPLE Theme
+              Click anywhere on card to select
           ═══════════════════════════════════════════ */}
           <div 
-            className={`relative bg-gradient-to-br from-[#cc89ff]/40 to-[#FED19F]/30 rounded-3xl p-6 border-2 transition-all shadow-xl ${
+            className={`relative bg-gradient-to-br from-[#6700b6]/30 to-[#cc89ff]/30 rounded-3xl p-6 border-2 transition-all shadow-xl cursor-pointer ${
               selectedConfig === 'merlin'
-                ? 'border-[#6700b6] ring-4 ring-[#6700b6]/30 scale-[1.02]'
-                : 'border-[#6700b6]/40'
+                ? 'border-[#6700b6] ring-4 ring-[#6700b6]/40 scale-[1.02]'
+                : 'border-[#6700b6]/60 hover:border-[#6700b6]'
             }`}
+            onClick={() => handleSelectConfig('merlin')}
           >
             {/* Recommended Badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -746,11 +748,11 @@ export function ConfigurationComparison({
             
             {/* Select Button - Actually selects Merlin's config */}
             <button
-              onClick={() => handleSelectConfig('merlin')}
+              onClick={(e) => { e.stopPropagation(); handleSelectConfig('merlin'); }}
               className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
                 selectedConfig === 'merlin'
                   ? 'bg-[#6700b6] text-white'
-                  : 'bg-gradient-to-r from-[#6700b6] to-[#060F76] hover:from-[#7a00d9] hover:to-[#0b1fa8] text-white'
+                  : 'bg-gradient-to-r from-[#ffa600] to-[#ff8c00] hover:from-[#ffb733] hover:to-[#ffa600] text-white border-2 border-[#6700b6]'
               }`}
             >
               {selectedConfig === 'merlin' ? (
