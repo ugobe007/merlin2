@@ -529,7 +529,7 @@ export function ConfigurationComparison({
             </div>
             
             {/* Equipment Summary */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               <div className="flex justify-between items-center py-2 border-b border-purple-500/30">
                 <div className="flex items-center gap-2">
                   <Battery className="w-5 h-5 text-blue-400" />
@@ -567,18 +567,95 @@ export function ConfigurationComparison({
                   <span className="font-bold text-white">{formatPower(merlinConfig.generatorKW)}</span>
                 </div>
               )}
-              
-              {/* Why This Config */}
-              <div className="bg-purple-500/10 rounded-lg p-3 mt-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Lightbulb className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm font-semibold text-purple-200">Why this configuration?</span>
+            </div>
+            
+            {/* ═══════════════════════════════════════════
+                ENHANCED: Detailed Analysis Section
+            ═══════════════════════════════════════════ */}
+            
+            {/* Why This Config - Expanded */}
+            <div className="bg-gradient-to-br from-purple-500/15 to-indigo-500/10 rounded-xl p-4 mb-4 border border-purple-400/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="w-5 h-5 text-amber-400" />
+                <span className="font-bold text-white">Why Merlin Recommends This</span>
+              </div>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-purple-200">
+                    <strong className="text-white">{wizardState.industryName || 'Your facility'}</strong> typically needs {merlinConfig.durationHours}-hour backup for reliable operations
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-purple-200">
+                    <strong className="text-white">{wizardState.state}</strong> electricity at <strong className="text-emerald-400">${(wizardState.electricityRate || 0.12).toFixed(2)}/kWh</strong> makes this configuration profitable
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-purple-200">
+                    Battery sized at <strong className="text-white">40% of peak demand</strong> for optimal peak shaving
+                  </span>
+                </li>
+                {merlinConfig.solarKW > 0 && (
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-purple-200">
+                      Solar sized to <strong className="text-amber-400">maximize self-consumption</strong> and reduce grid dependency
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </div>
+            
+            {/* ROI Analysis */}
+            <div className="bg-emerald-900/20 rounded-xl p-4 mb-4 border border-emerald-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <span className="font-bold text-white">Return on Investment</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-900/40 rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">10-Year Savings</p>
+                  <p className="text-lg font-bold text-emerald-400">{formatMoney(merlinConfig.annualSavings * 10)}</p>
                 </div>
-                <ul className="text-xs text-purple-300 space-y-1">
-                  <li>• Optimized for {wizardState.industryName || 'your facility type'}</li>
-                  <li>• {wizardState.state} electricity rates considered</li>
-                  <li>• Balanced for fastest payback with adequate backup</li>
-                </ul>
+                <div className="bg-slate-900/40 rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">25-Year Savings</p>
+                  <p className="text-lg font-bold text-emerald-400">{formatMoney(merlinConfig.annualSavings * 25)}</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-emerald-500/20">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-emerald-200">Monthly Savings</span>
+                  <span className="font-bold text-emerald-400">{formatMoney(merlinConfig.annualSavings / 12)}/mo</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* TrueQuote™ Sources */}
+            <div className="bg-slate-900/40 rounded-xl p-3 mb-4 border border-slate-600/50">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-semibold text-emerald-300">TrueQuote™ Pricing Sources</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                  NREL ATB 2024
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <span className="w-2 h-2 bg-amber-400 rounded-full"></span>
+                  IRA Tax Credits
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                  Regional Rates
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                  Industry Benchmarks
+                </div>
               </div>
             </div>
             
