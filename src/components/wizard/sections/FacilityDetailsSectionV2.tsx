@@ -185,6 +185,7 @@ interface FacilityDetailsSectionV2Props {
   sectionRef?: (el: HTMLDivElement | null) => void;
   onBack: () => void;
   onContinue: () => void;
+  onHome?: () => void; // Navigate to vertical landing page
 }
 
 export function FacilityDetailsSectionV2({
@@ -195,6 +196,7 @@ export function FacilityDetailsSectionV2({
   sectionRef,
   onBack,
   onContinue,
+  onHome,
 }: FacilityDetailsSectionV2Props) {
   // Local state for expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -558,7 +560,7 @@ export function FacilityDetailsSectionV2({
                 </button>
                 
                 <button
-                  onClick={onBack} // Home goes back to hero
+                  onClick={onHome || onBack} // Home navigates to vertical landing page
                   className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white rounded-xl border border-slate-600 transition-all"
                 >
                   <Home className="w-5 h-5" />
