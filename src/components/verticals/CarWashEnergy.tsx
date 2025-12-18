@@ -911,11 +911,11 @@ export default function CarWashEnergy() {
                   <div className="flex flex-col gap-3 pt-2">
                     <button
                       onClick={() => setShowWizard(true)}
-                      className="relative w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white py-5 rounded-xl font-bold text-lg shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 animate-pulse hover:animate-none"
+                      className="relative w-full bg-gradient-to-r from-emerald-300 via-green-300 to-lime-300 hover:from-emerald-200 hover:via-green-200 hover:to-lime-200 text-purple-900 py-5 rounded-xl font-black text-lg shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 border-4 border-purple-700 hover:shadow-green-400/50"
                     >
-                      <Sparkles className="w-6 h-6" />
-                      <span>Build My Custom Quote</span>
-                      <ArrowRight className="w-5 h-5" />
+                      <Sparkles className="w-6 h-6 text-purple-800" />
+                      <span className="font-black">Build My Custom Quote</span>
+                      <ArrowRight className="w-5 h-5 text-purple-800" />
                     </button>
                     <button
                       onClick={() => setShowLeadForm(true)}

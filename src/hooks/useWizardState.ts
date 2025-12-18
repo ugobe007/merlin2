@@ -470,19 +470,21 @@ export function useWizardState() {
     // ⚠️ SOLAR STORAGE: If user adds solar, increase battery to capture solar energy
     // Rule: Battery should be able to store 4-6 hours of solar generation for evening use
     const solarHours = state.location.solarHours || 5;
-    if (state.goals.addSolar && state.goals.solarKW > 0) {
-      const solarDailyKWh = state.goals.solarKW * solarHours;
+    // ⚠️ GUARD: Ensure solarKW is finite to prevent Infinity propagation
+    const safeSolarKW = (state.goals.addSolar && Number.isFinite(state.goals.solarKW)) ? state.goals.solarKW : 0;
+    if (safeSolarKW > 0) {
+      const solarDailyKWh = safeSolarKW * solarHours;
       const solarStorageKWh = Math.round(solarDailyKWh * 0.6); // Store 60% of daily solar
       
       // Take the larger of: peak demand backup OR solar storage
       recommendedBatteryKWh = Math.max(recommendedBatteryKWh, solarStorageKWh);
       
       // Battery power should handle solar input rate
-      const solarInputKW = Math.round(state.goals.solarKW * 0.8); // 80% of solar capacity
+      const solarInputKW = Math.round(safeSolarKW * 0.8); // 80% of solar capacity
       recommendedBatteryKW = Math.max(recommendedBatteryKW, solarInputKW);
       
       console.log('🔋 [recalculate] Solar storage adjustment:', {
-        solarKW: state.goals.solarKW,
+        solarKW: safeSolarKW,
         solarDailyKWh,
         solarStorageKWh,
         finalBatteryKWh: recommendedBatteryKWh,
@@ -495,32 +497,40 @@ export function useWizardState() {
     // Using 1.4x allows solar to fully charge BESS while serving load
     const recommendedSolarKW = Math.round(recommendedBatteryKW * SOLAR_TO_BESS_RATIO);
     
-    console.log('🔋 [recalculate] Final values:', {
-      baseBuildingLoadKW,
-      existingEVLoadKW,
-      newEVLoadKW,
-      totalPeakDemandKW,
-      bessRatio,
-      recommendedBackupHours,
-      recommendedBatteryKWh,
-      recommendedBatteryKW,
-      recommendedSolarKW,
-    });
+    // ⚠️ SAFETY CAP: Prevent any Infinity/NaN from escaping (max 50 MW systems)
+    const MAX_KW = 50000; // 50 MW
+    const MAX_KWH = 400000; // 400 MWh (8 hours at 50 MW)
+    const safeValue = (val: number, max: number) => 
+      Number.isFinite(val) ? Math.min(Math.max(0, val), max) : 0;
     
-    return {
-      baseBuildingLoadKW: Math.round(baseBuildingLoadKW * 10) / 10,
-      existingEVLoadKW,
-      newEVLoadKW,
-      totalPeakDemandKW: Math.round(totalPeakDemandKW * 10) / 10,
-      recommendedBatteryKWh,
-      recommendedBatteryKW,
-      recommendedSolarKW,
+    const finalValues = {
+      baseBuildingLoadKW: safeValue(Math.round(baseBuildingLoadKW * 10) / 10, MAX_KW),
+      existingEVLoadKW: safeValue(existingEVLoadKW, MAX_KW),
+      newEVLoadKW: safeValue(newEVLoadKW, MAX_KW),
+      totalPeakDemandKW: safeValue(Math.round(totalPeakDemandKW * 10) / 10, MAX_KW),
+      recommendedBatteryKWh: safeValue(recommendedBatteryKWh, MAX_KWH),
+      recommendedBatteryKW: safeValue(recommendedBatteryKW, MAX_KW),
+      recommendedSolarKW: safeValue(recommendedSolarKW, MAX_KW),
       recommendedBackupHours,
       // Financial estimates will be updated asynchronously via SSOT
       estimatedAnnualSavings: 0,
       estimatedPaybackYears: 0,
       estimatedCost: 0,
     };
+    
+    console.log('🔋 [recalculate] Final values:', {
+      baseBuildingLoadKW: finalValues.baseBuildingLoadKW,
+      existingEVLoadKW: finalValues.existingEVLoadKW,
+      newEVLoadKW: finalValues.newEVLoadKW,
+      totalPeakDemandKW: finalValues.totalPeakDemandKW,
+      bessRatio,
+      recommendedBackupHours,
+      recommendedBatteryKWh: finalValues.recommendedBatteryKWh,
+      recommendedBatteryKW: finalValues.recommendedBatteryKW,
+      recommendedSolarKW: finalValues.recommendedSolarKW,
+    });
+    
+    return finalValues;
   }, [calculateBuildingLoad, calculateEVLoad, calculateNewEVLoad, getRecommendedBackupHours]);
 
   // ────────────────────────────────────────────

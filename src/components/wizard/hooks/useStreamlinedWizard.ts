@@ -259,18 +259,25 @@ export function useStreamlinedWizard({
       const calc = centralizedState.calculated;
       
       // Only update if we have actual calculated values (not defaults)
-      if (calc.recommendedBatteryKW > 0) {
+      // ⚠️ GUARD: Ensure values are finite to prevent Infinity loop bug
+      if (calc.recommendedBatteryKW > 0 && Number.isFinite(calc.recommendedBatteryKW)) {
+        // Safety cap: max 50 MW for any single system
+        const MAX_VALUE = 50000; // 50 MW in kW
+        const safeBatteryKW = Math.min(calc.recommendedBatteryKW, MAX_VALUE);
+        const safeBatteryKWh = Math.min(calc.recommendedBatteryKWh, MAX_VALUE * 8);
+        const safeSolarKW = Math.min(calc.recommendedSolarKW || 0, MAX_VALUE);
+        
         console.log('🎚️ [SYNC] Initializing Section 4 sliders from calculated values:', {
-          batteryKW: calc.recommendedBatteryKW,
-          batteryKWh: calc.recommendedBatteryKWh,
-          solarKW: calc.recommendedSolarKW,
+          batteryKW: safeBatteryKW,
+          batteryKWh: safeBatteryKWh,
+          solarKW: safeSolarKW,
         });
         
         setWizardState((prev) => ({
           ...prev,
-          batteryKW: calc.recommendedBatteryKW,
-          batteryKWh: calc.recommendedBatteryKWh,
-          solarKW: calc.recommendedSolarKW || prev.solarKW,
+          batteryKW: safeBatteryKW,
+          batteryKWh: safeBatteryKWh,
+          solarKW: safeSolarKW || prev.solarKW,
         }));
       }
     }
