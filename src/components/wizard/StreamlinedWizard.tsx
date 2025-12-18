@@ -33,6 +33,7 @@ import {
   FacilityDetailsSectionV2,
   GoalsSection,
   GoalsSectionV2,
+  GoalsSectionV3,
   QuoteResultsSection,
   ScenarioComparison,
   ScenarioSection,
@@ -663,9 +664,9 @@ export default function StreamlinedWizard({
               } : undefined;
               
               // Show Goals section (Section 3 - user tells us what matters)
-              // Dec 17, 2025: Using GoalsSectionV2 with high-fidelity UI components
+              // Dec 17, 2025: Using GoalsSectionV3 - Clean refactor with stable slider interactions
               return wizard.currentSection === 3 ? (
-                <GoalsSectionV2
+                <GoalsSectionV3
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
                   currentSection={3}

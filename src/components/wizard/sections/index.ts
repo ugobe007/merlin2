@@ -16,6 +16,7 @@ export { FacilityDetailsSection } from './FacilityDetailsSection';
 export { FacilityDetailsSectionV2 } from './FacilityDetailsSectionV2';
 export { GoalsSection } from './GoalsSection';
 export { GoalsSectionV2 } from './GoalsSectionV2';
+export { GoalsSectionV3 } from './GoalsSectionV3'; // Clean refactor Dec 17, 2025
 // Using new redesigned quote template (Dec 14, 2025)
 export { QuoteResultsSection } from './QuoteResultsSectionNew';
 
