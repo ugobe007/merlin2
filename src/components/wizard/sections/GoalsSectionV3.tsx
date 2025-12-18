@@ -1,62 +1,33 @@
 /**
- * GOALS SECTION V3 - Clean Refactor December 17, 2025
- * ====================================================
- * 
- * COMPLETELY REBUILT from scratch to fix systematic bugs:
- * - NO overflow-hidden animations (breaks sliders)
- * - Simple conditional rendering (stable, no CSS hacks)
- * - Clean state management (no re-render issues)
- * - Professional, stable interactions
- * 
- * Architecture:
- * - Each equipment type in its own collapsible card
- * - Controlled via simple boolean state
- * - Sliders work without animation interference
+ * GoalsSectionV3.tsx
+ * Step 3: Goals & Preferences with Equipment Configuration
+ * REBUILT Dec 2025 - Proper event isolation for slider/select controls
  */
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronDown,
-  ChevronUp,
-  Sparkles, 
-  Car, 
-  Sun, 
-  Wind, 
-  Fuel, 
-  Zap, 
-  Info, 
-  Home,
-  CheckCircle,
-  Plus,
-  Minus
-} from 'lucide-react';
+import React, { useCallback, useMemo } from 'react';
+import { ChevronDown, ChevronUp, Zap, Sun, Wind, Fuel, Battery, Plug } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
-import { StepExplanation } from '../ui/StepExplanation';
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const GENERATOR_RESERVE_MARGIN = 1.25;
-
-const CRITICAL_LOAD_BY_INDUSTRY: Record<string, number> = {
-  'hotel': 0.50,
-  'hospital': 0.85,
-  'data-center': 1.0,
-  'manufacturing': 0.60,
-  'retail': 0.40,
-  'office': 0.35,
-  'warehouse': 0.35,
-  'car-wash': 0.25,
-  'ev-charging': 0.70,
-  'default': 0.50,
-};
-
-// ============================================================================
-// TYPES
-// ============================================================================
+// =============================================================================
+// PROPS INTERFACE
+// =============================================================================
+interface MerlinRecommendation {
+  solarKW: number;
+  windKW: number;
+  generatorKW: number;
+  batteryKW: number;
+  batteryKWh: number;
+  durationHours: number;
+  pcsKW: number;
+  transformerKVA: number;
+  totalProductionKW: number;
+  totalStorageKWh: number;
+  dailyProductionKWh: number;
+  annualSavings: number;
+  paybackYears: number;
+  roi10Year: number;
+  currency: string;
+}
 
 interface GoalsSectionV3Props {
   wizardState: WizardState;
@@ -64,606 +35,535 @@ interface GoalsSectionV3Props {
   currentSection: number;
   sectionRef?: (el: HTMLDivElement | null) => void;
   onBack: () => void;
-  onContinue: () => void;
   onHome?: () => void;
+  onContinue: () => void;
   onGenerateScenarios?: () => void;
   isGeneratingScenarios?: boolean;
   powerCoverage?: number;
   peakDemandKW?: number;
-  merlinRecommendation?: {
-    batteryKW: number;
-    batteryKWh: number;
-    solarKW: number;
-    paybackYears: number;
-    roi10Year: number;
-    currency: string;
-  };
+  merlinRecommendation?: MerlinRecommendation;
 }
 
-// ============================================================================
-// HELPER: Simple Number Input with +/- buttons (no slider issues)
-// ============================================================================
+// =============================================================================
+// EVENT ISOLATION - Prevents bubbling to parent EquipmentCard toggle
+// =============================================================================
+interface EventIsolatorProps {
+  children: React.ReactNode;
+  className?: string;
+}
 
+const EventIsolator: React.FC<EventIsolatorProps> = ({ children, className }) => {
+  const stopAll = useCallback((e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  return (
+    <div
+      className={className}
+      onClick={stopAll}
+      onMouseDown={stopAll}
+      onMouseUp={stopAll}
+      onPointerDown={stopAll}
+      onPointerUp={stopAll}
+      onTouchStart={stopAll}
+      onTouchEnd={stopAll}
+    >
+      {children}
+    </div>
+  );
+};
+
+// =============================================================================
+// NUMBER INPUT - Slider with text input
+// =============================================================================
 interface NumberInputProps {
   label: string;
   value: number;
-  onChange: (v: number) => void;
-  min?: number;
-  max?: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
   step?: number;
   unit?: string;
-  helpText?: string;
+  disabled?: boolean;
 }
 
-function NumberInput({ label, value, onChange, min = 0, max = 100, step = 1, unit = '', helpText }: NumberInputProps) {
-  const handleIncrement = () => {
-    const newVal = Math.min(max, value + step);
-    onChange(newVal);
-  };
-  
-  const handleDecrement = () => {
-    const newVal = Math.max(min, value - step);
-    onChange(newVal);
-  };
-  
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+const NumberInput: React.FC<NumberInputProps> = ({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  unit = '',
+  disabled = false,
+}) => {
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(Number(e.target.value));
-  };
-  
-  const formatValue = (v: number) => {
-    if (unit === 'kW' && v >= 1000) return `${(v / 1000).toFixed(1)} MW`;
-    return `${v.toLocaleString()} ${unit}`;
-  };
+  }, [onChange]);
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    if (!isNaN(val) && val >= min && val <= max) {
+      onChange(val);
+    }
+  }, [onChange, min, max]);
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <label className="text-sm font-medium text-gray-700">{label}</label>
-        <span className="text-lg font-bold text-[#6700b6]">{formatValue(value)}</span>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            value={value}
+            onChange={handleTextChange}
+            min={min}
+            max={max}
+            step={step}
+            disabled={disabled}
+            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded text-right
+                       disabled:bg-gray-100 disabled:text-gray-400"
+          />
+          {unit && <span className="text-sm text-gray-500 ml-1">{unit}</span>}
+        </div>
       </div>
-      {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
-      
-      {/* Slider + Buttons */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleDecrement}
-          disabled={value <= min}
-          className="w-10 h-10 flex items-center justify-center bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors border border-[#68BFFA]/40"
-        >
-          <Minus className="w-4 h-4 text-[#060F76]" />
-        </button>
-        
+      {/* Dedicated event capture container for slider */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <input
           type="range"
+          value={value}
+          onChange={handleSliderChange}
           min={min}
           max={max}
           step={step}
-          value={value}
-          onChange={handleSliderChange}
-          className="flex-1 h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#6700b6]"
+          disabled={disabled}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+                     disabled:cursor-not-allowed disabled:opacity-50
+                     [&::-webkit-slider-thumb]:appearance-none
+                     [&::-webkit-slider-thumb]:w-4
+                     [&::-webkit-slider-thumb]:h-4
+                     [&::-webkit-slider-thumb]:rounded-full
+                     [&::-webkit-slider-thumb]:bg-[#6700b6]
+                     [&::-webkit-slider-thumb]:cursor-pointer
+                     [&::-webkit-slider-thumb]:shadow-md
+                     [&::-moz-range-thumb]:w-4
+                     [&::-moz-range-thumb]:h-4
+                     [&::-moz-range-thumb]:rounded-full
+                     [&::-moz-range-thumb]:bg-[#6700b6]
+                     [&::-moz-range-thumb]:cursor-pointer
+                     [&::-moz-range-thumb]:border-0"
         />
-        
-        <button
-          type="button"
-          onClick={handleIncrement}
-          disabled={value >= max}
-          className="w-10 h-10 flex items-center justify-center bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors border border-[#68BFFA]/40"
-        >
-          <Plus className="w-4 h-4 text-[#060F76]" />
-        </button>
       </div>
-      
       <div className="flex justify-between text-xs text-gray-400">
-        <span>{min.toLocaleString()} {unit}</span>
-        <span>{max.toLocaleString()} {unit}</span>
+        <span>{min}{unit}</span>
+        <span>{max}{unit}</span>
       </div>
     </div>
   );
-}
+};
 
-// ============================================================================
-// HELPER: Equipment Card (collapsible section)
-// ============================================================================
-
+// =============================================================================
+// EQUIPMENT CARD - Expandable card with header/content separation
+// =============================================================================
 interface EquipmentCardProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
-  isEnabled: boolean;
-  onToggle: (enabled: boolean) => void;
+  enabled: boolean;
+  onToggle: () => void;
+  expanded: boolean;
+  onExpand: () => void;
   children: React.ReactNode;
-  recommended?: boolean;
+  accentColor?: string;
+  bgColor?: string;
 }
 
-function EquipmentCard({ icon, title, subtitle, isEnabled, onToggle, children, recommended }: EquipmentCardProps) {
+const EquipmentCard: React.FC<EquipmentCardProps> = ({
+  icon,
+  title,
+  subtitle,
+  enabled,
+  onToggle,
+  expanded,
+  onExpand,
+  children,
+  accentColor = '#6700b6',
+  bgColor = '#FED19F',
+}) => {
+  const handleHeaderClick = useCallback(() => {
+    if (enabled) {
+      onExpand();
+    } else {
+      onToggle();
+    }
+  }, [enabled, onExpand, onToggle]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleHeaderClick();
+    }
+  }, [handleHeaderClick]);
+
+  const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onToggle();
+  }, [onToggle]);
+
   return (
-    <div className={`rounded-2xl border-2 transition-colors ${
-      isEnabled ? 'border-[#6700b6] bg-white' : 'border-slate-200 bg-slate-50'
-    }`}>
-      {/* Header - Click to toggle */}
-      <button
-        type="button"
-        onClick={() => onToggle(!isEnabled)}
-        className="w-full p-4 flex items-center justify-between text-left"
+    <div
+      className={`rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+        enabled ? 'border-[#6700b6] shadow-lg' : 'border-gray-200'
+      }`}
+      style={{ backgroundColor: enabled ? `${bgColor}20` : 'white' }}
+    >
+      {/* Header - Clickable area for expand/collapse */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleHeaderClick}
+        onKeyDown={handleKeyDown}
+        className="w-full p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${isEnabled ? 'bg-[#6700b6]/10 text-[#6700b6]' : 'bg-slate-200 text-slate-500'}`}>
-            {icon}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-900">{title}</h3>
-              {recommended && (
-                <span className="px-2 py-0.5 bg-[#ffa600]/20 text-[#9d6200] text-xs font-medium rounded-full border border-[#ffa600]/40">
-                  Recommended
-                </span>
-              )}
-            </div>
-            {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
-          </div>
+        {/* Enable Checkbox */}
+        <EventIsolator>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={handleCheckboxChange}
+            className="w-5 h-5 rounded border-gray-300 text-[#6700b6] focus:ring-[#6700b6]"
+          />
+        </EventIsolator>
+
+        {/* Icon */}
+        <div
+          className={`p-2 rounded-lg ${enabled ? 'text-white' : 'text-gray-400 bg-gray-100'}`}
+          style={{ backgroundColor: enabled ? accentColor : undefined }}
+        >
+          {icon}
         </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Toggle indicator */}
-          <div className={`w-12 h-6 rounded-full transition-colors ${
-            isEnabled ? 'bg-[#6700b6]' : 'bg-slate-300'
-          }`}>
-            <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mt-0.5 ${
-              isEnabled ? 'translate-x-6 ml-0.5' : 'translate-x-0.5'
-            }`} />
-          </div>
-          
-          {isEnabled ? (
-            <ChevronUp className="w-5 h-5 text-[#6700b6]" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+
+        {/* Title & Subtitle */}
+        <div className="flex-1 text-left">
+          <h3 className={`font-semibold ${enabled ? 'text-gray-900' : 'text-gray-500'}`}>
+            {title}
+          </h3>
+          {subtitle && (
+            <p className="text-sm text-gray-500">{subtitle}</p>
           )}
         </div>
-      </button>
-      
-      {/* Content - Only render when enabled (simple conditional, no animation hacks) */}
-      {isEnabled && (
-        <div className="px-4 pb-4 pt-2 border-t border-slate-200">
+
+        {/* Expand/Collapse Icon */}
+        {enabled && (
+          <div className="text-gray-400">
+            {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        )}
+      </div>
+
+      {/* Content - NOT inside button, only shown when expanded */}
+      {enabled && expanded && (
+        <div className="px-4 pb-4 pt-2 border-t border-gray-100">
           {children}
         </div>
       )}
     </div>
   );
-}
+};
 
-// ============================================================================
-// HELPER: Simple Select
-// ============================================================================
-
-interface SelectOption {
-  value: string;
-  label: string;
-}
-
-interface SimpleSelectProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: SelectOption[];
-}
-
-function SimpleSelect({ label, value, onChange, options }: SimpleSelectProps) {
-  return (
-    <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 bg-white border border-slate-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#6700b6] focus:border-[#6700b6]"
-      >
-        {options.map(opt => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-// ============================================================================
+// =============================================================================
 // MAIN COMPONENT
-// ============================================================================
-
+// =============================================================================
 export function GoalsSectionV3({
   wizardState,
   setWizardState,
-  currentSection,
-  sectionRef,
-  onBack,
-  onContinue,
-  onHome,
-  onGenerateScenarios,
-  isGeneratingScenarios = false,
-  powerCoverage = 100,
-  peakDemandKW = 500,
-  merlinRecommendation,
 }: GoalsSectionV3Props) {
+  // ---------------------------------------------------------------------------
+  // Local state for card expansion
+  // ---------------------------------------------------------------------------
+  const [expandedCards, setExpandedCards] = React.useState<Record<string, boolean>>({
+    bess: true,
+    solar: false,
+    wind: false,
+    generator: false,
+    evChargers: false,
+  });
+
+  // ---------------------------------------------------------------------------
+  // Equipment toggle handlers (use WizardState field names)
+  // ---------------------------------------------------------------------------
+  const toggleSolar = useCallback(() => {
+    setWizardState((prev: WizardState) => ({ ...prev, wantsSolar: !prev.wantsSolar }));
+  }, [setWizardState]);
+
+  const toggleWind = useCallback(() => {
+    setWizardState((prev: WizardState) => ({ ...prev, wantsWind: !prev.wantsWind }));
+  }, [setWizardState]);
+
+  const toggleGenerator = useCallback(() => {
+    setWizardState((prev: WizardState) => ({ ...prev, wantsGenerator: !prev.wantsGenerator }));
+  }, [setWizardState]);
+
+  const toggleExistingEV = useCallback(() => {
+    setWizardState((prev: WizardState) => ({ ...prev, hasExistingEV: !prev.hasExistingEV }));
+  }, [setWizardState]);
+
+  const toggleExpanded = useCallback((key: string) => {
+    setExpandedCards((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Grid connection options (match WizardState type)
+  // ---------------------------------------------------------------------------
+  type GridConnectionType = 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   
-  // Calculate recommended values
-  const recommendations = useMemo(() => {
-    const criticalLoadPct = CRITICAL_LOAD_BY_INDUSTRY[wizardState.selectedIndustry || 'default'] || 0.5;
-    return {
-      solarKW: Math.round(peakDemandKW * 0.6),
-      windKW: Math.round(peakDemandKW * 0.2),
-      generatorKW: Math.round(peakDemandKW * criticalLoadPct * GENERATOR_RESERVE_MARGIN),
-    };
-  }, [peakDemandKW, wizardState.selectedIndustry]);
+  const gridOptions = useMemo(() => [
+    { value: 'on-grid', label: 'Grid-Connected (Standard)' },
+    { value: 'off-grid', label: 'Off-Grid / Island Mode' },
+    { value: 'limited', label: 'Limited Grid (Backup Only)' },
+  ], []);
 
-  // Format helpers
-  const formatKW = (kw: number) => kw >= 1000 ? `${(kw / 1000).toFixed(1)} MW` : `${Math.round(kw)} kW`;
-
-  // Calculate total EV load for display
-  const totalExistingEVLoadKW = (
-    (wizardState.existingEVL1 || 0) * 1.4 +
-    (wizardState.existingEVL2 || 0) * 11 +
-    (wizardState.existingEVL3 || 0) * 150
-  );
-  
-  const totalNewEVLoadKW = (
-    (wizardState.evChargersL2 || 0) * 11 +
-    (wizardState.evChargersDCFC || 0) * 150 +
-    (wizardState.evChargersHPC || 0) * 350
-  );
-
-  // Don't render if not on section 3
-  if (currentSection !== 3) return null;
-
+  // ---------------------------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------------------------
   return (
-    <div ref={sectionRef} className="min-h-[calc(100vh-120px)] p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
-        
-        {/* Merlin's Guidance Header */}
-        <StepExplanation
-          stepNumber={3}
-          totalSteps={7}
-          title="Configure Your Energy System"
-          description="Tell me about your existing equipment and what you'd like to add. I'll analyze your facility data to recommend the perfect energy solution."
-          estimatedTime="2-3 min"
-          showMerlin={true}
-          tips={[
-            "Toggle on the equipment you have or want - I'll optimize the sizing",
-            "Existing EV chargers add to your current load",
-            "Solar and wind can offset your electricity costs",
-            "Generator backup provides resilience during outages"
-          ]}
-          outcomes={[
-            "EV Charging",
-            "Solar Power",
-            "Wind Power",
-            "Generator Backup"
-          ]}
-        />
+    <div className="space-y-6">
+      {/* Section Header */}
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Equipment & Goals</h2>
+        <p className="text-gray-600 mt-1">
+          Configure your energy system components
+        </p>
+      </div>
 
-        {/* Equipment Cards */}
-        <div className="space-y-4">
-          
-          {/* ════════════════════════════════════════════════════════════════
-              EXISTING EV CHARGERS
-          ════════════════════════════════════════════════════════════════ */}
-          <EquipmentCard
-            icon={<Car className="w-5 h-5" />}
-            title="Existing EV Chargers"
-            subtitle="Already installed at your facility"
-            isEnabled={wizardState.hasExistingEV || false}
-            onToggle={(enabled) => setWizardState(prev => ({
-              ...prev,
-              hasExistingEV: enabled,
-              ...(enabled ? {} : { existingEVL1: 0, existingEVL2: 0, existingEVL3: 0 })
+      {/* Grid Connection */}
+      <div className="bg-gradient-to-r from-[#060F76]/5 to-[#6700b6]/5 rounded-xl p-4 mb-6">
+        <EventIsolator className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">Grid Connection Status</label>
+          <select
+            value={wizardState.gridConnection || 'on-grid'}
+            onChange={(e) => setWizardState((prev: WizardState) => ({ 
+              ...prev, 
+              gridConnection: e.target.value as GridConnectionType 
             }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                       bg-white focus:outline-none focus:ring-2 focus:ring-[#6700b6]/20 focus:border-[#6700b6]"
           >
-            <div className="space-y-4 pt-2">
-              <NumberInput
-                label="Level 1 Chargers (1.4 kW each)"
-                value={wizardState.existingEVL1 || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, existingEVL1: v }))}
-                min={0}
-                max={20}
-                step={1}
-                unit="units"
-                helpText="Standard 120V outlets"
-              />
-              <NumberInput
-                label="Level 2 Chargers (11 kW each)"
-                value={wizardState.existingEVL2 || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, existingEVL2: v }))}
-                min={0}
-                max={50}
-                step={1}
-                unit="units"
-                helpText="240V chargers - most common"
-              />
-              <NumberInput
-                label="DC Fast Chargers (150 kW each)"
-                value={wizardState.existingEVL3 || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, existingEVL3: v }))}
-                min={0}
-                max={20}
-                step={1}
-                unit="units"
-                helpText="High-power DC charging"
-              />
-              
-              {totalExistingEVLoadKW > 0 && (
-                <div className="p-3 bg-emerald-50 rounded-lg">
-                  <p className="text-sm text-emerald-700 font-medium">
-                    Total Existing EV Load: {formatKW(totalExistingEVLoadKW)}
-                  </p>
-                </div>
-              )}
-            </div>
-          </EquipmentCard>
+            {gridOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </EventIsolator>
+      </div>
 
-          {/* ════════════════════════════════════════════════════════════════
-              NEW EV CHARGERS
-          ════════════════════════════════════════════════════════════════ */}
-          <EquipmentCard
-            icon={<Car className="w-5 h-5" />}
-            title="Add New EV Chargers"
-            subtitle="Plan for future EV infrastructure"
-            isEnabled={wizardState.wantsEVCharging || false}
-            onToggle={(enabled) => setWizardState(prev => ({
-              ...prev,
-              wantsEVCharging: enabled,
-              ...(enabled ? {} : { evChargersL2: 0, evChargersDCFC: 0, evChargersHPC: 0 })
-            }))}
-          >
-            <div className="space-y-4 pt-2">
+      {/* Equipment Cards Stack */}
+      <div className="space-y-4">
+        {/* BESS Card - Always enabled, just configure size */}
+        <EquipmentCard
+          icon={<Battery size={24} />}
+          title="Battery Storage (BESS)"
+          subtitle="Energy storage for peak shaving & backup"
+          enabled={true}
+          onToggle={() => {}}
+          expanded={expandedCards.bess ?? true}
+          onExpand={() => toggleExpanded('bess')}
+          accentColor="#6700b6"
+          bgColor="#cc89ff"
+        >
+          <div className="space-y-4">
+            <EventIsolator>
               <NumberInput
-                label="Level 2 Chargers (11 kW each)"
-                value={wizardState.evChargersL2 || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, evChargersL2: v }))}
-                min={0}
-                max={50}
+                label="Battery Capacity"
+                value={wizardState.batteryKW || 500}
+                onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, batteryKW: val }))}
+                min={100}
+                max={10000}
+                step={100}
+                unit=" kW"
+              />
+            </EventIsolator>
+            <EventIsolator>
+              <NumberInput
+                label="Duration"
+                value={wizardState.durationHours || 4}
+                onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, durationHours: val }))}
+                min={1}
+                max={8}
                 step={1}
-                unit="units"
+                unit=" hrs"
               />
-              <NumberInput
-                label="DC Fast Chargers (150 kW each)"
-                value={wizardState.evChargersDCFC || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, evChargersDCFC: v }))}
-                min={0}
-                max={20}
-                step={1}
-                unit="units"
-              />
-              <NumberInput
-                label="High Power Chargers (350 kW each)"
-                value={wizardState.evChargersHPC || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, evChargersHPC: v }))}
-                min={0}
-                max={10}
-                step={1}
-                unit="units"
-                helpText="Ultra-fast charging for EVs"
-              />
-              
-              {totalNewEVLoadKW > 0 && (
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-700 font-medium">
-                    New EV Load: {formatKW(totalNewEVLoadKW)}
-                  </p>
-                </div>
-              )}
-            </div>
-          </EquipmentCard>
+            </EventIsolator>
+          </div>
+        </EquipmentCard>
 
-          {/* ════════════════════════════════════════════════════════════════
-              SOLAR
-          ════════════════════════════════════════════════════════════════ */}
-          <EquipmentCard
-            icon={<Sun className="w-5 h-5" />}
-            title="Solar Power"
-            subtitle="Reduce electricity costs with on-site generation"
-            isEnabled={wizardState.wantsSolar || false}
-            onToggle={(enabled) => setWizardState(prev => ({
-              ...prev,
-              wantsSolar: enabled,
-              solarKW: enabled ? (prev.solarKW || recommendations.solarKW) : 0
-            }))}
-            recommended={powerCoverage < 100}
-          >
-            <div className="space-y-4 pt-2">
-              <NumberInput
-                label="Solar System Size"
-                value={wizardState.solarKW || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, solarKW: v }))}
-                min={0}
-                max={Math.max(2000, Math.round(peakDemandKW * 1.5))}
-                step={25}
-                unit="kW"
-                helpText={`Recommended: ${formatKW(recommendations.solarKW)}`}
-              />
-              
-              {/* Solar canopy option */}
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <input
-                  type="checkbox"
-                  id="solarCanopy"
-                  checked={wizardState.wantsSolarCanopy || false}
-                  onChange={(e) => setWizardState(prev => ({ ...prev, wantsSolarCanopy: e.target.checked }))}
-                  className="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="solarCanopy" className="text-sm text-gray-700">
-                  Include solar parking canopy (premium option)
-                </label>
-              </div>
-            </div>
-          </EquipmentCard>
+        {/* Solar Card */}
+        <EquipmentCard
+          icon={<Sun size={24} />}
+          title="Solar PV"
+          subtitle="On-site solar generation"
+          enabled={wizardState.wantsSolar ?? false}
+          onToggle={toggleSolar}
+          expanded={expandedCards.solar ?? false}
+          onExpand={() => toggleExpanded('solar')}
+          accentColor="#ffa600"
+          bgColor="#ffd689"
+        >
+          <EventIsolator>
+            <NumberInput
+              label="Solar Capacity"
+              value={wizardState.solarKW || 500}
+              onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, solarKW: val }))}
+              min={50}
+              max={5000}
+              step={50}
+              unit=" kW"
+            />
+          </EventIsolator>
+        </EquipmentCard>
 
-          {/* ════════════════════════════════════════════════════════════════
-              WIND
-          ════════════════════════════════════════════════════════════════ */}
-          <EquipmentCard
-            icon={<Wind className="w-5 h-5" />}
-            title="Wind Power"
-            subtitle="Complements solar with 24/7 generation potential"
-            isEnabled={wizardState.wantsWind || false}
-            onToggle={(enabled) => setWizardState(prev => ({
-              ...prev,
-              wantsWind: enabled,
-              windTurbineKW: enabled ? (prev.windTurbineKW || recommendations.windKW) : 0
-            }))}
-          >
-            <div className="space-y-4 pt-2">
-              <NumberInput
-                label="Wind Turbine Capacity"
-                value={wizardState.windTurbineKW || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, windTurbineKW: v }))}
-                min={0}
-                max={Math.max(500, Math.round(peakDemandKW * 0.5))}
-                step={10}
-                unit="kW"
-              />
-            </div>
-          </EquipmentCard>
+        {/* Wind Card */}
+        <EquipmentCard
+          icon={<Wind size={24} />}
+          title="Wind Turbine"
+          subtitle="On-site wind generation"
+          enabled={wizardState.wantsWind ?? false}
+          onToggle={toggleWind}
+          expanded={expandedCards.wind ?? false}
+          onExpand={() => toggleExpanded('wind')}
+          accentColor="#68BFFA"
+          bgColor="#b3dffc"
+        >
+          <EventIsolator>
+            <NumberInput
+              label="Wind Capacity"
+              value={wizardState.windTurbineKW || 500}
+              onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, windTurbineKW: val }))}
+              min={50}
+              max={3000}
+              step={50}
+              unit=" kW"
+            />
+          </EventIsolator>
+        </EquipmentCard>
 
-          {/* ════════════════════════════════════════════════════════════════
-              BACKUP GENERATOR
-          ════════════════════════════════════════════════════════════════ */}
-          <EquipmentCard
-            icon={<Fuel className="w-5 h-5" />}
-            title="Backup Generator"
-            subtitle="Extended backup beyond battery duration"
-            isEnabled={wizardState.wantsGenerator || false}
-            onToggle={(enabled) => setWizardState(prev => ({
-              ...prev,
-              wantsGenerator: enabled,
-              generatorKW: enabled ? (prev.generatorKW || recommendations.generatorKW) : 0
-            }))}
-            recommended={powerCoverage < 100}
-          >
-            <div className="space-y-4 pt-2">
-              <SimpleSelect
-                label="Generator Type"
-                value={wizardState.generatorType || 'traditional'}
-                onChange={(v) => setWizardState(prev => ({ ...prev, generatorType: v as any }))}
-                options={[
-                  { value: 'traditional', label: 'Traditional Combustion' },
-                  { value: 'linear', label: 'Linear Generator (Mainspring)' },
-                ]}
-              />
-              
-              <SimpleSelect
-                label="Fuel Type"
-                value={wizardState.generatorFuel || 'natural-gas'}
-                onChange={(v) => setWizardState(prev => ({ ...prev, generatorFuel: v as any }))}
-                options={[
-                  { value: 'natural-gas', label: 'Natural Gas' },
-                  { value: 'diesel', label: 'Diesel' },
-                  { value: 'propane', label: 'Propane' },
-                  { value: 'dual-fuel', label: 'Dual Fuel' },
-                ]}
-              />
-              
+        {/* Generator Card */}
+        <EquipmentCard
+          icon={<Fuel size={24} />}
+          title="Backup Generator"
+          subtitle="Diesel/Natural gas backup power"
+          enabled={wizardState.wantsGenerator ?? false}
+          onToggle={toggleGenerator}
+          expanded={expandedCards.generator ?? false}
+          onExpand={() => toggleExpanded('generator')}
+          accentColor="#ef4444"
+          bgColor="#fecaca"
+        >
+          <div className="space-y-4">
+            <EventIsolator>
               <NumberInput
-                label="Generator Size"
-                value={wizardState.generatorKW || 0}
-                onChange={(v) => setWizardState(prev => ({ ...prev, generatorKW: v }))}
+                label="Generator Capacity"
+                value={wizardState.generatorKW || 500}
+                onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, generatorKW: val }))}
                 min={50}
                 max={5000}
                 step={50}
-                unit="kW"
-                helpText={`Recommended: ${formatKW(recommendations.generatorKW)}`}
+                unit=" kW"
               />
-            </div>
-          </EquipmentCard>
-
-          {/* ════════════════════════════════════════════════════════════════
-              GRID CONNECTION
-          ════════════════════════════════════════════════════════════════ */}
-          <div className="rounded-2xl border-2 border-[#060F76]/30 bg-white p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-[#060F76]/10 text-[#060F76]">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Grid Connection Status</h3>
-                <p className="text-sm text-gray-500">How reliable is your utility power?</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {[
-                { value: 'on-grid', label: 'Reliable', icon: '🔌' },
-                { value: 'limited', label: 'Limited', icon: '⚠️' },
-                { value: 'unreliable', label: 'Unreliable', icon: '🔴' },
-                { value: 'off-grid', label: 'Off-Grid', icon: '🏝️' },
-              ].map(option => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setWizardState(prev => ({ ...prev, gridConnection: option.value as any }))}
-                  className={`p-3 rounded-lg border-2 text-center transition-all ${
-                    wizardState.gridConnection === option.value
-                      ? 'border-[#6700b6] bg-[#6700b6]/10 text-[#6700b6]'
-                      : 'border-slate-200 bg-white text-gray-600 hover:border-[#68BFFA]'
-                  }`}
-                >
-                  <span className="text-xl block mb-1">{option.icon}</span>
-                  <span className="text-sm font-medium">{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* ════════════════════════════════════════════════════════════════
-            NAVIGATION
-        ════════════════════════════════════════════════════════════════ */}
-        <div className="mt-8 pt-6 border-t border-slate-200">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onBack}
-                className="flex items-center gap-2 px-5 py-3 bg-[#060F76] hover:bg-[#0815a9] text-white font-medium rounded-xl transition-colors border-2 border-[#4b59f5]"
+            </EventIsolator>
+            <EventIsolator className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Fuel Type</label>
+              <select
+                value={wizardState.generatorFuel || 'natural-gas'}
+                onChange={(e) => setWizardState((prev: WizardState) => ({ 
+                  ...prev, 
+                  generatorFuel: e.target.value as 'diesel' | 'natural-gas' | 'propane'
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                           bg-white focus:outline-none focus:ring-2 focus:ring-[#6700b6]/20 focus:border-[#6700b6]"
               >
-                <ChevronLeft className="w-5 h-5" />
-                Back
-              </button>
-              
-              {onHome && (
-                <button
-                  type="button"
-                  onClick={onHome}
-                  className="flex items-center gap-2 px-5 py-3 bg-[#68BFFA]/20 hover:bg-[#68BFFA]/40 text-[#060F76] font-medium rounded-xl transition-colors border border-[#68BFFA]"
-                >
-                  <Home className="w-5 h-5" />
-                  Home
-                </button>
-              )}
-            </div>
-            
-            <button
-              type="button"
-              onClick={() => {
-                if (onGenerateScenarios) onGenerateScenarios();
-                onContinue();
-              }}
-              disabled={isGeneratingScenarios}
-              className="flex items-center gap-2 px-6 py-3 bg-[#6700b6] hover:bg-[#7900d6] disabled:bg-[#6700b6]/50 text-white font-semibold rounded-xl transition-colors border-2 border-[#ad42ff]"
-            >
-              {isGeneratingScenarios ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  Next Step
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
+                <option value="natural-gas">Natural Gas</option>
+                <option value="diesel">Diesel</option>
+                <option value="propane">Propane</option>
+              </select>
+            </EventIsolator>
           </div>
-        </div>
+        </EquipmentCard>
 
+        {/* Existing EV Chargers Card */}
+        <EquipmentCard
+          icon={<Plug size={24} />}
+          title="Existing EV Chargers"
+          subtitle="Account for current charging infrastructure"
+          enabled={wizardState.hasExistingEV ?? false}
+          onToggle={toggleExistingEV}
+          expanded={expandedCards.evChargers ?? false}
+          onExpand={() => toggleExpanded('evChargers')}
+          accentColor="#22c55e"
+          bgColor="#bbf7d0"
+        >
+          <div className="space-y-4">
+            <EventIsolator>
+              <NumberInput
+                label="Level 2 Chargers (7kW each)"
+                value={wizardState.existingEVL2 || 0}
+                onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, existingEVL2: val }))}
+                min={0}
+                max={50}
+                step={1}
+                unit=" units"
+              />
+            </EventIsolator>
+            <EventIsolator>
+              <NumberInput
+                label="DC Fast Chargers (50kW each)"
+                value={wizardState.existingEVL3 || 0}
+                onChange={(val) => setWizardState((prev: WizardState) => ({ ...prev, existingEVL3: val }))}
+                min={0}
+                max={20}
+                step={1}
+                unit=" units"
+              />
+            </EventIsolator>
+          </div>
+        </EquipmentCard>
+      </div>
+
+      {/* Summary Footer */}
+      <div className="mt-6 p-4 bg-gradient-to-r from-[#6700b6]/10 to-[#ffa600]/10 rounded-xl">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="text-[#6700b6]" size={20} />
+          <span className="font-semibold text-gray-900">Configuration Summary</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+          <div className="text-gray-600">
+            <span className="font-medium">BESS:</span> {wizardState.batteryKW || 500} kW / {wizardState.durationHours || 4}h
+          </div>
+          {wizardState.wantsSolar && (
+            <div className="text-gray-600">
+              <span className="font-medium">Solar:</span> {wizardState.solarKW || 500} kW
+            </div>
+          )}
+          {wizardState.wantsWind && (
+            <div className="text-gray-600">
+              <span className="font-medium">Wind:</span> {wizardState.windTurbineKW || 500} kW
+            </div>
+          )}
+          {wizardState.wantsGenerator && (
+            <div className="text-gray-600">
+              <span className="font-medium">Generator:</span> {wizardState.generatorKW || 500} kW
+            </div>
+          )}
+          {wizardState.hasExistingEV && (
+            <div className="text-gray-600">
+              <span className="font-medium">EV:</span> {wizardState.existingEVL2 || 0} L2, {wizardState.existingEVL3 || 0} DCFC
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
