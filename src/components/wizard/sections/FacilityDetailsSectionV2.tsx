@@ -571,7 +571,7 @@ export function FacilityDetailsSectionV2({
               <div className="flex gap-3">
                 <button
                   onClick={onBack}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#060F76] border-2 border-[#6700b6] hover:bg-[#0a1a9a] text-white font-bold rounded-xl transition-all"
                 >
                   <ChevronLeft className="w-5 h-5" />
                   Back
@@ -579,10 +579,9 @@ export function FacilityDetailsSectionV2({
                 
                 <button
                   onClick={onHome || onBack} // Home navigates to vertical landing page
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 hover:text-white rounded-xl border border-slate-600 transition-all"
+                  className="flex items-center justify-center w-12 h-12 bg-[#060F76] border-2 border-[#6700b6] hover:bg-[#0a1a9a] text-white rounded-xl transition-all"
                 >
                   <Home className="w-5 h-5" />
-                  Home
                 </button>
               </div>
               
@@ -597,7 +596,7 @@ export function FacilityDetailsSectionV2({
                   onContinue();
                 }}
                 disabled={!isFormComplete()}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="flex items-center gap-2 px-8 py-4 bg-[#6700b6] border-2 border-[#ffa600] hover:bg-[#7a00d4] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xl rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
                 Next Step
                 <ChevronRight className="w-5 h-5" />

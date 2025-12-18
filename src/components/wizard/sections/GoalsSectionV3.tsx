@@ -144,16 +144,16 @@ const NumberInput: React.FC<NumberInputProps> = ({
             type="button"
             onClick={handleDecrement}
             disabled={disabled || value <= min}
-            className="w-8 h-8 rounded-lg bg-[#6700b6]/60 hover:bg-[#6700b6] 
+            className="w-8 h-8 rounded-lg bg-[#68BFFA]/40 hover:bg-[#68BFFA]/70 
                        text-white font-bold text-xl flex items-center justify-center
-                       border border-[#cc89ff]/40 transition-all
+                       border border-[#68BFFA]/60 transition-all
                        disabled:opacity-40 disabled:cursor-not-allowed"
           >
             −
           </button>
           
           {/* Value Display */}
-          <div className="flex items-center bg-[#060F76]/60 rounded-lg border border-[#ffa600]/40 px-3 py-1">
+          <div className="flex items-center bg-[#060F76]/60 rounded-lg border-2 border-[#ffa600]/50 px-3 py-1">
             <input
               type="number"
               value={value}
@@ -174,9 +174,9 @@ const NumberInput: React.FC<NumberInputProps> = ({
             type="button"
             onClick={handleIncrement}
             disabled={disabled || value >= max}
-            className="w-8 h-8 rounded-lg bg-[#6700b6]/60 hover:bg-[#6700b6] 
+            className="w-8 h-8 rounded-lg bg-[#68BFFA]/40 hover:bg-[#68BFFA]/70 
                        text-white font-bold text-xl flex items-center justify-center
-                       border border-[#cc89ff]/40 transition-all
+                       border border-[#68BFFA]/60 transition-all
                        disabled:opacity-40 disabled:cursor-not-allowed"
           >
             +
@@ -201,7 +201,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
           step={step}
           disabled={disabled}
           className="w-full h-3 rounded-full appearance-none cursor-pointer
-                     bg-[#6700b6]/50 
+                     bg-[#68BFFA]/30 
                      disabled:cursor-not-allowed disabled:opacity-50
                      [&::-webkit-slider-thumb]:appearance-none
                      [&::-webkit-slider-thumb]:w-6
@@ -225,7 +225,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
       </div>
 
       {/* Min/Max Labels */}
-      <div className="flex justify-between text-sm text-[#cc89ff]">
+      <div className="flex justify-between text-sm text-[#68BFFA]">
         <span>{min.toLocaleString()}{unit}</span>
         <span>{max.toLocaleString()}{unit}</span>
       </div>
@@ -244,6 +244,7 @@ interface EquipmentCardProps {
   onToggle: () => void;
   expanded: boolean;
   onExpand: () => void;
+  onForceExpand?: () => void; // NEW: Force expand to true (used when enabling disabled card)
   children: React.ReactNode;
   iconBgColor?: string;
   alwaysEnabled?: boolean;
@@ -258,32 +259,27 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
   onToggle,
   expanded,
   onExpand,
+  onForceExpand,
   children,
   iconBgColor = 'bg-[#6700b6]',
   alwaysEnabled = false,
   recommended = false,
 }) => {
-  const handleHeaderClick = useCallback(() => {
-    if (alwaysEnabled) {
-      // BESS card - always enabled, just toggle expand
-      onExpand();
-    } else if (enabled) {
-      // Card is enabled - toggle expand to show/hide config
-      onExpand();
-    } else {
-      // Card is disabled - ENABLE IT AND EXPAND IT
-      // This is the fix: clicking a disabled card should enable AND expand
-      onToggle();
-      onExpand(); // Also expand to show configuration immediately
-    }
-  }, [alwaysEnabled, enabled, onExpand, onToggle]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleHeaderClick();
+  // Only expand/collapse when checkbox is clicked
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!enabled) {
+      onToggle();
+      if (onForceExpand) {
+        onForceExpand();
+      } else {
+        onExpand();
+      }
+    } else {
+      onExpand();
     }
-  }, [handleHeaderClick]);
+  };
 
   const isActive = alwaysEnabled || enabled;
 
@@ -291,17 +287,13 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
     <div
       className={`rounded-xl border-2 transition-all duration-200 overflow-hidden
         ${isActive 
-          ? 'bg-[#6700b6]/20 border-[#6700b6] shadow-lg shadow-[#6700b6]/20' 
-          : 'bg-[#060F76]/30 border-[#6700b6]/30 hover:border-[#6700b6]/50'
+          ? 'bg-gradient-to-br from-[#060F76]/40 to-[#0a1a9a]/30 border-[#ffa600]/60 shadow-lg shadow-[#ffa600]/20' 
+          : 'bg-[#060F76]/30 border-[#6700b6]/30 hover:border-[#ffa600]/50'
         }`}
     >
       {/* Header */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={handleHeaderClick}
-        onKeyDown={handleKeyDown}
-        className="w-full p-4 flex items-center gap-4 cursor-pointer hover:bg-[#6700b6]/10 transition-colors"
+        className="w-full p-4 flex items-center gap-4 select-none"
       >
         {/* Enable Checkbox */}
         {!alwaysEnabled && (
@@ -310,9 +302,9 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
               className={`w-6 h-6 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all
                 ${enabled 
                   ? 'bg-[#ffa600] border-[#FED19F]' 
-                  : 'bg-[#060F76]/50 border-[#6700b6]/50 hover:border-[#cc89ff]'
+                  : 'bg-[#060F76]/50 border-[#68BFFA]/50 hover:border-[#68BFFA]'
                 }`}
-              onClick={(e) => { e.stopPropagation(); onToggle(); }}
+              onClick={handleCheckboxClick}
             >
               {enabled && <Check size={16} className="text-[#060F76]" strokeWidth={3} />}
             </div>
@@ -349,9 +341,12 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
         )}
       </div>
 
-      {/* Content */}
+      {/* Content - stop propagation so clicks don't collapse the card */}
       {isActive && expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-[#6700b6]/30">
+        <div 
+          className="px-4 pb-4 pt-2 border-t border-[#6700b6]/30"
+          onClick={(e) => e.stopPropagation()}
+        >
           {children}
         </div>
       )}
@@ -376,8 +371,8 @@ const GridPill: React.FC<GridPillProps> = ({ icon, label, selected, onClick }) =
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all flex-1
       ${selected 
-        ? 'bg-[#6700b6] border-[#ffa600] text-white shadow-lg shadow-[#6700b6]/30' 
-        : 'bg-[#060F76]/30 border-[#6700b6]/40 text-[#cc89ff] hover:border-[#6700b6] hover:bg-[#6700b6]/20'
+        ? 'bg-gradient-to-r from-[#68BFFA] to-[#4ba3e8] border-[#ffa600] text-white shadow-lg shadow-[#68BFFA]/40' 
+        : 'bg-[#060F76]/30 border-[#68BFFA]/40 text-[#68BFFA] hover:border-[#68BFFA] hover:bg-[#68BFFA]/20'
       }`}
   >
     {icon}
@@ -430,6 +425,11 @@ export function GoalsSectionV3({
 
   const toggleExpanded = useCallback((key: string) => {
     setExpandedCards((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  // Force expand a card (set to true, don't toggle)
+  const forceExpand = useCallback((key: string) => {
+    setExpandedCards((prev) => ({ ...prev, [key]: true }));
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -489,13 +489,13 @@ export function GoalsSectionV3({
         {/* ================================================================= */}
         {/* GRID CONNECTION STATUS - 4 Pill Buttons */}
         {/* ================================================================= */}
-        <div className="bg-[#060F76]/40 rounded-xl p-5 border border-[#6700b6]/40">
+        <div className="bg-gradient-to-r from-[#060F76]/50 to-[#0a1a9a]/40 rounded-xl p-5 border-2 border-[#68BFFA]/40 shadow-lg shadow-[#68BFFA]/10">
           <div className="mb-4">
             <h3 className="text-white font-bold text-lg flex items-center gap-2">
               <Zap className="text-[#ffa600]" size={20} />
               Grid Connection Status
             </h3>
-            <p className="text-[#cc89ff] text-sm mt-1">How reliable is your utility power?</p>
+            <p className="text-[#68BFFA] text-sm mt-1">How reliable is your utility power?</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {gridOptions.map((opt) => (
@@ -528,7 +528,7 @@ export function GoalsSectionV3({
             onToggle={() => {}}
             expanded={expandedCards.bess ?? true}
             onExpand={() => toggleExpanded('bess')}
-            iconBgColor="bg-[#6700b6]"
+            iconBgColor="bg-gradient-to-r from-[#ffa600] to-[#ff8c00]"
             alwaysEnabled={true}
           >
             <div className="space-y-6 pt-2">
@@ -573,6 +573,7 @@ export function GoalsSectionV3({
             onToggle={toggleSolar}
             expanded={expandedCards.solar ?? false}
             onExpand={() => toggleExpanded('solar')}
+            onForceExpand={() => forceExpand('solar')}
             iconBgColor="bg-[#ffa600]"
             recommended={true}
           >
@@ -606,6 +607,7 @@ export function GoalsSectionV3({
             onToggle={toggleWind}
             expanded={expandedCards.wind ?? false}
             onExpand={() => toggleExpanded('wind')}
+            onForceExpand={() => forceExpand('wind')}
             iconBgColor="bg-[#68BFFA]"
           >
             <div className="pt-2">
@@ -632,6 +634,7 @@ export function GoalsSectionV3({
             onToggle={toggleGenerator}
             expanded={expandedCards.generator ?? false}
             onExpand={() => toggleExpanded('generator')}
+            onForceExpand={() => forceExpand('generator')}
             iconBgColor="bg-red-500"
             recommended={wizardState.gridConnection === 'unreliable' || wizardState.gridConnection === 'limited'}
           >
@@ -678,6 +681,7 @@ export function GoalsSectionV3({
             onToggle={toggleExistingEV}
             expanded={expandedCards.existingEV ?? false}
             onExpand={() => toggleExpanded('existingEV')}
+            onForceExpand={() => forceExpand('existingEV')}
             iconBgColor="bg-[#22c55e]"
           >
             <div className="space-y-6 pt-2">
@@ -717,19 +721,19 @@ export function GoalsSectionV3({
         {/* ================================================================= */}
         {/* CONFIGURATION SUMMARY */}
         {/* ================================================================= */}
-        <div className="bg-gradient-to-r from-[#6700b6]/40 to-[#060F76]/40 rounded-xl p-5 border border-[#ffa600]/30">
+        <div className="bg-gradient-to-r from-[#060F76]/50 via-[#0a1a9a]/40 to-[#68BFFA]/20 rounded-xl p-5 border-2 border-[#68BFFA]/40 shadow-lg shadow-[#68BFFA]/10">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="text-[#ffa600]" size={24} />
             <span className="font-bold text-xl text-white">Configuration Summary</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* BESS - Always shown */}
-            <div className="bg-[#6700b6]/30 rounded-lg p-3 border border-[#6700b6]/40">
-              <span className="text-[#cc89ff] text-sm">Battery Storage</span>
-              <p className="text-[#ffa600] font-bold text-lg">
+            <div className="bg-[#ffa600]/15 rounded-lg p-3 border border-[#ffa600]/40">
+              <span className="text-[#ffa600] text-sm">Battery Storage</span>
+              <p className="text-white font-bold text-lg">
                 {wizardState.batteryKW || 500} kW / {wizardState.durationHours || 4}h
               </p>
-              <p className="text-[#cc89ff] text-xs">
+              <p className="text-[#FED19F] text-xs">
                 {((wizardState.batteryKW || 500) * (wizardState.durationHours || 4)).toLocaleString()} kWh
               </p>
             </div>
@@ -771,8 +775,8 @@ export function GoalsSectionV3({
             )}
             
             {/* Grid Status */}
-            <div className="bg-[#060F76]/40 rounded-lg p-3 border border-[#6700b6]/40">
-              <span className="text-[#cc89ff] text-sm">Grid Status</span>
+            <div className="bg-[#68BFFA]/10 rounded-lg p-3 border border-[#68BFFA]/40">
+              <span className="text-[#68BFFA] text-sm">Grid Status</span>
               <p className="text-white font-bold text-lg capitalize">
                 {(wizardState.gridConnection || 'on-grid').replace('-', ' ')}
               </p>
@@ -783,16 +787,16 @@ export function GoalsSectionV3({
         {/* ================================================================= */}
         {/* NAVIGATION BUTTONS (REQUIRED) */}
         {/* ================================================================= */}
-        <div className="flex items-center justify-between pt-6 border-t border-[#6700b6]/30">
+        <div className="flex items-center justify-between pt-6 border-t border-[#68BFFA]/30">
           {/* Left side: Back + Home */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onBack}
               className="flex items-center gap-2 px-5 py-3 rounded-xl
-                         bg-[#060F76]/50 border-2 border-[#6700b6]/40
+                         bg-[#060F76]/50 border-2 border-[#68BFFA]/40
                          text-white font-semibold
-                         hover:bg-[#6700b6]/30 hover:border-[#6700b6] transition-all"
+                         hover:bg-[#68BFFA]/20 hover:border-[#68BFFA] transition-all"
             >
               <ArrowLeft size={18} />
               Back
@@ -803,9 +807,9 @@ export function GoalsSectionV3({
                 type="button"
                 onClick={onHome}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl
-                           bg-[#060F76]/50 border-2 border-[#6700b6]/40
+                           bg-[#060F76]/50 border-2 border-[#68BFFA]/40
                            text-white font-semibold
-                           hover:bg-[#6700b6]/30 hover:border-[#6700b6] transition-all"
+                           hover:bg-[#68BFFA]/20 hover:border-[#68BFFA] transition-all"
               >
                 <Home size={18} />
               </button>
@@ -816,12 +820,12 @@ export function GoalsSectionV3({
           <button
             type="button"
             onClick={onContinue}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl
-                       bg-gradient-to-r from-[#6700b6] to-[#4b00a0]
-                       border-2 border-[#ffa600]/50
-                       text-white font-bold text-lg
-                       hover:from-[#7a00d4] hover:to-[#5a00b8]
-                       hover:border-[#ffa600] hover:shadow-lg hover:shadow-[#6700b6]/30
+            className="flex items-center gap-2 px-8 py-4 rounded-xl
+                       bg-gradient-to-r from-[#ffa600] to-[#ff8c00]
+                       border-2 border-[#FED19F]/50
+                       text-[#060F76] font-black text-lg
+                       hover:from-[#ffb833] hover:to-[#ffa600]
+                       hover:border-white hover:shadow-lg hover:shadow-[#ffa600]/40
                        transition-all"
           >
             Next Step

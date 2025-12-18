@@ -72,7 +72,7 @@ export function ScenarioSectionV2({
 
   // Dec 16, 2025: ScenarioSectionV2 is now Section 5 (after Magic Fit)
   // It only renders when currentSection matches what's passed from parent
-  const SECTION_NUMBER = 5; // This component is Section 5 in the wizard flow
+  const SECTION_NUMBER = 6; // This component is Section 6 in the wizard flow (Dec 17, 2025)
   
   // Show explainer on first visit (disabled - AcceptCustomizeModal already explained)
   useEffect(() => {

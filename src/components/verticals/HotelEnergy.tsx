@@ -69,6 +69,8 @@ interface HotelInputs {
   hasEventCenter: boolean;      // Event center checkbox
   hasRestaurant: boolean;       // Restaurant checkbox
   restaurantCount: number;      // If yes, how many restaurants
+  hasKitchens: boolean;         // Commercial kitchens
+  kitchenCount: number;         // Number of kitchens
   hasPool: boolean;             // Pool checkbox
   hasIndoorPool: boolean;       // Indoor pool option
   hasOutdoorPool: boolean;      // Outdoor pool option
@@ -82,7 +84,9 @@ interface HotelInputs {
   hasSpa: boolean;
   hasFitnessCenter: boolean;
   hasEVCharging: boolean;
-  evChargerCount: number;
+  evChargerCount: number;       // Level 2 chargers (11kW each)
+  dcfcChargerCount: number;     // DC Fast Chargers (150kW each)
+  hpcChargerCount: number;      // High Power Chargers (350kW each)
   hasLaundry: boolean;
   laundryMachineCount: number;
   laundryType: 'commercial' | 'regular';
@@ -560,6 +564,8 @@ export default function HotelEnergy() {
     hasEventCenter: false,
     hasRestaurant: true,
     restaurantCount: 1,
+    hasKitchens: false,
+    kitchenCount: 0,
     hasPool: true,
     hasIndoorPool: false,
     hasOutdoorPool: true,
@@ -571,10 +577,12 @@ export default function HotelEnergy() {
     
     // STEP 5: Additional amenities
     hasSpa: false,
-    hasFitnessCenter: true,
+    hasFitnessCenter: false,
     hasEVCharging: false,
-    evChargerCount: 4,
-    hasLaundry: true,
+    evChargerCount: 0,  // Default to 0, user must select
+    dcfcChargerCount: 0,
+    hpcChargerCount: 0,
+    hasLaundry: false,
     laundryMachineCount: 6,
     laundryType: 'commercial',
     elevatorCount: 2,
@@ -644,8 +652,16 @@ export default function HotelEnergy() {
   // How Merlin Works Modal
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   
+  // State for solar (moved before useMemo that uses it)
+  const [hasSolar, setHasSolar] = useState(false);
+  const [solarKW, setSolarKW] = useState(100);
+  
   // Hero inline estimate - calculated from ALL inputs (Dec 2025 - comprehensive calculation)
   const heroEstimate = React.useMemo(() => {
+    // Get state-specific rates for demand charge savings
+    const stateData = STATE_RATES[inputs.state] || STATE_RATES['Other'];
+    const stateMultiplier = stateData.rate / 0.12; // Normalize to Florida baseline
+    
     // Derive hotel class from room count (same logic as UI display)
     const derivedClass: 'luxury' | 'upscale' | 'midscale' | 'economy' = 
       inputs.numberOfRooms > 400 ? 'luxury' :
@@ -666,11 +682,36 @@ export default function HotelEnergy() {
     baseSavings += inputs.squareFootage * sqftFactor;
     
     // Add amenity savings (high-draw equipment benefits most from peak shaving)
-    if (inputs.hasPool) baseSavings += 3500; // Pool pumps, heating
-    if (inputs.hasRestaurant) baseSavings += 4500; // Kitchen equipment, refrigeration
+    // Pool savings - indoor pools use more energy (heating), both = bonus
+    if (inputs.hasIndoorPool && inputs.hasOutdoorPool) {
+      baseSavings += 5500; // Both pools = more savings
+    } else if (inputs.hasIndoorPool) {
+      baseSavings += 4500; // Indoor pool = higher energy (heating)
+    } else if (inputs.hasOutdoorPool || inputs.hasPool) {
+      baseSavings += 3500; // Outdoor pool = pumps, filtration
+    }
+    
+    if (inputs.hasRestaurant) baseSavings += 4500 + (inputs.restaurantCount - 1) * 2500; // Kitchen equipment, refrigeration
+    if (inputs.hasKitchens) baseSavings += inputs.kitchenCount * 3000; // Commercial kitchens
     if (inputs.hasSpa) baseSavings += 3000; // HVAC, hot tubs
+    if (inputs.hasFitnessCenter) baseSavings += 1500; // Gym equipment, HVAC
+    if (inputs.hasConferenceCenter) baseSavings += 2500; // A/V equipment, HVAC
     if (inputs.hasLaundry) baseSavings += 2500; // Industrial washers/dryers
-    if (inputs.hasEVCharging) baseSavings += 2000; // EV charger demand
+    
+    // EV charger savings - based on actual charger count and type (all types)
+    if (inputs.hasEVCharging) {
+      const totalChargers = inputs.evChargerCount + inputs.dcfcChargerCount + inputs.hpcChargerCount;
+      if (totalChargers > 0) {
+        // L2 chargers (11kW each), DCFC (150kW each), HPC (350kW each)
+        const l2Power = inputs.evChargerCount * 11;
+        const dcfcPower = inputs.dcfcChargerCount * 150;
+        const hpcPower = inputs.hpcChargerCount * 350;
+        const totalEVPower = l2Power + dcfcPower + hpcPower;
+        // Demand charge savings: 40% peak reduction * demand charge * 12 months
+        const evDemandSavings = totalEVPower * stateData.demandCharge * 0.4 * 12;
+        baseSavings += Math.round(evDemandSavings);
+      }
+    }
     
     // Add elevator savings (each elevator ~$800/yr in demand charge savings)
     baseSavings += inputs.elevatorCount * 800;
@@ -686,9 +727,21 @@ export default function HotelEnergy() {
     const certificationMultiplier = inputs.isEnergyEfficient ? 0.85 : 1.0; // Certified = 15% lower baseline
     baseSavings *= hvacMultiplier * lightingMultiplier * certificationMultiplier;
     
+    // Apply state multiplier (higher electricity rates = more savings)
+    baseSavings *= stateMultiplier;
+    
     // Adjust for laundry type (commercial = higher power = more savings)
     if (inputs.hasLaundry && inputs.laundryType === 'commercial') {
       baseSavings += inputs.laundryMachineCount * 200; // Commercial machines add more savings
+    }
+    
+    // Add solar savings if user selected solar (Dec 2025)
+    // Solar typically offsets 20-30% of hotel electricity usage
+    // At 4 sun-hours/day average: solarKW * 4h * 365 * rate * 0.25 (net metering factor)
+    if (hasSolar && solarKW > 0) {
+      const solarAnnualKWh = solarKW * 4 * 365; // ~1,460 kWh per kW installed
+      const solarSavings = solarAnnualKWh * stateData.rate * 0.25; // Net metering typically 25% effective
+      baseSavings += Math.round(solarSavings);
     }
     
     const savings = Math.round(baseSavings);
@@ -700,7 +753,7 @@ export default function HotelEnergy() {
     else if (savings > 50000) payback -= 0.2;
     
     return { savings, payback: Math.round(payback * 10) / 10, hotelClass: derivedClass };
-  }, [inputs.numberOfRooms, inputs.squareFootage, inputs.hasPool, inputs.hasRestaurant, inputs.hasSpa, inputs.hasLaundry, inputs.hasEVCharging, inputs.elevatorCount, inputs.storageHours, inputs.hvacRating, inputs.lightingEfficiency, inputs.isEnergyEfficient, inputs.laundryType, inputs.laundryMachineCount]);
+  }, [inputs.numberOfRooms, inputs.squareFootage, inputs.hasPool, inputs.hasIndoorPool, inputs.hasOutdoorPool, inputs.hasRestaurant, inputs.restaurantCount, inputs.hasKitchens, inputs.kitchenCount, inputs.hasSpa, inputs.hasFitnessCenter, inputs.hasConferenceCenter, inputs.hasLaundry, inputs.hasEVCharging, inputs.evChargerCount, inputs.dcfcChargerCount, inputs.hpcChargerCount, inputs.elevatorCount, inputs.storageHours, inputs.hvacRating, inputs.lightingEfficiency, inputs.isEnergyEfficient, inputs.laundryType, inputs.laundryMachineCount, inputs.state, hasSolar, solarKW]);
   
   // Calculate quote when inputs change
   useEffect(() => {
@@ -762,10 +815,6 @@ export default function HotelEnergy() {
   };
   
   const { peakKW, demandChargeImpact } = calculateHotelPower(inputs);
-  
-  // State for solar
-  const [hasSolar, setHasSolar] = useState(false);
-  const [solarKW, setSolarKW] = useState(100);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-violet-900">
@@ -841,14 +890,14 @@ export default function HotelEnergy() {
           {/* Two-Panel Calculator Layout - LARGER & BALANCED */}
           <div id="hero-panel" className="grid lg:grid-cols-2 gap-5 items-stretch">
             
-            {/* LEFT PANEL: Hotel Details - LARGER INPUTS */}
-            <div className="bg-slate-800/50 backdrop-blur-md rounded-3xl p-6 border border-slate-500/40 shadow-2xl">
+            {/* LEFT PANEL: Hotel Details - MERLIN THEMED */}
+            <div className="bg-gradient-to-br from-slate-800/60 via-[#060F76]/30 to-slate-800/60 backdrop-blur-md rounded-3xl p-6 border-2 border-[#68BFFA]/40 shadow-2xl shadow-[#6700b6]/20">
               {/* Header */}
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6700b6] to-[#4b00a0] flex items-center justify-center shadow-lg shadow-[#6700b6]/40 border-2 border-[#ffa600]/50">
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-black text-white">Your Hotel Details</h3>
+                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-[#68BFFA]">Your Hotel Details</h3>
               </div>
 
               {/* Location - Full Width */}
@@ -857,13 +906,13 @@ export default function HotelEnergy() {
                 <select
                   value={inputs.state}
                   onChange={(e) => setInputs({ ...inputs, state: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-base font-semibold focus:border-cyan-400 transition-colors"
+                  className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-base font-semibold focus:border-[#ffa600] transition-colors"
                 >
                   {Object.keys(STATE_RATES).map((state) => (
                     <option key={state} value={state} className="bg-slate-800">{state}</option>
                   ))}
                 </select>
-                <p className="text-sm text-cyan-400 mt-1.5 font-medium">
+                <p className="text-sm text-[#ffa600] mt-1.5 font-medium">
                   ${(STATE_RATES[inputs.state]?.rate || 0.12).toFixed(2)}/kWh • ${STATE_RATES[inputs.state]?.demandCharge || 12}/kW demand
                 </p>
               </div>
@@ -873,24 +922,31 @@ export default function HotelEnergy() {
                 <div>
                   <label className="text-gray-300 text-sm font-semibold mb-1.5 block">🛏️ Guest Rooms</label>
                   <input
-                    type="number"
-                    value={inputs.numberOfRooms}
-                    onChange={(e) => setInputs({ ...inputs, numberOfRooms: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-cyan-400 transition-colors"
+                    type="text"
+                    inputMode="numeric"
+                    value={inputs.numberOfRooms || ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 3); // Max 3 digits (999)
+                      setInputs({ ...inputs, numberOfRooms: parseInt(val) || 0 });
+                    }}
+                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-[#ffa600] transition-colors"
                     placeholder="150"
+                    maxLength={3}
                   />
                 </div>
                 <div>
                   <label className="text-gray-300 text-sm font-semibold mb-1.5 block">📐 Sq Footage</label>
                   <input
-                    type="number"
-                    value={inputs.squareFootage}
+                    type="text"
+                    inputMode="numeric"
+                    value={inputs.squareFootage ? inputs.squareFootage.toLocaleString() : ''}
                     onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 7); // Max 7 digits
                       setUserSetBill(false);
-                      setInputs({ ...inputs, squareFootage: parseInt(e.target.value) || 0 });
+                      setInputs({ ...inputs, squareFootage: parseInt(val) || 0 });
                     }}
-                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-cyan-400 transition-colors"
-                    placeholder="75000"
+                    className="w-full px-4 py-3 bg-slate-700/80 border-2 border-slate-500/50 rounded-xl text-white text-lg font-bold focus:border-[#ffa600] transition-colors"
+                    placeholder="75,000"
                   />
                 </div>
               </div>
@@ -916,8 +972,8 @@ export default function HotelEnergy() {
                 <Sparkles className="w-4 h-4 text-purple-400" /> Amenities
               </p>
 
-              {/* Pool & Restaurants - TWO COLUMNS */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Pool & Restaurants & Kitchens - THREE COLUMNS */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <div>
                   <label className="text-gray-400 text-xs font-medium mb-1 block">🏊 Pool</label>
                   <select
@@ -931,7 +987,7 @@ export default function HotelEnergy() {
                         hasOutdoorPool: val === 'outdoor' || val === 'both'
                       });
                     }}
-                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-[#ffa600]"
                   >
                     <option value="none">None</option>
                     <option value="indoor">Indoor</option>
@@ -947,7 +1003,23 @@ export default function HotelEnergy() {
                       const count = parseInt(e.target.value);
                       setInputs({ ...inputs, restaurantCount: count, hasRestaurant: count > 0 });
                     }}
-                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-cyan-400"
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-[#ffa600]"
+                  >
+                    <option value={0}>None</option>
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3+</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs font-medium mb-1 block">🍳 Kitchens</label>
+                  <select
+                    value={inputs.kitchenCount}
+                    onChange={(e) => {
+                      const count = parseInt(e.target.value);
+                      setInputs({ ...inputs, kitchenCount: count, hasKitchens: count > 0 });
+                    }}
+                    className="w-full px-3 py-2.5 bg-slate-700/80 border-2 border-slate-500/50 rounded-lg text-white text-sm font-semibold focus:border-[#ffa600]"
                   >
                     <option value={0}>None</option>
                     <option value={1}>1</option>
@@ -961,14 +1033,22 @@ export default function HotelEnergy() {
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-gray-300 text-sm font-semibold flex items-center gap-2">
-                    <Car className="w-4 h-4 text-emerald-400" /> EV Chargers
+                    <Car className="w-4 h-4 text-[#ffa600]" /> EV Chargers
                   </label>
                   <button
-                    onClick={() => setInputs({ ...inputs, hasEVCharging: !inputs.hasEVCharging, evChargerCount: inputs.hasEVCharging ? 0 : 4 })}
+                    onClick={() => {
+                      if (inputs.hasEVCharging) {
+                        // Turning off - reset all charger counts
+                        setInputs({ ...inputs, hasEVCharging: false, evChargerCount: 0, dcfcChargerCount: 0, hpcChargerCount: 0 });
+                      } else {
+                        // Turning on - don't set any defaults, user must choose
+                        setInputs({ ...inputs, hasEVCharging: true });
+                      }
+                    }}
                     className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${
                       inputs.hasEVCharging 
-                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40' 
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-2 border-emerald-400 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/30 animate-pulse'
+                        ? 'bg-[#ffa600] text-[#060F76] shadow-lg shadow-[#ffa600]/40' 
+                        : 'bg-gradient-to-r from-[#ffa600] to-[#ff8c00] text-[#060F76] border-2 border-[#FED19F] hover:from-[#ffb833] hover:to-[#ffa600] shadow-lg shadow-[#ffa600]/30 animate-pulse'
                     }`}
                     style={{ animationDuration: '2s' }}
                   >
@@ -976,36 +1056,50 @@ export default function HotelEnergy() {
                   </button>
                 </div>
                 {inputs.hasEVCharging && (
-                  <div className="grid grid-cols-3 gap-2 bg-slate-700/40 p-3 rounded-xl border border-emerald-500/30">
+                  <div className="grid grid-cols-3 gap-2 bg-slate-700/40 p-3 rounded-xl border border-[#ffa600]/40">
                     <div>
                       <label className="text-gray-400 text-[10px] mb-1 block">Level 2 (11kW)</label>
                       <input
-                        type="number"
-                        value={inputs.evChargerCount}
-                        onChange={(e) => setInputs({ ...inputs, evChargerCount: parseInt(e.target.value) || 0 })}
+                        type="text"
+                        inputMode="numeric"
+                        value={inputs.evChargerCount || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                          setInputs({ ...inputs, evChargerCount: parseInt(val) || 0 });
+                        }}
                         className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
                         placeholder="0"
-                        min={0}
+                        maxLength={2}
                       />
                     </div>
                     <div>
                       <label className="text-gray-400 text-[10px] mb-1 block">DCFC (150kW)</label>
                       <input
-                        type="number"
-                        defaultValue={0}
+                        type="text"
+                        inputMode="numeric"
+                        value={inputs.dcfcChargerCount || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                          setInputs({ ...inputs, dcfcChargerCount: parseInt(val) || 0 });
+                        }}
                         className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
                         placeholder="0"
-                        min={0}
+                        maxLength={2}
                       />
                     </div>
                     <div>
                       <label className="text-gray-400 text-[10px] mb-1 block">HPC (350kW)</label>
                       <input
-                        type="number"
-                        defaultValue={0}
+                        type="text"
+                        inputMode="numeric"
+                        value={inputs.hpcChargerCount || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                          setInputs({ ...inputs, hpcChargerCount: parseInt(val) || 0 });
+                        }}
                         className="w-full px-2 py-2 bg-slate-600 border border-slate-500 rounded-lg text-white text-sm font-bold text-center"
                         placeholder="0"
-                        min={0}
+                        maxLength={2}
                       />
                     </div>
                   </div>
@@ -1046,12 +1140,16 @@ export default function HotelEnergy() {
                     <label className="text-amber-300 text-xs mb-1 block">How much solar capacity (kW)?</label>
                     <div className="flex items-center gap-3">
                       <input
-                        type="number"
-                        value={solarKW}
-                        onChange={(e) => setSolarKW(parseInt(e.target.value) || 0)}
+                        type="text"
+                        inputMode="numeric"
+                        value={solarKW === 0 ? '' : solarKW}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
+                          setSolarKW(val === '' ? 0 : Math.min(parseInt(val), 9999));
+                        }}
+                        maxLength={4}
                         className="flex-1 px-3 py-2 bg-slate-700 border border-amber-500/50 rounded-lg text-white text-lg font-bold"
                         placeholder="100"
-                        min={0}
                       />
                       <span className="text-amber-400 font-bold">kW</span>
                     </div>
@@ -1075,8 +1173,8 @@ export default function HotelEnergy() {
                     onClick={() => setInputs({ ...inputs, [amenity.key]: !amenity.value })}
                     className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
                       amenity.value 
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30' 
-                        : 'bg-slate-700/60 text-gray-300 border-2 border-slate-500/50 hover:bg-slate-600/80 hover:border-slate-400/50'
+                        ? 'bg-gradient-to-r from-[#ffa600] to-[#ff8c00] text-[#060F76] border-2 border-[#FED19F]/60 shadow-lg shadow-[#ffa600]/30' 
+                        : 'bg-slate-700/60 text-gray-300 border-2 border-slate-500/50 hover:bg-[#6700b6]/30 hover:border-[#6700b6]/60'
                     }`}
                   >
                     <span className="text-lg">{amenity.icon}</span>
@@ -1098,7 +1196,7 @@ export default function HotelEnergy() {
                     max={10}
                     value={inputs.elevatorCount}
                     onChange={(e) => setInputs({ ...inputs, elevatorCount: parseInt(e.target.value) })}
-                    className="w-full h-3 accent-indigo-500 cursor-pointer"
+                    className="w-full h-3 accent-[#ffa600] cursor-pointer"
                   />
                 </div>
                 <div>
@@ -1108,7 +1206,7 @@ export default function HotelEnergy() {
                       onClick={() => setInputs({ ...inputs, isEnergyEfficient: true })}
                       className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all ${
                         inputs.isEnergyEfficient 
-                          ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30' 
+                          ? 'bg-gradient-to-r from-[#ffa600] to-[#ff8c00] text-[#060F76] shadow-lg shadow-[#ffa600]/30' 
                           : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
                       }`}
                     >
@@ -1129,15 +1227,15 @@ export default function HotelEnergy() {
               </div>
             </div>
             
-            {/* RIGHT PANEL: Your Estimated Savings - EXPANDED with POP */}
-            <div className="bg-gradient-to-br from-purple-900/60 via-indigo-900/50 to-slate-900/60 backdrop-blur-md rounded-3xl p-6 border-2 border-purple-500/40 shadow-2xl shadow-purple-500/20 flex flex-col">
+            {/* RIGHT PANEL: Your Estimated Savings - MORE TRANSLUCENT */}
+            <div className="bg-gradient-to-br from-[#060F76]/60 via-[#0a1a9a]/50 to-[#6700b6]/20 backdrop-blur-xl rounded-3xl p-6 border-2 border-[#ffa600]/40 shadow-2xl shadow-[#6700b6]/20 flex flex-col">
               {/* Header with TrueQuote */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/40">
-                    <TrendingDown className="w-6 h-6 text-white" />
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#6700b6] to-[#4b00a0] flex items-center justify-center shadow-lg shadow-[#6700b6]/40 border-2 border-[#ffa600]/50">
+                    <Building2 className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Your Savings</h3>
+                  <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffa600] to-[#ff8c00]">Your Savings</h3>
                 </div>
                 <button 
                   onClick={() => setShowTrueQuoteModal(true)}
@@ -1149,52 +1247,52 @@ export default function HotelEnergy() {
               </div>
 
               {/* Hero Savings Number - BIGGER & GLOWING */}
-              <div className="relative text-center py-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl mb-5 border border-emerald-500/30 overflow-hidden">
+              <div className="relative text-center py-6 bg-gradient-to-br from-[#060F76]/60 to-[#0a1a9a]/60 rounded-2xl mb-5 border-2 border-[#6700b6]/40 overflow-hidden">
                 {/* Glow background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 animate-pulse" />
-                <p className="relative text-gray-400 text-sm mb-2 font-semibold">⚡ ESTIMATED ANNUAL SAVINGS ⚡</p>
-                <p className="relative text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 drop-shadow-lg animate-pulse" style={{ animationDuration: '2s' }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#6700b6]/10 via-[#ffa600]/10 to-[#6700b6]/10 animate-pulse" />
+                <p className="relative text-[#68BFFA] text-sm mb-2 font-semibold">⚡ ESTIMATED ANNUAL SAVINGS ⚡</p>
+                <p className="relative text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffa600] via-[#ffb833] to-[#ffa600] drop-shadow-lg animate-pulse" style={{ animationDuration: '2s' }}>
                   ${heroEstimate.savings.toLocaleString()}
                 </p>
-                <p className="relative text-gray-300 text-base font-medium mt-1">per year</p>
+                <p className="relative text-[#68BFFA] text-base font-medium mt-1">per year</p>
               </div>
 
-              {/* System Specs - THREE COLUMNS with GLOW */}
+              {/* System Specs - THREE COLUMNS with MERLIN COLORS */}
               <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl p-4 text-center border border-cyan-400/40 shadow-lg shadow-cyan-500/20">
-                  <Battery className="w-7 h-7 text-cyan-400 mx-auto mb-2" />
-                  <p className="text-2xl font-black text-white">{Math.round(peakKW * 0.4 * inputs.storageHours)}</p>
-                  <p className="text-xs text-cyan-300 font-semibold">kWh Battery</p>
+                <div className="bg-gradient-to-br from-[#6700b6]/50 to-[#4b00a0]/50 rounded-xl p-3 text-center border-2 border-[#6700b6]/60 shadow-lg shadow-[#6700b6]/30">
+                  <Battery className="w-5 h-5 text-[#ffa600] mx-auto mb-1" />
+                  <p className="text-xl font-black text-white drop-shadow-lg">{Math.round(peakKW * 0.4 * inputs.storageHours)}</p>
+                  <p className="text-[10px] text-purple-200 font-bold">kWh Battery</p>
                 </div>
-                <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl p-4 text-center border border-amber-400/40 shadow-lg shadow-amber-500/20">
-                  <Sun className="w-7 h-7 text-amber-400 mx-auto mb-2" />
-                  <p className="text-2xl font-black text-white">{Math.round(peakKW * 0.3)}</p>
-                  <p className="text-xs text-amber-300 font-semibold">kW Solar</p>
+                <div className={`bg-gradient-to-br rounded-xl p-3 text-center border-2 shadow-lg ${hasSolar ? 'from-[#ffa600]/50 to-[#ff8c00]/50 border-[#ffa600]/60 shadow-[#ffa600]/30' : 'from-slate-600/50 to-slate-700/50 border-slate-500/60 shadow-slate-600/30'}`}>
+                  <Sun className={`w-5 h-5 mx-auto mb-1 ${hasSolar ? 'text-white' : 'text-slate-400'}`} />
+                  <p className={`text-xl font-black drop-shadow-lg ${hasSolar ? 'text-white' : 'text-slate-400'}`}>{hasSolar ? solarKW : '--'}</p>
+                  <p className={`text-[10px] font-bold ${hasSolar ? 'text-amber-100' : 'text-slate-400'}`}>kW Solar</p>
                 </div>
-                <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-xl p-4 text-center border border-emerald-400/40 shadow-lg shadow-emerald-500/20">
-                  <DollarSign className="w-7 h-7 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-2xl font-black text-white">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7 / 1000)}K</p>
-                  <p className="text-xs text-emerald-300 font-semibold">Net Cost</p>
+                <div className="bg-gradient-to-br from-[#68BFFA]/50 to-[#4ba3e8]/50 rounded-xl p-3 text-center border-2 border-[#68BFFA]/60 shadow-lg shadow-[#68BFFA]/30">
+                  <DollarSign className="w-5 h-5 text-white mx-auto mb-1" />
+                  <p className="text-xl font-black text-white drop-shadow-lg">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.7 / 1000)}K</p>
+                  <p className="text-[10px] text-cyan-100 font-bold">Net Cost</p>
                 </div>
               </div>
 
-              {/* Financial Metrics - 4 COLUMNS with BIG NUMBERS */}
+              {/* Financial Metrics - 4 COLUMNS with MERLIN COLORS */}
               <div className="grid grid-cols-4 gap-2 mb-5">
-                <div className="text-center p-3 bg-white/5 rounded-xl border border-purple-400/30">
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-purple-300 to-purple-500">{heroEstimate.payback}</p>
-                  <p className="text-[11px] text-gray-400 font-semibold">Yr Payback</p>
+                <div className="text-center p-2 bg-gradient-to-br from-[#6700b6]/60 to-[#4b00a0]/60 rounded-xl border-2 border-[#6700b6]/60">
+                  <p className="text-2xl font-black text-white drop-shadow-lg">{heroEstimate.payback}</p>
+                  <p className="text-[9px] text-purple-200 font-bold">Yr Payback</p>
                 </div>
-                <div className="text-center p-3 bg-white/5 rounded-xl border border-cyan-400/30">
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-cyan-500">{Math.round(25 / heroEstimate.payback * 100)}%</p>
-                  <p className="text-[11px] text-gray-400 font-semibold">25-Yr ROI</p>
+                <div className="text-center p-2 bg-gradient-to-br from-[#68BFFA]/60 to-[#4ba3e8]/60 rounded-xl border-2 border-[#68BFFA]/60">
+                  <p className="text-2xl font-black text-white drop-shadow-lg">{Math.round(25 / heroEstimate.payback * 100)}%</p>
+                  <p className="text-[9px] text-cyan-200 font-bold">25-Yr ROI</p>
                 </div>
-                <div className="text-center p-3 bg-white/5 rounded-xl border border-amber-400/30">
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-500">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.3 / 1000)}K</p>
-                  <p className="text-[11px] text-gray-400 font-semibold">Incentives</p>
+                <div className="text-center p-2 bg-gradient-to-br from-[#ffa600]/60 to-[#ff8c00]/60 rounded-xl border-2 border-[#ffa600]/60">
+                  <p className="text-2xl font-black text-white drop-shadow-lg">${Math.round(heroEstimate.savings * heroEstimate.payback * 0.3 / 1000)}K</p>
+                  <p className="text-[9px] text-amber-100 font-bold">Incentives</p>
                 </div>
-                <div className="text-center p-3 bg-white/5 rounded-xl border border-emerald-400/30">
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-emerald-300 to-emerald-500">${Math.round(heroEstimate.savings * 25 / 1000)}K</p>
-                  <p className="text-[11px] text-gray-400 font-semibold">25-Yr Save</p>
+                <div className="text-center p-2 bg-gradient-to-br from-emerald-600/60 to-emerald-800/60 rounded-xl border-2 border-emerald-400/60">
+                  <p className="text-2xl font-black text-white drop-shadow-lg">${Math.round(heroEstimate.savings * 25 / 1000)}K</p>
+                  <p className="text-[9px] text-emerald-200 font-bold">25-Yr Save</p>
                 </div>
               </div>
 
@@ -1235,15 +1333,15 @@ export default function HotelEnergy() {
                 </div>
               </div>
 
-              {/* CTA Button - Clean White with Purple Accent */}
+              {/* CTA Button - Navy Blue with Hotel Icon + Orange accent */}
               <div className="mt-auto">
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="group relative w-full py-5 bg-white hover:bg-purple-50 text-purple-700 font-black text-xl rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl hover:shadow-purple-300/50 hover:scale-[1.02] border-2 border-purple-500 hover:border-purple-600"
+                  className="group relative w-full py-5 bg-gradient-to-r from-[#6700b6] to-[#4b00a0] hover:from-[#7a00d4] hover:to-[#5a00b8] text-white font-black text-2xl rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl hover:shadow-[#6700b6]/50 hover:scale-[1.02] border-2 border-[#ffa600]"
                 >
-                  <Wand2 className="w-7 h-7 text-purple-600" />
+                  <Building2 className="w-8 h-8 text-[#ffa600]" />
                   <span>Build My Quote</span>
-                  <ArrowRight className="w-7 h-7 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-8 h-8 text-[#ffa600] group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
@@ -1272,36 +1370,34 @@ export default function HotelEnergy() {
           FINAL CTA
           ═══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 relative overflow-hidden">
-        {/* Decorative floating elements */}
-        <div className="absolute top-12 left-12 text-6xl animate-bounce" style={{ animationDuration: '3s' }}>🏨</div>
-        <div className="absolute bottom-12 right-12 text-5xl animate-pulse" style={{ animationDuration: '2s' }}>💰</div>
-        <div className="absolute top-20 right-24 text-4xl animate-bounce" style={{ animationDuration: '4s' }}>⚡</div>
-        <div className="absolute bottom-20 left-24 text-4xl animate-pulse" style={{ animationDuration: '3s' }}>🔋</div>
+        {/* Decorative floating elements - Professional icons only */}
+        <div className="absolute top-12 left-12 text-6xl opacity-30 animate-bounce" style={{ animationDuration: '3s' }}>🏨</div>
+        <div className="absolute top-20 right-24 text-4xl opacity-40 animate-bounce" style={{ animationDuration: '4s' }}>⚡</div>
+        <div className="absolute bottom-20 left-24 text-4xl opacity-30 animate-pulse" style={{ animationDuration: '3s' }}>🔋</div>
         
-        {/* Gradient background glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/30 via-purple-900/40 to-pink-900/30 blur-3xl" />
+        {/* Gradient background glow - MERLIN COLORS */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#060F76]/40 via-[#6700b6]/50 to-[#060F76]/40 blur-3xl" />
         
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30 px-5 py-2 rounded-full border-2 border-purple-400/50 mb-6 shadow-lg shadow-purple-500/20">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <span className="text-purple-100 font-black tracking-wide">🚀 LIMITED TIME OFFER</span>
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#6700b6]/40 via-[#ffa600]/20 to-[#6700b6]/40 px-5 py-2 rounded-full border-2 border-[#ffa600]/60 mb-6 shadow-lg shadow-[#6700b6]/30">
+            <Sparkles className="w-5 h-5 text-[#ffa600]" />
+            <span className="text-white font-black tracking-wide">🚀 LIMITED TIME OFFER</span>
           </div>
           
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-            Ready to Improve Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">Bottom Line?</span>
+            Ready to Improve Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffa600] via-[#68BFFA] to-[#ffa600]">Bottom Line?</span>
           </h2>
-          <p className="text-xl text-indigo-200 mb-8 font-bold">
+          <p className="text-xl text-[#68BFFA] mb-8 font-bold">
             ✅ Free consultation • ✅ No obligation • ✅ Takes 2 minutes
           </p>
           
           {/* Big CTA Button with pulse */}
           <button
             onClick={() => setShowWizard(true)}
-            className="inline-flex items-center gap-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-400 hover:to-pink-400 text-white px-14 py-6 rounded-2xl font-black text-2xl shadow-2xl hover:shadow-purple-500/50 transition-all hover:scale-105 border-3 border-purple-300/50 animate-pulse group"
-            style={{ animationDuration: '2s' }}
+            className="inline-flex items-center gap-4 bg-gradient-to-r from-[#6700b6] via-[#7a00d4] to-[#6700b6] hover:from-[#7a00d4] hover:via-[#8b00e6] hover:to-[#7a00d4] text-white px-14 py-6 rounded-2xl font-black text-2xl shadow-2xl hover:shadow-[#6700b6]/50 transition-all hover:scale-105 border-3 border-[#ffa600]/60 group"
           >
-            <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+            <Sparkles className="w-7 h-7 text-[#ffa600] group-hover:rotate-12 transition-transform" />
             Start My Free Quote
             <ArrowRight className="w-7 h-7 group-hover:translate-x-2 transition-transform" />
           </button>

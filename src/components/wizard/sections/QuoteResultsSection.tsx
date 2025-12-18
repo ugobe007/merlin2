@@ -219,8 +219,8 @@ export function QuoteResultsSection({
     })() : undefined,
   };
 
-  // Dec 16, 2025: QuoteResultsSection is now Section 6
-  const SECTION_NUMBER = 6;
+  // Dec 17, 2025: QuoteResultsSection is now Section 7
+  const SECTION_NUMBER = 7;
 
   return (
     <div
