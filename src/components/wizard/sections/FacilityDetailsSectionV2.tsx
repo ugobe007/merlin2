@@ -90,12 +90,12 @@ const PROPERTY_TYPE_BY_SIZE = {
   }
 };
 
-// Amenity categories with pill-style buttons
+// Amenity categories with pill-style buttons - MERLIN COLOR PALETTE
 const AMENITY_CATEGORIES = {
   aquatics: {
     label: 'Pool & Aquatics',
     icon: Waves,
-    color: 'purple', // Merlin theme
+    color: 'malibu', // #68BFFA - Light blue
     options: [
       { id: 'indoor_pool', label: 'Indoor Pool', icon: Waves },
       { id: 'outdoor_pool', label: 'Outdoor Pool', icon: Waves },
@@ -106,7 +106,7 @@ const AMENITY_CATEGORIES = {
   wellness: {
     label: 'Wellness & Fitness',
     icon: Dumbbell,
-    color: 'purple', // Merlin theme
+    color: 'merlinPurple', // #6700b6 - Merlin primary
     options: [
       { id: 'fitness_center', label: 'Fitness Center', icon: Dumbbell },
       { id: 'spa', label: 'Full Spa', icon: Sparkles },
@@ -117,7 +117,7 @@ const AMENITY_CATEGORIES = {
   dining: {
     label: 'Food & Beverage',
     icon: Utensils,
-    color: 'purple', // Merlin theme
+    color: 'webOrange', // #ffa600 - Orange accent
     options: [
       { id: 'restaurant', label: 'Restaurant(s)', icon: Utensils },
       { id: 'bar_lounge', label: 'Bar / Lounge', icon: Coffee },
@@ -128,7 +128,7 @@ const AMENITY_CATEGORIES = {
   business: {
     label: 'Business & Events',
     icon: Briefcase,
-    color: 'purple', // Merlin theme
+    color: 'arapawa', // #060F76 - Dark navy
     options: [
       { id: 'meeting_rooms', label: 'Meeting Rooms', icon: Users },
       { id: 'conference_center', label: 'Conference Center', icon: Briefcase },
@@ -139,7 +139,7 @@ const AMENITY_CATEGORIES = {
   services: {
     label: 'Guest Services',
     icon: Star,
-    color: 'purple', // Merlin theme
+    color: 'peachOrange', // #FED19F - Peach accent
     options: [
       { id: 'laundry', label: 'On-Site Laundry', icon: Shirt },
       { id: 'ev_charging', label: 'EV Charging', icon: Car },
@@ -149,32 +149,43 @@ const AMENITY_CATEGORIES = {
   }
 };
 
-// Color classes for amenity pills
+// MERLIN COLOR PALETTE - Official brand colors with hex values
 const AMENITY_COLORS: Record<string, { selected: string; unselected: string; border: string }> = {
-  cyan: {
-    selected: 'bg-cyan-500 text-white border-cyan-600',
-    unselected: 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300',
-    border: 'border-cyan-300'
+  // Malibu Blue - #68BFFA
+  malibu: {
+    selected: 'bg-[#0893f1] text-white border-[#067ecf]',
+    unselected: 'bg-[#8dcefb]/20 text-[#0569ac] border-[#68BFFA] hover:bg-[#6ac0fa]/30 hover:border-[#48b1f8]',
+    border: 'border-[#68BFFA]'
   },
-  emerald: {
-    selected: 'bg-emerald-500 text-white border-emerald-600',
-    unselected: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300',
-    border: 'border-emerald-300'
+  // Merlin Purple - #6700b6
+  merlinPurple: {
+    selected: 'bg-[#6700b6] text-white border-[#50008e]',
+    unselected: 'bg-[#cc89ff]/20 text-[#6500b2] border-[#ad42ff] hover:bg-[#bc66ff]/30 hover:border-[#9d1eff]',
+    border: 'border-[#ad42ff]'
   },
-  amber: {
-    selected: 'bg-amber-500 text-white border-amber-600',
-    unselected: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
-    border: 'border-amber-300'
+  // Web Orange - #ffa600
+  webOrange: {
+    selected: 'bg-[#f9a200] text-white border-[#d68b00]',
+    unselected: 'bg-[#ffd689]/20 text-[#b27400] border-[#ffbd42] hover:bg-[#ffc966]/30 hover:border-[#ffb01e]',
+    border: 'border-[#ffbd42]'
   },
-  indigo: {
-    selected: 'bg-indigo-500 text-white border-indigo-600',
-    unselected: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300',
-    border: 'border-indigo-300'
+  // Arapawa Navy - #060F76
+  arapawa: {
+    selected: 'bg-[#060F76] text-white border-[#050c65]',
+    unselected: 'bg-[#8f97f9]/20 text-[#0815a9] border-[#4b59f5] hover:bg-[#6d78f7]/30 hover:border-[#2939f4]',
+    border: 'border-[#4b59f5]'
   },
+  // Peach Orange - #FED19F
+  peachOrange: {
+    selected: 'bg-[#f78302] text-white border-[#d37002]',
+    unselected: 'bg-[#fdc78a]/20 text-[#8d4b01] border-[#fda544] hover:bg-[#fdb667]/30 hover:border-[#fc9420]',
+    border: 'border-[#fda544]'
+  },
+  // Keep purple as fallback
   purple: {
-    selected: 'bg-purple-500 text-white border-purple-600',
-    unselected: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300',
-    border: 'border-purple-300'
+    selected: 'bg-[#6700b6] text-white border-[#50008e]',
+    unselected: 'bg-[#cc89ff]/20 text-[#6500b2] border-[#ad42ff] hover:bg-[#bc66ff]/30 hover:border-[#9d1eff]',
+    border: 'border-[#ad42ff]'
   }
 };
 
