@@ -1370,12 +1370,7 @@ export default function HotelEnergy() {
           FINAL CTA
           ═══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 relative overflow-hidden">
-        {/* Decorative floating elements - Professional icons only */}
-        <div className="absolute top-12 left-12 text-6xl opacity-30 animate-bounce" style={{ animationDuration: '3s' }}>🏨</div>
-        <div className="absolute top-20 right-24 text-4xl opacity-40 animate-bounce" style={{ animationDuration: '4s' }}>⚡</div>
-        <div className="absolute bottom-20 left-24 text-4xl opacity-30 animate-pulse" style={{ animationDuration: '3s' }}>🔋</div>
-        
-        {/* Gradient background glow - MERLIN COLORS */}
+        {/* Gradient background glow - MERLIN COLORS (removed floating icons per user request Dec 18) */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#060F76]/40 via-[#6700b6]/50 to-[#060F76]/40 blur-3xl" />
         
         <div className="max-w-4xl mx-auto px-6 text-center relative">
@@ -1392,12 +1387,13 @@ export default function HotelEnergy() {
             ✅ Free consultation • ✅ No obligation • ✅ Takes 2 minutes
           </p>
           
-          {/* Big CTA Button with pulse */}
+          {/* Big CTA Button with pulse - ORANGE for maximum POP */}
           <button
             onClick={() => setShowWizard(true)}
-            className="inline-flex items-center gap-4 bg-gradient-to-r from-[#6700b6] via-[#7a00d4] to-[#6700b6] hover:from-[#7a00d4] hover:via-[#8b00e6] hover:to-[#7a00d4] text-white px-14 py-6 rounded-2xl font-black text-2xl shadow-2xl hover:shadow-[#6700b6]/50 transition-all hover:scale-105 border-3 border-[#ffa600]/60 group"
+            className="inline-flex items-center gap-4 bg-gradient-to-r from-[#ffa600] via-[#ff8c00] to-[#ffa600] hover:from-[#ffb833] hover:via-[#ffa600] hover:to-[#ffb833] text-[#060F76] px-14 py-6 rounded-2xl font-black text-2xl shadow-2xl shadow-[#ffa600]/50 hover:shadow-[#ffa600]/70 transition-all hover:scale-105 border-3 border-white/60 group animate-pulse"
+            style={{ animationDuration: '2s' }}
           >
-            <Sparkles className="w-7 h-7 text-[#ffa600] group-hover:rotate-12 transition-transform" />
+            <Sparkles className="w-7 h-7 text-[#060F76] group-hover:rotate-12 transition-transform" />
             Start My Free Quote
             <ArrowRight className="w-7 h-7 group-hover:translate-x-2 transition-transform" />
           </button>
@@ -1423,7 +1419,7 @@ export default function HotelEnergy() {
             <div className="flex items-center gap-3">
               <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
               <div>
-                <p className="text-white font-bold">Hotel Energy Partners</p>
+                <p className="text-white font-bold">Hotel Energy</p>
                 <p className="text-indigo-200/50 text-sm">Powered by Merlin Energy</p>
               </div>
             </div>
@@ -1434,7 +1430,7 @@ export default function HotelEnergy() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-white/10 text-center text-indigo-200/50 text-sm">
-            © {new Date().getFullYear()} Hotel Energy Partners. All rights reserved.
+            © {new Date().getFullYear()} Hotel Energy. All rights reserved.
           </div>
         </div>
       </footer>
