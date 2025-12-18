@@ -1235,17 +1235,15 @@ export default function HotelEnergy() {
                 </div>
               </div>
 
-              {/* CTA Button - GLOWING GRADIENT - Push to Bottom */}
+              {/* CTA Button - Clean White with Purple Accent */}
               <div className="mt-auto">
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="group relative w-full py-5 bg-gradient-to-r from-emerald-300 via-green-300 to-lime-300 hover:from-emerald-200 hover:via-green-200 hover:to-lime-200 text-purple-900 font-black text-xl rounded-2xl transition-all flex items-center justify-center gap-3 shadow-2xl hover:shadow-green-400/50 hover:scale-[1.02] border-4 border-purple-700"
+                  className="group relative w-full py-5 bg-white hover:bg-purple-50 text-purple-700 font-black text-xl rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl hover:shadow-purple-300/50 hover:scale-[1.02] border-2 border-purple-500 hover:border-purple-600"
                 >
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-300 via-green-300 to-lime-300 blur-xl opacity-40 group-hover:opacity-60 transition-opacity -z-10" />
-                  <Wand2 className="w-7 h-7 text-purple-800" />
-                  <span className="font-black">Build My Custom Quote</span>
-                  <ArrowRight className="w-7 h-7 text-purple-800 group-hover:translate-x-1 transition-transform" />
+                  <Wand2 className="w-7 h-7 text-purple-600" />
+                  <span>Build My Quote</span>
+                  <ArrowRight className="w-7 h-7 text-purple-600 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
