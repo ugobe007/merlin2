@@ -89,6 +89,7 @@ export default function StreamlinedWizard({
   const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
   const [hasSeenRecommendation, setHasSeenRecommendation] = useState(false);
   const [showMerlinBanner, setShowMerlinBanner] = useState(false); // Persistent recommendation banner
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Collapsible sidebar buttons
 
   // Home navigation - navigates to the appropriate vertical landing page
   const handleGoHome = useCallback(() => {
@@ -1306,59 +1307,81 @@ export default function StreamlinedWizard({
         </div>
       )}
 
-      {/* SIDEBAR TRUEQUOTE BUTTON - Higher on left side */}
+      {/* SIDEBAR TRUEQUOTE BUTTON - Higher on left side - COLLAPSIBLE */}
       <div className="fixed left-4 top-32 z-[9998] flex flex-col gap-3">
-        {/* TrueQuote Logo Button - Exact replica from image */}
+        {/* Toggle Button - Always visible */}
         <button
-          onClick={() => {
-            setShowTrueQuoteExplainer(true);
-            setShowCalculations(true);
-          }}
-          className="flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-full shadow-2xl hover:shadow-amber-300/50 hover:scale-105 transition-all border-2 border-amber-200"
-          title="TrueQuote™ - See how we calculate your quote"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className={`flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all ${
+            sidebarCollapsed 
+              ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+              : 'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-800'
+          }`}
+          title={sidebarCollapsed ? 'Show help buttons' : 'Hide help buttons'}
         >
-          {/* Shield Icon - Orange/Amber */}
-          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M12 2L4 6v6c0 5.5 3.84 10.66 8 12 4.16-1.34 8-6.5 8-12V6l-8-4z" 
-              fill="#EA580C"
-              stroke="#C2410C"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M9 12l2 2 4-4"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <ChevronLeft className="w-5 h-5" />
+          )}
+        </button>
+        
+        {/* Collapsible Buttons - Slide in/out */}
+        <div className={`flex flex-col gap-3 transition-all duration-300 ${
+          sidebarCollapsed ? 'opacity-0 -translate-x-8 pointer-events-none' : 'opacity-100 translate-x-0'
+        }`}>
+          {/* TrueQuote Logo Button - Exact replica from image */}
+          <button
+            onClick={() => {
+              setShowTrueQuoteExplainer(true);
+              setShowCalculations(true);
+            }}
+            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-amber-50/90 to-yellow-50/90 backdrop-blur-sm rounded-full shadow-2xl hover:shadow-amber-300/50 hover:scale-105 transition-all border-2 border-amber-200"
+            title="TrueQuote™ - See how we calculate your quote"
+          >
+            {/* Shield Icon - Orange/Amber */}
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+              <path 
+                d="M12 2L4 6v6c0 5.5 3.84 10.66 8 12 4.16-1.34 8-6.5 8-12V6l-8-4z" 
+                fill="#EA580C"
+                stroke="#C2410C"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M9 12l2 2 4-4"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            
+            {/* TrueQuote Text - Brown */}
+            <span className="font-bold text-lg text-amber-900">
+              TrueQuote<sup className="text-xs">™</sup>
+            </span>
+          </button>
           
-          {/* TrueQuote Text - Brown */}
-          <span className="font-bold text-lg text-amber-900">
-            TrueQuote<sup className="text-xs">™</sup>
-          </span>
-        </button>
-        
-        {/* Merlin Energy Button - Below TrueQuote */}
-        <button
-          onClick={() => setShowMerlinRecommendation(true)}
-          className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full shadow-xl hover:shadow-purple-300/50 hover:scale-105 transition-all border-2 border-purple-300"
-          title="Click for Merlin's help"
-        >
-          <img src={merlinImage} alt="Merlin" className="w-6 h-6" />
-          <span className="font-bold text-sm text-purple-900">Merlin Energy</span>
-        </button>
-        
-        {/* How to Use Button - Below Merlin Energy */}
-        <button
-          onClick={() => setShowWizardHelp(true)}
-          className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg hover:shadow-emerald-300/50 hover:scale-105 transition-all border-2 border-emerald-300"
-          title="Learn how to use the wizard"
-        >
-          <HelpCircle className="w-5 h-5 text-emerald-600" />
-          <span className="font-bold text-sm text-emerald-800">How to Use</span>
-        </button>
+          {/* Merlin Energy Button - Below TrueQuote */}
+          <button
+            onClick={() => setShowMerlinRecommendation(true)}
+            className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-100/90 to-indigo-100/90 backdrop-blur-sm rounded-full shadow-xl hover:shadow-purple-300/50 hover:scale-105 transition-all border-2 border-purple-300"
+            title="Click for Merlin's help"
+          >
+            <img src={merlinImage} alt="Merlin" className="w-6 h-6" />
+            <span className="font-bold text-sm text-purple-900">Merlin Energy</span>
+          </button>
+          
+          {/* How to Use Button - Below Merlin Energy */}
+          <button
+            onClick={() => setShowWizardHelp(true)}
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-emerald-100/90 to-teal-100/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-emerald-300/50 hover:scale-105 transition-all border-2 border-emerald-300"
+            title="Learn how to use the wizard"
+          >
+            <HelpCircle className="w-5 h-5 text-emerald-600" />
+            <span className="font-bold text-sm text-emerald-800">How to Use</span>
+          </button>
+        </div>
         
         {/* Real-time Calculations Widget - Only show when toggled */}
         {showCalculations && (() => {
