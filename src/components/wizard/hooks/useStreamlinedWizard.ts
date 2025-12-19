@@ -1032,10 +1032,15 @@ export function useStreamlinedWizard({
   
   const advanceToSection = useCallback((index: number) => {
     setIsTransitioning(true);
+    // Scroll to top immediately
+    window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(() => {
       setCurrentSection(index);
-      setIsTransitioning(false);
-    }, 300);
+      // Small delay before removing transition overlay to ensure content renders
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 100);
+    }, 150);
   }, []);
   
   // Handle zip code change - NO auto-advance (user clicks Continue button)

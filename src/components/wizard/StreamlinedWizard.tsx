@@ -33,6 +33,9 @@ import { AcceptCustomizeModal } from './shared';
 import { SavingsScoutNavbar } from './indicators/SavingsScoutWidget';
 import {
   WelcomeLocationSection,
+  Step1LocationGoals,  // NEW: Dec 18, 2025 - Two-column Location + Goals
+  Step2IndustrySize,   // NEW: Dec 18, 2025 - Industry + Key Size + Educational Merlin
+  Step3FacilityDetails, // NEW: Dec 18, 2025 - Redesigned Facility Details
   IndustrySection,
   FacilityDetailsSection,
   FacilityDetailsSectionV2,
@@ -551,9 +554,19 @@ export default function StreamlinedWizard({
           ref={containerRef}
           className="h-full overflow-y-auto scroll-smooth"
         >
+          {/* Loading Overlay during transitions */}
+          {wizard.isTransitioning && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-[#060F76] via-[#1a237e] to-[#0d1952]">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 border-4 border-[#7DD3FC]/30 border-t-[#7DD3FC] rounded-full animate-spin"></div>
+                <p className="text-white/80 text-lg font-medium">Loading next step...</p>
+              </div>
+            </div>
+          )}
+          
           <div className={`transition-opacity duration-300 ${wizard.isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            {/* Section 0: Welcome + Location + Goals */}
-            <WelcomeLocationSection
+            {/* Section 0: Location + Goals (Two-Column Layout) - NEW Dec 18, 2025 */}
+            <Step1LocationGoals
               wizardState={wizard.wizardState}
               setWizardState={wizard.setWizardState}
               onZipChange={wizard.handleZipCodeChange}
@@ -563,53 +576,42 @@ export default function StreamlinedWizard({
                 wizard.completeSection('location');
                 wizard.advanceToSection(1);
               }}
-              onOpenAdvanced={onOpenAdvanced}
+              onOpenProQuote={onOpenAdvanced}
               isHidden={wizard.currentSection !== 0}
             />
 
-            {/* Section 1: Industry Selection */}
-            <IndustrySection
+            {/* Section 1: Industry + Key Size (NEW Dec 18, 2025 - Educational Merlin) */}
+            <Step2IndustrySize
               wizardState={wizard.wizardState}
+              setWizardState={wizard.setWizardState}
               availableUseCases={wizard.availableUseCases}
               isLoadingUseCases={wizard.isLoadingUseCases}
-              groupedUseCases={wizard.groupedUseCases}
               onIndustrySelect={wizard.handleIndustrySelect}
               onBack={() => wizard.advanceToSection(0)}
+              onHome={handleGoHome}
+              onContinue={() => {
+                wizard.completeSection('industry');
+                wizard.advanceToSection(2);
+              }}
+              onOpenProQuote={onOpenAdvanced}
               isHidden={wizard.currentSection !== 1}
             />
 
-            {/* Section 2: Facility Details */}
-            {/* Use V2 for hotel vertical (smart dropdowns + pill buttons) */}
-            {wizard.wizardState.selectedIndustry === 'hotel' ? (
-              <FacilityDetailsSectionV2
-                wizardState={wizard.wizardState}
-                setWizardState={wizard.setWizardState}
-                currentSection={wizard.currentSection}
-                initializedFromVertical={wizard.initializedFromVertical}
-                sectionRef={(el) => { sectionRefs.current[2] = el; }}
-                onBack={() => wizard.advanceToSection(1)}
-                onHome={handleGoHome}
-                onContinue={() => {
-                  wizard.completeSection('facility');
-                  // Go to Goals/Preferences (Section 3)
-                  wizard.advanceToSection(3);
-                }}
-              />
-            ) : (
-              <FacilityDetailsSection
-                wizardState={wizard.wizardState}
-                setWizardState={wizard.setWizardState}
-                currentSection={wizard.currentSection}
-                initializedFromVertical={wizard.initializedFromVertical}
-                sectionRef={(el) => { sectionRefs.current[2] = el; }}
-                onBack={() => wizard.advanceToSection(1)}
-                onContinue={() => {
-                  wizard.completeSection('facility');
-                  // Go to Goals/Preferences (Section 3)
-                  wizard.advanceToSection(3);
-                }}
-              />
-            )}
+            {/* Section 2: Facility Details - NEW DESIGN Dec 18, 2025 */}
+            <Step3FacilityDetails
+              wizardState={wizard.wizardState}
+              setWizardState={wizard.setWizardState}
+              initializedFromVertical={wizard.initializedFromVertical}
+              sectionRef={(el) => { sectionRefs.current[2] = el; }}
+              onBack={() => wizard.advanceToSection(1)}
+              onHome={handleGoHome}
+              onContinue={() => {
+                wizard.completeSection('facility');
+                // Go to Goals/Preferences (Section 3)
+                wizard.advanceToSection(3);
+              }}
+              isHidden={wizard.currentSection !== 2}
+            />
 
             {/* ═══════════════════════════════════════════════════════════════
                 MAGIC FIT FLOW (Dec 16, 2025 - CORRECTED):
@@ -680,12 +682,17 @@ export default function StreamlinedWizard({
                   sectionRef={(el) => { sectionRefs.current[3] = el; }}
                   onBack={() => wizard.advanceToSection(2)}
                   onHome={handleGoHome}
-                  onContinue={() => {
-                    // Dec 18, 2025 - SIMPLIFIED: Go directly to Quote Results (Section 4)
-                    // Removed redundant ConfigurationComparison, ScenarioSection, ScenarioSectionV2
-                    console.log('🎯 [GOALS] Continue clicked - going directly to Quote Results');
+                  onContinue={async () => {
+                    // Dec 18, 2025 - SIMPLIFIED: Generate quote and go to Quote Results
+                    // Dec 19, 2025 - FIX: Actually call generateQuote()!
+                    console.log('🎯 [GOALS] Continue clicked - generating quote...');
                     wizard.completeSection('preferences');
-                    wizard.completeSection('configuration'); // Mark config as complete too
+                    wizard.completeSection('configuration');
+                    
+                    // Generate the quote BEFORE navigating!
+                    await wizard.generateQuote();
+                    
+                    console.log('✅ [GOALS] Quote generated - advancing to Section 4');
                     wizard.advanceToSection(4); // Quote Results
                   }}
                   onGenerateScenarios={wizard.generateAllScenarios}
@@ -1236,191 +1243,7 @@ export default function StreamlinedWizard({
         </div>
       )}
 
-      {/* SIDEBAR TRUEQUOTE BUTTON - Higher on left side - COLLAPSIBLE */}
-      <div className="fixed left-4 top-32 z-[9998] flex flex-col gap-3">
-        {/* Toggle Button - Always visible */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className={`flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all ${
-            sidebarCollapsed 
-              ? 'bg-purple-600 hover:bg-purple-500 text-white' 
-              : 'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-800'
-          }`}
-          title={sidebarCollapsed ? 'Show help buttons' : 'Hide help buttons'}
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronLeft className="w-5 h-5" />
-          )}
-        </button>
-        
-        {/* Collapsible Buttons - Slide in/out */}
-        <div className={`flex flex-col gap-3 transition-all duration-300 ${
-          sidebarCollapsed ? 'opacity-0 -translate-x-8 pointer-events-none' : 'opacity-100 translate-x-0'
-        }`}>
-          {/* TrueQuote Logo Button - Exact replica from image */}
-          <button
-            onClick={() => {
-              setShowTrueQuoteExplainer(true);
-              setShowCalculations(true);
-            }}
-            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-amber-50/90 to-yellow-50/90 backdrop-blur-sm rounded-full shadow-2xl hover:shadow-amber-300/50 hover:scale-105 transition-all border-2 border-amber-200"
-            title="TrueQuote™ - See how we calculate your quote"
-          >
-            {/* Shield Icon - Orange/Amber */}
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-              <path 
-                d="M12 2L4 6v6c0 5.5 3.84 10.66 8 12 4.16-1.34 8-6.5 8-12V6l-8-4z" 
-                fill="#EA580C"
-                stroke="#C2410C"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M9 12l2 2 4-4"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            
-            {/* TrueQuote Text - Brown */}
-            <span className="font-bold text-lg text-amber-900">
-              TrueQuote<sup className="text-xs">™</sup>
-            </span>
-          </button>
-          
-          {/* Merlin Energy Button - Below TrueQuote */}
-          <button
-            onClick={() => setShowMerlinRecommendation(true)}
-            className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-100/90 to-indigo-100/90 backdrop-blur-sm rounded-full shadow-xl hover:shadow-purple-300/50 hover:scale-105 transition-all border-2 border-purple-300"
-            title="Click for Merlin's help"
-          >
-            <img src={merlinImage} alt="Merlin" className="w-6 h-6" />
-            <span className="font-bold text-sm text-purple-900">Merlin Energy</span>
-          </button>
-          
-          {/* How to Use Button - Below Merlin Energy */}
-          <button
-            onClick={() => setShowWizardHelp(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-br from-emerald-100/90 to-teal-100/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-emerald-300/50 hover:scale-105 transition-all border-2 border-emerald-300"
-            title="Learn how to use the wizard"
-          >
-            <HelpCircle className="w-5 h-5 text-emerald-600" />
-            <span className="font-bold text-sm text-emerald-800">How to Use</span>
-          </button>
-        </div>
-        
-        {/* Real-time Calculations Widget - Only show when toggled */}
-        {showCalculations && (() => {
-          // CRITICAL: Read from latest centralizedState which updates with ALL facility changes
-          const calc = wizard.centralizedState?.calculated || {};
-          const hasData = calc.totalPeakDemandKW > 0 || calc.recommendedBatteryKW > 0;
-          
-          if (!hasData) {
-            return (
-              <div className="bg-gradient-to-br from-indigo-900/95 to-purple-900/95 backdrop-blur-xl border border-indigo-400/30 rounded-2xl p-4 shadow-2xl shadow-indigo-500/20 max-w-xs">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calculator className="w-4 h-4 text-indigo-300" />
-                  <span className="text-indigo-200 font-bold text-xs">Live Calculations</span>
-                </div>
-                <p className="text-indigo-300/60 text-xs">Complete facility details to see calculations</p>
-              </div>
-            );
-          }
-          
-          return (
-            <div className="bg-gradient-to-br from-indigo-900/95 to-purple-900/95 backdrop-blur-xl border border-indigo-400/30 rounded-2xl p-4 shadow-2xl shadow-indigo-500/20 max-w-xs">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Calculator className="w-4 h-4 text-indigo-300" />
-                  <span className="text-indigo-200 font-bold text-xs">Live Calculations</span>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                </div>
-                <button
-                  onClick={() => setShowCalculations(false)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                  title="Close"
-                >
-                  <X className="w-4 h-4 text-indigo-300 hover:text-white" />
-                </button>
-              </div>
-              
-              <div className="space-y-2 text-xs">
-                {/* Peak Demand */}
-                {calc.totalPeakDemandKW > 0 && (
-                  <div className="flex justify-between items-center py-1 border-b border-indigo-400/20">
-                    <span className="text-indigo-300/80">Peak Demand</span>
-                    <span className="text-white font-bold">
-                      {calc.totalPeakDemandKW >= 1000 
-                        ? `${(calc.totalPeakDemandKW / 1000).toFixed(2)} MW`
-                        : `${Math.round(calc.totalPeakDemandKW)} kW`
-                      }
-                    </span>
-                  </div>
-                )}
-                
-                {/* Battery Recommendation */}
-                {calc.recommendedBatteryKW > 0 && (
-                  <div className="flex justify-between items-center py-1 border-b border-indigo-400/20">
-                    <span className="text-indigo-300/80">Battery Power</span>
-                    <span className="text-emerald-300 font-bold">
-                      {calc.recommendedBatteryKW >= 1000 
-                        ? `${(calc.recommendedBatteryKW / 1000).toFixed(2)} MW`
-                        : `${Math.round(calc.recommendedBatteryKW)} kW`
-                      }
-                    </span>
-                  </div>
-                )}
-                
-                {/* Battery Energy */}
-                {calc.recommendedBatteryKWh > 0 && (
-                  <div className="flex justify-between items-center py-1 border-b border-indigo-400/20">
-                    <span className="text-indigo-300/80">Battery Storage</span>
-                    <span className="text-emerald-300 font-bold">
-                      {calc.recommendedBatteryKWh >= 1000 
-                        ? `${(calc.recommendedBatteryKWh / 1000).toFixed(2)} MWh`
-                        : `${Math.round(calc.recommendedBatteryKWh)} kWh`
-                      }
-                    </span>
-                  </div>
-                )}
-                
-                {/* Solar Recommendation */}
-                {calc.recommendedSolarKW > 0 && (
-                  <div className="flex justify-between items-center py-1 border-b border-indigo-400/20">
-                    <span className="text-indigo-300/80">Solar Array</span>
-                    <span className="text-amber-300 font-bold">
-                      {calc.recommendedSolarKW >= 1000 
-                        ? `${(calc.recommendedSolarKW / 1000).toFixed(2)} MW`
-                        : `${Math.round(calc.recommendedSolarKW)} kW`
-                      }
-                    </span>
-                  </div>
-                )}
-                
-                {/* Annual Savings */}
-                {calc.estimatedAnnualSavings > 0 && (
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-indigo-300/80">Annual Savings</span>
-                    <span className="text-green-300 font-bold">
-                      ${(calc.estimatedAnnualSavings / 1000).toFixed(0)}k
-                    </span>
-                  </div>
-                )}
-                
-                {/* Methodology note */}
-                <div className="mt-2 pt-2 border-t border-indigo-400/20">
-                  <p className="text-indigo-300/60 text-[10px] leading-tight">
-                    Calculations updating live from facility details (rooms, elevators, etc.)
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
+      {/* SIDEBAR REMOVED - Merlin guidance is now integrated into the wizard flow */}
       
       {/* TRUEQUOTE EXPLAINER MODAL */}
       {showTrueQuoteExplainer && (

@@ -11,6 +11,9 @@
 
 // Section components
 export { WelcomeLocationSection } from './WelcomeLocationSection';
+export { Step1LocationGoals } from './Step1LocationGoals'; // NEW: Dec 18, 2025 - Two-column Location + Goals
+export { Step2IndustrySize } from './Step2IndustrySize'; // NEW: Dec 18, 2025 - Industry + Key Size + Educational Merlin
+export { Step3FacilityDetails } from './Step3FacilityDetails'; // NEW: Dec 18, 2025 - Redesigned Facility Details
 export { IndustrySection } from './IndustrySection';
 export { FacilityDetailsSection } from './FacilityDetailsSection';
 export { FacilityDetailsSectionV2 } from './FacilityDetailsSectionV2';

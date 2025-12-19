@@ -213,6 +213,16 @@ input[type="range"].slider::-moz-range-thumb:hover {
   }
 }
 
+/* Fire & Ice glow-pulse animation for GlowButton */
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.1);
+  }
+}
+
 @keyframes flowLine {
   0% {
     clip-path: inset(0 100% 0 0);

@@ -7,6 +7,7 @@
 // 
 // Updated Dec 15, 2025: Added Facility Subtype + Equipment Tier selectors
 // per Vineet feedback (Universal Pattern)
+// Updated Dec 19, 2025: Added MERLIN GUIDANCE PANEL with recommendations
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
@@ -22,6 +23,8 @@ import {
   Sparkles,
   Settings,
   Star,
+  Lightbulb,
+  MessageCircle,
   // Icons for amenities/options
   Waves,
   Dumbbell,
@@ -58,6 +61,13 @@ import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '..
 
 // Import new high-fidelity UI components
 import { StepExplanation, PrimaryButton, SecondaryButton } from '../ui';
+
+// Import Merlin image
+import merlinImage from '@/assets/images/new_Merlin.png';
+
+// Step 2 colors - cool blue theme
+import { getStepColors } from '../constants/stepColors';
+const step2Colors = getStepColors(2);
 
 // Icon mapping for common amenity/option values
 const OPTION_ICONS: Record<string, React.ElementType> = {
@@ -307,6 +317,223 @@ export function FacilityDetailsSection({
         </div>
         
         {/* ═══════════════════════════════════════════════════════════════════
+            🧙‍♂️ MERLIN'S GUIDANCE PANEL - Dec 19, 2025
+            Shows Merlin guiding the user with recommendations
+            ═══════════════════════════════════════════════════════════════════ */}
+        {(() => {
+          // Industry-specific guidance and preliminary estimates
+          const industryGuidance: Record<string, { 
+            greeting: string;
+            whatToDo: string;
+            whyItMatters: string;
+            typicalPeakKW: string;
+            typicalBESSKWh: string;
+            equipmentRec: 'standard' | 'premium';
+            equipmentWhy: string;
+          }> = {
+            'shopping-center': {
+              greeting: "Great choice! Shopping centers are perfect for BESS because of your high daytime demand charges.",
+              whatToDo: "Tell me about your anchor tenants, common areas, and peak shopping times. I'll use this to calculate your exact power needs.",
+              whyItMatters: "Your HVAC and lighting during peak retail hours drive most of your electricity costs. We can shave 20-40% off demand charges.",
+              typicalPeakKW: "500 - 2,000 kW",
+              typicalBESSKWh: "1,000 - 4,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment handles most shopping centers well. Upgrade to Premium only if you have 24/7 grocery anchors or data centers."
+            },
+            'hotel': {
+              greeting: "Hotels are excellent BESS candidates! Your consistent occupancy patterns make savings very predictable.",
+              whatToDo: "Tell me about your rooms, amenities (pool, restaurant, spa), and typical occupancy. This helps me size your system perfectly.",
+              whyItMatters: "Hotels have predictable demand peaks around check-in time and evening hours. BESS can shave these peaks dramatically.",
+              typicalPeakKW: "200 - 800 kW",
+              typicalBESSKWh: "400 - 1,600 kWh",
+              equipmentRec: 'premium',
+              equipmentWhy: "I recommend Premium for hotels - your guests expect 24/7 reliability, and the efficiency gains pay off with your continuous operation."
+            },
+            'hospital': {
+              greeting: "Critical infrastructure! Hospitals need the most reliable energy systems. Let me design something bulletproof.",
+              whatToDo: "I need to know your bed count, critical care units, and backup requirements. These determine minimum BESS sizing for safety.",
+              whyItMatters: "Hospitals can't afford any downtime. Your BESS will provide instant backup AND ongoing demand charge savings.",
+              typicalPeakKW: "1,000 - 5,000 kW",
+              typicalBESSKWh: "2,000 - 10,000 kWh",
+              equipmentRec: 'premium',
+              equipmentWhy: "Premium is essential for hospitals. You need the highest reliability, redundancy, and fastest response times for critical care."
+            },
+            'data-center': {
+              greeting: "Data centers are ideal for BESS - your load is constant, predictable, and reliability is paramount.",
+              whatToDo: "Tell me your IT load in kW, cooling system type, and redundancy requirements (N+1, 2N). I'll design for 99.999% uptime.",
+              whyItMatters: "Even seconds of downtime cost fortune in data centers. BESS provides instant switchover plus ongoing energy arbitrage.",
+              typicalPeakKW: "500 - 10,000 kW",
+              typicalBESSKWh: "1,000 - 20,000 kWh",
+              equipmentRec: 'premium',
+              equipmentWhy: "Premium is mandatory for data centers. Tier III/IV requirements demand the highest quality equipment with full redundancy."
+            },
+            'manufacturing': {
+              greeting: "Manufacturing plants see huge savings from BESS - your demand spikes from equipment startups are expensive!",
+              whatToDo: "Share your production schedule, major equipment loads, and shift patterns. This reveals your peak shaving opportunity.",
+              whyItMatters: "Motor startups and production ramps create expensive demand spikes. BESS smooths these out for major savings.",
+              typicalPeakKW: "500 - 5,000 kW",
+              typicalBESSKWh: "1,000 - 10,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment works great for most manufacturing. Consider Premium only for 24/7 operations or harsh environments."
+            },
+            'warehouse': {
+              greeting: "Warehouses have surprisingly good BESS economics - especially with refrigeration or forklift charging!",
+              whatToDo: "Tell me about your square footage, refrigeration needs, and forklift charging schedules. These are your main power drivers.",
+              whyItMatters: "Cold storage and EV forklift charging create predictable demand peaks. BESS can reduce your utility bills 15-30%.",
+              typicalPeakKW: "150 - 1,000 kW",
+              typicalBESSKWh: "300 - 2,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment is perfect for warehouse applications. Simple, reliable, cost-effective."
+            },
+            'retail': {
+              greeting: "Retail stores benefit nicely from BESS - your daytime hours align perfectly with peak utility rates!",
+              whatToDo: "Tell me your store size, operating hours, and major equipment (refrigeration, HVAC). I'll size for maximum ROI.",
+              whyItMatters: "Retail's daytime operation coincides with highest utility rates. BESS lets you buy cheap nighttime power and use it during the day.",
+              typicalPeakKW: "50 - 300 kW",
+              typicalBESSKWh: "100 - 600 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment is ideal for retail. Clean, quiet, compact units that won't disturb your customers."
+            },
+            'office': {
+              greeting: "Office buildings are BESS sweet spots! Your 9-5 demand profile is perfect for peak shaving.",
+              whatToDo: "Share your square footage, floor count, and tenant types. Also let me know about your data center or server rooms if any.",
+              whyItMatters: "Office HVAC peaks during afternoon hours when rates are highest. BESS reduces these peaks by 20-40%.",
+              typicalPeakKW: "200 - 2,000 kW",
+              typicalBESSKWh: "400 - 4,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment handles most office buildings excellently. Upgrade to Premium for Class A buildings with 24/7 tenants."
+            },
+            'car-wash': {
+              greeting: "Car washes are unique - your power spikes during washes are perfect for BESS optimization!",
+              whatToDo: "Tell me about your bay count, wash types, and daily vehicle throughput. Each wash creates a demand spike I can smooth out.",
+              whyItMatters: "Car wash motors and blowers create huge but brief demand spikes. BESS eliminates demand charges from these spikes.",
+              typicalPeakKW: "100 - 500 kW",
+              typicalBESSKWh: "200 - 1,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "Standard equipment is perfect for car washes. Handles the rapid charge/discharge cycles well."
+            },
+            'ev-charging': {
+              greeting: "EV charging stations are the future of energy! Let me design a BESS that maximizes your charging profits.",
+              whatToDo: "Tell me your charger count by type (Level 2, DCFC, HPC), daily sessions, and grid connection capacity.",
+              whyItMatters: "Without BESS, DCFC chargers create massive demand charges. BESS can cut your utility costs 40-60%!",
+              typicalPeakKW: "100 - 1,000 kW",
+              typicalBESSKWh: "200 - 2,000 kWh",
+              equipmentRec: 'premium',
+              equipmentWhy: "Premium is recommended for EV charging - high cycle counts and fast charge/discharge require quality cells."
+            },
+            'default': {
+              greeting: "Let me analyze your facility to find the best energy storage solution for your specific needs.",
+              whatToDo: "Answer the questions below about your facility. The more details you provide, the more accurate my recommendations will be.",
+              whyItMatters: "Every facility is unique. Your answers help me calculate exactly how much you can save with battery storage.",
+              typicalPeakKW: "100 - 1,000 kW",
+              typicalBESSKWh: "200 - 2,000 kWh",
+              equipmentRec: 'standard',
+              equipmentWhy: "I'll recommend the right equipment tier based on your specific requirements."
+            }
+          };
+          
+          const guidance = industryGuidance[wizardState.selectedIndustry] || industryGuidance['default'];
+          
+          return (
+            <div className="bg-gradient-to-br from-[#1a1f4e] via-[#252a6a] to-[#1a1f4e] rounded-3xl p-6 border-2 border-[#4b59f5]/50 shadow-2xl mb-6 relative overflow-hidden">
+              {/* Subtle glow effect */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#7DD3FC]/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
+              
+              {/* Merlin Header */}
+              <div className="flex items-start gap-4 mb-5 relative z-10">
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#7DD3FC]/50 bg-gradient-to-br from-[#060F76] to-[#1a237e] shadow-lg">
+                  <img src={merlinImage} alt="Merlin" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-bold text-white">Merlin's Guidance</h3>
+                    <Sparkles className="w-5 h-5 text-[#7DD3FC]" />
+                  </div>
+                  <p className="text-[#7DD3FC] text-lg leading-relaxed">
+                    {guidance.greeting}
+                  </p>
+                </div>
+              </div>
+              
+              {/* What To Do - CLEAR GUIDANCE */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 relative z-10">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-emerald-400 font-bold mb-1 flex items-center gap-2">
+                      <span>What I Need From You</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </h4>
+                    <p className="text-white/90">{guidance.whatToDo}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Why It Matters */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/10 relative z-10">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <Lightbulb className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-amber-400 font-bold mb-1">Why This Matters</h4>
+                    <p className="text-white/80">{guidance.whyItMatters}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Preliminary Estimates */}
+              <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
+                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl p-4 border border-blue-400/30">
+                  <div className="flex items-center gap-2 text-blue-300 text-sm mb-1">
+                    <Zap className="w-4 h-4" />
+                    <span>Typical Peak Demand</span>
+                  </div>
+                  <div className="text-white font-bold text-lg">{guidance.typicalPeakKW}</div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl p-4 border border-purple-400/30">
+                  <div className="flex items-center gap-2 text-purple-300 text-sm mb-1">
+                    <Battery className="w-4 h-4" />
+                    <span>Typical BESS Size</span>
+                  </div>
+                  <div className="text-white font-bold text-lg">{guidance.typicalBESSKWh}</div>
+                </div>
+              </div>
+              
+              {/* Equipment Recommendation */}
+              <div className={`relative z-10 rounded-xl p-4 border ${
+                guidance.equipmentRec === 'premium' 
+                  ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 border-amber-400/30'
+                  : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border-blue-400/30'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    guidance.equipmentRec === 'premium' ? 'bg-amber-500/30' : 'bg-blue-500/30'
+                  }`}>
+                    {guidance.equipmentRec === 'premium' ? (
+                      <Star className="w-5 h-5 text-amber-400" />
+                    ) : (
+                      <Settings className="w-5 h-5 text-blue-400" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className={`font-bold mb-1 flex items-center gap-2 ${
+                      guidance.equipmentRec === 'premium' ? 'text-amber-400' : 'text-blue-400'
+                    }`}>
+                      <span>My Recommendation: {guidance.equipmentRec === 'premium' ? 'Premium' : 'Standard'} Equipment</span>
+                    </h4>
+                    <p className="text-white/80 text-sm">{guidance.equipmentWhy}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* ═══════════════════════════════════════════════════════════════════
             FACILITY SUBTYPE SELECTOR (Dec 2025 - Universal Pattern)
             First question for all use cases - determines power profile
             ═══════════════════════════════════════════════════════════════════ */}
@@ -316,13 +543,13 @@ export function FacilityDetailsSection({
           if (subtypes.length <= 1 && subtypes[0]?.id === 'standard') return null;
           
           return (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-amber-200 shadow-xl mb-6">
+            <div className={`${step2Colors.panelBgGradient} rounded-3xl p-6 border-2 ${step2Colors.panelBorder} shadow-xl mb-6`}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#0066CC] to-[#004499] rounded-xl flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-amber-700">What type of {wizardState.industryName || 'facility'}?</h3>
+                  <h3 className="text-lg font-bold text-[#0066CC]">What type of {wizardState.industryName || 'facility'}?</h3>
                   <p className="text-sm text-gray-500">This affects power requirements and sizing</p>
                 </div>
               </div>
@@ -334,12 +561,12 @@ export function FacilityDetailsSection({
                     onClick={() => setWizardState(prev => ({ ...prev, facilitySubtype: subtype.id }))}
                     className={`p-4 rounded-xl text-left transition-all ${
                       wizardState.facilitySubtype === subtype.id
-                        ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'bg-amber-50 border-2 border-amber-200 text-gray-700 hover:border-amber-400 hover:bg-amber-100'
+                        ? 'bg-gradient-to-br from-[#0066CC] to-[#004499] text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-blue-50/50 border-2 border-blue-200 text-gray-700 hover:border-blue-400 hover:bg-blue-100'
                     }`}
                   >
                     <div className="font-bold">{subtype.label}</div>
-                    <div className={`text-sm mt-1 ${wizardState.facilitySubtype === subtype.id ? 'text-amber-100' : 'text-gray-500'}`}>
+                    <div className={`text-sm mt-1 ${wizardState.facilitySubtype === subtype.id ? 'text-blue-100' : 'text-gray-500'}`}>
                       {subtype.description}
                     </div>
                   </button>
@@ -353,13 +580,13 @@ export function FacilityDetailsSection({
             EQUIPMENT TIER SELECTOR (Dec 2025 - Simplified Two-Tier System)
             Standard vs Premium - per Vineet feedback
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-indigo-200 shadow-xl mb-6">
+        <div className={`${step2Colors.panelBgGradient} rounded-3xl p-6 border-2 ${step2Colors.panelBorder} shadow-xl mb-6`}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#0066CC] to-[#004499] rounded-xl flex items-center justify-center">
               <Settings className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-indigo-700">Equipment Grade</h3>
+              <h3 className="text-lg font-bold text-[#0066CC]">Equipment Grade</h3>
               <p className="text-sm text-gray-500">Standard meets needs; Premium maximizes efficiency</p>
             </div>
           </div>
@@ -373,8 +600,8 @@ export function FacilityDetailsSection({
                   wizardState.equipmentTier === tier.id
                     ? tier.id === 'premium'
                       ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
-                      : 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30'
-                    : 'bg-gray-50 border-2 border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50'
+                      : 'bg-gradient-to-br from-[#0066CC] to-[#004499] text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-blue-50/30 border-2 border-blue-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
                 }`}
               >
                 {tier.id === 'premium' && wizardState.equipmentTier !== 'premium' && (
@@ -400,15 +627,15 @@ export function FacilityDetailsSection({
         </div>
         
         {/* Dynamic Custom Questions from Database */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border border-purple-200 shadow-xl">
+        <div className={`${step2Colors.panelBgGradient} rounded-3xl p-8 border-2 ${step2Colors.panelBorder} shadow-xl`}>
           {filteredQuestions.length > 0 ? (
             <>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#0066CC] to-[#004499] rounded-2xl flex items-center justify-center">
                   <Info className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-purple-700">Industry-Specific Details</h3>
+                  <h3 className="text-xl font-bold text-[#0066CC]">Industry-Specific Details</h3>
                   <p className="text-sm text-gray-500">{filteredQuestions.length} questions to accurately size your system</p>
                 </div>
               </div>
@@ -428,7 +655,7 @@ export function FacilityDetailsSection({
                       ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200' 
                       : isGoalsQuestion
                         ? 'bg-gradient-to-br from-purple-50 via-indigo-50 to-violet-50 border-purple-300'
-                        : 'bg-gradient-to-br from-purple-50/60 to-indigo-50/60 border-purple-100'
+                        : `${step2Colors.panelBg} border-blue-200`
                   }`}>
                     {/* Special BESS explanation banner */}
                     {isBESSQuestion && (
@@ -445,7 +672,7 @@ export function FacilityDetailsSection({
                         ? 'text-emerald-800 text-xl' 
                         : isGoalsQuestion
                           ? 'text-purple-800 text-xl'
-                          : 'text-gray-800 text-lg'
+                          : 'text-[#0066CC] text-lg'
                     }`}>
                       {question.question_text}
                       {question.is_required && <span className="text-red-500 ml-1">*</span>}
@@ -457,7 +684,7 @@ export function FacilityDetailsSection({
                           ? 'text-emerald-600' 
                           : isGoalsQuestion
                             ? 'text-purple-600'
-                            : 'text-gray-500'
+                            : 'text-blue-600/70'
                       }`}>{question.help_text}</p>
                     )}
                     
@@ -476,9 +703,9 @@ export function FacilityDetailsSection({
                               }
                             }));
                           }}
-                          className="p-3 bg-purple-100 rounded-xl hover:bg-purple-200 transition-colors"
+                          className="p-3 bg-blue-100 rounded-xl hover:bg-blue-200 transition-colors"
                         >
-                          <Minus className="w-5 h-5 text-purple-600" />
+                          <Minus className="w-5 h-5 text-[#0066CC]" />
                         </button>
                         <input
                           type="text"
@@ -496,7 +723,7 @@ export function FacilityDetailsSection({
                             }));
                           }}
                           onFocus={(e) => e.target.select()}
-                          className="flex-1 px-5 py-4 bg-white border-2 border-purple-200 rounded-xl text-gray-800 text-center text-2xl font-bold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                          className="flex-1 px-5 py-4 bg-white border-2 border-blue-200 rounded-xl text-gray-800 text-center text-2xl font-bold focus:border-[#0066CC] focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                         <button
                           onClick={() => {
@@ -510,9 +737,9 @@ export function FacilityDetailsSection({
                               }
                             }));
                           }}
-                          className="p-3 bg-purple-100 rounded-xl hover:bg-purple-200 transition-colors"
+                          className="p-3 bg-blue-100 rounded-xl hover:bg-blue-200 transition-colors"
                         >
-                          <Plus className="w-5 h-5 text-purple-600" />
+                          <Plus className="w-5 h-5 text-[#0066CC]" />
                         </button>
                       </div>
                     )}
@@ -530,7 +757,7 @@ export function FacilityDetailsSection({
                               ...prev,
                               useCaseData: { ...prev.useCaseData, [question.field_name]: e.target.value }
                             }))}
-                            className="w-full px-5 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl text-gray-800 text-lg font-semibold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%239333ea%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                            className="w-full px-5 py-4 bg-gradient-to-r from-blue-50 to-sky-50 border-2 border-blue-300 rounded-xl text-gray-800 text-lg font-semibold focus:border-[#0066CC] focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%230066CC%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em] bg-[right_0.75rem_center] bg-no-repeat pr-10"
                           >
                             <option value="" disabled>Select an option...</option>
                             {options.map((option: any) => {
@@ -545,14 +772,14 @@ export function FacilityDetailsSection({
                       }
                       
                       // Use large card buttons for 6 or fewer options
-                      // Gradient colors cycle: purple→indigo→emerald→amber→rose→cyan
+                      // Gradient colors cycle: blue→sky→cyan→teal→emerald→green (cool blue theme)
                       const gradients = [
-                        { selected: 'from-purple-600 to-indigo-600', border: 'border-purple-300 hover:border-purple-400', bg: 'from-purple-50 to-indigo-50', shadow: 'shadow-purple-500/20' },
-                        { selected: 'from-indigo-600 to-blue-600', border: 'border-indigo-300 hover:border-indigo-400', bg: 'from-indigo-50 to-blue-50', shadow: 'shadow-indigo-500/20' },
-                        { selected: 'from-emerald-600 to-teal-600', border: 'border-emerald-300 hover:border-emerald-400', bg: 'from-emerald-50 to-teal-50', shadow: 'shadow-emerald-500/20' },
-                        { selected: 'from-amber-500 to-orange-500', border: 'border-amber-300 hover:border-amber-400', bg: 'from-amber-50 to-orange-50', shadow: 'shadow-amber-500/20' },
-                        { selected: 'from-rose-500 to-pink-500', border: 'border-rose-300 hover:border-rose-400', bg: 'from-rose-50 to-pink-50', shadow: 'shadow-rose-500/20' },
-                        { selected: 'from-cyan-500 to-sky-500', border: 'border-cyan-300 hover:border-cyan-400', bg: 'from-cyan-50 to-sky-50', shadow: 'shadow-cyan-500/20' },
+                        { selected: 'from-[#0066CC] to-[#004499]', border: 'border-blue-300 hover:border-blue-400', bg: 'from-blue-50 to-sky-50', shadow: 'shadow-blue-500/20' },
+                        { selected: 'from-sky-500 to-cyan-600', border: 'border-sky-300 hover:border-sky-400', bg: 'from-sky-50 to-cyan-50', shadow: 'shadow-sky-500/20' },
+                        { selected: 'from-cyan-500 to-teal-600', border: 'border-cyan-300 hover:border-cyan-400', bg: 'from-cyan-50 to-teal-50', shadow: 'shadow-cyan-500/20' },
+                        { selected: 'from-teal-500 to-emerald-600', border: 'border-teal-300 hover:border-teal-400', bg: 'from-teal-50 to-emerald-50', shadow: 'shadow-teal-500/20' },
+                        { selected: 'from-emerald-500 to-green-600', border: 'border-emerald-300 hover:border-emerald-400', bg: 'from-emerald-50 to-green-50', shadow: 'shadow-emerald-500/20' },
+                        { selected: 'from-green-500 to-teal-500', border: 'border-green-300 hover:border-green-400', bg: 'from-green-50 to-teal-50', shadow: 'shadow-green-500/20' },
                       ];
                       
                       return (
@@ -609,7 +836,7 @@ export function FacilityDetailsSection({
                           useCaseData: { ...prev.useCaseData, [question.field_name]: e.target.value }
                         }))}
                         placeholder={question.placeholder || ''}
-                        className="w-full px-5 py-4 bg-white border-2 border-purple-200 rounded-xl text-gray-800 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                        className="w-full px-5 py-4 bg-white border-2 border-blue-200 rounded-xl text-gray-800 focus:border-[#0066CC] focus:ring-2 focus:ring-blue-500/20 transition-all"
                       />
                     )}
                     
@@ -623,7 +850,7 @@ export function FacilityDetailsSection({
                             ...prev,
                             useCaseData: { ...prev.useCaseData, [question.field_name]: e.target.checked }
                           }))}
-                          className="w-6 h-6 rounded accent-purple-500"
+                          className="w-6 h-6 rounded accent-[#0066CC]"
                         />
                         <span className="text-gray-700">Yes</span>
                       </label>
@@ -643,10 +870,10 @@ export function FacilityDetailsSection({
                               ...prev,
                               useCaseData: { ...prev.useCaseData, [question.field_name]: parseFloat(e.target.value) }
                             }))}
-                            className="flex-1 h-3 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-[#0066CC]"
                           />
-                          <div className="bg-purple-100 rounded-xl px-4 py-2 min-w-[100px] text-center border-2 border-purple-300">
-                            <span className="text-2xl font-black text-purple-600">
+                          <div className="bg-blue-100 rounded-xl px-4 py-2 min-w-[100px] text-center border-2 border-blue-300">
+                            <span className="text-2xl font-black text-[#0066CC]">
                               {question.field_name.includes('bill') || question.field_name.includes('cost') 
                                 ? `$${(wizardState.useCaseData[question.field_name] ?? question.default_value ?? 0).toLocaleString()}`
                                 : (wizardState.useCaseData[question.field_name] ?? question.default_value ?? 0).toLocaleString()
@@ -868,11 +1095,11 @@ export function FacilityDetailsSection({
                 return (
                   <>
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#0066CC] to-[#004499] rounded-2xl flex items-center justify-center">
                         <Gauge className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-800">{preset.label}</h3>
+                        <h3 className="text-xl font-bold text-[#0066CC]">{preset.label}</h3>
                         <p className="text-sm text-gray-500">Select or enter your size in {preset.unit}</p>
                       </div>
                     </div>
@@ -885,8 +1112,8 @@ export function FacilityDetailsSection({
                           onClick={() => setWizardState(prev => ({ ...prev, facilitySize: size }))}
                           className={`py-3 px-4 rounded-xl font-medium transition-all ${
                             wizardState.facilitySize === size
-                              ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-                              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              ? 'bg-[#0066CC] text-white shadow-lg shadow-blue-500/30'
+                              : 'bg-blue-100 text-[#0066CC] hover:bg-blue-200'
                           }`}
                         >
                           {size.toLocaleString()}
@@ -900,9 +1127,9 @@ export function FacilityDetailsSection({
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => setWizardState(prev => ({ ...prev, facilitySize: Math.max(1000, prev.facilitySize - 5000) }))}
-                          className="p-3 bg-purple-100 rounded-xl hover:bg-purple-200 transition-colors"
+                          className="p-3 bg-blue-100 rounded-xl hover:bg-blue-200 transition-colors"
                         >
-                          <Minus className="w-5 h-5 text-purple-600" />
+                          <Minus className="w-5 h-5 text-[#0066CC]" />
                         </button>
                         <input
                           type="text"
@@ -914,13 +1141,13 @@ export function FacilityDetailsSection({
                             setWizardState(prev => ({ ...prev, facilitySize: parseInt(val) || 0 }));
                           }}
                           onFocus={(e) => e.target.select()}
-                          className="flex-1 px-5 py-4 bg-purple-50 border-2 border-purple-200 rounded-xl text-gray-800 text-center text-2xl font-bold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                          className="flex-1 px-5 py-4 bg-blue-50 border-2 border-blue-200 rounded-xl text-gray-800 text-center text-2xl font-bold focus:border-[#0066CC] focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                         <button
                           onClick={() => setWizardState(prev => ({ ...prev, facilitySize: prev.facilitySize + 5000 }))}
-                          className="p-3 bg-purple-100 rounded-xl hover:bg-purple-200 transition-colors"
+                          className="p-3 bg-blue-100 rounded-xl hover:bg-blue-200 transition-colors"
                         >
-                          <Plus className="w-5 h-5 text-purple-600" />
+                          <Plus className="w-5 h-5 text-[#0066CC]" />
                         </button>
                       </div>
                       <p className="text-center text-gray-500 mt-2">{preset.unit}</p>

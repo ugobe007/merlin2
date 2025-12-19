@@ -4,6 +4,8 @@
  * 
  * December 2025 - Professional, bank-ready quote template
  * 
+ * UPDATED Dec 19, 2025: Step 4 color theme (warm gold - celebration!)
+ * 
  * Structure:
  * 1. Quote Summary Header
  * 2. TrueQuote™ Compliance Explanation
@@ -54,6 +56,10 @@ import { SolarSizingModal } from '../modals/SolarSizingModal';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
 import merlinImage from '@/assets/images/new_Merlin.png';
+
+// Step 4 colors - warm gold celebration theme
+import { getStepColors } from '../constants/stepColors';
+const step4Colors = getStepColors(4);
 
 interface QuoteResultsSectionProps {
   wizardState: WizardState;
@@ -181,7 +187,7 @@ export function QuoteResultsSection({
   return (
     <div
       ref={sectionRef}
-      className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${currentSection !== 7 ? 'hidden' : ''}`}
+      className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${step4Colors.panelBgGradient} ${currentSection !== 7 ? 'hidden' : ''}`}
     >
       <div className="max-w-4xl mx-auto">
         {/* Navigation - Back / Home / Start New */}
@@ -189,20 +195,20 @@ export function QuoteResultsSection({
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors shadow-md"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
             <button
               onClick={onHome || onBack} // Home navigates to vertical landing page
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg border border-slate-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-amber-700 rounded-lg border-2 border-amber-300 transition-colors shadow-sm"
             >
               <Home className="w-4 h-4" />
               Home
             </button>
           </div>
-          <div className="text-sm text-gray-400">TrueQuote™ Results</div>
+          <div className="text-sm text-amber-700 font-semibold">TrueQuote™ Results</div>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -217,7 +223,7 @@ export function QuoteResultsSection({
             ════════════════════════════════════════════════════════════════ */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               {/* Header Banner */}
-              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6">
+              <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -225,7 +231,7 @@ export function QuoteResultsSection({
                     </div>
                     <div>
                       <h1 className="text-2xl md:text-3xl font-black text-white">Your Energy Quote</h1>
-                      <p className="text-emerald-100">Prepared by Merlin Energy • {new Date().toLocaleDateString()}</p>
+                      <p className="text-amber-100">Prepared by Merlin Energy • {new Date().toLocaleDateString()}</p>
                     </div>
                   </div>
                   <img src={merlinImage} alt="Merlin" className="w-14 h-14 hidden md:block" />
@@ -236,21 +242,21 @@ export function QuoteResultsSection({
               <div className="p-6">
                 <div className="grid md:grid-cols-3 gap-4 mb-6">
                   <div className="flex items-center gap-3">
-                    <Building className="w-5 h-5 text-gray-400" />
+                    <Building className="w-5 h-5 text-amber-500" />
                     <div>
                       <p className="text-sm text-gray-500">Facility Type</p>
                       <p className="font-bold text-gray-800">{wizardState.industryName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-gray-400" />
+                    <MapPin className="w-5 h-5 text-amber-500" />
                     <div>
                       <p className="text-sm text-gray-500">Location</p>
                       <p className="font-bold text-gray-800">{wizardState.state}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-gray-400" />
+                    <Calendar className="w-5 h-5 text-amber-500" />
                     <div>
                       <p className="text-sm text-gray-500">Quote Valid</p>
                       <p className="font-bold text-gray-800">30 Days</p>
@@ -260,21 +266,21 @@ export function QuoteResultsSection({
 
                 {/* Key Numbers */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 text-center">
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 text-center border-2 border-emerald-200">
                     <p className="text-sm text-emerald-600 font-semibold mb-1">Annual Savings</p>
                     <p className="text-2xl md:text-3xl font-black text-emerald-600">{formatMoney(annualSavings)}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 text-center">
-                    <p className="text-sm text-purple-600 font-semibold mb-1">Payback Period</p>
-                    <p className="text-2xl md:text-3xl font-black text-purple-600">{paybackYears.toFixed(1)} yrs</p>
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 text-center border-2 border-amber-200">
+                    <p className="text-sm text-amber-600 font-semibold mb-1">Payback Period</p>
+                    <p className="text-2xl md:text-3xl font-black text-amber-600">{paybackYears.toFixed(1)} yrs</p>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 text-center">
-                    <p className="text-sm text-blue-600 font-semibold mb-1">10-Year ROI</p>
-                    <p className="text-2xl md:text-3xl font-black text-blue-600">{Math.round(roi10Year)}%</p>
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center border-2 border-orange-200">
+                    <p className="text-sm text-orange-600 font-semibold mb-1">10-Year ROI</p>
+                    <p className="text-2xl md:text-3xl font-black text-orange-600">{Math.round(roi10Year)}%</p>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 text-center">
-                    <p className="text-sm text-amber-600 font-semibold mb-1">Net Investment</p>
-                    <p className="text-2xl md:text-3xl font-black text-amber-600">{formatMoney(netCost)}</p>
+                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-4 text-center border-2 border-yellow-300">
+                    <p className="text-sm text-yellow-700 font-semibold mb-1">Net Investment</p>
+                    <p className="text-2xl md:text-3xl font-black text-yellow-700">{formatMoney(netCost)}</p>
                   </div>
                 </div>
               </div>
@@ -283,20 +289,20 @@ export function QuoteResultsSection({
             {/* ════════════════════════════════════════════════════════════════
                 SECTION 2: TRUEQUOTE™ COMPLIANCE
             ════════════════════════════════════════════════════════════════ */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-6 border-2 border-amber-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-emerald-800 mb-2">TrueQuote™ Verified</h3>
-                  <p className="text-emerald-700 mb-3">
+                  <h3 className="text-lg font-bold text-amber-800 mb-2">TrueQuote™ Verified</h3>
+                  <p className="text-amber-700 mb-3">
                     Every number in this quote is backed by authoritative industry sources including NREL, IEEE, and the IRS. 
                     This isn't guesswork—it's data you can take to your bank.
                   </p>
                   <button
                     onClick={() => setShowTrueQuoteModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-md"
                   >
                     <Info className="w-4 h-4" />
                     Learn About Our Sources
@@ -308,10 +314,10 @@ export function QuoteResultsSection({
             {/* ════════════════════════════════════════════════════════════════
                 SECTION 3: FULL EQUIPMENT & COST BREAKDOWN
             ════════════════════════════════════════════════════════════════ */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              <div className="p-6 bg-gray-50 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <DollarSign className="w-6 h-6 text-emerald-600" />
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-amber-200">
+              <div className="p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-b-2 border-amber-200">
+                <h2 className="text-xl font-bold text-amber-800 flex items-center gap-2">
+                  <DollarSign className="w-6 h-6 text-amber-600" />
                   Complete Cost Breakdown
                 </h2>
               </div>
@@ -319,7 +325,7 @@ export function QuoteResultsSection({
               <div className="p-6">
                 {/* Hardware Section */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Hardware & Equipment</h3>
+                  <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wider mb-4">Hardware & Equipment</h3>
                   <div className="space-y-3">
                     {/* Battery System */}
                     <CostLineItem
@@ -431,7 +437,7 @@ export function QuoteResultsSection({
                 </div>
 
                 {/* Totals Section */}
-                <div className="bg-gray-50 rounded-xl p-5 space-y-3">
+                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-5 space-y-3 border-2 border-amber-200">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total Before Incentives</span>
                     <span className="font-bold text-gray-800 text-xl">{formatMoney(totalProjectCost)}</span>
@@ -452,9 +458,9 @@ export function QuoteResultsSection({
                     </div>
                   )}
                   
-                  <div className="pt-3 border-t-2 border-emerald-200 flex justify-between items-center">
+                  <div className="pt-3 border-t-2 border-amber-300 flex justify-between items-center">
                     <span className="text-xl font-bold text-gray-800">Net Investment</span>
-                    <span className="text-3xl font-black text-emerald-600">{formatMoney(netCost)}</span>
+                    <span className="text-3xl font-black text-amber-600">{formatMoney(netCost)}</span>
                   </div>
                 </div>
               </div>
@@ -463,13 +469,13 @@ export function QuoteResultsSection({
             {/* ════════════════════════════════════════════════════════════════
                 SECTION 4: ROI ANALYSIS - WHY THIS WORKS
             ════════════════════════════════════════════════════════════════ */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              <div className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-200">
-                <h2 className="text-xl font-bold text-purple-800 flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-amber-200">
+              <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-200">
+                <h2 className="text-xl font-bold text-amber-800 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6 text-amber-600" />
                   Return on Investment Analysis
                 </h2>
-                <p className="text-purple-600 text-sm mt-1">Why this configuration works for your {wizardState.industryName}</p>
+                <p className="text-amber-600 text-sm mt-1">Why this configuration works for your {wizardState.industryName}</p>
               </div>
 
               <div className="p-6">
@@ -495,7 +501,7 @@ export function QuoteResultsSection({
 
                 {/* How You Save */}
                 <div className="mb-6">
-                  <h3 className="font-bold text-gray-800 mb-4">How This System Saves You Money</h3>
+                  <h3 className="font-bold text-amber-800 mb-4">How This System Saves You Money</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <SavingsSource
                       title="Peak Demand Reduction"
@@ -734,10 +740,10 @@ interface ROICardProps {
 
 function ROICard({ title, value, description, highlight }: ROICardProps) {
   return (
-    <div className={`rounded-xl p-5 text-center ${highlight ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white' : 'bg-gray-50'}`}>
-      <p className={`text-sm font-semibold mb-1 ${highlight ? 'text-emerald-100' : 'text-gray-500'}`}>{title}</p>
-      <p className={`text-3xl font-black mb-1 ${highlight ? 'text-white' : 'text-gray-800'}`}>{value}</p>
-      <p className={`text-sm ${highlight ? 'text-emerald-100' : 'text-gray-500'}`}>{description}</p>
+    <div className={`rounded-xl p-5 text-center ${highlight ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 text-white shadow-lg' : 'bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200'}`}>
+      <p className={`text-sm font-semibold mb-1 ${highlight ? 'text-amber-100' : 'text-amber-600'}`}>{title}</p>
+      <p className={`text-3xl font-black mb-1 ${highlight ? 'text-white' : 'text-amber-800'}`}>{value}</p>
+      <p className={`text-sm ${highlight ? 'text-amber-100' : 'text-amber-600'}`}>{description}</p>
     </div>
   );
 }
@@ -750,16 +756,16 @@ interface SavingsSourceProps {
 
 function SavingsSource({ title, savings, description }: SavingsSourceProps) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-        <DollarSign className="w-4 h-4 text-emerald-600" />
+    <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
+      <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <DollarSign className="w-4 h-4 text-amber-600" />
       </div>
       <div className="flex-1">
         <p className="font-semibold text-gray-800">{title}</p>
         <p className="text-sm text-gray-500">{description}</p>
       </div>
       <div className="text-right">
-        <p className="font-bold text-emerald-600">~${savings.toLocaleString()}/yr</p>
+        <p className="font-bold text-amber-600">~${savings.toLocaleString()}/yr</p>
       </div>
     </div>
   );
@@ -772,7 +778,7 @@ function ExportDropdown({ quoteData, equipment }: { quoteData: any; equipment: a
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors shadow-lg"
+        className="w-full flex items-center justify-center gap-2 py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold transition-colors shadow-lg"
       >
         <Download className="w-5 h-5" />
         Export Quote
@@ -782,7 +788,7 @@ function ExportDropdown({ quoteData, equipment }: { quoteData: any; equipment: a
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border-2 border-amber-200 rounded-xl shadow-xl z-50 overflow-hidden">
             <button 
               onClick={() => { generatePDF(quoteData, equipment); setIsOpen(false); }} 
               className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-red-50 hover:text-red-600 border-b border-gray-100"

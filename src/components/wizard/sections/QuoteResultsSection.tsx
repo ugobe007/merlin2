@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   Battery,
+  Check,
   CheckCircle,
   ChevronDown,
   Clock,
@@ -16,13 +17,16 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
+  Gauge,
   Info,
   Mail,
   Phone,
   Settings,
   Shield,
+  Sparkles,
   Sun,
   TrendingDown,
+  Wand2,
   X,
   Zap,
 } from 'lucide-react';
@@ -53,6 +57,7 @@ interface QuoteResultsSectionProps {
   premiumConfig: PremiumConfiguration | null;
   premiumComparison: PremiumComparison | null;
   onBack: () => void;
+  onHome?: () => void;
   onStartNew: () => void;
   /** Navigate to Advanced Quote Builder for pro users */
   onOpenAdvanced?: () => void;
@@ -66,6 +71,7 @@ export function QuoteResultsSection({
   premiumConfig,
   premiumComparison,
   onBack,
+  onHome,
   onStartNew,
   onOpenAdvanced,
 }: QuoteResultsSectionProps) {
@@ -241,6 +247,100 @@ export function QuoteResultsSection({
           <div className="px-3 py-1 bg-[#6700b6] text-white text-sm font-medium rounded-full">Step 5 of 5 • Final Quote</div>
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════
+            MERLIN GUIDANCE PANEL - Comprehensive template (Dec 19, 2025)
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-3xl p-6 shadow-xl border border-indigo-400/30 mb-8">
+          {/* Top Row: Avatar + Acknowledgment */}
+          <div className="flex items-start gap-5 mb-5">
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#6700b6] to-[#060F76] rounded-2xl flex items-center justify-center shadow-lg">
+                <Wand2 className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              {/* 1. ACKNOWLEDGE PREVIOUS STEP */}
+              <div className="flex items-center gap-2 mb-2">
+                <Check className="w-5 h-5 text-emerald-400" />
+                <span className="text-emerald-300 font-semibold">
+                  🎉 Excellent! Your quote is ready!
+                </span>
+              </div>
+              <h2 className="text-2xl font-black text-white mb-2">
+                Review Your Custom BESS Quote
+              </h2>
+              <p className="text-white/90">
+                I've calculated your savings, ROI, and payback period. Here's your complete investment analysis!
+              </p>
+            </div>
+          </div>
+          
+          {/* 2. STEP BY STEP INSTRUCTIONS */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-5">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-300" />
+              Here's what to do on this page:
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">1</div>
+                <span className="text-white/90 text-sm">Review <strong>savings & ROI</strong> below</span>
+              </div>
+              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">2</div>
+                <span className="text-white/90 text-sm"><strong>Download</strong> PDF/Word/Excel</span>
+              </div>
+              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">3</div>
+                <span className="text-white/90 text-sm"><strong>Request vendor quotes</strong></span>
+              </div>
+            </div>
+          </div>
+          
+          {/* 3. RECOMMENDATION HIGHLIGHT */}
+          {wizardState.quoteResult && (
+            <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl p-4 mb-5 border border-emerald-400/30">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="w-5 h-5 text-emerald-300" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-emerald-300 font-bold mb-1">💰 Your Investment Summary</h4>
+                  <p className="text-white/90 text-sm">
+                    Net cost: <strong className="text-emerald-300">${Math.round(wizardState.quoteResult.costs.netCost).toLocaleString()}</strong> after tax credits • 
+                    Payback in <strong className="text-emerald-300">{wizardState.quoteResult.financials.paybackYears.toFixed(1)} years</strong> • 
+                    Annual savings: <strong className="text-emerald-300">${Math.round(wizardState.quoteResult.financials.annualSavings).toLocaleString()}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* 4. PRO TIP */}
+          <div className="bg-amber-500/20 rounded-2xl p-4 border border-amber-400/30">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-5 h-5 text-amber-300" />
+              </div>
+              <div>
+                <h4 className="text-amber-300 font-bold text-sm mb-1">💡 Pro Tip: Compare Premium Options</h4>
+                <p className="text-white/80 text-sm">
+                  Scroll down to see how <strong>Premium BESS configurations</strong> can boost your savings even more with advanced features!
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Step indicator */}
+          <div className="flex items-center gap-3 mt-5">
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/20">
+              <span className="text-amber-300 font-bold text-sm">Step 5 of 5</span>
+              <span className="text-white/50">•</span>
+              <span className="text-white/80 text-sm">Final Quote</span>
+            </div>
+          </div>
+        </div>
+
         {wizardState.quoteResult ? (
           <>
             {/* Header */}
@@ -352,10 +452,81 @@ export function QuoteResultsSection({
             </div>
           </>
         ) : (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-            <p className="text-gray-800 font-bold text-xl">Generating your quote...</p>
-            <p className="text-gray-500 mt-2">This takes just a moment</p>
+          /* Quote not generated yet - show Merlin guidance instead of blank */
+          <div className="max-w-2xl mx-auto">
+            {/* Merlin Guidance Panel */}
+            <div className="bg-gradient-to-br from-[#1a1f4e] via-[#252a6a] to-[#1a1f4e] rounded-3xl p-8 border-2 border-[#4b59f5]/50 shadow-2xl mb-8">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#7DD3FC]/50 bg-gradient-to-br from-[#060F76] to-[#1a237e] shadow-lg">
+                  <img src={merlinImage} alt="Merlin" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-2">Generating Your Custom Quote</h2>
+                  <p className="text-[#7DD3FC]">
+                    I'm analyzing your configuration and calculating the optimal savings for your facility.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Loading Animation */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-20 h-20 border-4 border-[#7DD3FC] border-t-transparent rounded-full animate-spin" />
+              </div>
+              
+              {/* Configuration Summary */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+                <h3 className="text-white font-bold mb-3">Configuration Summary</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Battery Storage:</span>
+                    <span className="text-white font-bold">{wizardState.batteryKW} kW / {wizardState.durationHours}h</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Energy:</span>
+                    <span className="text-white font-bold">{wizardState.batteryKWh.toLocaleString()} kWh</span>
+                  </div>
+                  {wizardState.solarKW > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Solar:</span>
+                      <span className="text-white font-bold">{wizardState.solarKW} kW</span>
+                    </div>
+                  )}
+                  {wizardState.generatorKW > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Generator:</span>
+                      <span className="text-white font-bold">{wizardState.generatorKW} kW</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Location:</span>
+                    <span className="text-white font-bold">{wizardState.state}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Industry:</span>
+                    <span className="text-white font-bold">{wizardState.industryName}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Tip while waiting */}
+              <div className="mt-4 p-3 bg-[#7DD3FC]/10 rounded-xl border border-[#7DD3FC]/30">
+                <p className="text-[#7DD3FC] text-sm text-center">
+                  <Sparkles className="w-4 h-4 inline mr-1" />
+                  Pro tip: Check the Power Gap indicator in the top nav bar to see your coverage level!
+                </p>
+              </div>
+            </div>
+            
+            {/* Go Back button */}
+            <div className="flex justify-center">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 px-6 py-3 bg-[#060F76] hover:bg-[#0815a9] text-white rounded-xl font-bold transition-colors border-2 border-[#4b59f5]"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Configuration
+              </button>
+            </div>
           </div>
         )}
       </div>
