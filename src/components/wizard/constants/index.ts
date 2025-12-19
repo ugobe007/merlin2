@@ -6,3 +6,5 @@
  */
 
 export * from './wizardConstants';
+export * from './stepColors';
+export * from './industryCategories';
