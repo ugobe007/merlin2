@@ -35,7 +35,7 @@ import {
   ThumbsUp,
   ArrowDown,
 } from 'lucide-react';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface MerlinRecommendation {
   // Energy Production

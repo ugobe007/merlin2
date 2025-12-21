@@ -7,7 +7,7 @@ import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { type FinancialCalculationResult } from '@/services/centralizedCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
-import merlinImage from '../assets/images/new_Merlin.png';
+import merlinImage from '../assets/images/new_profile_merlin.png';
 import { DocumentUploadZone } from './upload/DocumentUploadZone';
 import type { ExtractedSpecsData } from '@/services/openAIExtractionService';
 import type { ParsedDocument } from '@/services/documentParserService';
@@ -1693,37 +1693,40 @@ export default function AdvancedQuoteBuilder({
                   
                   <div className="p-6">
                   {/* Power Conversion System (PCS) Configuration */}
-                  <div className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-6 mb-6">
-                    <h4 className="text-lg font-bold mb-4 text-purple-200">Power Conversion System (PCS)</h4>
+                  <div className="bg-white border-2 border-purple-200 rounded-xl p-6 mb-6 shadow-lg">
+                    <h4 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2">
+                      <Zap className="w-6 h-6 text-purple-600" />
+                      Power Conversion System (PCS)
+                    </h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* PCS Quoting Option */}
                       <div className="col-span-full">
-                        <label className="block text-sm font-semibold mb-3 text-slate-900">
+                        <label className="block text-base font-bold mb-3 text-gray-900">
                           PCS Quoting Method
                         </label>
                         <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer bg-purple-50 border border-purple-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-purple-100 transition-all flex-1">
+                          <label className="flex items-center gap-3 cursor-pointer bg-purple-50 border-2 border-purple-300 text-gray-900 rounded-xl px-5 py-4 hover:bg-purple-100 hover:border-purple-400 transition-all flex-1">
                             <input
                               type="radio"
                               checked={!pcsQuoteSeparately}
                               onChange={() => setPcsQuoteSeparately(false)}
-                              className="w-4 h-4 text-purple-600"
+                              className="w-5 h-5 text-purple-600"
                             />
-                            <span className="text-sm font-medium">Included with BESS System</span>
+                            <span className="text-base font-semibold">Included with BESS System</span>
                           </label>
-                          <label className="flex items-center gap-2 cursor-pointer bg-purple-50 border border-purple-300 text-slate-900 rounded-lg px-4 py-3 hover:bg-purple-100 transition-all flex-1">
+                          <label className="flex items-center gap-3 cursor-pointer bg-purple-50 border-2 border-purple-300 text-gray-900 rounded-xl px-5 py-4 hover:bg-purple-100 hover:border-purple-400 transition-all flex-1">
                             <input
                               type="radio"
                               checked={pcsQuoteSeparately}
                               onChange={() => setPcsQuoteSeparately(true)}
-                              className="w-4 h-4 text-purple-600"
+                              className="w-5 h-5 text-purple-600"
                             />
-                            <span className="text-sm font-medium">Quote PCS Separately</span>
+                            <span className="text-base font-semibold">Quote PCS Separately</span>
                           </label>
                         </div>
                         {pcsQuoteSeparately && (
-                          <p className="text-xs text-indigo-800 mt-2 bg-indigo-100 border border-indigo-400 rounded-lg p-2">
+                          <p className="text-sm text-indigo-900 mt-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg p-3 font-medium">
                             💡 PCS will be itemized separately in the quote with detailed specifications
                           </p>
                         )}
@@ -1731,25 +1734,25 @@ export default function AdvancedQuoteBuilder({
 
                       {/* Inverter Type */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-slate-900">
+                        <label className="block text-base font-bold mb-3 text-gray-900">
                           Inverter Type
                         </label>
                         <select
                           value={inverterType}
                           onChange={(e) => setInverterType(e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner hover:border-purple-400 transition-colors"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-colors"
                         >
                           <option value="bidirectional">Bidirectional Inverter</option>
                           <option value="unidirectional">Unidirectional (Charge Only)</option>
                         </select>
-                        <p className="text-xs text-slate-700 mt-1 font-medium">
+                        <p className="text-sm text-gray-700 mt-2 font-medium">
                           {inverterType === 'bidirectional' ? '⚡ Supports charge & discharge' : '⚡ Charge only (typical for solar)'}
                         </p>
                       </div>
 
                       {/* Number of Inverters */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-slate-900">
+                        <label className="block text-base font-bold mb-3 text-gray-900">
                           Number of Inverters
                         </label>
                         <div className="flex gap-2">
@@ -1758,25 +1761,25 @@ export default function AdvancedQuoteBuilder({
                             value={numberOfInvertersInput}
                             onChange={(e) => setNumberOfInvertersInput(parseInt(e.target.value) || 1)}
                             min="1"
-                            className="flex-1 px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                            className="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                             placeholder="Auto-calculated"
                           />
                           <button
                             onClick={() => setNumberOfInvertersInput(Math.ceil(totalKW / inverterRating))}
-                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 border border-purple-700 rounded-lg text-sm font-semibold text-white transition-all"
+                            className="px-5 py-3 bg-purple-600 hover:bg-purple-700 border-2 border-purple-700 rounded-lg text-sm font-bold text-white transition-all shadow-sm"
                             title="Auto-calculate based on system size"
                           >
                             Auto
                           </button>
                         </div>
-                        <p className="text-xs text-slate-700 mt-1 font-medium">
+                        <p className="text-sm text-gray-700 mt-2 font-medium">
                           Suggested: {Math.ceil(totalKW / inverterRating)} units @ {inverterRating} kW each
                         </p>
                       </div>
 
                       {/* Inverter Rating */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-slate-900">
+                        <label className="block text-base font-bold mb-3 text-gray-900">
                           Inverter Rating (kW per unit)
                         </label>
                         <input
@@ -1785,13 +1788,13 @@ export default function AdvancedQuoteBuilder({
                           onChange={(e) => setInverterRating(parseFloat(e.target.value) || 2500)}
                           step="100"
                           min="100"
-                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg font-medium shadow-inner"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                         />
                       </div>
 
                       {/* Manufacturer */}
                       <div>
-                        <label className="block text-sm font-semibold mb-2 text-slate-900">
+                        <label className="block text-base font-bold mb-3 text-gray-900">
                           Inverter Manufacturer (Optional)
                         </label>
                         <input
@@ -1799,7 +1802,7 @@ export default function AdvancedQuoteBuilder({
                           value={inverterManufacturer}
                           onChange={(e) => setInverterManufacturer(e.target.value)}
                           placeholder="e.g., SMA, Sungrow, Power Electronics"
-                          className="w-full px-4 py-3 bg-white border-2 border-purple-300 text-slate-900 rounded-lg placeholder-slate-400 shadow-inner"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base placeholder-gray-400 shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                         />
                       </div>
                     </div>
@@ -1960,26 +1963,26 @@ export default function AdvancedQuoteBuilder({
                     <div className="space-y-6">
                       
                       {/* Solar PV */}
-                      <div className="bg-yellow-100 border border-yellow-400 rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-xl font-bold flex items-center gap-2">
+                      <div className="bg-white border-2 border-amber-300 rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                          <h4 className="text-xl font-bold flex items-center gap-2 text-gray-900">
                             ☀️ Solar PV System
                           </h4>
-                          <label className="flex items-center gap-2 cursor-pointer">
+                          <label className="flex items-center gap-3 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={solarPVIncluded}
                               onChange={(e) => setSolarPVIncluded(e.target.checked)}
-                              className="w-5 h-5 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                              className="w-5 h-5 rounded border-2 border-gray-300 text-amber-600 focus:ring-amber-500"
                             />
-                            <span className="text-sm">Include Solar</span>
+                            <span className="text-base font-semibold text-gray-900">Include Solar</span>
                           </label>
                         </div>
 
                         {solarPVIncluded && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                              <label className="block text-sm font-bold mb-2 text-slate-900">
+                              <label className="block text-base font-bold mb-3 text-gray-900">
                                 Solar Capacity (kW)
                               </label>
                               <input
@@ -1988,17 +1991,17 @@ export default function AdvancedQuoteBuilder({
                                 onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
                                 step="50"
                                 min="0"
-                                className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-300 text-slate-900 rounded-lg font-medium"
+                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-bold mb-2 text-slate-900">
+                              <label className="block text-base font-bold mb-3 text-gray-900">
                                 Panel Type
                               </label>
                               <select
                                 value={solarPanelType}
                                 onChange={(e) => setSolarPanelType(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-300 text-slate-900 rounded-lg font-medium"
+                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                               >
                                 <option value="monocrystalline">Monocrystalline (20-22% eff.)</option>
                                 <option value="polycrystalline">Polycrystalline (15-17% eff.)</option>
@@ -2008,7 +2011,7 @@ export default function AdvancedQuoteBuilder({
                               </select>
                             </div>
                             <div>
-                              <label className="block text-sm font-bold mb-2 text-slate-900">
+                              <label className="block text-base font-bold mb-3 text-gray-900">
                                 Panel Efficiency (%)
                               </label>
                               <input
@@ -2018,17 +2021,17 @@ export default function AdvancedQuoteBuilder({
                                 min="10"
                                 max="25"
                                 step="0.5"
-                                className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-300 text-slate-900 rounded-lg font-medium"
+                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-bold mb-2 text-slate-900">
+                              <label className="block text-base font-bold mb-3 text-gray-900">
                                 Solar Inverter Type
                               </label>
                               <select
                                 value={solarInverterType}
                                 onChange={(e) => setSolarInverterType(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-50 border-2 border-gray-300 text-slate-900 rounded-lg font-medium"
+                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                               >
                                 <option value="string">String Inverter</option>
                                 <option value="micro">Micro-Inverters</option>
@@ -2036,14 +2039,14 @@ export default function AdvancedQuoteBuilder({
                                 <option value="central">Central Inverter</option>
                               </select>
                             </div>
-                            <div className="md:col-span-2 bg-yellow-200 border-2 border-yellow-400 rounded p-3">
-                              <p className="text-sm text-slate-900 font-bold">
+                            <div className="md:col-span-2 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                              <p className="text-base text-gray-900 font-bold mb-2">
                                 ☀️ Estimated Annual Production: <strong>{(solarCapacityKW * 1400).toLocaleString()} kWh/year</strong> (1,400 hrs/year avg)
                               </p>
-                              <p className="text-xs text-slate-900 mt-1 font-medium">
+                              <p className="text-sm text-gray-700 mt-2 font-medium">
                                 Array Size: ~{(solarCapacityKW * 1000 * 6).toLocaleString()} sq ft (~{((solarCapacityKW * 1000 * 6) / 43560).toFixed(2)} acres) | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
                               </p>
-                              <p className="text-xs text-slate-900 mt-1 font-medium">
+                              <p className="text-sm text-gray-700 mt-1 font-medium">
                                 💡 Note: Assumes 6 sq ft per watt installed capacity (including spacing)
                               </p>
                             </div>

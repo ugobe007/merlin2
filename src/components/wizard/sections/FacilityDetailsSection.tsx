@@ -63,7 +63,7 @@ import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '..
 import { StepExplanation, PrimaryButton, SecondaryButton } from '../ui';
 
 // Import Merlin image
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 // Step 2 colors - cool blue theme
 import { getStepColors } from '../constants/stepColors';

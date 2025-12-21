@@ -28,7 +28,7 @@ import {
 import { supabase } from '@/services/supabaseClient';
 import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
 import { useUtilityRates } from '@/hooks/useUtilityRates';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 import carWashImage from '@/assets/images/car_wash_1.jpg';
 import carWashTunnel from '@/assets/images/car_wash_tunnel.jpg';
 import carWashRobot from '@/assets/images/car_wash_robot.jpg';

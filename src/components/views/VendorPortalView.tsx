@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { ArrowLeft, Building2, Package, TrendingUp, Users } from 'lucide-react';
-import merlinImage from '../../assets/images/new_Merlin.png';
+import merlinImage from '../../assets/images/new_profile_merlin.png';
 
 interface VendorPortalViewProps {
   onBack: () => void;

@@ -109,21 +109,21 @@ export const STEP_COLORS: Record<number, StepColorScheme> = {
     successText: 'text-emerald-800',
   },
   
-  // Step 4: Quote Results - Warm gold (celebration!)
+  // Step 4: Quote Results - Deep purple (elegant, professional)
   4: {
-    panelBg: 'bg-[#FFFBEB]',
-    panelBgGradient: 'bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7]',
-    panelBorder: 'border-[#FCD34D]',
-    accentPrimary: '#D97706',
-    accentSecondary: '#6700b6',
-    textPrimary: 'text-gray-800',
-    textSecondary: 'text-gray-500',
-    textAccent: 'text-[#D97706]',
-    selectedBg: 'bg-gradient-to-br from-[#D97706] to-[#B45309]',
-    selectedBorder: 'border-[#FBBF24]',
-    hoverBg: 'hover:bg-[#FEF9E7]',
-    successBg: 'bg-amber-100',
-    successText: 'text-amber-800',
+    panelBg: 'bg-[#1a1a2e]',
+    panelBgGradient: 'bg-gradient-to-br from-[#1a1a2e] via-[#252547] to-[#1e1e3d]',
+    panelBorder: 'border-[#5B21B6]',
+    accentPrimary: '#8B5CF6',
+    accentSecondary: '#ffa600',
+    textPrimary: 'text-white',
+    textSecondary: 'text-gray-300',
+    textAccent: 'text-[#FDE047]',
+    selectedBg: 'bg-gradient-to-br from-[#8B5CF6] to-[#5B21B6]',
+    selectedBorder: 'border-[#A855F7]',
+    hoverBg: 'hover:bg-[#2d1a54]',
+    successBg: 'bg-emerald-500/20',
+    successText: 'text-emerald-300',
   },
 };
 

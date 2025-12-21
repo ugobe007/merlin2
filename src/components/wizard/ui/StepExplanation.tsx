@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { Lightbulb, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 // ============================================================================
 // TYPES

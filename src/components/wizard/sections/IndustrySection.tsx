@@ -26,7 +26,7 @@ import {
   INDUSTRY_ICONS 
 } from '../constants/wizardConstants';
 import type { WizardState } from '../types/wizardTypes';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface IndustrySectionProps {
   wizardState: WizardState;

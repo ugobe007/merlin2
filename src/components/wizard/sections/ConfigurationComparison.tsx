@@ -41,7 +41,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 interface ConfigurationComparisonProps {

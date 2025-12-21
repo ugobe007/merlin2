@@ -16,3 +16,5 @@ export { ScenarioExplainerModal } from './ScenarioExplainerModal';
 export { ConfigurationConfirmModal } from './ConfigurationConfirmModal';
 // Solar Sizing Modal (Dec 2025 - Universal Pattern)
 export { SolarSizingModal } from './SolarSizingModal';
+// Solar Opportunity Modal (Dec 2025 - Comprehensive Planning Tool)
+export { SolarOpportunityModal } from './SolarOpportunityModal';

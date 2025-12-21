@@ -55,7 +55,8 @@ import { TrueQuoteModal } from '../modals/StepTransitionModal';
 import { SolarSizingModal } from '../modals/SolarSizingModal';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
+import { MerlinGreeting } from '../shared';
 
 // Step 4 colors - warm gold celebration theme
 import { getStepColors } from '../constants/stepColors';
@@ -184,31 +185,52 @@ export function QuoteResultsSection({
   // Tax estimate (varies by state, use 0 for now as most commercial is tax exempt)
   const taxAmount = 0;
 
+  // Early return if not on Step 5 (which is currentSection === 4)
+  if (currentSection !== 4) {
+    return null;
+  }
+
   return (
     <div
       ref={sectionRef}
-      className={`min-h-[calc(100vh-120px)] p-4 md:p-8 ${step4Colors.panelBgGradient} ${currentSection !== 7 ? 'hidden' : ''}`}
+      className={`min-h-screen p-4 md:p-8 ${step4Colors.panelBgGradient}`}
     >
       <div className="max-w-4xl mx-auto">
+        {/* Merlin Greeting - Consistent with Step 1 */}
+        <MerlinGreeting
+          stepNumber={5}
+          totalSteps={5}
+          stepTitle="Your Quote"
+          stepDescription="Congratulations! Your energy system is now ready. I have created your complete TrueQuote™ with verified savings, payback calculations, and system specifications. Every number is traceable to authoritative sources—that's TrueQuote™."
+          estimatedTime="Review"
+          actionInstructions={[
+            'Review your estimated annual savings and payback period',
+            'Explore the detailed cost breakdown',
+            'Download or share your quote',
+            'Request a vendor quote if you\'re ready to move forward'
+          ]}
+          isComplete={true}
+          onCompleteMessage="🎉 Excellent! Your personalized energy solution is complete. I've calculated your exact savings, payback period, and system specs. Review the details below and take the next step!"
+        />
+        
         {/* Navigation - Back / Home / Start New */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 mt-4">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors shadow-md"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#68BFFA] via-[#4A90E2] to-[#3B5BDB] hover:from-[#4A90E2] hover:to-[#3B5BDB] text-white font-medium rounded-lg transition-colors shadow-md shadow-[#3B5BDB]/20"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
             <button
               onClick={onHome || onBack} // Home navigates to vertical landing page
-              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-amber-700 rounded-lg border-2 border-amber-300 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#68BFFA]/10 text-[#3B5BDB] rounded-lg border border-[#68BFFA]/30 transition-colors shadow-sm"
             >
               <Home className="w-4 h-4" />
               Home
             </button>
           </div>
-          <div className="text-sm text-amber-700 font-semibold">TrueQuote™ Results</div>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
@@ -312,127 +334,180 @@ export function QuoteResultsSection({
             </div>
 
             {/* ════════════════════════════════════════════════════════════════
-                SECTION 3: FULL EQUIPMENT & COST BREAKDOWN
+                SECTION 3: EQUIPMENT BREAKDOWN
             ════════════════════════════════════════════════════════════════ */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-amber-200">
               <div className="p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-b-2 border-amber-200">
                 <h2 className="text-xl font-bold text-amber-800 flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-amber-600" />
-                  Complete Cost Breakdown
+                  Equipment & Cost Breakdown
                 </h2>
               </div>
 
               <div className="p-6">
-                {/* Hardware Section */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wider mb-4">Hardware & Equipment</h3>
-                  <div className="space-y-3">
-                    {/* Battery System */}
-                    <CostLineItem
-                      icon={Battery}
-                      iconColor="emerald"
-                      label="Battery Energy Storage System (BESS)"
-                      description={`${formatKWh(wizardState.batteryKWh)} capacity • ${formatKW(wizardState.batteryKW)} power • ${wizardState.durationHours}hr duration`}
-                      amount={Math.round(equipmentCost * 0.6)}
-                    />
-                    
-                    {/* Inverter/PCS */}
-                    <CostLineItem
-                      icon={Zap}
-                      iconColor="blue"
-                      label="Power Conversion System (PCS/Inverter)"
-                      description={`${formatKW(wizardState.batteryKW)} rated capacity`}
-                      amount={Math.round(equipmentCost * 0.2)}
-                    />
-                    
-                    {/* Balance of System */}
-                    <CostLineItem
-                      icon={Settings}
-                      iconColor="gray"
-                      label="Balance of System"
-                      description="Switchgear, transformers, wiring, enclosure"
-                      amount={Math.round(equipmentCost * 0.2)}
-                    />
-                    
-                    {/* Solar if applicable */}
-                    {wizardState.solarKW > 0 && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <CostLineItem
-                            icon={Sun}
-                            iconColor="amber"
-                            label="Solar Array"
-                            description={`${formatKW(wizardState.solarKW)} peak capacity${wizardState.physicalConstraints?.isRefined ? ' (constrained)' : ''}`}
-                            amount={Math.round(wizardState.solarKW * 850)}
-                          />
+                {/* Equipment Grid - Compact Layout */}
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  {/* BESS System */}
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                          <Battery className="w-5 h-5 text-white" />
                         </div>
-                        <button
-                          onClick={() => setShowSolarSizingModal(true)}
-                          className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-600 hover:bg-amber-500/30 rounded-lg transition-colors"
-                          title="Refine solar sizing based on roof space"
-                        >
-                          Refine
-                        </button>
-                        {wizardState.physicalConstraints?.isRefined && (
-                          <span className="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded-full">
-                            Capped
-                          </span>
-                        )}
+                        <div>
+                          <p className="font-bold text-gray-800">Battery Storage</p>
+                          <p className="text-xs text-gray-600">{formatKWh(wizardState.batteryKWh)} / {formatKW(wizardState.batteryKW)}</p>
+                        </div>
                       </div>
-                    )}
-                    
-                    {/* Wind if applicable */}
-                    {wizardState.windTurbineKW > 0 && (
-                      <CostLineItem
-                        icon={Wind}
-                        iconColor="sky"
-                        label="Wind Turbine"
-                        description={`${formatKW(wizardState.windTurbineKW)} capacity`}
-                        amount={Math.round(wizardState.windTurbineKW * 1200)}
-                      />
-                    )}
-                    
-                    {/* Generator if applicable */}
-                    {wizardState.generatorKW > 0 && (
-                      <CostLineItem
-                        icon={Zap}
-                        iconColor="slate"
-                        label="Backup Generator"
-                        description={`${formatKW(wizardState.generatorKW)} natural gas`}
-                        amount={Math.round(wizardState.generatorKW * 700)}
-                      />
-                    )}
+                      <p className="font-bold text-emerald-700">{formatMoney(Math.round(equipmentCost * 0.6))}</p>
+                    </div>
                   </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <span className="font-semibold text-gray-700">Equipment Subtotal</span>
-                    <span className="font-bold text-gray-800 text-lg">{formatMoney(equipmentCost)}</span>
+
+                  {/* Power Conversion */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Power Conversion</p>
+                          <p className="text-xs text-gray-600">Inverter & PCS</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-blue-700">{formatMoney(Math.round(equipmentCost * 0.2))}</p>
+                    </div>
+                  </div>
+
+                  {/* Balance of System */}
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                          <Settings className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Balance of System</p>
+                          <p className="text-xs text-gray-600">Switchgear, wiring, enclosure</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-gray-700">{formatMoney(Math.round(equipmentCost * 0.2))}</p>
+                    </div>
+                  </div>
+
+                  {/* Solar (if applicable) */}
+                  {wizardState.solarKW > 0 ? (
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                            <Sun className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">Solar Array</p>
+                            <p className="text-xs text-gray-600">{formatKW(wizardState.solarKW)} peak capacity</p>
+                          </div>
+                        </div>
+                        <p className="font-bold text-amber-700">{formatMoney(Math.round(wizardState.solarKW * 850))}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 opacity-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-300 rounded-lg flex items-center justify-center">
+                          <Sun className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-400">Solar Array</p>
+                          <p className="text-xs text-gray-400">Not included</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Wind (if applicable) */}
+                  {wizardState.windTurbineKW > 0 ? (
+                    <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl p-4 border border-sky-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center">
+                            <Wind className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">Wind Turbine</p>
+                            <p className="text-xs text-gray-600">{formatKW(wizardState.windTurbineKW)} capacity</p>
+                          </div>
+                        </div>
+                        <p className="font-bold text-sky-700">{formatMoney(Math.round(wizardState.windTurbineKW * 1200))}</p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Generator (if applicable) */}
+                  {wizardState.generatorKW > 0 ? (
+                    <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-500 rounded-lg flex items-center justify-center">
+                            <Zap className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">Backup Generator</p>
+                            <p className="text-xs text-gray-600">{formatKW(wizardState.generatorKW)} natural gas</p>
+                          </div>
+                        </div>
+                        <p className="font-bold text-slate-700">{formatMoney(Math.round(wizardState.generatorKW * 700))}</p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Equipment Subtotal */}
+                <div className="mb-6 pb-6 border-b-2 border-gray-200">
+                  <div className="flex justify-between items-center bg-amber-50 rounded-xl p-4">
+                    <span className="font-bold text-gray-800 text-lg">Equipment Subtotal</span>
+                    <span className="font-black text-amber-700 text-xl">{formatMoney(equipmentCost)}</span>
                   </div>
                 </div>
 
-                {/* Services Section */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Installation & Services</h3>
-                  <div className="space-y-3">
-                    <CostLineItem
-                      icon={Wrench}
-                      iconColor="purple"
-                      label="Professional Installation"
-                      description="Site prep, electrical work, commissioning"
-                      amount={installationCost}
-                    />
-                    <CostLineItem
-                      icon={Truck}
-                      iconColor="indigo"
-                      label="Shipping & Delivery"
-                      description="Freight, handling, site delivery"
-                      amount={shippingCost}
-                    />
+                {/* Services Section - Compact */}
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                          <Wrench className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Installation</p>
+                          <p className="text-xs text-gray-600">Site prep & commissioning</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-purple-700">{formatMoney(installationCost)}</p>
+                    </div>
                   </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <span className="font-semibold text-gray-700">Services Subtotal</span>
-                    <span className="font-bold text-gray-800 text-lg">{formatMoney(installationCost + shippingCost)}</span>
+
+                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+                          <Truck className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Shipping</p>
+                          <p className="text-xs text-gray-600">Freight & delivery</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-indigo-700">{formatMoney(shippingCost)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Services Subtotal */}
+                <div className="mb-6 pb-6 border-b-2 border-gray-200">
+                  <div className="flex justify-between items-center bg-purple-50 rounded-xl p-4">
+                    <span className="font-bold text-gray-800 text-lg">Services Subtotal</span>
+                    <span className="font-black text-purple-700 text-xl">{formatMoney(installationCost + shippingCost)}</span>
                   </div>
                 </div>
 
@@ -613,18 +688,38 @@ export function QuoteResultsSection({
                 Quote Reference: {wizardState.selectedIndustry?.toUpperCase()}-{Date.now().toString(36).toUpperCase()}
               </p>
               
-              {/* Pro Mode Link */}
+              {/* ProQuote Translucent Badge - Glassmorphism Style */}
               {onOpenAdvanced && (
-                <div className="mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-gray-500 text-sm mb-2">
-                    Want to customize every detail?
-                  </p>
+                <div className="mt-6 pt-6 flex justify-center">
                   <button
-                    onClick={onOpenAdvanced}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                    onClick={() => {
+                      // Pass wizard values to ProQuote for pre-population
+                      if (onOpenAdvanced) {
+                        onOpenAdvanced();
+                      }
+                    }}
+                    className="group relative backdrop-blur-xl bg-gradient-to-br from-emerald-500/15 via-teal-500/15 to-cyan-500/15 border-2 border-emerald-400/40 rounded-2xl px-6 py-4 shadow-2xl hover:shadow-[0_8px_32px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105 hover:border-emerald-400/60 max-w-md w-full"
                   >
-                    <Settings className="w-4 h-4" />
-                    Open Advanced Quote Builder
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-teal-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Content */}
+                    <div className="relative flex items-center justify-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <Calculator className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-base font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors">
+                          ProQuote™ Builder
+                        </div>
+                        <div className="text-xs text-emerald-700/80 group-hover:text-emerald-700 transition-colors">
+                          Customize your configuration
+                        </div>
+                      </div>
+                      <div className="text-emerald-600 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 ml-2">
+                        →
+                      </div>
+                    </div>
                   </button>
                 </div>
               )}

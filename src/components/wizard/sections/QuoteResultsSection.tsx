@@ -36,6 +36,7 @@ import { TrueQuoteBadge, TrueQuoteBanner } from '@/components/shared/TrueQuoteBa
 import { QuoteComplianceFooter } from '@/components/shared/IndustryComplianceBadges';
 import { QuoteLineItemWithSource } from '@/components/quotes';
 import { SolarSizingModal } from '../modals';
+import { MerlinGreeting } from '../shared';
 import { 
   AUTHORITATIVE_SOURCES, 
   PRICING_BENCHMARKS,
@@ -47,7 +48,7 @@ import {
 } from '@/services/benchmarkSources';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { createRFQ, type CreateRFQData } from '@/services/vendorService';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface QuoteResultsSectionProps {
   wizardState: WizardState;
@@ -235,8 +236,24 @@ export function QuoteResultsSection({
       className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== SECTION_NUMBER ? 'hidden' : ''}`}
     >
       <div className="max-w-5xl mx-auto">
+        {/* Merlin Greeting - Consistent with Step 1 */}
+        <MerlinGreeting
+          stepNumber={4}
+          totalSteps={4}
+          stepTitle="Your Quote"
+          stepDescription="Here's your personalized energy storage quote with detailed savings projections. Review the numbers, explore the breakdown, and get started!"
+          actionInstructions={[
+            'Review your estimated annual savings and payback period',
+            'Explore the detailed cost breakdown',
+            'Download or share your quote',
+            'Request a vendor quote if you\'re ready to move forward'
+          ]}
+          isComplete={true}
+          onCompleteMessage="Your quote is ready! Review the details below and take the next step."
+        />
+        
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 mt-4">
           <button
             onClick={onBack}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#060F76] hover:bg-[#0815a9] rounded-lg transition-colors border border-[#4b59f5]"
@@ -244,7 +261,6 @@ export function QuoteResultsSection({
             <ArrowLeft className="w-4 h-4" />
             Back to Configuration
           </button>
-          <div className="px-3 py-1 bg-[#6700b6] text-white text-sm font-medium rounded-full">Step 5 of 5 • Final Quote</div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════

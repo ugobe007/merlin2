@@ -6,7 +6,7 @@ import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
 import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { QuoteEngine } from '@/core/calculations';
-import merlinImage from "../../assets/images/new_Merlin.png";
+import merlinImage from "../../assets/images/new_profile_merlin.png";
 import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '../shared/TrueQuoteModal';
@@ -384,211 +384,339 @@ export default function HeroSection({
         </div>
 
         <div className="relative z-10 min-h-screen">
-          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+          {/* ========== NEW HERO DESIGN - Two Column Grid ========== */}
+          <div 
+            className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr]"
+          >
             
-            {/* ========== LEFT HALF - Content ========== */}
-            <div className="flex flex-col justify-center px-8 md:px-12 lg:px-16 xl:px-24 py-20 lg:py-0 pt-8 lg:pt-16">
+            {/* ========== LEFT PANEL - Darker Purple Gradient ========== */}
+            <div 
+              className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none lg:my-4 my-0"
+              style={{
+                background: 'linear-gradient(165deg, #2d1a54 0%, #3d2272 40%, #4a2888 70%, #3d2272 100%)',
+                boxShadow: '20px 0 80px rgba(0,0,0,0.5)'
+              }}
+            >
               
-              {/* Welcome Text - with top padding for breathing room */}
-              <p className="text-purple-300/80 text-lg mb-4 mt-4">
-                Welcome to <span className="text-amber-300 font-semibold">Merlin Energy</span>, an advanced AI energy service.
+              {/* AI Badge */}
+              <div 
+                className="inline-flex items-center gap-2 mb-8"
+                style={{
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  padding: '10px 18px',
+                  borderRadius: '100px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  width: 'fit-content'
+                }}
+              >
+                <span style={{ fontSize: '14px' }}>✨</span>
+                <span>AI-Powered Energy Solutions</span>
+              </div>
+
+              {/* Intro Text */}
+              <p 
+                className="mb-4 lg:text-[18px] md:text-[22px] text-[18px]"
+                style={{
+                  fontWeight: 500,
+                  color: 'rgba(255,255,255,0.85)',
+                  lineHeight: 1.5
+                }}
+              >
+                Welcome to <span style={{ color: '#fbbf24', fontWeight: 800 }}>Merlin Energy</span> — Advanced AI powered energy solutions and services company.
               </p>
-              
-              {/* Main Headline - ENERGY SAVINGS focused */}
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight mb-6">
+
+              {/* Main Headline - Improved Typography */}
+              <h1 
+                className="mb-8 lg:text-[72px] md:text-[48px] text-[36px]"
+                style={{
+                  fontWeight: 900,
+                  lineHeight: 0.95,
+                  letterSpacing: '-0.02em',
+                  color: '#fff',
+                  fontKerning: 'normal',
+                  textRendering: 'optimizeLegibility',
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale'
+                }}
+              >
                 Slash Your
-                <span className="block bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400 text-transparent bg-clip-text">
+                <span className="block" style={{ color: '#fbbf24', letterSpacing: '-0.025em' }}>
                   Energy Costs
                 </span>
               </h1>
-              
+
               {/* Subheadline */}
-              <p className="text-xl text-purple-200/90 mb-8 max-w-lg leading-relaxed">
+              <p 
+                className="mb-5"
+                style={{
+                  fontSize: '20px',
+                  color: 'rgba(255,255,255,0.85)',
+                  lineHeight: 1.6,
+                  maxWidth: '460px'
+                }}
+              >
                 Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.
               </p>
 
-              {/* CTA Button - Purple-Pink Gradient with Smooth Animation */}
-              <style>{`
-                @keyframes spinButton {
-                  0% { transform: scale(1) rotate(0deg); }
-                  25% { transform: scale(1.05) rotate(5deg); }
-                  50% { transform: scale(1.1) rotate(0deg); }
-                  75% { transform: scale(1.05) rotate(-5deg); }
-                  100% { transform: scale(1) rotate(0deg); }
-                }
-                @keyframes gradientShift {
-                  0% { background-position: 0% 50%; }
-                  50% { background-position: 100% 50%; }
-                  100% { background-position: 0% 50%; }
-                }
-                @keyframes floatGlow {
-                  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
-                  50% { transform: scale(1.1) rotate(180deg); opacity: 0.9; }
-                }
-                .gradient-button {
-                  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 20%, #22d3ee 50%, #10b981 80%, #5b21b6 100%);
-                  background-size: 300% 300%;
-                  animation: gradientShift 3s ease infinite;
-                }
-                .spin-button:hover {
-                  animation: spinButton 0.6s ease-in-out;
-                }
-                .gradient-button:hover {
-                  background-size: 400% 400%;
-                  animation: gradientShift 2s ease infinite;
-                }
-                .float-glow {
-                  animation: floatGlow 3s ease-in-out infinite;
-                }
-              `}</style>
-              <button 
-                onClick={() => setShowSmartWizard(true)}
-                className="gradient-button spin-button group relative w-full max-w-md px-8 py-4 rounded-full font-bold text-xl transition-all duration-300 mb-6 overflow-hidden"
+              {/* TrueQuote Link - Orange Italic */}
+              <button
+                onClick={() => setShowTrueQuoteModal(true)}
+                className="inline-flex items-center gap-1.5 mb-9 transition-all hover:opacity-80"
                 style={{
-                  boxShadow: '0 0 40px rgba(102,126,234,0.6), 0 0 80px rgba(118,75,162,0.4), 0 8px 32px rgba(0,0,0,0.3)'
+                  fontSize: '17px',
+                  fontWeight: 600,
+                  color: '#f59e0b',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#fcd34d';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#f59e0b';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}
+              >
+                TrueQuote™ — <span style={{ fontStyle: 'italic', fontWeight: 500, color: '#fbbf24' }}>Every number has a source.</span>
+              </button>
+
+              {/* CTA Button - Professional Typography */}
+              <button
+                onClick={() => setShowSmartWizard(true)}
+                className="inline-flex items-center justify-center gap-2.5 mb-5 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '2px solid rgba(255, 255, 255, 0.25)',
+                  color: '#5B21B6',
+                  borderRadius: '16px',
+                  fontWeight: 900,
+                  fontSize: '20px',
+                  lineHeight: '1.2',
+                  letterSpacing: '-0.02em',
+                  fontKerning: 'auto',
+                  textRendering: 'optimizeLegibility',
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  WebkitTextStroke: '0.3px rgba(91, 33, 182, 0.3)',
+                  padding: '18px 40px',
+                  boxShadow: '0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)',
+                  textShadow: '0 1px 2px rgba(255,255,255,0.5)'
                 }}
                 aria-label="Start Saving with SmartWizard"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.95) 0%, rgba(34, 211, 238, 0.95) 50%, rgba(34, 197, 94, 0.95) 100%)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 6px 28px rgba(56, 189, 248, 0.5), 0 0 60px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255,255,255,0.4)';
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                }}
               >
-                {/* Floating glow ring - sky-300 blue-500 gradient for Three Pillars validation */}
-                <div className="float-glow absolute -inset-2 bg-gradient-to-r from-purple-600 via-sky-300 via-cyan-400 via-blue-500 to-emerald-500 rounded-full blur-xl opacity-60" />
-                {/* Shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-full" />
-                <span className="relative flex items-center justify-center gap-2 text-white">
-                  <span className="text-2xl animate-pulse">✨</span>
-                  <span className="text-xl font-black whitespace-nowrap">Get My Free Quote</span>
-                  <span className="text-2xl group-hover:translate-x-2 transition-transform">→</span>
-                </span>
+                <span style={{ fontSize: '22px', lineHeight: '1' }}>✨</span>
+                <span style={{ letterSpacing: '-0.01em', fontWeight: 900 }}>Get My Free Quote</span>
+                <span style={{ fontSize: '20px', marginLeft: '2px' }}>→</span>
               </button>
 
-              {/* Advanced Builder - Smaller secondary button */}
-              <button 
+              {/* ProQuote Button - Translucent */}
+              <button
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="group flex items-center justify-center gap-2 mb-4 px-6 py-2.5 rounded-full border border-purple-400/50 hover:border-amber-400 hover:bg-purple-800/30 transition-all"
+                className="inline-flex items-center justify-center gap-2 mb-8 transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'rgba(255,255,255,0.85)',
+                  padding: '12px 24px',
+                  borderRadius: '40px',
+                  fontSize: '14px',
+                  fontWeight: 600
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                }}
               >
-                <span className="text-sm">⚡</span>
-                <span className="text-white font-medium text-sm">Advanced Quote Builder</span>
-                <span className="text-purple-300 group-hover:text-amber-300 group-hover:translate-x-1 transition-all text-sm">→</span>
+                <span style={{ color: '#fbbf24', fontSize: '14px' }}>⚡</span>
+                <span>ProQuote</span>
+                <span>→</span>
               </button>
 
-              {/* TrueQuote™ Badge - Clickable for marketing modal */}
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <button 
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  className="hover:scale-105 transition-transform cursor-pointer"
-                >
-                  <TrueQuoteBadge size="md" />
-                </button>
-                <button 
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  className="text-purple-300 text-sm hover:text-amber-300 transition-colors cursor-pointer"
-                >
-                  Every number has a source →
-                </button>
-              </div>
-
-              {/* How it Works - with wizard icon - Merlin Magic tooltip */}
-              <button 
+              {/* Merlin Link */}
+              <button
                 onClick={() => setShowAbout(true)}
-                className="flex items-center gap-3 text-purple-300 hover:text-amber-300 transition-colors cursor-pointer"
-                title="Merlin Magic"
+                className="inline-flex items-center gap-2 transition-all"
+                style={{
+                  color: 'rgba(255,255,255,0.6)',
+                  fontSize: '15px',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.9)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                }}
               >
-                <img src={merlinImage} alt="" className="w-6 h-6" />
-                <span>See how Merlin works his magic</span>
-                <span>→</span>
+                <span style={{ fontSize: '18px' }}>🧙</span>
+                <span>See how Merlin works his magic →</span>
               </button>
             </div>
 
-            {/* ========== RIGHT HALF - Infinity Pool Image ========== */}
-            <div className="relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-1/2">
-              
-              {/* Images that bleed to edge */}
-              <div className="relative w-full h-[50vh] lg:h-full">
+            {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
+            <div className="relative overflow-hidden lg:min-h-full min-h-[500px]">
+              <div className="absolute inset-0">
                 {heroUseCases.map((useCase, index) => (
                   <div
                     key={useCase.id}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                    className={`absolute inset-0 transition-opacity duration-800 ${
                       index === currentImageIndex ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
-                    {/* Full-bleed image - no rounded corners on right edge */}
                     <img 
                       src={useCase.image} 
                       alt={useCase.name}
                       className="w-full h-full object-cover"
                     />
                     
-                    {/* Gradient overlay - fades into purple on left */}
+                    {/* Purple overlay */}
                     <div 
                       className="absolute inset-0"
                       style={{
-                        background: 'linear-gradient(to right, rgba(76,29,149,1) 0%, rgba(76,29,149,0.6) 15%, transparent 40%), linear-gradient(to top, rgba(30,15,60,0.9) 0%, transparent 50%)'
+                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(99, 102, 241, 0.25) 30%, transparent 60%)'
                       }}
                     />
-                    
-                    {/* Financial overlay card - CLICKABLE */}
-                    <div 
-                      className="absolute bottom-8 left-8 right-8 lg:left-12 lg:right-12 cursor-pointer group/card"
-                      onClick={() => {
-                        setSelectedHeroUseCase(useCase);
-                        setShowUseCaseDetail(true);
-                      }}
-                    >
-                      <div 
-                        className="backdrop-blur-xl rounded-3xl p-6 border border-white/20 hover:border-amber-400/50 transition-all hover:scale-[1.02] hover:shadow-2xl"
-                        style={{ background: 'rgba(255,255,255,0.1)' }}
-                      >
-                        {/* Click hint */}
-                        <div className="absolute top-3 right-3 text-xs text-purple-300/50 group-hover/card:text-amber-300 transition-colors flex items-center gap-1">
-                          <span>Click for details</span>
-                          <span>→</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-2xl font-bold text-white">{useCase.name}</h3>
-                          <span className="text-xs text-purple-200 bg-white/10 px-3 py-1.5 rounded-full">
-                            {useCase.systemSize}
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-3xl font-black text-amber-400">{useCase.savings}</div>
-                            <div className="text-xs text-purple-300/70 mt-1">Annual Savings</div>
-                          </div>
-                          <div className="text-center border-x border-white/10 px-2">
-                            <div className="text-3xl font-black text-purple-300">{useCase.payback}</div>
-                            <div className="text-xs text-purple-300/70 mt-1">Payback</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-3xl font-black text-cyan-400">{useCase.roi}</div>
-                            <div className="text-xs text-purple-300/70 mt-1">25-Year ROI</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>
 
-              {/* Navigation dots */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 lg:left-auto lg:right-8 lg:translate-x-0 flex gap-2 z-20">
+              {/* Stats Card Overlay - Translucent Glassmorphism */}
+              {heroUseCases[currentImageIndex] && (
+                <div 
+                  className="absolute bottom-8 left-8 right-8 cursor-pointer transition-all hover:scale-[1.02]"
+                  onClick={() => {
+                    setSelectedHeroUseCase(heroUseCases[currentImageIndex]);
+                    setShowUseCaseDetail(true);
+                  }}
+                  style={{
+                    background: 'rgba(15, 10, 35, 0.15)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '20px',
+                    padding: '24px 32px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)'
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <span style={{ fontSize: '22px', fontWeight: 700, color: '#fff' }}>
+                      {heroUseCases[currentImageIndex].name}
+                    </span>
+                    <div className="flex items-center gap-4">
+                      <span 
+                        className="text-xs opacity-50 hover:opacity-100 transition-opacity"
+                        style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}
+                      >
+                        Click for details →
+                      </span>
+                      <span 
+                        style={{
+                          background: 'rgba(255,255,255,0.1)',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          color: 'rgba(255,255,255,0.8)',
+                          fontWeight: 600
+                        }}
+                      >
+                        {heroUseCases[currentImageIndex].systemSize}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 md:gap-6">
+                    <div className="text-center">
+                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#fbbf24' }}>
+                        {heroUseCases[currentImageIndex].savings}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        Annual Savings
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#fff' }}>
+                        {heroUseCases[currentImageIndex].payback}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        Payback
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#4ade80' }}>
+                        {heroUseCases[currentImageIndex].roi}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        25-Year ROI
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Carousel Dots */}
+              <div className="absolute bottom-3 right-20 flex items-center gap-2 z-20">
                 {heroUseCases.map((uc, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
+                    className={`rounded-full transition-all duration-300 cursor-pointer ${
                       index === currentImageIndex 
-                        ? 'bg-amber-400 w-8' 
-                        : 'bg-white/30 hover:bg-white/50 w-2'
+                        ? 'bg-[#fbbf24] w-8 h-2' 
+                        : 'bg-white/30 hover:bg-white/50 w-2 h-2'
                     }`}
                     title={uc.name}
                   />
                 ))}
               </div>
+
+              {/* Settings Button */}
+              <button
+                onClick={() => setShowAdvancedQuoteBuilder(true)}
+                className="absolute bottom-3 right-6 w-11 h-11 flex items-center justify-center transition-all hover:rotate-45 cursor-pointer z-20"
+                style={{
+                  background: 'rgba(139, 92, 246, 0.7)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '50%',
+                  color: '#fff',
+                  fontSize: '20px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.7)';
+                }}
+                title="Advanced Settings"
+              >
+                ⚙
+              </button>
             </div>
           </div>
         </div>
-        </div>
+      </div>
       </section>
 
       {/* ========== THE MERLIN INTELLIGENCE ENGINE ========== */}

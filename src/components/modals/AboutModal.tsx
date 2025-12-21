@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { X, Zap, BarChart3, Shield, Globe, Sparkles, ArrowRight } from 'lucide-react';
-import merlinImage from "../../assets/images/new_Merlin.png";
+import merlinImage from "../../assets/images/new_profile_merlin.png";
 
 interface AboutModalProps {
   show: boolean;

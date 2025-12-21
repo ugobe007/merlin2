@@ -1,60 +1,105 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 17, 2025  
+**Last Updated:** December 2025 (Apple-Inspired Palette Update)  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
 
 ---
 
-## 🎨 OFFICIAL MERLIN COLOR PALETTE (December 17, 2025)
+## 🎨 OFFICIAL MERLIN COLOR PALETTE (Updated December 2025 - Apple-Inspired)
 
 ### Primary Brand Colors
-Use these exact hex values for all new components:
+Apple-like smooth gradients: Light blue/cyan → Deep indigo/purple
 
 | Color Name | Hex Code | Usage | Tailwind Class |
 |------------|----------|-------|----------------|
-| **Merlin Purple** | `#6700b6` | Primary brand, CTAs, selected states | `bg-[#6700b6]` |
+| **Light Cyan** | `#68BFFA` | Primary light (Malibu Blue - kept) | `bg-[#68BFFA]` |
+| **Medium Blue** | `#4A90E2` | Mid-tone transitions | `bg-[#4A90E2]` |
+| **Deep Indigo** | `#3B5BDB` | Primary dark, CTAs | `bg-[#3B5BDB]` |
+| **Deep Purple** | `#5B21B6` | Selected states, emphasis | `bg-[#5B21B6]` |
 | **Web Orange** | `#ffa600` | Accents, highlights, badges | `bg-[#ffa600]` |
-| **Malibu Blue** | `#68BFFA` | Success states, info boxes | `bg-[#68BFFA]` |
-| **Arapawa Navy** | `#060F76` | Dark backgrounds, contrast | `bg-[#060F76]` |
 | **Peach Orange** | `#FED19F` | Soft accents, light fills | `bg-[#FED19F]` |
 
-### Purple Gradient Shades (Light → Dark)
+### Primary Gradient (Apple-Inspired: Light Blue → Deep Indigo/Purple)
+**Main gradient for backgrounds, cards, and CTAs:**
 ```
-#cc89ff → #bc66ff → #ad42ff → #9d1eff → #8d00f9 → #6700b6 → #580097 → #490078 → #390058 → #280047
+Light: #8FC5F8 → #68BFFA → #4A90E2 → #3B5BDB → #5B21B6 → #4C1D95 (Deep)
 ```
 
-### Orange Gradient Shades (Light → Dark)
+### Orange Gradient Shades (Accent - Light → Dark)
 ```
 #ffd689 → #ffc966 → #ffbb42 → #ffad1f → #ffa600 → #d98d00 → #b37400 → #8c5b00 → #664200 → #472e00
 ```
 
-### Malibu Blue Gradient Shades (Light → Dark)
-```
-#8dcefb → #6ac0fa → #47b2f9 → #24a4f8 → #68BFFA → #0489e6 → #0373c0 → #025d9a → #024774 → #022a45
-```
+### Legacy Colors (For Reference - Being Phased Out)
+- Old Merlin Purple: `#6700b6` (replaced by `#5B21B6`)
+- Old Arapawa Navy: `#060F76` (replaced by `#3B5BDB`)
 
-### Arapawa Navy Gradient Shades (Light → Dark)
-```
-#8f97f9 → #6d78f7 → #4b59f5 → #293af3 → #060F76 → #0610a9 → #050e8c → #040b70 → #030953 → #030843
-```
-
-### Usage Guidelines:
+### Usage Guidelines (Apple-Inspired Design):
 
 **Buttons:**
-- Primary CTA: `bg-gradient-to-r from-[#6700b6] to-[#060F76]` with `border-2 border-[#ad42ff]`
-- Secondary: `bg-[#060F76]` with `border border-[#4b59f5]`
+- Primary CTA: `bg-gradient-to-r from-[#68BFFA] via-[#4A90E2] to-[#3B5BDB]` with `border border-[#68BFFA]/30` and soft shadow
+- Secondary: `bg-[#3B5BDB]` with `border border-[#4A90E2]` and soft shadow
 - Accent: `bg-[#68BFFA]` for success/info actions
-- Warning: `bg-[#ffa600]` for selected/highlighted states
+- Highlight: `bg-[#ffa600]` for selected/highlighted states
+- **Shadows**: Use `shadow-lg shadow-[#3B5BDB]/20` for depth (soft, not harsh)
 
 **Cards & Panels:**
-- Light fills: Use `/20` or `/30` opacity (e.g., `bg-[#6700b6]/20`)
-- Borders: Use `border-4` for emphasis, `border-2` for standard
-- Dark backgrounds: `bg-slate-800/50` with colored borders
+- Light fills: Use `/10` or `/20` opacity for subtlety (e.g., `bg-[#68BFFA]/10`)
+- Borders: Use `border` (1px) for minimal, `border-2` for emphasis
+- Backgrounds: `bg-gradient-to-br from-[#68BFFA]/5 via-[#4A90E2]/10 to-[#3B5BDB]/15` for cards
+- **Shadows**: Soft, subtle - `shadow-md shadow-[#3B5BDB]/10` (not harsh black)
 
 **Text Colors:**
-- On dark backgrounds: `text-white`, `text-[#cc89ff]` (light purple), `text-[#ffd689]` (light orange)
-- On light backgrounds: `text-[#6700b6]`, `text-[#060F76]`, `text-gray-800`
+- On dark backgrounds: `text-white`, `text-[#68BFFA]` (light blue), `text-[#ffd689]` (light orange)
+- On light backgrounds: `text-[#3B5BDB]`, `text-[#5B21B6]`, `text-gray-700`
+- **Typography**: Clean, sans-serif, generous spacing
+
+---
+
+## 🎯 NAVIGATION PATTERN (NEW - Dec 20, 2025)
+
+### Floating Nav Widget (Option 1 - Recommended)
+**Apple-like minimal design:** Small dashboard icon in top-right corner that expands to show all navigation widgets and controls.
+
+**Design Principles:**
+- Hidden by default (minimal, non-intrusive)
+- Expands on click to show all widgets
+- Auto-collapses when clicking outside
+- Consistent across all wizard steps and Merlin site
+
+**SSOT Compliance:**
+- All data comes from `wizardState` (Single Source of Truth)
+- Widgets display calculated values from `centralizedState`
+- TrueQuote badge links to methodology explanation
+- No duplicate calculations - all values flow from SSOT
+
+**Component:** `FloatingNavWidget` in `src/components/wizard/shared/FloatingNavWidget.tsx`
+
+**Usage:**
+```tsx
+<FloatingNavWidget
+  wizardState={wizard.wizardState}
+  centralizedState={wizard.centralizedState}
+  onOpenSidebarMenu={() => setShowSidebarMenu(!showSidebarMenu)}
+  onOpenTrueQuote={() => setShowTrueQuoteModal(true)}
+  onOpenSolarOpportunity={() => setShowSolarOpportunity(true)}
+  onOpenPowerProfileExplainer={() => setShowPowerProfileExplainer(true)}
+  onClose={onClose}
+  onNavigateToSection={(section) => wizard.advanceToSection(section)}
+  currentSection={wizard.currentSection}
+/>
+```
+
+**Widgets Included:**
+- Menu & Navigation (opens sidebar)
+- TrueQuote™ badge (opens methodology modal)
+- Solar Opportunity (shows sun rating, hours/day)
+- Power Profile (shows battery storage, total power)
+- Power Coverage (shows coverage percentage, status)
+- Energy Opportunity (Savings Scout widget)
+
+**Replaces:** Old top navigation bar (removed Dec 20, 2025)
 
 ---
 
