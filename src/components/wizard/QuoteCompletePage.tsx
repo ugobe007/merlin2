@@ -9,7 +9,7 @@ import LeadCaptureModal from './LeadCaptureModal';
 import { calculateFinancialMetrics } from '../../services/centralizedCalculations';
 import { calculateDatabaseBaseline } from '../../services/baselineService';
 import { supabase } from '../../services/supabaseClient';
-import merlinImage from '../../assets/images/new_Merlin.png';
+import merlinImage from '../../assets/images/new_profile_merlin.png';
 import wizardIcon from '../../assets/images/wizard_icon1.png';
 
 interface QuoteCompletePageProps {

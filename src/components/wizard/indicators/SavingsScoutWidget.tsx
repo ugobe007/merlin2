@@ -155,56 +155,63 @@ export function SavingsScoutNavbar({
         }`} />
       </button>
       
-      {/* Expanded Dropdown */}
+      {/* Expanded Dropdown - Fixed positioning for readability */}
       {isExpanded && (
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 z-40" 
+            className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm" 
             onClick={() => setIsExpanded(false)}
           />
           
-          {/* Dropdown Panel */}
-          <div className="absolute top-full right-0 mt-2 w-[420px] bg-white rounded-2xl 
-                         shadow-2xl border-2 border-amber-200 overflow-hidden z-50
-                         animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Modal Panel - Centered and larger for readability */}
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[600px] max-h-[85vh] bg-white rounded-2xl 
+                         shadow-2xl border-2 border-amber-200 overflow-hidden z-[60]
+                         animate-in fade-in zoom-in-95 duration-200">
             
             {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-amber-400 px-5 py-4">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-400 px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Wand2 className="w-8 h-8 text-white" />
-                  <h3 className="font-bold text-white text-lg">Savings Scout™</h3>
+                  <h3 className="font-bold text-white text-xl">Savings Scout™</h3>
                 </div>
                 <button 
                   onClick={() => setIsExpanded(false)}
-                  className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
                   aria-label="Close"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="w-6 h-6 text-white" />
                 </button>
               </div>
-              <p className="text-amber-100 text-sm mt-1">
+              <p className="text-amber-100 text-base mt-2">
                 📍 {state} • 🏨 {facilityDetails?.rooms || 0}-Room {industryProfile}
               </p>
             </div>
             
             {/* Opportunities List */}
-            <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
-              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <div className="p-6 space-y-4 max-h-[calc(85vh-280px)] overflow-y-auto">
+              <h4 className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-3">
                 Your Top Opportunities
               </h4>
-              {displayOpportunities.map(opportunity => (
-                <OpportunityCard key={opportunity.id} opportunity={opportunity} compact />
-              ))}
+              {displayOpportunities.length > 0 ? (
+                displayOpportunities.map(opportunity => (
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} compact={false} />
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-lg">No opportunities found.</p>
+                  <p className="text-sm mt-2">Try adjusting your facility details.</p>
+                </div>
+              )}
             </div>
             
             {/* Total Potential */}
             {totalAnnualPotential > 0 && (
-              <div className="px-5 py-3 bg-emerald-50 border-t-2 border-emerald-200">
+              <div className="px-6 py-4 bg-emerald-50 border-t-2 border-emerald-200">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-emerald-800">Total Annual Potential:</span>
-                  <span className="text-2xl font-black text-emerald-600">
+                  <span className="font-semibold text-emerald-800 text-lg">Total Annual Potential:</span>
+                  <span className="text-3xl font-black text-emerald-600">
                     ${totalAnnualPotential.toLocaleString()}+
                   </span>
                 </div>
@@ -212,14 +219,14 @@ export function SavingsScoutNavbar({
             )}
             
             {/* CTAs */}
-            <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
               <button 
                 onClick={() => {
                   setIsExpanded(false);
                   onGetQuote?.();
                 }}
                 className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-400 
-                          text-white font-bold rounded-xl hover:shadow-lg transition-all
+                          text-white font-bold text-base rounded-xl hover:shadow-lg transition-all
                           hover:from-amber-600 hover:to-amber-500"
               >
                 🚀 Get My Quote
@@ -230,14 +237,14 @@ export function SavingsScoutNavbar({
                   onFullAnalysis?.();
                 }}
                 className="flex-1 py-3 bg-white border-2 border-gray-300 
-                          text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all"
+                          text-gray-700 font-semibold text-base rounded-xl hover:bg-gray-100 transition-all"
               >
                 📊 Full Analysis
               </button>
             </div>
             
             {/* Data Sources Footer */}
-            <div className="px-5 py-2 bg-gray-100 text-xs text-gray-500 text-center">
+            <div className="px-6 py-3 bg-gray-100 text-sm text-gray-500 text-center">
               📖 Sources: NREL Solar • EIA Rates • State Utility Databases
             </div>
           </div>

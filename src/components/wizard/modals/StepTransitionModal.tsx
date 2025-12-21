@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { X, Sparkles, Settings, Sliders, Battery, Sun, Zap, CheckCircle, ArrowRight, Shield, Wand2, TrendingUp } from 'lucide-react';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STEP 3 → 4 TRANSITION: Welcome to Configuration

@@ -398,17 +398,64 @@ export class UseCaseService {
    */
   async getCustomQuestionsByUseCaseId(useCaseId: string): Promise<CustomQuestionRow[]> {
     try {
+      if (!useCaseId) {
+        console.warn('⚠️ [useCaseService] getCustomQuestionsByUseCaseId called with empty useCaseId');
+        return [];
+      }
+      
+      // Fetch ALL questions (including inactive) - let the frontend decide what to display
+      // This ensures we don't accidentally hide questions that should be visible
       const { data, error } = await supabase
         .from('custom_questions')
         .select('*')
         .eq('use_case_id', useCaseId)
-        .order('display_order');
+        .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('❌ [useCaseService] Supabase error fetching custom questions:', {
+          useCaseId,
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      
+      const allQuestions = data || [];
+      
+      // Filter out inactive questions unless we're debugging
+      // TODO: Consider showing inactive questions in dev mode to help identify missing ones
+      const activeQuestions = allQuestions.filter((q: any) => q.is_active !== false);
+      
+      if (activeQuestions.length !== allQuestions.length) {
+        console.warn(`⚠️ [useCaseService] Found ${allQuestions.length - activeQuestions.length} inactive questions for useCaseId: ${useCaseId}`);
+      }
+      
+      // DEBUG: Log what we're returning
+      if (import.meta.env.DEV) {
+        console.log(`📋 [useCaseService] Fetched ${activeQuestions.length} active custom questions (out of ${allQuestions.length} total) for useCaseId: ${useCaseId}`, {
+          activeCount: activeQuestions.length,
+          totalCount: allQuestions.length,
+          inactiveCount: allQuestions.length - activeQuestions.length,
+          questionFields: activeQuestions.map((q: any) => q.field_name || q.id || q.question_text?.substring(0, 30)),
+          inactiveFields: allQuestions.filter((q: any) => q.is_active === false).map((q: any) => q.field_name || q.id)
+        });
+      }
+      
+      return activeQuestions;
 
-    } catch (error) {
-      console.error('Error fetching custom questions:', error);
+    } catch (error: any) {
+      // Network errors (connection lost, CORS, etc.) should be handled gracefully
+      if (error?.message?.includes('Load failed') || 
+          error?.message?.includes('network') || 
+          error?.message?.includes('connection') ||
+          error?.code === 'NETWORK_ERROR' ||
+          error?.name === 'TypeError') {
+        console.warn('⚠️ [useCaseService] Network error fetching custom questions, returning empty array:', error.message);
+        return []; // Return empty array instead of throwing
+      }
+      console.error('❌ [useCaseService] Error fetching custom questions:', error);
       throw error;
     }
   }

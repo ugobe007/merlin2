@@ -29,7 +29,7 @@ import {
   EV_CHARGER_SPECS_SIMPLE 
 } from '@/services/evChargingCalculations';
 import { supabase } from '@/services/supabaseClient';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // REFACTORED: Use StreamlinedWizard instead of EVChargingWizard

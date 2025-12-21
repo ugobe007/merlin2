@@ -73,6 +73,7 @@ export interface WizardState {
   state: string;
   geoRecommendations: GeographicRecommendation | null;
   electricityRate: number;
+  utilityName?: string; // Utility name from zip code lookup (for accurate rate display)
   
   // Section 2: Industry
   selectedIndustry: string;

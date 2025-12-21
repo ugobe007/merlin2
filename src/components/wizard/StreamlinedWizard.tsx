@@ -24,12 +24,13 @@
  */
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator, Search, Home, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Sparkles, MapPin, Building2, Target, Settings, FileText, Wand2, Battery, Zap, HelpCircle, Sun, Award, AlertTriangle, CheckCircle, Lightbulb, Menu, Calculator, Search, Home, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 
 // Modular components
 import { useStreamlinedWizard } from './hooks';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
-import { AcceptCustomizeModal } from './shared';
+import { TrueQuoteModal } from '../shared/TrueQuoteModal';
+import { FloatingNavWidget, WizardBottomNav, ConfigurationSummary, SignupForm } from './shared';
 import { SavingsScoutNavbar } from './indicators/SavingsScoutWidget';
 import {
   WelcomeLocationSection,
@@ -42,6 +43,7 @@ import {
   GoalsSection,
   GoalsSectionV2,
   GoalsSectionV3,
+  Step4MagicFit,
   QuoteResultsSection,
   ScenarioComparison,
   ScenarioSection,
@@ -50,7 +52,7 @@ import {
 import ScenarioSectionV2 from './sections/ScenarioSectionV2';
 import { ConfigurationConfirmModal } from './modals';
 import FloatingWidgets from './FloatingWidgets';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 // ============================================
 // TYPES
@@ -94,6 +96,7 @@ export default function StreamlinedWizard({
   const [showPowerProfileExplainer, setShowPowerProfileExplainer] = useState(false);
   const [showSolarOpportunity, setShowSolarOpportunity] = useState(false);
   const [showTrueQuoteExplainer, setShowTrueQuoteExplainer] = useState(false);
+  const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
   const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
   const [hasSeenRecommendation, setHasSeenRecommendation] = useState(false);
   const [showMerlinBanner, setShowMerlinBanner] = useState(false); // Persistent recommendation banner
@@ -176,273 +179,25 @@ export default function StreamlinedWizard({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 overflow-hidden">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-900/90 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo & Menu */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <button
-                onClick={() => setShowSidebarMenu(!showSidebarMenu)}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                title="Menu"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              
-              {/* Simple Merlin logo - no text */}
-              <div className="flex items-center">
-                <img src={merlinImage} alt="Merlin" className="w-10 h-10" />
-              </div>
-            </div>
-
-            {/* Center: Main Nav Icons - centered in remaining space */}
-            <div className="flex-1 flex items-center justify-center gap-2">
-              {/* Solar Opportunity - Clickable sun icons - ALWAYS show if state is selected */}
-              {(() => {
-                // Use geo data if available, otherwise estimate from state
-                const geoSolarHours = wizard.wizardState.geoRecommendations?.profile?.avgSolarHoursPerDay || 0;
-                const hasState = !!wizard.wizardState.state;
-                
-                // Default solar hours by region if geo not available
-                const getDefaultSolarHours = (state: string): number => {
-                  const highSolarStates = ['Arizona', 'California', 'Nevada', 'New Mexico', 'Texas', 'Florida', 'Hawaii'];
-                  const medSolarStates = ['Colorado', 'Utah', 'Georgia', 'North Carolina', 'Oklahoma', 'Kansas'];
-                  if (highSolarStates.some(s => state.toLowerCase().includes(s.toLowerCase()))) return 6;
-                  if (medSolarStates.some(s => state.toLowerCase().includes(s.toLowerCase()))) return 5;
-                  return 4.5; // Default for other states
-                };
-                
-                const solarHours = geoSolarHours > 0 ? geoSolarHours : (hasState ? getDefaultSolarHours(wizard.wizardState.state) : 0);
-                
-                // Calculate sun rating (1-5 based on solar hours: 3h=1, 4h=2, 5h=3, 6h=4, 7h+=5)
-                const sunRating = hasState ? Math.min(5, Math.max(1, Math.round(solarHours - 2))) : 0;
-                
-                if (!hasState) return null;
-                
-                return (
-                  <button
-                    onClick={() => setShowSolarOpportunity(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors border border-amber-400/30"
-                    title={`${solarHours.toFixed(1)} hours avg solar - Click for details`}
-                  >
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Sun 
-                        key={i}
-                        className={`w-5 h-5 transition-all ${
-                          i <= sunRating 
-                            ? 'text-amber-400 fill-amber-400' 
-                            : 'text-amber-400/20'
-                        }`}
-                      />
-                    ))}
-                  </button>
-                );
-              })()}
-              
-              {/* Power Profile - Total System Power (Battery + Solar + Generator) */}
-              {(() => {
-                // ONLY show user-configured values, no fallbacks to recommended
-                // This keeps header and configuration section in sync
-                const batteryKW = wizard.wizardState.batteryKW || 0;
-                const batteryKWh = wizard.wizardState.batteryKWh || 0;
-                const solarKW = wizard.wizardState.solarKW || 0;
-                const generatorKW = wizard.wizardState.generatorKW || 0;
-                
-                // Totals - Show BATTERY STORAGE ONLY (not daily solar production)
-                const totalPowerKW = batteryKW + solarKW + generatorKW;
-                const totalStorageKWh = batteryKWh; // Battery storage capacity
-                
-                // Format the display
-                const formatEnergy = (kwh: number) => {
-                  if (kwh >= 1000) return `${(kwh / 1000).toFixed(1)} MWh`;
-                  return `${Math.round(kwh)} kWh`;
-                };
-                const formatPower = (kw: number) => {
-                  if (kw >= 1000) return `${(kw / 1000).toFixed(1)} MW`;
-                  return `${Math.round(kw)} kW`;
-                };
-                
-                // Show "calculating" state if no data yet
-                const hasData = totalPowerKW > 0 || totalStorageKWh > 0;
-                
-                return (
-                  <button
-                    onClick={() => setShowPowerProfileExplainer(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border border-emerald-400/50 rounded-xl hover:from-emerald-500/40 hover:to-teal-500/40 transition-all shadow-lg"
-                  >
-                    <Battery className="w-5 h-5 text-emerald-400" />
-                    <div className="flex flex-col items-start">
-                      <span className="text-emerald-300 font-black text-lg leading-tight">
-                        {hasData ? formatEnergy(totalStorageKWh) : '—'}
-                      </span>
-                      <span className="text-emerald-400/70 text-[10px] leading-tight">
-                        {hasData ? `${formatPower(totalPowerKW)} total` : 'Configure system'}
-                      </span>
-                    </div>
-                    <HelpCircle className="w-4 h-4 text-emerald-400/60" />
-                  </button>
-                );
-              })()}
-              
-              {/* Power Gap - PROMINENTLY LARGER with pulse when underpowered */}
-              {(() => {
-                // Get peak demand from centralized calculations
-                const calc = wizard.centralizedState?.calculated || {};
-                
-                // ONLY use totalPeakDemandKW - never fall back to recommendedBatteryKW
-                const peakDemandKW = calc.totalPeakDemandKW || 0;
-                
-                // Get configured power - use ONLY user-configured values
-                // Don't auto-fill from recommended, only use what user has explicitly set
-                const batteryKW = wizard.wizardState.batteryKW || 0;
-                const solarKW = wizard.wizardState.solarKW || 0;
-                const generatorKW = wizard.wizardState.generatorKW || 0;
-                const totalConfiguredKW = batteryKW + solarKW + generatorKW;
-                
-                // Debug logging
-                console.log('🔌 [PowerGap Header]:', {
-                  peakDemandKW,
-                  totalConfiguredKW,
-                  batteryKW,
-                  solarKW,
-                  generatorKW,
-                  calc,
-                });
-                
-                // Calculate coverage percentage - cap at 200% for display sanity
-                const rawCoverage = peakDemandKW > 0 
-                  ? Math.round((totalConfiguredKW / peakDemandKW) * 100)
-                  : 0;
-                const coverage = Math.min(rawCoverage, 200); // Cap display at 200%
-                const isCovered = rawCoverage >= 100;
-                const isPartial = rawCoverage >= 50 && rawCoverage < 100;
-                const isCritical = rawCoverage > 0 && rawCoverage < 50; // Severely underpowered!
-                const hasIndustry = !!wizard.wizardState.selectedIndustry;
-                const hasPeakDemand = peakDemandKW > 0;
-                const hasPowerConfig = totalConfiguredKW > 0;
-                const hasData = hasPeakDemand && hasPowerConfig;
-                
-                // Don't show power gap until user has configured something
-                if (!hasPowerConfig) return null;
-                
-                // Determine the status message
-                const statusMessage = (() => {
-                  if (!hasIndustry) return 'Select industry first';
-                  if (!hasPeakDemand) return 'Complete facility details';
-                  if (!hasPowerConfig) return `Need ${Math.round(peakDemandKW).toLocaleString()} kW`;
-                  if (isCovered) return '✓ Power covered';
-                  if (isCritical) return `⚠ Need ${Math.round(peakDemandKW - totalConfiguredKW).toLocaleString()} kW more!`;
-                  return `Need ${Math.round(peakDemandKW - totalConfiguredKW).toLocaleString()} kW more`;
-                })();
-                
-                // Show warning state when we know demand but have no power configured
-                const showWarning = hasPeakDemand && !hasPowerConfig;
-                
-                return (
-                  <button
-                    onClick={() => setShowPowerProfileExplainer(true)}
-                    className={`flex items-center gap-4 px-6 py-3 rounded-2xl border-2 transition-all shadow-xl ${
-                      isCritical || showWarning ? 'animate-pulse' : ''
-                    } ${
-                      !hasData && !showWarning
-                        ? 'bg-gradient-to-r from-slate-500/30 to-gray-500/30 border-slate-400/50'
-                        : showWarning
-                          ? 'bg-gradient-to-r from-amber-500/40 to-orange-500/40 border-amber-400/60'
-                          : isCovered
-                            ? 'bg-gradient-to-r from-emerald-500/40 to-green-500/40 border-emerald-400/60'
-                            : isPartial
-                              ? 'bg-gradient-to-r from-amber-500/40 to-yellow-500/40 border-amber-400/60'
-                              : 'bg-gradient-to-r from-red-500/50 to-orange-500/50 border-red-400/70 shadow-red-500/40 shadow-2xl'
-                    }`}
-                  >
-                    {/* MUCH Larger icon with warning indicator for critical */}
-                    <div className="relative">
-                      <Zap className={`w-10 h-10 ${
-                        !hasData && !showWarning ? 'text-slate-400' : showWarning ? 'text-amber-400' : isCovered ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
-                      }`} />
-                      {(isCritical || showWarning) && (
-                        <AlertTriangle className="absolute -top-1.5 -right-1.5 w-5 h-5 text-amber-300 animate-bounce" />
-                      )}
-                    </div>
-                    <div className="flex flex-col items-start">
-                      <div className="flex items-center gap-3">
-                        {/* MUCH Larger Progress bar */}
-                        <div className="w-36 h-4 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              !hasData && !showWarning
-                                ? 'bg-slate-400'
-                                : showWarning
-                                  ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                                  : isCovered 
-                                    ? 'bg-gradient-to-r from-emerald-400 to-green-400'
-                                    : isPartial
-                                      ? 'bg-gradient-to-r from-amber-400 to-yellow-400'
-                                      : 'bg-gradient-to-r from-red-400 to-orange-400'
-                            }`}
-                            style={{ width: hasData ? `${Math.min(100, coverage)}%` : showWarning ? '5%' : '0%' }}
-                          />
-                        </div>
-                        <span className={`text-2xl font-black transition-all duration-300 ease-out ${
-                          !hasData && !showWarning ? 'text-slate-300' : showWarning ? 'text-amber-300' : isCovered ? 'text-emerald-300' : isPartial ? 'text-amber-300' : 'text-red-300'
-                        }`}>
-                          {hasData ? `${coverage}%` : showWarning ? '0%' : '—'}
-                        </span>
-                      </div>
-                      <span className={`text-sm leading-tight font-bold ${
-                        !hasData && !showWarning ? 'text-slate-400/70' : showWarning ? 'text-amber-400/80' : isCovered ? 'text-emerald-400/80' : isPartial ? 'text-amber-400/80' : 'text-red-300'
-                      }`}>
-                        {statusMessage}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })()}
-              
-              {/* Energy Opportunity Widget - Fire icons for savings opportunities */}
-              {(() => {
-                const geo = wizard.wizardState.geoRecommendations;
-                const calc = wizard.centralizedState?.calculated || {};
-                const hasData = wizard.wizardState.state && (geo || calc.totalPeakDemandKW > 0);
-                
-                if (!hasData) return null;
-                
-                return (
-                  <div className="hidden lg:block">
-                    <SavingsScoutNavbar
-                      state={wizard.wizardState.state}
-                      industryProfile={wizard.wizardState.selectedIndustry || 'hotel'}
-                      peakDemandKW={calc.totalPeakDemandKW || 200}
-                      facilityDetails={{
-                        rooms: wizard.wizardState.useCaseData?.rooms || wizard.wizardState.useCaseData?.roomCount || 100,
-                        hasEVChargers: wizard.wizardState.useCaseData?.hasEVChargers || false,
-                        evChargerCount: wizard.wizardState.useCaseData?.evChargerCount || 0,
-                        evChargersL2: wizard.wizardState.evChargersL2 || 0,
-                        evChargersDCFC: wizard.wizardState.evChargersDCFC || 0,
-                        gridConnection: wizard.wizardState.gridConnection as any || 'on-grid',
-                      }}
-                      onGetQuote={() => wizard.setCurrentSection(5)}
-                      onFullAnalysis={() => wizard.setCurrentSection(3)}
-                    />
-                  </div>
-                );
-              })()}
-            </div>
-              
-            {/* Right: Close Button */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={onClose}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 overflow-y-auto">
+      {/* Floating Nav Widget - Option 1 (Recommended) - Replaces top nav bar */}
+      <FloatingNavWidget
+        wizardState={wizard.wizardState}
+        centralizedState={wizard.centralizedState}
+        onOpenSidebarMenu={() => setShowSidebarMenu(!showSidebarMenu)}
+        onOpenTrueQuote={() => setShowTrueQuoteModal(true)}
+        onOpenSolarOpportunity={() => setShowSolarOpportunity(true)}
+        onOpenPowerProfileExplainer={() => setShowPowerProfileExplainer(true)}
+        onClose={onClose}
+        onNavigateToSection={(section) => wizard.advanceToSection(section)}
+        currentSection={wizard.currentSection}
+      />
+      
+      {/* REMOVED: Old top nav bar - replaced by FloatingNavWidget above */}
+      {/* Header - Collapsible - REMOVED */}
+      {/* <header className={`fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-900/90 backdrop-blur-xl border-b border-white/10 transition-all duration-300 ${
+        showTopNavBar ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+      }`}> */}
 
       {/* HAMBURGER MENU SIDEBAR - Dec 17, 2025 */}
       {showSidebarMenu && (
@@ -547,24 +302,17 @@ export default function StreamlinedWizard({
         </>
       )}
 
-      {/* Main Content - FULL WIDTH (sidebar removed Dec 17, 2025) */}
-      <div className="h-full pt-16">
+      {/* Progress Bar - REMOVED per user request - top purple nav bar was irritating */}
+
+      {/* Main Content - FULL WIDTH (no top nav bar, using FloatingNavWidget) */}
+      <div className="min-h-full pt-6 pb-[120px]">
         {/* Scrollable Content Area - Now full width */}
         <main
           ref={containerRef}
-          className="h-full overflow-y-auto scroll-smooth"
+          className="min-h-full"
         >
-          {/* Loading Overlay during transitions */}
-          {wizard.isTransitioning && (
-            <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-[#060F76] via-[#1a237e] to-[#0d1952]">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 border-4 border-[#7DD3FC]/30 border-t-[#7DD3FC] rounded-full animate-spin"></div>
-                <p className="text-white/80 text-lg font-medium">Loading next step...</p>
-              </div>
-            </div>
-          )}
-          
-          <div className={`transition-opacity duration-300 ${wizard.isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          {/* No transition overlay - immediate navigation */}
+          <div>
             {/* Section 0: Location + Goals (Two-Column Layout) - NEW Dec 18, 2025 */}
             <Step1LocationGoals
               wizardState={wizard.wizardState}
@@ -573,10 +321,17 @@ export default function StreamlinedWizard({
               onStateSelect={wizard.handleStateSelect}
               onInternationalSelect={wizard.handleInternationalSelect}
               onContinue={() => {
+                console.log('🎯 [Step1] Continue clicked - advancing to Step 2 (Industry Selection)');
+                console.log('🎯 [Step1] Current section BEFORE advance:', wizard.currentSection);
                 wizard.completeSection('location');
                 wizard.advanceToSection(1);
+                // Log after a brief delay to see the actual state
+                setTimeout(() => {
+                  console.log('🎯 [Step1] Current section AFTER advance (delayed check):', wizard.currentSection);
+                }, 50);
               }}
               onOpenProQuote={onOpenAdvanced}
+              onOpenTrueQuote={() => setShowTrueQuoteModal(true)}
               isHidden={wizard.currentSection !== 0}
             />
 
@@ -587,11 +342,16 @@ export default function StreamlinedWizard({
               availableUseCases={wizard.availableUseCases}
               isLoadingUseCases={wizard.isLoadingUseCases}
               onIndustrySelect={wizard.handleIndustrySelect}
-              onBack={() => wizard.advanceToSection(0)}
-              onHome={handleGoHome}
+              onBack={() => {
+                console.log('🎯 [StreamlinedWizard] Step 2 back clicked - going to Step 1');
+                wizard.advanceToSection(0);
+              }}
+              onHome={undefined}
               onContinue={() => {
+                console.log('🎯 [StreamlinedWizard] Step 2 onContinue called - advancing to Section 2 (Facility Details)');
                 wizard.completeSection('industry');
                 wizard.advanceToSection(2);
+                console.log('🎯 [StreamlinedWizard] Current section after advance:', wizard.currentSection);
               }}
               onOpenProQuote={onOpenAdvanced}
               isHidden={wizard.currentSection !== 1}
@@ -604,34 +364,31 @@ export default function StreamlinedWizard({
               initializedFromVertical={wizard.initializedFromVertical}
               sectionRef={(el) => { sectionRefs.current[2] = el; }}
               onBack={() => wizard.advanceToSection(1)}
-              onHome={handleGoHome}
-              onContinue={() => {
+              onHome={undefined}
+              onContinue={async () => {
                 wizard.completeSection('facility');
-                // Go to Goals/Preferences (Section 3)
+                // Advance immediately - don't block UI
+                console.log('🎯 [FACILITY] Continue clicked - advancing to Magic Fit immediately...');
                 wizard.advanceToSection(3);
+                // Generate scenarios in background (Step 4 will show loading state)
+                wizard.generateAllScenarios().catch(err => {
+                  console.error('❌ [FACILITY] Failed to generate scenarios:', err);
+                });
               }}
               isHidden={wizard.currentSection !== 2}
+              currentSection={wizard.currentSection}
             />
 
             {/* ═══════════════════════════════════════════════════════════════
-                MAGIC FIT FLOW (Dec 16, 2025 - CORRECTED):
-                
-                Section 3: GOALS/PREFERENCES - User tells us what matters
-                Section 4: MAGIC FIT (3 cards) - "Here are 3 ways to save"
-                    → User picks: Savings Focus, Balanced, or Resilient
-                    → selectScenario() triggers AcceptCustomizeModal
-                Section 5: TWO-COLUMN (if Customize) - Fine-tune the details
-                Section 6: QUOTE RESULTS - Final savings estimate
-                
-                Why this order? 
-                1. User preferences INFORM scenario generation
-                2. Magic Fit presents 3 strategies to CHOOSE from
-                3. AcceptCustomizeModal offers Accept (skip) or Customize (fine-tune)
-                4. Two-column lets user adjust within chosen strategy
+                SIMPLIFIED FLOW (Dec 20, 2025):
+                Section 0: Location & Goals
+                Section 1: Industry Selection
+                Section 2: Facility Details
+                Section 3: Magic Fit (3 cards) - with inline customization (solar/generator only)
+                Section 4: Quote Results
             ═══════════════════════════════════════════════════════════════ */}
             
-            {/* Section 3: GOALS/PREFERENCES (BEFORE Magic Fit) */}
-            {/* User tells us what matters: savings, backup, solar, etc. */}
+            {/* Section 3: Magic Fit - 3 Preconfigured Options with Inline Customization */}
             {(() => {
               const calc = wizard.centralizedState?.calculated || {};
               const peakDemandKW = calc.totalPeakDemandKW || 0;
@@ -641,97 +398,160 @@ export default function StreamlinedWizard({
               const totalConfiguredKW = batteryKW + solarKW + generatorKW;
               const powerCoverage = peakDemandKW > 0 ? Math.round((totalConfiguredKW / peakDemandKW) * 100) : 100;
               
-              // Dec 16, 2025 - SSOT FIX: Use calculated financial estimates instead of hardcoded values
-              // Financial estimates now come from QuoteEngine.quickEstimate() via useWizardState
-              const annualSavings = calc.estimatedAnnualSavings || 0;
-              const paybackYears = calc.estimatedPaybackYears || 0;
-              const estimatedCost = calc.estimatedCost || 0;
-              // ROI = (10yr savings - cost) / cost * 100
-              const roi10Year = estimatedCost > 0 
-                ? Math.round(((annualSavings * 10) - estimatedCost) / estimatedCost * 100)
-                : 0;
-              
-              // Pass calculated recommendation from SSOT (no more hardcoded values!)
-              const merlinRecommendation = calc.recommendedBatteryKW ? {
-                batteryKW: calc.recommendedBatteryKW || 0,
-                batteryKWh: calc.recommendedBatteryKWh || 0,
-                durationHours: calc.recommendedBackupHours || 4,
-                solarKW: calc.recommendedSolarKW || 0,
-                windKW: 0,
-                generatorKW: Math.round(peakDemandKW * 0.25),
-                pcsKW: calc.recommendedBatteryKW || 0,
-                transformerKVA: Math.round(peakDemandKW * 0.5),
-                totalProductionKW: (calc.recommendedBatteryKW || 0) + (calc.recommendedSolarKW || 0),
-                totalStorageKWh: calc.recommendedBatteryKWh || 0,
-                dailyProductionKWh: Math.round((calc.recommendedSolarKW || 0) * 4.5),
-                // SSOT values - no more hardcoded 3.5 years or 285% ROI!
-                annualSavings: annualSavings,
-                paybackYears: paybackYears,
-                roi10Year: roi10Year,
-                currency: 'USD',
-              } : undefined;
-              
-              // Show Goals section (Section 3 - user tells us what matters)
-              // Dec 17, 2025: Using GoalsSectionV3 - Clean refactor with stable slider interactions
-              // Dec 18, 2025: SIMPLIFIED - Goes directly to Quote Results (Section 4)
               return wizard.currentSection === 3 ? (
-                <GoalsSectionV3
+                <Step4MagicFit
                   wizardState={wizard.wizardState}
                   setWizardState={wizard.setWizardState}
                   currentSection={3}
                   sectionRef={(el) => { sectionRefs.current[3] = el; }}
                   onBack={() => wizard.advanceToSection(2)}
-                  onHome={handleGoHome}
                   onContinue={async () => {
-                    // Dec 18, 2025 - SIMPLIFIED: Generate quote and go to Quote Results
-                    // Dec 19, 2025 - FIX: Actually call generateQuote()!
-                    console.log('🎯 [GOALS] Continue clicked - generating quote...');
-                    wizard.completeSection('preferences');
+                    // Advance immediately - don't block UI
+                    console.log('🎯 [MAGIC FIT] Continue clicked - advancing to Quote Results immediately...');
                     wizard.completeSection('configuration');
-                    
-                    // Generate the quote BEFORE navigating!
-                    await wizard.generateQuote();
-                    
-                    console.log('✅ [GOALS] Quote generated - advancing to Section 4');
                     wizard.advanceToSection(4); // Quote Results
+                    // Generate quote in background (Step 5 will show loading state)
+                    wizard.generateQuote().catch(err => {
+                      console.error('❌ [MAGIC FIT] Failed to generate quote:', err);
+                    });
                   }}
+                  onOpenProQuote={onOpenAdvanced}
+                  scenarioResult={wizard.wizardState.scenarioResult || null}
+                  isGenerating={wizard.isGeneratingScenarios}
                   onGenerateScenarios={wizard.generateAllScenarios}
-                  isGeneratingScenarios={wizard.isGeneratingScenarios}
-                  powerCoverage={powerCoverage}
                   peakDemandKW={peakDemandKW}
-                  merlinRecommendation={merlinRecommendation}
+                  powerCoverage={powerCoverage}
+                  onSelectScenario={(scenario) => {
+                    wizard.setWizardState(prev => ({
+                      ...prev,
+                      selectedScenario: scenario,
+                      batteryKW: scenario.batteryKW,
+                      batteryKWh: scenario.batteryKWh,
+                      durationHours: scenario.durationHours,
+                      solarKW: scenario.solarKW || 0,
+                      generatorKW: scenario.generatorKW || 0,
+                    }));
+                    // No modal - user proceeds directly to quote results
+                  }}
                 />
               ) : null;
             })()}
 
-            {/* ═══════════════════════════════════════════════════════════════
-                SIMPLIFIED FLOW (Dec 18, 2025):
-                - REMOVED ConfigurationComparison (was Section 4)
-                - REMOVED ScenarioSection (was Section 5) 
-                - REMOVED ScenarioSectionV2 (was Section 6)
-                - Now: Goals (Section 3) → Quote Results (Section 4)
-            ═══════════════════════════════════════════════════════════════ */}
-
             {/* Section 4: Quote Results - THE FINAL STEP */}
-            <QuoteResultsSection
-              wizardState={wizard.wizardState}
-              setWizardState={wizard.setWizardState}
-              currentSection={wizard.currentSection}
-              sectionRef={(el) => { sectionRefs.current[4] = el; }}
-              premiumConfig={wizard.premiumConfig}
-              premiumComparison={wizard.premiumComparison}
-              onBack={() => wizard.advanceToSection(3)}
-              onHome={handleGoHome}
-              onStartNew={() => {
-                wizard.setCurrentSection(0);
-                wizard.setCompletedSections([]);
-                wizard.setTotalPoints(0);
-              }}
-              onOpenAdvanced={onOpenAdvanced}
-            />
+            {wizard.currentSection === 4 && wizard.wizardState.quoteResult && !wizard.wizardState.isCalculating && (
+              <QuoteResultsSection
+                wizardState={wizard.wizardState}
+                setWizardState={wizard.setWizardState}
+                currentSection={wizard.currentSection}
+                sectionRef={(el) => { sectionRefs.current[4] = el; }}
+                premiumConfig={wizard.premiumConfig}
+                premiumComparison={wizard.premiumComparison}
+                onBack={() => wizard.advanceToSection(3)}
+                onHome={undefined}
+                onStartNew={() => {
+                  wizard.setCurrentSection(0);
+                  wizard.setCompletedSections([]);
+                  wizard.setTotalPoints(0);
+                }}
+                onOpenAdvanced={onOpenAdvanced}
+              />
+            )}
+            {wizard.currentSection === 4 && !wizard.wizardState.quoteResult && (
+              <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#252547] to-[#1e1e3d] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+                  <p className="text-white font-bold text-xl">Generating your quote...</p>
+                  <p className="text-gray-400 mt-2">This takes just a moment</p>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
+
+      {/* Bottom Navigation */}
+      <WizardBottomNav
+        currentStep={wizard.currentSection}
+        totalSteps={5}
+        stepName={
+          wizard.currentSection === 0 ? 'Location & Goals' :
+          wizard.currentSection === 1 ? 'Industry Selection' :
+          wizard.currentSection === 2 ? 'Facility Details' :
+          wizard.currentSection === 3 ? 'Choose Strategy' :
+          'Your Quote'
+        }
+        canGoBack={wizard.currentSection > 0}
+        canGoForward={
+          wizard.currentSection === 0 ? (!!wizard.wizardState.state && wizard.wizardState.goals.length > 0) :
+          wizard.currentSection === 1 ? !!wizard.wizardState.selectedIndustry :
+          wizard.currentSection === 2 ? true : // Facility details validation handled internally
+          wizard.currentSection === 3 ? !!wizard.wizardState.selectedScenario :
+          false
+        }
+        onBack={() => wizard.advanceToSection(wizard.currentSection - 1)}
+        onForward={() => {
+          if (wizard.currentSection === 0) {
+            wizard.completeSection('location');
+            wizard.advanceToSection(1);
+          } else if (wizard.currentSection === 1) {
+            wizard.completeSection('industry');
+            wizard.advanceToSection(2);
+          } else if (wizard.currentSection === 2) {
+            wizard.completeSection('facility');
+            wizard.generateAllScenarios().then(() => {
+              wizard.advanceToSection(3);
+            });
+          } else if (wizard.currentSection === 3) {
+            // Advance immediately, generate in background
+            wizard.advanceToSection(4);
+            wizard.generateQuote().catch(err => {
+              console.error('❌ [WizardBottomNav] Failed to generate quote:', err);
+            });
+          }
+        }}
+        forwardLabel={
+          wizard.currentSection === 3 ? 'See My Results' :
+          wizard.currentSection === 4 ? undefined :
+          'Continue'
+        }
+        // Step 3 progress ring props
+        answeredCount={
+          wizard.currentSection === 2 
+            ? (() => {
+                const excludedFields = [
+                  'gridCapacityKW', 'gridSavingsGoal', 'gridImportLimit', 'annualGridFees',
+                  'gridReliabilityIssues', 'existingSolarKW', 'offGridReason', 'annualOutageHours',
+                  'wantsSolar', 'hasEVCharging', 'evChargerCount', 'existingEVChargers', 
+                  'wantsEVCharging', 'evChargerStatus', 'evChargingPower'
+                ];
+                const filteredQuestions = (wizard.wizardState.customQuestions || []).filter(
+                  (q: any) => q && !excludedFields.includes(q.field_name)
+                );
+                let count = 0;
+                filteredQuestions.forEach((q: any) => {
+                  const value = wizard.wizardState.useCaseData?.[q.field_name];
+                  if (value !== undefined && value !== null && value !== '') count++;
+                });
+                return count;
+              })()
+            : undefined
+        }
+        totalQuestions={
+          wizard.currentSection === 2
+            ? (() => {
+                const excludedFields = [
+                  'gridCapacityKW', 'gridSavingsGoal', 'gridImportLimit', 'annualGridFees',
+                  'gridReliabilityIssues', 'existingSolarKW', 'offGridReason', 'annualOutageHours',
+                  'wantsSolar', 'hasEVCharging', 'evChargerCount', 'existingEVChargers', 
+                  'wantsEVCharging', 'evChargerStatus', 'evChargingPower'
+                ];
+                return (wizard.wizardState.customQuestions || []).filter(
+                  (q: any) => q && !excludedFields.includes(q.field_name)
+                ).length;
+              })()
+            : undefined
+        }
+      />
       
       {/* ═══════════════════════════════════════════════════════════════════
           FLOATING WIDGETS (Dec 17, 2025)
@@ -1205,8 +1025,8 @@ export default function StreamlinedWizard({
         </div>
       )}
       
-      {/* PERSISTENT MERLIN RECOMMENDATION BANNER - Shows until final quote */}
-      {showMerlinBanner && merlinRecommendation && wizard.currentSection < 5 && !showMerlinRecommendation && (
+      {/* PERSISTENT MERLIN RECOMMENDATION BANNER - Only show on Step 3 (Facility Details) */}
+      {showMerlinBanner && merlinRecommendation && wizard.currentSection === 2 && !showMerlinRecommendation && (
         <div className="fixed bottom-4 left-4 z-[9998] max-w-sm">
           <div className="bg-gradient-to-r from-purple-900/95 to-indigo-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-500/30 p-4">
             <div className="flex items-center gap-3">
@@ -1463,34 +1283,71 @@ export default function StreamlinedWizard({
         </div>
       )}
 
-      {/* Accept/Customize Modal - Dec 14, 2025 CRITICAL FIX #2 */}
-      {wizard.showAcceptCustomizeModal && wizard.wizardState.quoteResult && (
-        <AcceptCustomizeModal
-          isOpen={wizard.showAcceptCustomizeModal}
-          onClose={() => wizard.setShowAcceptCustomizeModal(false)}
-          onAccept={wizard.handleAcceptAI}
-          onCustomize={wizard.handleCustomize}
-          quoteResult={wizard.wizardState.quoteResult}
-          verticalName={
-            wizard.wizardState.selectedIndustry 
-              ? wizard.wizardState.selectedIndustry.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-              : 'Your Facility'
-          }
-          facilityDetails={{
-            name: wizard.wizardState.industryName || 'Your Facility',
-            size: wizard.centralizedState?.calculated?.totalPeakDemandKW 
-              ? `${Math.round(wizard.centralizedState.calculated.totalPeakDemandKW)} kW Peak Demand`
-              : undefined,
-            location: wizard.wizardState.state || undefined,
+      {/* AcceptCustomizeModal removed - Step 4 now goes directly to Step 5 (Quote Results) */}
+
+      {/* TrueQuote Modal */}
+      <TrueQuoteModal
+        isOpen={showTrueQuoteModal}
+        onClose={() => setShowTrueQuoteModal(false)}
+        onGetQuote={() => {
+          setShowTrueQuoteModal(false);
+        }}
+      />
+      
+      {/* Configuration Summary - Floating Sidebar - REMOVED per user request */}
+      {/* User found the side panel cluttering the UI - commenting out
+      <ConfigurationSummary
+        currentStep={wizard.currentSection}
+        location={{
+          state: wizard.wizardState.state,
+          zipCode: wizard.wizardState.zipCode,
+          utilityRate: wizard.wizardState.electricityRate,
+        }}
+        goals={wizard.wizardState.goals}
+        industry={{
+          name: wizard.wizardState.industryName,
+          id: wizard.wizardState.selectedIndustry,
+        }}
+        facilitySize={{
+          rooms: wizard.wizardState.useCaseData?.roomCount || wizard.wizardState.useCaseData?.rooms,
+          squareFootage: wizard.wizardState.useCaseData?.squareFootage,
+          bayCount: wizard.wizardState.useCaseData?.bayCount,
+        }}
+        amenities={(() => {
+          // Extract amenities from useCaseData
+          const amenities: Array<{ name: string; category?: string }> = [];
+          const data = wizard.wizardState.useCaseData || {};
+          if (data.hasPool) amenities.push({ name: 'Pool', category: 'Aquatics' });
+          if (data.hasGym) amenities.push({ name: 'Gym', category: 'Fitness' });
+          if (data.hasRestaurant) amenities.push({ name: 'Restaurant', category: 'Dining' });
+          if (data.hasEVChargers || data.hasEVCharging) amenities.push({ name: 'EV Chargers', category: 'Transportation' });
+          return amenities;
+        })()}
+        selectedStrategy={wizard.wizardState.selectedScenario ? {
+          name: wizard.wizardState.selectedScenario.name || 'Selected Strategy',
+          batteryKW: wizard.wizardState.selectedScenario.batteryKW,
+          batteryKWh: wizard.wizardState.selectedScenario.batteryKWh,
+          solarKW: wizard.wizardState.selectedScenario.solarKW,
+          generatorKW: wizard.wizardState.selectedScenario.generatorKW,
+          annualSavings: wizard.wizardState.selectedScenario.annualSavings,
+        } : undefined}
+        quoteSummary={wizard.wizardState.quoteResult ? {
+          annualSavings: wizard.wizardState.quoteResult.financials?.annualSavings,
+          paybackYears: wizard.wizardState.quoteResult.financials?.paybackYears,
+          totalCost: wizard.wizardState.quoteResult.costs?.totalProjectCost || wizard.wizardState.quoteResult.costs?.netCost,
+        } : undefined}
+      />
+      */}
+      
+      {/* Signup Form - Only on Step 5 */}
+      {wizard.currentSection === 4 && wizard.wizardState.quoteResult && (
+        <SignupForm
+          onSignup={async (data) => {
+            // TODO: Implement actual signup API call
+            console.log('User signup:', data);
+            // For now, just log it
+            return Promise.resolve();
           }}
-          systemSummary={{
-            bessKW: wizard.centralizedState?.calculated?.recommendedBatteryKW || 0,
-            bessKWh: wizard.centralizedState?.calculated?.recommendedBatteryKWh || 0,
-            solarKW: wizard.centralizedState?.calculated?.recommendedSolarKW || 0,
-            paybackYears: wizard.wizardState.quoteResult.financials?.paybackYears || 0,
-            annualSavings: wizard.wizardState.quoteResult.financials?.annualSavings || 0,
-          }}
-          colorScheme="purple"
         />
       )}
     </div>

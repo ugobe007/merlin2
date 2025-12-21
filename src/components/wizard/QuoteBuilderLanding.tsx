@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Building2, Zap, DollarSign, Calendar, TrendingUp, ArrowRight, Edit, CheckCircle } from 'lucide-react';
-import merlinLogo from '../../assets/images/new_Merlin.png';
+import merlinLogo from '../../assets/images/new_profile_merlin.png';
 
 interface UseCaseData {
   id: string;

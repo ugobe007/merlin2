@@ -38,5 +38,8 @@ export { CompareConfigureSection } from './CompareConfigureSection';
 // Magic Fit™ Section - Step 4 "Wizard on Steroids" (Dec 2025)
 export { MagicFitSection } from './MagicFitSection';
 
+// Step 4: Magic Fit + Customization (Dec 2025 - Apple-inspired)
+export { Step4MagicFit } from './Step4MagicFit';
+
 // Shared panels
 export { MerlinRecommendationPanel } from './MerlinRecommendationPanel';

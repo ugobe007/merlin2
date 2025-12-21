@@ -20,7 +20,7 @@ import type { WizardState } from '../types/wizardTypes';
 import PowerGapIndicator from '../indicators/PowerGapIndicator';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 // MerlinWizardModal removed - file no longer exists
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface ConfigurationSectionProps {
   wizardState: WizardState;

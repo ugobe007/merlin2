@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import type { ViewMode } from '../../utils/advancedBuilderConstants';
 import { TOOL_CARDS } from '../../utils/advancedBuilderConstants';
-import merlinImage from '../../assets/images/new_Merlin.png';
+import merlinImage from '../../assets/images/new_profile_merlin.png';
 
 /**
  * Tool Cards Grid Component

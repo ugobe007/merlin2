@@ -32,6 +32,7 @@ import {
   getRegionalElectricityRate,
   type GeographicRecommendation 
 } from '@/services/geographicIntelligenceService';
+import { getCommercialRateByZip } from '@/services/utilityRateService';
 import { 
   generatePremiumConfiguration, 
   calculatePremiumComparison,
@@ -692,264 +693,16 @@ export function useStreamlinedWizard({
   }, [JSON.stringify(wizardState.useCaseData), wizardState.selectedIndustry, wizardState.wantsSolar, currentSection, wizardState.facilitySubtype, wizardState.equipmentTier, JSON.stringify(wizardState.physicalConstraints), setWizardState, setCentralizedState]);
   
   // ═══════════════════════════════════════════════════════════════
-  // EFFECT: CRITICAL FIX - Recalculate when user completes Section 2
-  // This triggers SSOT calculation with actual user inputs
-  // Dec 14, 2025 - Fix for "User inputs not recorded" bug
+  // EFFECT: Sync useCaseData to centralized state (NO CALCULATIONS)
+  // PERFORMANCE FIX (Dec 2025): Removed auto-calculation - calculations now run
+  // only once when explicitly called via generateAllScenarios() when advancing Step 3 → Step 4
+  // PERFORMANCE FIX (Dec 2025): Removed auto-calculation from useEffect
+  // Calculations now run ONLY once when generateAllScenarios() is called
+  // (when advancing from Step 3 to Step 4)
+  // This eliminates 20+ calculations per user click
   // ═══════════════════════════════════════════════════════════════
-  useEffect(() => {
-    // Only trigger calculation when transitioning FROM Section 2 TO Section 3
-    // This ensures user has completed facility details form
-    if (currentSection === 3 && wizardState.useCaseData && wizardState.selectedIndustry) {
-      const data = wizardState.useCaseData;
-      
-      console.log('🔄 [RECALC] ========================================');
-      console.log('🔄 [RECALC] CALCULATION TRIGGER FIRED!');
-      console.log('🔄 [RECALC] Industry:', wizardState.selectedIndustry);
-      console.log('🔄 [RECALC] Current Section:', currentSection);
-      console.log('🔄 [RECALC] Raw useCaseData field names:', Object.keys(data));
-      console.log('🔄 [RECALC] Raw useCaseData values:', data);
-      console.log('🔄 [RECALC] ========================================');
-      
-      // CALL THE SSOT to calculate power from user inputs
-      let peakDemandKW = 0;
-      let dailyKWh = 0;
-      let monthlyKWh = 0;
-      
-      try {
-        // Normalize field names for SSOT compatibility
-        // Database uses various field names, SSOT expects specific names
-        const normalizedData = { ...data };
-        
-        // For ALL use cases: Try to extract the primary sizing field
-        // Hotel: Use questionnaireMapper for SSOT compliance (Dec 15, 2025)
-        if (wizardState.selectedIndustry === 'hotel' || wizardState.selectedIndustry === 'hotel-hospitality') {
-          // Use the new questionnaire mapper for hotels
-          const hotelMapped = mapHotelQuestionnaire(data as HotelQuestionnaireAnswers);
-          
-          // Calculate power using SSOT function with mapped inputs
-          const hotelPowerResult = calculateHotelPower(
-            hotelMapped.ssotInput.roomCount,
-            {
-              hotelClass: hotelMapped.ssotInput.hotelClass,
-              amenities: hotelMapped.ssotInput.amenities,
-            }
-          );
-          
-          peakDemandKW = (hotelPowerResult.powerMW || 0) * 1000;
-          dailyKWh = peakDemandKW * 24 * 0.4;
-          monthlyKWh = dailyKWh * 30;
-          
-          // Store extracted data for quote generation (solar, EV, backup, etc.)
-          // Dec 16, 2025 - CRITICAL FIX: Also sync to fields that sync effects read
-          // Dec 17, 2025 - DON'T OVERWRITE solar/EV if user has already modified in Goals
-          // Dec 17, 2025 - FIX SLIDER BUG: Only set these values ONCE on initial Section 3 entry
-          setWizardState(prev => {
-            // CRITICAL: Don't overwrite if user has already interacted with Goals section
-            // Check if any Goals-modifiable values have been set by user
-            const userHasModifiedGoals = prev.wantsSolar || prev.wantsEVCharging || prev.wantsWind || prev.wantsGenerator || 
-              prev.solarKW > 0 || prev.evChargersL2 > 0 || prev.evChargersDCFC > 0 || prev.generatorKW > 0 || prev.windTurbineKW > 0;
-            
-            // If user has modified Goals, don't overwrite their settings
-            if (userHasModifiedGoals) {
-              console.log('🛡️ [HOTEL MAPPER] User has modified Goals - preserving their settings');
-              return prev; // Don't change anything
-            }
-            
-            // Only use questionnaire solar data if user hasn't set it
-            const useQuestionnaireSolar = !prev.wantsSolar && currentSection <= 2;
-            
-            return {
-              ...prev,
-              // Facility size from questionnaire - FIXES "25,000 rooms" badge bug
-              facilitySize: hotelMapped.ssotInput.roomCount || prev.facilitySize,
-              // Solar from questionnaire - ONLY if user hasn't overridden in Goals
-              existingSolarKW: hotelMapped.extractedData.existingSolarKW,
-              wantsSolar: useQuestionnaireSolar ? hotelMapped.extractedData.wantsSolar : prev.wantsSolar,
-              targetSolarKW: hotelMapped.extractedData.targetSolarKW,
-              solarKW: useQuestionnaireSolar 
-                ? (hotelMapped.extractedData.wantsSolar ? (hotelMapped.extractedData.targetSolarKW || 0) : 0)
-                : prev.solarKW,
-              hasExistingSolar: hotelMapped.extractedData.existingSolarKW > 0,
-              // EV from questionnaire - SYNC TO L2 FIELDS for sync effect!
-              existingEVChargers: hotelMapped.extractedData.existingEVChargers,
-              wantsEVCharging: hotelMapped.extractedData.wantsEVCharging,
-              targetEVChargers: hotelMapped.extractedData.targetEVChargers,
-              // Dec 16, 2025 - Map to L2 fields so sync effect can propagate to centralized state
-              existingEVL2: hotelMapped.extractedData.existingEVChargers || 0,
-              evChargersL2: hotelMapped.extractedData.targetEVChargers || 0,
-              // Backup from questionnaire
-              durationHours: hotelMapped.extractedData.backupDurationHours,
-              hasExistingGenerator: hotelMapped.extractedData.hasExistingGenerator,
-              existingGeneratorKW: hotelMapped.extractedData.existingGeneratorKW,
-              // Financial from questionnaire
-              monthlyBill: hotelMapped.extractedData.monthlyBill,
-              peakDemandKW: hotelMapped.extractedData.peakDemandKW > 0 
-                ? hotelMapped.extractedData.peakDemandKW 
-                : peakDemandKW,
-            };
-          });
-          
-          console.log('🏨 [HOTEL MAPPER] Questionnaire mapped successfully:', {
-            ssotInput: hotelMapped.ssotInput,
-            extractedData: hotelMapped.extractedData,
-            calculatedPeakKW: peakDemandKW,
-          });
-          
-          // Skip generic calculateUseCasePower for hotel - already calculated
-        } else {
-          // Non-hotel use cases: Use generic field normalization
-          // Office: squareFeet
-          if (wizardState.selectedIndustry === 'office') {
-            if (!normalizedData.squareFeet) {
-              normalizedData.squareFeet = data.officeSqFt || data.buildingSqFt || data.sqFt || data.facilitySize;
-            }
-          }
-          // Hospital: bedCount
-          else if (wizardState.selectedIndustry === 'hospital') {
-            if (!normalizedData.bedCount) {
-              normalizedData.bedCount = data.beds || data.numberOfBeds || data.facilitySize;
-            }
-          }
-          // Warehouse: squareFeet
-          else if (wizardState.selectedIndustry === 'warehouse') {
-            if (!normalizedData.squareFeet) {
-              normalizedData.squareFeet = data.warehouseSqFt || data.sqFt || data.facilitySize;
-            }
-          }
-          // Manufacturing: squareFeet
-          else if (wizardState.selectedIndustry === 'manufacturing') {
-            if (!normalizedData.squareFeet) {
-              normalizedData.squareFeet = data.facilitySqFt || data.squareFeet || data.sqFt || data.facilitySize;
-            }
-          }
-          // Retail: squareFeet
-          else if (wizardState.selectedIndustry === 'retail') {
-            if (!normalizedData.squareFeet) {
-              normalizedData.squareFeet = data.retailSqFt || data.sqFt || data.facilitySize;
-            }
-          }
-          // Airport: annualPassengers
-          else if (wizardState.selectedIndustry === 'airport') {
-            if (!normalizedData.annualPassengers) {
-              normalizedData.annualPassengers = data.totalPassengers || data.passengers || data.facilitySize;
-            }
-          }
-          // Casino: gamingFloorSqFt
-          else if (wizardState.selectedIndustry === 'casino') {
-            if (!normalizedData.gamingFloorSqFt) {
-              normalizedData.gamingFloorSqFt = data.gamingFloorSize || data.gamingSpaceSqFt || data.facilitySize;
-            }
-          }
-          // Car Wash: bayCount
-          else if (wizardState.selectedIndustry === 'car-wash') {
-            if (!normalizedData.bayCount) {
-              normalizedData.bayCount = data.washBays || data.numBays || data.bays || data.facilitySize;
-            }
-          }
-          
-          // Generic SSOT calculation for non-hotel use cases
-          const powerResult = calculateUseCasePower(wizardState.selectedIndustry, normalizedData);
-          peakDemandKW = (powerResult.powerMW || 0) * 1000; // Convert MW to kW
-          // Estimate daily/monthly from peak (assumes 40% capacity factor)
-          dailyKWh = peakDemandKW * 24 * 0.4;
-          monthlyKWh = dailyKWh * 30;
-          
-          console.log('✅ [SSOT] ========================================');
-          console.log('✅ [SSOT] CALCULATION SUCCESSFUL!');
-          console.log('✅ [SSOT] Industry:', wizardState.selectedIndustry);
-          console.log('✅ [SSOT] Raw field names:', Object.keys(data));
-          console.log('✅ [SSOT] Normalized field names:', Object.keys(normalizedData));
-          console.log('✅ [SSOT] Normalized values:', normalizedData);
-          console.log('✅ [SSOT] Peak Demand (kW):', peakDemandKW);
-          console.log('✅ [SSOT] Power (MW):', powerResult.powerMW);
-          console.log('✅ [SSOT] Method:', powerResult.calculationMethod);
-          console.log('✅ [SSOT] ========================================');
-        }
-      } catch (error) {
-        console.error('❌ [SSOT] Power calculation failed:', error);
-        // Fallback to any values in useCaseData
-        peakDemandKW = data.peakDemandKW || data.totalPeakKW || 0;
-        dailyKWh = data.dailyKWh || 0;
-        monthlyKWh = data.monthlyKWh || dailyKWh * 30;
-      }
-      
-      // ═══════════════════════════════════════════════════════════════
-      // EV CHARGER LOAD (Dec 16, 2025 - Add EV load to peak demand)
-      // Include both existing and new EV chargers in the power calculation
-      // Uses 40% concurrency factor (not all chargers run at peak)
-      // This is the Section 3 RECALC effect
-      // ═══════════════════════════════════════════════════════════════
-      const EV_CONCURRENCY_FACTOR = 0.40;
-      const existingEVLoadKW = (
-        (wizardState.existingEVL2 || 0) * 11 +  // Level 2 @ 11 kW
-        (wizardState.existingEVL3 || 0) * 100   // DCFC @ 100 kW
-      ) * EV_CONCURRENCY_FACTOR;
-      
-      const newEVLoadKW = (
-        (wizardState.evChargersL2 || 0) * 11 +
-        (wizardState.evChargersDCFC || 0) * 100 +
-        (wizardState.evChargersHPC || 0) * 350
-      ) * EV_CONCURRENCY_FACTOR;
-      
-      // Add EV load to peak demand
-      peakDemandKW += Math.round(existingEVLoadKW + newEVLoadKW);
-      
-      console.log('⚡🔌 [RECALC-EV] EV load calculation:', {
-        existingEVL2: wizardState.existingEVL2,
-        existingEVL3: wizardState.existingEVL3,
-        evChargersL2: wizardState.evChargersL2,
-        evChargersDCFC: wizardState.evChargersDCFC,
-        evChargersHPC: wizardState.evChargersHPC,
-        existingEVLoadKW: Math.round(existingEVLoadKW),
-        newEVLoadKW: Math.round(newEVLoadKW),
-        totalAddedKW: Math.round(existingEVLoadKW + newEVLoadKW),
-        finalPeakKW: peakDemandKW,
-      });
-      
-      // Calculate recommended BESS size using INDUSTRY-SPECIFIC ratio
-      // Dec 2025: Uses getIndustryBESSRatio() instead of hardcoded 0.70
-      // Hotel=0.50, Hospital=0.60, Data Center=0.70, etc.
-      const targetReduction = getIndustryBESSRatio(wizardState.selectedIndustry);
-      const recommendedBatteryKW = Math.round(peakDemandKW * targetReduction);
-      const recommendedBatteryKWh = recommendedBatteryKW * 4; // 4-hour duration
-      
-      // Calculate solar recommendation
-      let recommendedSolarKW = 0;
-      if (wizardState.wantsSolar) {
-        // 60% of peak demand (typical solar sizing)
-        recommendedSolarKW = Math.round(peakDemandKW * 0.6);
-      }
-      
-      // UPDATE centralizedState.calculated with ACTUAL user values
-      setCentralizedState((prev: any) => ({
-        ...prev,
-        calculated: {
-          ...prev.calculated, // CRITICAL: Preserve financial estimates from useWizardState!
-          totalPeakDemandKW: peakDemandKW,
-          recommendedBatteryKW,
-          recommendedBatteryKWh,
-          recommendedSolarKW,
-          dailyKWh,
-          monthlyKWh,
-          calculatedAt: new Date().toISOString(),
-        },
-      }));
-      
-      console.log('💾 [RECALC] ========================================');
-      console.log('💾 [RECALC] UPDATED centralizedState.calculated:');
-      console.log('💾 [RECALC] Total Peak Demand (kW):', peakDemandKW);
-      console.log('💾 [RECALC] Recommended Battery (kW):', recommendedBatteryKW);
-      console.log('💾 [RECALC] Recommended Battery (kWh):', recommendedBatteryKWh);
-      console.log('💾 [RECALC] Recommended Solar (kW):', recommendedSolarKW);
-      console.log('💾 [RECALC] Daily kWh:', dailyKWh);
-      console.log('💾 [RECALC] Monthly kWh:', monthlyKWh);
-      console.log('💾 [RECALC] ========================================');
-    }
-  // Dec 16, 2025 - Added EV fields to deps so peak demand recalculates when chargers change
-  }, [currentSection, wizardState.useCaseData, wizardState.selectedIndustry, wizardState.solarKW,
-      wizardState.existingEVL2, wizardState.existingEVL3,
-      wizardState.evChargersL2, wizardState.evChargersDCFC, wizardState.evChargersHPC,
-      setCentralizedState]);
+  // NOTE: Data sync still happens above (lines 444-489) for Power Gap indicator
+  // but NO SSOT calculations are triggered here anymore
   
   // ═══════════════════════════════════════════════════════════════
   // EFFECT: Sync industry to centralized state
@@ -1031,38 +784,83 @@ export function useStreamlinedWizard({
   }, [completedSections]);
   
   const advanceToSection = useCallback((index: number) => {
-    setIsTransitioning(true);
-    // Scroll to top immediately
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    setTimeout(() => {
-      setCurrentSection(index);
-      // Small delay before removing transition overlay to ensure content renders
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 100);
-    }, 150);
-  }, []);
+    const prevSection = currentSection;
+    
+    console.log(`🔄 [advanceToSection] Called: ${prevSection} → ${index}`);
+    
+    // Prevent invalid transitions
+    if (index < 0 || index > 4) {
+      console.warn(`⚠️ [advanceToSection] Invalid index: ${index}`);
+      return;
+    }
+    
+    // Prevent skipping sections (except for vertical init from landing page)
+    if (index > prevSection + 1 && !initializedFromVertical) {
+      console.warn(`⚠️ [advanceToSection] Skipping from ${prevSection} to ${index} - forcing sequential`);
+      // Force sequential navigation
+      const nextSection = prevSection + 1;
+      setCurrentSection(nextSection);
+      // Use requestAnimationFrame for smooth DOM updates
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      return;
+    }
+    
+    // Immediate state update - use requestAnimationFrame for consistent timing
+    setCurrentSection(index);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    console.log(`✅ [advanceToSection] Successfully advanced to section ${index}`);
+  }, [currentSection, initializedFromVertical]);
   
-  // Handle zip code change - NO auto-advance (user clicks Continue button)
+  // Handle zip code change - Uses zip code for accurate utility rate lookup
   const handleZipCodeChange = useCallback(async (zip: string) => {
     setWizardState(prev => ({ ...prev, zipCode: zip }));
     
     if (zip.length === 5) {
       try {
+        // First, get state from zip code
         const state = await getStateFromZipCode(zip);
-        if (state) {
-          const rate = await getRegionalElectricityRate(state);
-          const recommendations = await getGeographicRecommendations(state);
-          
-          setWizardState(prev => ({
-            ...prev,
-            state,
-            electricityRate: rate,
-            geoRecommendations: recommendations,
-          }));
-          
-          // NOTE: Removed auto-advance - user will click Continue button
+        if (!state) {
+          console.error('[Wizard] Could not determine state from zip code');
+          return;
         }
+        
+        // Try to get utility-specific rate by zip code (more accurate)
+        let rate = 0.12; // Default fallback
+        let utilityName = '';
+        
+        try {
+          const zipRateData = await getCommercialRateByZip(zip);
+          if (zipRateData) {
+            rate = zipRateData.rate;
+            utilityName = zipRateData.utilityName;
+            console.log(`✅ [Wizard] Got utility-specific rate for ZIP ${zip}: ${rate}/kWh from ${utilityName}`);
+          } else {
+            // Fallback to state average if zip lookup fails
+            rate = await getRegionalElectricityRate(state);
+            console.log(`⚠️ [Wizard] Using state average rate for ${state}: ${rate}/kWh`);
+          }
+        } catch (zipError) {
+          // Fallback to state average if zip lookup fails
+          console.warn('[Wizard] Zip code rate lookup failed, using state average:', zipError);
+          rate = await getRegionalElectricityRate(state);
+        }
+        
+        const recommendations = await getGeographicRecommendations(state);
+        
+        setWizardState(prev => ({
+          ...prev,
+          state,
+          electricityRate: rate,
+          geoRecommendations: recommendations,
+          utilityName: utilityName || undefined, // Store utility name if available
+        }));
+        
+        console.log(`✅ [Wizard] Location updated: ${state} (ZIP: ${zip}), Rate: $${rate.toFixed(3)}/kWh`);
       } catch (error) {
         console.error('[Wizard] Zip code lookup failed:', error);
       }
@@ -1140,25 +938,72 @@ export function useStreamlinedWizard({
   
   const handleIndustrySelect = useCallback(async (slug: string, name: string, useCaseId?: string) => {
     try {
-      const questions = useCaseId ? await useCaseService.getCustomQuestionsByUseCaseId(useCaseId) : [];
+      console.log('🎯 [handleIndustrySelect] Called with:', { slug, name, useCaseId });
+      
+      // If no useCaseId provided, try to find it from availableUseCases
+      let finalUseCaseId = useCaseId;
+      if (!finalUseCaseId && availableUseCases.length > 0) {
+        const useCase = availableUseCases.find(uc => 
+          uc.slug === slug || uc.slug?.toLowerCase() === slug.toLowerCase()
+        );
+        finalUseCaseId = useCase?.id;
+        console.log('🎯 [handleIndustrySelect] Found useCaseId from availableUseCases:', finalUseCaseId);
+      }
+      
+      // Try to fetch questions, but handle network errors gracefully
+      let questions: any[] = [];
+      if (finalUseCaseId) {
+        try {
+          questions = await useCaseService.getCustomQuestionsByUseCaseId(finalUseCaseId);
+          console.log(`🎯 [handleIndustrySelect] Loaded ${questions.length} questions for ${name} (${slug})`, {
+            useCaseId: finalUseCaseId,
+            questionCount: questions.length,
+            questionFields: questions.map((q: any) => q.field_name || q.id || q.question_text?.substring(0, 30)),
+            hasQuestions: questions.length > 0
+          });
+          
+          // Warn if no questions found - might indicate database issue
+          if (questions.length === 0) {
+            console.warn(`⚠️ [handleIndustrySelect] WARNING: No custom questions found for ${name} (${slug}) with useCaseId: ${finalUseCaseId}`);
+          }
+        } catch (networkError: any) {
+          // Service should handle network errors, but double-check here
+          console.warn('🎯 [handleIndustrySelect] Error loading questions (continuing with empty):', networkError.message);
+          questions = [];
+        }
+      } else {
+        console.warn(`⚠️ [handleIndustrySelect] No useCaseId provided for ${name} (${slug}) - cannot load custom questions`);
+      }
+      
       const preset = FACILITY_PRESETS[slug] || FACILITY_PRESETS['default'];
       
       setWizardState(prev => ({
         ...prev,
         selectedIndustry: slug,
         industryName: name,
-        useCaseId: useCaseId || '',
+        useCaseId: finalUseCaseId || '',
         customQuestions: questions || [],
         facilitySize: preset.default,
         useCaseData: {},
       }));
       
-      completeSection('industry');
-      advanceToSection(2);
+      // DO NOT auto-advance - let user complete Step 2 (size, solar, EV) before continuing
+      // User will click Continue button to advance to Step 3
+      console.log('🎯 [handleIndustrySelect] Industry selected, staying on Step 2 for size/solar/EV inputs');
     } catch (error) {
       console.error('[Wizard] Industry selection failed:', error);
+      // Still set the industry even if questions fail to load
+      setWizardState(prev => ({
+        ...prev,
+        selectedIndustry: slug,
+        industryName: name,
+        useCaseId: useCaseId || '',
+        customQuestions: [],
+        facilitySize: FACILITY_PRESETS[slug]?.default || FACILITY_PRESETS['default'].default,
+        useCaseData: {},
+      }));
     }
-  }, [completeSection, advanceToSection]);
+  }, [completeSection, advanceToSection, availableUseCases]);
   
   const generateQuote = useCallback(async () => {
     setWizardState(prev => ({ ...prev, isCalculating: true }));
@@ -1169,8 +1014,8 @@ export function useStreamlinedWizard({
       if (wizardState.selectedIndustry && (!centralizedState.industry.type || centralizedState.industry.type === '')) {
         console.warn('🔧 [generateQuote] Industry not synced to centralized state, forcing sync...');
         updateSection('industry', { type: wizardState.selectedIndustry });
-        // Give it a tick to propagate
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Use requestAnimationFrame for immediate state propagation instead of setTimeout
+        await new Promise(resolve => requestAnimationFrame(resolve));
       }
       
       // Map fuel type to valid API values
@@ -1277,21 +1122,84 @@ export function useStreamlinedWizard({
   
   // ═══════════════════════════════════════════════════════════════
   // CALLBACK: Generate All Scenarios (Dec 2025 - Phase 3)
+  // PERFORMANCE FIX (Dec 2025): Now calculates power requirements ONCE here
+  // before generating scenarios, instead of on every useCaseData change
   // ═══════════════════════════════════════════════════════════════
-  // NOTE: This is called from ScenarioSection (Section 3) which now comes BEFORE Goals
-  // Dec 16, 2025 - Fixed: Use refs to prevent callback identity changing when state updates
   const generateAllScenarios = useCallback(async () => {
-    console.log('🎯 [generateAllScenarios] Generating 3 scenario configurations...');
+    console.log('🎯 [generateAllScenarios] Calculating power requirements and generating 3 scenarios...');
     setIsGeneratingScenarios(true);
     setWizardState(prev => ({ ...prev, isCalculating: true }));
     
     try {
       // Use ref to get current state without adding to dependency array
-      // This prevents the callback from regenerating when wizardState changes
       const currentState = wizardStateRef.current;
       const calc = centralizedState?.calculated || {};
-      const peakDemandKW = currentState.peakDemandKW || calc.totalPeakDemandKW || calc.recommendedBatteryKW || 500;
-      const dailyKWh = peakDemandKW * 10; // Estimate daily consumption
+      
+      // PERFORMANCE FIX: Calculate power requirements ONCE here (not on every click)
+      let peakDemandKW = currentState.peakDemandKW || calc.totalPeakDemandKW || 0;
+      let dailyKWh = 0; // Will be calculated if needed
+      
+      // If we don't have a calculated value, calculate it now
+      if (!peakDemandKW && currentState.selectedIndustry && currentState.useCaseData) {
+        console.log('🔄 [generateAllScenarios] Calculating power from useCaseData...');
+        const data = currentState.useCaseData;
+        const normalizedData = { ...data };
+        
+        try {
+          // Normalize field names for SSOT compatibility
+          if (currentState.selectedIndustry === 'hotel' || currentState.selectedIndustry === 'hotel-hospitality') {
+            const hotelMapped = mapHotelQuestionnaire(data as HotelQuestionnaireAnswers);
+            const hotelPowerResult = calculateHotelPower(
+              hotelMapped.ssotInput.roomCount,
+              {
+                hotelClass: hotelMapped.ssotInput.hotelClass,
+                amenities: hotelMapped.ssotInput.amenities,
+              }
+            );
+            peakDemandKW = (hotelPowerResult.powerMW || 0) * 1000;
+          } else {
+            // Normalize fields for other industries
+            if (currentState.selectedIndustry === 'office' && !normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.officeSqFt || data.buildingSqFt || data.sqFt || data.facilitySize;
+            } else if (currentState.selectedIndustry === 'hospital' && !normalizedData.bedCount) {
+              normalizedData.bedCount = data.beds || data.numberOfBeds || data.facilitySize;
+            } else if (currentState.selectedIndustry === 'warehouse' && !normalizedData.squareFeet) {
+              normalizedData.squareFeet = data.warehouseSqFt || data.sqFt || data.facilitySize;
+            } else if (currentState.selectedIndustry === 'car-wash' && !normalizedData.bayCount) {
+              normalizedData.bayCount = data.washBays || data.numBays || data.bays || data.facilitySize;
+            }
+            
+            const powerResult = calculateUseCasePower(currentState.selectedIndustry, normalizedData);
+            peakDemandKW = (powerResult.powerMW || 0) * 1000;
+          }
+          
+          // Add EV charger load (40% concurrency factor)
+          const EV_CONCURRENCY_FACTOR = 0.40;
+          const existingEVLoadKW = (
+            ((currentState.existingEVL2 || 0) * 11) +
+            ((currentState.existingEVL3 || 0) * 100)
+          ) * EV_CONCURRENCY_FACTOR;
+          const newEVLoadKW = (
+            ((currentState.evChargersL2 || 0) * 11) +
+            ((currentState.evChargersDCFC || 0) * 100) +
+            ((currentState.evChargersHPC || 0) * 350)
+          ) * EV_CONCURRENCY_FACTOR;
+          peakDemandKW += Math.round(existingEVLoadKW + newEVLoadKW);
+          
+          // Estimate daily/monthly (40% capacity factor)
+          dailyKWh = peakDemandKW * 24 * 0.4;
+          
+          console.log('✅ [generateAllScenarios] Calculated peakDemandKW:', peakDemandKW);
+        } catch (error) {
+          console.error('❌ [generateAllScenarios] Power calculation failed:', error);
+          const fallbackPeak = (data.peakDemandKW || data.totalPeakKW || 500);
+          peakDemandKW = peakDemandKW || fallbackPeak;
+          dailyKWh = dailyKWh || peakDemandKW * 10;
+        }
+      } else {
+        // Use existing calculated values
+        dailyKWh = dailyKWh || peakDemandKW * 10;
+      }
       
       // Build scenario generator input
       const input: ScenarioGeneratorInput = {

@@ -34,7 +34,7 @@ import {
   type HotelAmenitySimple
 } from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 import hotelImage from '@/assets/images/hotel_1.jpg';
 import hotelImage2 from '@/assets/images/hotel_motel_holidayinn_1.jpg';
 import hotelImage3 from '@/assets/images/hotel_motel_holidayinn_2.jpg';

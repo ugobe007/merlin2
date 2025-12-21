@@ -6,7 +6,7 @@ import UseCaseConfigManager from './admin/UseCaseConfigManager';
 import CacheStatistics from './admin/CacheStatistics';
 import AIDataCollectionAdmin from './admin/AIDataCollectionAdmin';
 import { getUseCaseProfiles, getEquipmentCatalog, calculatePremiumComparison, type EquipmentTier } from '../services/premiumConfigurationService';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 
 /**

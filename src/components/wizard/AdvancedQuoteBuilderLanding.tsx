@@ -15,7 +15,7 @@ import {
   Star
 } from 'lucide-react';
 import SpecUploadModal from '../upload/SpecUploadModal';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface AdvancedQuoteBuilderLandingProps {
   onBackToHome: () => void;

@@ -20,11 +20,12 @@
 import React, { useCallback, useMemo } from 'react';
 import { 
   ChevronDown, ChevronUp, Zap, Sun, Wind, Fuel, Battery, Plug, Check, 
-  ArrowLeft, Home, ArrowRight, Wifi, WifiOff, AlertTriangle, Radio, Wand2, Sparkles, Gauge
+  ArrowLeft, Home, ArrowRight, Wifi, WifiOff, AlertTriangle, Radio, Wand2, Sparkles, Gauge, Calculator
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import { StepExplanation } from '../ui/StepExplanation';
 import { getStepColors } from '../constants/stepColors';
+import { MerlinGreeting } from '../shared';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STEP 3 PANEL COLORS - Soft Green (building solution)
@@ -69,6 +70,7 @@ interface GoalsSectionV3Props {
   powerCoverage?: number;
   peakDemandKW?: number;
   merlinRecommendation?: MerlinRecommendation;
+  onOpenProQuote?: () => void;
 }
 
 // =============================================================================
@@ -403,6 +405,7 @@ export function GoalsSectionV3({
   onContinue,
   sectionRef,
   merlinRecommendation,
+  onOpenProQuote,
 }: GoalsSectionV3Props) {
   // ---------------------------------------------------------------------------
   // Local state for card expansion
@@ -473,99 +476,21 @@ export function GoalsSectionV3({
       {/* Centered Container - MAX WIDTH 768px (max-w-3xl) */}
       <div className="max-w-3xl mx-auto space-y-6">
         
-        {/* ═══════════════════════════════════════════════════════════════
-            MERLIN GUIDANCE PANEL - Comprehensive template (Dec 19, 2025)
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-3xl p-6 shadow-xl border border-indigo-400/30">
-          {/* Top Row: Avatar + Acknowledgment */}
-          <div className="flex items-start gap-5 mb-5">
-            <div className="flex-shrink-0">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#6700b6] to-[#060F76] rounded-2xl flex items-center justify-center shadow-lg">
-                <Wand2 className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <div className="flex-1">
-              {/* 1. ACKNOWLEDGE PREVIOUS STEP */}
-              <div className="flex items-center gap-2 mb-2">
-                <Check className="w-5 h-5 text-emerald-400" />
-                <span className="text-emerald-300 font-semibold">
-                  ✅ Perfect! I've analyzed your {wizardState.industryName || 'facility'} in {wizardState.state || 'your location'}
-                </span>
-              </div>
-              <h2 className="text-2xl font-black text-white mb-2">
-                Configure Your Energy System
-              </h2>
-              <p className="text-white/90">
-                Based on your facility details, I've calculated your optimal energy configuration. Review my recommendations below!
-              </p>
-            </div>
-          </div>
-          
-          {/* 2. STEP BY STEP INSTRUCTIONS */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-5">
-            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-300" />
-              Here's what to do on this page:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">1</div>
-                <span className="text-white/90 text-sm">Review my <strong>BESS recommendation</strong></span>
-              </div>
-              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">2</div>
-                <span className="text-white/90 text-sm">Add <strong>Solar, Wind, or Generator</strong></span>
-              </div>
-              <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">3</div>
-                <span className="text-white/90 text-sm">Click <strong>Generate Quote</strong></span>
-              </div>
-            </div>
-          </div>
-          
-          {/* 3. RECOMMENDATION HIGHLIGHT */}
-          {merlinRecommendation && (
-            <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl p-4 mb-5 border border-emerald-400/30">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                  <Battery className="w-5 h-5 text-emerald-300" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-emerald-300 font-bold mb-1">💡 Merlin's Optimal Configuration</h4>
-                  <p className="text-white/90 text-sm">
-                    For your {wizardState.industryName}, I recommend <strong>{merlinRecommendation.batteryKW >= 1000 ? `${(merlinRecommendation.batteryKW / 1000).toFixed(1)} MW` : `${merlinRecommendation.batteryKW} kW`}</strong> battery 
-                    {merlinRecommendation.solarKW > 0 && <> + <strong>{merlinRecommendation.solarKW >= 1000 ? `${(merlinRecommendation.solarKW / 1000).toFixed(1)} MW` : `${merlinRecommendation.solarKW} kW`}</strong> solar</>}.
-                    Estimated savings: <strong className="text-emerald-300">${(merlinRecommendation.annualSavings / 1000).toFixed(0)}K/year</strong>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* 4. PRO TIP: NAV BAR */}
-          <div className="bg-amber-500/20 rounded-2xl p-4 border border-amber-400/30">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center flex-shrink-0">
-                <Gauge className="w-5 h-5 text-amber-300" />
-              </div>
-              <div>
-                <h4 className="text-amber-300 font-bold text-sm mb-1">👆 Pro Tip: Check the Power Profile</h4>
-                <p className="text-white/80 text-sm">
-                  Watch the <strong>Power Profile</strong> in the top nav bar update as you adjust settings. It shows your total system capacity!
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Step indicator */}
-          <div className="flex items-center gap-3 mt-5">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/20">
-              <span className="text-amber-300 font-bold text-sm">Step 4 of 5</span>
-              <span className="text-white/50">•</span>
-              <span className="text-white/80 text-sm">Configure System</span>
-            </div>
-          </div>
-        </div>
+        {/* Merlin Greeting - Consistent with Step 1 */}
+        <MerlinGreeting
+          stepNumber={3}
+          totalSteps={5}
+          stepTitle="Energy Preferences"
+          stepDescription="Tell me your energy preferences and I'll create 3 optimized strategies for you to choose from."
+          actionInstructions={[
+            'Select your energy goals and preferences',
+            'Choose if you want solar, wind, or backup generator',
+            'Click the right arrow when ready to see your Magic Fit options'
+          ]}
+          nextStepPreview="Next, I'll show you 3 preconfigured energy strategies to choose from"
+          isComplete={false}
+          onCompleteMessage={undefined}
+        />
 
         {/* ================================================================= */}
         {/* MERLIN'S SUGGESTED CONFIGURATION - Prominent recommendation panel */}
@@ -998,20 +923,37 @@ export function GoalsSectionV3({
             )}
           </div>
           
-          {/* Right side: Generate Quote */}
-          <button
-            type="button"
-            onClick={onContinue}
-            className="flex items-center gap-2 px-8 py-4 rounded-xl
-                       bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6]
-                       border-2 border-[#ad42ff]
-                       text-white font-black text-lg
-                       hover:shadow-xl hover:shadow-purple-500/40
-                       hover:scale-105 transition-all"
-          >
-            Generate Quote
-            <ArrowRight size={18} />
-          </button>
+          {/* Right side: ProQuote + Continue to Magic Fit */}
+          <div className="flex items-center gap-3">
+            {onOpenProQuote && (
+              <button
+                type="button"
+                onClick={onOpenProQuote}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl
+                           bg-gradient-to-r from-emerald-500 to-teal-500
+                           border-2 border-emerald-400
+                           text-white font-bold
+                           hover:shadow-lg hover:shadow-emerald-500/40
+                           transition-all"
+              >
+                <Calculator size={18} />
+                ProQuote™
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onContinue}
+              className="flex items-center gap-2 px-8 py-4 rounded-xl
+                         bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6]
+                         border-2 border-[#ad42ff]
+                         text-white font-black text-lg
+                         hover:shadow-xl hover:shadow-purple-500/40
+                         hover:scale-105 transition-all"
+            >
+              See Magic Fit™
+              <ArrowRight size={18} />
+            </button>
+          </div>
         </div>
 
       </div>

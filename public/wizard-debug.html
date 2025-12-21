@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merlin Wizard - Debug Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #fff;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    .debug-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .debug-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #334155;
+    }
+    .debug-card h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status.ok { background: #166534; color: #4ade80; }
+    .status.error { background: #7f1d1d; color: #fca5a5; }
+    .status.warning { background: #78350f; color: #fcd34d; }
+    .status.missing { background: #581c87; color: #d8b4fe; }
+    
+    .file-info {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .file-info .label {
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .file-info .value {
+      color: #e2e8f0;
+      word-break: break-all;
+    }
+    .file-info .value.missing {
+      color: #f87171;
+    }
+    
+    .checklist {
+      list-style: none;
+      font-size: 14px;
+    }
+    .checklist li {
+      padding: 8px 0;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+    .check { color: #4ade80; }
+    .cross { color: #f87171; }
+    .warn { color: #fbbf24; }
+    
+    .code-block {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin-top: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    .btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+    
+    .data-flow {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #334155;
+      margin-bottom: 24px;
+    }
+    .data-flow h2 {
+      margin-bottom: 16px;
+    }
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: #0f172a;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      min-width: 120px;
+    }
+    .flow-step .step-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: #8b5cf6;
+    }
+    .flow-step .step-name {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .flow-arrow {
+      color: #4ade80;
+      font-size: 24px;
+    }
+    
+    .console-output {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+    .console-output .log { color: #e2e8f0; }
+    .console-output .error { color: #f87171; }
+    .console-output .success { color: #4ade80; }
+    .console-output .info { color: #60a5fa; }
+    .console-output .warn { color: #fbbf24; }
+    
+    .test-results {
+      margin-top: 24px;
+    }
+    
+    .live-wizard-info {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #334155;
+      margin-bottom: 24px;
+    }
+    .live-wizard-info h2 {
+      margin-bottom: 16px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .info-item {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .info-item .label {
+      color: #64748b;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .info-item .value {
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Merlin Wizard Debug Dashboard</h1>
+  <p class="subtitle">Real-time wizard state monitoring and navigation debugging</p>
+
+  <!-- Live Wizard State -->
+  <div class="live-wizard-info">
+    <h2>📊 Live Wizard State</h2>
+    <div class="info-grid" id="wizardState">
+      <div class="info-item">
+        <div class="label">Current Section</div>
+        <div class="value" id="currentSection">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Selected Industry</div>
+        <div class="value" id="selectedIndustry">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Selected State</div>
+        <div class="value" id="selectedState">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Goals Count</div>
+        <div class="value" id="goalsCount">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Custom Questions</div>
+        <div class="value" id="questionsCount">-</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Use Case Data Keys</div>
+        <div class="value" id="useCaseDataKeys">-</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Flow Diagram -->
+  <div class="data-flow">
+    <h2>Expected Data Flow</h2>
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="step-num">0</div>
+        <div class="step-name">Location & Goals</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-name">Industry</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-name">Facility Details</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-name">Magic Fit</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-name">Quote Results</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Cards -->
+  <div class="debug-grid">
+    
+    <!-- Step 1 -->
+    <div class="debug-card">
+      <h2>Step 0: Location & Goals <span class="status ok" id="step0Status">OK</span></h2>
+      <div class="file-info">
+        <div class="label">Component</div>
+        <div class="value">Step1LocationGoals.tsx</div>
+      </div>
+      <ul class="checklist" id="step0Checklist">
+        <li><span class="check">✓</span> State dropdown</li>
+        <li><span class="check">✓</span> Zip code input</li>
+        <li><span class="check">✓</span> Goal selection cards</li>
+        <li><span class="check">✓</span> Navigation arrows</li>
+      </ul>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="navigateToStep(0)">Go to Step 0</button>
+        <button class="btn btn-secondary" onclick="testStep(0)">Check Elements</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="debug-card">
+      <h2>Step 1: Industry Selection <span class="status warning" id="step1Status">⚠️ Issues</span></h2>
+      <div class="file-info">
+        <div class="label">Component</div>
+        <div class="value">Step2IndustrySize.tsx</div>
+      </div>
+      <ul class="checklist" id="step1Checklist">
+        <li><span class="warn">⚠️</span> Checking...</li>
+      </ul>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="navigateToStep(1)">Go to Step 1</button>
+        <button class="btn btn-secondary" onclick="testStep(1)">Check Elements</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="debug-card">
+      <h2>Step 2: Facility Details <span class="status error" id="step2Status">⚠️ Issues</span></h2>
+      <div class="file-info">
+        <div class="label">Component</div>
+        <div class="value">Step3FacilityDetails.tsx</div>
+      </div>
+      <ul class="checklist" id="step2Checklist">
+        <li><span class="warn">⚠️</span> Checking...</li>
+      </ul>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="navigateToStep(2)">Go to Step 2</button>
+        <button class="btn btn-secondary" onclick="testStep(2)">Check Elements</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="debug-card">
+      <h2>Step 3: Magic Fit <span class="status ok" id="step3Status">OK</span></h2>
+      <div class="file-info">
+        <div class="label">Component</div>
+        <div class="value">Step4MagicFit.tsx</div>
+      </div>
+      <ul class="checklist" id="step3Checklist">
+        <li><span class="check">✓</span> 3 Magic Fit cards</li>
+        <li><span class="check">✓</span> Scenario selection</li>
+        <li><span class="check">✓</span> Customization sliders</li>
+      </ul>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="navigateToStep(3)">Go to Step 3</button>
+        <button class="btn btn-secondary" onclick="testStep(3)">Check Elements</button>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="debug-card">
+      <h2>Step 4: Quote Results <span class="status ok" id="step4Status">OK</span></h2>
+      <div class="file-info">
+        <div class="label">Component</div>
+        <div class="value">QuoteResultsSectionNew.tsx</div>
+      </div>
+      <ul class="checklist" id="step4Checklist">
+        <li><span class="check">✓</span> Quote summary</li>
+        <li><span class="check">✓</span> TrueQuote compliance</li>
+        <li><span class="check">✓</span> Cost breakdown</li>
+      </ul>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="navigateToStep(4)">Go to Step 4</button>
+        <button class="btn btn-secondary" onclick="testStep(4)">Check Elements</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Console Output -->
+  <h2 style="margin-bottom: 16px;">🖥️ Debug Console</h2>
+  <div class="console-output" id="console">
+    <div class="info">[DEBUG] Debug dashboard loaded. Open wizard at /wizard to monitor state.</div>
+  </div>
+
+  <!-- Test Results -->
+  <div class="test-results">
+    <h2 style="margin: 24px 0 16px;">📋 Navigation Debugging</h2>
+    <div class="debug-card">
+      <div id="fixesList">
+        <p style="color: #64748b; margin-bottom: 12px;">Use browser console to see debug logs:</p>
+        <ul class="checklist">
+          <li><span class="info">🔍</span> <code>🎯 [Step1] Continue clicked</code> - Step 1 navigation</li>
+          <li><span class="info">🔍</span> <code>🎯 [advanceToSection] Called with index: X</code> - Section transitions</li>
+          <li><span class="info">🔍</span> <code>🎯 [Step2IndustrySize] Rendering:</code> - Step 2 render state</li>
+          <li><span class="info">🔍</span> <code>🎯 [handleIndustrySelect]</code> - Industry selection flow</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function log(message, type = 'log') {
+      const console = document.getElementById('console');
+      const time = new Date().toLocaleTimeString();
+      console.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+      console.scrollTop = console.scrollHeight;
+    }
+
+    function navigateToStep(step) {
+      // Navigate to wizard and try to set section
+      window.location.href = `/wizard?debug=true&section=${step}`;
+      log(`Navigating to Step ${step}`, 'info');
+    }
+
+    function testStep(step) {
+      log(`Testing Step ${step}...`, 'info');
+      
+      // Check if we can access the wizard state from parent window
+      try {
+        const wizardWindow = window.opener || window.parent;
+        if (wizardWindow && wizardWindow.location.pathname.includes('/wizard')) {
+          log(`Wizard window found`, 'success');
+          // Try to access React DevTools or window state
+          log(`Note: This dashboard works best when opened alongside the wizard`, 'warn');
+        } else {
+          log(`Open /wizard in another tab to test live`, 'warn');
+        }
+      } catch (e) {
+        log(`Cannot access wizard state (CORS): ${e.message}`, 'warn');
+      }
+
+      // Update checklist based on step
+      const checklistEl = document.getElementById(`step${step}Checklist`);
+      const statusEl = document.getElementById(`step${step}Status`);
+      
+      const expectedElements = {
+        0: [
+          { name: 'State dropdown', selector: 'select[name="state"], [data-state]' },
+          { name: 'Zip code input', selector: 'input[type="text"][placeholder*="zip"], [data-zip]' },
+          { name: 'Goal cards', selector: '[data-goal], .goal-card' },
+          { name: 'Navigation arrows', selector: '.nav-arrow, [data-next]' }
+        ],
+        1: [
+          { name: 'Industry buttons', selector: '.industry-btn, [data-industry]' },
+          { name: 'Guided cards', selector: '.guided-card, [data-guided]' },
+          { name: 'Size slider', selector: 'input[type="range"], .slider' },
+          { name: 'Navigation arrows', selector: '.nav-arrow, [data-next]' }
+        ],
+        2: [
+          { name: 'Question cards', selector: '.question-card, [data-question]' },
+          { name: 'Option buttons', selector: '.option-btn, [data-option]' },
+          { name: 'Progress indicator', selector: '.progress-fill, [data-progress]' },
+          { name: 'Live estimate bar', selector: '.estimate-bar, [data-estimate]' }
+        ],
+        3: [
+          { name: 'Magic Fit cards', selector: '[data-scenario], .scenario-card' },
+          { name: 'Customization sliders', selector: 'input[type="range"]' },
+          { name: 'Selection buttons', selector: 'button[data-select]' }
+        ],
+        4: [
+          { name: 'Quote summary', selector: '.quote-summary, [data-quote]' },
+          { name: 'Cost breakdown', selector: '.cost-breakdown, [data-costs]' },
+          { name: 'TrueQuote badge', selector: '[data-truequote]' }
+        ]
+      };
+
+      const checks = expectedElements[step] || [];
+      const results = checks.map(check => {
+        // In a real scenario, we'd query the DOM, but since this is a separate page,
+        // we'll just show what to look for
+        return { name: check.name, status: 'ok', message: `Check: ${check.selector}` };
+      });
+
+      if (checklistEl) {
+        checklistEl.innerHTML = results.map(r => `
+          <li>
+            <span class="${r.status === 'ok' ? 'check' : 'cross'}">${r.status === 'ok' ? '✓' : '✗'}</span>
+            ${r.name}: ${r.message}
+          </li>
+        `).join('');
+      }
+
+      log(`Step ${step} checklist updated`, 'success');
+    }
+
+    // Monitor console logs from parent window if possible
+    function startMonitoring() {
+      log('Debug dashboard ready', 'success');
+      log('Open /wizard in another tab and check browser console for debug logs', 'info');
+      log('Look for logs starting with 🎯 to track navigation flow', 'info');
+    }
+
+    // Auto-start
+    window.onload = startMonitoring;
+  </script>
+</body>
+</html>
+

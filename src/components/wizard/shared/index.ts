@@ -41,3 +41,36 @@ export type {
 // Accept/Customize Modal Component (NEW - Dec 2025)
 export { AcceptCustomizeModal } from './AcceptCustomizeModal';
 export type { AcceptCustomizeModalProps } from './AcceptCustomizeModal';
+
+// Merlin Greeting Component (NEW - Dec 2025)
+export { MerlinGreeting } from './MerlinGreeting';
+export type { MerlinGreetingProps } from './MerlinGreeting';
+
+// Floating Navigation Arrows (NEW - Dec 2025)
+export { FloatingNavigationArrows } from './FloatingNavigationArrows';
+export type { FloatingNavigationArrowsProps } from './FloatingNavigationArrows';
+
+// Floating Nav Widget (NEW - Dec 20, 2025 - Option 1)
+export { FloatingNavWidget } from './FloatingNavWidget';
+export type { FloatingNavWidgetProps } from './FloatingNavWidget';
+
+// Wizard Progress Bar (NEW - Dec 20, 2025 - Simple Navigation)
+export { WizardProgressBar } from './WizardProgressBar';
+
+// Wizard Bottom Navigation (NEW - Dec 20, 2025 - Simple Navigation)
+export { WizardBottomNav } from './WizardBottomNav';
+
+// Progress Ring (NEW - Dec 20, 2025)
+export { ProgressRing } from './ProgressRing';
+
+// Configuration Summary (NEW - Floating Sidebar)
+export { ConfigurationSummary } from './ConfigurationSummary';
+export type { ConfigurationSummaryProps } from './ConfigurationSummary';
+
+// Signup Form (NEW - User Registration)
+export { SignupForm } from './SignupForm';
+export type { SignupFormProps } from './SignupForm';
+
+// Floating Solar Button (NEW - Solar Opportunity Indicator)
+export { FloatingSolarButton } from './FloatingSolarButton';
+export type { FloatingSolarButtonProps } from './FloatingSolarButton';

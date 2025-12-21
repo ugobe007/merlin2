@@ -15,7 +15,7 @@ import {
   FileText, CheckCircle, Circle, Sparkles, TrendingUp,
   Battery, Sun, DollarSign, AlertTriangle
 } from 'lucide-react';
-import merlinImage from '@/assets/images/new_Merlin.png';
+import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 // ============================================
 // TYPES
