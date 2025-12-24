@@ -36,6 +36,7 @@ import {
   Settings,
   HelpCircle
 } from 'lucide-react';
+import badgeIcon from '@/assets/images/badge_icon.jpg';
 
 // Proper ES6 import for useCaseService
 import { useCaseService } from '@/services/useCaseService';
@@ -56,6 +57,15 @@ interface Step3Props {
   // Current config summaries (for badges)
   solarKW?: number;
   evChargerCount?: number;
+  // Wizard state for ProQuote
+  state?: string;
+  zipCode?: string;
+  goals?: string[];
+  electricityRate?: number;
+  batteryKW?: number;
+  durationHours?: number;
+  generatorKW?: number;
+  gridConnection?: 'on-grid' | 'off-grid' | 'limited';
 }
 
 interface Question {
@@ -917,6 +927,14 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
   onEVConfigClick,
   solarKW,
   evChargerCount,
+  state = '',
+  zipCode = '',
+  goals = [],
+  electricityRate = 0.12,
+  batteryKW = 500,
+  durationHours = 4,
+  generatorKW = 0,
+  gridConnection = 'on-grid',
 }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1391,6 +1409,57 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
         <p className="text-white/40 text-sm mt-2">
           {answeredCount} of {visibleQuestions.length} questions answered
         </p>
+      </div>
+
+      {/* ProQuote Shield Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => {
+            sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
+              batteryKW,
+              durationHours,
+              solarKW: solarKW || 0,
+              generatorKW: generatorKW || 0,
+              state,
+              zipCode,
+              selectedIndustry,
+              electricityRate,
+              useCaseData,
+              goals,
+            }));
+            window.location.href = '/?advanced=true&view=custom-config';
+          }}
+          className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group"
+          style={{
+            background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)',
+            border: '2px solid rgba(99, 102, 241, 0.5)',
+            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25)',
+          }}
+        >
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img 
+                src={badgeIcon} 
+                alt="ProQuote Badge"
+                className="w-12 h-12 object-contain"
+                style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' }}
+              />
+              <div>
+                <div className="text-white font-bold text-lg flex items-center gap-2">
+                  ProQuote™
+                  <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/30 text-indigo-200 font-medium">PRO</span>
+                </div>
+                <div className="text-indigo-300/80 text-sm">Advanced system configuration & custom pricing</div>
+              </div>
+            </div>
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.1)' }}
+            >
+              <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* Loading State */}
