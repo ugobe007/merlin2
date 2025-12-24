@@ -282,3 +282,23 @@ a,
   display: none;  /* Chrome, Safari, Opera */
 }
 
+/* Custom scrollbar styling for modals */
+.scrollbar-visible {
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #9ca3af #f3f4f6;  /* Firefox: thumb and track */
+}
+.scrollbar-visible::-webkit-scrollbar {
+  width: 8px;  /* Chrome, Safari, Opera */
+}
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
