@@ -237,6 +237,49 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         suffix: 'rooms',
       },
       {
+        id: 'hotelCategory',
+        label: 'Hotel category and service level',
+        type: 'select',
+        helpText: 'Hotel category affects energy intensity and system sizing. Star ratings define service level, facilities, and guest expectations.',
+        options: [
+          { 
+            value: '1-star', 
+            label: '1-Star Hotel', 
+            description: 'Basic accommodation with essential needs. Clean room, basic furniture, limited services, no restaurant or minimal facilities. Functionality over comfort.' 
+          },
+          { 
+            value: '2-star', 
+            label: '2-Star Hotel', 
+            description: 'Budget hotel with modest comfort. Private bathroom, daily housekeeping, limited front desk service. Affordable comfort.' 
+          },
+          { 
+            value: '3-star', 
+            label: '3-Star Hotel', 
+            description: 'Mid-range hotel with standard hospitality services. 24-hour reception, breakfast or restaurant, room service (limited hours). Suitable for leisure and business travelers. Balance between price and service.' 
+          },
+          { 
+            value: '4-star', 
+            label: '4-Star Hotel', 
+            description: 'Upscale hotel with enhanced comfort and service quality. Concierge or guest services, multiple dining options, fitness center or pool, higher-quality rooms and amenities. Comfort with sophistication.' 
+          },
+          { 
+            value: '5-star', 
+            label: '5-Star Hotel', 
+            description: 'Luxury hotel with officially regulated standards. High staff-to-guest ratio, personalized service, concierge and valet services, spa, fine dining, and premium facilities. Strong SOPs and service consistency. Luxury defined by reliability and service depth.' 
+          },
+          { 
+            value: 'boutique', 
+            label: 'Boutique Hotel', 
+            description: 'Experience-driven property, not defined by size or star rating. Small to mid-size, unique design or theme, personalized intimate service, strong local or lifestyle identity. Curated interiors, signature dining or breakfast concept, personalized guest interaction. May be star-rated or non-classified.' 
+          },
+          { 
+            value: 'non-classified', 
+            label: 'Non-Classified Hotel', 
+            description: 'Operates without an official star rating. No formal government classification, service levels vary widely, quality depends on management and reviews. Basic to moderate facilities, limited standardized services, flexible pricing. Can be excellent but consistency is not guaranteed.' 
+          },
+        ],
+      },
+      {
         id: 'squareFootage',
         label: 'Facility square footage (optional)',
         type: 'number',

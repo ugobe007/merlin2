@@ -50,26 +50,28 @@ function AdvancedQuestionsSection({
     <div className="mt-6">
       <button
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl px-4 py-3 transition-all duration-200 group"
+        className="w-full flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-300 rounded-lg px-5 py-4 transition-all duration-200 group hover:border-purple-400 hover:from-purple-50 hover:to-purple-100 shadow-sm"
       >
         <div className="flex items-center gap-3">
-          <Settings className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
-          <span className="text-white font-semibold text-base">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+            <Settings className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-gray-900 font-semibold text-base">
             Additional Details
           </span>
-          <span className="text-white/50 text-sm">
+          <span className="text-gray-600 text-sm font-medium">
             ({advancedQuestions.length} optional questions)
           </span>
         </div>
         {showAdvanced ? (
-          <ChevronUp className="w-5 h-5 text-white/70 group-hover:text-white transition-all" />
+          <ChevronUp className="w-5 h-5 text-purple-600 transition-all" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-white/70 group-hover:text-white transition-all" />
+          <ChevronDown className="w-5 h-5 text-purple-600 transition-all" />
         )}
       </button>
       
       {showAdvanced && (
-        <div className="mt-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
           {advancedQuestions.map((question: any, index: number) => 
             renderQuestion(question, index + standardQuestionsCount)
           )}
@@ -255,107 +257,174 @@ export function Step3FacilityDetails({
     const isYesNo = question.question_type === 'boolean' || question.field_name.toLowerCase().includes('have') || question.field_name.toLowerCase().includes('has');
     const isNumber = question.question_type === 'number' || question.question_type === 'slider';
     
-    // Number/Slider Question - Compact design with +/- buttons and input
-    if (isNumber) {
-      const numValue = Number(value) || Number(question.default_value) || 0;
-      const min = Number(question.min_value) || 0;
-      const max = Number(question.max_value) || 1000;
-      const step = Number(question.step_value) || (max > 100 ? 10 : 1);
-      const isCurrency = question.field_name.includes('bill') || question.field_name.includes('cost') || question.field_name.includes('price');
-      
-      return (
-        <div key={question.field_name} className="bg-gradient-to-br from-blue-100/90 to-purple-100/90 rounded-xl p-4 mb-3 border border-blue-200/60 shadow-sm">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-lg flex items-center justify-center flex-shrink-0">
-              <DollarSign className="w-4 h-4 text-white stroke-[2]" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-bold text-[#1e293b] mb-1">
-                {question.question_text}
+      // Number/Slider Question - Professional design
+      if (isNumber) {
+        const numValue = Number(value) || Number(question.default_value) || 0;
+        const min = Number(question.min_value) || 0;
+        const max = Number(question.max_value) || 1000;
+        const step = Number(question.step_value) || (max > 100 ? 10 : 1);
+        const isCurrency = question.field_name.includes('bill') || question.field_name.includes('cost') || question.field_name.includes('price');
+        
+        // Determine unit suffix based on field name
+        const getUnit = () => {
+          if (question.field_name.includes('room')) return 'rooms';
+          if (question.field_name.includes('square') || question.field_name.includes('sqft') || question.field_name.includes('sq_ft')) return 'sq ft';
+          if (question.field_name.includes('bed')) return 'beds';
+          if (question.field_name.includes('bay')) return 'bays';
+          if (question.field_name.includes('port') || question.field_name.includes('charger')) return 'ports';
+          if (isCurrency) return 'USD';
+          return '';
+        };
+        
+        const unit = getUnit();
+        const hasValue = numValue > 0;
+        const isValid = numValue >= min && numValue <= max;
+        
+        // Get appropriate icon
+        const getNumberIcon = () => {
+          if (question.field_name.includes('room') || question.field_name.includes('bed')) return Building2;
+          if (question.field_name.includes('square') || question.field_name.includes('size')) return Building2;
+          if (question.field_name.includes('bill') || question.field_name.includes('cost')) return DollarSign;
+          if (question.field_name.includes('hour') || question.field_name.includes('time')) return Clock;
+          return Info;
+        };
+        
+        const NumberIcon = getNumberIcon();
+        
+        // Check if this is a property size question (will be rendered in grouped card)
+        const isPropertySize = ['roomCount', 'squareFootage', 'bedCount', 'bayCount', 'evChargerCount'].includes(question.field_name);
+        
+        return (
+          <div key={question.field_name} className={isPropertySize ? "mb-0" : "bg-white rounded-lg p-6 mb-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"}>
+            {/* Section Header with Icon - only show if not in property size card */}
+            {!isPropertySize && (
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <NumberIcon className="w-6 h-6 text-white stroke-[2]" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-base font-semibold text-gray-900 mb-1">
+                    {question.question_text}
+                  </div>
+                  {question.help_text && (
+                    <div className="text-sm text-gray-500">{question.help_text}</div>
+                  )}
+                </div>
               </div>
-              {question.help_text && (
-                <div className="text-xs text-[#64748b]">{question.help_text}</div>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const newValue = Math.max(min, numValue - step);
-                handleSelectOption(question, newValue);
-              }}
-              className="w-10 h-10 bg-white border-2 border-purple-200 rounded-lg text-purple-700 font-bold text-lg hover:bg-purple-50 hover:border-purple-400 transition-colors shadow-sm flex items-center justify-center"
-            >
-              −
-            </button>
-            <input
-              type="number"
-              value={numValue}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (!isNaN(val) && val >= min && val <= max) {
-                  handleSelectOption(question, val);
-                }
-              }}
-              min={min}
-              max={max}
-              step={step}
-              className="flex-1 px-4 py-2.5 bg-white border-2 border-purple-200 rounded-lg text-center text-base font-semibold text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-colors shadow-sm"
-            />
-            <button
-              onClick={() => {
-                const newValue = Math.min(max, numValue + step);
-                handleSelectOption(question, newValue);
-              }}
-              className="w-10 h-10 bg-white border-2 border-purple-200 rounded-lg text-purple-700 font-bold text-lg hover:bg-purple-50 hover:border-purple-400 transition-colors shadow-sm flex items-center justify-center"
-            >
-              +
-            </button>
-            {isCurrency && (
-              <span className="text-sm font-semibold text-gray-700">USD</span>
             )}
-          </div>
-          {isCurrency && (
-            <div className="mt-2 text-right text-xs text-gray-600">
-              {numValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+            
+            {/* Input Group */}
+            <div className={isPropertySize ? "space-y-2" : "relative"}>
+              {isPropertySize && (
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {question.question_text}
+                </label>
+              )}
+              
+              {/* Input with +/- buttons and suffix */}
+              <div className="relative">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const newValue = Math.max(min, numValue - step);
+                    handleSelectOption(question, newValue);
+                  }}
+                  disabled={numValue <= min}
+                  className="w-11 h-11 bg-blue-50 border-2 border-blue-200 rounded-lg text-blue-600 font-semibold hover:bg-blue-100 hover:border-blue-300 transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <Minus className="w-5 h-5" />
+                </button>
+                
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    value={numValue || ''}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (!isNaN(val) && val >= min && val <= max) {
+                        handleSelectOption(question, val);
+                      }
+                    }}
+                    min={min}
+                    max={max}
+                    step={step}
+                    placeholder={question.help_text || `Enter ${question.question_text.toLowerCase()}`}
+                    className={`w-full px-4 py-3.5 pr-16 border-2 rounded-lg text-base font-semibold text-gray-900 transition-all ${
+                      hasValue
+                        ? 'bg-blue-50 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30'
+                        : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30'
+                    }`}
+                  />
+                  {unit && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-blue-600 font-semibold pointer-events-none">
+                      {unit}
+                    </span>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const newValue = Math.min(max, numValue + step);
+                    handleSelectOption(question, newValue);
+                  }}
+                  disabled={numValue >= max}
+                  className="w-11 h-11 bg-blue-50 border-2 border-blue-200 rounded-lg text-blue-600 font-semibold hover:bg-blue-100 hover:border-blue-300 transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {/* Validation hint when valid */}
+              {hasValue && isValid && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="font-semibold">
+                    {question.field_name.includes('room') && `${numValue} ${numValue === 1 ? 'room' : 'rooms'} entered`}
+                    {question.field_name.includes('square') && `${numValue.toLocaleString()} sq ft entered`}
+                    {question.field_name.includes('bed') && `${numValue} ${numValue === 1 ? 'bed' : 'beds'} entered`}
+                    {question.field_name.includes('bay') && `${numValue} ${numValue === 1 ? 'bay' : 'bays'} entered`}
+                    {!question.field_name.includes('room') && !question.field_name.includes('square') && !question.field_name.includes('bed') && !question.field_name.includes('bay') && 'Value entered'}
+                  </span>
+                </div>
+              )}
+              </div>
             </div>
-          )}
-        </div>
-      );
-    }
+          </div>
+        );
+      }
     
-    // Yes/No Question - Use dropdown if 2 options, otherwise buttons
+    // Yes/No Question - Professional dropdown
     if (isYesNo) {
       const isYes = value === true;
       const isNo = value === false;
       
       return (
-        <div key={question.field_name} className="bg-gradient-to-br from-blue-100/90 to-purple-100/90 rounded-xl p-4 mb-3 border border-blue-200/60 shadow-sm">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#0EA5E9] to-[#8B5CF6] rounded-lg flex items-center justify-center flex-shrink-0">
-              <Info className="w-4 h-4 text-white stroke-[2]" />
+        <div key={question.field_name} className="bg-white rounded-lg p-6 mb-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+              <CheckCircle className="w-6 h-6 text-white stroke-[2]" />
             </div>
             <div className="flex-1">
-              <div className="text-sm font-bold text-[#1e293b] mb-1">
+              <div className="text-base font-semibold text-gray-900 mb-1">
                 {question.question_text}
               </div>
               {question.help_text && (
-                <div className="text-xs text-[#64748b]">{question.help_text}</div>
+                <div className="text-sm text-gray-500">{question.help_text}</div>
               )}
             </div>
           </div>
-          
-          {/* Use dropdown for Yes/No to save space */}
-          <select
-            value={isYes ? 'yes' : isNo ? 'no' : ''}
-            onChange={(e) => handleYesNo(question, e.target.value === 'yes')}
-            className="w-full px-4 py-2.5 bg-white border-2 border-blue-200 rounded-lg text-sm font-semibold text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors shadow-sm"
-          >
-            <option value="">Select...</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+          <div className="relative">
+            <select
+              value={isYes ? 'yes' : isNo ? 'no' : ''}
+              onChange={(e) => handleYesNo(question, e.target.value === 'yes')}
+              className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 text-base font-semibold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all cursor-pointer appearance-none pr-10 hover:border-gray-400"
+            >
+              <option value="">Select an option...</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500 pointer-events-none" />
+          </div>
         </div>
       );
     }
@@ -381,74 +450,51 @@ export function Step3FacilityDetails({
     
     // Use dropdown for single-select questions with many options (save space)
     const useDropdown = !isMultiSelect && options.length > 5;
-    
-    // Determine panel tint color based on question type (light blue, purple, or orange - no grey, more vibrant)
-    let panelTint = 'from-purple-100/90 to-indigo-100/90 border-purple-200/60';
-    if (question.field_name.includes('amenities') || question.field_name?.toLowerCase().includes('amenity')) {
-      panelTint = 'from-blue-100/90 to-cyan-100/90 border-blue-200/60';
-    } else if (question.field_name.includes('food') || question.field_name.includes('beverage') || question.field_name?.toLowerCase().includes('f&b')) {
-      panelTint = 'from-orange-100/90 to-amber-100/90 border-orange-200/60';
-    } else if (question.field_name.includes('square') || question.field_name.includes('size') || question.field_name.includes('room') || question.field_name.includes('bed')) {
-      panelTint = 'from-blue-100/90 to-purple-100/90 border-blue-200/60';
-    }
       
     return (
-      <div key={question.field_name} className={`bg-gradient-to-br ${panelTint} rounded-xl p-4 mb-3 border shadow-sm`}>
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-lg flex items-center justify-center flex-shrink-0">
-            <Icon className="w-4 h-4 text-white stroke-[2]" />
+      <div key={question.field_name} className="bg-white rounded-lg p-6 mb-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Icon className="w-6 h-6 text-white stroke-[2]" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-bold text-[#1e293b] mb-1">
+            <div className="text-base font-semibold text-gray-900 mb-1">
               {question.question_text}
             </div>
             {question.help_text && (
-              <div className="text-xs text-[#64748b]">{question.help_text}</div>
+              <div className="text-sm text-gray-500">{question.help_text}</div>
             )}
           </div>
         </div>
         
         {useDropdown ? (
-          // Single-select dropdown for space efficiency
-          <select
-            value={selectedValues || ''}
-            onChange={(e) => handleSelectOption(question, e.target.value)}
-            className="w-full px-4 py-2.5 bg-white border-2 border-purple-200 rounded-lg text-sm font-semibold text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-colors shadow-sm"
-          >
-            <option value="">Select an option...</option>
-            {options.map((opt: any) => {
-              const optValue = typeof opt === 'string' ? opt : opt.value;
-              const optLabel = typeof opt === 'string' ? opt : opt.label;
-              return (
-                <option key={optValue} value={optValue}>{optLabel}</option>
-              );
-            })}
-          </select>
+          // Single-select dropdown
+          <div className="relative">
+            <select
+              value={selectedValues || ''}
+              onChange={(e) => handleSelectOption(question, e.target.value)}
+              className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-lg text-gray-900 text-base font-semibold focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all cursor-pointer appearance-none pr-10 hover:border-gray-400"
+            >
+              <option value="">Select an option...</option>
+              {options.map((opt: any) => {
+                const optValue = typeof opt === 'string' ? opt : opt.value;
+                const optLabel = typeof opt === 'string' ? opt : opt.label;
+                return (
+                  <option key={optValue} value={optValue}>{optLabel}</option>
+                );
+              })}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-500 pointer-events-none" />
+          </div>
         ) : (
-          // Multi-select or small option lists: 3 buttons per row (smaller)
-          <div className="grid grid-cols-3 gap-2">
+          // Multi-select or small option lists: 3 buttons per row
+          <div className="grid grid-cols-3 gap-2.5">
             {options.map((opt: any) => {
               const optValue = typeof opt === 'string' ? opt : opt.value;
               const optLabel = typeof opt === 'string' ? opt : opt.label;
               const isSelected = isMultiSelect
                 ? selectedValues.includes(optValue)
                 : selectedValues === optValue;
-              
-              // Determine color scheme based on question type
-              let gradientClasses = '';
-              if (question.field_name.includes('amenities') || question.field_name?.toLowerCase().includes('amenity')) {
-                gradientClasses = isSelected 
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 border-blue-600 text-white shadow-md'
-                  : 'bg-white border-blue-200 text-blue-800 hover:border-blue-400 hover:bg-blue-50 shadow-sm';
-              } else if (question.field_name.includes('food') || question.field_name.includes('beverage') || question.field_name?.toLowerCase().includes('f&b')) {
-                gradientClasses = isSelected
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-600 text-white shadow-md'
-                  : 'bg-white border-orange-200 text-orange-800 hover:border-orange-400 hover:bg-orange-50 shadow-sm';
-              } else {
-                gradientClasses = isSelected
-                  ? 'bg-gradient-to-r from-purple-500 to-indigo-500 border-purple-600 text-white shadow-md'
-                  : 'bg-white border-purple-200 text-purple-800 hover:border-purple-400 hover:bg-purple-50 shadow-sm';
-              }
               
               return (
                 <button
@@ -463,7 +509,11 @@ export function Step3FacilityDetails({
                       handleSelectOption(question, optValue);
                     }
                   }}
-                  className={`px-3 py-2.5 rounded-lg border-2 text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${gradientClasses}`}
+                  className={`px-3 py-2.5 rounded-lg border-2 text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-700 text-white shadow-md hover:from-purple-600 hover:to-purple-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
+                  }`}
                 >
                   <span className="truncate text-xs">{optLabel}</span>
                   {isSelected && (
@@ -518,23 +568,75 @@ export function Step3FacilityDetails({
             onCompleteMessage={isFormValid ? `Perfect! You've answered ${answeredCount} of ${totalQuestions} questions. Use the right arrow to continue to Magic Fit.` : undefined}
           />
           
-          {/* Context Bar */}
-          <div className="flex items-center gap-4 px-4 py-3 bg-white/3 rounded-[10px] mb-6 text-[13px] text-white/60">
-            <div className="flex items-center gap-1.5">
-              🏛️ {wizardState.state || 'Location'}
+          {/* Context Bar - Professional with Color */}
+          <div className="flex items-center gap-6 px-5 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 mb-6 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Building2 className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-semibold text-gray-900">{wizardState.state || 'Location'}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              🎓 {wizardState.industryName || 'Industry'}
+            <div className="w-px h-5 bg-blue-300" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                <Info className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-semibold text-gray-900">{wizardState.industryName || 'Industry'}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[#FBBF24] font-semibold">
-              📋 {standardQuestionsCount} questions{advancedQuestions.length > 0 && ` + ${advancedQuestions.length} optional`}
+            <div className="w-px h-5 bg-blue-300" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-semibold text-gray-900">{standardQuestionsCount} questions</span>
+              {advancedQuestions.length > 0 && (
+                <span className="text-gray-600 font-medium">+ {advancedQuestions.length} optional</span>
+              )}
             </div>
           </div>
           
-          {/* Standard Questions */}
+          {/* Standard Questions - Group property size inputs together */}
           {standardQuestions.length > 0 ? (
-            <div className="space-y-3 mb-6">
-              {standardQuestions.map((question: any, index: number) => renderQuestion(question, index))}
+            <div className="space-y-4 mb-6">
+              {(() => {
+                const questions = [...standardQuestions];
+                const propertySizeFields = ['roomCount', 'squareFootage', 'bedCount', 'bayCount', 'evChargerCount'];
+                const propertySizeQuestions: any[] = [];
+                const otherQuestions: any[] = [];
+                
+                // Separate property size questions from others
+                questions.forEach((q: any) => {
+                  if (propertySizeFields.includes(q.field_name)) {
+                    propertySizeQuestions.push(q);
+                  } else {
+                    otherQuestions.push(q);
+                  }
+                });
+                
+                // Render property size questions in a two-column card if we have them
+                return (
+                  <>
+                    {propertySizeQuestions.length > 0 && (
+                      <div className="bg-white rounded-lg p-6 mb-4 border-2 border-blue-200 shadow-md">
+                        <div className="flex items-center gap-4 mb-5">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Building2 className="w-6 h-6 text-white stroke-[2]" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-semibold text-gray-900">Property Size</div>
+                            <div className="text-sm text-gray-500">Enter your facility dimensions</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {propertySizeQuestions.map((question: any, index: number) => renderQuestion(question, index))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Render other questions normally */}
+                    {otherQuestions.map((question: any, index: number) => renderQuestion(question, index + propertySizeQuestions.length))}
+                  </>
+                );
+              })()}
             </div>
           ) : null}
           

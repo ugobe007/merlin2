@@ -167,7 +167,7 @@ export function SolarOpportunityModal({
       />
       
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto border-2 border-amber-500/40">
+      <div className="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] border-2 border-amber-500/40">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 px-6 py-5 rounded-t-3xl z-10">
           <div className="flex items-center justify-between">

@@ -5,8 +5,7 @@ import VendorPortal from './components/VendorPortal';
 import CarWashEnergy from './components/verticals/CarWashEnergy';
 import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
-import StreamlinedWizard from './components/wizard/StreamlinedWizard';
-import AdvancedQuoteBuilderLanding from './components/wizard/AdvancedQuoteBuilderLanding';
+import { WizardV5 } from './components/wizard/v5';
 import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder';
 import { QuoteProvider } from './contexts/QuoteContext';
 
@@ -110,57 +109,21 @@ function App() {
     return <HotelEnergy />;
   }
   
-  // Access via /wizard - Streamlined Wizard (new UX)
-  // Use URL hash to force remount when navigating back to wizard
+  // Access via /wizard - V5 Wizard (Clean Build Dec 21, 2025)
   if (showStreamlinedWizard) {
     return (
-      <StreamlinedWizard 
-        key="wizard-fresh" // Stable key - reset handled in component
-        show={true}
-        onClose={() => window.location.href = '/'}
-        onFinish={() => {}}
-        onOpenAdvanced={() => window.location.href = '/quote-builder'}
+      <WizardV5 
+        onComplete={(quote) => {
+          console.log('Quote completed:', quote);
+          // TODO: Navigate to quote results
+        }}
+        onCancel={() => window.location.href = '/'}
       />
     );
   }
 
-  // Access via /quote-builder - Advanced Quote Builder with upload capability
-  // This is the professional tool with spec upload, custom config, AI optimization
-  // BUG FIX: If view=custom-config is set, skip landing and go to BessQuoteBuilder
-  const viewParam = urlParams.get('view');
-  if (showAdvancedQuoteBuilder && viewParam !== 'custom-config') {
-    const sourceVertical = urlParams.get('vertical') || verticalParam;
-    return (
-      <QuoteProvider>
-        <AdvancedQuoteBuilderLanding
-          onBackToHome={() => {
-            // If came from a vertical, go back there
-            if (sourceVertical === 'car-wash') {
-              window.location.href = '/carwashenergy';
-            } else if (sourceVertical === 'ev-charging') {
-              window.location.href = '/evchargingenergy';
-            } else if (sourceVertical === 'hotel') {
-              window.location.href = '/hotelenergy';
-            } else {
-              window.location.href = '/';
-            }
-          }}
-          onStartCustomQuote={() => {
-            // Navigate to main Merlin with advanced builder open
-            window.location.href = '/?advanced=true&view=custom-config';
-          }}
-          onShowSmartWizard={() => {
-            window.location.href = '/wizard';
-          }}
-          onExtractedSpecs={(specs) => {
-            // Store specs in session storage and redirect to advanced builder
-            sessionStorage.setItem('extractedSpecs', JSON.stringify(specs));
-            window.location.href = '/?advanced=true&view=custom-config&fromUpload=true';
-          }}
-        />
-      </QuoteProvider>
-    );
-  }
+  // Access via /quote-builder or advanced=true - Show Advanced Quote Builder
+  // The BessQuoteBuilder component handles this via the advanced param
 
   return (
     <QuoteProvider>

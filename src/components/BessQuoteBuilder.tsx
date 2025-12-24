@@ -125,9 +125,9 @@ export default function BessQuoteBuilder() {
       if (verticalParam) {
         setUseCase(verticalParam);
       }
-      // Set the initial view if specified (e.g., 'custom-config')
-      if (viewParam === 'custom-config' || viewParam === 'interactive-dashboard' || viewParam === 'professional-model') {
-        setAdvancedQuoteBuilderInitialView(viewParam as 'landing' | 'custom-config');
+      // Set the initial view if specified (e.g., 'landing', 'custom-config')
+      if (viewParam === 'landing' || viewParam === 'custom-config' || viewParam === 'interactive-dashboard' || viewParam === 'professional-model') {
+        setAdvancedQuoteBuilderInitialView(viewParam as 'landing' | 'custom-config' | 'interactive-dashboard' | 'professional-model');
       }
       setShowAdvancedQuoteBuilderModal(true);
       // Clean up URL

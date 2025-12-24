@@ -75,7 +75,7 @@ export function WizardBottomNav({
             disabled={!canGoForward}
             className={`px-6 py-3 rounded-[10px] text-[14px] font-semibold transition-all flex items-center gap-1.5 ${
               canGoForward
-                ? 'bg-gradient-to-r from-[#4ADE80] to-[#22C55E] hover:shadow-[0_4px_16px_rgba(74,222,128,0.4)] text-[#052e16]'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-2 border-emerald-400 hover:border-emerald-500 shadow-lg hover:shadow-[0_4px_16px_rgba(16,185,129,0.5)] text-white font-bold'
                 : 'bg-white/10 text-white/40 cursor-not-allowed'
             }`}
           >

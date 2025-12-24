@@ -39,8 +39,8 @@ import carWashPitStop3 from '@/assets/images/Car_Wash_PitStop3.jpg';
 import carWashPitStop4 from '@/assets/images/Car_Wash_PitStop4.jpg';
 import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
-// REFACTORED: Use StreamlinedWizard instead of CarWashWizard
-import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+// V5 Wizard (Clean Build Dec 21, 2025)
+import { WizardV5 } from '@/components/wizard/v5';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
@@ -241,6 +241,11 @@ function ImageCarousel() {
 // ============================================
 
 export default function CarWashEnergy() {
+  // Redirect to wizard with car-wash pre-selected
+  useEffect(() => {
+    window.location.href = '/wizard?industry=car-wash';
+  }, []);
+
   // Database-driven UI limits
   const { limits, loading: limitsLoading } = useCarWashLimits();
   
@@ -1248,25 +1253,19 @@ export default function CarWashEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          CAR WASH WIZARD MODAL - Uses StreamlinedWizard with car-wash pre-selected
+          CAR WASH WIZARD MODAL - Uses WizardV5 with car-wash pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <StreamlinedWizard
-          show={showWizard}
-          initialUseCase="car-wash"
-          initialState={inputs.state}
-          initialData={{
-            bayCount: inputs.numberOfBays,
-            washType: 'tunnel', // Landing page uses tunnel type
-            dailyVehicles: inputs.carsPerDay,
-            hasVacuums: inputs.includesVacuums,
-            hasDryers: inputs.includesDryers,
-          }}
-          onClose={() => setShowWizard(false)}
-          onFinish={() => {
-            setShowWizard(false);
-          }}
-        />
+        <div className="fixed inset-0 z-50">
+          <WizardV5
+            initialUseCase="car-wash"
+            onComplete={(quote) => {
+              console.log('Car wash quote completed:', quote);
+              setShowWizard(false);
+            }}
+            onCancel={() => setShowWizard(false)}
+          />
+        </div>
       )}
       
       {/* TrueQuote Modal */}

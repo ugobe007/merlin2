@@ -9,22 +9,11 @@
  * 
  * @created December 2025
  * @author Merlin Team
+ * 
+ * NOTE: Components not yet implemented - using V5 design system instead.
+ * See: src/components/wizard/v5/design-system/
  */
 
-// Input Components
-export { DropdownSelector, type DropdownOption, type DropdownSelectorProps } from './DropdownSelector';
-export { YesNoButtons, type YesNoButtonsProps } from './YesNoButtons';
-export { SegmentedControl, type SegmentedOption, type SegmentedControlProps } from './SegmentedControl';
-export { SliderInput, type SliderInputProps } from './SliderInput';
-
-// Button Components
-export { PrimaryButton, type PrimaryButtonProps } from './PrimaryButton';
-export { SecondaryButton, type SecondaryButtonProps } from './SecondaryButton';
-
-// Layout Components
-export { StepExplanation, type StepExplanationProps } from './StepExplanation';
-export { QuestionCard, type QuestionCardProps } from './QuestionCard';
-
-// Floating Components
-export { FloatingWidget, type FloatingWidgetProps } from './FloatingWidget';
-export { FloatingPanel, type FloatingPanelProps } from './FloatingPanel';
+export { StepExplanation } from './StepExplanation';
+export { PrimaryButton } from './PrimaryButton';
+export { SecondaryButton } from './SecondaryButton';

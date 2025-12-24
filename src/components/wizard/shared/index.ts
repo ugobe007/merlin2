@@ -1,76 +1,60 @@
 /**
- * WIZARD SHARED COMPONENTS - Index
- * =================================
+ * SHARED WIZARD COMPONENTS INDEX
+ * ==============================
  * 
- * Shared components used across all vertical wizards.
- * Import from this index for cleaner imports.
- * 
- * Usage:
- * import { WizardPowerProfile, WizardStepHelp, COMMON_STEP_HELP } from '@/components/wizard/shared';
- * 
- * Version: 1.0.0
- * Date: December 2025
+ * Exports shared components used across wizard sections.
  */
 
-// Power Profile Component
-export { default as WizardPowerProfile } from './WizardPowerProfile';
-export type { 
-  PowerProfileData, 
-  WizardPowerProfileProps 
-} from './WizardPowerProfile';
-export { formatEnergy, formatPower, formatCurrency } from './WizardPowerProfile';
+import React from 'react';
 
-// Step Help Component
-export { default as WizardStepHelp } from './WizardStepHelp';
-export type { 
-  StepHelpContent, 
-  HelpTip, 
-  HelpLink,
-  WizardStepHelpProps 
-} from './WizardStepHelp';
-export { COMMON_STEP_HELP } from './WizardStepHelp';
+// Placeholder types for backwards compatibility
+export interface StepInstruction {
+  text: string;
+  icon?: React.ReactNode;
+}
 
-// Mode Selector Component (Pro vs Guided)
-export { default as WizardModeSelector, WizardModeSelector as ModeSelector } from './WizardModeSelector';
-export type { 
-  WizardMode, 
-  VerticalType, 
-  WizardModeSelectorProps 
-} from './WizardModeSelector';
+export interface StepInstruction {
+  text: string;
+  highlight?: string;
+}
 
-// Accept/Customize Modal Component (NEW - Dec 2025)
-export { AcceptCustomizeModal } from './AcceptCustomizeModal';
-export type { AcceptCustomizeModalProps } from './AcceptCustomizeModal';
+export interface MerlinGreetingProps {
+  stepNumber: number;
+  totalSteps: number;
+  stepTitle: string;
+  stepDescription: string;
+  estimatedTime?: string;
+  actionInstructions?: string[];
+  nextStepPreview?: string;
+  isComplete?: boolean;
+  onCompleteMessage?: string;
+  state?: string;
+  utilityRate?: number;
+  solarOpportunity?: { rating: string; hours: number };
+  savings?: { min: number; max: number };
+  onOpenTrueQuote?: () => void;
+  acknowledgment?: string;
+  instructions?: StepInstruction[];
+  recommendation?: {
+    title: string;
+    content: React.ReactNode;
+  };
+  proTip?: {
+    title: string;
+    content: string;
+  };
+  showMerlinAvatar?: boolean;
+  className?: string;
+}
 
-// Merlin Greeting Component (NEW - Dec 2025)
-export { MerlinGreeting } from './MerlinGreeting';
-export type { MerlinGreetingProps } from './MerlinGreeting';
-
-// Floating Navigation Arrows (NEW - Dec 2025)
-export { FloatingNavigationArrows } from './FloatingNavigationArrows';
-export type { FloatingNavigationArrowsProps } from './FloatingNavigationArrows';
-
-// Floating Nav Widget (NEW - Dec 20, 2025 - Option 1)
-export { FloatingNavWidget } from './FloatingNavWidget';
-export type { FloatingNavWidgetProps } from './FloatingNavWidget';
-
-// Wizard Progress Bar (NEW - Dec 20, 2025 - Simple Navigation)
-export { WizardProgressBar } from './WizardProgressBar';
-
-// Wizard Bottom Navigation (NEW - Dec 20, 2025 - Simple Navigation)
-export { WizardBottomNav } from './WizardBottomNav';
-
-// Progress Ring (NEW - Dec 20, 2025)
-export { ProgressRing } from './ProgressRing';
-
-// Configuration Summary (NEW - Floating Sidebar)
-export { ConfigurationSummary } from './ConfigurationSummary';
-export type { ConfigurationSummaryProps } from './ConfigurationSummary';
-
-// Signup Form (NEW - User Registration)
-export { SignupForm } from './SignupForm';
-export type { SignupFormProps } from './SignupForm';
-
-// Floating Solar Button (NEW - Solar Opportunity Indicator)
-export { FloatingSolarButton } from './FloatingSolarButton';
-export type { FloatingSolarButtonProps } from './FloatingSolarButton';
+// Placeholder components for backwards compatibility
+export const MerlinGreeting: React.FC<MerlinGreetingProps> = () => null;
+export const FloatingNavigationArrows: React.FC<{ 
+  canGoBack?: boolean;
+  canGoForward?: boolean;
+  onBack?: () => void; 
+  onForward?: () => void;
+  backLabel?: string;
+  forwardLabel?: string;
+}> = () => null;
+export const AcceptCustomizeModal: React.FC<any> = () => null;

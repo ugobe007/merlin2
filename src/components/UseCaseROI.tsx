@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, Zap, DollarSign, Clock, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Import use case images with explicit extensions for Vite
-import carWashImage from '../assets/images/car_wash_1.jpg?url';
+import carWashImage from '../assets/images/car_wash_valet.jpg?url';
 import hospitalImage from '../assets/images/hospital_1.jpg?url';
 import evChargingStationImage from '../assets/images/ev_charging_station.jpg?url';
 import evChargingHotelImage from '../assets/images/ev_charging_hotel.jpg?url';
-import hotelImage from '../assets/images/hotel_1.jpg?url';
+import hotelImage from '../assets/images/hotel_motel_holidayinn_1.jpg?url';
 import airportImage from '../assets/images/airports_1.jpg?url';
 
 interface UseCaseData {

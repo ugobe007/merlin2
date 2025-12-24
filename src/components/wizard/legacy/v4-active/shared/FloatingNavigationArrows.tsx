@@ -60,7 +60,7 @@ export function FloatingNavigationArrows({
                     group
                     ${
                       canGoForward
-                        ? 'bg-gradient-to-r from-[#68BFFA] via-[#4A90E2] to-[#3B5BDB] border-[#68BFFA]/30 hover:shadow-xl hover:shadow-[#3B5BDB]/20 hover:scale-110 animate-pulse'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-2 border-emerald-400/50 hover:from-emerald-600 hover:to-teal-600 hover:border-emerald-500 hover:shadow-xl hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)] hover:scale-110'
                         : 'bg-gray-200/50 border-gray-300 cursor-not-allowed'
                     }`}
         aria-label={forwardLabel}

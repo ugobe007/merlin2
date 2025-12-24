@@ -10,7 +10,7 @@ import WelcomeModal from './WelcomeModal';
 import AccountSetup from './AccountSetup';
 import EnhancedProfile from '../EnhancedProfile';
 import JoinMerlinModal from './JoinMerlinModal';
-import StreamlinedWizard from '../wizard/StreamlinedWizard';
+import { WizardV5 } from '../wizard/v5';
 import CalculationModal from './CalculationModal';
 import SaveProjectModal from './SaveProjectModal';
 import LoadProjectModal from './LoadProjectModal';
@@ -284,76 +284,26 @@ export default function ModalManager(props: ModalManagerProps) {
         }}
       />
       
-      {/* Streamlined Wizard - New UX */}
-      <StreamlinedWizard
-        show={showSmartWizard}
-        onClose={() => {
-          setShowSmartWizard(false);
-          // Reset advanced mode flag when closing
-          if (setStartWizardInAdvancedMode) {
-            setStartWizardInAdvancedMode(false);
-          }
-          // Reset skip intro flag when closing
-          if (setSkipWizardIntro) {
-            setSkipWizardIntro(false);
-          }
-        }}
-        onOpenAdvanced={() => {
-          // Close wizard and open Advanced Quote Builder in custom-config mode
-          if (import.meta.env.DEV) { console.log('🔥 ModalManager: onOpenAdvanced called'); }
-          setShowSmartWizard(false);
-          if (setShowAdvancedQuoteBuilderModal) {
-            if (import.meta.env.DEV) { console.log('🔥 Setting showAdvancedQuoteBuilderModal to true'); }
-            if (setAdvancedQuoteBuilderInitialView) {
-              setAdvancedQuoteBuilderInitialView('custom-config');
-            }
-            setShowAdvancedQuoteBuilderModal(true);
-          }
-        }}
-        onFinish={(wizardData) => {
-          // Map wizard data to the main form
-          setPowerMW(wizardData.storageSizeMW || 1);
-          setStandbyHours(wizardData.durationHours || 2);
-          
-          // Map application to use case
-          const applicationMap: { [key: string]: string } = {
-            'ev-charging': 'EV Charging Stations',
-            'data-center': 'Data Centers',
-            'manufacturing': 'Manufacturing',
-            'commercial': 'Commercial Buildings',
-            'utility': 'Utility Scale',
-            'resiliency': 'Critical Infrastructure',
-          };
-          setUseCase(applicationMap[wizardData.primaryApplication] || 'EV Charging Stations');
-          
-          // Set warranty
-          setWarranty(`${wizardData.warranty} years`);
-          
-          // Set renewable energy and generator values from wizard
-          setSolarMWp(wizardData.solarMW || 0);
-          setWindMW(wizardData.windMW || 0);
-          setGeneratorMW(wizardData.generatorMW || 0);
-          
-          // Close wizard and show success message
-          setShowSmartWizard(false);
-          
-          // Scroll to top to show the updated configuration
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          
-          // Show success notification
-          setTimeout(() => {
-            alert(`🎉 Configuration Applied Successfully!\n\n` +
-                  `BESS Power: ${wizardData.power} MW\n` +
-                  `Duration: ${wizardData.duration} hours\n` +
-                  `Solar: ${wizardData.solarMW || 0} MW\n` +
-                  `Wind: ${wizardData.windMW || 0} MW\n` +
-                  `Generator: ${wizardData.generatorMW || 0} MW\n` +
-                  `Grid: ${wizardData.gridConnection === 'behind' ? 'Behind the meter' : 'Front of meter'}\n` +
-                  `Application: ${applicationMap[wizardData.primaryApplication]}\n\n` +
-                  `Your quote has been updated. Review the details below and click "Generate Quote" when ready.`);
-          }, 500);
-        }}
-      />
+      {/* V5 Wizard */}
+      {showSmartWizard && (
+        <div className="fixed inset-0 z-50">
+          <WizardV5
+            onComplete={(quote) => {
+              console.log('Quote completed from ModalManager:', quote);
+              setShowSmartWizard(false);
+            }}
+            onCancel={() => {
+              setShowSmartWizard(false);
+              if (setStartWizardInAdvancedMode) {
+                setStartWizardInAdvancedMode(false);
+              }
+              if (setSkipWizardIntro) {
+                setSkipWizardIntro(false);
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Calculation Modal */}
       {showCalculationModal && (

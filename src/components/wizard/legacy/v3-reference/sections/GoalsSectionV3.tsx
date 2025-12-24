@@ -20,12 +20,12 @@
 import React, { useCallback, useMemo } from 'react';
 import { 
   ChevronDown, ChevronUp, Zap, Sun, Wind, Fuel, Battery, Plug, Check, 
-  ArrowLeft, Home, ArrowRight, Wifi, WifiOff, AlertTriangle, Radio, Wand2, Sparkles, Gauge, Calculator
+  ArrowLeft, Home, ArrowRight, Wifi, WifiOff, AlertTriangle, Radio, Wand2, Sparkles, Gauge
 } from 'lucide-react';
 import type { WizardState } from '../types/wizardTypes';
 import { StepExplanation } from '../ui/StepExplanation';
+import { MerlinGuidancePanel } from '../ui/MerlinGuidancePanel';
 import { getStepColors } from '../constants/stepColors';
-import { MerlinGreeting } from '../shared';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STEP 3 PANEL COLORS - Soft Green (building solution)
@@ -70,7 +70,6 @@ interface GoalsSectionV3Props {
   powerCoverage?: number;
   peakDemandKW?: number;
   merlinRecommendation?: MerlinRecommendation;
-  onOpenProQuote?: () => void;
 }
 
 // =============================================================================
@@ -405,7 +404,6 @@ export function GoalsSectionV3({
   onContinue,
   sectionRef,
   merlinRecommendation,
-  onOpenProQuote,
 }: GoalsSectionV3Props) {
   // ---------------------------------------------------------------------------
   // Local state for card expansion
@@ -476,20 +474,36 @@ export function GoalsSectionV3({
       {/* Centered Container - MAX WIDTH 768px (max-w-3xl) */}
       <div className="max-w-3xl mx-auto space-y-6">
         
-        {/* Merlin Greeting - Consistent with Step 1 */}
-        <MerlinGreeting
+        {/* ═══════════════════════════════════════════════════════════════
+            MERLIN GUIDANCE PANEL (Dec 21, 2025 - Using reusable component)
+        ═══════════════════════════════════════════════════════════════ */}
+        <MerlinGuidancePanel
           stepNumber={3}
           totalSteps={5}
-          stepTitle="Energy Preferences"
-          stepDescription="Tell me your energy preferences and I'll create 3 optimized strategies for you to choose from."
-          actionInstructions={[
-            'Select your energy goals and preferences',
-            'Choose if you want solar, wind, or backup generator',
-            'Click the right arrow when ready to see your Magic Fit options'
+          stepLabel="Configure System"
+          customIcon={Wand2}
+          acknowledgment={`✅ Perfect! I've analyzed your ${wizardState.industryName || 'facility'} in ${wizardState.state || 'your location'}`}
+          heading="Configure Your Energy System"
+          subheading="Based on your facility details, I've calculated your optimal energy configuration. Review my recommendations below!"
+          instructions={[
+            { text: "Review my BESS recommendation", highlight: "BESS recommendation" },
+            { text: "Add Solar, Wind, or Generator", highlight: "Solar, Wind, or Generator" },
+            { text: "Click Generate Quote", highlight: "Generate Quote" },
           ]}
-          nextStepPreview="Next, I'll show you 3 preconfigured energy strategies to choose from"
-          isComplete={false}
-          onCompleteMessage={undefined}
+          recommendation={merlinRecommendation ? {
+            title: "💡 Merlin's Optimal Configuration",
+            content: (
+              <>
+                For your {wizardState.industryName}, I recommend <strong>{merlinRecommendation.batteryKW >= 1000 ? `${(merlinRecommendation.batteryKW / 1000).toFixed(1)} MW` : `${merlinRecommendation.batteryKW} kW`}</strong> battery 
+                {merlinRecommendation.solarKW > 0 && <> + <strong>{merlinRecommendation.solarKW >= 1000 ? `${(merlinRecommendation.solarKW / 1000).toFixed(1)} MW` : `${merlinRecommendation.solarKW} kW`}</strong> solar</>}.
+                Estimated savings: <strong className="text-emerald-300">${(merlinRecommendation.annualSavings / 1000).toFixed(0)}K/year</strong>
+              </>
+            )
+          } : undefined}
+          proTip={{
+            title: "👆 Pro Tip: Check the Power Profile",
+            content: "Watch the <strong>Power Profile</strong> in the top nav bar update as you adjust settings. It shows your total system capacity!"
+          }}
         />
 
         {/* ================================================================= */}
@@ -923,37 +937,20 @@ export function GoalsSectionV3({
             )}
           </div>
           
-          {/* Right side: ProQuote + Continue to Magic Fit */}
-          <div className="flex items-center gap-3">
-            {onOpenProQuote && (
-              <button
-                type="button"
-                onClick={onOpenProQuote}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl
-                           bg-gradient-to-r from-emerald-500 to-teal-500
-                           border-2 border-emerald-400
-                           text-white font-bold
-                           hover:shadow-lg hover:shadow-emerald-500/40
-                           transition-all"
-              >
-                <Calculator size={18} />
-                ProQuote™
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onContinue}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl
-                         bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6]
-                         border-2 border-[#ad42ff]
-                         text-white font-black text-lg
-                         hover:shadow-xl hover:shadow-purple-500/40
-                         hover:scale-105 transition-all"
-            >
-              See Magic Fit™
-              <ArrowRight size={18} />
-            </button>
-          </div>
+          {/* Right side: Generate Quote */}
+          <button
+            type="button"
+            onClick={onContinue}
+            className="flex items-center gap-2 px-8 py-4 rounded-xl
+                       bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6]
+                       border-2 border-[#ad42ff]
+                       text-white font-black text-lg
+                       hover:shadow-xl hover:shadow-purple-500/40
+                       hover:scale-105 transition-all"
+          >
+            Generate Quote
+            <ArrowRight size={18} />
+          </button>
         </div>
 
       </div>

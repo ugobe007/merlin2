@@ -38,7 +38,7 @@ import carWashImage from '../assets/images/car_wash_1.jpg';
 import evChargingStationImage from '../assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '../assets/images/ev_charging_hotel.jpg';
 import hospitalImage from '../assets/images/hospital_1.jpg';
-import hotelImage from '../assets/images/hotel_1.jpg';
+import hotelImage from '../assets/images/hotel_motel_holidayinn_1.jpg';
 import airportImage from '../assets/images/airports_1.jpg';
 
 export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
@@ -879,16 +879,18 @@ export const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
         id: 'hotelCategory',
         question: 'Hotel category and service level',
         type: 'select',
-        default: 'full_service',
+        default: '3-star',
         options: [
-          'limited_service', // Lower energy intensity (2-2.5 kW/room)
-          'full_service', // Standard full-service hotel (3-3.5 kW/room)
-          'luxury_resort', // Higher energy intensity (4-5 kW/room)
-          'extended_stay', // Different load patterns with kitchenettes (2.5-3 kW/room)
-          'boutique_hotel' // Unique energy profile (3-4 kW/room)
+          { value: '1-star', label: '1-Star Hotel', energyFactor: 0.7 }, // Lower energy intensity (2-2.5 kW/room)
+          { value: '2-star', label: '2-Star Hotel', energyFactor: 0.85 }, // Budget hotel (2.5-3 kW/room)
+          { value: '3-star', label: '3-Star Hotel', energyFactor: 1.0 }, // Standard full-service hotel (3-3.5 kW/room)
+          { value: '4-star', label: '4-Star Hotel', energyFactor: 1.3 }, // Upscale hotel (4-4.5 kW/room)
+          { value: '5-star', label: '5-Star Hotel', energyFactor: 1.6 }, // Luxury hotel (4.5-6 kW/room)
+          { value: 'boutique', label: 'Boutique Hotel', energyFactor: 1.15 }, // Unique energy profile (3.5-4.5 kW/room)
+          { value: 'non-classified', label: 'Non-Classified Hotel', energyFactor: 0.9 } // Varies widely (2.5-4 kW/room)
         ],
         impactType: 'factor',
-        helpText: 'Service level affects energy intensity - luxury properties use 50-70% more energy per room',
+        helpText: 'Hotel category affects energy intensity. Star ratings define service level, facilities, and guest expectations. Luxury properties (4-5 star) typically use 50-70% more energy per room than budget hotels.',
         required: true
       },
       {

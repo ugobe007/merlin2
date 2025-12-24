@@ -18,6 +18,42 @@ import { useCaseService, type CustomQuestionRow } from './useCaseService';
 import { baselineCache } from './cacheService';
 import { DATACENTER_TIER_STANDARDS, AMENITY_POWER_STANDARDS } from './useCasePowerCalculations';
 
+// ============================================================================
+// HELPER: Parse scale string to numeric value
+// ============================================================================
+// Handles cases where scale comes as a string like "50,000 - 100,000 sq ft"
+// Returns a numeric multiplier for power calculations
+// ============================================================================
+function parseScaleToNumber(scale: string | number | undefined): number {
+  // If already a number, return it
+  if (typeof scale === 'number') return scale;
+  
+  // If undefined or empty, return default
+  if (!scale) return 1;
+  
+  // Parse strings like "50,000 - 100,000 sq ft" → take midpoint
+  const cleanedScale = String(scale).replace(/,/g, '').replace(/sq\s*ft/gi, '').trim();
+  
+  // Check for range (e.g., "50000 - 100000")
+  const rangeMatch = cleanedScale.match(/(\d+)\s*-\s*(\d+)/);
+  if (rangeMatch) {
+    const low = parseInt(rangeMatch[1], 10);
+    const high = parseInt(rangeMatch[2], 10);
+    // Return midpoint normalized to 50,000 sq ft baseline
+    return ((low + high) / 2) / 50000;
+  }
+  
+  // Check for single number with optional suffix
+  const numberMatch = cleanedScale.match(/(\d+)/);
+  if (numberMatch) {
+    // Normalize to 50,000 sq ft baseline
+    return parseInt(numberMatch[1], 10) / 50000;
+  }
+  
+  // Default fallback (1.0 = 50,000 sq ft baseline)
+  return 1;
+}
+
 export interface BaselineCalculationResult {
   powerMW: number;
   durationHrs: number;
@@ -54,13 +90,13 @@ export interface BaselineCalculationResult {
  * Performance: Results are cached for 10 minutes to reduce database load.
  * 
  * @param template - Use case slug (e.g., 'ev-charging', 'hotel')
- * @param scale - Scale factor for sizing (number of rooms, sq ft, etc.)
+ * @param scale - Scale factor for sizing (number of rooms, sq ft, or string like "50,000 - 100,000 sq ft")
  * @param useCaseData - Additional data for complex calculations (EV chargers, etc.)
  * @returns Recommended BESS configuration
  */
 export async function calculateDatabaseBaseline(
   template: string | string[],
-  scale: number = 1,
+  scale: number | string = 1,
   useCaseData?: Record<string, any>
 ): Promise<BaselineCalculationResult> {
   const templateKey = Array.isArray(template) ? template[0] : template;
@@ -99,6 +135,11 @@ export async function calculateDatabaseBaseline(
       if (import.meta.env.DEV) { console.log(`🔍 [BaselineService] useCaseData values:`, useCaseData); }
     }
     
+    // ═══════════════════════════════════════════════════════════════════════
+    // SPECIAL CASE HANDLERS - Industry-specific calculation logic
+    // Each handler takes useCaseData and returns BaselineCalculationResult
+    // ═══════════════════════════════════════════════════════════════════════
+    
     // Special case: EV Charging uses charger-specific calculation
     if (templateKey === 'ev-charging' && useCaseData) {
       if (import.meta.env.DEV) {
@@ -126,31 +167,126 @@ export async function calculateDatabaseBaseline(
       return dcResult;
     }
     
+    // Special case: College/University uses enrollment and facility-based calculation
+    if (templateKey === 'college' && useCaseData) {
+      const collegeResult = calculateCollegeBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🎓 [BaselineService] College calculated:`, collegeResult);
+      }
+      
+      // Cache the result
+      baselineCache.set(cacheKey, collegeResult);
+      return collegeResult;
+    }
+    
+    // Special case: Hospital uses bed count and facility type
+    if (templateKey === 'hospital' && useCaseData) {
+      const hospitalResult = calculateHospitalBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🏥 [BaselineService] Hospital calculated:`, hospitalResult);
+      }
+      baselineCache.set(cacheKey, hospitalResult);
+      return hospitalResult;
+    }
+    
+    // Special case: Hotel uses room count and amenities
+    if (templateKey === 'hotel' && useCaseData) {
+      const hotelResult = calculateHotelBaseline(useCaseData, String(scale));
+      if (import.meta.env.DEV) {
+        console.log(`🏨 [BaselineService] Hotel calculated:`, hotelResult);
+      }
+      baselineCache.set(cacheKey, hotelResult);
+      return hotelResult;
+    }
+    
+    // Special case: Car wash uses bay count and equipment type
+    if (templateKey === 'car-wash' && useCaseData) {
+      const carWashResult = calculateCarWashBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🚗 [BaselineService] Car Wash calculated:`, carWashResult);
+      }
+      baselineCache.set(cacheKey, carWashResult);
+      return carWashResult;
+    }
+    
+    // Special case: Warehouse uses square footage and cold storage
+    if (templateKey === 'warehouse' && useCaseData) {
+      const warehouseResult = calculateWarehouseBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`📦 [BaselineService] Warehouse calculated:`, warehouseResult);
+      }
+      baselineCache.set(cacheKey, warehouseResult);
+      return warehouseResult;
+    }
+    
+    // Special case: Manufacturing uses square footage and equipment type
+    if (templateKey === 'manufacturing' && useCaseData) {
+      const mfgResult = calculateManufacturingBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🏭 [BaselineService] Manufacturing calculated:`, mfgResult);
+      }
+      baselineCache.set(cacheKey, mfgResult);
+      return mfgResult;
+    }
+    
+    // Special case: Airport uses terminal size and passenger volume
+    if (templateKey === 'airport' && useCaseData) {
+      const airportResult = calculateAirportBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`✈️ [BaselineService] Airport calculated:`, airportResult);
+      }
+      baselineCache.set(cacheKey, airportResult);
+      return airportResult;
+    }
+    
+    // Special case: Retail uses square footage and store type
+    if (templateKey === 'retail' && useCaseData) {
+      const retailResult = calculateRetailBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🏪 [BaselineService] Retail calculated:`, retailResult);
+      }
+      baselineCache.set(cacheKey, retailResult);
+      return retailResult;
+    }
+    
+    // Special case: Office uses square footage and building class
+    if (templateKey === 'office' && useCaseData) {
+      const officeResult = calculateOfficeBaseline(useCaseData);
+      if (import.meta.env.DEV) {
+        console.log(`🏢 [BaselineService] Office calculated:`, officeResult);
+      }
+      baselineCache.set(cacheKey, officeResult);
+      return officeResult;
+    }
+    
     // Special case: Agriculture uses acreage-based calculation
     // Scale is already calculated as MW in the wizard, so use it directly
     if ((templateKey === 'agriculture' || templateKey === 'agricultural') && useCaseData) {
       // If user specified irrigation load, add it
       const irrigationKW = parseFloat(useCaseData.irrigationLoad) || 0;
       
+      // Parse scale to number (handles both numeric and string inputs)
+      const numericScale = parseScaleToNumber(scale);
+      
       // Scale from wizard is already in MW (acreage × 0.4 kW/acre / 1000)
       // Add irrigation load if specified
-      const totalPowerMW = scale + (irrigationKW / 1000);
+      const totalPowerMW = numericScale + (irrigationKW / 1000);
       
       // Use reasonable duration for agricultural operations (backup during irrigation season)
       const durationHrs = 4;
       
       if (import.meta.env.DEV) {
         console.log(`🚜 [BaselineService] Agriculture calculation:`);
-        if (import.meta.env.DEV) { console.log(`   Scale (from acreage): ${scale.toFixed(3)} MW`); }
-        if (import.meta.env.DEV) { console.log(`   Irrigation load: ${irrigationKW} kW = ${(irrigationKW/1000).toFixed(3)} MW`); }
-        if (import.meta.env.DEV) { console.log(`   Total power: ${totalPowerMW.toFixed(3)} MW`); }
+        console.log(`   Scale (from acreage): ${numericScale.toFixed(3)} MW`);
+        console.log(`   Irrigation load: ${irrigationKW} kW = ${(irrigationKW/1000).toFixed(3)} MW`);
+        console.log(`   Total power: ${totalPowerMW.toFixed(3)} MW`);
       }
       
       const agResult = {
         powerMW: Math.max(0.2, Math.round(totalPowerMW * 100) / 100), // Minimum 200 kW
         durationHrs,
         solarMW: 0, // Let user control solar preference
-        description: `Agricultural baseline: ${scale.toFixed(2)} MW from acreage + ${(irrigationKW/1000).toFixed(2)} MW irrigation`,
+        description: `Agricultural baseline: ${numericScale.toFixed(2)} MW from acreage + ${(irrigationKW/1000).toFixed(2)} MW irrigation`,
         dataSource: 'Wizard (acreage × 0.4 kW/acre)'
       };
       
@@ -252,7 +388,8 @@ export async function calculateDatabaseBaseline(
     if (referenceMatch && templateKey === 'hotel') {
       // Hotel-specific: Extract reference room count
       const referenceRooms = parseInt(referenceMatch[1]); // e.g., 150
-      const actualRooms = scale * 100; // Convert scale back to actual rooms
+      const numericScale = parseScaleToNumber(scale);
+      const actualRooms = numericScale * 100; // Convert scale back to actual rooms
       
       // Calculate per-room kW, then multiply by actual rooms
       const kWPerRoom = defaultConfig.typical_load_kw / referenceRooms;
@@ -260,21 +397,24 @@ export async function calculateDatabaseBaseline(
       
       if (import.meta.env.DEV) {
         console.log(`🏨 [Hotel Calculation] Reference: ${referenceRooms} rooms @ ${defaultConfig.typical_load_kw} kW = ${kWPerRoom.toFixed(2)} kW/room`);
-        if (import.meta.env.DEV) { console.log(`🏨 [Hotel Calculation] Actual: ${actualRooms} rooms × ${kWPerRoom.toFixed(2)} kW/room = ${basePowerMW.toFixed(3)} MW`); }
+        console.log(`🏨 [Hotel Calculation] Actual: ${actualRooms} rooms × ${kWPerRoom.toFixed(2)} kW/room = ${basePowerMW.toFixed(3)} MW`);
       }
       
     } else {
       // Fallback to simple scale multiplication for other use cases
       // SPECIAL CASE: For datacenters, scale represents total MW capacity directly
       if (templateKey === 'datacenter' || templateKey === 'data-center') {
-        basePowerMW = scale; // Use scale directly as the datacenter capacity in MW
+        const numericScale = parseScaleToNumber(scale);
+        basePowerMW = numericScale; // Use scale directly as the datacenter capacity in MW
         if (import.meta.env.DEV) {
-          console.log(`🖥️ [Data Center Calculation] Direct capacity: ${scale} MW (scale = capacity)`);
+          console.log(`🖥️ [Data Center Calculation] Direct capacity: ${numericScale} MW (scale = capacity)`);
         }
       } else {
-        basePowerMW = (defaultConfig.typical_load_kw / 1000) * scale;
+        // Parse scale to handle both numeric and string values (e.g., "50,000 - 100,000 sq ft")
+        const numericScale = parseScaleToNumber(scale);
+        basePowerMW = (defaultConfig.typical_load_kw / 1000) * numericScale;
         if (import.meta.env.DEV) {
-          console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${scale} scale = ${basePowerMW.toFixed(3)} MW`);
+          console.log(`📊 [Generic Calculation] ${defaultConfig.typical_load_kw} kW × ${numericScale.toFixed(2)} scale (from: ${scale}) = ${basePowerMW.toFixed(3)} MW`);
         }
       }
     }
@@ -401,7 +541,7 @@ export async function calculateDatabaseBaseline(
  * Calculate datacenter baseline from user inputs
  * Handles capacity from rack count × power per rack or direct capacity input
  */
-function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: number): BaselineCalculationResult {
+function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: number | string): BaselineCalculationResult {
   // FIXED: Use template field names (rackCount, tierClassification, powerUsageEffectiveness)
   let capacity = 0;
   
@@ -443,8 +583,9 @@ function calculateDatacenterBaseline(useCaseData: Record<string, any>, scale: nu
   }
   
   // Priority 4: Use scale parameter (from wizard)
-  if (!capacity && scale > 0) {
-    capacity = scale;
+  const numericScale = parseScaleToNumber(scale);
+  if (!capacity && numericScale > 0) {
+    capacity = numericScale;
     if (import.meta.env.DEV) {
       console.log(`🖥️ [Data Center] Using scale as capacity: ${capacity} MW`);
     }
@@ -562,6 +703,886 @@ export function calculateDatacenterBESS(
     powerMW: Math.round(powerMW * 100) / 100, // Round to 0.01 MW
     durationHours: duration,
     description
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USE CASE SPECIFIC CALCULATION FUNCTIONS
+// Each function takes useCaseData and returns BaselineCalculationResult
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate hospital baseline from bed count and facility type
+ * 
+ * Power demand reference (ASHRAE/Healthcare):
+ * - Small clinic: 50-100 kW (< 25 beds)
+ * - Community hospital: 500-2000 kW (25-200 beds)
+ * - Regional hospital: 2-5 MW (200-500 beds)
+ * - Major medical center: 5-15 MW (500+ beds)
+ * 
+ * Power per bed: 8-15 kW depending on facility type
+ */
+function calculateHospitalBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100),
+      durationHrs: 8, // Critical facilities need longer backup
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Hospital: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from hospital preset'
+    };
+  }
+  
+  // Priority 2: Calculate from bed count
+  const bedCount = parseInt(useCaseData.bedCount || useCaseData.beds || useCaseData.numberOfBeds) || 0;
+  const hospitalType = useCaseData.facilitySubtype || useCaseData.hospitalType || useCaseData.facilityType || 'community';
+  
+  // kW per bed varies by facility type
+  const kWPerBed: Record<string, number> = {
+    'clinic': 4,          // Outpatient only
+    'community': 8,       // Standard inpatient
+    'regional': 10,       // More specialized equipment
+    'teaching': 12,       // Research + treatment
+    'major': 15,          // Full service + research
+    'trauma': 15          // High intensity care
+  };
+  
+  const perBed = kWPerBed[hospitalType] || 10;
+  let calculatedKW = bedCount > 0 ? bedCount * perBed : 0;
+  let calcMethod = bedCount > 0 ? `${bedCount} beds × ${perBed} kW/bed` : '';
+  
+  // Priority 3: Square footage fallback
+  if (calculatedKW === 0) {
+    const sqFt = parseInt(useCaseData.totalSqFt || useCaseData.squareFootage || useCaseData.facilitySize) || 0;
+    if (sqFt > 0) {
+      calculatedKW = sqFt * 0.025; // 25 W/sqft for hospitals (higher than office)
+      calcMethod = `${sqFt.toLocaleString()} sqft × 25 W/sqft`;
+    }
+  }
+  
+  // Add modifiers for special departments
+  if ((useCaseData.icuBeds && parseInt(useCaseData.icuBeds) > 0) || useCaseData.hasICU === 'true' || (useCaseData.icuBeds && parseInt(useCaseData.icuBeds) > 0) || useCaseData.hasICU === true) {
+    calculatedKW += calculatedKW * 0.15; // +15% for ICU
+    calcMethod += ' +15% ICU';
+  }
+  if ((useCaseData.operatingRooms && parseInt(useCaseData.operatingRooms) > 0) || useCaseData.hasOR === 'true' || (useCaseData.operatingRooms && parseInt(useCaseData.operatingRooms) > 0) || useCaseData.hasOR === true || useCaseData.hasSurgery === 'true') {
+    calculatedKW += calculatedKW * 0.10; // +10% for operating rooms
+    calcMethod += ' +10% OR';
+  }
+  if ((useCaseData.imagingEquipment && useCaseData.imagingEquipment !== 'none') || useCaseData.hasImagingCenter === 'true' || (useCaseData.imagingEquipment && useCaseData.imagingEquipment !== 'none') || useCaseData.hasImagingCenter === true) {
+    calculatedKW += 300; // MRI, CT scanners
+    calcMethod += ' +300kW imaging';
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 1000; // 1 MW minimum for hospitals
+  const powerMW = Math.max(0.5, Math.round((finalKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🏥 [Hospital Calculation]:`, { bedCount, hospitalType, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 8, // Hospitals need longer backup for critical care
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Hospital: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from hospital characteristics'
+  };
+}
+
+/**
+ * Calculate hotel baseline from room count and amenities
+ * 
+ * Power demand reference (ASHRAE/Hospitality):
+ * - Budget motel: 0.5-1.5 kW/room
+ * - Midscale hotel: 1.5-3 kW/room
+ * - Upscale hotel: 3-5 kW/room
+ * - Luxury resort: 5-10 kW/room
+ */
+function calculateHotelBaseline(useCaseData: Record<string, any>, scale?: string): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW or gridConnectionKW
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW || useCaseData.gridConnectionKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Hotel: ${directPeakKW.toLocaleString()} kW peak demand (direct input)`,
+      dataSource: 'Direct input from hotel configuration'
+    };
+  }
+
+  // Priority 2: Calculate from hotel category and amenities
+  const hotelCategory = useCaseData.hotelCategory || 'midscale';
+  const amenities = useCaseData.amenities || [];
+  const foodBeverage = useCaseData.foodBeverage || [];
+  const meetingSpace = useCaseData.meetingSpace || 'none';
+  const laundryOperations = useCaseData.laundryOperations || 'none';
+  const parking = useCaseData.parking || 'surface';
+  const guestServices = useCaseData.guestServices || [];
+  
+  // Base load by hotel category (kW)
+  const categoryBaseLoad: Record<string, number> = {
+    '1-star': 75,
+    '2-star': 100,
+    '3-star': 175,
+    '4-star': 300,
+    '5-star': 500,
+    'boutique': 200,
+    'resort': 600,
+    'extended-stay': 150,
+    'budget': 75,
+    'economy': 100,
+    'midscale': 175,
+    'upscale': 300,
+    'luxury': 500
+  };
+  
+  let calculatedKW = categoryBaseLoad[hotelCategory] || 175;
+  let calcDetails: string[] = [`Base (${hotelCategory}): ${calculatedKW}kW`];
+  
+  // Add amenities load
+  const amenityLoads: Record<string, number> = {
+    'outdoor_pool': 30,
+    'indoor_pool': 75,
+    'fitness_small': 15,
+    'fitness_large': 40,
+    'spa': 60,
+    'business_center': 10,
+    'guest_laundry': 20,
+    'ev_charging': 50
+  };
+  
+  if (Array.isArray(amenities)) {
+    amenities.forEach((amenity: string) => {
+      const load = amenityLoads[amenity] || 0;
+      if (load > 0) {
+        calculatedKW += load;
+        calcDetails.push(`+${amenity}: ${load}kW`);
+      }
+    });
+  }
+  
+  // Add food & beverage load
+  const fbLoads: Record<string, number> = {
+    'breakfast': 25,
+    'coffee_shop': 15,
+    'casual_dining': 75,
+    'fine_dining': 100,
+    'bar_lounge': 30,
+    'room_service': 40,
+    'banquet': 120
+  };
+  
+  if (Array.isArray(foodBeverage)) {
+    foodBeverage.forEach((fb: string) => {
+      const load = fbLoads[fb] || 0;
+      if (load > 0) {
+        calculatedKW += load;
+        calcDetails.push(`+${fb}: ${load}kW`);
+      }
+    });
+  }
+  
+  // Add meeting space load
+  const meetingLoads: Record<string, number> = {
+    'small': 25,
+    'medium': 75,
+    'large': 150,
+    'convention': 300,
+    'none': 0
+  };
+  calculatedKW += meetingLoads[meetingSpace] || 0;
+  if (meetingLoads[meetingSpace] > 0) {
+    calcDetails.push(`+meeting (${meetingSpace}): ${meetingLoads[meetingSpace]}kW`);
+  }
+  
+  // Add laundry load
+  const laundryLoads: Record<string, number> = {
+    'commercial': 100,
+    'guest_laundry': 20,
+    'outsourced': 0,
+    'none': 0
+  };
+  calculatedKW += laundryLoads[laundryOperations] || 0;
+  if (laundryLoads[laundryOperations] > 0) {
+    calcDetails.push(`+laundry (${laundryOperations}): ${laundryLoads[laundryOperations]}kW`);
+  }
+  
+  // Add parking load (for EV charging potential)
+  const parkingLoads: Record<string, number> = {
+    'garage': 30,
+    'covered': 20,
+    'surface': 10,
+    'valet': 5,
+    'none': 0
+  };
+  calculatedKW += parkingLoads[parking] || 0;
+  
+  // Add guest services load
+  const serviceLoads: Record<string, number> = {
+    'concierge': 5,
+    'valet': 5,
+    'bellhop': 5,
+    'shuttle': 15,
+    'rental_car': 10
+  };
+  
+  if (Array.isArray(guestServices)) {
+    guestServices.forEach((service: string) => {
+      const load = serviceLoads[service] || 0;
+      if (load > 0) {
+        calculatedKW += load;
+      }
+    });
+  }
+  
+  const powerMW = Math.max(0.1, Math.round((calculatedKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log('🏨 [Hotel Calculation]:', { 
+      hotelCategory, 
+      amenities, 
+      foodBeverage, 
+      meetingSpace,
+      calculatedKW, 
+      powerMW,
+      details: calcDetails.join(', ')
+    });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Hotel (${hotelCategory}): ${calculatedKW.toLocaleString()} kW - ${calcDetails.slice(0, 3).join(', ')}`,
+    dataSource: 'Calculated from hotel category and amenities'
+  };
+}
+
+/**
+ * Calculate car wash baseline from bay count and equipment type
+ * 
+ * Power demand reference (Industry):
+ * - Self-service bay: 8-12 kW
+ * - Automatic in-bay: 30-50 kW
+ * - Tunnel entrance: 50-75 kW per unit
+ * - Full service with drying: 75-100 kW
+ */
+function calculateCarWashBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.05, Math.round(powerMW * 1000) / 1000),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Car Wash: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from car wash preset'
+    };
+  }
+  
+  // Priority 2: Calculate from bay count
+  const bayCount = parseInt(useCaseData.washBays || useCaseData.bayCount || useCaseData.bays || useCaseData.numberOfBays) || 0;
+  const washType = useCaseData.facilitySubtype || useCaseData.washType || useCaseData.carWashType || 'automatic';
+  
+  const kWPerBay: Record<string, number> = {
+    'self-service': 10,
+    'automatic': 40,
+    'in-bay': 40,
+    'tunnel': 60,
+    'express': 50,
+    'full-service': 80
+  };
+  
+  const perBay = kWPerBay[washType] || 40;
+  let calculatedKW = bayCount > 0 ? bayCount * perBay : 0;
+  let calcMethod = bayCount > 0 ? `${bayCount} bays × ${perBay} kW/bay (${washType})` : '';
+  
+  // Add extras
+  if (useCaseData.hasVacuums === 'true' || useCaseData.hasVacuums === true) {
+    const vacuumCount = parseInt(useCaseData.vacuumStations || useCaseData.vacuumCount) || bayCount * 2;
+    calculatedKW += vacuumCount * 3; // 3 kW per vacuum station
+    calcMethod += ` +${vacuumCount * 3}kW vacuums`;
+  }
+  if (useCaseData.hasDetailCenter === 'true' || useCaseData.hasDetailCenter === true) {
+    calculatedKW += 20; // Detail equipment
+    calcMethod += ' +20kW detail';
+  }
+  if (useCaseData.hasWaterReclaim === 'true' || useCaseData.hasWaterReclaim === true) {
+    calculatedKW += 15; // Reclaim pumps
+    calcMethod += ' +15kW reclaim';
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 50; // Minimum
+  const powerMW = Math.max(0.03, Math.round((finalKW / 1000) * 1000) / 1000);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🚗 [Car Wash Calculation]:`, { bayCount, washType, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Car Wash: ${calcMethod || 'Estimated'} → ${(powerMW * 1000).toFixed(0)} kW`,
+    dataSource: 'Calculated from car wash characteristics'
+  };
+}
+
+/**
+ * Calculate warehouse baseline from square footage and operations
+ * 
+ * Power demand reference (ASHRAE/Industrial):
+ * - Basic storage: 3-5 W/sqft
+ * - Distribution center: 5-8 W/sqft
+ * - Cold storage: 15-25 W/sqft
+ * - High-automation: 8-15 W/sqft
+ */
+function calculateWarehouseBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Warehouse: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from warehouse preset'
+    };
+  }
+  
+  // Priority 2: Calculate from square footage
+  const sqFt = parseInt(useCaseData.warehouseSqFt || useCaseData.squareFootage || useCaseData.totalSqFt || useCaseData.facilitySize) || 0;
+  const warehouseType = useCaseData.warehouseType || useCaseData.facilityType || 'distribution';
+  
+  const wattsPerSqFt: Record<string, number> = {
+    'storage': 4,
+    'distribution': 6,
+    'fulfillment': 8,
+    'cold-storage': 20,
+    'refrigerated': 20,
+    'high-automation': 12,
+    'e-commerce': 10
+  };
+  
+  const perSqFt = wattsPerSqFt[warehouseType] || 6;
+  let calculatedKW = sqFt > 0 ? (sqFt * perSqFt) / 1000 : 0;
+  let calcMethod = sqFt > 0 ? `${sqFt.toLocaleString()} sqft × ${perSqFt} W/sqft (${warehouseType})` : '';
+  
+  // Add equipment
+  if (useCaseData.hasForkliftCharging === 'true' || useCaseData.hasForkliftCharging === true) {
+    const forkliftCount = parseInt(useCaseData.forkliftCount) || Math.ceil(sqFt / 50000);
+    calculatedKW += forkliftCount * 15; // 15 kW per charger
+    calcMethod += ` +${forkliftCount * 15}kW forklifts`;
+  }
+  if (useCaseData.hasDockDoors === 'true' || useCaseData.hasDockDoors === true) {
+    const dockCount = parseInt(useCaseData.dockDoors || useCaseData.dockDoorCount) || Math.ceil(sqFt / 25000);
+    calculatedKW += dockCount * 3; // Dock levelers, lights
+    calcMethod += ` +${dockCount * 3}kW docks`;
+  }
+  if (useCaseData.hasConveyors === 'true' || useCaseData.hasConveyors === true) {
+    calculatedKW += calculatedKW * 0.20; // +20% for conveyor systems
+    calcMethod += ' +20% conveyors';
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 300; // Minimum
+  const powerMW = Math.max(0.1, Math.round((finalKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`📦 [Warehouse Calculation]:`, { sqFt, warehouseType, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Warehouse: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from warehouse characteristics'
+  };
+}
+
+/**
+ * Calculate manufacturing baseline from square footage and production type
+ * 
+ * Power demand reference (ASHRAE/Industrial):
+ * - Light assembly: 10-20 W/sqft
+ * - Heavy manufacturing: 30-50 W/sqft
+ * - Process industry: 50-100+ W/sqft
+ * - Clean room/semiconductor: 100-200 W/sqft
+ */
+function calculateManufacturingBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Manufacturing: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from manufacturing preset'
+    };
+  }
+  
+  // Priority 2: Calculate from square footage
+  const sqFt = parseInt(useCaseData.warehouseSqFt || useCaseData.squareFootage || useCaseData.totalSqFt || useCaseData.facilitySize) || 0;
+  const mfgType = useCaseData.manufacturingType || useCaseData.facilityType || useCaseData.industryType || 'general';
+  
+  const wattsPerSqFt: Record<string, number> = {
+    'light-assembly': 15,
+    'assembly': 15,
+    'general': 25,
+    'heavy': 40,
+    'process': 60,
+    'pharmaceutical': 50,
+    'food-processing': 35,
+    'clean-room': 120,
+    'semiconductor': 150,
+    'automotive': 45
+  };
+  
+  const perSqFt = wattsPerSqFt[mfgType] || 25;
+  let calculatedKW = sqFt > 0 ? (sqFt * perSqFt) / 1000 : 0;
+  let calcMethod = sqFt > 0 ? `${sqFt.toLocaleString()} sqft × ${perSqFt} W/sqft (${mfgType})` : '';
+  
+  // Add for production capacity
+  const shifts = parseInt(useCaseData.operatingShifts || useCaseData.shifts) || 1;
+  if (shifts > 1) {
+    calcMethod += ` (${shifts} shifts)`;
+  }
+  
+  // Add equipment modifiers
+  if (useCaseData.hasCompressedAir === 'true' || useCaseData.hasCompressedAir === true) {
+    calculatedKW += calculatedKW * 0.15; // +15% for compressors
+    calcMethod += ' +15% compressed air';
+  }
+  if (useCaseData.hasCNCMachines === 'true' || useCaseData.hasCNCMachines === true) {
+    const cncCount = parseInt(useCaseData.cncCount) || 5;
+    calculatedKW += cncCount * 25; // 25 kW average per CNC
+    calcMethod += ` +${cncCount * 25}kW CNC`;
+  }
+  if (useCaseData.hasWelding === 'true' || useCaseData.hasWelding === true) {
+    calculatedKW += calculatedKW * 0.20; // +20% for welding
+    calcMethod += ' +20% welding';
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 500; // Minimum for manufacturing
+  const powerMW = Math.max(0.2, Math.round((finalKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🏭 [Manufacturing Calculation]:`, { sqFt, mfgType, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Manufacturing: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from manufacturing characteristics'
+  };
+}
+
+/**
+ * Calculate airport baseline from terminal size and operations
+ * 
+ * Power demand reference (FAA/ASHRAE):
+ * - Small regional: 2-5 MW
+ * - Medium commercial: 10-30 MW
+ * - Large hub: 50-150 MW
+ * - Major international: 150-300+ MW
+ */
+function calculateAirportBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(1, Math.round(powerMW * 100) / 100),
+      durationHrs: 8, // Critical infrastructure
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Airport: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from airport preset'
+    };
+  }
+  
+  // Priority 2: Calculate from annual passengers
+  const passengers = parseInt(useCaseData.annualPassengers || useCaseData.passengerCount) || 0;
+  const terminalSqFt = parseInt(useCaseData.terminalSqFt || useCaseData.terminalSize || useCaseData.squareFootage) || 0;
+  
+  let calculatedKW = 0;
+  let calcMethod = '';
+  
+  // Calculate from passengers (roughly 0.5-1 W per annual passenger)
+  if (passengers > 0) {
+    calculatedKW = passengers * 0.0008; // 0.8 W per annual passenger
+    calcMethod = `${(passengers / 1000000).toFixed(1)}M passengers × 0.8 kW/1000`;
+  } else if (terminalSqFt > 0) {
+    calculatedKW = (terminalSqFt * 30) / 1000; // 30 W/sqft for terminals
+    calcMethod = `${terminalSqFt.toLocaleString()} sqft × 30 W/sqft`;
+  }
+  
+  // Add for critical systems
+  if (useCaseData.hasRunwayLighting === 'true' || useCaseData.hasRunwayLighting === true) {
+    calculatedKW += 500; // Runway and taxiway lighting
+    calcMethod += ' +500kW runway';
+  }
+  if (useCaseData.hasAirTrafficControl === 'true' || useCaseData.hasAirTrafficControl === true) {
+    calculatedKW += 200; // ATC systems
+    calcMethod += ' +200kW ATC';
+  }
+  if (useCaseData.hasJetBridges === 'true' || useCaseData.hasJetBridges === true) {
+    const bridges = parseInt(useCaseData.gateCount || useCaseData.jetBridgeCount) || 10;
+    calculatedKW += bridges * 25; // 25 kW per jet bridge
+    calcMethod += ` +${bridges * 25}kW bridges`;
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 5000; // 5 MW minimum for any airport
+  const powerMW = Math.max(2, Math.round((finalKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`✈️ [Airport Calculation]:`, { passengers, terminalSqFt, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 8, // Critical infrastructure needs longer backup
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Airport: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from airport characteristics'
+  };
+}
+
+/**
+ * Calculate retail baseline from square footage and store type
+ * 
+ * Power demand reference (ASHRAE/CBECS):
+ * - Small retail: 15-25 W/sqft
+ * - Grocery store: 40-60 W/sqft (refrigeration)
+ * - Department store: 20-30 W/sqft
+ * - Shopping mall: 25-35 W/sqft
+ */
+function calculateRetailBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.05, Math.round(powerMW * 1000) / 1000),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Retail: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from retail preset'
+    };
+  }
+  
+  // Priority 2: Calculate from square footage
+  const sqFt = parseInt(useCaseData.warehouseSqFt || useCaseData.squareFootage || useCaseData.totalSqFt || useCaseData.storeSize) || 0;
+  const retailType = useCaseData.retailType || useCaseData.storeType || 'general';
+  
+  const wattsPerSqFt: Record<string, number> = {
+    'convenience': 30,
+    'general': 20,
+    'specialty': 22,
+    'grocery': 50,
+    'supermarket': 50,
+    'department': 25,
+    'big-box': 22,
+    'mall': 30,
+    'strip-mall': 25
+  };
+  
+  const perSqFt = wattsPerSqFt[retailType] || 22;
+  let calculatedKW = sqFt > 0 ? (sqFt * perSqFt) / 1000 : 0;
+  let calcMethod = sqFt > 0 ? `${sqFt.toLocaleString()} sqft × ${perSqFt} W/sqft (${retailType})` : '';
+  
+  // Add extras
+  if (useCaseData.hasRefrigeration === 'true' || useCaseData.hasRefrigeration === true) {
+    calculatedKW += calculatedKW * 0.30; // +30% for refrigeration
+    calcMethod += ' +30% refrigeration';
+  }
+  if (useCaseData.hasKitchen === 'true' || useCaseData.hasKitchen === true) {
+    calculatedKW += 50; // Food prep
+    calcMethod += ' +50kW kitchen';
+  }
+  if (useCaseData.hasSignage === 'true' || useCaseData.hasSignage === true) {
+    calculatedKW += 25; // Digital signage, displays
+    calcMethod += ' +25kW signage';
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 100; // Minimum
+  const powerMW = Math.max(0.05, Math.round((finalKW / 1000) * 1000) / 1000);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🏪 [Retail Calculation]:`, { sqFt, retailType, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Retail: ${calcMethod || 'Estimated'} → ${(powerMW * 1000).toFixed(0)} kW`,
+    dataSource: 'Calculated from retail characteristics'
+  };
+}
+
+/**
+ * Calculate office baseline from square footage and building class
+ * 
+ * Power demand reference (ASHRAE/CBECS):
+ * - Class C: 12-18 W/sqft
+ * - Class B: 15-22 W/sqft
+ * - Class A: 20-30 W/sqft
+ * - High-tech: 25-40 W/sqft
+ */
+function calculateOfficeBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  // Priority 1: Direct peakDemandKW from presets
+  const directPeakKW = parseFloat(useCaseData.peakDemandKW) || 0;
+  if (directPeakKW > 0) {
+    const powerMW = directPeakKW / 1000;
+    return {
+      powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100),
+      durationHrs: 4,
+      solarMW: 0,
+      peakDemandMW: powerMW,
+      description: `Office: ${directPeakKW.toLocaleString()} kW peak demand (preset)`,
+      dataSource: 'Direct input from office preset'
+    };
+  }
+  
+  // Priority 2: Calculate from square footage
+  // Check multiple possible field names from DB and legacy
+  const sqFt = parseInt(useCaseData.squareFeet || useCaseData.warehouseSqFt || useCaseData.squareFootage || useCaseData.totalSqFt || useCaseData.facilitySize) || 0;
+  // Building class can be 'class_a', 'class_b', 'class_c' from DB, or 'A', 'B', 'C' from legacy
+  const rawBuildingClass = useCaseData.facilitySubtype || useCaseData.buildingClass || useCaseData.officeType || 'class_b';
+  // Normalize: 'class_a' → 'A', 'class_b' → 'B', etc.
+  const buildingClass = rawBuildingClass.replace('class_', '').toUpperCase();
+  
+  const wattsPerSqFt: Record<string, number> = {
+    'C': 15,
+    'B': 18,
+    'A': 25,
+    'PREMIUM': 30,
+    'HIGH-TECH': 35,
+    'MIXED-USE': 20
+  };
+  
+  const perSqFt = wattsPerSqFt[buildingClass] || 18;
+  let calculatedKW = sqFt > 0 ? (sqFt * perSqFt) / 1000 : 0;
+  let calcMethod = sqFt > 0 ? `${sqFt.toLocaleString()} sqft × ${perSqFt} W/sqft (Class ${buildingClass})` : '';
+  
+  // Add for features - check DB field names
+  if (useCaseData.hasServerRoom === 'true' || useCaseData.hasServerRoom === true || 
+      useCaseData.hasDataRoom === 'true' || useCaseData.hasDataRoom === true) {
+    calculatedKW += 100; // Server room
+    calcMethod += ' +100kW server room';
+  }
+  if (useCaseData.hasGym === 'true' || useCaseData.hasGym === true) {
+    calculatedKW += 30; // Fitness equipment
+    calcMethod += ' +30kW gym';
+  }
+  if (useCaseData.hasCafeteria === 'true' || useCaseData.hasCafeteria === true) {
+    calculatedKW += 75; // Commercial kitchen
+    calcMethod += ' +75kW cafeteria';
+  }
+  if (useCaseData.wantsEVCharging === true || useCaseData.wantsEVCharging === 'true' ||
+      useCaseData.hasEVCharging === 'true' || useCaseData.hasEVCharging === true) {
+    const existingChargers = parseInt(useCaseData.existingEVChargers) || 0;
+    const wantsMore = useCaseData.wantsMoreEVCharging === true || useCaseData.wantsMoreEVCharging === 'true';
+    const chargers = wantsMore ? Math.max(4, existingChargers + 4) : Math.max(4, existingChargers);
+    calculatedKW += chargers * 7; // L2 chargers
+    calcMethod += ` +${chargers * 7}kW EV`;
+  }
+  
+  // Add for elevators
+  if (useCaseData.elevatorCount) {
+    const elevators = parseInt(useCaseData.elevatorCount) || 0;
+    if (elevators > 0) {
+      calculatedKW += elevators * 15; // ~15 kW per elevator
+      calcMethod += ` +${elevators * 15}kW elevators`;
+    }
+  }
+  
+  const finalKW = calculatedKW > 0 ? calculatedKW : 200; // Minimum
+  const powerMW = Math.max(0.1, Math.round((finalKW / 1000) * 100) / 100);
+  
+  if (import.meta.env.DEV) {
+    console.log(`🏢 [Office Calculation]:`, { sqFt, rawBuildingClass, buildingClass, calculatedKW, finalKW, powerMW, method: calcMethod });
+  }
+  
+  return {
+    powerMW,
+    durationHrs: 4,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Office: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from office characteristics'
+  };
+}
+
+/**
+ * Calculate college/university baseline from user inputs
+ * Uses enrollment, building sq ft, and facility characteristics
+ * 
+ * Power demand reference (ASHRAE/Campus guidelines):
+ * - Small liberal arts: 1-3 MW (< 3,000 students, < 500k sq ft)
+ * - Medium college: 3-10 MW (3,000-15,000 students, 500k-2M sq ft)
+ * - Large university: 10-30 MW (15,000-50,000 students, 2M-5M sq ft)
+ * - Major research: 30-100+ MW (50,000+ students, 5M+ sq ft)
+ */
+function calculateCollegeBaseline(useCaseData: Record<string, any>): BaselineCalculationResult {
+  if (import.meta.env.DEV) {
+    console.log(`🎓 [College] Input data:`, useCaseData);
+  }
+  
+  // Priority 1: Direct peak demand input (from presets or user)
+  const peakDemandKW = parseFloat(useCaseData.peakDemandKW) || parseFloat(useCaseData.peakDemand) || 0;
+  if (peakDemandKW > 0) {
+    const powerMW = peakDemandKW / 1000;
+    const durationHrs = 4; // Standard backup duration for campus
+    
+    if (import.meta.env.DEV) {
+      console.log(`🎓 [College] Using direct peak demand: ${peakDemandKW} kW = ${powerMW} MW`);
+    }
+    
+    return {
+      powerMW: Math.max(0.5, Math.round(powerMW * 100) / 100),
+      durationHrs,
+      solarMW: 0, // Let user configure
+      peakDemandMW: powerMW,
+      description: `Campus baseline: ${powerMW.toFixed(1)} MW peak demand`,
+      dataSource: 'User/Preset peak demand input'
+    };
+  }
+  
+  // Priority 2: Calculate from building square footage
+  const sqftMapping: Record<string, number> = {
+    'under_500k': 300000,
+    '500k_1_million': 750000,
+    '1_3_million': 2000000,
+    '3_5_million': 4000000,
+    '5_10_million': 7500000,
+    'over_10_million': 12000000,
+  };
+  
+  const sqftKey = useCaseData.totalBuildingSqFt || useCaseData.squareFootage || '';
+  let totalSqFt = sqftMapping[sqftKey] || 0;
+  
+  // Try to parse if numeric
+  if (!totalSqFt && sqftKey) {
+    const numMatch = String(sqftKey).replace(/[^0-9]/g, '');
+    if (numMatch) {
+      totalSqFt = parseInt(numMatch, 10);
+    }
+  }
+  
+  // Priority 3: Estimate from student enrollment
+  const enrollmentMapping: Record<string, number> = {
+    'under_1k': 500,
+    '1_3k': 2000,
+    '3_5k': 4000,
+    '5_15k': 10000,
+    '15_35k': 25000,
+    '35_50k': 42500,
+    'over_50k': 60000,
+  };
+  
+  const enrollmentKey = useCaseData.dormitoryBeds || useCaseData.studentEnrollment || '';
+  const students = enrollmentMapping[enrollmentKey] || 0;
+  
+  // Calculate power demand
+  let calculatedKW = 0;
+  let calcMethod = '';
+  
+  if (totalSqFt > 0) {
+    // Campus buildings: ~15-25 W/sq ft average (mix of classrooms, labs, dorms)
+    const wattsPerSqFt = 18; // Conservative average
+    calculatedKW = (totalSqFt * wattsPerSqFt) / 1000;
+    calcMethod = `${(totalSqFt / 1000000).toFixed(1)}M sq ft × ${wattsPerSqFt} W/sqft`;
+  } else if (students > 0) {
+    // Estimate: ~0.5-1.5 kW per student (depends on facilities)
+    const kwPerStudent = 0.8;
+    calculatedKW = students * kwPerStudent;
+    calcMethod = `${students.toLocaleString()} students × ${kwPerStudent} kW/student`;
+  }
+  
+  // Add facility-specific loads
+  let additionalKW = 0;
+  
+  // Research facilities (labs, clean rooms)
+  if ((useCaseData.researchFacilities && useCaseData.researchFacilities !== 'none') || useCaseData.hasResearchFacilities === 'true' || (useCaseData.researchFacilities && useCaseData.researchFacilities !== 'none') || useCaseData.hasResearchFacilities === true) {
+    additionalKW += calculatedKW * 0.15; // +15% for research loads
+    calcMethod += ' +15% research';
+  }
+  
+  // Medical facilities (hospital, health center)
+  if ((useCaseData.medicalFacilities && useCaseData.medicalFacilities !== 'none') || useCaseData.hasMedicalFacilities === 'true' || (useCaseData.medicalFacilities && useCaseData.medicalFacilities !== 'none') || useCaseData.hasMedicalFacilities === true) {
+    additionalKW += calculatedKW * 0.10; // +10% for medical
+    calcMethod += ' +10% medical';
+  }
+  
+  // Stadium (event days)
+  if ((useCaseData.athleticFacilities && useCaseData.athleticFacilities !== 'none') || useCaseData.hasStadium === 'true' || (useCaseData.athleticFacilities && useCaseData.athleticFacilities !== 'none') || useCaseData.hasStadium === true) {
+    additionalKW += 2000; // ~2 MW for stadium operations
+    calcMethod += ' +2MW stadium';
+  }
+  
+  // Data center on campus
+  const dcSize = (useCaseData.dataCenterSize && useCaseData.dataCenterSize !== 'none') || useCaseData.hasDataCenter;
+  if (dcSize === 'small') additionalKW += 500;
+  else if (dcSize === 'medium') additionalKW += 2000;
+  else if (dcSize === 'large') additionalKW += 5000;
+  
+  const totalKW = calculatedKW + additionalKW;
+  
+  // If still no calculation, use fallback based on building count
+  const buildingCount = parseInt(useCaseData.buildingCount) || 0;
+  const finalKW = totalKW > 0 ? totalKW : (buildingCount > 0 ? buildingCount * 50 : 2000);
+  
+  const powerMW = Math.max(0.5, Math.round((finalKW / 1000) * 100) / 100);
+  const durationHrs = 4; // Standard campus backup
+  
+  if (import.meta.env.DEV) {
+    console.log(`🎓 [College Calculation]:`, {
+      sqftKey,
+      totalSqFt,
+      enrollmentKey,
+      students,
+      calculatedKW,
+      additionalKW,
+      finalKW,
+      powerMW,
+      method: calcMethod
+    });
+  }
+  
+  return {
+    powerMW,
+    durationHrs,
+    solarMW: 0,
+    peakDemandMW: powerMW,
+    description: `Campus: ${calcMethod || 'Estimated'} → ${powerMW} MW`,
+    dataSource: 'Calculated from facility characteristics'
   };
 }
 

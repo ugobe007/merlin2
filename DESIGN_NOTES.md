@@ -1,8 +1,152 @@
 # Merlin Energy - UI/UX Design Notes
 
-**Last Updated:** December 2025 (Apple-Inspired Palette Update)  
+**Last Updated:** December 21, 2025 (New 6-Step Workflow)  
 **Purpose:** This file serves as persistent design memory for AI assistants working on this project.  
 **⚠️ AI AGENTS: READ THIS ENTIRE FILE BEFORE MAKING ANY UI CHANGES!**
+
+---
+
+## 🧙‍♂️ NEW WIZARD WORKFLOW (December 21, 2025)
+
+### 6-Step Guided Wizard Flow
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         MERLIN WIZARD - 6 STEPS                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  STEP 1: LOCATION + GOALS                                                   │
+│  └─ State selector, electricity rates, primary goals                        │
+│  └─ Component: Step1LocationGoals.tsx                                       │
+│                                                                             │
+│  STEP 2: INDUSTRY                                                           │
+│  └─ Industry selection (Commercial, Industrial, Housing tabs)               │
+│  └─ Component: Step2IndustrySize.tsx                                        │
+│                                                                             │
+│  STEP 3: INPUTS (Facility Details)                                          │
+│  └─ Custom questions based on industry                                      │
+│  └─ Premium slider inputs with +/- controls                                 │
+│  └─ Component: Step3FacilityDetails.tsx                                     │
+│                                                                             │
+│  STEP 4: REVIEW & CONFIGURE (Magic Fit™)                                    │
+│  └─ Merlin's 3 AI recommendations (Savings, Balanced, Resilient)            │
+│  └─ Simple adjustments via sliders if needed                                │
+│  └─ 🚪 ProQuote ESCAPE ROUTE available                                      │
+│  └─ Component: Step4ReviewConfigure.tsx                                     │
+│                                                                             │
+│  STEP 5: PRELIMINARY QUOTE                                                  │
+│  └─ Quick quote preview with key metrics                                    │
+│  └─ Accept or refine options                                                │
+│  └─ 🚪 ProQuote ESCAPE ROUTE available                                      │
+│  └─ Component: Step4MagicFit.tsx (renamed from Step5)                       │
+│                                                                             │
+│  STEP 6: QUOTE DOWNLOAD & SUMMARY                                           │
+│  └─ Final quote with export options (PDF, Word, Excel)                      │
+│  └─ TrueQuote™ source attribution                                           │
+│  └─ 🚪 ProQuote ESCAPE ROUTE available                                      │
+│  └─ Component: QuoteResultsSection.tsx                                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### ProQuote Escape Routes
+Users can exit to ProQuote (Advanced Quote Builder) from Steps 4, 5, and 6:
+- Button text: "Switch to ProQuote" or "Advanced Builder"
+- Opens: AdvancedQuoteBuilderLanding.tsx
+- Carries over: All wizard state (location, industry, inputs, sizing)
+
+### Navigation Pattern
+- **FloatingNavigationArrows**: Apple-style left/right arrows fixed at screen edges
+- **NO legacy nav bars**: SummaryBar, Back/Home button rows removed
+- **MerlinGreeting**: Unified guidance at top of each step
+
+---
+
+## 🎚️ PREMIUM INPUT FIELD DESIGNS (Late November 2025)
+
+### NUMBER INPUT - Slider + Input Combo
+From `InteractiveConfigDashboard.tsx` and `GoalsSectionV3.tsx`:
+
+```tsx
+// Premium slider with gradient track and styled thumb
+<div className="space-y-3">
+  {/* Label and Value Row */}
+  <div className="flex justify-between items-center">
+    <label className="text-white font-semibold text-base">{label}</label>
+    <div className="flex items-center gap-2">
+      {/* Decrement Button */}
+      <button className="w-8 h-8 rounded-lg bg-[#68BFFA]/40 hover:bg-[#68BFFA]/70 
+                         text-white font-bold text-xl flex items-center justify-center
+                         border border-[#68BFFA]/60 transition-all">−</button>
+      
+      {/* Value Display with Orange Accent */}
+      <div className="flex items-center bg-[#060F76]/60 rounded-lg border-2 border-[#ffa600]/50 px-3 py-1">
+        <input type="number" className="w-16 bg-transparent text-[#ffa600] font-black text-xl text-center" />
+        <span className="text-[#FED19F] font-semibold ml-1">{unit}</span>
+      </div>
+      
+      {/* Increment Button */}
+      <button className="w-8 h-8 rounded-lg bg-[#68BFFA]/40 hover:bg-[#68BFFA]/70 
+                         text-white font-bold text-xl flex items-center justify-center
+                         border border-[#68BFFA]/60 transition-all">+</button>
+    </div>
+  </div>
+
+  {/* Slider Track */}
+  <input type="range" className="w-full h-3 rounded-full appearance-none cursor-pointer
+    bg-[#f5d4a3]
+    [&::-webkit-slider-thumb]:appearance-none
+    [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+    [&::-webkit-slider-thumb]:rounded-full
+    [&::-webkit-slider-thumb]:bg-[#6700b6]
+    [&::-webkit-slider-thumb]:cursor-pointer
+    [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-purple-500/50
+    [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white" />
+
+  {/* Min/Max Labels */}
+  <div className="flex justify-between text-sm text-gray-500">
+    <span>{min}</span>
+    <span>{max}</span>
+  </div>
+</div>
+```
+
+### CSS for Custom Slider Thumbs
+```css
+/* From InteractiveConfigDashboard.tsx */
+.slider-purple::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+  border: 2px solid white;
+}
+
+.slider-green::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+```
+
+### Visual Slider with Gradient Fill
+From `Step3FacilityDetails.tsx`:
+```tsx
+{/* Premium Slider Track with visual fill */}
+<div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+  {/* Filled portion */}
+  <div 
+    className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#68BFFA] to-[#3B5BDB] rounded-full"
+    style={{ width: `${sliderPercent}%` }}
+  />
+  {/* Slider thumb indicator */}
+  <div 
+    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full border-2 border-[#3B5BDB] shadow-md"
+    style={{ left: `calc(${sliderPercent}% - 10px)` }}
+  />
+</div>
+```
 
 ---
 
@@ -388,14 +532,70 @@ Located: `src/components/wizard/StreamlinedWizard.tsx`
 
 ---
 
-## 🚨 WIZARD FLOW CORRECTED (Dec 16, 2025)
+## 🚨 WIZARD FLOW - DECEMBER 21, 2025 (CURRENT)
+
+### NEW 6-Step Flow (Simplified)
+```
+Step 1: LOCATION + GOALS (Step1LocationGoals.tsx)
+    - State selector with electricity rates
+    - Primary goals selection
+    ↓
+Step 2: INDUSTRY (Step2IndustrySize.tsx)
+    - 3 tabs: Commercial, Industrial, Housing
+    - Industry cards with distinctive icons
+    ↓
+Step 3: INPUTS / FACILITY DETAILS (Step3FacilityDetails.tsx)
+    - Dynamic custom questions from database
+    - Premium slider inputs (late Nov design)
+    ↓
+Step 4: REVIEW & CONFIGURE / MAGIC FIT (Step4ReviewConfigure.tsx)
+    - Merlin's 3 AI recommendations:
+      • 💰 Savings Focus (0.8x) - Fastest payback
+      • ⚖️ Balanced (1.0x) - AI recommended
+      • 🛡️ Resilient (1.3x) - Maximum backup
+    - Simple slider adjustments
+    - 🚪 ProQuote escape route
+    ↓
+Step 5: PRELIMINARY QUOTE (Step4MagicFit.tsx)
+    - Quick preview of selected strategy
+    - Key metrics: Cost, Savings, Payback, ROI
+    - Accept or refine
+    - 🚪 ProQuote escape route
+    ↓
+Step 6: QUOTE DOWNLOAD & SUMMARY (QuoteResultsSection.tsx)
+    - Final TrueQuote™ quote
+    - Export: PDF, Word, Excel
+    - Source attribution
+    - 🚪 ProQuote escape route
+```
+
+### ProQuote Escape Routes
+Available on Steps 4, 5, 6:
+- Button: "Switch to ProQuote" or "🔧 Advanced Builder"
+- Target: AdvancedQuoteBuilderLanding.tsx
+- Carries: Full wizard state
+
+### Navigation Components
+| Component | Purpose |
+|-----------|---------|
+| FloatingNavigationArrows | Apple-style left/right fixed arrows |
+| MerlinGreeting | Unified guidance header per step |
+
+### REMOVED (Dec 21, 2025)
+- ❌ SummaryBar - Legacy state/industry display bar
+- ❌ Back/Home button rows - Replaced by floating arrows
+- ❌ Step indicator pills - Replaced by cleaner design
+
+---
+
+## 🚨 WIZARD FLOW HISTORY (Dec 16, 2025 - Archived)
 
 ### The Problem We Fixed:
 There were TWO competing flows:
 1. OLD: Goals → generateQuote → AcceptCustomizeModal → Section 4 (sliders)
 2. WRONG: Goals → Section 4 (two-column) directly
 
-### The Correct Flow:
+### The Dec 16 Flow (Now Superseded):
 ```
 Section 0: Location
 Section 1: Industry  
