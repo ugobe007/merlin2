@@ -523,6 +523,11 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
     );
   }
 
+  // Debug: Log when component renders
+  useEffect(() => {
+    console.log('🎯 Step4MagicFit rendered - ProQuote button should be visible');
+  }, []);
+
   return (
     <div className="relative min-h-[800px]">
       {/* Particle Background */}
@@ -618,9 +623,10 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
         {/* ═══════════════════════════════════════════════════════════════
             PROQUOTE SHIELD BUTTON
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-8">
+        <div className="mb-8 relative z-20">
           <button
             onClick={() => {
+              console.log('🚀 ProQuote button clicked!');
               sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
                 batteryKW,
                 durationHours,
@@ -634,11 +640,11 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
               }));
               window.location.href = '/?advanced=true&view=custom-config';
             }}
-            className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group"
+            className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group relative z-20"
             style={{
-              background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)',
-              border: '2px solid rgba(99, 102, 241, 0.5)',
-              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25)',
+              background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(49, 46, 129, 0.95) 100%)',
+              border: '2px solid rgba(99, 102, 241, 0.6)',
+              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255,255,255,0.1)',
             }}
           >
             <div className="px-6 py-4 flex items-center justify-between">

@@ -1396,6 +1396,11 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
 
   const progressWidth = visibleQuestions.length > 0 ? (answeredCount / visibleQuestions.length) * 100 : 0;
 
+  // Debug: Log when component renders
+  useEffect(() => {
+    console.log('🎯 Step3FacilityDetails rendered - ProQuote button should be visible');
+  }, []);
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 pb-8 w-full min-h-0">
       {/* Header */}
@@ -1412,9 +1417,10 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
       </div>
 
       {/* ProQuote Shield Button */}
-      <div className="mb-6">
+      <div className="mb-6 relative z-20">
         <button
           onClick={() => {
+            console.log('🚀 ProQuote button clicked from Step 3!');
             sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
               batteryKW,
               durationHours,
@@ -1429,11 +1435,11 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
             }));
             window.location.href = '/?advanced=true&view=custom-config';
           }}
-          className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group"
+          className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group relative z-20"
           style={{
-            background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)',
-            border: '2px solid rgba(99, 102, 241, 0.5)',
-            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25)',
+            background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(49, 46, 129, 0.95) 100%)',
+            border: '2px solid rgba(99, 102, 241, 0.6)',
+            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255,255,255,0.1)',
           }}
         >
           <div className="px-6 py-4 flex items-center justify-between">
