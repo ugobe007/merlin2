@@ -147,7 +147,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="overflow-y-auto flex-1 min-h-0 p-8 bg-white scrollbar-visible">
+        <div className="overflow-y-auto flex-1 min-h-0 p-8 bg-white scrollbar-hide">
           
           {/* TAB: Why It Matters */}
           {activeTab === 'why' && (
