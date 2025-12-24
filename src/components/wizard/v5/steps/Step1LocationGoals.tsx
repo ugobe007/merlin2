@@ -16,8 +16,9 @@
  * - #060F76 (Arapawa Navy)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CleanInput, SearchableDropdown } from '@/components/MerlinInputComponents';
+import { useCommercialRate } from '@/hooks/useUtilityRates';
 import {
   Sparkles, MapPin, CheckCircle, Sun, Battery, Zap,
   AlertTriangle, ChevronDown, Wand2, ArrowRight,
@@ -105,6 +106,7 @@ interface Step1Props {
   onStateChange: (state: string) => void;
   onZipCodeChange: (zip: string) => void;
   onGoalsChange: (goals: string[]) => void;
+  onElectricityRateChange?: (rate: number) => void;
   onContinue?: () => void;
   onOpenAdvanced?: () => void;
 }
@@ -147,14 +149,30 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   onStateChange,
   onZipCodeChange,
   onGoalsChange,
+  onElectricityRateChange,
   onContinue,
   onOpenAdvanced,
 }) => {
   const [showInternational, setShowInternational] = useState(false);
   const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
   
+  // Fetch commercial rate when zip code is entered
+  const { rate: commercialRate, loading: rateLoading } = useCommercialRate(
+    zipCode && zipCode.length === 5 ? zipCode : null
+  );
+  
+  // Update electricity rate when commercial rate is fetched
+  useEffect(() => {
+    if (commercialRate && commercialRate > 0 && onElectricityRateChange) {
+      onElectricityRateChange(commercialRate);
+    }
+  }, [commercialRate, onElectricityRateChange]);
+  
   // Check if user has completed location and at least one goal
   const canContinue = state && goals.length > 0;
+  
+  // Determine if zip code is entered (locks state dropdown)
+  const hasZipCode = zipCode && zipCode.length === 5;
   
   // Handle goal toggle
   const handleGoalToggle = (goalId: string) => {
@@ -166,9 +184,12 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   
   // Handle zip code change with auto-lookup
   const handleZipChange = async (zip: string) => {
-    onZipCodeChange(zip);
+    // Limit to 5 digits
+    const normalizedZip = zip.replace(/\D/g, '').slice(0, 5);
+    onZipCodeChange(normalizedZip);
+    
     // Auto-lookup state from zip using 3-digit prefix (more accurate)
-    if (zip.length >= 3) {
+    if (normalizedZip.length >= 3) {
       const prefix3 = zip.substring(0, 3);
       const prefix2 = zip.substring(0, 2);
       
@@ -333,6 +354,11 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
         onStateChange(matchedState);
       }
     }
+    
+    // Clear state if zip is cleared
+    if (normalizedZip.length === 0) {
+      onStateChange('');
+    }
   };
   
   // Handle international region select
@@ -423,14 +449,15 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
                 />
               </div>
               
-              {/* State Dropdown */}
+              {/* State Dropdown - Disabled when zip is entered */}
               <div>
                 <SearchableDropdown
                   label="🏛️ Or select state"
                   options={US_STATES.map(s => ({ value: s, label: s }))}
                   value={state}
                   onChange={onStateChange}
-                  placeholder="Select your state..."
+                  placeholder={hasZipCode ? "Auto-filled from zip code" : "Select your state..."}
+                  disabled={hasZipCode}
                 />
               </div>
             </div>
@@ -499,8 +526,18 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
                 }`}>
                   {getSolarData(state).rating} Solar
                 </span>
-                {/* Electricity rate */}
-                <span className="text-gray-500 font-medium">~${electricityRate > 0 ? electricityRate.toFixed(2) : '0.12'}/kWh</span>
+                {/* Electricity rate - Use commercial rate if available, otherwise fallback */}
+                <span className="text-gray-500 font-medium">
+                  {rateLoading ? (
+                    'Loading...'
+                  ) : commercialRate ? (
+                    `$${commercialRate.toFixed(2)}/kWh`
+                  ) : electricityRate > 0 ? (
+                    `~$${electricityRate.toFixed(2)}/kWh`
+                  ) : (
+                    '~$0.12/kWh'
+                  )}
+                </span>
               </div>
             </div>
           )}
