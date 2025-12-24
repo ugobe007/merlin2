@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
+import { RequestQuoteModal } from '@/components/modals/RequestQuoteModal';
 import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 import badgeIcon from '@/assets/images/badge_icon.jpg';
 import { 
@@ -18,7 +19,6 @@ import {
   Award, Zap, Clock, Info, FileSpreadsheet, Star,
   Settings
 } from 'lucide-react';
-import { COLORS } from '../design-system';
 import { QuoteEngine } from '@/core/calculations';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { CalculationValidator } from '@/services/calculationValidator';
@@ -69,6 +69,7 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
   const [animatedSavings, setAnimatedSavings] = useState(0);
   const [animatedNetCost, setAnimatedNetCost] = useState(0);
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  const [showRequestQuoteModal, setShowRequestQuoteModal] = useState(false);
 
   // Generate quote on mount
   useEffect(() => {
@@ -707,10 +708,7 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
       ═══════════════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-center gap-4 pt-4">
         <button
-          onClick={() => {
-            // TODO: Implement quote request
-            alert('Quote request feature coming soon!');
-          }}
+          onClick={() => setShowRequestQuoteModal(true)}
           className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 rounded-xl text-white font-bold text-lg transition-all"
           style={{
             boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)',
@@ -738,6 +736,24 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
       <TrueQuoteModal
         isOpen={showTrueQuoteModal}
         onClose={() => setShowTrueQuoteModal(false)}
+      />
+
+      {/* Request Quote Modal */}
+      <RequestQuoteModal
+        isOpen={showRequestQuoteModal}
+        onClose={() => setShowRequestQuoteModal(false)}
+        onSuccess={() => {
+          setShowRequestQuoteModal(false);
+        }}
+        quoteData={{
+          storageSizeMW: batteryKW / 1000,
+          durationHours,
+          energyCapacity: (batteryKW * durationHours) / 1000,
+          solarMW: solarKW / 1000,
+          totalCost: quoteResult?.costs?.totalProjectCost,
+          industryName: selectedIndustry,
+          location: state,
+        }}
       />
     </div>
   );

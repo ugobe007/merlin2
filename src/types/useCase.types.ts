@@ -53,6 +53,7 @@ export interface CustomQuestion {
     value: string; 
     label: string; 
     powerKw?: number;
+    energyFactor?: number; // Legacy field for deprecated templates
     // Compound-specific fields
     hasAmount?: boolean;      // Show numeric input when enabled
     amountUnit?: string;      // Unit label for amount (e.g., "seats", "chargers")

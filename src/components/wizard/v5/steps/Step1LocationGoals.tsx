@@ -420,7 +420,6 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
                   onChange={handleZipChange}
                   placeholder="Enter 5-digit zip"
                   type="text"
-                  gradient="from-purple-500 to-violet-600"
                 />
               </div>
               
@@ -432,7 +431,6 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
                   value={state}
                   onChange={onStateChange}
                   placeholder="Select your state..."
-                  gradient="from-purple-500 to-violet-600"
                 />
               </div>
             </div>

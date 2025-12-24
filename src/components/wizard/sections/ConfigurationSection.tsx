@@ -17,11 +17,11 @@ const step3Colors = getStepColors(3);
 export function ConfigurationSection({
   wizardState,
   setWizardState,
-  currentSection,
+  currentSection = 3,
   sectionRef,
   onBack,
   onContinue,
-}: ConfigurationSectionProps) {
+}: ConfigurationSectionProps & { currentSection?: number; onBack?: () => void; onContinue?: () => void }) {
   // TODO: Implement configuration logic, sliders, and popups
   return (
     <div ref={sectionRef} className={`min-h-[calc(100vh-120px)] p-8 ${currentSection !== 3 ? 'hidden' : ''}`}>
@@ -38,8 +38,8 @@ export function ConfigurationSection({
           <p className="text-lg text-gray-700">Configuration controls coming soon...</p>
         </div>
         <div className="flex justify-between mt-8">
-          <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-          <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+          {onBack && <SecondaryButton onClick={onBack}>Back</SecondaryButton>}
+          {onContinue && <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>}
         </div>
       </div>
     </div>

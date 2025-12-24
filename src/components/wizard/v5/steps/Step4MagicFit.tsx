@@ -215,8 +215,6 @@ function ParticleBackground() {
 // MAIN COMPONENT
 // ============================================
 
-console.log("🚀 Step4MagicFit MODULE LOADED");
-
 export const Step4MagicFit: React.FC<Step4Props> = ({
   selectedIndustry,
   useCaseData,
@@ -251,7 +249,6 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
   
   // Create a hash of inputs to detect actual changes
   const inputsHash = useMemo(() => {
-    console.log("🔑 Step4 inputsHash calculation - useCaseData:", useCaseData, "keys:", Object.keys(useCaseData || {}));
     return JSON.stringify({
       selectedIndustry,
       useCaseData,
@@ -288,9 +285,6 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
     }));
   }, []);
 
-  // Debug logging
-  console.log('🎯 Step4MagicFit render:', { selectedIndustry, loading, goals, batteryKW, useCaseData });
-
   // Store original recommendation separately - only calculate once per input set
   const lastInputsHashRef = useRef<string>('');
   
@@ -312,7 +306,6 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
       setLoading(true);
       
       try {
-        console.log('📊 Step4: Getting baseline for', selectedIndustry, 'with data:', useCaseData);
         // calculateDatabaseBaseline expects (template, scale, useCaseData)
         // For college: useCaseData contains peakDemandKW from presets
         // The scale is less important since college calculation uses useCaseData directly
@@ -324,9 +317,7 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
           || useCaseData?.studentEnrollment
           || useCaseData?.buildingCount
           || 1;
-        console.log('📊 Step4: Using scale:', scale, 'from useCaseData:', useCaseData);
         const result = await calculateDatabaseBaseline(selectedIndustry, scale, useCaseData);
-        console.log('✅ Step4: Got baseline:', result);
         setRecommendation(result);
         // Store as original if this is the first calculation or inputs changed
         if (!originalRecommendation || inputsHash !== lastInputsHashRef.current) {
