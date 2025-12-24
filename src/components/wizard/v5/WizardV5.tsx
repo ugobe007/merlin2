@@ -204,18 +204,24 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             onStateChange={(v) => updateState({ state: v })}
             onZipCodeChange={(v) => updateState({ zipCode: v })}
             onGoalsChange={(v) => updateState({ goals: v })}
+            onElectricityRateChange={(rate) => updateState({ electricityRate: rate })}
             onContinue={() => setCurrentStep(1)}
             onOpenAdvanced={onOpenAdvanced}
           />
         );
       
       case 1:
+        const solarDataStep2 = getSolarData(wizardState.state);
         return (
           <Step2IndustrySelect
             selectedIndustry={wizardState.selectedIndustry}
             onIndustrySelect={(slug, name) => updateState({ selectedIndustry: slug, industryName: name })}
             solarOpportunity={getSolarOpportunity(wizardState.state)}
             onSolarClick={() => setShowSolarModal(true)}
+            state={wizardState.state}
+            electricityRate={wizardState.electricityRate}
+            peakSunHours={solarDataStep2.peakSunHours}
+            solarRating={solarDataStep2.rating}
           />
         );
       
@@ -439,19 +445,28 @@ export const WizardV5: React.FC<WizardV5Props> = ({
         </button>
       )}
       {/* Next/Complete Button - Fixed bottom right - More prominent on Step 4 */}
-      <button
-        onClick={currentStep === 4 ? () => handleComplete(wizardState.quoteResult) : nextStep}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all
-          backdrop-blur-xl border
-          shadow-xl hover:shadow-2xl hover:scale-105 ${
-            currentStep === 3
-              ? 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 text-white border-emerald-400/50 shadow-emerald-500/50 hover:shadow-emerald-500/70 hover:from-emerald-500 hover:via-green-400 hover:to-teal-400 text-lg px-8 py-4'
-              : 'bg-gradient-to-r from-purple-600 via-purple-500 to-violet-500 text-white border-purple-400/30 shadow-purple-500/40 hover:shadow-purple-500/50 hover:from-purple-500 hover:via-purple-400 hover:to-violet-400'
-          }`}
-      >
-        <span>{currentStep === 4 ? 'Get My Quote' : currentStep === 3 ? 'Build My Quote' : 'Continue'}</span>
-        <ArrowRight className="w-5 h-5" />
-      </button>
+      {/* Disable on Step 1 if no industry selected */}
+      {(() => {
+        const canGoForward = currentStep !== 1 || wizardState.selectedIndustry.length > 0;
+        return (
+          <button
+            onClick={currentStep === 4 ? () => handleComplete(wizardState.quoteResult) : nextStep}
+            disabled={!canGoForward}
+            className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all
+              backdrop-blur-xl border
+              shadow-xl hover:shadow-2xl hover:scale-105 ${
+                !canGoForward
+                  ? 'bg-gray-500/50 text-gray-300 border-gray-400/30 cursor-not-allowed opacity-50'
+                  : currentStep === 3
+                    ? 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 text-white border-emerald-400/50 shadow-emerald-500/50 hover:shadow-emerald-500/70 hover:from-emerald-500 hover:via-green-400 hover:to-teal-400 text-lg px-8 py-4'
+                    : 'bg-gradient-to-r from-purple-600 via-purple-500 to-violet-500 text-white border-purple-400/30 shadow-purple-500/40 hover:shadow-purple-500/50 hover:from-purple-500 hover:via-purple-400 hover:to-violet-400'
+              }`}
+          >
+            <span>{currentStep === 4 ? 'Get My Quote' : currentStep === 3 ? 'Build My Quote' : 'Continue'}</span>
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        );
+      })()}
     </div>
   );
 };

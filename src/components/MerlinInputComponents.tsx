@@ -47,8 +47,17 @@ export const CleanInput: React.FC<CleanInputProps> = ({
         <input
           type={type}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            // For zip code inputs, limit to 5 digits
+            if (placeholder?.toLowerCase().includes('zip') || placeholder?.toLowerCase().includes('5-digit')) {
+              const numericValue = e.target.value.replace(/\D/g, '').slice(0, 5);
+              onChange(numericValue);
+            } else {
+              onChange(e.target.value);
+            }
+          }}
           placeholder={placeholder}
+          maxLength={placeholder?.toLowerCase().includes('zip') || placeholder?.toLowerCase().includes('5-digit') ? 5 : undefined}
           className={`
             w-full px-4 py-3 rounded-xl
             bg-white border border-gray-200
@@ -72,6 +81,7 @@ interface SearchableDropdownProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
@@ -81,6 +91,7 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   onChange,
   placeholder = "Select...",
   className = '',
+  disabled = false,
 }) => {
   return (
     <div className={`space-y-2 ${className}`}>
@@ -90,7 +101,8 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer"
+        disabled={disabled}
+        className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (

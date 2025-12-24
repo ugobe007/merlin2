@@ -94,6 +94,10 @@ interface Step2Props {
   onIndustrySelect: (slug: string, name: string) => void;
   solarOpportunity?: boolean; // True if location is good for solar
   onSolarClick?: () => void; // Callback when user clicks solar opportunity
+  state?: string; // State for dynamic solar data
+  electricityRate?: number; // Electricity rate for display
+  peakSunHours?: number; // Peak sun hours for display
+  solarRating?: string; // Solar rating for display
 }
 
 export const Step2IndustrySelect: React.FC<Step2Props> = ({
@@ -101,6 +105,10 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
   onIndustrySelect,
   solarOpportunity = false,
   onSolarClick,
+  state = '',
+  electricityRate = 0.12,
+  peakSunHours = 4.0,
+  solarRating = 'Good',
 }) => {
   const [industries, setIndustries] = useState<UseCaseWithConfiguration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,10 +137,14 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
     industry.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Popular industries to show first (ones with images)
+  // Popular industries to show first (ones with images) - sorted alphabetically
   const popularSlugs = ['hotel', 'car-wash', 'ev-charging', 'hospital', 'data-center', 'airport', 'manufacturing', 'warehouse', 'logistics', 'office', 'office-building', 'indoor-farm', 'indoor-agriculture', 'college', 'university', 'college-university'];
-  const popularIndustries = filteredIndustries.filter(i => popularSlugs.includes(i.slug));
-  const otherIndustries = filteredIndustries.filter(i => !popularSlugs.includes(i.slug));
+  const popularIndustries = filteredIndustries
+    .filter(i => popularSlugs.includes(i.slug))
+    .sort((a, b) => a.name.localeCompare(b.name)); // Alphabetical order
+  const otherIndustries = filteredIndustries
+    .filter(i => !popularSlugs.includes(i.slug))
+    .sort((a, b) => a.name.localeCompare(b.name)); // Alphabetical order
 
   const getIcon = (slug: string) => INDUSTRY_ICONS[slug] || INDUSTRY_ICONS.default;
   const getColor = (slug: string) => INDUSTRY_COLORS[slug] || INDUSTRY_COLORS.default;
@@ -173,7 +185,7 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                   <div>
                     <h3 className="text-xl font-bold text-white">Great Solar Potential in Your Area!</h3>
                     <p className="text-orange-100 text-sm flex items-center gap-2">
-                      <span>📍</span> Nevada • <span>⭐</span> Excellent for Solar
+                      <span>📍</span> {state || 'Your Location'} • <span>⭐</span> {solarRating} for Solar
                     </p>
                   </div>
                 </div>
@@ -192,14 +204,14 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                 <div className="text-amber-400 text-xs font-semibold mb-1 flex items-center justify-center gap-1">
                   <span>⚡</span> Peak Sun Hours
                 </div>
-                <div className="text-3xl font-bold text-white">5.8</div>
+                <div className="text-3xl font-bold text-white">{peakSunHours.toFixed(1)}</div>
                 <div className="text-xs text-gray-400">hours/day average</div>
               </div>
               <div className="text-center border-x border-slate-700">
                 <div className="text-amber-400 text-xs font-semibold mb-1 flex items-center justify-center gap-1">
                   <span>🏆</span> Solar Rating
                 </div>
-                <div className="text-2xl font-bold text-white">Excellent</div>
+                <div className="text-2xl font-bold text-white">{solarRating}</div>
                 <div className="text-xs text-emerald-400 flex items-center justify-center gap-1">
                   <span>⭐</span> Great for solar!
                 </div>
@@ -208,7 +220,7 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                 <div className="text-amber-400 text-xs font-semibold mb-1 flex items-center justify-center gap-1">
                   <span>💰</span> Avg Utility Rate
                 </div>
-                <div className="text-3xl font-bold text-white">$0.12</div>
+                <div className="text-3xl font-bold text-white">${electricityRate.toFixed(2)}</div>
                 <div className="text-xs text-gray-400">per kWh</div>
               </div>
             </div>
@@ -261,7 +273,7 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                   onClick={() => onIndustrySelect(industry.slug, industry.name)}
                   className={`group relative h-48 rounded-2xl overflow-hidden border transition-all duration-300 ${
                     isSelected 
-                      ? 'border-purple-500/50 shadow-lg shadow-purple-500/20' 
+                      ? 'border-emerald-500 shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-500/50 animate-pulse' 
                       : 'border-white/10 hover:border-purple-400/50'
                   }`}
                 >
@@ -284,18 +296,20 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                   
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorInfo.gradient} flex items-center justify-center mb-3 shadow-lg`}>
-                      <span className="text-lg">{colorInfo.icon}</span>
-                    </div>
                     <h3 className="font-bold text-white text-xl mb-1">{industry.name}</h3>
-                    {industry.description && industry.slug !== 'office' && industry.slug !== 'office-building' && (
-                      <p className="text-sm text-gray-300">{industry.description}</p>
-                    )}
+                    {/* Description shown on hover via title attribute */}
                   </div>
                   
-                  {/* Selected Checkmark */}
+                  {/* Hover tooltip for description */}
+                  {industry.description && industry.slug !== 'office' && industry.slug !== 'office-building' && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      {industry.description}
+                    </div>
+                  )}
+                  
+                  {/* Selected Checkmark - Green for selection */}
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/50">
                       <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                     </div>
                   )}
@@ -328,23 +342,23 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
                 onClick={() => onIndustrySelect(industry.slug, industry.name)}
                 className={`group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border text-left transition-all duration-300 ${
                   isSelected
-                    ? `bg-gradient-to-br from-purple-600/30 to-violet-700/30 border-2 border-purple-500 shadow-lg shadow-purple-500/20`
+                    ? `bg-gradient-to-br from-emerald-600/30 to-green-700/30 border-2 border-emerald-500 shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-500/50 animate-pulse`
                     : 'border-white/10 hover:border-white/20 hover:shadow-lg hover:-translate-y-1'
                 }`}
               >
-                {/* Selected Checkmark */}
+                {/* Selected Checkmark - Green for selection */}
                 {isSelected && (
-                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/50">
                     <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                   </div>
                 )}
                 
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorInfo.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                  <span className="text-xl">{colorInfo.icon}</span>
-                </div>
                 <h3 className="font-bold text-white text-lg mb-1">{industry.name}</h3>
+                {/* Description shown on hover via title attribute */}
                 {industry.description && industry.slug !== 'office' && industry.slug !== 'office-building' && (
-                  <p className="text-xs text-gray-400 leading-relaxed">{industry.description}</p>
+                  <div className="absolute bottom-full left-0 right-0 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    {industry.description}
+                  </div>
                 )}
                 
                 {/* Hover glow */}
