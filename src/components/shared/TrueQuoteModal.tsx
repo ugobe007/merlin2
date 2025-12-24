@@ -85,7 +85,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
       
       {/* Modal */}
       <div 
-        className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl transition-all duration-500 ${
+        className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl transition-all duration-500 ${
           animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-8'
         }`}
       >
@@ -98,7 +98,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </button>
 
         {/* Header with Deep Purple Gradient - Compact */}
-        <div className="relative bg-gradient-to-br from-purple-900 via-purple-700 to-indigo-800 px-8 py-6 text-center overflow-hidden">
+        <div className="relative bg-gradient-to-br from-purple-900 via-purple-700 to-indigo-800 px-8 py-6 text-center overflow-hidden flex-shrink-0">
           {/* Animated shine effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
           
@@ -125,7 +125,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 flex-shrink-0">
           {[
             { id: 'why', label: 'Why It Matters', icon: AlertTriangle },
             { id: 'how', label: 'How It Works', icon: Eye },
@@ -147,7 +147,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="overflow-y-auto max-h-[calc(90vh-300px)] p-8 bg-white">
+        <div className="overflow-y-auto flex-1 min-h-0 p-8 bg-white scrollbar-visible">
           
           {/* TAB: Why It Matters */}
           {activeTab === 'why' && (
@@ -437,7 +437,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
         </div>
 
         {/* Footer CTA */}
-        <div className="border-t border-gray-200 bg-gray-50 px-8 py-6">
+        <div className="border-t border-gray-200 bg-gray-50 px-8 py-6 flex-shrink-0">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <TrueQuoteBadge size="sm" showTooltip={false} />
