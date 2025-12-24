@@ -238,6 +238,14 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             onEVConfigClick={() => setShowEVModal(true)}
             solarKW={solarConfig?.totalSolarKW || wizardState.solarKW}
             evChargerCount={evConfig ? (evConfig.existingL2Count + evConfig.existingDCFCCount + evConfig.desiredL2Count + evConfig.desiredDCFCCount) : 0}
+            state={wizardState.state}
+            zipCode={wizardState.zipCode}
+            goals={wizardState.goals}
+            electricityRate={wizardState.electricityRate}
+            batteryKW={wizardState.batteryKW}
+            durationHours={wizardState.durationHours}
+            generatorKW={wizardState.generatorKW}
+            gridConnection={wizardState.gridConnection}
           />
         );
       
