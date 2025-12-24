@@ -169,16 +169,16 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-gradient-to-br from-white via-green-50 to-blue-50 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border-4 border-green-400">
+      <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border-4 border-purple-400/60 ring-4 ring-purple-500/20">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white p-6 rounded-t-xl z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-purple-800 via-indigo-700 to-blue-700 text-white p-6 rounded-t-xl z-10 border-b-4 border-purple-400">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <span>💰</span>
                 Financing Calculator
               </h2>
-              <p className="text-green-100 mt-1">{projectData.quoteName} - ${(projectData.totalCapEx / 1000000).toFixed(2)}M Total</p>
+              <p className="text-purple-200 mt-1">{projectData.quoteName} - ${(projectData.totalCapEx / 1000000).toFixed(2)}M Total</p>
             </div>
             <button
               onClick={onClose}
@@ -191,46 +191,46 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
 
         <div className="p-8 space-y-8">
           {/* Financing Type Selector */}
-          <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Select Financing Option</h3>
+          <div className="bg-gradient-to-br from-slate-700/80 to-slate-800/80 p-6 rounded-xl border-2 border-purple-400/40 shadow-lg backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-white mb-4">Select Financing Option</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => setFinancingType('loan')}
                 className={`p-6 rounded-xl border-2 transition-all ${
                   financingType === 'loan'
-                    ? 'bg-blue-100 border-blue-500 shadow-lg'
-                    : 'bg-gray-50 border-gray-300 hover:border-blue-300'
+                    ? 'bg-gradient-to-br from-blue-500/30 to-indigo-500/30 border-blue-400/60 shadow-lg shadow-blue-500/20'
+                    : 'bg-slate-700/50 border-slate-500/50 hover:border-blue-400/50 hover:bg-blue-500/10'
                 }`}
               >
                 <div className="text-4xl mb-2">🏦</div>
-                <div className="font-bold text-lg">Term Loan</div>
-                <div className="text-sm text-gray-600">Traditional financing</div>
+                <div className={`font-bold text-lg ${financingType === 'loan' ? 'text-white' : 'text-gray-300'}`}>Term Loan</div>
+                <div className={`text-sm ${financingType === 'loan' ? 'text-blue-200' : 'text-gray-400'}`}>Traditional financing</div>
               </button>
               
               <button
                 onClick={() => setFinancingType('lease')}
                 className={`p-6 rounded-xl border-2 transition-all ${
                   financingType === 'lease'
-                    ? 'bg-purple-100 border-purple-500 shadow-lg'
-                    : 'bg-gray-50 border-gray-300 hover:border-purple-300'
+                    ? 'bg-gradient-to-br from-purple-500/30 to-violet-500/30 border-purple-400/60 shadow-lg shadow-purple-500/20'
+                    : 'bg-slate-700/50 border-slate-500/50 hover:border-purple-400/50 hover:bg-purple-500/10'
                 }`}
               >
                 <div className="text-4xl mb-2">📋</div>
-                <div className="font-bold text-lg">Capital Lease</div>
-                <div className="text-sm text-gray-600">Lease-to-own option</div>
+                <div className={`font-bold text-lg ${financingType === 'lease' ? 'text-white' : 'text-gray-300'}`}>Capital Lease</div>
+                <div className={`text-sm ${financingType === 'lease' ? 'text-purple-200' : 'text-gray-400'}`}>Lease-to-own option</div>
               </button>
               
               <button
                 onClick={() => setFinancingType('ppa')}
                 className={`p-6 rounded-xl border-2 transition-all ${
                   financingType === 'ppa'
-                    ? 'bg-green-100 border-green-500 shadow-lg'
-                    : 'bg-gray-50 border-gray-300 hover:border-green-300'
+                    ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30 border-emerald-400/60 shadow-lg shadow-emerald-500/20'
+                    : 'bg-slate-700/50 border-slate-500/50 hover:border-emerald-400/50 hover:bg-emerald-500/10'
                 }`}
               >
                 <div className="text-4xl mb-2">⚡</div>
-                <div className="font-bold text-lg">Power Purchase Agreement</div>
-                <div className="text-sm text-gray-600">Pay per kWh</div>
+                <div className={`font-bold text-lg ${financingType === 'ppa' ? 'text-white' : 'text-gray-300'}`}>Power Purchase Agreement</div>
+                <div className={`text-sm ${financingType === 'ppa' ? 'text-emerald-200' : 'text-gray-400'}`}>Pay per kWh</div>
               </button>
             </div>
           </div>
@@ -239,39 +239,39 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
           {financingType === 'loan' && (
             <>
               {/* Loan Parameters */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-400 shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">🏦 Loan Parameters</h3>
+              <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 p-6 rounded-xl border-2 border-blue-400/50 shadow-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold text-white mb-4">🏦 Loan Parameters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Down Payment (%)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Down Payment (%)</label>
                     <input
                       type="number"
                       value={downPayment}
                       onChange={(e) => setDownPayment(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-blue-400/50 rounded-lg text-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       min="0"
                       max="100"
                     />
-                    <p className="text-xs text-gray-600 mt-1">${((projectData.totalCapEx * downPayment / 100) / 1000000).toFixed(2)}M upfront</p>
+                    <p className="text-xs text-blue-200 mt-1">${((projectData.totalCapEx * downPayment / 100) / 1000000).toFixed(2)}M upfront</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Loan Term (years)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Loan Term (years)</label>
                     <input
                       type="number"
                       value={loanTerm}
                       onChange={(e) => setLoanTerm(parseFloat(e.target.value) || 1)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-blue-400/50 rounded-lg text-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       min="1"
                       max="30"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Interest Rate (% APR)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Interest Rate (% APR)</label>
                     <input
                       type="number"
                       value={interestRate}
                       onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-blue-400/50 rounded-lg text-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       step="0.1"
                       min="0"
                       max="20"
@@ -282,50 +282,50 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
 
               {/* Loan Summary */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Monthly Payment</p>
-                  <p className="text-3xl font-bold text-blue-700">${loanDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                  <p className="text-xs text-gray-600 mt-1">x {loanTerm * 12} months</p>
+                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 p-6 rounded-xl border-2 border-blue-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Monthly Payment</p>
+                  <p className="text-3xl font-bold text-blue-300">${loanDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                  <p className="text-xs text-blue-200 mt-1">x {loanTerm * 12} months</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-orange-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Total Interest</p>
-                  <p className="text-3xl font-bold text-orange-700">${(loanDetails.totalInterest / 1000000).toFixed(2)}M</p>
-                  <p className="text-xs text-gray-600 mt-1">Over loan term</p>
+                <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-6 rounded-xl border-2 border-amber-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Total Interest</p>
+                  <p className="text-3xl font-bold text-amber-300">${(loanDetails.totalInterest / 1000000).toFixed(2)}M</p>
+                  <p className="text-xs text-amber-200 mt-1">Over loan term</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-purple-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Total Cost</p>
-                  <p className="text-3xl font-bold text-purple-700">${(loanDetails.totalPayment / 1000000).toFixed(2)}M</p>
-                  <p className="text-xs text-gray-600 mt-1">Incl. down payment</p>
+                <div className="bg-gradient-to-br from-purple-500/20 to-violet-500/20 p-6 rounded-xl border-2 border-purple-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Total Cost</p>
+                  <p className="text-3xl font-bold text-purple-300">${(loanDetails.totalPayment / 1000000).toFixed(2)}M</p>
+                  <p className="text-xs text-purple-200 mt-1">Incl. down payment</p>
                 </div>
-                <div className="bg-gradient-to-br from-green-100 to-green-50 p-6 rounded-xl border-2 border-green-400 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Net Annual Savings</p>
-                  <p className={`text-3xl font-bold ${netSavings.loan.annual > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <div className="bg-gradient-to-br from-emerald-500/30 to-teal-500/30 p-6 rounded-xl border-2 border-emerald-400/60 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Net Annual Savings</p>
+                  <p className={`text-3xl font-bold ${netSavings.loan.annual > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                     ${(netSavings.loan.annual / 1000).toFixed(0)}K
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">After loan payments</p>
+                  <p className="text-xs text-emerald-200 mt-1">After loan payments</p>
                 </div>
               </div>
 
               {/* Amortization Schedule */}
-              <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">📅 Amortization Schedule</h3>
+              <div className="bg-gradient-to-br from-slate-700/80 to-slate-800/80 p-6 rounded-xl border-2 border-purple-400/40 shadow-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold text-white mb-4">📅 Amortization Schedule</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-100 border-b-2 border-gray-300">
-                        <th className="px-4 py-3 text-left font-bold">Year</th>
-                        <th className="px-4 py-3 text-right font-bold">Principal</th>
-                        <th className="px-4 py-3 text-right font-bold">Interest</th>
-                        <th className="px-4 py-3 text-right font-bold">Remaining Balance</th>
+                      <tr className="bg-purple-600/30 border-b-2 border-purple-400/50">
+                        <th className="px-4 py-3 text-left font-bold text-white">Year</th>
+                        <th className="px-4 py-3 text-right font-bold text-white">Principal</th>
+                        <th className="px-4 py-3 text-right font-bold text-white">Interest</th>
+                        <th className="px-4 py-3 text-right font-bold text-white">Remaining Balance</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loanDetails.paymentSchedule.map((row) => (
-                        <tr key={row.year} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="px-4 py-3 font-semibold">{row.year}</td>
-                          <td className="px-4 py-3 text-right">${row.principal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                          <td className="px-4 py-3 text-right text-orange-700">${row.interest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                          <td className="px-4 py-3 text-right font-semibold">${row.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                        <tr key={row.year} className="border-b border-purple-400/20 hover:bg-purple-500/10">
+                          <td className="px-4 py-3 font-semibold text-white">{row.year}</td>
+                          <td className="px-4 py-3 text-right text-blue-300">${row.principal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="px-4 py-3 text-right text-amber-300">${row.interest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-white">${row.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -339,39 +339,39 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
           {financingType === 'lease' && (
             <>
               {/* Lease Parameters */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-400 shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">📋 Lease Parameters</h3>
+              <div className="bg-gradient-to-br from-purple-500/20 to-violet-500/20 p-6 rounded-xl border-2 border-purple-400/50 shadow-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold text-white mb-4">📋 Lease Parameters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Lease Term (years)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Lease Term (years)</label>
                     <input
                       type="number"
                       value={leaseTerm}
                       onChange={(e) => setLeaseTerm(parseFloat(e.target.value) || 1)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-purple-400/50 rounded-lg text-white focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                       min="1"
                       max="20"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Annual Lease Rate (% of value)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Annual Lease Rate (% of value)</label>
                     <input
                       type="number"
                       value={leaseRate}
                       onChange={(e) => setLeaseRate(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-purple-400/50 rounded-lg text-white focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                       step="0.1"
                       min="0"
                       max="20"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Buyout Option (% of value)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Buyout Option (% of value)</label>
                     <input
                       type="number"
                       value={buyoutPercent}
                       onChange={(e) => setBuyoutPercent(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-purple-400/50 rounded-lg text-white focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                       min="0"
                       max="100"
                     />
@@ -381,27 +381,27 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
 
               {/* Lease Summary */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-xl border-2 border-purple-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Monthly Payment</p>
-                  <p className="text-3xl font-bold text-purple-700">${leaseDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                  <p className="text-xs text-gray-600 mt-1">Fixed for term</p>
+                <div className="bg-gradient-to-br from-purple-500/20 to-violet-500/20 p-6 rounded-xl border-2 border-purple-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Monthly Payment</p>
+                  <p className="text-3xl font-bold text-purple-300">${leaseDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                  <p className="text-xs text-purple-200 mt-1">Fixed for term</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Total Lease Payments</p>
-                  <p className="text-3xl font-bold text-blue-700">${(leaseDetails.totalPayments / 1000000).toFixed(2)}M</p>
-                  <p className="text-xs text-gray-600 mt-1">Over {leaseTerm} years</p>
+                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 p-6 rounded-xl border-2 border-blue-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Total Lease Payments</p>
+                  <p className="text-3xl font-bold text-blue-300">${(leaseDetails.totalPayments / 1000000).toFixed(2)}M</p>
+                  <p className="text-xs text-blue-200 mt-1">Over {leaseTerm} years</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-orange-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Buyout Option</p>
-                  <p className="text-3xl font-bold text-orange-700">${(leaseDetails.buyoutOption / 1000000).toFixed(2)}M</p>
-                  <p className="text-xs text-gray-600 mt-1">End of term</p>
+                <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-6 rounded-xl border-2 border-amber-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Buyout Option</p>
+                  <p className="text-3xl font-bold text-amber-300">${(leaseDetails.buyoutOption / 1000000).toFixed(2)}M</p>
+                  <p className="text-xs text-amber-200 mt-1">End of term</p>
                 </div>
-                <div className="bg-gradient-to-br from-green-100 to-green-50 p-6 rounded-xl border-2 border-green-400 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Net Annual Savings</p>
-                  <p className={`text-3xl font-bold ${netSavings.lease.annual > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <div className="bg-gradient-to-br from-emerald-500/30 to-teal-500/30 p-6 rounded-xl border-2 border-emerald-400/60 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Net Annual Savings</p>
+                  <p className={`text-3xl font-bold ${netSavings.lease.annual > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                     ${(netSavings.lease.annual / 1000).toFixed(0)}K
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">After lease payments</p>
+                  <p className="text-xs text-emerald-200 mt-1">After lease payments</p>
                 </div>
               </div>
             </>
@@ -411,39 +411,39 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
           {financingType === 'ppa' && (
             <>
               {/* PPA Parameters */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-400 shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">⚡ PPA Parameters</h3>
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-6 rounded-xl border-2 border-emerald-400/50 shadow-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold text-white mb-4">⚡ PPA Parameters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">PPA Term (years)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">PPA Term (years)</label>
                     <input
                       type="number"
                       value={ppaTerm}
                       onChange={(e) => setPpaTerm(parseFloat(e.target.value) || 1)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-emerald-400/50 rounded-lg text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       min="1"
                       max="30"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Rate ($/kWh)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Rate ($/kWh)</label>
                     <input
                       type="number"
                       value={ppaRate}
                       onChange={(e) => setPpaRate(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-emerald-400/50 rounded-lg text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       step="0.01"
                       min="0"
                       max="1"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Annual Escalation (%)</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Annual Escalation (%)</label>
                     <input
                       type="number"
                       value={escalationRate}
                       onChange={(e) => setEscalationRate(parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500"
+                      className="w-full px-4 py-2 bg-slate-700/60 border-2 border-emerald-400/50 rounded-lg text-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       step="0.1"
                       min="0"
                       max="10"
@@ -454,71 +454,71 @@ const FinancingCalculator: React.FC<FinancingCalculatorProps> = ({
 
               {/* PPA Summary */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-xl border-2 border-green-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Year 1 Payment</p>
-                  <p className="text-3xl font-bold text-green-700">${(ppaDetails.annualPayment / 1000).toFixed(0)}K</p>
-                  <p className="text-xs text-gray-600 mt-1">Escalates annually</p>
+                <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-6 rounded-xl border-2 border-emerald-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Year 1 Payment</p>
+                  <p className="text-3xl font-bold text-emerald-300">${(ppaDetails.annualPayment / 1000).toFixed(0)}K</p>
+                  <p className="text-xs text-emerald-200 mt-1">Escalates annually</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Total PPA Payments</p>
-                  <p className="text-3xl font-bold text-blue-700">${(ppaDetails.totalPayments / 1000000).toFixed(2)}M</p>
-                  <p className="text-xs text-gray-600 mt-1">Over {ppaTerm} years</p>
+                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 p-6 rounded-xl border-2 border-blue-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Total PPA Payments</p>
+                  <p className="text-3xl font-bold text-blue-300">${(ppaDetails.totalPayments / 1000000).toFixed(2)}M</p>
+                  <p className="text-xs text-blue-200 mt-1">Over {ppaTerm} years</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border-2 border-purple-300 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">No Upfront Cost</p>
-                  <p className="text-3xl font-bold text-purple-700">$0</p>
-                  <p className="text-xs text-gray-600 mt-1">Zero capital required</p>
+                <div className="bg-gradient-to-br from-purple-500/20 to-violet-500/20 p-6 rounded-xl border-2 border-purple-400/50 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">No Upfront Cost</p>
+                  <p className="text-3xl font-bold text-purple-300">$0</p>
+                  <p className="text-xs text-purple-200 mt-1">Zero capital required</p>
                 </div>
-                <div className="bg-gradient-to-br from-green-100 to-green-50 p-6 rounded-xl border-2 border-green-400 shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Net Annual Savings</p>
-                  <p className={`text-3xl font-bold ${netSavings.ppa.annual > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <div className="bg-gradient-to-br from-emerald-500/30 to-teal-500/30 p-6 rounded-xl border-2 border-emerald-400/60 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white/80 mb-1">Net Annual Savings</p>
+                  <p className={`text-3xl font-bold ${netSavings.ppa.annual > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                     ${(netSavings.ppa.annual / 1000).toFixed(0)}K
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">Year 1 estimate</p>
+                  <p className="text-xs text-emerald-200 mt-1">Year 1 estimate</p>
                 </div>
               </div>
             </>
           )}
 
           {/* Comparison Summary */}
-          <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">📊 Financing Comparison</h3>
+          <div className="bg-gradient-to-br from-slate-700/80 to-slate-800/80 p-6 rounded-xl border-2 border-purple-400/40 shadow-lg backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-white mb-4">📊 Financing Comparison</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-100 border-b-2 border-gray-300">
-                    <th className="px-4 py-3 text-left font-bold">Option</th>
-                    <th className="px-4 py-3 text-right font-bold">Upfront Cost</th>
-                    <th className="px-4 py-3 text-right font-bold">Monthly Payment</th>
-                    <th className="px-4 py-3 text-right font-bold">Total Cost</th>
-                    <th className="px-4 py-3 text-right font-bold">Net Lifetime Savings</th>
+                  <tr className="bg-purple-600/30 border-b-2 border-purple-400/50">
+                    <th className="px-4 py-3 text-left font-bold text-white">Option</th>
+                    <th className="px-4 py-3 text-right font-bold text-white">Upfront Cost</th>
+                    <th className="px-4 py-3 text-right font-bold text-white">Monthly Payment</th>
+                    <th className="px-4 py-3 text-right font-bold text-white">Total Cost</th>
+                    <th className="px-4 py-3 text-right font-bold text-white">Net Lifetime Savings</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-gray-200 hover:bg-blue-50">
-                    <td className="px-4 py-3 font-semibold">🏦 Loan ({loanTerm}yr)</td>
-                    <td className="px-4 py-3 text-right">${((projectData.totalCapEx * downPayment / 100) / 1000000).toFixed(2)}M</td>
-                    <td className="px-4 py-3 text-right font-bold">${loanDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="px-4 py-3 text-right">${(loanDetails.totalPayment / 1000000).toFixed(2)}M</td>
-                    <td className={`px-4 py-3 text-right font-bold ${netSavings.loan.lifetime > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  <tr className="border-b border-purple-400/20 hover:bg-blue-500/10">
+                    <td className="px-4 py-3 font-semibold text-white">🏦 Loan ({loanTerm}yr)</td>
+                    <td className="px-4 py-3 text-right text-blue-300">${((projectData.totalCapEx * downPayment / 100) / 1000000).toFixed(2)}M</td>
+                    <td className="px-4 py-3 text-right font-bold text-white">${loanDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3 text-right text-purple-300">${(loanDetails.totalPayment / 1000000).toFixed(2)}M</td>
+                    <td className={`px-4 py-3 text-right font-bold ${netSavings.loan.lifetime > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                       ${(netSavings.loan.lifetime / 1000000).toFixed(2)}M
                     </td>
                   </tr>
-                  <tr className="border-b border-gray-200 hover:bg-purple-50">
-                    <td className="px-4 py-3 font-semibold">📋 Lease ({leaseTerm}yr)</td>
-                    <td className="px-4 py-3 text-right">$0</td>
-                    <td className="px-4 py-3 text-right font-bold">${leaseDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="px-4 py-3 text-right">${((leaseDetails.totalPayments + leaseDetails.buyoutOption) / 1000000).toFixed(2)}M</td>
-                    <td className={`px-4 py-3 text-right font-bold ${netSavings.lease.lifetime > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  <tr className="border-b border-purple-400/20 hover:bg-purple-500/10">
+                    <td className="px-4 py-3 font-semibold text-white">📋 Lease ({leaseTerm}yr)</td>
+                    <td className="px-4 py-3 text-right text-purple-300">$0</td>
+                    <td className="px-4 py-3 text-right font-bold text-white">${leaseDetails.monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3 text-right text-purple-300">${((leaseDetails.totalPayments + leaseDetails.buyoutOption) / 1000000).toFixed(2)}M</td>
+                    <td className={`px-4 py-3 text-right font-bold ${netSavings.lease.lifetime > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                       ${(netSavings.lease.lifetime / 1000000).toFixed(2)}M
                     </td>
                   </tr>
-                  <tr className="border-b border-gray-200 hover:bg-green-50">
-                    <td className="px-4 py-3 font-semibold">⚡ PPA ({ppaTerm}yr)</td>
-                    <td className="px-4 py-3 text-right">$0</td>
-                    <td className="px-4 py-3 text-right font-bold">${(ppaDetails.annualPayment / 12 / 1000).toFixed(0)}K</td>
-                    <td className="px-4 py-3 text-right">${(ppaDetails.totalPayments / 1000000).toFixed(2)}M</td>
-                    <td className={`px-4 py-3 text-right font-bold ${netSavings.ppa.lifetime > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  <tr className="border-b border-purple-400/20 hover:bg-emerald-500/10">
+                    <td className="px-4 py-3 font-semibold text-white">⚡ PPA ({ppaTerm}yr)</td>
+                    <td className="px-4 py-3 text-right text-emerald-300">$0</td>
+                    <td className="px-4 py-3 text-right font-bold text-white">${(ppaDetails.annualPayment / 12 / 1000).toFixed(0)}K</td>
+                    <td className="px-4 py-3 text-right text-emerald-300">${(ppaDetails.totalPayments / 1000000).toFixed(2)}M</td>
+                    <td className={`px-4 py-3 text-right font-bold ${netSavings.ppa.lifetime > 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                       ${(netSavings.ppa.lifetime / 1000000).toFixed(2)}M
                     </td>
                   </tr>

@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import badgeIcon from '@/assets/images/badge_icon.jpg';
 import { X, Wrench, Zap, Calculator, TrendingUp, Package, FileText, ArrowLeft, ArrowRight, Building2, MapPin, DollarSign, Battery, Calendar, Sparkles, Cpu, GitBranch, FileSpreadsheet, Eye, Sliders, Gauge, Wand2, PiggyBank, BarChart3, Box, ScrollText, Search, Landmark, Banknote, Lock, Crown, Download, CheckCircle, ChevronDown } from 'lucide-react';
-import InteractiveConfigDashboard from './wizard/InteractiveConfigDashboard';
+// InteractiveConfigDashboard moved to legacy - feature disabled for V5 cleanup
 import { generateProfessionalModel, type ProfessionalModelResult } from '@/services/professionalFinancialModel';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
 import { type FinancialCalculationResult } from '@/services/centralizedCalculations';
+import { calculateSolarSizing } from '@/services/useCasePowerCalculations';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, PageBreak } from 'docx';
 import { saveAs } from 'file-saver';
 import merlinImage from '../assets/images/new_profile_merlin.png';
 import { DocumentUploadZone } from './upload/DocumentUploadZone';
 import type { ExtractedSpecsData } from '@/services/openAIExtractionService';
 import type { ParsedDocument } from '@/services/documentParserService';
+import { ProjectInfoForm } from './ProjectInfoForm';
+import { supabase } from '../services/supabaseClient';
 
 /**
  * ADVANCED QUOTE BUILDER - MERLIN EDITION
@@ -281,13 +285,102 @@ export default function AdvancedQuoteBuilder({
     }
   }, [viewMode, solarMW, windMW, generatorMW]);
 
-  // Reset to initialView when modal opens
+  // Check if wizard config exists in sessionStorage
+  const [hasWizardConfig, setHasWizardConfig] = useState(false);
+  
+  useEffect(() => {
+    setHasWizardConfig(!!sessionStorage.getItem('advancedBuilderConfig'));
+  }, [show]);
+
+  // Load wizard values from sessionStorage when navigating to custom-config view
+  const loadWizardConfig = useCallback(() => {
+    try {
+      const configData = sessionStorage.getItem('advancedBuilderConfig');
+      if (configData) {
+        const config = JSON.parse(configData);
+        console.log('✅ Loading wizard config into Advanced Builder:', config);
+        
+        // Set battery/storage values (convert kW to MW)
+        if (config.batteryKW) {
+          const batteryMW = config.batteryKW / 1000;
+          onStorageSizeChange(batteryMW);
+        }
+        
+        // Set duration
+        if (config.durationHours) {
+          onDurationChange(config.durationHours);
+        }
+        
+        // Set solar (convert kW to MW)
+        if (config.solarKW && config.solarKW > 0) {
+          setSolarMW(config.solarKW / 1000);
+          setIncludeRenewables(true);
+          setSolarPVIncluded(true);
+          setSolarCapacityKW(config.solarKW);
+        }
+        
+        // Set generator (convert kW to MW and enable)
+        if (config.generatorKW && config.generatorKW > 0) {
+          setGeneratorMW(config.generatorKW / 1000);
+          setIncludeRenewables(true);
+          setDieselGenIncluded(true);
+          setDieselGenCapacityKW(config.generatorKW);
+        }
+        
+        // Set location/state
+        if (config.state) {
+          setLocation(config.state);
+        }
+        
+        // Set utility rate
+        if (config.electricityRate) {
+          setUtilityRate(config.electricityRate);
+        }
+        
+        // Set use case
+        if (config.selectedIndustry) {
+          setUseCase(config.selectedIndustry.replace(/-/g, '-'));
+        }
+        
+        // Set project name if available
+        if (config.selectedIndustry) {
+          setProjectName(`${config.selectedIndustry.charAt(0).toUpperCase() + config.selectedIndustry.slice(1).replace(/-/g, ' ')} Project`);
+        }
+        
+        // Clear sessionStorage after loading
+        sessionStorage.removeItem('advancedBuilderConfig');
+        setHasWizardConfig(false);
+      }
+    } catch (error) {
+      console.error('❌ Error loading wizard config:', error);
+    }
+  }, [onStorageSizeChange, onDurationChange]);
+
+  // Reset to initialView when modal opens AND load wizard config if needed
   useEffect(() => {
     if (show) {
       setViewMode(initialView);
       window.scrollTo(0, 0);
+      
+      // Load wizard config immediately if we're going to custom-config view
+      if (initialView === 'custom-config') {
+        // Small delay to ensure state is set
+        setTimeout(() => {
+          loadWizardConfig();
+        }, 100);
+      }
     }
-  }, [show, initialView]);
+  }, [show, initialView, loadWizardConfig]);
+
+  // Also load wizard config when viewMode changes to custom-config (backup)
+  useEffect(() => {
+    if (show && viewMode === 'custom-config') {
+      const configData = sessionStorage.getItem('advancedBuilderConfig');
+      if (configData) {
+        loadWizardConfig();
+      }
+    }
+  }, [show, viewMode, loadWizardConfig]);
 
   // Handler for document extraction completion (Path A)
   const handleExtractionComplete = useCallback((
@@ -412,7 +505,7 @@ export default function AdvancedQuoteBuilder({
       icon: <BarChart3 className="w-8 h-8" />,
       title: 'Market Analytics',
       description: 'Market trends, pricing intelligence, and competitive analysis',
-      color: 'from-orange-400 via-red-500 to-pink-600',
+      color: 'from-orange-400 via-amber-500 to-orange-600',
       action: () => {
         onClose();
         onOpenMarketIntel?.();
@@ -438,7 +531,7 @@ export default function AdvancedQuoteBuilder({
       icon: <Wand2 className="w-8 h-8" />,
       title: 'AI Optimizer',
       description: 'Let AI analyze your facility and recommend optimal configurations',
-      color: 'from-purple-400 via-pink-500 to-rose-600',
+      color: 'from-purple-400 via-indigo-500 to-violet-600',
       action: () => {
         alert('🤖 AI Optimizer\n\nAdvanced AI-powered system optimization.\n\n✨ Coming Q1 2026');
       },
@@ -450,6 +543,19 @@ export default function AdvancedQuoteBuilder({
 
   // Export handler function
   const handleExportQuote = async (format: 'word' | 'excel' | 'pdf') => {
+    // Check authentication - require project info (account creation)
+    if (!projectInfo) {
+      alert('Please complete the Project Information form at the top of the page to create your account and download quotes.');
+      return;
+    }
+
+    // Double-check Supabase auth
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user && !projectInfo.userId) {
+      alert('Account authentication required. Please complete the Project Information form.');
+      return;
+    }
+
     setIsExporting(true);
     setExportSuccess(false);
     
@@ -690,23 +796,28 @@ export default function AdvancedQuoteBuilder({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-600">
+    <div className="fixed inset-0 z-[70] overflow-y-auto bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
       <div className="min-h-screen text-gray-100">
         
         {/* LANDING PAGE VIEW */}
         {viewMode === 'landing' && (
           <>
-            {/* Premium header with purple-blue gradient and quick access buttons */}
+            {/* Premium header with purple-indigo-blue gradient and quick access buttons */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-800 via-indigo-700 to-blue-700 border-b-4 border-purple-400 shadow-2xl backdrop-blur-xl">
               <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl shadow-2xl ring-2 ring-purple-300/30">
-                      <Wrench className="w-6 h-6 text-white drop-shadow-lg" />
-                    </div>
+                    <img 
+                      src={badgeIcon} 
+                      alt="ProQuote Badge"
+                      className="w-12 h-12 object-contain"
+                      style={{
+                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))'
+                      }}
+                    />
                     <div>
                       <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-100 via-blue-100 to-cyan-100 bg-clip-text text-transparent drop-shadow-2xl">
-                        Advanced Quote Builder
+                        ProQuote
                       </h1>
                       <p className="text-purple-200 text-xs drop-shadow-lg font-medium">Professional-grade BESS configuration</p>
                     </div>
@@ -774,102 +885,104 @@ export default function AdvancedQuoteBuilder({
               </div>
             </div>
 
-            {/* BESS Market Pricing Intelligence - NEW */}
-            <div className="max-w-7xl mx-auto px-6 pb-8">
-              <div className="bg-gradient-to-br from-emerald-600/20 via-teal-600/20 to-cyan-600/20 backdrop-blur-xl border-2 border-emerald-400/30 rounded-2xl p-6 shadow-2xl ring-1 ring-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg shadow-lg">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">BESS Market Pricing Intelligence</h3>
-                      <p className="text-sm text-emerald-200">Real-time installed costs (Q4 2025)</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-emerald-200">Last Updated</p>
-                    <p className="text-sm font-bold text-white">Nov 2025</p>
-                  </div>
+            {/* BESS Market Pricing Intelligence - Floating Buttons at Top */}
+            <div className="max-w-7xl mx-auto px-6 pt-6 pb-4">
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-emerald-600/50 to-teal-600/50 backdrop-blur-sm border-2 border-emerald-400/60 rounded-full shadow-lg">
+                  <TrendingUp className="w-5 h-5 text-emerald-200" />
+                  <span className="text-sm font-bold text-white">Market Pricing</span>
                 </div>
+                <button className="px-5 py-2.5 bg-gradient-to-br from-blue-500/40 to-cyan-500/40 backdrop-blur-sm border-2 border-blue-400/50 rounded-full hover:scale-110 transition-all shadow-lg hover:shadow-blue-500/30">
+                  <div className="flex items-center gap-2.5">
+                    <Battery className="w-5 h-5 text-blue-200" />
+                    <span className="text-base font-bold text-white">$200/kWh</span>
+                    <span className="text-xs text-blue-200 font-medium">≤2 MWh</span>
+                  </div>
+                </button>
+                <button className="px-5 py-2.5 bg-gradient-to-br from-purple-500/40 to-indigo-500/40 backdrop-blur-sm border-2 border-purple-400/50 rounded-full hover:scale-110 transition-all shadow-lg hover:shadow-purple-500/30">
+                  <div className="flex items-center gap-2.5">
+                    <Battery className="w-5 h-5 text-purple-200" />
+                    <span className="text-base font-bold text-white">$155/kWh</span>
+                    <span className="text-xs text-purple-200 font-medium">2-15 MWh</span>
+                  </div>
+                </button>
+                <button className="px-5 py-2.5 bg-gradient-to-br from-green-500/40 to-emerald-500/40 backdrop-blur-sm border-2 border-green-400/50 rounded-full hover:scale-110 transition-all shadow-lg hover:shadow-green-500/30">
+                  <div className="flex items-center gap-2.5">
+                    <Battery className="w-5 h-5 text-green-200" />
+                    <span className="text-base font-bold text-white">$140/kWh</span>
+                    <span className="text-xs text-green-200 font-medium">15+ MWh</span>
+                  </div>
+                </button>
+                <div className="px-4 py-2.5 bg-white/10 rounded-full border-2 border-white/20">
+                  <span className="text-xs text-white/80 font-semibold">Q4 2025</span>
+                </div>
+              </div>
+            </div>
+
+            {/* System Configuration Hero Panel - START HERE */}
+            <div className="max-w-7xl mx-auto px-6 pb-6">
+              <div
+                className="group w-full relative bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl p-10 md:p-16 text-left transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 overflow-hidden shadow-2xl hover:shadow-purple-500/40 border-t-2 border-white/50 ring-4 ring-purple-500/20"
+              >
+                {/* Glow effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 opacity-0 group-hover:opacity-30 rounded-3xl transition-all duration-500 blur-2xl" />
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Small Systems - NREL ATB 2024 with premium for small scale */}
-                  <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-400/40 rounded-xl p-4 hover:scale-105 transition-transform duration-300">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-xs text-blue-200 font-semibold mb-1">Small Systems</p>
-                        <p className="text-2xl font-bold text-white">${'200'}<span className="text-lg text-blue-200">/kWh</span></p>
-                      </div>
-                      <div className="bg-blue-500/30 rounded-lg px-2 py-1">
-                        <Battery className="w-5 h-5 text-blue-200" />
-                      </div>
-                    </div>
-                    <p className="text-xs text-blue-100 mb-2">≤ 2 MWh capacity</p>
-                    <div className="pt-2 border-t border-blue-400/30">
-                      <p className="text-xs text-blue-200">Includes all BOS + installation</p>
+                <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-12">
+                  {/* Merlin on the left */}
+                  <div className="flex-shrink-0">
+                    <div className="w-40 h-40 md:w-48 md:h-48 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 rounded-3xl p-3 shadow-2xl ring-4 ring-purple-400/30">
+                      <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain" />
                     </div>
                   </div>
-
-                  {/* Medium Systems - NREL ATB 2024 commercial */}
-                  <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-400/40 rounded-xl p-4 hover:scale-105 transition-transform duration-300">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-xs text-purple-200 font-semibold mb-1">Medium Systems</p>
-                        <p className="text-2xl font-bold text-white">${'155'}<span className="text-lg text-purple-200">/kWh</span></p>
+                  
+                  {/* Content on the right */}
+                  <div className="flex-1">
+                    {/* START HERE badge */}
+                    <span className="inline-block px-5 py-2 bg-orange-500 text-white text-sm font-bold rounded-full mb-5 shadow-xl">
+                      START HERE
+                    </span>
+                    
+                    <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 group-hover:text-purple-100 transition-colors leading-tight">
+                      System Configuration
+                    </h3>
+                    <p className="text-white/95 text-xl md:text-2xl leading-relaxed mb-8 group-hover:text-white transition-colors">
+                      <span className="font-semibold text-white">Test your skills and build a remarkable energy system</span> with professional-grade tools and configurations. Design your complete BESS system with detailed electrical specifications, renewable energy integration, and all system parameters. This is where your expertise meets powerful technology—design systems that save time, reduce costs, and deliver exceptional results.
+                    </p>
+                    
+                    {/* Feature highlights */}
+                    <div className="grid md:grid-cols-2 gap-5 mb-8">
+                      <div className="flex items-start gap-4 p-5 bg-white/15 rounded-xl border-2 border-white/30">
+                        <Sparkles className="w-6 h-6 text-amber-300 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-white mb-1.5 text-lg">Professional Tools</p>
+                          <p className="text-sm text-white/90">Advanced configuration options, detailed electrical specs, and real-time calculations</p>
+                        </div>
                       </div>
-                      <div className="bg-purple-500/30 rounded-lg px-2 py-1">
-                        <Battery className="w-5 h-5 text-purple-200" />
+                      <div className="flex items-start gap-4 p-5 bg-white/15 rounded-xl border-2 border-white/30">
+                        <Zap className="w-6 h-6 text-emerald-300 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-white mb-1.5 text-lg">Save Time & Money</p>
+                          <p className="text-sm text-white/90">Instant feedback and market intelligence to optimize your system design</p>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-purple-100 mb-2">2-15 MWh capacity</p>
-                    <div className="pt-2 border-t border-purple-400/30">
-                      <p className="text-xs text-purple-200">Commercial & C&I scale</p>
-                    </div>
+                    
+                    {/* Large Launch button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewMode('custom-config');
+                        if (hasWizardConfig) {
+                          loadWizardConfig();
+                        }
+                      }}
+                      className="group/btn w-full md:w-auto px-10 py-5 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white font-bold text-xl md:text-2xl rounded-2xl shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-4 border-2 border-purple-400/50"
+                    >
+                      <Sliders className="w-7 h-7 md:w-8 md:h-8" />
+                      <span>Launch Configuration Tool</span>
+                      <ArrowRight className="w-7 h-7 md:w-8 md:h-8 group-hover/btn:translate-x-2 transition-transform" />
+                    </button>
                   </div>
-
-                  {/* Large/Utility Systems - NREL ATB 2024 utility scale */}
-                  <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/40 rounded-xl p-4 hover:scale-105 transition-transform duration-300 ring-2 ring-green-400/20">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-xs text-green-200 font-semibold mb-1 flex items-center gap-1">
-                          Utility Scale
-                          <Sparkles className="w-3 h-3 text-green-300" />
-                        </p>
-                        <p className="text-2xl font-bold text-white">${'140'}<span className="text-lg text-green-200">/kWh</span></p>
-                      </div>
-                      <div className="bg-green-500/30 rounded-lg px-2 py-1">
-                        <Battery className="w-5 h-5 text-green-200" />
-                      </div>
-                    </div>
-                    <p className="text-xs text-green-100 mb-2">15+ MWh capacity</p>
-                    <div className="pt-2 border-t border-green-400/30">
-                      <p className="text-xs text-green-200">Utility-scale installed cost</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Volume Discount Info */}
-                <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
-                  <p className="text-xs text-emerald-200 mb-2 font-semibold">💰 Volume Discounts Available:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div className="text-emerald-100">10+ MWh: <span className="text-white font-bold">2% off</span></div>
-                    <div className="text-emerald-100">25+ MWh: <span className="text-white font-bold">5% off</span></div>
-                    <div className="text-emerald-100">50+ MWh: <span className="text-white font-bold">8% off</span></div>
-                    <div className="text-emerald-100">100+ MWh: <span className="text-white font-bold">12% off</span></div>
-                    <div className="text-emerald-100">250+ MWh: <span className="text-white font-bold">15% off</span></div>
-                    <div className="text-emerald-100">500+ MWh: <span className="text-white font-bold">18% off</span></div>
-                    <div className="text-emerald-100">1+ GWh: <span className="text-white font-bold">22% off</span></div>
-                    <div className="text-emerald-200 italic">Max discount</div>
-                  </div>
-                </div>
-
-                {/* Technology Note */}
-                <div className="mt-3 flex items-start gap-2 text-xs text-emerald-100">
-                  <Sparkles className="w-4 h-4 text-emerald-300 mt-0.5 flex-shrink-0" />
-                  <p>
-                    <span className="font-semibold">Market Intelligence:</span> Pricing reflects Q4 2025 realistic installed costs including all balance of system components, installation labor, and profit margins. Based on LFP chemistry improvements and actual utility RFP pricing.
-                  </p>
                 </div>
               </div>
             </div>
@@ -1018,51 +1131,6 @@ export default function AdvancedQuoteBuilder({
 
             {/* Tool cards grid - Merlin themed */}
             <div className="max-w-7xl mx-auto px-6 py-12">
-              
-              {/* FEATURED: System Configuration - Large Hero Card */}
-              <div className="mb-10">
-                <button
-                  onClick={() => setViewMode('custom-config')}
-                  className="group w-full relative bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl p-8 text-left transition-all duration-300 hover:scale-[1.02] hover:-translate-y-2 overflow-hidden shadow-2xl hover:shadow-purple-500/30 border-2 border-purple-400/50 hover:border-purple-300/70"
-                >
-                  {/* Animated background effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-transparent to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="flex items-center gap-8">
-                    {/* Merlin Image */}
-                    <div className="flex-shrink-0">
-                      <div className="w-32 h-32 bg-gradient-to-br from-purple-500/30 to-indigo-500/30 rounded-2xl p-2 shadow-2xl border border-white/20">
-                        <img src={merlinImage} alt="Merlin" className="w-full h-full object-contain drop-shadow-lg" />
-                      </div>
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow animate-pulse">
-                          START HERE
-                        </span>
-                      </div>
-                      <h3 className="text-3xl md:text-4xl font-bold text-white mb-3 group-hover:text-purple-100 transition-colors">
-                        System Configuration
-                      </h3>
-                      <p className="text-purple-100 text-lg leading-relaxed group-hover:text-white transition-colors max-w-2xl">
-                        Design your complete BESS system with detailed electrical specifications, renewable energy integration, and all system parameters. This is where your quote begins.
-                      </p>
-                      
-                      {/* Arrow indicator */}
-                      <div className="mt-6 flex items-center text-purple-200 group-hover:text-white transition-all">
-                        <span className="font-bold">Launch Configuration Tool</span>
-                        <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-3 transition-transform" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Bottom accent */}
-                  <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-400 via-indigo-400 to-blue-400 opacity-70 group-hover:opacity-100 transition-opacity" />
-                </button>
-              </div>
-
               {/* Section: Other Core Tools */}
               <div className="mb-12">
                 <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
@@ -1371,6 +1439,25 @@ export default function AdvancedQuoteBuilder({
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* ═══ PROJECT INFO FORM - Account Creation ═══ */}
+            <div className="max-w-7xl mx-auto px-4 py-6 relative z-0">
+              <ProjectInfoForm
+                onComplete={(data) => {
+                  setProjectInfo(data);
+                  // Update existing state if needed
+                  if (data.projectName) setProjectName(data.projectName);
+                  if (data.projectLocation) setLocation(data.projectLocation);
+                }}
+                initialData={{
+                  projectName: projectName || undefined,
+                  projectLocation: location || undefined,
+                  projectGoals: useCase || undefined,
+                  userName: '',
+                  email: '',
+                }}
+              />
             </div>
 
             {/* ═══ MAIN CONFIGURATION FORM ═══ */}
@@ -1979,79 +2066,90 @@ export default function AdvancedQuoteBuilder({
                           </label>
                         </div>
 
-                        {solarPVIncluded && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                              <label className="block text-base font-bold mb-3 text-gray-900">
-                                Solar Capacity (kW)
-                              </label>
-                              <input
-                                type="number"
-                                value={solarCapacityKW}
-                                onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
-                                step="50"
-                                min="0"
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                              />
+                        {solarPVIncluded && (() => {
+                          const solarSizing = calculateSolarSizing({
+                            solarCapacityKW,
+                            panelType: solarPanelType,
+                            panelEfficiency: solarPanelEfficiency,
+                            region: 'midwest', // TODO: make region user-selectable if needed
+                          });
+                          return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                              <div>
+                                <label className="block text-base font-bold mb-3 text-gray-900">
+                                  Solar Capacity (kW)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={solarCapacityKW}
+                                  onChange={(e) => setSolarCapacityKW(parseFloat(e.target.value) || 0)}
+                                  step="50"
+                                  min="0"
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold mb-3 text-gray-900">
+                                  Panel Type
+                                </label>
+                                <select
+                                  value={solarPanelType}
+                                  onChange={(e) => setSolarPanelType(e.target.value)}
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                >
+                                  <option value="monocrystalline">Monocrystalline (20-22% eff.)</option>
+                                  <option value="polycrystalline">Polycrystalline (15-17% eff.)</option>
+                                  <option value="thin-film">Thin-Film (10-12% eff.)</option>
+                                  <option value="bifacial">Bifacial (22-24% eff.)</option>
+                                  <option value="perc">PERC (21-23% eff.)</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold mb-3 text-gray-900">
+                                  Panel Efficiency (%)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={solarPanelEfficiency}
+                                  onChange={(e) => setSolarPanelEfficiency(parseFloat(e.target.value) || 15)}
+                                  min="10"
+                                  max="25"
+                                  step="0.5"
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold mb-3 text-gray-900">
+                                  Solar Inverter Type
+                                </label>
+                                <select
+                                  value={solarInverterType}
+                                  onChange={(e) => setSolarInverterType(e.target.value)}
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                >
+                                  <option value="string">String Inverter</option>
+                                  <option value="micro">Micro-Inverters</option>
+                                  <option value="power-optimizer">Power Optimizers</option>
+                                  <option value="central">Central Inverter</option>
+                                </select>
+                              </div>
+                              <div className="md:col-span-2 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                                <p className="text-base text-gray-900 font-bold mb-2">
+                                  ☀️ Estimated Annual Production: <strong>{solarSizing.annualKWh.toLocaleString()} kWh/year</strong> ({solarSizing.sunHours} hrs/year avg)
+                                </p>
+                                <p className="text-sm text-gray-700 mt-2 font-medium">
+                                  Array Size: ~{solarSizing.arrayAreaSqFt.toLocaleString()} sq ft (~{solarSizing.arrayAreaAcres} acres) | ~{solarSizing.panelsNeeded} panels @ {solarSizing.panelWattage}W
+                                </p>
+                                <p className="text-sm text-gray-700 mt-1 font-medium">
+                                  ILR: {solarSizing.ilr} (DC-coupled, NREL ATB 2024)
+                                </p>
+                                <p className="text-xs text-gray-500 mt-2 italic">
+                                  {solarSizing.citation}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <label className="block text-base font-bold mb-3 text-gray-900">
-                                Panel Type
-                              </label>
-                              <select
-                                value={solarPanelType}
-                                onChange={(e) => setSolarPanelType(e.target.value)}
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                              >
-                                <option value="monocrystalline">Monocrystalline (20-22% eff.)</option>
-                                <option value="polycrystalline">Polycrystalline (15-17% eff.)</option>
-                                <option value="thin-film">Thin-Film (10-12% eff.)</option>
-                                <option value="bifacial">Bifacial (22-24% eff.)</option>
-                                <option value="perc">PERC (21-23% eff.)</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-base font-bold mb-3 text-gray-900">
-                                Panel Efficiency (%)
-                              </label>
-                              <input
-                                type="number"
-                                value={solarPanelEfficiency}
-                                onChange={(e) => setSolarPanelEfficiency(parseFloat(e.target.value) || 15)}
-                                min="10"
-                                max="25"
-                                step="0.5"
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-base font-bold mb-3 text-gray-900">
-                                Solar Inverter Type
-                              </label>
-                              <select
-                                value={solarInverterType}
-                                onChange={(e) => setSolarInverterType(e.target.value)}
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg text-base font-semibold shadow-sm hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                              >
-                                <option value="string">String Inverter</option>
-                                <option value="micro">Micro-Inverters</option>
-                                <option value="power-optimizer">Power Optimizers</option>
-                                <option value="central">Central Inverter</option>
-                              </select>
-                            </div>
-                            <div className="md:col-span-2 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                              <p className="text-base text-gray-900 font-bold mb-2">
-                                ☀️ Estimated Annual Production: <strong>{(solarCapacityKW * 1400).toLocaleString()} kWh/year</strong> (1,400 hrs/year avg)
-                              </p>
-                              <p className="text-sm text-gray-700 mt-2 font-medium">
-                                Array Size: ~{(solarCapacityKW * 1000 * 6).toLocaleString()} sq ft (~{((solarCapacityKW * 1000 * 6) / 43560).toFixed(2)} acres) | ~{Math.ceil(solarCapacityKW / 0.4)} panels @ 400W
-                              </p>
-                              <p className="text-sm text-gray-700 mt-1 font-medium">
-                                💡 Note: Assumes 6 sq ft per watt installed capacity (including spacing)
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
 
                       {/* Wind Turbine */}
@@ -3053,7 +3151,7 @@ export default function AdvancedQuoteBuilder({
                   </button>
                   <button
                     onClick={() => handleExportQuote('pdf')}
-                    className="px-5 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="px-5 py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <FileText className="w-5 h-5" />
                     PDF
@@ -3065,50 +3163,20 @@ export default function AdvancedQuoteBuilder({
         </div>
       )}
 
-      {/* Interactive Dashboard View */}
+      {/* Interactive Dashboard View - DISABLED for V5 cleanup */}
       {viewMode === 'interactive-dashboard' && (
-        <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 z-50">
-          <InteractiveConfigDashboard
-            initialStorageSizeMW={storageSizeMW}
-            initialDurationHours={durationHours}
-            initialSolarMW={solarMW}
-            initialWindMW={windMW}
-            initialGeneratorMW={generatorMW}
-            solarSpaceConfig={{ spaceType: 'rooftop', useAI: false }}
-            evChargerConfig={{ 
-              level2_11kw: 0, 
-              level2_19kw: 0, 
-              dcfast_50kw: 0, 
-              dcfast_150kw: 0, 
-              dcfast_350kw: 0 
-            }}
-            windConfig={{ turbineSize: '2.5', numberOfTurbines: 0, useAI: false }}
-            generatorConfig={{ generatorType: 'diesel', numberOfUnits: 0, sizePerUnit: 0, useAI: false }}
-            industryTemplate=""
-            location={location || 'California'}
-            electricityRate={utilityRate}
-            useCaseData={{}}
-            onConfigurationChange={(config) => {
-              onStorageSizeChange(config.storageSizeMW);
-              onDurationChange(config.durationHours);
-              setSolarMW(config.solarMW || 0);
-              setWindMW(config.windMW || 0);
-              setGeneratorMW(config.generatorMW || 0);
-            }}
-            onContinue={() => {
-              // Capture final configuration and move to Custom Configuration
-              setViewMode('custom-config');
-            }}
-            continueButtonText="Continue to Configuration"
-          />
-          
-          {/* Close button overlay */}
-          <button
-            onClick={() => setViewMode('landing')}
-            className="fixed top-6 right-6 z-[60] bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg text-2xl font-bold transition-all"
-          >
-            ×
-          </button>
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md text-center">
+            <Sparkles className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Interactive Dashboard</h2>
+            <p className="text-gray-600 mb-6">This feature is being upgraded to V5. Please use the Custom Configuration for now.</p>
+            <button
+              onClick={() => setViewMode('custom-config')}
+              className="px-6 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+            >
+              Go to Custom Configuration
+            </button>
+          </div>
         </div>
       )}
 

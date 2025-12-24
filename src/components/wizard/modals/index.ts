@@ -1,20 +1,13 @@
 /**
- * WIZARD MODALS INDEX
- * ===================
- * 
- * Central export point for all wizard modal components.
- * December 2025
+ * WIZARD MODALS INDEX - PLACEHOLDER
+ * ==================================
+ * Actual modals are in v5/modals/ or elsewhere
  */
 
-export { 
-  Step3to4Modal, 
-  Step4to5Modal, 
-  TrueQuoteModal 
-} from './StepTransitionModal';
-// BESS Configuration Optimizer Phase 3 (Dec 2025)
-export { ScenarioExplainerModal } from './ScenarioExplainerModal';
-export { ConfigurationConfirmModal } from './ConfigurationConfirmModal';
-// Solar Sizing Modal (Dec 2025 - Universal Pattern)
-export { SolarSizingModal } from './SolarSizingModal';
-// Solar Opportunity Modal (Dec 2025 - Comprehensive Planning Tool)
-export { SolarOpportunityModal } from './SolarOpportunityModal';
+import React from 'react';
+
+// Placeholder modals
+export const ConfigurationConfirmModal: React.FC<any> = () => null;
+export const ProQuoteModal: React.FC<any> = () => null;
+export const SolarSizingModal: React.FC<any> = () => null;
+export const StepTransitionModal: React.FC<any> = () => null;

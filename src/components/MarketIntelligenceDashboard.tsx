@@ -78,22 +78,22 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
   const hasPremiumAccess = userTier !== 'free';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 rounded-3xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl border-4 border-purple-400/60 ring-4 ring-purple-500/20">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-3xl">
+        <div className="p-6 border-b-4 border-purple-400/50 flex-shrink-0 bg-gradient-to-r from-purple-800 via-indigo-700 to-blue-700 rounded-t-3xl">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-1">
+              <h2 className="text-3xl font-bold text-white mb-1">
                 📊 Market Intelligence Dashboard
               </h2>
-              <p className="text-gray-600">
+              <p className="text-purple-200">
                 Real-time BESS pricing data from {marketStats.totalDataPoints.toLocaleString()} validated quotes
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center text-3xl transition-all"
+              className="text-white hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-3xl transition-all"
               title="Close (ESC)"
             >
               ×
@@ -102,41 +102,41 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200">
-              <p className="text-xs text-gray-600 mb-1">💰 Installed Price</p>
-              <p className="text-2xl font-bold text-green-600">${marketStats.avgPricePerKWh}/kWh</p>
-              <p className={`text-xs ${marketStats.priceChange30d < 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-lg p-4 shadow-lg border-2 border-emerald-400/50 backdrop-blur-sm">
+              <p className="text-xs text-white/80 mb-1">💰 Installed Price</p>
+              <p className="text-2xl font-bold text-emerald-300">${marketStats.avgPricePerKWh}/kWh</p>
+              <p className={`text-xs ${marketStats.priceChange30d < 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                 {marketStats.priceChange30d}% (30d)
               </p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-200">
-              <p className="text-xs text-gray-600 mb-1">Average $/kW</p>
-              <p className="text-2xl font-bold text-purple-600">${marketStats.avgPricePerKW}</p>
-              <p className={`text-xs ${marketStats.priceChange90d < 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="bg-gradient-to-br from-purple-500/30 to-violet-500/30 rounded-lg p-4 shadow-lg border-2 border-purple-400/50 backdrop-blur-sm">
+              <p className="text-xs text-white/80 mb-1">Average $/kW</p>
+              <p className="text-2xl font-bold text-purple-300">${marketStats.avgPricePerKW}</p>
+              <p className={`text-xs ${marketStats.priceChange90d < 0 ? 'text-emerald-300' : 'text-red-400'}`}>
                 {marketStats.priceChange90d}% (90d)
               </p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200">
-              <p className="text-xs text-gray-600 mb-1">Data Points</p>
-              <p className="text-2xl font-bold text-green-600">{marketStats.totalDataPoints.toLocaleString()}</p>
-              <p className="text-xs text-green-600">+45 this week</p>
+            <div className="bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-lg p-4 shadow-lg border-2 border-blue-400/50 backdrop-blur-sm">
+              <p className="text-xs text-white/80 mb-1">Data Points</p>
+              <p className="text-2xl font-bold text-blue-300">{marketStats.totalDataPoints.toLocaleString()}</p>
+              <p className="text-xs text-blue-200">+45 this week</p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-200">
-              <p className="text-xs text-gray-600 mb-1">Quality Score</p>
-              <p className="text-2xl font-bold text-orange-600">{marketStats.dataQualityScore}/10</p>
-              <p className="text-xs text-gray-600">Excellent</p>
+            <div className="bg-gradient-to-br from-amber-500/30 to-orange-500/30 rounded-lg p-4 shadow-lg border-2 border-amber-400/50 backdrop-blur-sm">
+              <p className="text-xs text-white/80 mb-1">Quality Score</p>
+              <p className="text-2xl font-bold text-amber-300">{marketStats.dataQualityScore}/10</p>
+              <p className="text-xs text-amber-200">Excellent</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 px-6 bg-gray-50 flex-shrink-0 overflow-x-auto">
+        <div className="flex border-b-4 border-purple-400/50 px-6 bg-gradient-to-r from-slate-800/80 to-slate-700/80 flex-shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab('breakdown')}
             className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
               activeTab === 'breakdown'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-purple-400 text-purple-300'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             💰 Cost Breakdown
@@ -145,8 +145,8 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
             onClick={() => setActiveTab('overview')}
             className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
               activeTab === 'overview'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-purple-400 text-purple-300'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             📈 Overview
@@ -155,8 +155,8 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
             onClick={() => setActiveTab('trends')}
             className={`px-6 py-3 font-semibold transition-all whitespace-nowrap ${
               activeTab === 'trends'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-purple-400 text-purple-300'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             📉 Price Trends
@@ -165,8 +165,8 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
             onClick={() => setActiveTab('regional')}
             className={`px-6 py-3 font-semibold transition-all ${
               activeTab === 'regional'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-purple-400 text-purple-300'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             🌍 Regional
@@ -175,8 +175,8 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
             onClick={() => setActiveTab('manufacturers')}
             className={`px-6 py-3 font-semibold transition-all ${
               activeTab === 'manufacturers'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-purple-400 text-purple-300'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             🏭 Manufacturers
@@ -184,7 +184,7 @@ const MarketIntelligenceDashboard: React.FC<MarketIntelligenceDashboardProps> = 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
           {/* Cost Breakdown Tab */}
           {activeTab === 'breakdown' && (
             <div className="space-y-6">

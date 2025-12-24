@@ -188,6 +188,7 @@ export class UseCaseService {
         max: q.max_value,
         helpText: q.help_text,
         placeholder: (q as any).placeholder,
+        metadata: (q as any).metadata || {}, // Include metadata for is_advanced flag
       }));
 
       return {

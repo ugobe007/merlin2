@@ -5,9 +5,9 @@
 // Purpose: Handle industry-specific custom questions from database
 // with fallback to facility size presets
 // 
-// Updated Dec 15, 2025: Added Facility Subtype + Equipment Tier selectors
+// Updated Dec 15, 2025: Added Facility Subtype selector (Equipment Tier removed Dec 22, 2025)
 // per Vineet feedback (Universal Pattern)
-// Updated Dec 19, 2025: Added MERLIN GUIDANCE PANEL with recommendations
+// Updated Dec 19, 2025: Added MERLIN GUIDANCE PANEL with recommendations (no equipment tier)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
@@ -56,17 +56,17 @@ import {
   Banknote,
   CircleOff
 } from 'lucide-react';
-import { FACILITY_PRESETS, EQUIPMENT_TIER_OPTIONS, FACILITY_SUBTYPES } from '../constants/wizardConstants';
-import type { WizardState, FacilityDetailsSectionProps, EquipmentTier } from '../types/wizardTypes';
+import { FACILITY_PRESETS, FACILITY_SUBTYPES } from '../constants/wizardConstants';
+import type { WizardState, FacilityDetailsSectionProps } from '../types/wizardTypes';
 
 // Import new high-fidelity UI components
 import { StepExplanation, PrimaryButton, SecondaryButton } from '../ui';
 
 // Import Merlin image
-import merlinImage from '@/assets/images/new_profile_merlin.png';
+import merlinImage from '@/assets/images/new_Merlin.png';
 
 // Step 2 colors - cool blue theme
-import { getStepColors } from '../constants/stepColors';
+import { getStepColors } from '../constants';
 const step2Colors = getStepColors(2);
 
 // Icon mapping for common amenity/option values
@@ -328,8 +328,7 @@ export function FacilityDetailsSection({
             whyItMatters: string;
             typicalPeakKW: string;
             typicalBESSKWh: string;
-            equipmentRec: 'standard' | 'premium';
-            equipmentWhy: string;
+            // equipmentRec and equipmentWhy removed (Dec 22, 2025)
           }> = {
             'shopping-center': {
               greeting: "Great choice! Shopping centers are perfect for BESS because of your high daytime demand charges.",
@@ -337,8 +336,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Your HVAC and lighting during peak retail hours drive most of your electricity costs. We can shave 20-40% off demand charges.",
               typicalPeakKW: "500 - 2,000 kW",
               typicalBESSKWh: "1,000 - 4,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment handles most shopping centers well. Upgrade to Premium only if you have 24/7 grocery anchors or data centers."
+              // No equipment tier recommendation
             },
             'hotel': {
               greeting: "Hotels are excellent BESS candidates! Your consistent occupancy patterns make savings very predictable.",
@@ -346,8 +344,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Hotels have predictable demand peaks around check-in time and evening hours. BESS can shave these peaks dramatically.",
               typicalPeakKW: "200 - 800 kW",
               typicalBESSKWh: "400 - 1,600 kWh",
-              equipmentRec: 'premium',
-              equipmentWhy: "I recommend Premium for hotels - your guests expect 24/7 reliability, and the efficiency gains pay off with your continuous operation."
+              // No equipment tier recommendation
             },
             'hospital': {
               greeting: "Critical infrastructure! Hospitals need the most reliable energy systems. Let me design something bulletproof.",
@@ -355,8 +352,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Hospitals can't afford any downtime. Your BESS will provide instant backup AND ongoing demand charge savings.",
               typicalPeakKW: "1,000 - 5,000 kW",
               typicalBESSKWh: "2,000 - 10,000 kWh",
-              equipmentRec: 'premium',
-              equipmentWhy: "Premium is essential for hospitals. You need the highest reliability, redundancy, and fastest response times for critical care."
+              // No equipment tier recommendation
             },
             'data-center': {
               greeting: "Data centers are ideal for BESS - your load is constant, predictable, and reliability is paramount.",
@@ -364,8 +360,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Even seconds of downtime cost fortune in data centers. BESS provides instant switchover plus ongoing energy arbitrage.",
               typicalPeakKW: "500 - 10,000 kW",
               typicalBESSKWh: "1,000 - 20,000 kWh",
-              equipmentRec: 'premium',
-              equipmentWhy: "Premium is mandatory for data centers. Tier III/IV requirements demand the highest quality equipment with full redundancy."
+              // No equipment tier recommendation
             },
             'manufacturing': {
               greeting: "Manufacturing plants see huge savings from BESS - your demand spikes from equipment startups are expensive!",
@@ -373,8 +368,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Motor startups and production ramps create expensive demand spikes. BESS smooths these out for major savings.",
               typicalPeakKW: "500 - 5,000 kW",
               typicalBESSKWh: "1,000 - 10,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment works great for most manufacturing. Consider Premium only for 24/7 operations or harsh environments."
+              // No equipment tier recommendation
             },
             'warehouse': {
               greeting: "Warehouses have surprisingly good BESS economics - especially with refrigeration or forklift charging!",
@@ -382,8 +376,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Cold storage and EV forklift charging create predictable demand peaks. BESS can reduce your utility bills 15-30%.",
               typicalPeakKW: "150 - 1,000 kW",
               typicalBESSKWh: "300 - 2,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment is perfect for warehouse applications. Simple, reliable, cost-effective."
+              // No equipment tier recommendation
             },
             'retail': {
               greeting: "Retail stores benefit nicely from BESS - your daytime hours align perfectly with peak utility rates!",
@@ -391,8 +384,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Retail's daytime operation coincides with highest utility rates. BESS lets you buy cheap nighttime power and use it during the day.",
               typicalPeakKW: "50 - 300 kW",
               typicalBESSKWh: "100 - 600 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment is ideal for retail. Clean, quiet, compact units that won't disturb your customers."
+              // No equipment tier recommendation
             },
             'office': {
               greeting: "Office buildings are BESS sweet spots! Your 9-5 demand profile is perfect for peak shaving.",
@@ -400,8 +392,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Office HVAC peaks during afternoon hours when rates are highest. BESS reduces these peaks by 20-40%.",
               typicalPeakKW: "200 - 2,000 kW",
               typicalBESSKWh: "400 - 4,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment handles most office buildings excellently. Upgrade to Premium for Class A buildings with 24/7 tenants."
+              // No equipment tier recommendation
             },
             'car-wash': {
               greeting: "Car washes are unique - your power spikes during washes are perfect for BESS optimization!",
@@ -409,8 +400,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Car wash motors and blowers create huge but brief demand spikes. BESS eliminates demand charges from these spikes.",
               typicalPeakKW: "100 - 500 kW",
               typicalBESSKWh: "200 - 1,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "Standard equipment is perfect for car washes. Handles the rapid charge/discharge cycles well."
+              // No equipment tier recommendation
             },
             'ev-charging': {
               greeting: "EV charging stations are the future of energy! Let me design a BESS that maximizes your charging profits.",
@@ -418,8 +408,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Without BESS, DCFC chargers create massive demand charges. BESS can cut your utility costs 40-60%!",
               typicalPeakKW: "100 - 1,000 kW",
               typicalBESSKWh: "200 - 2,000 kWh",
-              equipmentRec: 'premium',
-              equipmentWhy: "Premium is recommended for EV charging - high cycle counts and fast charge/discharge require quality cells."
+              // No equipment tier recommendation
             },
             'default': {
               greeting: "Let me analyze your facility to find the best energy storage solution for your specific needs.",
@@ -427,8 +416,7 @@ export function FacilityDetailsSection({
               whyItMatters: "Every facility is unique. Your answers help me calculate exactly how much you can save with battery storage.",
               typicalPeakKW: "100 - 1,000 kW",
               typicalBESSKWh: "200 - 2,000 kWh",
-              equipmentRec: 'standard',
-              equipmentWhy: "I'll recommend the right equipment tier based on your specific requirements."
+              // No equipment tier recommendation
             }
           };
           
@@ -503,32 +491,7 @@ export function FacilityDetailsSection({
                 </div>
               </div>
               
-              {/* Equipment Recommendation */}
-              <div className={`relative z-10 rounded-xl p-4 border ${
-                guidance.equipmentRec === 'premium' 
-                  ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 border-amber-400/30'
-                  : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border-blue-400/30'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    guidance.equipmentRec === 'premium' ? 'bg-amber-500/30' : 'bg-blue-500/30'
-                  }`}>
-                    {guidance.equipmentRec === 'premium' ? (
-                      <Star className="w-5 h-5 text-amber-400" />
-                    ) : (
-                      <Settings className="w-5 h-5 text-blue-400" />
-                    )}
-                  </div>
-                  <div>
-                    <h4 className={`font-bold mb-1 flex items-center gap-2 ${
-                      guidance.equipmentRec === 'premium' ? 'text-amber-400' : 'text-blue-400'
-                    }`}>
-                      <span>My Recommendation: {guidance.equipmentRec === 'premium' ? 'Premium' : 'Standard'} Equipment</span>
-                    </h4>
-                    <p className="text-white/80 text-sm">{guidance.equipmentWhy}</p>
-                  </div>
-                </div>
-              </div>
+              {/* Equipment Recommendation removed (Dec 22, 2025) */}
             </div>
           );
         })()}
@@ -576,56 +539,7 @@ export function FacilityDetailsSection({
           );
         })()}
         
-        {/* ═══════════════════════════════════════════════════════════════════
-            EQUIPMENT TIER SELECTOR (Dec 2025 - Simplified Two-Tier System)
-            Standard vs Premium - per Vineet feedback
-            ═══════════════════════════════════════════════════════════════════ */}
-        <div className={`${step2Colors.panelBgGradient} rounded-3xl p-6 border-2 ${step2Colors.panelBorder} shadow-xl mb-6`}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#0066CC] to-[#004499] rounded-xl flex items-center justify-center">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-[#0066CC]">Equipment Grade</h3>
-              <p className="text-sm text-gray-500">Standard meets needs; Premium maximizes efficiency</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {EQUIPMENT_TIER_OPTIONS.map((tier) => (
-              <button
-                key={tier.id}
-                onClick={() => setWizardState(prev => ({ ...prev, equipmentTier: tier.id as EquipmentTier }))}
-                className={`p-5 rounded-xl text-left transition-all relative overflow-hidden ${
-                  wizardState.equipmentTier === tier.id
-                    ? tier.id === 'premium'
-                      ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
-                      : 'bg-gradient-to-br from-[#0066CC] to-[#004499] text-white shadow-lg shadow-blue-500/30'
-                    : 'bg-blue-50/30 border-2 border-blue-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
-                }`}
-              >
-                {tier.id === 'premium' && wizardState.equipmentTier !== 'premium' && (
-                  <div className="absolute top-2 right-2">
-                    <Star className="w-4 h-4 text-amber-500" />
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{tier.icon}</span>
-                  <div className="font-bold">{tier.label}</div>
-                </div>
-                <div className={`text-sm mt-2 ${wizardState.equipmentTier === tier.id ? 'text-white/90' : 'text-gray-500'}`}>
-                  {tier.description}
-                </div>
-                {tier.id === 'premium' && (
-                  <div className={`text-xs mt-2 font-medium ${wizardState.equipmentTier === tier.id ? 'text-white/80' : 'text-amber-600'}`}>
-                    +30% capacity, +25% cost
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-        
+        // Equipment Tier Selector removed (Dec 22, 2025)
         {/* Dynamic Custom Questions from Database */}
         <div className={`${step2Colors.panelBgGradient} rounded-3xl p-8 border-2 ${step2Colors.panelBorder} shadow-xl`}>
           {filteredQuestions.length > 0 ? (

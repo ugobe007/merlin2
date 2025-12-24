@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UseCaseROI from '../UseCaseROI';
 import type { UseCaseData } from '../UseCaseROI';
-import QuoteBuilderLanding from '../wizard/QuoteBuilderLanding';
+// QuoteBuilderLanding moved to legacy - using wizard v5
 import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
 import { calculateBESSPricing } from '../../utils/bessPricing';
 import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
@@ -10,12 +10,14 @@ import merlinImage from "../../assets/images/new_profile_merlin.png";
 import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '../shared/TrueQuoteModal';
+import badgeGoldIcon from '../../assets/images/badge_gold_icon.jpg';
+import badgeIcon from '../../assets/images/badge_icon.jpg';
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
 import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
 
 // Import use case images
-import carWashImage from "../../assets/images/car_wash_1.jpg";
+import carWashValet from "../../assets/images/car_wash_valet.jpg";
 import carWashPitStop from "../../assets/images/Car_Wash_PitStop.jpg";
 import carWashPitStop1 from "../../assets/images/Car_Wash_PitStop1.jpg";
 import carWashPitStop2 from "../../assets/images/Car_Wash_PitStop2.jpg";
@@ -32,9 +34,9 @@ import hospital2Image from "../../assets/images/hospital_2.jpg";
 import hospital3Image from "../../assets/images/hospital_3.jpg";
 import evChargingStationImage from "@/assets/images/ev_charging_station.jpg";
 import evChargingHotelImage from "@/assets/images/ev_charging_hotel.jpg";
-import hotelImage from "@/assets/images/hotel_1.jpg";
 import airportImage from "../../assets/images/airports_1.jpg";
 // Hotel images
+import hotelImage from "../../assets/images/hotel_motel_holidayinn_1.jpg";
 import hotelHolidayInn1 from "../../assets/images/hotel_motel_holidayinn_1.jpg";
 import hotelHolidayInn2 from "../../assets/images/hotel_motel_holidayinn_2.jpg";
 import hotelHolidayInn3 from "../../assets/images/hotel_motel_holidayinn_3.jpg";
@@ -43,6 +45,32 @@ import hotelHolidayInn4 from "../../assets/images/hotel_motel_holidayinn_4.jpg";
 import dataCenter1 from "../../assets/images/data-centers/data-center-1.jpg";
 import dataCenter2 from "../../assets/images/data-centers/data-center-2.jpg";
 import dataCenter3 from "../../assets/images/data-centers/data-center-3.jpg";
+// Manufacturing images
+import manufacturing1 from "../../assets/images/manufacturing_1.jpg";
+import manufacturing2 from "../../assets/images/manufacturing_2.jpg";
+import manufacturing3 from "../../assets/images/manufacturing_3.jpg";
+// Logistics images
+import logistics1 from "../../assets/images/logistics_1.jpg";
+import logistics2 from "../../assets/images/logistics_2.jpeg";
+import logistics3 from "../../assets/images/logistics_3.jpg";
+// Office building images
+import officeBuilding1 from "../../assets/images/office_building1.jpg";
+import officeBuilding2 from "../../assets/images/office_building2.jpg";
+import officeBuilding3 from "../../assets/images/office_building3.jpg";
+// Indoor farm images
+import indoorFarm1 from "../../assets/images/indoor_farm1.jpeg";
+import indoorFarm2 from "../../assets/images/indoor_farm2.jpg";
+import indoorFarm3 from "../../assets/images/indoor_farm3.jpg";
+// Marine image
+import marine1 from "../../assets/images/marine_1.webp";
+// Additional airport images
+import airport1 from "../../assets/images/airport_1.jpg";
+import airport2 from "../../assets/images/airport_2.jpg";
+// College/University images
+import college1 from "../../assets/images/college_1.jpg";
+import college3 from "../../assets/images/college_3.jpg";
+import college4 from "../../assets/images/college_4.webp";
+import college5 from "../../assets/images/college_5.jpg";
 
 // Hero use cases with real financial data - Diverse Industries (Alternating Pattern)
 const heroUseCases = [
@@ -67,7 +95,7 @@ const heroUseCases = [
   {
     id: 'car-wash-tunnel',
     name: 'Tunnel Car Wash',
-    image: carWashTunnel,
+    image: carWashValet,
     savings: '$156K',
     payback: '1.8 yrs',
     roi: '560%',
@@ -112,7 +140,7 @@ const heroUseCases = [
   {
     id: 'car-wash-auto',
     name: 'Automated Car Wash',
-    image: carWashAuto,
+    image: carWash1,
     savings: '$145K',
     payback: '1.9 yrs',
     roi: '530%',
@@ -177,6 +205,87 @@ const heroUseCases = [
     name: 'Medical Center',
     image: hospital2Image,
     savings: '$1.1M',
+    payback: '1.5 yrs',
+    roi: '670%',
+    systemSize: '2.0 MW / 8 MWh'
+  },
+  {
+    id: 'manufacturing-plant',
+    name: 'Manufacturing Plant',
+    image: manufacturing1,
+    savings: '$1.8M',
+    payback: '1.3 yrs',
+    roi: '770%',
+    systemSize: '3.5 MW / 14 MWh'
+  },
+  {
+    id: 'logistics-warehouse',
+    name: 'Logistics Center',
+    image: logistics1,
+    savings: '$950K',
+    payback: '1.4 yrs',
+    roi: '720%',
+    systemSize: '2.0 MW / 8 MWh'
+  },
+  {
+    id: 'office-building',
+    name: 'Office Building',
+    image: officeBuilding1,
+    savings: '$680K',
+    payback: '1.6 yrs',
+    roi: '630%',
+    systemSize: '1.2 MW / 4.8 MWh'
+  },
+  {
+    id: 'indoor-farm',
+    name: 'Indoor Farm',
+    image: indoorFarm1,
+    savings: '$420K',
+    payback: '1.9 yrs',
+    roi: '530%',
+    systemSize: '0.8 MW / 3.2 MWh'
+  },
+  {
+    id: 'airport-regional-2',
+    name: 'Regional Airport',
+    image: airport1,
+    savings: '$2.1M',
+    payback: '1.4 yrs',
+    roi: '720%',
+    systemSize: '4.0 MW / 16 MWh'
+  },
+  {
+    id: 'manufacturing-factory',
+    name: 'Factory',
+    image: manufacturing2,
+    savings: '$1.5M',
+    payback: '1.5 yrs',
+    roi: '670%',
+    systemSize: '2.8 MW / 11.2 MWh'
+  },
+  {
+    id: 'logistics-distribution',
+    name: 'Distribution Center',
+    image: logistics2,
+    savings: '$1.2M',
+    payback: '1.3 yrs',
+    roi: '770%',
+    systemSize: '2.5 MW / 10 MWh'
+  },
+  {
+    id: 'college-university',
+    name: 'College & University',
+    image: college1,
+    savings: '$1.4M',
+    payback: '1.2 yrs',
+    roi: '830%',
+    systemSize: '2.8 MW / 11.2 MWh'
+  },
+  {
+    id: 'college-campus',
+    name: 'University Campus',
+    image: college3,
+    savings: '$980K',
     payback: '1.5 yrs',
     roi: '670%',
     systemSize: '2.0 MW / 8 MWh'
@@ -448,45 +557,43 @@ export default function HeroSection({
                 </span>
               </h1>
 
-              {/* Subheadline */}
-              <p 
-                className="mb-5"
+              {/* Subheadline with TrueQuote badge */}
+              <div 
+                className="mb-8"
                 style={{
                   fontSize: '20px',
                   color: 'rgba(255,255,255,0.85)',
-                  lineHeight: 1.6,
-                  maxWidth: '460px'
+                  lineHeight: 1.7,
+                  maxWidth: '480px'
                 }}
               >
-                Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.
-              </p>
-
-              {/* TrueQuote Link - Orange Italic */}
-              <button
-                onClick={() => setShowTrueQuoteModal(true)}
-                className="inline-flex items-center gap-1.5 mb-9 transition-all hover:opacity-80"
-                style={{
-                  fontSize: '17px',
-                  fontWeight: 600,
-                  color: '#f59e0b',
-                  textDecoration: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#fcd34d';
-                  e.currentTarget.style.transform = 'translateX(4px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#f59e0b';
-                  e.currentTarget.style.transform = 'translateX(0)';
-                }}
-              >
-                TrueQuote™ — <span style={{ fontStyle: 'italic', fontWeight: 500, color: '#fbbf24' }}>Every number has a source.</span>
-              </button>
+                Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.{' '}
+                <button
+                  onClick={() => setShowTrueQuoteModal(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #1C1917 0%, #292524 100%)',
+                    border: '1.5px solid #D97706',
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.3)',
+                    fontSize: '11px',
+                    verticalAlign: 'middle',
+                    display: 'inline-flex',
+                    marginLeft: '4px',
+                  }}
+                >
+                  <img 
+                    src={badgeGoldIcon} 
+                    alt="TrueQuote"
+                    className="w-4 h-4 object-contain"
+                  />
+                  <span style={{ color: '#FBBF24', fontWeight: 600 }}>TrueQuote™</span>
+                </button>
+              </div>
 
               {/* CTA Button - Professional Typography */}
               <button
                 onClick={() => setShowSmartWizard(true)}
-                className="inline-flex items-center justify-center gap-2.5 mb-5 transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2.5 mb-4 transition-all duration-300"
                 style={{
                   background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)',
                   backdropFilter: 'blur(12px)',
@@ -527,34 +634,47 @@ export default function HeroSection({
                 <span style={{ fontSize: '20px', marginLeft: '2px' }}>→</span>
               </button>
 
-              {/* ProQuote Button - Translucent */}
-              <button
+              {/* ProQuote Panel - Advanced Configuration Option */}
+              <div 
+                className="mb-6 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
                 onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="inline-flex items-center justify-center gap-2 mb-8 transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'rgba(255,255,255,0.85)',
-                  padding: '12px 24px',
-                  borderRadius: '40px',
-                  fontSize: '14px',
-                  fontWeight: 600
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                  background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)',
+                  border: '2px solid rgba(99, 102, 241, 0.5)',
+                  boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255,255,255,0.05) inset',
+                  width: '100%',
+                  maxWidth: '460px',
+                  backdropFilter: 'blur(8px)',
                 }}
               >
-                <span style={{ color: '#fbbf24', fontSize: '14px' }}>⚡</span>
-                <span>ProQuote</span>
-                <span>→</span>
-              </button>
+                <div className="px-4 py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={badgeIcon} 
+                      alt="ProQuote Badge"
+                      className="w-10 h-10 flex-shrink-0 object-contain"
+                      style={{
+                        filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
+                      }}
+                    />
+                    <div>
+                      <div className="text-white font-bold text-sm flex items-center gap-2">
+                        ProQuote™
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 font-medium">PRO</span>
+                      </div>
+                      <div className="text-indigo-300/80 text-xs">Custom system configuration</div>
+                    </div>
+                  </div>
+                  <div 
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition-colors"
+                    style={{
+                      background: 'rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <span className="text-white/80 text-sm group-hover:text-white transition-colors">→</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Merlin Link */}
               <button
@@ -1264,7 +1384,7 @@ export default function HeroSection({
                 {/* Image */}
                 <div className="relative h-56 overflow-hidden">
                   <img 
-                    src={carWashImage} 
+                    src={carWashValet} 
                     alt="Car Wash Success Story" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
@@ -1766,15 +1886,14 @@ export default function HeroSection({
         </div>
       )}
 
-      {/* Quote Builder Landing Modal */}
-      {showQuoteBuilderLanding && selectedUseCaseForQuote && (
-        <QuoteBuilderLanding
-          useCase={selectedUseCaseForQuote}
-          onGenerateQuote={handleGenerateQuote}
-          onCustomize={handleCustomizeSystem}
+      {/* Quote Builder Landing Modal - V5 TODO: Replace with WizardV5 modal */}
+      {/* showQuoteBuilderLanding && selectedUseCaseForQuote && (
+        <WizardV5
+          initialUseCase={selectedUseCaseForQuote.slug}
+          onComplete={handleGenerateQuote}
           onCancel={handleCancelQuoteBuilder}
         />
-      )}
+      ) */}
 
       {/* Real World Applications Modal */}
       <RealWorldApplicationModal

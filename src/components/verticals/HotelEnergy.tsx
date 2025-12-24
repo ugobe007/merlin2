@@ -35,14 +35,14 @@ import {
 } from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
-import hotelImage from '@/assets/images/hotel_1.jpg';
+import hotelImage from '@/assets/images/hotel_motel_holidayinn_1.jpg';
 import hotelImage2 from '@/assets/images/hotel_motel_holidayinn_1.jpg';
 import hotelImage3 from '@/assets/images/hotel_motel_holidayinn_2.jpg';
 import hotelImage4 from '@/assets/images/hotel_motel_holidayinn_3.jpg';
 import hotelImage5 from '@/assets/images/hotel_motel_holidayinn_4.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
-// REFACTORED: Use StreamlinedWizard instead of HotelWizard
-import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+// V5 Wizard (Clean Build Dec 21, 2025)
+import { WizardV5 } from '@/components/wizard/v5';
 import { TrustBadgesInline, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
@@ -548,6 +548,10 @@ function calculateHotelPower(inputs: HotelInputs): { peakKW: number; dailyKWh: n
 // ============================================
 
 export default function HotelEnergy() {
+  // Redirect to wizard with hotel pre-selected
+  useEffect(() => {
+    window.location.href = '/wizard?industry=hotel';
+  }, []);
   // Calculator inputs - restructured per user requirements (Dec 2025)
   const [inputs, setInputs] = useState<HotelInputs>({
     // STEP 1: Building basics
@@ -1543,49 +1547,16 @@ export default function HotelEnergy() {
           WIZARD MODAL - Uses StreamlinedWizard with hotel pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <StreamlinedWizard
-          show={showWizard}
-          initialUseCase="hotel"
-          initialState={inputs.state}
-          initialData={{
-            // Core facility data from hero calculator
-            roomCount: inputs.numberOfRooms,
-            squareFootage: inputs.squareFootage,
-            hotelClass: inputs.hotelClass,
-            
-            // Amenity flags - will be mapped to selectedAmenities array by hook
-            hasPool: inputs.hasPool || inputs.hasIndoorPool || inputs.hasOutdoorPool,
-            hasIndoorPool: inputs.hasIndoorPool,
-            hasOutdoorPool: inputs.hasOutdoorPool,
-            hasRestaurant: inputs.hasRestaurant,
-            hasSpa: inputs.hasSpa,
-            hasFitnessCenter: inputs.hasFitnessCenter,
-            hasLaundry: inputs.hasLaundry,
-            hasEVCharging: inputs.hasEVCharging,
-            hasConferenceCenter: inputs.hasConferenceCenter,
-            hasEventCenter: inputs.hasEventCenter,
-            hasClubhouse: inputs.hasClubhouse,
-            hasGolfCourse: inputs.hasGolfCourse,
-            
-            // Counts (for detailed calculations)
-            evChargerCount: inputs.evChargerCount,
-            elevatorCount: inputs.elevatorCount,
-            restaurantCount: inputs.restaurantCount,
-            laundryMachineCount: inputs.laundryMachineCount,
-            golfCartCount: inputs.golfCartCount,
-            parkingLotSize: inputs.parkingLotSize,
-            
-            // Billing and estimates
-            currentMonthlyBill: inputs.currentMonthlyBill,
-            storageHours: inputs.storageHours,
-            estimatedAnnualSavings: heroEstimate.savings,
-            estimatedPayback: heroEstimate.payback,
-          }}
-          onClose={() => setShowWizard(false)}
-          onFinish={() => {
-            setShowWizard(false);
-          }}
-        />
+        <div className="fixed inset-0 z-50">
+          <WizardV5
+            initialUseCase="hotel"
+            onComplete={(quote) => {
+              console.log('Hotel quote completed:', quote);
+              setShowWizard(false);
+            }}
+            onCancel={() => setShowWizard(false)}
+          />
+        </div>
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════

@@ -16,8 +16,11 @@
 
 import React, { useState } from 'react';
 import { Wand2, BarChart3, HelpCircle, Battery, Sun, Zap, DollarSign, Clock, ChevronRight } from 'lucide-react';
-import { FloatingWidget, FloatingPanel } from './ui';
-import { SavingsScoutNavbar } from './indicators/SavingsScoutWidget';
+
+// Placeholder components - ./ui is deprecated
+const FloatingWidget: React.FC<{ icon: any; label: string; isOpen?: boolean; onClick: () => void; position: string; color?: string; pulse?: boolean }> = () => null;
+const FloatingPanel: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = () => null;
+// SavingsScoutNavbar REMOVED (Dec 21, 2025) - Redundant with Merlin guidance panels
 
 // ============================================================================
 // TYPES
@@ -105,7 +108,7 @@ export function FloatingWidgets({
           SLIDE-OUT PANELS
           ═══════════════════════════════════════════════════════════════════ */}
       
-      {/* Savings Scout Panel */}
+      {/* Savings Scout Panel - SIMPLIFIED (Dec 21, 2025) */}
       <FloatingPanel
         isOpen={savingsScoutOpen}
         onClose={() => setSavingsScoutOpen(false)}
@@ -118,24 +121,6 @@ export function FloatingWidgets({
                 Based on your location in <strong className="text-purple-700">{state}</strong> and 
                 facility type <strong className="text-purple-700">{industryName || industryProfile}</strong>:
               </p>
-              
-              {/* Inline Savings Scout */}
-              <div className="border border-purple-200 rounded-xl overflow-hidden">
-                <SavingsScoutNavbar
-                  state={state}
-                  industryProfile={industryProfile}
-                  peakDemandKW={peakDemandKW || 200}
-                  facilityDetails={facilityDetails || {}}
-                  onGetQuote={() => {
-                    setSavingsScoutOpen(false);
-                    onNavigateToSection?.(5);
-                  }}
-                  onFullAnalysis={() => {
-                    setSavingsScoutOpen(false);
-                    onNavigateToSection?.(3);
-                  }}
-                />
-              </div>
               
               {/* Quick opportunities list */}
               <div className="space-y-3">

@@ -32,8 +32,8 @@ import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
-// REFACTORED: Use StreamlinedWizard instead of EVChargingWizard
-import StreamlinedWizard from '@/components/wizard/StreamlinedWizard';
+// V5 Wizard (Clean Build Dec 21, 2025)
+import { WizardV5 } from '@/components/wizard/v5';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
@@ -242,6 +242,10 @@ function calculateEVChargingPower(inputs: EVChargingInputs): { peakKW: number; d
 // ============================================
 
 export default function EVChargingEnergy() {
+  // Redirect to wizard with ev-charging pre-selected
+  useEffect(() => {
+    window.location.href = '/wizard?industry=ev-charging';
+  }, []);
   // Calculator inputs
   const [inputs, setInputs] = useState<EVChargingInputs>({
     level2Ports: 4,
@@ -1111,23 +1115,19 @@ export default function EVChargingEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL - Uses StreamlinedWizard with ev-charging pre-selected
+          WIZARD MODAL - Uses WizardV5 with ev-charging pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
-        <StreamlinedWizard
-          show={showWizard}
-          initialUseCase="ev-charging"
-          initialState={inputs.state}
-          initialData={{
-            numberOfLevel2Chargers: inputs.level2Ports,
-            numberOfDCFastChargers: inputs.dcfcPorts,
-            // Note: HPC ports not in database custom_questions yet
-          }}
-          onClose={() => setShowWizard(false)}
-          onFinish={() => {
-            setShowWizard(false);
-          }}
-        />
+        <div className="fixed inset-0 z-50">
+          <WizardV5
+            initialUseCase="ev-charging"
+            onComplete={(quote) => {
+              console.log('EV Charging quote completed:', quote);
+              setShowWizard(false);
+            }}
+            onCancel={() => setShowWizard(false)}
+          />
+        </div>
       )}
       
       {/* TrueQuote Modal */}

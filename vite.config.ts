@@ -27,13 +27,8 @@ export default defineConfig({
           
           // App chunks - split by functionality
           'wizard': [
-            './src/components/wizard/StreamlinedWizard.tsx',
-            './src/components/wizard/InteractiveConfigDashboard.tsx',
-          ],
-          'modals': [
-            './src/components/wizard/FinancingOptionsModal.tsx',
-            './src/components/wizard/InstallerDirectoryModal.tsx',
-            './src/components/wizard/IncentivesGuideModal.tsx',
+            './src/components/wizard/v5/WizardV5.tsx',
+            './src/components/wizard/v5/components/MerlinInputs.tsx',
           ],
           'services': [
             './src/services/centralizedCalculations.ts',

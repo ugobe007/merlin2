@@ -47,8 +47,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "src/components/wizard/backup",
-    "src/components/wizard/_deprecated",
+    "src/components/wizard/legacy/**",
+    "src/components/wizard/backup/**",
+    "src/components/wizard/_deprecated/**",
     "src/components/archive_legacy_nov_2025",
     "src/hooks/useSmartWizardV2.ts",
     "backup_archive",
