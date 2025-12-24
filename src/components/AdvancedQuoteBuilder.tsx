@@ -87,6 +87,15 @@ export default function AdvancedQuoteBuilder({
   const [showWelcomePopup, setShowWelcomePopup] = useState(true); // Welcome popup for first-time users
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [projectInfo, setProjectInfo] = useState<{
+    projectName?: string;
+    projectLocation?: string;
+    projectGoals?: string;
+    projectSchedule?: string;
+    userName?: string;
+    email?: string;
+    userId?: string;
+  } | null>(null);
   
   // ✅ SSOT: Financial metrics from centralizedCalculations (database-driven)
   const [financialMetrics, setFinancialMetrics] = useState<FinancialCalculationResult | null>(null);

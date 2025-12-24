@@ -14,6 +14,8 @@
  * See: src/components/wizard/v5/design-system/
  */
 
-export { StepExplanation } from './StepExplanation';
-export { PrimaryButton } from './PrimaryButton';
-export { SecondaryButton } from './SecondaryButton';
+// Legacy exports - components moved to v5 design system
+// These exports are kept for backward compatibility but components are in legacy folder
+export { default as StepExplanation } from '../legacy/archive/ui/StepExplanation';
+export { default as PrimaryButton } from '../legacy/archive/ui/PrimaryButton';
+export { default as SecondaryButton } from '../legacy/archive/ui/SecondaryButton';

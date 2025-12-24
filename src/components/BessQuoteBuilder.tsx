@@ -54,7 +54,7 @@ export default function BessQuoteBuilder() {
   const [showProfessionalAnalytics, setShowProfessionalAnalytics] = useState(false);
   const [skipWizardIntro, setSkipWizardIntro] = useState(false);
   // Local state to track the initial view for Advanced Quote Builder
-  const [advancedQuoteBuilderInitialView, setAdvancedQuoteBuilderInitialView] = useState<'landing' | 'custom-config'>('landing');
+  const [advancedQuoteBuilderInitialView, setAdvancedQuoteBuilderInitialView] = useState<'landing' | 'custom-config' | 'interactive-dashboard' | 'professional-model'>('landing');
   
   // Use custom hook for all state management
   const { state, actions, exchangeRates } = useBessQuoteBuilder();

@@ -390,11 +390,15 @@ const INDUSTRY_QUESTIONS: Record<string, Question[]> = {
 
 // Helper to normalize options - handles both string[] and object[] formats
 type OptionItem = string | { label: string; value: string; description?: string; [key: string]: any };
-const normalizeOption = (opt: OptionItem): { label: string; value: string } => {
+const normalizeOption = (opt: OptionItem): { label: string; value: string; description?: string } => {
   if (typeof opt === 'string') {
     return { label: opt, value: opt };
   }
-  return { label: opt.label || String(opt.value), value: String(opt.value) };
+  return { 
+    label: opt.label || String(opt.value), 
+    value: String(opt.value),
+    description: (opt as any).description
+  };
 };
 
 // Compact Dropdown - only for 6+ options
@@ -938,19 +942,16 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoading(true);
-      console.log('📥 Step3: Loading questions for industry:', selectedIndustry);
 
       // Try database first via useCaseService.getUseCaseBySlug()
       if (selectedIndustry) {
         try {
           // The service returns DetailedUseCase with custom_questions included
           const useCaseData = await useCaseService.getUseCaseBySlug(selectedIndustry);
-          console.log('📊 Database returned use case:', useCaseData?.name || 'null');
           
           // custom_questions is already transformed by getUseCaseBySlug
           // Format: { id, question, type, default, required, options, min, max, helpText }
           const dbQuestions = useCaseData?.custom_questions || (useCaseData as any)?.customQuestions;
-          console.log('📊 Database returned:', dbQuestions?.length || 0, 'questions');
 
           if (dbQuestions && dbQuestions.length > 0) {
             // Transform from service format to Step3 Question format
@@ -968,13 +969,12 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
               isRequired: q.required ?? q.is_required,
               metadata: q.metadata || (q as any).metadata_json || {},
             }));
-            console.log('✅ Step3: Loaded', transformed.length, 'questions from database for:', selectedIndustry);
             setQuestions(transformed);
             setIsLoading(false);
             return;
           }
         } catch (error) {
-          console.warn('❌ Database query failed, using fallback:', error);
+          // Silently fall back to hardcoded questions
         }
       }
 
@@ -983,10 +983,8 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
       const industryQuestions = INDUSTRY_QUESTIONS[industryKey];
       
       if (industryQuestions) {
-        console.log('📋 Using industry-specific questions for:', industryKey);
         setQuestions(industryQuestions);
       } else {
-        console.log('📋 Using generic fallback questions');
         setQuestions(FALLBACK_QUESTIONS);
       }
       
