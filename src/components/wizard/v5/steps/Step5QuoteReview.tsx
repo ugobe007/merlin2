@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
-import { RequestQuoteModal } from '@/components/modals/RequestQuoteModal';
+import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
 import badgeIcon from '@/assets/images/badge_icon.jpg';
 import { 

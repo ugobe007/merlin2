@@ -172,7 +172,7 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   const canContinue = state && goals.length > 0;
   
   // Determine if zip code is entered (locks state dropdown)
-  const hasZipCode = zipCode && zipCode.length === 5;
+  const hasZipCode = Boolean(zipCode && zipCode.length === 5);
   
   // Handle goal toggle
   const handleGoalToggle = (goalId: string) => {
