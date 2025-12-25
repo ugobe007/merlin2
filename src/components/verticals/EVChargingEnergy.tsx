@@ -12,7 +12,7 @@
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
  * 
- * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='ev-charging'
+ * REFACTORED Dec 2025: Now uses WizardV5 with initialUseCase='ev-charging'
  * instead of separate EVChargingWizard component (2.7K+ lines of duplicate code removed)
  */
 

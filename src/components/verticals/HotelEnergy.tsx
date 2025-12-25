@@ -12,7 +12,7 @@
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
  * 
- * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='hotel'
+ * REFACTORED Dec 2025: Now uses WizardV5 with initialUseCase='hotel'
  * instead of separate HotelWizard component (10K+ lines of duplicate code removed)
  */
 
@@ -1544,7 +1544,7 @@ export default function HotelEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          WIZARD MODAL - Uses StreamlinedWizard with hotel pre-selected
+          WIZARD MODAL - Uses WizardV5 with hotel pre-selected
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div className="fixed inset-0 z-50">

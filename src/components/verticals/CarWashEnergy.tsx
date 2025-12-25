@@ -12,7 +12,7 @@
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
  * 
- * REFACTORED Dec 2025: Now uses StreamlinedWizard with initialUseCase='car-wash'
+ * REFACTORED Dec 2025: Now uses WizardV5 with initialUseCase='car-wash'
  * instead of separate CarWashWizard component (4K+ lines of duplicate code removed)
  */
 

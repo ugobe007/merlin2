@@ -31,7 +31,7 @@ function App() {
   
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
   const [showVendorPortal, setShowVendorPortal] = useState(isVendorPortalRoute);
-  const [showStreamlinedWizard, setShowStreamlinedWizard] = useState(pathname === '/wizard');
+  const [showWizard, setShowWizard] = useState(pathname === '/wizard');
   
   // NEW: Direct /quote-builder route support
   // This enables verticals to redirect to Advanced Quote Builder directly
@@ -63,17 +63,20 @@ function App() {
   }, []);
 
   // Admin authentication with email and password
-  const handleAdminAccess = () => {
+  const handleAdminAccess = async () => {
     const email = prompt('Enter admin email:');
     if (!email) return;
     
     const password = prompt('Enter admin password:');
     if (!password) return;
     
-    // Check admin credentials (update these credentials as needed)
-    // Current: admin@merlin.energy / merlin2025
-    // To change: modify the email and password values below
-    if (email === 'admin@merlin.energy' && password === 'merlin2025') {
+    // Check admin credentials using AdminAuthService (supports multiple admin accounts)
+    // Current accounts:
+    // - admin@merlinenergy.net / merlin2025 (super admin - full access)
+    // - viewer@merlinenergy.net / viewer2025 (limited admin - view only, no edits)
+    const { adminAuthService } = await import('./services/adminAuthService');
+    const authenticated = adminAuthService.authenticate(email, password);
+    if (authenticated) {
       setShowAdmin(true);
     } else {
       alert('Incorrect email or password');
@@ -110,7 +113,7 @@ function App() {
   }
   
   // Access via /wizard - V5 Wizard (Clean Build Dec 21, 2025)
-  if (showStreamlinedWizard) {
+  if (showWizard) {
     return (
       <WizardV5 
         onComplete={(quote) => {
@@ -133,7 +136,7 @@ function App() {
         {/* Floating Admin Access Button - Bottom Right */}
         <button
           onClick={handleAdminAccess}
-          className="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-400 animate-pulse hover:animate-none"
+          className="fixed bottom-4 right-4 bg-gradient-to-br from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white p-4 rounded-full shadow-xl shadow-purple-700/30 transition-all z-40 opacity-90 hover:opacity-100 hover:scale-110 border-2 border-purple-500 animate-pulse hover:animate-none"
           title="Admin Access (Ctrl+Shift+A)"
         >
           <span className="text-xl">⚙️</span>

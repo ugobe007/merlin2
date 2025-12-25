@@ -9,7 +9,7 @@
  * - Anomaly detection for pricing alerts
  */
 
-import { supabase } from './supabase';
+import { supabase } from './supabaseClient';
 
 interface PriceTrendAnalysis {
   productType: string;

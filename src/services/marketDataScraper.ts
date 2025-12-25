@@ -235,47 +235,127 @@ function extractAttr(xml: string, tag: string, attr: string): string {
 
 /**
  * Classify content by equipment type and extract topics
+ * IMPROVED: Better keyword matching and topic detection
  */
 export function classifyContent(text: string): {
   equipment: string[];
   topics: string[];
   relevanceScore: number;
 } {
-  const textLower = text.toLowerCase();
+  // Preprocess text: strip HTML, normalize
+  const cleanText = text.replace(/<[^>]*>/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+  const textLower = cleanText.toLowerCase();
   const equipment: string[] = [];
   const topics: string[] = [];
   let relevanceScore = 0;
   
-  // Check each equipment category
+  // Check each equipment category with improved matching
   for (const [category, keywords] of Object.entries(EQUIPMENT_KEYWORDS)) {
-    const matches = keywords.filter(kw => textLower.includes(kw.toLowerCase()));
+    // Use word boundary matching for better accuracy
+    const matches = keywords.filter(kw => {
+      const keywordLower = kw.toLowerCase();
+      // Exact word match (better accuracy) - escape special regex chars
+      const escapedKeyword = keywordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordBoundaryRegex = new RegExp('\\b' + escapedKeyword + '\\b', 'i');
+      return wordBoundaryRegex.test(textLower);
+    });
     if (matches.length > 0) {
       equipment.push(category);
       relevanceScore += matches.length * 0.1;
     }
   }
   
-  // Extract topics based on common themes
-  if (textLower.includes('price') || textLower.includes('cost') || textLower.includes('$/')) {
-    topics.push('pricing');
-    relevanceScore += 0.3;
+  // Expanded topic detection with fuzzy matching
+  const topicPatterns: Array<{ topic: string; patterns: string[]; score: number }> = [
+    {
+      topic: 'pricing',
+      patterns: ['price', 'cost', '$/', 'dollar', 'pricing', 'priced at', 'costs', 'affordable', 'expensive', 'cheap', 'budget'],
+      score: 0.3
+    },
+    {
+      topic: 'projects',
+      patterns: ['project', 'install', 'deploy', 'construction', 'development', 'announcement', 'commission', 'operational'],
+      score: 0.15
+    },
+    {
+      topic: 'policy',
+      patterns: ['regulation', 'policy', 'incentive', 'itc', 'tax credit', 'rebate', 'subsidy', 'government', 'federal', 'state', 'legislation', 'bill'],
+      score: 0.2
+    },
+    {
+      topic: 'tariffs',
+      patterns: ['tariff', 'trade', 'import', 'export', 'duty', 'customs', 'trade war'],
+      score: 0.2
+    },
+    {
+      topic: 'market-trends',
+      patterns: ['market', 'forecast', 'outlook', 'trend', 'growth', 'decline', 'demand', 'supply', 'capacity', 'industry'],
+      score: 0.15
+    },
+    {
+      topic: 'technology',
+      patterns: ['technology', 'innovation', 'breakthrough', 'advancement', 'new tech', 'cutting edge', 'next generation', 'patent'],
+      score: 0.1
+    },
+    {
+      topic: 'financing',
+      patterns: ['financing', 'funding', 'investment', 'capital', 'loan', 'lease', 'ppa', 'power purchase agreement', 'financier'],
+      score: 0.15
+    },
+    {
+      topic: 'manufacturing',
+      patterns: ['manufacture', 'factory', 'production', 'facility', 'plant', 'assembly', 'supply chain'],
+      score: 0.1
+    },
+    {
+      topic: 'grid',
+      patterns: ['grid', 'utility', 'transmission', 'distribution', 'interconnection', 'net metering', 'grid-tied'],
+      score: 0.15
+    },
+    {
+      topic: 'sustainability',
+      patterns: ['sustainability', 'carbon', 'emission', 'renewable', 'clean energy', 'green', 'climate', 'environmental'],
+      score: 0.1
+    },
+    {
+      topic: 'performance',
+      patterns: ['efficiency', 'performance', 'output', 'capacity', 'rating', 'specification', 'specs', 'warranty'],
+      score: 0.1
+    },
+    {
+      topic: 'partnership',
+      patterns: ['partnership', 'collaboration', 'joint venture', 'alliance', 'agreement', 'deal', 'contract'],
+      score: 0.1
+    }
+  ];
+  
+  // Detect topics with improved matching
+  for (const { topic, patterns, score } of topicPatterns) {
+    const matches = patterns.filter(pattern => {
+      // Use word boundary for better matching - escape special regex chars
+      const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp('\\b' + escapedPattern + '\\b', 'i');
+      return regex.test(textLower);
+    });
+    
+    if (matches.length > 0) {
+      // Avoid duplicates
+      if (!topics.includes(topic)) {
+        topics.push(topic);
+        relevanceScore += score;
+      }
+    }
   }
-  if (textLower.includes('project') || textLower.includes('install') || textLower.includes('deploy')) {
-    topics.push('projects');
+  
+  // Additional context-based topic detection
+  if (textLower.includes('megawatt') || textLower.includes('mw ') || textLower.includes(' mw')) {
+    if (!topics.includes('projects')) topics.push('projects');
   }
-  if (textLower.includes('regulation') || textLower.includes('policy') || textLower.includes('incentive') || textLower.includes('itc') || textLower.includes('tax credit')) {
-    topics.push('policy');
-    relevanceScore += 0.2;
-  }
-  if (textLower.includes('tariff') || textLower.includes('trade') || textLower.includes('import')) {
-    topics.push('tariffs');
-    relevanceScore += 0.2;
-  }
-  if (textLower.includes('market') || textLower.includes('forecast') || textLower.includes('outlook')) {
-    topics.push('market_trends');
-  }
-  if (textLower.includes('technology') || textLower.includes('innovation') || textLower.includes('breakthrough')) {
-    topics.push('technology');
+  
+  if (textLower.includes('percent') || textLower.includes('%') || textLower.includes('percentage')) {
+    if (!topics.includes('market-trends')) topics.push('market-trends');
   }
   
   return {
@@ -290,79 +370,276 @@ export function classifyContent(text: string): {
 // ============================================================================
 
 /**
+ * Preprocess text for price extraction
+ * Strips HTML, normalizes whitespace, and preserves price patterns
+ */
+function preprocessTextForPrices(text: string): string {
+  // Remove HTML tags but preserve content
+  let cleaned = text.replace(/<[^>]*>/g, ' ');
+  // Decode HTML entities
+  cleaned = cleaned
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+  // Normalize whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned;
+}
+
+/**
  * Extract pricing data from text content
+ * IMPROVED: Works even without equipment detection, uses better preprocessing
  */
 export function extractPrices(text: string, equipment: string[]): ExtractedPrice[] {
   const prices: ExtractedPrice[] = [];
   
-  // BESS $/kWh
-  if (equipment.includes('bess') || equipment.includes('ess')) {
-    let match;
-    while ((match = PRICE_PATTERNS.bess_kwh.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 50 && price < 2000) {  // Sanity check for BESS pricing
-        // Get context (surrounding text)
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        const context = text.slice(start, end);
-        
-        prices.push({
-          equipment: 'bess',
-          price,
-          unit: 'kWh',
-          currency: 'USD',
-          context,
-          confidence: 0.8
-        });
+  // Preprocess text: strip HTML, normalize
+  const cleanText = preprocessTextForPrices(text);
+  const textLower = cleanText.toLowerCase();
+  
+  // Detect equipment from text if not provided
+  const detectedEquipment = equipment.length > 0 ? equipment : detectEquipmentFromText(textLower);
+  
+  // Expanded BESS price patterns
+  const bessPatterns = [
+    PRICE_PATTERNS.bess_kwh,
+    /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
+    /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/)\s*kwh/gi,
+    /(?:cost|price|priced|pricing)\s*(?:at|of)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
+    /battery.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
+    /storage.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kwh/gi,
+  ];
+  
+  // Extract BESS prices
+  if (detectedEquipment.includes('bess') || detectedEquipment.includes('ess') || 
+      textLower.includes('battery') || textLower.includes('energy storage') || 
+      textLower.includes('bess')) {
+    for (const pattern of bessPatterns) {
+      // Reset regex lastIndex
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (price > 50 && price < 2000) {  // Sanity check for BESS pricing
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+          
+          // Avoid duplicates
+          const isDuplicate = prices.some(p => 
+            p.equipment === 'bess' && 
+            Math.abs(p.price - price) < 1 && 
+            p.unit === 'kWh'
+          );
+          
+          if (!isDuplicate) {
+            prices.push({
+              equipment: 'bess',
+              price,
+              unit: 'kWh',
+              currency: 'USD',
+              context,
+              confidence: 0.8
+            });
+          }
+        }
       }
     }
   }
   
-  // Solar $/W
-  if (equipment.includes('solar')) {
-    let match;
-    while ((match = PRICE_PATTERNS.solar_watt.exec(text)) !== null) {
-      const price = parseFloat(match[1]);
-      if (price > 0.10 && price < 5) {  // Sanity check for solar $/W
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        const context = text.slice(start, end);
+  // Expanded Solar price patterns
+  const solarPatterns = [
+    PRICE_PATTERNS.solar_watt,
+    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
+    /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/)\s*[Ww](?:att)?/gi,
+    /(?:cost|price|priced|pricing)\s*(?:at|of)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
+    /solar.*?\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
+    /pv.*?\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/)\s*[Ww](?:att)?/gi,
+    // $/kW patterns for solar
+    /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+  ];
+  
+  // Extract Solar prices
+  if (detectedEquipment.includes('solar') || textLower.includes('solar') || 
+      textLower.includes('photovoltaic') || textLower.includes('pv ')) {
+    for (const pattern of solarPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        // Check if it's $/W (0.1-5) or $/kW (100-5000)
+        const isPerWatt = match[0].toLowerCase().includes('watt') || 
+                         match[0].toLowerCase().includes('/w') ||
+                         (price >= 0.10 && price <= 5);
+        const isPerKW = match[0].toLowerCase().includes('/kw') && 
+                       !match[0].toLowerCase().includes('kwh') &&
+                       (price >= 100 && price <= 5000);
         
-        prices.push({
-          equipment: 'solar',
-          price,
-          unit: 'W',
-          currency: 'USD',
-          context,
-          confidence: 0.8
-        });
+        if (isPerWatt && price > 0.10 && price < 5) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+          
+          const isDuplicate = prices.some(p => 
+            p.equipment === 'solar' && 
+            Math.abs(p.price - price) < 0.01 && 
+            p.unit === 'W'
+          );
+          
+          if (!isDuplicate) {
+            prices.push({
+              equipment: 'solar',
+              price,
+              unit: 'W',
+              currency: 'USD',
+              context,
+              confidence: 0.8
+            });
+          }
+        } else if (isPerKW && price >= 100 && price <= 5000) {
+          // Convert $/kW to $/W for consistency
+          const pricePerWatt = price / 1000;
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+          
+          const isDuplicate = prices.some(p => 
+            p.equipment === 'solar' && 
+            Math.abs(p.price - pricePerWatt) < 0.01 && 
+            p.unit === 'W'
+          );
+          
+          if (!isDuplicate) {
+            prices.push({
+              equipment: 'solar',
+              price: pricePerWatt,
+              unit: 'W',
+              currency: 'USD',
+              context,
+              confidence: 0.75
+            });
+          }
+        }
       }
     }
   }
   
   // EV charger pricing
-  if (equipment.includes('ev-charger')) {
-    let match;
-    while ((match = PRICE_PATTERNS.ev_unit.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 100 && price < 500000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        const context = text.slice(start, end);
-        
-        prices.push({
-          equipment: 'ev-charger',
-          price,
-          unit: 'unit',
-          currency: 'USD',
-          context,
-          confidence: 0.7
-        });
+  const evPatterns = [
+    PRICE_PATTERNS.ev_unit,
+    /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*(?:charger|unit|station|port)/gi,
+    /(?:cost|price|priced)\s*(?:at|of)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*(?:charger|unit|station)/gi,
+    /ev.*?charger.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/gi,
+  ];
+  
+  if (detectedEquipment.includes('ev-charger') || textLower.includes('ev charger') || 
+      textLower.includes('electric vehicle charging')) {
+    for (const pattern of evPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (price > 100 && price < 500000) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+          
+          const isDuplicate = prices.some(p => 
+            p.equipment === 'ev-charger' && 
+            Math.abs(p.price - price) < 100 && 
+            p.unit === 'unit'
+          );
+          
+          if (!isDuplicate) {
+            prices.push({
+              equipment: 'ev-charger',
+              price,
+              unit: 'unit',
+              currency: 'USD',
+              context,
+              confidence: 0.7
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  // Generator pricing ($/kW)
+  if (detectedEquipment.includes('generator') || textLower.includes('generator') || 
+      textLower.includes('genset')) {
+    const genPatterns = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+      /generator.*?\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/)\s*kw(?!h)/gi,
+    ];
+    
+    for (const pattern of genPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanText)) !== null) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (price > 200 && price < 2000) {
+          const start = Math.max(0, match.index - 100);
+          const end = Math.min(cleanText.length, match.index + match[0].length + 100);
+          const context = cleanText.slice(start, end);
+          
+          const isDuplicate = prices.some(p => 
+            p.equipment === 'generator' && 
+            Math.abs(p.price - price) < 50 && 
+            p.unit === 'kW'
+          );
+          
+          if (!isDuplicate) {
+            prices.push({
+              equipment: 'generator',
+              price,
+              unit: 'kW',
+              currency: 'USD',
+              context,
+              confidence: 0.7
+            });
+          }
+        }
       }
     }
   }
   
   return prices;
+}
+
+/**
+ * Detect equipment from text if not already detected
+ */
+function detectEquipmentFromText(text: string): string[] {
+  const equipment: string[] = [];
+  
+  if (text.includes('battery') || text.includes('bess') || text.includes('energy storage') || 
+      text.includes('energy storage system')) {
+    equipment.push('bess');
+  }
+  if (text.includes('solar') || text.includes('photovoltaic') || text.includes('pv ') || 
+      text.includes('solar panel')) {
+    equipment.push('solar');
+  }
+  if (text.includes('wind') || text.includes('wind turbine')) {
+    equipment.push('wind');
+  }
+  if (text.includes('generator') || text.includes('genset')) {
+    equipment.push('generator');
+  }
+  if (text.includes('ev charger') || text.includes('electric vehicle charging') || 
+      text.includes('charging station')) {
+    equipment.push('ev-charger');
+  }
+  if (text.includes('inverter')) {
+    equipment.push('inverter');
+  }
+  
+  return equipment;
 }
 
 // ============================================================================
@@ -458,11 +735,18 @@ export async function fetchRSSFeed(source: MarketDataSource): Promise<ScrapedArt
     // Process each item
     const articles: ScrapedArticle[] = items.map(item => {
       const content = item.content || item.description || '';
+      // Combine title and content for better extraction
       const fullText = `${item.title} ${content}`;
       
       const classification = classifyContent(fullText);
+      // Extract prices with improved preprocessing
       const prices = extractPrices(fullText, classification.equipment);
       const regulations = extractRegulations(fullText);
+      
+      // Debug logging in development
+      if (import.meta.env.DEV && prices.length > 0) {
+        console.log(`💰 Extracted ${prices.length} price(s) from: ${item.title?.substring(0, 60)}`);
+      }
       
       return {
         source_id: source.id,
