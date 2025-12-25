@@ -66,6 +66,8 @@ interface Step3Props {
   durationHours?: number;
   generatorKW?: number;
   gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+  // ProQuote handler
+  onOpenAdvanced?: () => void;
 }
 
 interface Question {
@@ -935,6 +937,7 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
   durationHours = 4,
   generatorKW = 0,
   gridConnection = 'on-grid',
+  onOpenAdvanced,
 }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1417,24 +1420,29 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
       </div>
 
       {/* ProQuote Shield Button */}
-      <div className="mb-6 relative z-20">
-        <button
-          onClick={() => {
-            console.log('🚀 ProQuote button clicked from Step 3!');
-            sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
-              batteryKW,
-              durationHours,
-              solarKW: solarKW || 0,
-              generatorKW: generatorKW || 0,
-              state,
-              zipCode,
-              selectedIndustry,
-              electricityRate,
-              useCaseData,
-              goals,
-            }));
-            window.location.href = '/?advanced=true&view=custom-config';
-          }}
+      {onOpenAdvanced && (
+        <div className="mb-6 relative z-20">
+          <button
+            onClick={() => {
+              console.log('🚀 ProQuote button clicked from Step 3!');
+              sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
+                batteryKW,
+                durationHours,
+                solarKW: solarKW || 0,
+                generatorKW: generatorKW || 0,
+                state,
+                zipCode,
+                selectedIndustry,
+                electricityRate,
+                useCaseData,
+                goals,
+              }));
+              if (onOpenAdvanced) {
+                onOpenAdvanced();
+              } else {
+                window.location.href = '/?advanced=true&view=custom-config';
+              }
+            }}
           className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group relative z-20"
           style={{
             background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(49, 46, 129, 0.95) 100%)',
@@ -1466,7 +1474,8 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
             </div>
           </div>
         </button>
-      </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {isLoading ? (

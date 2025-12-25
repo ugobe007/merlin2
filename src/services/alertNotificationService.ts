@@ -31,7 +31,7 @@ export const ALERT_CONFIG = {
   alertCooldownMinutes: 15,
   
   // Recipients
-  alertEmail: import.meta.env.VITE_ALERT_EMAIL || 'admin@example.com',
+  alertEmail: import.meta.env.VITE_ALERT_EMAIL || 'admin@merlinenergy.net',
   alertPhone: import.meta.env.VITE_ALERT_PHONE || '', // +1234567890 format
   slackWebhook: import.meta.env.VITE_SLACK_WEBHOOK || '',
   
@@ -209,7 +209,7 @@ async function sendEmailAlert(payload: AlertPayload): Promise<boolean> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Merlin Alerts <alerts@merlin.energy>',
+        from: 'Merlin Alerts <alerts@merlinenergy.net>',
         to: ALERT_CONFIG.alertEmail,
         subject,
         html,

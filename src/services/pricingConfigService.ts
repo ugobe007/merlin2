@@ -2,7 +2,13 @@
  * Pricing Configuration Service
  * Centralized management of all equipment pricing assumptions
  * Based on real-world vendor quotes and market intelligence
+ * 
+ * MIGRATED TO DATABASE (January 3, 2025)
+ * - Now uses pricing_configurations table as single source of truth
+ * - Maintains backward compatibility with localStorage during migration
  */
+
+import { supabase } from './supabaseClient';
 
 export interface BESSPricingConfig {
   // 4-tier realistic pricing structure for 2025
@@ -145,131 +151,103 @@ export interface PricingConfiguration {
   version: string;
 }
 
-// Default pricing configuration based on vendor analysis and market data
+// Default pricing configuration (fallback if database unavailable)
 const defaultBESSPricing: BESSPricingConfig = {
-  // Realistic Q4 2025 BESS pricing tiers (user-validated)
-  smallSystemPerKWh: 145,        // <1 MWh: $145/kWh
-  mediumSystemPerKWh: 135,       // 1-5 MWh: $135/kWh
-  mediumLargeSystemPerKWh: 120,  // 5-15 MWh: $120/kWh
-  largeSystemPerKWh: 105,        // 15+ MWh: $105/kWh
-  
-  // Reference points for tier boundaries
-  smallSystemSizeMWh: 1,         // <1 MWh threshold
-  mediumSystemSizeMWh: 5,        // 1-5 MWh threshold
-  largeSystemSizeMWh: 15,        // 15+ MWh threshold
-  
-  degradationRate: 2.4,          // Realistic LFP degradation rate
-  warrantyYears: 11,             // Industry standard warranty terms
+  smallSystemPerKWh: 145,
+  mediumSystemPerKWh: 135,
+  mediumLargeSystemPerKWh: 120,
+  largeSystemPerKWh: 105,
+  smallSystemSizeMWh: 1,
+  mediumSystemSizeMWh: 5,
+  largeSystemSizeMWh: 15,
+  degradationRate: 2.4,
+  warrantyYears: 11,
   vendorNotes: "Q4 2025 realistic BESS pricing tiers: <1MWh=$145/kWh | 1-5MWh=$135/kWh | 5-15MWh=$120/kWh | 15+MWh=$105/kWh. Includes installation, BOS, commissioning, realistic profit margins. LFP technology, 6000+ cycles."
 };
 
-// Default configuration for all pricing sections
 const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
   bess: defaultBESSPricing,
   solar: {
-    // Updated Q4 2025 solar pricing - significant cost reductions
-    utilityScalePerWatt: 0.58,     // Down from 0.65 - large utility projects
-    commercialPerWatt: 0.78,       // Down from 0.85 - commercial rooftop
-    smallScalePerWatt: 1.15,       // Down from 1.25 - small commercial/residential
-    trackingSystemUpcharge: 12,     // Down from 15% - tracking systems more competitive
-    rooftopInstallationFactor: 1.35, // 35% premium for rooftop vs ground mount
-    permittingCostPerWatt: 0.12,   // Permitting costs per watt
+    utilityScalePerWatt: 0.58,
+    commercialPerWatt: 0.78,
+    smallScalePerWatt: 1.15,
+    trackingSystemUpcharge: 12,
+    rooftopInstallationFactor: 1.35,
+    permittingCostPerWatt: 0.12,
     vendorNotes: "NREL ATB Q4 2025 + market intelligence. Solar module prices down 18% YoY. Installation labor optimized with prefab systems."
   },
   officeBuilding: {
-    // Office building specific BESS installation costs
-    rooftopInstallationPerKWh: 45,    // Additional cost for rooftop installation
-    basementInstallationPerKWh: 65,   // Higher cost for basement installation (ventilation, access)
-    groundLevelInstallationPerKWh: 25, // Lowest cost option - parking lot installation
-    
-    // Building integration costs
-    hvacIntegrationCost: 35000,        // HVAC thermal management integration
-    buildingAutomationCost: 28000,     // BAS integration costs
-    elevatorBackupCost: 45000,         // Emergency elevator backup integration
-    fireSuppressionPerSqFt: 15,       // Fire suppression system costs per sq ft of BESS room
-    
-    // Permitting and compliance
-    cityPermittingBaseCost: 8500,      // Base permitting cost for urban areas
-    structuralAnalysisCost: 12000,     // Structural engineering analysis
-    electricalUpgradeCost: 35000,      // Building electrical system upgrades
-    
-    // Installation factors
-    urbanAccessFactor: 1.25,           // 25% premium for urban access challenges
-    highRiseInstallationFactor: 1.40,  // 40% premium for buildings >10 stories
-    weekendWorkPremium: 1.75,          // 75% premium for after-hours/weekend work
-    
+    rooftopInstallationPerKWh: 45,
+    basementInstallationPerKWh: 65,
+    groundLevelInstallationPerKWh: 25,
+    hvacIntegrationCost: 35000,
+    buildingAutomationCost: 28000,
+    elevatorBackupCost: 45000,
+    fireSuppressionPerSqFt: 15,
+    cityPermittingBaseCost: 8500,
+    structuralAnalysisCost: 12000,
+    electricalUpgradeCost: 35000,
+    urbanAccessFactor: 1.25,
+    highRiseInstallationFactor: 1.40,
+    weekendWorkPremium: 1.75,
     vendorNotes: "Q4 2025 office building BESS integration costs. Includes fire code compliance (NFPA 855), building code integration, and urban installation challenges."
   },
   wind: {
-    // Updated wind pricing with improved turbine efficiency
-    utilityScalePerKW: 1150,       // Down from 1200 - larger turbines, economies of scale
-    commercialPerKW: 1350,         // Down from 1400 - distributed wind improvements
-    smallScalePerKW: 2100,         // Down from 2200 - small wind technology advances
-    foundationCostPerMW: 48000,    // Down from 50000 - optimized foundation designs
+    utilityScalePerKW: 1150,
+    commercialPerKW: 1350,
+    smallScalePerKW: 2100,
+    foundationCostPerMW: 48000,
     vendorNotes: "2025 wind market with improved turbine efficiency and installation processes"
   },
   generators: {
-    // Updated generator pricing based on latest market intelligence (Q4 2025)
-    naturalGasPerKW: 300,          // Updated from 750 - aligned with market range $250-$350
-    dieselPerKW: 420,              // Proportionally adjusted from diesel premium
-    propanePerKW: 480,             // Cleaner fuel premium maintained
-    bioGasPerKW: 650,              // Renewable fuel premium maintained
-    baseInstallationCost: 48000,   // Installation costs unchanged
+    naturalGasPerKW: 300,
+    dieselPerKW: 420,
+    propanePerKW: 480,
+    bioGasPerKW: 650,
+    baseInstallationCost: 48000,
     vendorNotes: "Generator pricing updated per Eaton/Cummins market intelligence Q4 2025"
   },
   powerElectronics: {
-    // Updated power electronics with advanced grid-forming capabilities
-    inverterPerKW: 140,            // Down from 150 - volume production, technology maturity
-    transformerPerKVA: 72,         // Down from 75 - standardized designs
-    switchgearPerKW: 185,          // Down from 200 - improved manufacturing
-    protectionRelaysPerUnit: 23500, // Down from 25000 - digital protection advances
+    inverterPerKW: 140,
+    transformerPerKVA: 72,
+    switchgearPerKW: 185,
+    protectionRelaysPerUnit: 23500,
     vendorNotes: "Grid-forming and grid-following capable PCS with enhanced cybersecurity (IEC 62443 compliant)"
   },
   evCharging: {
-    // Updated EV charging with 2025 technology improvements and cost reductions
-    level1ACPerUnit: 950,          // Down from 1200 - basic Level 1 chargers more commoditized
-    level2ACPerUnit: 2850,         // Down from 3500 - Level 2 market maturity
-    dcFastPerUnit: 38000,          // Down from 45000 - DC fast charging scale economies
-    dcUltraFastPerUnit: 125000,    // Down from 150000 - 350kW+ charger cost improvements
-    pantographChargerPerUnit: 175000, // Down from 200000 - overhead charging optimization
-    networkingCostPerUnit: 2200,   // Down from 2500 - OCPP and connectivity standardization
-    
-    // Installation and infrastructure costs
-    electricalInfrastructurePerUnit: 8500,   // Electrical infrastructure per charging point
-    pavementAndFoundationPerUnit: 3200,     // Concrete work and foundations
-    utilityConnectionCost: 15000,            // Utility interconnection and service upgrades
-    permittingPerSite: 6500,                // Site permitting and approvals
-    networkingInstallationPerUnit: 1200,     // Network installation and configuration
-    
-    // Operational costs
-    maintenancePerUnitPerYear: 750,         // Annual maintenance costs
-    softwareLicensePerUnitPerYear: 480,     // Annual software licensing
-    networkFeesPerUnitPerMonth: 45,         // Monthly network connectivity fees
-    
+    level1ACPerUnit: 950,
+    level2ACPerUnit: 2850,
+    dcFastPerUnit: 38000,
+    dcUltraFastPerUnit: 125000,
+    pantographChargerPerUnit: 175000,
+    networkingCostPerUnit: 2200,
+    electricalInfrastructurePerUnit: 8500,
+    pavementAndFoundationPerUnit: 3200,
+    utilityConnectionCost: 15000,
+    permittingPerSite: 6500,
+    networkingInstallationPerUnit: 1200,
+    maintenancePerUnitPerYear: 750,
+    softwareLicensePerUnitPerYear: 480,
+    networkFeesPerUnitPerMonth: 45,
     vendorNotes: "Commercial EV charging Q4 2025: CCS standard, plug-and-charge, vehicle-to-grid ready infrastructure. Includes full installation and 5-year operational cost estimates."
   },
   balanceOfPlant: {
-    // Updated BOP costs with installation efficiency improvements
-    bopPercentage: 11,             // Down from 12% - standardized BOP components
-    laborCostPerHour: 92,          // Up from 85 - skilled labor cost increases
-    epcPercentage: 7.5,            // Down from 8% - EPC competition and efficiency
-    shippingCostPercentage: 3.2,   // Up from 3% - logistics cost increases
-    internationalTariffRate: 22,   // Down from 25% - trade policy changes
-    contingencyPercentage: 9,      // Down from 10% - project risk reduction with experience
-    
-    // Regional labor variations
-    urbanLaborPremium: 18,         // 18% premium for urban areas
-    skillLaborPremiumPercentage: 25, // 25% premium for specialized skills (electrical, controls)
-    unionLaborPremiumPercentage: 32, // 32% premium for union labor areas
-    
+    bopPercentage: 11,
+    laborCostPerHour: 92,
+    epcPercentage: 7.5,
+    shippingCostPercentage: 3.2,
+    internationalTariffRate: 22,
+    contingencyPercentage: 9,
+    urbanLaborPremium: 18,
+    skillLaborPremiumPercentage: 25,
+    unionLaborPremiumPercentage: 32,
     vendorNotes: "Q4 2025 BOP costs: modular systems reducing field labor, increased material costs offset by efficiency gains. Regional labor variations reflect market reality."
   },
   systemControls: {
-    // Updated system controls with advanced AI/ML capabilities
-    scadaSystemBaseCost: 68000,    // Down from 75000 - standardized SCADA platforms
-    cybersecurityComplianceCost: 32000, // Up from 25000 - enhanced security requirements
-    cloudConnectivityPerYear: 8500, // Down from 12000 - cloud service cost reductions
-    hmiTouchscreenCost: 12500,     // Down from 15000 - display technology improvements
+    scadaSystemBaseCost: 68000,
+    cybersecurityComplianceCost: 32000,
+    cloudConnectivityPerYear: 8500,
+    hmiTouchscreenCost: 12500,
     vendorNotes: "Industrial SCADA with AI-powered predictive maintenance, NERC CIP compliance, edge computing integration"
   },
   lastUpdated: new Date().toISOString(),
@@ -279,18 +257,237 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
 
 class PricingConfigService {
   private config: PricingConfiguration;
+  private useDatabase: boolean = true; // Flag to enable/disable database usage
+  private configCache: PricingConfiguration | null = null;
+  private cacheExpiry: number = 0;
+  private readonly CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    // Load from localStorage or use defaults
-    const savedConfig = localStorage.getItem('pricingConfiguration');
-    this.config = savedConfig ? JSON.parse(savedConfig) : DEFAULT_PRICING_CONFIG;
+    // Initialize with defaults (will be overridden by loadFromDatabase)
+    this.config = DEFAULT_PRICING_CONFIG;
+    
+    // Try to load from database first, fallback to localStorage, then defaults
+    this.loadConfiguration();
+  }
+
+  /**
+   * Load configuration from database, localStorage, or defaults
+   * Priority: Database > localStorage > Defaults
+   */
+  private async loadConfiguration(): Promise<void> {
+    try {
+      // Try database first
+      if (this.useDatabase) {
+        const dbConfig = await this.loadFromDatabase();
+        if (dbConfig) {
+          this.config = dbConfig;
+          // Migrate localStorage to database if it exists and is newer
+          await this.migrateLocalStorageToDatabase();
+          return;
+        }
+      }
+      
+      // Fallback to localStorage
+      const savedConfig = localStorage.getItem('pricingConfiguration');
+      if (savedConfig) {
+        try {
+          const parsed = JSON.parse(savedConfig);
+          if (this.validateConfig(parsed)) {
+            this.config = parsed;
+            // Try to save to database for future use
+            if (this.useDatabase) {
+              await this.saveToDatabase(this.config, 'Migrated from localStorage');
+            }
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to parse localStorage pricing config:', e);
+        }
+      }
+      
+      // Use defaults
+      this.config = DEFAULT_PRICING_CONFIG;
+    } catch (error) {
+      console.error('Error loading pricing configuration:', error);
+      // Fallback to localStorage or defaults
+      const savedConfig = localStorage.getItem('pricingConfiguration');
+      if (savedConfig) {
+        try {
+          this.config = JSON.parse(savedConfig);
+        } catch {
+          this.config = DEFAULT_PRICING_CONFIG;
+        }
+      }
+    }
+  }
+
+  /**
+   * Load configuration from database
+   */
+  private async loadFromDatabase(): Promise<PricingConfiguration | null> {
+    // Check cache first
+    if (this.configCache && Date.now() < this.cacheExpiry) {
+      return this.configCache;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('pricing_configurations')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_default', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        // Table might not exist yet - that's okay during migration
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.warn('pricing_configurations table not found - using fallback');
+          return null;
+        }
+        throw error;
+      }
+
+      if (!data || !data.config_data) {
+        return null;
+      }
+
+      // Convert database format to PricingConfiguration
+      const config: PricingConfiguration = {
+        ...(data.config_data as any),
+        lastUpdated: data.last_updated || data.updated_at,
+        updatedBy: data.updated_by || 'System',
+        version: data.version || '1.0.0'
+      };
+
+      // Validate the config
+      if (!this.validateConfig(config)) {
+        console.warn('Invalid config from database, using defaults');
+        return null;
+      }
+
+      // Cache the result
+      this.configCache = config;
+      this.cacheExpiry = Date.now() + this.CACHE_DURATION_MS;
+
+      return config;
+    } catch (error) {
+      console.error('Error loading from database:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save configuration to database
+   */
+  private async saveToDatabase(config: PricingConfiguration, notes?: string): Promise<boolean> {
+    try {
+      // First, unset any existing default
+      await supabase
+        .from('pricing_configurations')
+        .update({ is_default: false })
+        .eq('is_default', true);
+
+      // Check if default config exists
+      const { data: existing } = await supabase
+        .from('pricing_configurations')
+        .select('id')
+        .eq('is_default', true)
+        .limit(1)
+        .single();
+
+      const configData = {
+        name: 'Default Pricing Configuration',
+        description: 'Active pricing configuration for quote calculations',
+        version: config.version,
+        is_active: true,
+        is_default: true,
+        config_data: {
+          bess: config.bess,
+          solar: config.solar,
+          officeBuilding: config.officeBuilding,
+          wind: config.wind,
+          generators: config.generators,
+          powerElectronics: config.powerElectronics,
+          evCharging: config.evCharging,
+          balanceOfPlant: config.balanceOfPlant,
+          systemControls: config.systemControls
+        },
+        updated_by: config.updatedBy || 'System',
+        notes: notes || `Updated via pricingConfigService`
+      };
+
+      let error;
+      if (existing?.id) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('pricing_configurations')
+          .update(configData)
+          .eq('id', existing.id);
+        error = updateError;
+      } else {
+        // Insert new
+        const { error: insertError } = await supabase
+          .from('pricing_configurations')
+          .insert(configData);
+        error = insertError;
+      }
+
+      if (error) {
+        // If table doesn't exist, that's okay - we'll use localStorage
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.warn('pricing_configurations table not found - saving to localStorage');
+          return false;
+        }
+        throw error;
+      }
+
+      // Clear cache
+      this.configCache = null;
+      this.cacheExpiry = 0;
+
+      return true;
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Migrate localStorage config to database if it's newer
+   */
+  private async migrateLocalStorageToDatabase(): Promise<void> {
+    try {
+      const savedConfig = localStorage.getItem('pricingConfiguration');
+      if (!savedConfig) return;
+
+      const localConfig = JSON.parse(savedConfig);
+      if (!this.validateConfig(localConfig)) return;
+
+      // Check if localStorage config is newer
+      const localDate = new Date(localConfig.lastUpdated || 0);
+      const dbDate = new Date(this.config.lastUpdated || 0);
+
+      if (localDate > dbDate) {
+        // localStorage is newer - migrate to database
+        console.log('Migrating newer localStorage config to database...');
+        await this.saveToDatabase(localConfig, 'Migrated from localStorage (newer version)');
+        // Keep localStorage as backup
+      } else {
+        // Database is newer or same - remove localStorage
+        localStorage.removeItem('pricingConfiguration');
+      }
+    } catch (error) {
+      console.error('Error during localStorage migration:', error);
+    }
   }
 
   getConfiguration(): PricingConfiguration {
     return { ...this.config };
   }
 
-  updateConfiguration(newConfig: Partial<PricingConfiguration>): void {
+  async updateConfiguration(newConfig: Partial<PricingConfiguration>): Promise<void> {
     this.config = {
       ...this.config,
       ...newConfig,
@@ -298,32 +495,55 @@ class PricingConfigService {
       version: this.incrementVersion(this.config.version)
     };
     
-    // Save to localStorage
-    localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+    // Save to database
+    const savedToDb = await this.saveToDatabase(this.config);
+    
+    // Also save to localStorage as backup (during migration period)
+    if (!savedToDb) {
+      localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+    } else {
+      // Remove localStorage if database save succeeded
+      localStorage.removeItem('pricingConfiguration');
+    }
     
     // Trigger recalculation of all quotes
     window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
   }
 
-  updateSection<K extends keyof PricingConfiguration>(
+  async updateSection<K extends keyof PricingConfiguration>(
     section: K, 
     updates: Partial<PricingConfiguration[K]>
-  ): void {
+  ): Promise<void> {
     this.config[section] = { ...(this.config[section] as any), ...(updates as any) };
     this.config.lastUpdated = new Date().toISOString();
     this.config.version = this.incrementVersion(this.config.version);
     
-    localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+    // Save to database
+    const savedToDb = await this.saveToDatabase(this.config);
+    
+    // Also save to localStorage as backup
+    if (!savedToDb) {
+      localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+    } else {
+      localStorage.removeItem('pricingConfiguration');
+    }
+    
     window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
   }
 
-  resetToDefaults(): void {
+  async resetToDefaults(): Promise<void> {
     this.config = { 
       ...DEFAULT_PRICING_CONFIG, 
       lastUpdated: new Date().toISOString(),
       version: "1.0.0"
     };
-    localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+    
+    // Save to database
+    await this.saveToDatabase(this.config, 'Reset to defaults');
+    
+    // Remove localStorage
+    localStorage.removeItem('pricingConfiguration');
+    
     window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
   }
 
@@ -331,7 +551,7 @@ class PricingConfigService {
     return JSON.stringify(this.config, null, 2);
   }
 
-  importConfiguration(configJson: string): boolean {
+  async importConfiguration(configJson: string): Promise<boolean> {
     try {
       const importedConfig = JSON.parse(configJson);
       // Validate the structure
@@ -341,7 +561,17 @@ class PricingConfigService {
           lastUpdated: new Date().toISOString(),
           version: this.incrementVersion(this.config.version)
         };
-        localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+        
+        // Save to database
+        const savedToDb = await this.saveToDatabase(this.config, 'Imported from JSON');
+        
+        // Also save to localStorage as backup
+        if (!savedToDb) {
+          localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+        } else {
+          localStorage.removeItem('pricingConfiguration');
+        }
+        
         window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
         return true;
       }
@@ -365,23 +595,16 @@ class PricingConfigService {
 
   // Convenience methods for common calculations
   getBESSCostPerKWh(capacityMWh: number): number {
-    // Realistic 4-tier pricing structure for Q4 2025
-    // [15 MWh -50 MWh: $105 kWh], [5 MWh - 15 MWh: $120 kWh], [1 MWh - 5 MWh:$135 kWh], [<1 MWh: $145 kWh]
-    
     if (capacityMWh >= 15) {
-      return 105; // 15-50+ MWh: Utility-scale with maximum economies
+      return this.config.bess.largeSystemPerKWh;
     }
-    
     if (capacityMWh >= 5) {
-      return 120; // 5-15 MWh: Large commercial with good economies
+      return this.config.bess.mediumLargeSystemPerKWh;
     }
-    
     if (capacityMWh >= 1) {
-      return 135; // 1-5 MWh: Medium commercial systems
+      return this.config.bess.mediumSystemPerKWh;
     }
-    
-    // <1 MWh: Small commercial/residential with higher per-unit costs
-    return 145;
+    return this.config.bess.smallSystemPerKWh;
   }
 
   getSolarCostPerWatt(capacityMW: number): number {
@@ -405,6 +628,15 @@ class PricingConfigService {
     } as const;
     
     return this.config.generators[fuelTypeMap[fuelType]];
+  }
+
+  /**
+   * Force refresh from database (clears cache)
+   */
+  async refreshFromDatabase(): Promise<void> {
+    this.configCache = null;
+    this.cacheExpiry = 0;
+    await this.loadConfiguration();
   }
 }
 

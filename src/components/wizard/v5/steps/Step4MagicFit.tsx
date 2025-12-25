@@ -24,6 +24,7 @@ import {
 import badgeIcon from '@/assets/images/badge_icon.jpg';
 import { COLORS } from '../design-system';
 import { calculateDatabaseBaseline, type BaselineCalculationResult } from '@/services/baselineService';
+import { createStableHash } from '@/utils/useStableMemo';
 
 // Merlin profile image
 const merlinProfile = '/images/new_profile_merlin.png';
@@ -52,6 +53,8 @@ interface Step4Props {
   onGridConnectionChange: (type: 'on-grid' | 'off-grid' | 'limited') => void;
   // Navigation
   onContinue?: () => void;
+  // ProQuote handler
+  onOpenAdvanced?: () => void;
 }
 
 type PowerLevel = 'starter' | 'perfect' | 'beast';
@@ -233,6 +236,7 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
   onGeneratorChange,
   onGridConnectionChange,
   onContinue,
+  onOpenAdvanced,
 }) => {
   const [recommendation, setRecommendation] = useState<BaselineCalculationResult | null>(null);
   const [originalRecommendation, setOriginalRecommendation] = useState<BaselineCalculationResult | null>(null);
@@ -248,9 +252,10 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   
-  // Create a hash of inputs to detect actual changes
+  // Create a stable hash of inputs to detect actual changes
+  // Use createStableHash to normalize useCaseData (object) for proper comparison
   const inputsHash = useMemo(() => {
-    return JSON.stringify({
+    return createStableHash({
       selectedIndustry,
       useCaseData,
       state,
@@ -623,23 +628,28 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
         {/* ═══════════════════════════════════════════════════════════════
             PROQUOTE SHIELD BUTTON
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-8 relative z-20">
-          <button
-            onClick={() => {
-              console.log('🚀 ProQuote button clicked!');
-              sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
-                batteryKW,
-                durationHours,
-                solarKW,
-                generatorKW,
-                state,
-                selectedIndustry,
-                electricityRate,
-                useCaseData,
-                goals,
-              }));
-              window.location.href = '/?advanced=true&view=custom-config';
-            }}
+        {onOpenAdvanced && (
+          <div className="mb-8 relative z-20">
+            <button
+              onClick={() => {
+                console.log('🚀 ProQuote button clicked!');
+                sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
+                  batteryKW,
+                  durationHours,
+                  solarKW,
+                  generatorKW,
+                  state,
+                  selectedIndustry,
+                  electricityRate,
+                  useCaseData,
+                  goals,
+                }));
+                if (onOpenAdvanced) {
+                  onOpenAdvanced();
+                } else {
+                  window.location.href = '/?advanced=true&view=custom-config';
+                }
+              }}
             className="w-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.01] cursor-pointer group relative z-20"
             style={{
               background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(49, 46, 129, 0.95) 100%)',
@@ -671,7 +681,8 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
               </div>
             </div>
           </button>
-        </div>
+          </div>
+        )}
         
         {/* ═══════════════════════════════════════════════════════════════
             SECTION HEADER

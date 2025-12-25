@@ -12,6 +12,7 @@ import { Settings, DollarSign, Database, Download, Upload, RotateCcw, Save, Aler
 import { pricingConfigService, type PricingConfiguration } from '../services/pricingConfigService';
 import { dailyPricingValidator, type ValidationAlert } from '../services/dailyPricingValidator';
 import { supabase } from '../services/supabase';
+import { adminAuthService } from '../services/adminAuthService';
 // REMOVED: pricingDatabaseService - archived, conflicts with new schema
 // import { pricingDatabaseService, type DatabaseSyncResult } from '../services/pricingDatabaseService';
 import { dailySyncService } from '../services/dailySyncService';
@@ -41,6 +42,15 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [validationAlerts, setValidationAlerts] = useState<ValidationAlert[]>([]);
   const [isValidating, setIsValidating] = useState(false);
+  
+  // Permission checks
+  const canEdit = adminAuthService.hasPermission('edit_pricing');
+  const canSave = adminAuthService.hasPermission('save_pricing');
+  const canReset = adminAuthService.hasPermission('reset_to_defaults');
+  const canImport = adminAuthService.hasPermission('import_config');
+  const canSync = adminAuthService.hasPermission('sync_database');
+  const canExport = adminAuthService.hasPermission('export_config');
+  const currentAdmin = adminAuthService.getCurrentAdmin();
   
   // Editable pricing configurations
   const [editableGenerators, setEditableGenerators] = useState(generatorPricingService.getConfiguration());
@@ -126,12 +136,16 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   // Sync configuration to Supabase
   // ⚠️ DISABLED: pricingDatabaseService archived - use useCaseService instead
   const syncToDatabase = async () => {
+    if (!canSync) {
+      alert('You do not have permission to sync to database.');
+      return;
+    }
     setSyncStatus('syncing');
     setSyncResult(null);
     
     try {
       // First save local changes
-      if (hasChanges) {
+      if (hasChanges && canSave) {
         await saveChanges();
       }
       
@@ -221,18 +235,63 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   const runValidation = async () => {
+    console.log('🔄 runValidation called');
     setIsValidating(true);
+    
     try {
+      console.log('🔄 Starting pricing validation...');
+      
+      // Validate that the service is available
+      if (!dailyPricingValidator) {
+        throw new Error('dailyPricingValidator is not available');
+      }
+      
+      console.log('✅ dailyPricingValidator found, calling forceValidation()...');
       const results = await dailyPricingValidator.forceValidation();
+      console.log('✅ Validation complete:', results);
+      console.log('📊 Results count:', results?.length || 0);
+      
+      if (!results || !Array.isArray(results)) {
+        console.warn('⚠️ Validation returned invalid results:', results);
+        setValidationAlerts([]);
+        alert('Validation completed but returned no results. Check console for details.');
+        return;
+      }
+      
       setValidationAlerts(results);
+      console.log('✅ Validation alerts updated in state');
+      
+      // Show success message
+      const criticalCount = results.filter(r => r.severity === 'critical').length;
+      const warningCount = results.filter(r => r.severity === 'warning').length;
+      const infoCount = results.filter(r => r.severity === 'info').length;
+      
+      console.log(`📊 Validation summary: ${criticalCount} critical, ${warningCount} warnings, ${infoCount} info`);
+      
+      if (results.length === 0) {
+        alert('Validation completed successfully. No alerts found.');
+      } else {
+        alert(`Validation completed. Found ${results.length} alert(s): ${criticalCount} critical, ${warningCount} warnings, ${infoCount} info.`);
+      }
     } catch (error) {
-      console.error('Validation failed:', error);
+      console.error('❌ Validation failed:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      setValidationAlerts([]);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Validation failed: ${errorMessage}\n\nCheck the browser console (F12) for more details.`);
     } finally {
       setIsValidating(false);
+      console.log('✅ Validation process completed (finally block)');
     }
   };
 
   const updateConfigSection = (section: keyof PricingConfiguration, field: string, value: number | string) => {
+    if (!canEdit) {
+      alert('You do not have permission to edit pricing configuration.');
+      return;
+    }
     const newConfig = {
       ...config,
       [section]: {
@@ -245,12 +304,19 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   const saveChanges = () => {
+    if (!canSave) {
+      alert('You do not have permission to save pricing configuration.');
+      return;
+    }
     setSaveStatus('saving');
     try {
-      pricingConfigService.updateConfiguration(config);
-      setSaveStatus('saved');
-      setHasChanges(false);
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      pricingConfigService.updateConfiguration(config).then(() => {
+        setSaveStatus('saved');
+        setHasChanges(false);
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }).catch((error) => {
+        setSaveStatus('error');
+      });
     } catch (error) {
       setSaveStatus('error');
       console.error('Error saving configuration:', error);
@@ -258,11 +324,16 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   const resetToDefaults = () => {
+    if (!canReset) {
+      alert('You do not have permission to reset pricing to defaults. This action requires super admin privileges.');
+      return;
+    }
     if (confirm('Are you sure you want to reset all pricing to defaults? This cannot be undone.')) {
-      pricingConfigService.resetToDefaults();
-      setConfig(pricingConfigService.getConfiguration());
-      setHasChanges(false);
-      setSaveStatus('saved');
+      pricingConfigService.resetToDefaults().then(() => {
+        setConfig(pricingConfigService.getConfiguration());
+        setHasChanges(false);
+        setSaveStatus('saved');
+      });
     }
   };
 
@@ -278,19 +349,26 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   const importConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canImport) {
+      alert('You do not have permission to import pricing configuration. This action requires super admin privileges.');
+      event.target.value = ''; // Clear file input
+      return;
+    }
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const configJson = e.target?.result as string;
-          if (pricingConfigService.importConfiguration(configJson)) {
-            setConfig(pricingConfigService.getConfiguration());
-            setHasChanges(false);
-            setSaveStatus('saved');
-          } else {
-            alert('Invalid configuration file format');
-          }
+          pricingConfigService.importConfiguration(configJson).then((success) => {
+            if (success) {
+              setConfig(pricingConfigService.getConfiguration());
+              setHasChanges(false);
+              setSaveStatus('saved');
+            } else {
+              alert('Invalid configuration file format');
+            }
+          });
         } catch (error) {
           alert('Error importing configuration');
         }
@@ -398,18 +476,24 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Daily Pricing Validation</h3>
           <button
-            onClick={runValidation}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('🔘 Run Validation button clicked');
+              runValidation();
+            }}
             disabled={isValidating}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all"
+            type="button"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isValidating ? 'animate-spin' : ''}`} />
             {isValidating ? 'Validating...' : 'Run Validation'}
           </button>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-800 mb-2">🔍 Automated Daily Sound Checks</h4>
-          <p className="text-sm text-blue-700">
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 shadow-sm">
+          <h4 className="font-semibold text-purple-800 mb-2">🔍 Automated Daily Sound Checks</h4>
+          <p className="text-sm text-purple-700">
             Pricing is automatically validated daily at 6 AM against NREL ATB 2024, BloombergNEF, Wood Mackenzie, 
             and other market intelligence sources. Deviations &gt;10% trigger alerts.
           </p>
@@ -458,7 +542,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                     ? 'bg-red-50 border-red-200' 
                     : alert.severity === 'warning'
                     ? 'bg-yellow-50 border-yellow-200'
-                    : 'bg-blue-50 border-blue-200'
+                    : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -466,17 +550,17 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                     <div className="flex items-center mb-2">
                       {alert.severity === 'critical' && <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />}
                       {alert.severity === 'warning' && <Bell className="w-4 h-4 text-yellow-600 mr-2" />}
-                      {alert.severity === 'info' && <CheckCircle className="w-4 h-4 text-blue-600 mr-2" />}
+                      {alert.severity === 'info' && <CheckCircle className="w-4 h-4 text-purple-600 mr-2" />}
                       <h5 className={`font-semibold ${
                         alert.severity === 'critical' ? 'text-red-800' : 
-                        alert.severity === 'warning' ? 'text-yellow-800' : 'text-blue-800'
+                        alert.severity === 'warning' ? 'text-yellow-800' : 'text-purple-800'
                       }`}>
                         {alert.category}
                       </h5>
                     </div>
                     <p className={`text-sm mb-2 ${
                       alert.severity === 'critical' ? 'text-red-700' : 
-                      alert.severity === 'warning' ? 'text-yellow-700' : 'text-blue-700'
+                      alert.severity === 'warning' ? 'text-yellow-700' : 'text-purple-700'
                     }`}>
                       {alert.message}
                     </p>
@@ -650,7 +734,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                   <div>
                     <h5 className="font-semibold text-gray-900">{generator.model}</h5>
                     <p className="text-sm text-gray-600">{generator.manufacturer}</p>
-                    <p className="text-xs text-blue-600 capitalize">{generator.fuelType.replace('_', ' ')}</p>
+                    <p className="text-xs text-purple-600 capitalize">{generator.fuelType.replace('_', ' ')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Power (kW)</p>
@@ -658,7 +742,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                       type="number"
                       value={generator.ratedPowerKW}
                       onChange={(e) => updateGeneratorPrice(generator.id, 'ratedPowerKW', parseInt(e.target.value))}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-purple-500 focus:ring-purple-500"
                     />
                   </div>
                   <div>
@@ -667,7 +751,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                       type="number"
                       value={generator.basePrice}
                       onChange={(e) => updateGeneratorPrice(generator.id, 'basePrice', parseInt(e.target.value))}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-purple-500 focus:ring-purple-500"
                     />
                   </div>
                   <div>
@@ -677,7 +761,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                       step="0.01"
                       value={generator.pricePerKW}
                       onChange={(e) => updateGeneratorPrice(generator.id, 'pricePerKW', parseFloat(e.target.value))}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-purple-500 focus:ring-purple-500"
                     />
                   </div>
                   <div>
@@ -685,7 +769,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                     <select
                       value={generator.enclosure}
                       onChange={(e) => updateGeneratorPrice(generator.id, 'enclosure', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-purple-500 focus:ring-purple-500"
                     >
                       <option value="open">Open</option>
                       <option value="silent">Silent</option>
@@ -943,7 +1027,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-blue-600">${panel.pricePerWatt}/W</p>
+                  <p className="font-bold text-purple-600">${panel.pricePerWatt}/W</p>
                   <p className="text-xs text-gray-500">${panel.pricePerPanel}/panel</p>
                 </div>
               </div>
@@ -1652,7 +1736,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           <button
             onClick={checkDatabaseStatus}
             disabled={databaseStatus === 'checking'}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 flex items-center shadow-lg shadow-purple-500/25"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${databaseStatus === 'checking' ? 'animate-spin' : ''}`} />
             Check Status
@@ -1707,8 +1791,9 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={syncToDatabase}
-              disabled={syncStatus === 'syncing' || databaseStatus !== 'connected'}
-              className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={syncStatus === 'syncing' || databaseStatus !== 'connected' || !canSync}
+              className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25"
+              title={!canSync ? 'You do not have permission to sync to database' : ''}
             >
               <Upload className="w-4 h-4 mr-2" />
               {syncStatus === 'syncing' ? 'Syncing...' : 'Sync to Database'}
@@ -1820,7 +1905,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
-            <Settings className="w-6 h-6 text-blue-600" />
+            <Settings className="w-6 h-6 text-purple-600" />
             <div>
               <h2 className="text-xl font-bold">Pricing Administration Dashboard</h2>
               <p className="text-sm text-gray-600">
@@ -1831,7 +1916,7 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           
           <div className="flex items-center space-x-2">
             {/* Save Status */}
-            {saveStatus === 'saving' && <span className="text-blue-600 text-sm">Saving...</span>}
+            {saveStatus === 'saving' && <span className="text-purple-600 text-sm">Saving...</span>}
             {saveStatus === 'saved' && (
               <span className="text-green-600 text-sm flex items-center">
                 <CheckCircle className="w-4 h-4 mr-1" /> Saved
@@ -1857,7 +1942,9 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
               Export
             </button>
             
-            <label className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 cursor-pointer flex items-center">
+            <label className={`bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center ${!canImport ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              title={!canImport ? 'You do not have permission to import configuration' : ''}
+            >
               <Upload className="w-4 h-4 mr-2" />
               Import
               <input
@@ -1865,12 +1952,15 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                 accept=".json"
                 onChange={importConfig}
                 className="hidden"
+                disabled={!canImport}
               />
             </label>
             
             <button
               onClick={resetToDefaults}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center"
+              disabled={!canReset}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              title={!canReset ? 'You do not have permission to reset to defaults' : ''}
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
@@ -1897,8 +1987,8 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
                     onClick={() => setActiveSection(section.id)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeSection === section.id
-                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-300 shadow-sm'
+                        : 'hover:bg-purple-50 text-gray-700'
                     }`}
                   >
                     <span className="mr-2">{section.icon}</span>

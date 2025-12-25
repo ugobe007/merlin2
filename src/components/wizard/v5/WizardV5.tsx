@@ -246,6 +246,7 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             durationHours={wizardState.durationHours}
             generatorKW={wizardState.generatorKW}
             gridConnection={wizardState.gridConnection}
+            onOpenAdvanced={onOpenAdvanced}
           />
         );
       
@@ -270,6 +271,7 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             onGeneratorChange={(v) => updateState({ generatorKW: v })}
             onGridConnectionChange={(v) => updateState({ gridConnection: v })}
             onContinue={nextStep}
+            onOpenAdvanced={onOpenAdvanced}
           />
         );
       

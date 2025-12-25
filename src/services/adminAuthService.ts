@@ -6,9 +6,11 @@ export interface AdminCredentials {
   password: string;
 }
 
+export type AdminRole = 'super_admin' | 'admin' | 'limited_admin';
+
 export interface AdminUser {
   email: string;
-  role: 'admin' | 'super_admin';
+  role: AdminRole;
   lastLogin?: string;
   permissions: string[];
 }
@@ -30,8 +32,12 @@ export class AdminAuthService {
   private getAdminCredentials(): AdminCredentials[] {
     const defaultCredentials: AdminCredentials[] = [
       {
-        email: 'admin@merlin.energy',
+        email: 'admin@merlinenergy.net',
         password: 'merlin2025'
+      },
+      {
+        email: 'viewer@merlinenergy.net',
+        password: 'viewer2025'
       }
     ];
 
@@ -69,11 +75,12 @@ export class AdminAuthService {
     );
 
     if (matchingCredential) {
+      const role = this.determineRoleFromEmail(matchingCredential.email);
       this.currentAdmin = {
         email: matchingCredential.email,
-        role: matchingCredential.email.includes('super') ? 'super_admin' : 'admin',
+        role: role,
         lastLogin: new Date().toISOString(),
-        permissions: this.getPermissions(matchingCredential.email)
+        permissions: this.getPermissions(matchingCredential.email, role)
       };
 
       // Store session
@@ -89,26 +96,56 @@ export class AdminAuthService {
     return false;
   }
 
-  // Get permissions based on admin email
-  private getPermissions(email: string): string[] {
-    const basePermissions = [
+  // Get role based on email pattern
+  private determineRoleFromEmail(email: string): AdminRole {
+    if (email.includes('super') || email === 'admin@merlinenergy.net') {
+      return 'super_admin';
+    } else if (email.includes('viewer') || email.includes('limited') || email === 'viewer@merlinenergy.net') {
+      return 'limited_admin';
+    }
+    return 'admin';
+  }
+
+  // Get permissions based on admin email and role
+  private getPermissions(email: string, role?: AdminRole): string[] {
+    const adminRole = role || this.determineRoleFromEmail(email);
+    // Limited admin permissions (view-only, no destructive actions)
+    const limitedAdminPermissions = [
       'view_pricing',
-      'edit_pricing',
       'view_validation',
       'run_validation',
       'view_database',
+      'export_config'  // Can export but not import
+    ];
+
+    // Regular admin permissions (can edit but not system-level changes)
+    const adminPermissions = [
+      ...limitedAdminPermissions,
+      'edit_pricing',
+      'save_pricing',
       'sync_database'
     ];
 
+    // Super admin permissions (full access)
     const superAdminPermissions = [
-      ...basePermissions,
+      ...adminPermissions,
+      'reset_to_defaults',
+      'import_config',
       'manage_users',
       'system_config',
       'delete_data',
       'export_data'
     ];
 
-    return email.includes('super') ? superAdminPermissions : basePermissions;
+    switch (adminRole) {
+      case 'limited_admin':
+        return limitedAdminPermissions;
+      case 'super_admin':
+        return superAdminPermissions;
+      case 'admin':
+      default:
+        return adminPermissions;
+    }
   }
 
   // Check if user has permission
@@ -167,14 +204,20 @@ export class AdminAuthService {
   }
 
   // Get current credentials for display (without passwords)
-  static getCredentialInfo(): { email: string; source: string }[] {
+  static getCredentialInfo(): { email: string; source: string; role: AdminRole }[] {
     const service = AdminAuthService.getInstance();
     const credentials = service.getAdminCredentials();
     
     return credentials.map(cred => ({
       email: cred.email,
-      source: cred.email === 'admin@merlin.energy' ? 'Default' : 'Environment'
+      source: cred.email === 'admin@merlinenergy.net' || cred.email === 'viewer@merlinenergy.net' ? 'Default' : 'Environment',
+      role: service.determineRoleFromEmail(cred.email)
     }));
+  }
+
+  // Get current admin role (public method)
+  getCurrentRole(): AdminRole | null {
+    return this.currentAdmin?.role || null;
   }
 }
 

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Users, Settings, TrendingUp, Database, Zap, Shield, BarChart3, Server, Cpu, Activity, CheckCircle, AlertTriangle, Clock, DollarSign, FileText, Sparkles, RefreshCw, Star, Crown, Play, Pause, Eye } from 'lucide-react';
+import { Home, Users, Settings, TrendingUp, Database, Zap, Shield, BarChart3, Server, Cpu, Activity, CheckCircle, AlertTriangle, Clock, DollarSign, FileText, Sparkles, RefreshCw, Star, Crown, Play, Pause, Eye, Brain, BarChart, Gauge, Wrench, Layers } from 'lucide-react';
 import { PricingAdminDashboard } from './PricingAdminDashboard';
 import CalculationsAdmin from './admin/CalculationsAdmin';
 import UseCaseConfigManager from './admin/UseCaseConfigManager';
 import CacheStatistics from './admin/CacheStatistics';
 import AIDataCollectionAdmin from './admin/AIDataCollectionAdmin';
+import PricingSystemHealthDashboard from './admin/PricingSystemHealthDashboard';
+import SystemHealthDashboard from './admin/SystemHealthDashboard';
+import MarketIntelligenceDashboard from './admin/MarketIntelligenceDashboard';
 import { getUseCaseProfiles, getEquipmentCatalog, calculatePremiumComparison, type EquipmentTier } from '../services/premiumConfigurationService';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
@@ -36,7 +39,7 @@ interface AdminStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'godSettings' | 'matching' | 'premium' | 'realtime' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'calculations' | 'cache' | 'migration' | 'aiData'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'marketIntelligence' | 'systemHealth' | 'godSettings' | 'matching' | 'premium' | 'realtime' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'pricingHealth' | 'calculations' | 'cache' | 'migration' | 'aiData'>('dashboard');
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
   
@@ -58,18 +61,54 @@ const AdminDashboard: React.FC = () => {
     failedWorkflows: 3
   };
 
-  // Tab configuration with icons - PRIORITIZED
-  const tabs = [
-    { key: 'dashboard', label: 'Dashboard', icon: BarChart3, priority: 1 },
-    { key: 'godSettings', label: 'GOD Settings', icon: Shield, priority: 2 },
-    { key: 'matching', label: 'Matching Engine', icon: Sparkles, priority: 3 },
-    { key: 'premium', label: 'MERLIN Premium', icon: Crown, priority: 4 },
-    { key: 'realtime', label: 'Real-Time', icon: Activity, priority: 5 },
-    { key: 'calculations', label: 'Calculations', icon: Cpu, priority: 6 },
-    { key: 'pricing', label: 'Pricing', icon: DollarSign, priority: 7 },
-    { key: 'aiData', label: 'AI Data', icon: Database, priority: 8 },
-    { key: 'workflows', label: 'Workflows', icon: Zap, priority: 9 },
-    { key: 'settings', label: 'Settings', icon: Settings, priority: 10 }
+  // Navigation panels - organized by category
+  const navigationPanels = [
+    {
+      title: 'Overview & Analytics',
+      icon: BarChart3,
+      items: [
+        { key: 'dashboard', label: 'System Dashboard', icon: BarChart3, description: 'System overview and statistics' },
+        { key: 'marketIntelligence', label: 'Market Intelligence', icon: Brain, description: 'AI-powered market analysis and trends', highlight: true },
+        { key: 'analytics', label: 'Analytics', icon: TrendingUp, description: 'Business analytics and reports' },
+      ]
+    },
+    {
+      title: 'System Health & Monitoring',
+      icon: Activity,
+      items: [
+        { key: 'systemHealth', label: 'System Health', icon: Activity, description: 'Comprehensive system health checks' },
+        { key: 'pricingHealth', label: 'Pricing Health', icon: Gauge, description: 'Pricing system status and validation' },
+      ]
+    },
+    {
+      title: 'Configuration & Management',
+      icon: Settings,
+      items: [
+        { key: 'pricing', label: 'Pricing Admin', icon: DollarSign, description: 'Manage pricing configurations' },
+        { key: 'calculations', label: 'Calculations', icon: Cpu, description: 'Calculation engine management' },
+        { key: 'useCases', label: 'Use Cases', icon: Layers, description: 'Use case configuration' },
+        { key: 'aiData', label: 'AI Data Collection', icon: Database, description: 'AI training data management' },
+        { key: 'cache', label: 'Cache Statistics', icon: Database, description: 'Cache performance metrics' },
+      ]
+    },
+    {
+      title: 'Advanced Features',
+      icon: Sparkles,
+      items: [
+        { key: 'matching', label: 'Matching Engine', icon: Sparkles, description: 'Live matching engine' },
+        { key: 'premium', label: 'MERLIN Premium', icon: Crown, description: 'Premium configuration management' },
+        { key: 'realtime', label: 'Real-Time Monitor', icon: Activity, description: 'Real-time system monitoring' },
+        { key: 'workflows', label: 'Workflows', icon: Zap, description: 'Workflow management' },
+      ]
+    },
+    {
+      title: 'Administration',
+      icon: Shield,
+      items: [
+        { key: 'godSettings', label: 'GOD Settings', icon: Shield, description: 'System-level settings' },
+        { key: 'settings', label: 'Settings', icon: Settings, description: 'General settings' },
+      ]
+    },
   ];
   
   // Live Matching Engine State
@@ -124,17 +163,17 @@ const AdminDashboard: React.FC = () => {
   }, [selectedPremiumUseCase]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 relative overflow-hidden">
-      {/* Animated Purple Magic Background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
+      {/* Animated Background with deeper purple, light blue, and slate blue */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-300/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-300/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-10 right-10 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-slate-300/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-10 right-10 w-64 h-64 bg-blue-400/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
       </div>
 
       {/* Header - Wizard-like styling */}
-      <div className="relative bg-white/70 backdrop-blur-md border-b border-purple-200/50 shadow-sm">
+      <div className="relative bg-white/70 backdrop-blur-md border-b border-purple-300/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -144,12 +183,12 @@ const AdminDashboard: React.FC = () => {
                   alt="Merlin" 
                   className="w-14 h-14 object-contain drop-shadow-lg"
                 />
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-700 to-slate-600 rounded-full flex items-center justify-center">
                   <Shield className="w-3 h-3 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600">
+                <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-800 via-slate-600 to-purple-800">
                   Merlin Admin Panel
                 </h1>
                 <p className="text-sm text-gray-500">System Administration & Control</p>
@@ -159,7 +198,7 @@ const AdminDashboard: React.FC = () => {
             {/* Exit to Home Button - Smaller, professional */}
             <button
               onClick={() => window.location.href = '/'}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm rounded-lg font-medium shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white text-sm rounded-lg font-medium shadow-md shadow-purple-700/30 hover:shadow-lg hover:shadow-purple-800/40 transition-all duration-200"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
@@ -168,41 +207,101 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Tabs - Compact pill style */}
-      <div className="relative bg-white/50 backdrop-blur-md border-b border-purple-100/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1 py-2 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as typeof activeTab)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    activeTab === tab.key
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20'
-                      : 'text-gray-500 hover:text-purple-600 hover:bg-purple-50/80'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </button>
-              );
-            })}
+      {/* Navigation Panels - Organized by category */}
+      {activeTab === 'dashboard' && (
+        <div className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 border-b border-blue-200/50">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {navigationPanels.map((panel, panelIndex) => {
+                const PanelIcon = panel.icon;
+                return (
+                  <div key={panelIndex} className="bg-white/80 backdrop-blur-md rounded-xl border border-purple-200/50 shadow-lg shadow-purple-500/5 p-4">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                      <PanelIcon className="w-5 h-5 text-purple-700" />
+                      <h3 className="font-semibold text-gray-900 text-sm">{panel.title}</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {panel.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() => setActiveTab(item.key as typeof activeTab)}
+                            className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all duration-200 ${
+                              activeTab === item.key
+                                ? 'bg-gradient-to-r from-purple-700 to-slate-600 text-white shadow-md'
+                                : item.highlight
+                                ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-300 hover:shadow-md'
+                                : 'bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200'
+                            }`}
+                          >
+                            <ItemIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                              activeTab === item.key ? 'text-white' : item.highlight ? 'text-purple-700' : 'text-gray-600'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <div className={`font-medium text-sm ${
+                                activeTab === item.key ? 'text-white' : 'text-gray-900'
+                              }`}>
+                                {item.label}
+                                {item.highlight && (
+                                  <span className="ml-2 px-1.5 py-0.5 bg-purple-200 text-purple-800 text-xs rounded-full font-semibold">
+                                    NEW
+                                  </span>
+                                )}
+                              </div>
+                              <div className={`text-xs mt-0.5 ${
+                                activeTab === item.key ? 'text-white/80' : 'text-gray-500'
+                              }`}>
+                                {item.description}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Back to Dashboard Button - Show when not on dashboard */}
+      {activeTab !== 'dashboard' && (
+        <div className="relative bg-white/50 backdrop-blur-md border-b border-blue-200/50">
+          <div className="max-w-7xl mx-auto px-6 py-3">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-700 to-slate-600 text-white rounded-lg hover:from-purple-800 hover:to-slate-700 shadow-md transition-all duration-200"
+            >
+              <Home className="w-4 h-4" />
+              <span className="font-medium">Back to Dashboard</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-6 py-6">
         
+        {/* Market Intelligence Tab */}
+        {activeTab === 'marketIntelligence' && (
+          <MarketIntelligenceDashboard />
+        )}
+
+        {/* System Health Tab */}
+        {activeTab === 'systemHealth' && (
+          <SystemHealthDashboard />
+        )}
+
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-md shadow-purple-500/20">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center shadow-md shadow-purple-700/30">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
                 <h2 className="text-lg font-bold text-gray-800">System Overview</h2>
@@ -216,19 +315,19 @@ const AdminDashboard: React.FC = () => {
             {/* Stats Grid - Compact cards */}
             <div className="grid md:grid-cols-4 gap-4">
               {/* Total Users */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-100/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-200/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-sky-400 rounded-lg flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">+12%</span>
+                  <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">+12%</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-800">{stats.totalUsers.toLocaleString()}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Total Users</p>
                 {/* Mini chart placeholder */}
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[40, 65, 45, 70, 55, 80, 60].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-blue-500/40 to-blue-500/10 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div key={i} className="flex-1 bg-gradient-to-t from-blue-400/50 to-blue-300/20 rounded-sm" style={{height: `${h}%`}}></div>
                   ))}
                 </div>
               </div>
@@ -251,18 +350,18 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Monthly Revenue */}
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-100/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
+              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-purple-200/50 shadow-lg shadow-purple-500/5 hover:shadow-xl transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center">
                     <DollarSign className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">+15%</span>
+                  <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">+15%</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-800">${stats.monthlyRevenue.toLocaleString()}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Monthly Revenue</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[45, 55, 50, 65, 70, 80, 90].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-purple-500/40 to-purple-500/10 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div key={i} className="flex-1 bg-gradient-to-t from-purple-600/50 to-purple-500/20 rounded-sm" style={{height: `${h}%`}}></div>
                   ))}
                 </div>
               </div>
@@ -319,9 +418,9 @@ const AdminDashboard: React.FC = () => {
                 
                 <button 
                   onClick={() => setActiveTab('analytics')}
-                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200/50 hover:border-purple-300 rounded-xl transition-all duration-200 hover:shadow-md"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  className="group flex items-center gap-2 p-3 bg-gradient-to-br from-purple-100 to-slate-100 hover:from-purple-200 hover:to-slate-200 border border-purple-300/50 hover:border-purple-400 rounded-xl transition-all duration-200 hover:shadow-md"
+                  >
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">Analytics</span>
@@ -390,9 +489,9 @@ const AdminDashboard: React.FC = () => {
 
             {/* Workflow Stats */}
             <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-200 shadow-lg">
+              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
                 <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">Active</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">{stats.activeWorkflows}</p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-500">{stats.activeWorkflows}</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-emerald-200 shadow-lg">
                 <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">Completed</p>
@@ -404,15 +503,15 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
                 <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">Success Rate</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">{(((stats.completedWorkflows) / (stats.completedWorkflows + stats.failedWorkflows)) * 100).toFixed(1)}%</p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">{(((stats.completedWorkflows) / (stats.completedWorkflows + stats.failedWorkflows)) * 100).toFixed(1)}%</p>
               </div>
             </div>
 
             {/* Active Workflows List */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+              <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-100 to-slate-100">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-purple-600" />
+                  <Activity className="w-5 h-5 text-purple-700" />
                   Currently Running
                 </h3>
               </div>
@@ -422,7 +521,7 @@ const AdminDashboard: React.FC = () => {
                   { id: 'wf-002', name: 'ML Analytics Processing', user: 'admin@merlin.com', started: '5 min ago', status: 'running' },
                   { id: 'wf-003', name: 'Data Export Job', user: 'system', started: '12 min ago', status: 'finalizing' },
                 ].map((workflow) => (
-                  <div key={workflow.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 rounded-xl border border-purple-100 hover:border-purple-200 hover:shadow-md transition-all">
+                  <div key={workflow.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-100/50 to-slate-100/50 rounded-xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all">
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
                       <div>
@@ -477,14 +576,14 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">{stats.uptime}%</p>
                 <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
               </div>
-              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-200 shadow-lg">
+              <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
                 <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">API Response</p>
                 <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">{stats.apiResponseTime}ms</p>
                 <p className="text-xs text-gray-500 mt-1">Average</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
                 <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">Error Rate</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">{stats.errorRate}%</p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">{stats.errorRate}%</p>
                 <p className="text-xs text-gray-500 mt-1">Last 24 hours</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-orange-200 shadow-lg">
@@ -496,9 +595,9 @@ const AdminDashboard: React.FC = () => {
 
             {/* System Components Health */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+              <div className="px-6 py-4 border-b border-purple-200 bg-gradient-to-r from-purple-100 to-slate-100">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Server className="w-5 h-5 text-purple-600" />
+                  <Server className="w-5 h-5 text-purple-700" />
                   Component Status
                 </h3>
               </div>
@@ -552,7 +651,7 @@ const AdminDashboard: React.FC = () => {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-blue-200 shadow-lg">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-600" />
+                  <Users className="w-5 h-5 text-blue-500" />
                   User Engagement
                 </h3>
                 <div className="space-y-3">
@@ -793,7 +892,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowPricingAdmin(true)}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
+                  className="bg-gradient-to-r from-blue-400 to-sky-400 hover:from-blue-500 hover:to-sky-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:scale-105"
                 >
                   Open Pricing Dashboard
                 </button>
@@ -1448,6 +1547,11 @@ const AdminDashboard: React.FC = () => {
         {/* Calculations & Formulas Tab */}
         {activeTab === 'calculations' && (
           <CalculationsAdmin />
+        )}
+
+        {/* Pricing System Health Tab */}
+        {activeTab === 'pricingHealth' && (
+          <PricingSystemHealthDashboard />
         )}
 
         {/* Use Case Configurations Tab */}

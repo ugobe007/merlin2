@@ -16,7 +16,7 @@
 // - ../constants/wizardConstants (doesn't exist)
 // - ../ui/* (missing components)
 
-// Placeholder exports to prevent import errors in StreamlinedWizard
+// Legacy placeholder exports - use WizardV5 components instead
 export const Step1LocationGoals: React.FC<any> = () => null;
 export const Step2IndustrySize: React.FC<any> = () => null;
 export const Step3FacilityDetails: React.FC<any> = () => null;
