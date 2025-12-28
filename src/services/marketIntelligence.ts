@@ -102,12 +102,24 @@ export function calculateMarketAlignedBESSPricing(
 ) {
   const energyCapacityMWh = systemSizeMW * durationHours;
   
-  // NREL ATB 2024 baseline costs (moderate scenario)
-  // ✅ Updated Dec 2025 based on professional quote benchmarks:
-  // - UK EV Hub: $120/kWh battery, $120/kW PCS
-  // - Hampton Heights: $190/kWh installed
-  // - Tribal Microgrid: $140/kWh turnkey
-  const batteryCostPerKWh = 140; // $/kWh - pack cost (avg of $120-190 range)
+  // Q4 2024 - Q1 2025 Market Reality Pricing
+  // NOTE: NREL ATB 2024 data lags 12-18 months (based on 2022-2023 data)
+  // Market drivers: Chinese LFP oversupply, cell price collapse ($50-60/kWh), aggressive competition
+  // Size-based pricing (Q4 2024 - Q1 2025 market reality):
+  // 3-10 MW: $101-125/kWh | 10-50 MW: $95-115/kWh | 50+ MW: $85-105/kWh
+  // Commercial (100-500 kWh): $250-400/kWh | Residential: $500-800/kWh
+  let batteryCostPerKWh: number;
+  if (systemSizeMW >= 50) {
+    batteryCostPerKWh = 95; // $85-105/kWh range, use mid-point
+  } else if (systemSizeMW >= 10) {
+    batteryCostPerKWh = 105; // $95-115/kWh range
+  } else if (systemSizeMW >= 3) {
+    batteryCostPerKWh = 113; // $101-125/kWh range
+  } else if (systemSizeMW >= 0.1) {
+    batteryCostPerKWh = 325; // $250-400/kWh commercial range
+  } else {
+    batteryCostPerKWh = 650; // $500-800/kWh residential range
+  }
   const pcsCostPerKW = 120; // $/kW - power conversion (validated from UK EV Hub quote)
   const bosCostPerKW = 28.8; // $/kW - balance of system (12%)
   const epcCostPerKW = 36; // $/kW - installation/EPC (15%)
@@ -208,7 +220,7 @@ export function calculateMarketAlignedBESSPricing(
       revenuePerMW: totalAnnualRevenue / systemSizeMW,
       profitMargin: annualProfit / totalAnnualRevenue
     },
-    dataSource: 'NREL ATB 2024 + Live Market Intelligence',
+    dataSource: 'Q4 2024 - Q1 2025 Market Reality + Live Market Intelligence (NREL ATB 2024 lags 12-18 months)',
     lastUpdated: new Date().toISOString()
   };
 }

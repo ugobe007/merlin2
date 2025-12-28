@@ -272,8 +272,8 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
               {/* Three Pillars - Large Cards */}
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Traceable */}
-                <div className="group bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="group bg-gradient-to-br from-sky-300 via-blue-50 to-white rounded-2xl p-6 border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-200 to-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Search className="w-8 h-8 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Traceable</h3>

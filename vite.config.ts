@@ -17,8 +17,14 @@ export default defineConfig({
     },
   },
   build: {
+    // Force clean build - remove dist before building
+    emptyOutDir: true,
     rollupOptions: {
       output: {
+        // Add hash to filenames for cache busting
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
         manualChunks: {
           // Vendor chunk - external dependencies
           'vendor-react': ['react', 'react-dom'],

@@ -4,12 +4,14 @@
  * CALCULATION TEST RUNNER
  * =======================
  * Run with: npm run test:calculations
- * Or: npx ts-node src/tests/runCalculationTests.ts
+ * Or: npx ts-node --project tsconfig.test.json src/tests/runCalculationTests.ts
  * 
  * This script tests all calculation functions outside the browser.
+ * 
+ * NOTE: Uses relative imports to avoid tsx path alias issues
  */
 
-// Import the calculation functions directly
+// Import the calculation functions directly (using relative path to avoid alias issues)
 import {
   calculateUseCasePower,
   calculateOfficePower,

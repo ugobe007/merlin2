@@ -27,7 +27,8 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
-  Info
+  Info,
+  Building2
 } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
 import { 
@@ -63,6 +64,20 @@ interface PricingHealthMetrics {
   mlUnprocessedRecords: number;
   mlProcessingTime: number;
   
+  // Vendor Pricing Status
+  vendorPricingStatus: 'active' | 'limited' | 'none';
+  approvedVendorProducts: number;
+  pendingVendorProducts: number;
+  vendorPricingCoverage: {
+    battery: number;
+    inverter: number;
+    ems: number;
+    bos: number;
+    container: number;
+  };
+  vendorPricingUtilization: number; // % of quotes using vendor pricing
+  vendorPricingLastSync: Date | null;
+  
   // Pricing Configuration Status
   pricingConfigStatus: 'synced' | 'outdated' | 'error';
   pricingConfigLastUpdate: Date | null;
@@ -71,6 +86,7 @@ interface PricingHealthMetrics {
   // Quote Impact Metrics
   quotesUsingMarketData: number;
   quotesUsingDefaults: number;
+  quotesUsingVendorPricing: number;
   marketDataUtilizationRate: number;
   averagePriceDeviation: number;
   
@@ -187,9 +203,24 @@ export const PricingSystemHealthDashboard: React.FC = () => {
         pricingConfigLastUpdate: null,
         pricingConfigSource: 'database',
         
+        // Vendor Pricing (TODO: Load vendor data when vendor service is implemented)
+        vendorPricingStatus: 'none',
+        approvedVendorProducts: 0,
+        pendingVendorProducts: 0,
+        vendorPricingCoverage: {
+          battery: 0,
+          inverter: 0,
+          ems: 0,
+          bos: 0,
+          container: 0,
+        },
+        vendorPricingUtilization: 0,
+        vendorPricingLastSync: null,
+        
         // Quote Impact
         quotesUsingMarketData: quoteMetrics.quotesUsingMarketData || 0,
         quotesUsingDefaults: quoteMetrics.quotesUsingDefaults || 0,
+        quotesUsingVendorPricing: quoteMetrics.quotesUsingVendorPricing || 0,
         marketDataUtilizationRate: quoteMetrics.marketDataUtilizationRate || 0,
         averagePriceDeviation: quoteMetrics.averagePriceDeviation || 0,
         
@@ -524,7 +555,7 @@ export const PricingSystemHealthDashboard: React.FC = () => {
       </div>
 
       {/* System Status Overview */}
-      <div className={`grid grid-cols-1 md:grid-cols-${metrics.marketDataPoints > 0 ? '4' : '3'} gap-4`}>
+      <div className={`grid grid-cols-1 md:grid-cols-${metrics.marketDataPoints > 0 ? '5' : '4'} gap-4`}>
         {/* Market Data Status - Only show if there's actionable data */}
         {metrics.marketDataPoints > 0 && (
           <div className={`bg-white/90 backdrop-blur-sm p-5 rounded-2xl border-2 ${getStatusColor(metrics.marketDataStatus)} shadow-lg`}>
@@ -609,6 +640,30 @@ export const PricingSystemHealthDashboard: React.FC = () => {
               'All clear'
             )}
           </div>
+        </div>
+
+        {/* Vendor Pricing Status */}
+        <div className={`bg-white/90 backdrop-blur-sm p-5 rounded-2xl border-2 ${getStatusColor(metrics.vendorPricingStatus)} shadow-lg`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {getStatusIcon(metrics.vendorPricingStatus)}
+              <span className="font-semibold text-sm">Vendor Pricing</span>
+            </div>
+            {metrics.vendorPricingStatus === 'active' ? (
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            ) : metrics.vendorPricingStatus === 'limited' ? (
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            ) : (
+              <Info className="w-5 h-5 text-gray-600" />
+            )}
+          </div>
+          <div className="text-2xl font-bold mb-1">{metrics.approvedVendorProducts}</div>
+          <div className="text-xs opacity-75">Approved products</div>
+          {metrics.pendingVendorProducts > 0 && (
+            <div className="text-xs mt-2 text-amber-600 font-medium">
+              {metrics.pendingVendorProducts} pending
+            </div>
+          )}
         </div>
       </div>
 
@@ -727,6 +782,76 @@ export const PricingSystemHealthDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Vendor Pricing Status */}
+      {metrics.approvedVendorProducts > 0 && (
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-purple-600" />
+              Vendor Pricing Status
+            </h3>
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              metrics.vendorPricingStatus === 'active' ? 'bg-emerald-100 text-emerald-700' :
+              metrics.vendorPricingStatus === 'limited' ? 'bg-amber-100 text-amber-700' :
+              'bg-gray-100 text-gray-700'
+            }`}>
+              {metrics.vendorPricingStatus === 'active' ? 'Active' : 
+               metrics.vendorPricingStatus === 'limited' ? 'Limited' : 'None'}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-200">
+              <div className="text-xs text-gray-600 mb-1">Approved Products</div>
+              <div className="text-2xl font-bold text-emerald-700">{metrics.approvedVendorProducts}</div>
+              <div className="text-xs text-gray-500 mt-1">In pricing system</div>
+            </div>
+            <div className={`p-4 rounded-xl border ${
+              metrics.pendingVendorProducts > 0 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <div className="text-xs text-gray-600 mb-1">Pending Review</div>
+              <div className={`text-2xl font-bold ${metrics.pendingVendorProducts > 0 ? 'text-amber-700' : 'text-gray-700'}`}>
+                {metrics.pendingVendorProducts}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Awaiting approval</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200">
+              <div className="text-xs text-gray-600 mb-1">Utilization Rate</div>
+              <div className="text-2xl font-bold text-purple-700">
+                {metrics.vendorPricingUtilization > 0 ? `${metrics.vendorPricingUtilization}%` : 'N/A'}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Quotes using vendor pricing</div>
+            </div>
+          </div>
+
+          {/* Vendor Pricing Coverage by Category */}
+          {Object.values(metrics.vendorPricingCoverage).some(count => count > 0) && (
+            <div className="mt-4">
+              <h4 className="text-sm font-bold text-gray-700 mb-3">Coverage by Product Category</h4>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {Object.entries(metrics.vendorPricingCoverage)
+                  .filter(([_, count]) => count > 0)
+                  .map(([category, count]) => (
+                    <div key={category} className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-xl border border-purple-200">
+                      <div className="text-xs text-gray-600 mb-1 uppercase font-medium">
+                        {category}
+                      </div>
+                      <div className="text-xl font-bold text-purple-700">{count}</div>
+                      <div className="text-xs text-gray-500 mt-1">products</div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {metrics.vendorPricingLastSync && (
+            <div className="mt-4 text-xs text-gray-500">
+              Last sync: {new Date(metrics.vendorPricingLastSync).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Validation Alerts */}
       {validationResults.length > 0 && (

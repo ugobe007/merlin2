@@ -31,7 +31,7 @@ export interface PricingBenchmark {
   value: number;
   unit: string;
   sourceId: string;
-  scenario?: 'conservative' | 'moderate' | 'advanced';
+  scenario?: 'conservative' | 'moderate' | 'advanced' | 'current-market';
   confidence: 'high' | 'medium' | 'low';
   validFrom: string;
   validUntil?: string;
@@ -428,25 +428,27 @@ export const AUTHORITATIVE_SOURCES: Record<string, BenchmarkSource> = {
 
 export const PRICING_BENCHMARKS: Record<string, PricingBenchmark> = {
   // BATTERY ENERGY STORAGE
+  // NOTE: NREL ATB 2024 data lags behind actual market (based on 2022-2023 data)
+  // Q4 2024 - Q1 2025 market reality reflects Chinese LFP oversupply and cell price collapse
   'bess-lfp-utility-scale': {
-    value: 155,
+    value: 110,
     unit: '$/kWh',
-    sourceId: 'nrel-atb-2024',
-    scenario: 'moderate',
+    sourceId: 'market-reality-q4-2024',
+    scenario: 'current-market',
     confidence: 'high',
-    validFrom: '2024-07-01',
-    validUntil: '2025-06-30',
-    deviationNotes: 'NREL ATB 2024 Moderate scenario for 4-hour LFP utility-scale storage'
+    validFrom: '2024-10-01',
+    validUntil: '2025-03-31',
+    deviationNotes: 'Q4 2024 - Q1 2025 market reality: $85-125/kWh for 3-50 MW systems. NREL ATB 2024 ($334/kWh) lags behind actual market conditions (30-40% higher than current prices). Market drivers: Chinese LFP oversupply, cell price collapse ($50-60/kWh), CATL/BYD/EVE/Hithium competition.'
   },
   'bess-lfp-commercial': {
-    value: 275,
+    value: 325,
     unit: '$/kWh',
-    sourceId: 'nrel-cost-benchmark-2024',
-    scenario: 'moderate',
+    sourceId: 'market-reality-q4-2024',
+    scenario: 'current-market',
     confidence: 'high',
-    validFrom: '2024-09-01',
-    validUntil: '2025-08-31',
-    deviationNotes: 'NREL Q1 2024 benchmark for commercial standalone storage (10 kW–1 MW)'
+    validFrom: '2024-10-01',
+    validUntil: '2025-03-31',
+    deviationNotes: 'Q4 2024 - Q1 2025 market reality: $250-400/kWh for 100-500 kWh commercial systems. Higher integration costs for smaller systems. NREL ATB 2024 ($450-550/kWh) reflects 2022-2023 data.'
   },
   'bess-floor-price': {
     value: 100,

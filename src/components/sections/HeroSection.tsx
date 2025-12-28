@@ -1032,6 +1032,7 @@ export default function HeroSection({
                   <div 
                     onClick={() => setShowMerlinVideo(true)}
                     className="relative flex flex-col items-center justify-center cursor-pointer group transition-transform hover:scale-105 active:scale-95 py-8"
+                    title="Merlin Magic - Click to see how it works"
                   >
                     {/* Click glow effect - expands on click */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 group-active:from-amber-500/30 group-active:via-amber-500/40 group-active:to-amber-500/30 transition-all duration-300 blur-xl scale-90 group-active:scale-125" />

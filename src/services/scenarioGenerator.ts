@@ -74,7 +74,7 @@ export interface ScenarioGeneratorInput {
   wantsGenerator: boolean;
   
   // Grid status
-  gridConnection: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
 }
 
 export interface ScenarioGeneratorResult {

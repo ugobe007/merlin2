@@ -81,7 +81,7 @@ async function analyzePriceTrends(): Promise<PriceTrendAnalysis[]> {
   const trends: PriceTrendAnalysis[] = [];
 
   try {
-    // Get pricing data from ai_training_data
+    // Get pricing data from ai_training_data (includes vendor submissions and RSS feeds)
     const { data: pricingData, error } = await supabase
       .from('ai_training_data')
       .select('*')

@@ -554,7 +554,7 @@ export class QuoteEngine {
     windMW: number = 0,
     generatorMW: number = 0,
     industryContext?: { selectedIndustry?: string; useCaseData?: unknown },
-    gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid',
+    gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive' = 'on-grid',
     location: string = 'California',
     options?: EquipmentBreakdownOptions
   ): Promise<EquipmentBreakdown> {
@@ -657,8 +657,8 @@ export class QuoteEngine {
     }
     
     // Grid connection type
-    if (input.gridConnection && !['on-grid', 'off-grid', 'limited'].includes(input.gridConnection)) {
-      errors.push('gridConnection must be "on-grid", "off-grid", or "limited"');
+    if (input.gridConnection && !['on-grid', 'off-grid', 'limited', 'unreliable', 'expensive'].includes(input.gridConnection)) {
+      errors.push('gridConnection must be "on-grid", "off-grid", "limited", "unreliable", or "expensive"');
     }
     
     // Generator fuel type
