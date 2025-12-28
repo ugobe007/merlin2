@@ -7,7 +7,7 @@
  * Based on step5-quote-redesign.html mockup
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import badgeGoldIcon from '@/assets/images/badge_gold_icon.jpg';
@@ -23,6 +23,8 @@ import { QuoteEngine } from '@/core/calculations';
 import { generatePDF, generateWord, generateExcel } from '@/utils/quoteExport';
 import { CalculationValidator } from '@/services/calculationValidator';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
+import { calculateRAVS, type RAVSInput, type RAVSScore } from '@/services/ravsService';
+import { RAVSDisplay } from '../components/RAVSDisplay';
 
 interface Step5Props {
   state: string;
@@ -34,7 +36,7 @@ interface Step5Props {
   durationHours: number;
   solarKW: number;
   generatorKW: number;
-  gridConnection: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   electricityRate: number;
   quoteResult: QuoteResult | null;
   onQuoteGenerated: (quote: QuoteResult) => void;
@@ -97,7 +99,9 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
         onQuoteGenerated(result);
         setLoading(false);
       } catch (err) {
-        console.error('Failed to generate quote:', err);
+        if (import.meta.env.DEV) {
+          console.error('Failed to generate quote:', err);
+        }
         setError(err instanceof Error ? err.message : 'Failed to generate quote.');
         setLoading(false);
       }
@@ -156,7 +160,9 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
         );
         setValidationResult(result);
       } catch (err) {
-        console.error('Validation failed:', err);
+        if (import.meta.env.DEV) {
+          console.error('Validation failed:', err);
+        }
       }
     };
     
@@ -260,6 +266,57 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
 
   const taxSavings = Math.round((costs?.totalProjectCost || 0) - (costs?.netCost || 0));
   const roi = financials?.roi25Year ? Math.round(financials.roi25Year) : financials?.roi10Year ? Math.round(financials.roi10Year) : 0;
+
+  // Calculate RAVS for the complete configuration
+  const ravsScore = useMemo<RAVSScore | null>(() => {
+    if (!quoteResult || !financials || !costs) return null;
+    
+    try {
+      // Estimate IRR if not available
+      const estimatedIRR = financials.irr || 
+        (costs.netCost > 0 ? Math.min(25, Math.max(0, (financials.annualSavings / costs.netCost) * 100 * 1.2)) : 10);
+      
+      const totalSystemKW = batteryKW + solarKW + generatorKW;
+      const systemType = solarKW > 0 ? 'solar+bess' : generatorKW > 0 ? 'hybrid' : 'bess';
+      
+      const ravsInput: RAVSInput = {
+        financial: {
+          npv: financials.npv || 0,
+          irr: estimatedIRR,
+          paybackYears: financials.paybackYears || 0,
+          roi10Year: financials.roi10Year || 0,
+          initialInvestment: costs.netCost || costs.totalProjectCost || 0,
+        },
+        project: {
+          systemType: systemType as 'bess' | 'solar' | 'solar+bess' | 'generator' | 'ev' | 'hybrid',
+          systemSizeKW: totalSystemKW,
+          durationHours: durationHours,
+          state: state,
+          gridConnection: gridConnection,
+          industry: selectedIndustry,
+        },
+        market: {
+          electricityRate: electricityRate || 0.12,
+          incentivesAvailable: true,
+          itcPercentage: 30,
+          stateIncentives: ['CA', 'NY', 'MA', 'NJ', 'CT', 'CO'].includes(state),
+          netMeteringAvailable: !['TX', 'AZ'].includes(state),
+        },
+        operational: {
+          warrantyYears: 15,
+          expectedLifeYears: 25,
+          maintenanceIncluded: false,
+          installerTier: 'standard',
+          equipmentTier: 'tier1',
+        },
+      };
+      
+      return calculateRAVS(ravsInput);
+    } catch (error) {
+      console.warn('RAVS calculation failed:', error);
+      return null;
+    }
+  }, [quoteResult, financials, costs, batteryKW, solarKW, generatorKW, durationHours, state, gridConnection, selectedIndustry, electricityRate]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4 py-6 pb-32">
@@ -429,6 +486,35 @@ export const Step5QuoteReview: React.FC<Step5Props> = ({
           )}
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          RAVS™ ANALYSIS
+      ═══════════════════════════════════════════════════════════════ */}
+      {ravsScore && (
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">RAVS™ Analysis</h3>
+              <p className="text-sm text-purple-300">Risk-Adjusted Value Score</p>
+            </div>
+          </div>
+          
+          <RAVSDisplay 
+            score={ravsScore} 
+            variant="full"
+            animated={true}
+          />
+          
+          {/* Trademark notice */}
+          <p className="mt-4 text-xs text-white/40 text-center">
+            RAVS™ is a proprietary risk assessment methodology by Noah Energy.
+            "Because the highest IRR isn't always the best decision."
+          </p>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════
           SYSTEM CONFIGURATION

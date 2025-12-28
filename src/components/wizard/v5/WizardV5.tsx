@@ -10,16 +10,21 @@
  * - MerlinInputs provides all input components
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { ArrowLeft, ArrowRight, Sparkles, Home } from 'lucide-react';
 
 // Design System
 import { COLORS, WIZARD_STEPS } from './design-system';
+import { WizardErrorBoundary } from './components/ErrorBoundary';
 
 // Step Components
 import { Step1LocationGoals } from './steps/Step1LocationGoals';
 import { Step2IndustrySelect } from './steps/Step2IndustrySelect';
 import { Step3FacilityDetails } from './steps/Step3FacilityDetails';
+import { MerlinInsightModal as OpportunityDiscoveryModal, type OpportunityPreferences } from './components/MerlinInsightModal';
+import { Step3RecommendationModal, type OpportunityConfiguration } from './components/Step3RecommendationModal';
+import { MerlinRecommendationModal, type SystemRecommendation, type FinancialSummary } from './components/MerlinRecommendationModal';
+import { QuoteEngine } from '@/core/calculations';
 import { Step4MagicFit } from './steps/Step4MagicFit';
 import { Step5QuoteReview } from './steps/Step5QuoteReview';
 
@@ -33,14 +38,22 @@ import { EVChargingConfigModal, type EVChargingConfig } from './components/EVCha
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface WizardState {
-  // Step 1 - Location & Goals
+  // Step 1 - Location & Goals & Grid Connection
   state: string;
   zipCode: string;
   goals: string[];
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   
   // Step 2 - Industry
   selectedIndustry: string;
   industryName: string;
+  
+  // Opportunity Preferences (set in Phase 2)
+  opportunityPreferences?: {
+    wantsSolar: boolean;
+    wantsGenerator: boolean;
+    wantsEV: boolean;
+  };
   
   // Step 3 - Facility Details
   facilitySubtype: string;
@@ -51,7 +64,6 @@ export interface WizardState {
   durationHours: number;
   solarKW: number;
   generatorKW: number;
-  gridConnection: 'on-grid' | 'off-grid' | 'limited';
   
   // Step 5 - Quote
   quoteResult: any | null;
@@ -64,6 +76,7 @@ const DEFAULT_STATE: WizardState = {
   state: '',
   zipCode: '',
   goals: [],
+  gridConnection: 'on-grid',
   selectedIndustry: '',
   industryName: '',
   facilitySubtype: '',
@@ -72,9 +85,9 @@ const DEFAULT_STATE: WizardState = {
   durationHours: 4,
   solarKW: 0,
   generatorKW: 0,
-  gridConnection: 'on-grid',
   quoteResult: null,
   electricityRate: 0.12,
+  opportunityPreferences: undefined,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -109,6 +122,11 @@ export const WizardV5: React.FC<WizardV5Props> = ({
   const [showSolarModal, setShowSolarModal] = useState(false);
   const [showSolarConfigModal, setShowSolarConfigModal] = useState(false);
   const [showEVModal, setShowEVModal] = useState(false);
+  const [showMerlinInsightModal, setShowMerlinInsightModal] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [showMerlinRecommendation, setShowMerlinRecommendation] = useState(false);
+  const [calculatedRecommendation, setCalculatedRecommendation] = useState<SystemRecommendation | null>(null);
+  const [calculatedFinancials, setCalculatedFinancials] = useState<FinancialSummary | null>(null);
 
   // Memoize useCaseData at top-level to comply with Rules of Hooks
   // useCaseData passed directly (useMemo removed - hooks cant be conditional)
@@ -134,6 +152,66 @@ export const WizardV5: React.FC<WizardV5Props> = ({
     }
   }, [initialUseCase]);
 
+  // Calculate recommendation and financials for MerlinRecommendationModal
+  const calculateMerlinRecommendation = async (updates: Partial<WizardState>) => {
+    console.log('🔮 calculateMerlinRecommendation called with updates:', updates);
+    try {
+      const finalState = { ...wizardState, ...updates };
+      console.log('🔮 calculateMerlinRecommendation - finalState.opportunityPreferences:', finalState.opportunityPreferences);
+      const batteryKW = finalState.batteryKW || 500;
+      const batteryKWH = batteryKW * (finalState.durationHours || 4);
+      const solarKW = finalState.solarKW || 0;
+      const generatorKW = finalState.generatorKW || 0;
+      
+      // Generate quote to get financials
+      const quote = await QuoteEngine.generateQuote({
+        storageSizeMW: batteryKW / 1000,
+        durationHours: finalState.durationHours || 4,
+        location: finalState.state,
+        electricityRate: finalState.electricityRate || 0.12,
+        useCase: finalState.selectedIndustry,
+        solarMW: solarKW / 1000,
+        generatorMW: generatorKW / 1000,
+        gridConnection: finalState.gridConnection,
+      });
+
+      // Build recommendation
+      const recommendation: SystemRecommendation = {
+        batteryKW,
+        batteryKWH,
+        solarKW: solarKW > 0 ? solarKW : undefined,
+        generatorKW: generatorKW > 0 ? generatorKW : undefined,
+        evStations: finalState.opportunityPreferences?.wantsEV && finalState.useCaseData
+          ? {
+              level2Count: finalState.useCaseData.numberOfLevel2Chargers || 0,
+              dcFastCount: finalState.useCaseData.numberOfDCFastChargers || 0,
+            }
+          : undefined,
+      };
+
+      // Build financial summary
+      const financials: FinancialSummary = {
+        totalInvestment: quote.costs.netCost || quote.costs.totalProjectCost,
+        annualSavings: quote.financials.annualSavings,
+        paybackYears: quote.financials.paybackYears,
+        roi10Year: quote.financials.roi10Year || 0,
+        npv: quote.financials.npv || 0,
+      };
+
+      console.log('🔮 calculateMerlinRecommendation - calculated recommendation:', recommendation);
+      console.log('🔮 calculateMerlinRecommendation - calculated financials:', financials);
+      setCalculatedRecommendation(recommendation);
+      setCalculatedFinancials(financials);
+      setShowMerlinRecommendation(true); // Show the final recommendation modal
+      console.log('🔮 calculateMerlinRecommendation - setShowMerlinRecommendation(true)');
+    } catch (error) {
+      console.error('Failed to calculate recommendation:', error);
+      // Fallback: proceed directly to Step 4
+      setShowRecommendationModal(false);
+      setCurrentStep(3);
+    }
+  };
+
   // Step Navigation
   const goToStep = useCallback((step: number) => {
     if (step < 0 || step > 4) return;
@@ -144,12 +222,34 @@ export const WizardV5: React.FC<WizardV5Props> = ({
     }, 200);
   }, []);
 
-  const nextStep = useCallback(() => goToStep(currentStep + 1), [currentStep, goToStep]);
+  // Handle step navigation - intercept Step 3 Continue to show configuration modal
+  const nextStep = useCallback(() => {
+    // If we're on Step 3 (index 2) and user has selected opportunities, show configuration modal
+    if (currentStep === 2 && wizardState.opportunityPreferences) {
+      const hasOpportunities = wizardState.opportunityPreferences.wantsSolar || 
+                              wizardState.opportunityPreferences.wantsGenerator || 
+                              wizardState.opportunityPreferences.wantsEV;
+      if (hasOpportunities) {
+        setShowRecommendationModal(true);
+        return; // Don't advance step yet - wait for modal confirmation
+      }
+    }
+    // Otherwise, proceed normally
+    goToStep(currentStep + 1);
+  }, [currentStep, goToStep, wizardState.opportunityPreferences]);
   const prevStep = useCallback(() => goToStep(currentStep - 1), [currentStep, goToStep]);
 
   // Update state helper
   const updateState = useCallback((updates: Partial<WizardState>) => {
-    setWizardState(prev => ({ ...prev, ...updates }));
+    setWizardState(prev => {
+      const newState = { ...prev, ...updates };
+      if (import.meta.env.DEV && updates.opportunityPreferences !== undefined) {
+        console.log('🔮 updateState called with opportunityPreferences:', updates.opportunityPreferences);
+        console.log('🔮 updateState - prev state opportunityPreferences:', prev.opportunityPreferences);
+        console.log('🔮 updateState - new state opportunityPreferences:', newState.opportunityPreferences);
+      }
+      return newState;
+    });
   }, []);
 
   // Calculate solar opportunity based on state location
@@ -191,53 +291,100 @@ export const WizardV5: React.FC<WizardV5Props> = ({
   // Render current step
   const renderStep = () => {
     switch (currentStep) {
-      case 0:
+      case 0: {
         const solarData = getSolarData(wizardState.state);
         return (
-          <Step1LocationGoals
-            state={wizardState.state}
-            zipCode={wizardState.zipCode}
-            goals={wizardState.goals}
-            electricityRate={wizardState.electricityRate}
-            peakSunHours={solarData.peakSunHours}
-            solarRating={solarData.rating}
-            onStateChange={(v) => updateState({ state: v })}
-            onZipCodeChange={(v) => updateState({ zipCode: v })}
-            onGoalsChange={(v) => updateState({ goals: v })}
-            onElectricityRateChange={(rate) => updateState({ electricityRate: rate })}
-            onContinue={() => setCurrentStep(1)}
-            onOpenAdvanced={onOpenAdvanced}
-          />
+          <>
+            <Step1LocationGoals
+              state={wizardState.state}
+              zipCode={wizardState.zipCode}
+              goals={wizardState.goals}
+              gridConnection={wizardState.gridConnection}
+              electricityRate={wizardState.electricityRate}
+              peakSunHours={solarData.peakSunHours}
+              solarRating={solarData.rating}
+              onStateChange={(v) => updateState({ state: v })}
+              onZipCodeChange={(v) => updateState({ zipCode: v })}
+              onGoalsChange={(v) => updateState({ goals: v })}
+              onGridConnectionChange={(v) => updateState({ gridConnection: v })}
+              onElectricityRateChange={(rate) => updateState({ electricityRate: rate })}
+              onContinue={() => goToStep(1)}
+              onOpenAdvanced={onOpenAdvanced}
+            />
+          </>
         );
+      }
       
-      case 1:
+      case 1: {
         const solarDataStep2 = getSolarData(wizardState.state);
         return (
-          <Step2IndustrySelect
-            selectedIndustry={wizardState.selectedIndustry}
-            onIndustrySelect={(slug, name) => updateState({ selectedIndustry: slug, industryName: name })}
-            solarOpportunity={getSolarOpportunity(wizardState.state)}
-            onSolarClick={() => setShowSolarModal(true)}
-            state={wizardState.state}
-            electricityRate={wizardState.electricityRate}
-            peakSunHours={solarDataStep2.peakSunHours}
-            solarRating={solarDataStep2.rating}
-          />
+          <>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-white/60">Loading...</div></div>}>
+              <Step2IndustrySelect
+                selectedIndustry={wizardState.selectedIndustry}
+                onIndustrySelect={(slug, name) => {
+                  updateState({ selectedIndustry: slug, industryName: name });
+                  // Trigger Merlin Insight Modal after industry selection
+                  setShowMerlinInsightModal(true);
+                }}
+                solarOpportunity={getSolarOpportunity(wizardState.state)}
+                onSolarClick={() => setShowSolarModal(true)}
+                state={wizardState.state}
+                electricityRate={wizardState.electricityRate}
+                peakSunHours={solarDataStep2.peakSunHours}
+                solarRating={solarDataStep2.rating}
+              />
+            </Suspense>
+            
+            {/* Merlin Insight Modal - appears after industry selection */}
+            {wizardState.selectedIndustry && wizardState.state && (
+              <OpportunityDiscoveryModal
+                isOpen={showMerlinInsightModal}
+                onClose={() => {
+                  setShowMerlinInsightModal(false);
+                  // If user closes without selecting, still proceed to Step 3 with default preferences
+                  if (!wizardState.opportunityPreferences) {
+                    updateState({ 
+                      opportunityPreferences: { 
+                        wantsSolar: false, 
+                        wantsGenerator: false, 
+                        wantsEV: false 
+                      } 
+                    });
+                  }
+                  // Proceed to Step 3 after a short delay
+                  setTimeout(() => setCurrentStep(2), 300);
+                }}
+                onConfirm={(preferences) => {
+                  console.log('🔮 MerlinInsightModal onConfirm - preferences received:', preferences);
+                  updateState({ opportunityPreferences: preferences });
+                  console.log('🔮 Wizard state updated, opportunityPreferences:', preferences);
+                  setShowMerlinInsightModal(false);
+                  // Proceed to Step 3 after preferences are set
+                  setTimeout(() => setCurrentStep(2), 300);
+                }}
+                state={wizardState.state}
+                industry={wizardState.selectedIndustry}
+                industryName={wizardState.industryName}
+                gridConnection={wizardState.gridConnection}
+              />
+            )}
+          </>
         );
+      }
       
-      case 2:
+      case 2: {
         return (
-          <Step3FacilityDetails
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-white/60">Loading...</div></div>}>
+            <Step3FacilityDetails
             selectedIndustry={wizardState.selectedIndustry}
             industryName={wizardState.industryName}
             useCaseData={wizardState.useCaseData}
             onDataChange={(field, value) => updateState({ 
               useCaseData: { ...wizardState.useCaseData, [field]: value } 
             })}
-            onSolarConfigClick={() => setShowSolarConfigModal(true)}
-            onEVConfigClick={() => setShowEVModal(true)}
-            solarKW={solarConfig?.totalSolarKW || wizardState.solarKW}
-            evChargerCount={evConfig ? (evConfig.existingL2Count + evConfig.existingDCFCCount + evConfig.desiredL2Count + evConfig.desiredDCFCCount) : 0}
+            // Removed: onSolarConfigClick, onEVConfigClick, solarKW, evChargerCount
+            // Solar/EV configuration now happens in Step 2 (MerlinInsightModal)
             state={wizardState.state}
             zipCode={wizardState.zipCode}
             goals={wizardState.goals}
@@ -247,14 +394,23 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             generatorKW={wizardState.generatorKW}
             gridConnection={wizardState.gridConnection}
             onOpenAdvanced={onOpenAdvanced}
+            opportunityPreferences={wizardState.opportunityPreferences}
+            onReviewRecommendations={() => setShowRecommendationModal(true)}
           />
+          </Suspense>
         );
+      }
       
-      case 3:
+      case 3: {
         // Memoize useCaseData to prevent infinite effect loop in Step4MagicFit
         // useCaseData passed directly (useMemo removed - hooks cant be conditional)
+        if (import.meta.env.DEV) {
+          console.log('🔮 WizardV5 case 3 (Step 4) - Rendering Step4MagicFit');
+          console.log('🔮 WizardV5 case 3 - wizardState.opportunityPreferences:', wizardState.opportunityPreferences);
+        }
         return (
-          <Step4MagicFit
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-white/60">Loading...</div></div>}>
+            <Step4MagicFit
             selectedIndustry={wizardState.selectedIndustry}
             useCaseData={wizardState.useCaseData}
             state={wizardState.state}
@@ -265,19 +421,22 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             solarKW={wizardState.solarKW}
             generatorKW={wizardState.generatorKW}
             gridConnection={wizardState.gridConnection}
+            opportunityPreferences={wizardState.opportunityPreferences}
             onBatteryChange={(v) => updateState({ batteryKW: v })}
             onDurationChange={(v) => updateState({ durationHours: v })}
             onSolarChange={(v) => updateState({ solarKW: v })}
             onGeneratorChange={(v) => updateState({ generatorKW: v })}
-            onGridConnectionChange={(v) => updateState({ gridConnection: v })}
             onContinue={nextStep}
             onOpenAdvanced={onOpenAdvanced}
           />
+          </Suspense>
         );
+      }
       
-      case 4:
+      case 4: {
         return (
-          <Step5QuoteReview
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-white/60">Loading...</div></div>}>
+            <Step5QuoteReview
             state={wizardState.state}
             selectedIndustry={wizardState.selectedIndustry}
             industryName={wizardState.industryName}
@@ -292,7 +451,9 @@ export const WizardV5: React.FC<WizardV5Props> = ({
             quoteResult={wizardState.quoteResult}
             onQuoteGenerated={(quote) => updateState({ quoteResult: quote })}
           />
+          </Suspense>
         );
+      }
       
       default:
         return null;
@@ -350,8 +511,19 @@ export const WizardV5: React.FC<WizardV5Props> = ({
     }
   }, [updateState, wizardState.useCaseData, wizardState.goals]);
 
+  // Debug: Log when component renders to verify it's the correct one
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('🎯 WizardV5 rendered - No fixed bottom nav should exist');
+    }
+  }, []);
+
   return (
-    <div className={`h-screen bg-gradient-to-br ${COLORS.background.page} flex flex-col`}>
+    <div 
+      className={`min-h-screen h-full bg-gradient-to-br ${COLORS.background.page} flex flex-col wizard-v5-container`} 
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
+      data-wizard-v5="true"
+    >
       {/* Solar Opportunity Modal (legacy) */}
       <SolarOpportunityModal
         isOpen={showSolarModal}
@@ -382,6 +554,91 @@ export const WizardV5: React.FC<WizardV5Props> = ({
         electricityRate={wizardState.electricityRate}
         currentConfig={evConfig || undefined}
       />
+
+      {/* Step 3 Recommendation Modal */}
+      <Step3RecommendationModal
+        isOpen={showRecommendationModal}
+        onClose={() => setShowRecommendationModal(false)}
+        onConfirm={(configuration: OpportunityConfiguration) => {
+          // Update wizard state with configuration (preferences + sizes)
+          const updates: Partial<WizardState> = {
+            opportunityPreferences: {
+              wantsSolar: configuration.wantsSolar,
+              wantsGenerator: configuration.wantsGenerator,
+              wantsEV: configuration.wantsEV,
+            },
+            // Store configured sizes
+            solarKW: configuration.solarKW || 0,
+            generatorKW: configuration.generatorKW || 0,
+          };
+          
+          // Update useCaseData with EV config if provided
+          if (configuration.evConfig) {
+            updates.useCaseData = {
+              ...wizardState.useCaseData,
+              numberOfLevel2Chargers: configuration.evConfig.level2Count || 0,
+              numberOfDCFastChargers: configuration.evConfig.dcFastCount || 0,
+            };
+          }
+          
+          console.log('🔮 Step3RecommendationModal onConfirm - configuration received:', configuration);
+          console.log('🔮 Step3RecommendationModal onConfirm - updates to apply:', updates);
+          setWizardState(prev => {
+            const newState = { ...prev, ...updates };
+            console.log('🔮 Step3RecommendationModal onConfirm - new wizard state opportunityPreferences:', newState.opportunityPreferences);
+            return newState;
+          });
+          // Close Step3RecommendationModal and calculate recommendation for MerlinRecommendationModal
+          setShowRecommendationModal(false);
+          calculateMerlinRecommendation(updates).then(() => {
+            console.log('🔮 Step3RecommendationModal onConfirm - calculateMerlinRecommendation complete');
+          });
+        }}
+        state={wizardState.state}
+        zipCode={wizardState.zipCode}
+        gridConnection={wizardState.gridConnection}
+        electricityRate={wizardState.electricityRate}
+        industry={wizardState.selectedIndustry}
+        industryLabel={wizardState.industryName}
+        useCaseData={wizardState.useCaseData}
+        goals={wizardState.goals}
+        baselineKW={wizardState.useCaseData.baselineKW}
+        peakKW={wizardState.useCaseData.peakKW}
+        initialPreferences={wizardState.opportunityPreferences}
+      />
+
+          {/* Merlin Recommendation Modal - Shows after Step3RecommendationModal confirms */}
+      {calculatedRecommendation && calculatedFinancials && (
+        <MerlinRecommendationModal
+          isOpen={showMerlinRecommendation}
+          onClose={() => {
+            console.log('🔮 MerlinRecommendationModal onClose');
+            setShowMerlinRecommendation(false);
+            setCurrentStep(3); // Go to Step 4
+          }}
+          onAccept={() => {
+            console.log('🔮 MerlinRecommendationModal onAccept - proceeding to Step 4');
+            setShowMerlinRecommendation(false);
+            setCurrentStep(3); // Go to Step 4 (Magic Fit)
+          }}
+          onProQuote={onOpenAdvanced}
+          state={wizardState.state}
+          industryName={wizardState.industryName}
+          preferences={wizardState.opportunityPreferences}
+          recommendation={calculatedRecommendation}
+          financials={calculatedFinancials}
+          gridConnection={wizardState.gridConnection}
+          electricityRate={wizardState.electricityRate}
+          industry={wizardState.selectedIndustry}
+        />
+      )}
+      {import.meta.env.DEV && (() => {
+        console.log('🔮 WizardV5 render - showMerlinRecommendation:', showMerlinRecommendation);
+        console.log('🔮 WizardV5 render - calculatedRecommendation:', calculatedRecommendation);
+        console.log('🔮 WizardV5 render - calculatedFinancials:', calculatedFinancials);
+        console.log('🔮 WizardV5 render - wizardState.opportunityPreferences:', wizardState.opportunityPreferences);
+        return null;
+      })()}
 
       {/* ═══════════════════════════════════════════════════════════════════
           HEADER - Step Indicator
@@ -433,52 +690,85 @@ export const WizardV5: React.FC<WizardV5Props> = ({
       {/* Wizard Content - Full width scrollable area */}
       <div 
         className="overflow-y-auto overflow-x-hidden w-full scrollbar-hide"
+        data-wizard-content
         style={{ 
           height: 'calc(100vh - 200px)',
+          paddingBottom: '100px', // Space for bottom nav bar
         }}
       >
-        <div className="max-w-4xl mx-auto" style={{ padding: '1.5rem 1rem 10rem 1rem' }}>
-          {renderStep()}
+        <div className="max-w-4xl mx-auto" style={{ padding: '1.5rem 1rem 4rem 1rem' }}>
+          <WizardErrorBoundary 
+            stepName={WIZARD_STEPS[currentStep]?.title || `Step ${currentStep + 1}`}
+            onReset={() => {
+              // Reset error state and go back one step
+              setCurrentStep(Math.max(0, currentStep - 1));
+            }}
+          >
+            {renderStep()}
+          </WizardErrorBoundary>
         </div>
       </div>
 
-      {currentStep > 0 && (
-        <button
-          onClick={prevStep}
-          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl font-medium transition-all
-            bg-white/10 backdrop-blur-xl border border-white/20 text-white/90
-            hover:bg-white/20 hover:border-white/30 hover:scale-105
-            shadow-lg shadow-purple-500/20"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
-        </button>
-      )}
-      {/* Next/Complete Button - Fixed bottom right - More prominent on Step 4 */}
-      {/* Disable on Step 1 if no industry selected */}
-      {(() => {
-        const canGoForward = currentStep !== 1 || wizardState.selectedIndustry.length > 0;
-        return (
+      {/* Bottom Navigation Bar */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/80 backdrop-blur-lg border-t border-white/10 px-6 py-4 z-[1000]"
+        data-wizard-v5-nav="true"
+      >
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          {/* Back Button */}
           <button
-            onClick={currentStep === 4 ? () => handleComplete(wizardState.quoteResult) : nextStep}
-            disabled={!canGoForward}
-            className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all
-              backdrop-blur-xl border
-              shadow-xl hover:shadow-2xl hover:scale-105 ${
-                !canGoForward
-                  ? 'bg-gray-500/50 text-gray-300 border-gray-400/30 cursor-not-allowed opacity-50'
-                  : currentStep === 3
-                    ? 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 text-white border-emerald-400/50 shadow-emerald-500/50 hover:shadow-emerald-500/70 hover:from-emerald-500 hover:via-green-400 hover:to-teal-400 text-lg px-8 py-4'
-                    : 'bg-gradient-to-r from-purple-600 via-purple-500 to-violet-500 text-white border-purple-400/30 shadow-purple-500/40 hover:shadow-purple-500/50 hover:from-purple-500 hover:via-purple-400 hover:to-violet-400'
-              }`}
+            onClick={prevStep}
+            disabled={currentStep === 0}
+            className={`px-8 py-3 rounded-2xl text-base font-semibold transition-all flex items-center gap-2 ${
+              currentStep === 0
+                ? 'opacity-30 cursor-not-allowed'
+                : 'text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
+            }`}
           >
-            <span>{currentStep === 4 ? 'Get My Quote' : currentStep === 3 ? 'Build My Quote' : 'Continue'}</span>
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+
+          {/* Step Indicator (optional) */}
+          <div className="text-sm text-white/40 font-medium">
+            Step {currentStep + 1} of 5
+          </div>
+
+          {/* Next/Continue Button */}
+          <button
+            onClick={nextStep}
+            disabled={currentStep === 4}
+            className={`px-10 py-4 rounded-2xl text-lg font-bold transition-all flex items-center gap-3 ${
+              currentStep === 4
+                ? 'opacity-30 cursor-not-allowed'
+                : 'bg-gradient-to-r from-[#6700b6] via-[#060F76] to-[#6700b6] text-white shadow-xl shadow-[#6700b6]/30 hover:shadow-[#6700b6]/50 hover:scale-105 border-2 border-[#ad42ff]'
+            }`}
+          >
+            {currentStep === 0 
+              ? 'Continue to Industry Selection'
+              : currentStep === 1
+              ? 'Continue to Details'
+              : currentStep === 2
+              ? 'Continue to System'
+              : currentStep === 3
+              ? 'Continue to Quote'
+              : 'Complete'}
             <ArrowRight className="w-5 h-5" />
           </button>
-        );
-      })()}
+        </div>
+      </div>
     </div>
   );
 };
 
 export default WizardV5;
+
+
+
+
+
+
+
+
+
+
