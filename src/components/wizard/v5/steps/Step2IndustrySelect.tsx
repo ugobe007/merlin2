@@ -72,21 +72,47 @@ const INDUSTRY_ICONS: Record<string, any> = {
 
 // Color mapping matching design reference
 const INDUSTRY_COLORS: Record<string, { gradient: string; border: string; icon: string }> = {
+  // Featured Industries
   'hotel': { gradient: 'from-amber-500 to-yellow-500', border: 'amber-500', icon: '🏨' },
-  'office': { gradient: 'from-blue-500 to-blue-600', border: 'blue-500', icon: '🏢' },
-  'retail': { gradient: 'from-pink-500 to-pink-600', border: 'pink-500', icon: '🛍️' },
+  'hospital': { gradient: 'from-rose-500 to-red-500', border: 'rose-500', icon: '🏥' },
+  'car-wash': { gradient: 'from-cyan-500 to-blue-500', border: 'cyan-500', icon: '🚿' },
+  'ev-charging': { gradient: 'from-emerald-500 to-teal-500', border: 'emerald-500', icon: '⚡' },
+  'data-center': { gradient: 'from-blue-500 to-indigo-600', border: 'blue-500', icon: '🖥️' },
+  'airport': { gradient: 'from-sky-500 to-blue-500', border: 'sky-500', icon: '✈️' },
   'manufacturing': { gradient: 'from-emerald-500 to-emerald-600', border: 'emerald-500', icon: '🏭' },
   'warehouse': { gradient: 'from-orange-500 to-orange-600', border: 'orange-500', icon: '📦' },
-  'ev-charging': { gradient: 'from-emerald-500 to-teal-500', border: 'emerald-500', icon: '🔌' },
-  'car-wash': { gradient: 'from-cyan-500 to-blue-500', border: 'cyan-500', icon: '🚗' },
-  'hospital': { gradient: 'from-rose-500 to-red-500', border: 'rose-500', icon: '🏥' },
+  'logistics': { gradient: 'from-orange-500 to-amber-500', border: 'orange-500', icon: '🚚' },
+  'office': { gradient: 'from-blue-500 to-blue-600', border: 'blue-500', icon: '🏢' },
+  'office-building': { gradient: 'from-blue-500 to-blue-600', border: 'blue-500', icon: '🏢' },
   'college': { gradient: 'from-cyan-500 to-cyan-600', border: 'cyan-500', icon: '🎓' },
-  'airport': { gradient: 'from-sky-500 to-blue-500', border: 'sky-500', icon: '✈️' },
-  'residential': { gradient: 'from-purple-500 to-purple-600', border: 'purple-500', icon: '🏠' },
-  'data-center': { gradient: 'from-blue-500 to-blue-600', border: 'blue-500', icon: '🖥️' },
-  'indoor-farm': { gradient: 'from-lime-500 to-green-500', border: 'lime-500', icon: '🌾' },
+  'university': { gradient: 'from-cyan-500 to-cyan-600', border: 'cyan-500', icon: '🎓' },
+  'college-university': { gradient: 'from-cyan-500 to-cyan-600', border: 'cyan-500', icon: '🎓' },
+  'indoor-farm': { gradient: 'from-lime-500 to-green-500', border: 'lime-500', icon: '🌱' },
+  'indoor-agriculture': { gradient: 'from-lime-500 to-green-500', border: 'lime-500', icon: '🌱' },
+  
+  // More Industries
+  'agricultural': { gradient: 'from-green-500 to-emerald-600', border: 'green-500', icon: '🚜' },
+  'agriculture': { gradient: 'from-green-500 to-emerald-600', border: 'green-500', icon: '🚜' },
+  'apartment': { gradient: 'from-violet-500 to-purple-600', border: 'violet-500', icon: '🏬' },
+  'apartment-complex': { gradient: 'from-violet-500 to-purple-600', border: 'violet-500', icon: '🏬' },
   'casino': { gradient: 'from-amber-500 to-yellow-500', border: 'amber-500', icon: '🎰' },
-  'default': { gradient: 'from-purple-500 to-purple-600', border: 'purple-500', icon: '🏢' },
+  'casino-gaming': { gradient: 'from-amber-500 to-yellow-500', border: 'amber-500', icon: '🎰' },
+  'cold-storage': { gradient: 'from-sky-400 to-blue-500', border: 'sky-400', icon: '❄️' },
+  'gas-station': { gradient: 'from-red-500 to-orange-500', border: 'red-500', icon: '⛽' },
+  'government': { gradient: 'from-slate-500 to-gray-600', border: 'slate-500', icon: '🏛️' },
+  'government-public': { gradient: 'from-slate-500 to-gray-600', border: 'slate-500', icon: '🏛️' },
+  'microgrid': { gradient: 'from-teal-500 to-cyan-600', border: 'teal-500', icon: '🔋' },
+  'microgrid-renewable': { gradient: 'from-teal-500 to-cyan-600', border: 'teal-500', icon: '🔋' },
+  'residential': { gradient: 'from-purple-500 to-purple-600', border: 'purple-500', icon: '🏠' },
+  'retail': { gradient: 'from-pink-500 to-pink-600', border: 'pink-500', icon: '🛍️' },
+  'retail-commercial': { gradient: 'from-pink-500 to-pink-600', border: 'pink-500', icon: '🛒' },
+  'shopping': { gradient: 'from-fuchsia-500 to-pink-600', border: 'fuchsia-500', icon: '🛒' },
+  'shopping-center': { gradient: 'from-fuchsia-500 to-pink-600', border: 'fuchsia-500', icon: '🛒' },
+  'shopping-mall': { gradient: 'from-fuchsia-500 to-pink-600', border: 'fuchsia-500', icon: '🏪' },
+  'restaurant': { gradient: 'from-red-500 to-rose-600', border: 'red-500', icon: '🍽️' },
+  
+  // Default fallback
+  'default': { gradient: 'from-purple-500 to-purple-600', border: 'purple-500', icon: '⚡' },
 };
 
 interface Step2Props {
@@ -340,30 +366,51 @@ export const Step2IndustrySelect: React.FC<Step2Props> = ({
               <button
                 key={industry.slug}
                 onClick={() => onIndustrySelect(industry.slug, industry.name)}
-                className={`group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-5 border text-left transition-all duration-300 ${
+                className={`group relative rounded-2xl p-5 border text-left transition-all duration-300 overflow-hidden ${
                   isSelected
-                    ? `bg-gradient-to-br from-emerald-600/30 to-green-700/30 border-2 border-emerald-500 shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-500/50 animate-pulse`
-                    : 'border-white/10 hover:border-white/20 hover:shadow-lg hover:-translate-y-1'
+                    ? 'border-2 border-emerald-500 shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-500/50'
+                    : 'border-white/10 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1'
                 }`}
+                style={{
+                  background: isSelected 
+                    ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)'
+                    : 'linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%)'
+                }}
               >
-                {/* Selected Checkmark - Green for selection */}
+                {/* Gradient overlay on hover */}
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, transparent 100%)'
+                  }}
+                />
+                
+                {/* Icon */}
+                <div className={`w-12 h-12 rounded-xl mb-3 flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 ${
+                  isSelected ? 'bg-emerald-500/20' : 'bg-white/5 group-hover:bg-white/10'
+                }`}>
+                  {colorInfo.icon}
+                </div>
+                
+                {/* Selected Checkmark */}
                 {isSelected && (
                   <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/50">
                     <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                   </div>
                 )}
                 
-                <h3 className="font-bold text-white text-lg mb-1">{industry.name}</h3>
-                {/* Description shown on hover via title attribute */}
-                {industry.description && industry.slug !== 'office' && industry.slug !== 'office-building' && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                <h3 className="font-bold text-white text-lg mb-1 group-hover:text-purple-200 transition-colors">{industry.name}</h3>
+                
+                {/* Subtle arrow indicator on hover */}
+                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="w-4 h-4 text-purple-400" />
+                </div>
+                
+                {/* Description tooltip on hover */}
+                {industry.description && (
+                  <div className="absolute bottom-full left-0 right-0 mb-2 px-3 py-2 bg-black/95 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-white/10">
                     {industry.description}
                   </div>
-                )}
-                
-                {/* Hover glow */}
-                {!isSelected && (
-                  <div className="absolute inset-0 rounded-2xl bg-transparent group-hover:bg-purple-500/5 transition-colors pointer-events-none"></div>
                 )}
               </button>
             );

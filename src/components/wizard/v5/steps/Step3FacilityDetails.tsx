@@ -34,13 +34,15 @@ import {
   Minus,
   Plus,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Flame
 } from 'lucide-react';
 import badgeIcon from '@/assets/images/badge_icon.jpg';
 
 // Proper ES6 import for useCaseService
 import { useCaseService } from '@/services/useCaseService';
 import { AdvancedQuestionsModal } from '../../modals/AdvancedQuestionsModal';
+import { getBrandPreset, applyBrandPresetDefaults } from '@/services/brandPresetService';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -51,12 +53,11 @@ interface Step3Props {
   industryName: string;
   useCaseData: Record<string, any>;
   onDataChange: (field: string, value: any) => void;
-  // Solar & EV modal triggers
-  onSolarConfigClick?: () => void;
-  onEVConfigClick?: () => void;
-  // Current config summaries (for badges)
-  solarKW?: number;
-  evChargerCount?: number;
+  // Legacy props - no longer used (configuration happens in Step 2 modal)
+  // onSolarConfigClick?: () => void;
+  // onEVConfigClick?: () => void;
+  // solarKW?: number;
+  // evChargerCount?: number;
   // Wizard state for ProQuote
   state?: string;
   zipCode?: string;
@@ -65,9 +66,17 @@ interface Step3Props {
   batteryKW?: number;
   durationHours?: number;
   generatorKW?: number;
-  gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection?: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   // ProQuote handler
   onOpenAdvanced?: () => void;
+  // Opportunity preferences (from Step 2)
+  opportunityPreferences?: {
+    wantsSolar: boolean;
+    wantsGenerator: boolean;
+    wantsEV: boolean;
+  };
+  // Recommendation modal trigger
+  onReviewRecommendations?: () => void;
 }
 
 interface Question {
@@ -283,7 +292,7 @@ const INDUSTRY_QUESTIONS: Record<string, Question[]> = {
       fieldName: 'roomCount',
       questionText: 'Number of guest rooms',
       helpText: 'Total rooms in the property',
-      questionType: 'slider',
+      questionType: 'number',
       minValue: 10,
       maxValue: 1000,
       defaultValue: 150,
@@ -674,14 +683,16 @@ const SliderWithValue: React.FC<{
           max={max}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 h-2 rounded-full appearance-none cursor-pointer"
+          className="flex-1 h-3 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${progress}%, #374151 ${progress}%, #374151 100%)`
+            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${progress}%, #4b5563 ${progress}%, #4b5563 100%)`,
+            // Make the track more visible with a subtle background
+            backgroundColor: '#4b5563', // Dark grey background for the entire track
           }}
         />
-        <div className="bg-slate-800 border-2 border-purple-500/50 rounded-xl px-4 py-2 min-w-[100px] text-center shadow-lg shadow-purple-500/20">
+        <div className="bg-slate-700 border-2 border-purple-400 rounded-xl px-4 py-2 min-w-[100px] text-center shadow-lg shadow-purple-500/30 bg-gradient-to-br from-slate-700 to-slate-800">
           <span className="text-2xl font-bold text-white">{displayValue}</span>
-          {unit && <span className="text-xs text-gray-400 ml-1">{unit}</span>}
+          {unit && <span className="text-xs text-purple-300 ml-1">{unit}</span>}
         </div>
       </div>
     </div>
@@ -711,9 +722,9 @@ const InlineSlider: React.FC<{
           max={max}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
+          className="w-full h-3 rounded-full appearance-none cursor-pointer bg-slate-600/50"
           style={{
-            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${percentage}%, #374151 ${percentage}%, #374151 100%)`
+            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${percentage}%, #6b7280 ${percentage}%, #6b7280 100%)`
           }}
         />
         {showScale && scaleLabels && (
@@ -786,9 +797,9 @@ const SliderWithPresets: React.FC<{
           max={max}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
+          className="w-full h-3 rounded-full appearance-none cursor-pointer bg-slate-600/50"
           style={{
-            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${percentage}%, #374151 ${percentage}%, #374151 100%)`
+            background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${percentage}%, #6b7280 ${percentage}%, #6b7280 100%)`
           }}
         />
       </div>
@@ -925,10 +936,10 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
   industryName,
   useCaseData,
   onDataChange,
-  onSolarConfigClick,
-  onEVConfigClick,
-  solarKW,
-  evChargerCount,
+  // onSolarConfigClick, // Removed - configuration happens in Step 2 modal
+  // onEVConfigClick,    // Removed - configuration happens in Step 2 modal
+  // solarKW,            // Removed - no longer needed
+  // evChargerCount,     // Removed - no longer needed
   state = '',
   zipCode = '',
   goals = [],
@@ -938,11 +949,15 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
   generatorKW = 0,
   gridConnection = 'on-grid',
   onOpenAdvanced,
+  opportunityPreferences,
+  onReviewRecommendations,
 }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showAdvancedQuestions, setShowAdvancedQuestions] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [isLoadingBrand, setIsLoadingBrand] = useState(false);
 
   // Check if this is a college/university use case
   const isCollegeUseCase = selectedIndustry?.toLowerCase().includes('college') || 
@@ -957,6 +972,36 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
     Object.entries(preset.defaults).forEach(([field, value]) => {
       onDataChange(field, value);
     });
+  };
+
+  // Handle brand selection - loads and applies brand preset defaults
+  const handleBrandChange = async (brandSlug: string) => {
+    if (!brandSlug || brandSlug === 'other') {
+      setSelectedBrand(null);
+      return;
+    }
+    
+    setSelectedBrand(brandSlug);
+    setIsLoadingBrand(true);
+    
+    try {
+      const brandPreset = await getBrandPreset(selectedIndustry, brandSlug);
+      if (brandPreset) {
+        // Apply brand preset defaults to useCaseData
+        const updatedData = applyBrandPresetDefaults(useCaseData, brandPreset);
+        
+        // Update each field individually via onDataChange
+        Object.entries(updatedData).forEach(([field, value]) => {
+          if (value !== undefined && value !== useCaseData[field]) {
+            onDataChange(field, value);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading brand preset:', error);
+    } finally {
+      setIsLoadingBrand(false);
+    }
   };
 
   // Load questions - try database first, fall back to hardcoded
@@ -1014,6 +1059,16 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
 
     loadQuestions();
   }, [selectedIndustry]);
+
+  // Monitor brand field changes and apply presets
+  useEffect(() => {
+    const brandValue = useCaseData['brand'];
+    if (brandValue && brandValue !== selectedBrand && brandValue !== 'other') {
+      handleBrandChange(brandValue);
+    } else if (!brandValue || brandValue === 'other') {
+      setSelectedBrand(null);
+    }
+  }, [useCaseData['brand'], selectedIndustry, selectedBrand]);
 
   // Count answered questions
   const answeredCount = useMemo(() => {
@@ -1082,8 +1137,17 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
     });
     
     // Remove duplicates by fieldName (keep first occurrence)
+    // Also remove duplicate rooftop solar questions - prefer 'rooftopSquareFootage' over 'existingSolarKW' if both exist
     const seen = new Set<string>();
+    const hasRooftopSqFt = filtered.some(q => q.fieldName.toLowerCase().includes('rooftopsquarefootage'));
     return filtered.filter(q => {
+      const field = q.fieldName.toLowerCase();
+      
+      // Skip 'existingSolarKW' if we already have 'rooftopSquareFootage' (duplicate rooftop solar question)
+      if (hasRooftopSqFt && field.includes('existingsolarkw')) {
+        return false;
+      }
+      
       if (seen.has(q.fieldName)) {
         return false;
       }
@@ -1102,13 +1166,19 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
       return { icon: '⚡', color: 'from-pink-500 to-rose-500' };
     }
     if (field.includes('hour') || field.includes('time') || field.includes('operating')) {
-      return { icon: '⏰', color: 'from-blue-500 to-indigo-600' };
+      return { icon: '📅', color: 'from-blue-500 to-indigo-600' }; // Updated to calendar icon
     }
     if (field.includes('solar')) {
       return { icon: '☀️', color: 'from-orange-500 to-amber-500' };
     }
     if (field.includes('ev') || field.includes('charger')) {
       return { icon: '🔌', color: 'from-emerald-500 to-teal-500' };
+    }
+    if (field.includes('food') || field.includes('beverage') || field.includes('f&b')) {
+      return { icon: '🍽️', color: 'from-amber-500 to-orange-500' };
+    }
+    if (field.includes('elevator')) {
+      return { icon: '🛗', color: 'from-slate-500 to-gray-600' };
     }
     if (field.includes('backup') || field.includes('critical')) {
       return { icon: '🛡️', color: 'from-purple-500 to-violet-600' };
@@ -1128,8 +1198,23 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
     if (field.includes('vacuum')) {
       return { icon: '🌀', color: 'from-emerald-500 to-teal-500' };
     }
-    if (field.includes('equipment')) {
-      return { icon: '⚙️', color: 'from-slate-500 to-gray-500' };
+    if (field.includes('equipment') || field.includes('workshop')) {
+      return { icon: '🛠️', color: 'from-slate-500 to-gray-500' }; // Updated to workshop icon
+    }
+    if (field.includes('competition') || field.includes('award') || field.includes('achievement')) {
+      return { icon: '🏆', color: 'from-yellow-500 to-amber-500' }; // Competition/award icon
+    }
+    if (field.includes('fellowship') || field.includes('program') || field.includes('education')) {
+      return { icon: '🎓', color: 'from-blue-500 to-indigo-600' }; // Fellowship/education icon
+    }
+    if (field.includes('founder') || field.includes('sponsor') || field.includes('team')) {
+      return { icon: '👥', color: 'from-purple-500 to-violet-600' }; // Team/people icon
+    }
+    if (field.includes('bulletin') || field.includes('community') || field.includes('board')) {
+      return { icon: '💬', color: 'from-cyan-500 to-blue-500' }; // Community/bulletin icon
+    }
+    if (field.includes('navigation') || field.includes('menu') || field.includes('dropdown')) {
+      return { icon: '🤖', color: 'from-purple-500 to-indigo-600' }; // Interactive navigation icon
     }
     return { icon: '🏢', color: 'from-purple-500 to-violet-600' };
   };
@@ -1202,6 +1287,52 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
                   </button>
                 );
               })}
+            </div>
+          );
+        }
+        
+        // Check if this field should use stepper control (count-based fields)
+        const useStepperFieldsEarly = ['elevatorcount', 'roomcount', 'floors', 'buildingfloors', 'washbays', 'dockdoors', 'bedcount', 'icubeds'];
+        if (useStepperFieldsEarly.includes(fieldName)) {
+          const numVal = typeof value === 'number' ? value : Number(value ?? question.defaultValue ?? 0);
+          const minVal = question.minValue || 0;
+          const maxVal = question.maxValue || 999;
+          
+          return (
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => onDataChange(question.fieldName, Math.max(minVal, numVal - 1))}
+                disabled={numVal <= minVal}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
+                  numVal <= minVal 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-400'
+                }`}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={numVal}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  onDataChange(question.fieldName, Math.min(maxVal, Math.max(minVal, val)));
+                }}
+                className="w-24 h-14 text-center text-2xl font-bold bg-slate-800/80 border-2 border-purple-500/50 rounded-xl text-white focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
+                min={minVal}
+                max={maxVal}
+              />
+              <button
+                onClick={() => onDataChange(question.fieldName, Math.min(maxVal, numVal + 1))}
+                disabled={numVal >= maxVal}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
+                  numVal >= maxVal 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-400'
+                }`}
+              >
+                +
+              </button>
             </div>
           );
         }
@@ -1330,6 +1461,64 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
         // Use SliderWithValue for numeric questions
         const numericValue = typeof value === 'number' ? value : (value ?? question.defaultValue ?? question.minValue ?? 0);
         
+        // Check if this field should use stepper control instead of slider
+        // Note: elevatorCount is handled as 'select' type with buttons (see line 1218),
+        // so it won't reach this 'number' case. This stepper logic is for other count fields.
+        const useStepperFields = ['roomcount', 'floors', 'buildingfloors', 'washbays', 'dockdoors', 'bedcount'];
+        if (import.meta.env.DEV) {
+          console.log('🔢 Slider/Number field:', fieldName, 'isStepper:', useStepperFields.includes(fieldName));
+        }
+        if (useStepperFields.includes(fieldName)) {
+          const stepperValue = Number(numericValue) || 0;
+          const minVal = question.minValue || 0;
+          const maxVal = question.maxValue || 999;
+          
+          return (
+            <div className="flex items-center justify-center gap-4">
+              {/* Minus Button */}
+              <button
+                onClick={() => onDataChange(question.fieldName, Math.max(minVal, stepperValue - 1))}
+                disabled={stepperValue <= minVal}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
+                  stepperValue <= minVal 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-400'
+                }`}
+              >
+                −
+              </button>
+              
+              {/* Number Input */}
+              <div className="relative">
+                <input
+                  type="number"
+                  value={stepperValue}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    onDataChange(question.fieldName, Math.min(maxVal, Math.max(minVal, val)));
+                  }}
+                  className="w-24 h-14 text-center text-2xl font-bold bg-slate-800/80 border-2 border-purple-500/50 rounded-xl text-white focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
+                  min={minVal}
+                  max={maxVal}
+                />
+              </div>
+              
+              {/* Plus Button */}
+              <button
+                onClick={() => onDataChange(question.fieldName, Math.min(maxVal, stepperValue + 1))}
+                disabled={stepperValue >= maxVal}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold transition-all ${
+                  stepperValue >= maxVal 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-400'
+                }`}
+              >
+                +
+              </button>
+            </div>
+          );
+        }
+        
         // Determine presets based on field type
         let presets: number[] | undefined;
         if (fieldName.includes('square') || fieldName.includes('footage') || fieldName.includes('size')) {
@@ -1401,7 +1590,9 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
 
   // Debug: Log when component renders
   useEffect(() => {
-    console.log('🎯 Step3FacilityDetails rendered - ProQuote button should be visible');
+    if (import.meta.env.DEV) {
+      console.log('🎯 Step3FacilityDetails rendered - ProQuote button should be visible');
+    }
   }, []);
 
   return (
@@ -1424,11 +1615,13 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
         <div className="mb-6 relative z-20">
           <button
             onClick={() => {
-              console.log('🚀 ProQuote button clicked from Step 3!');
+              if (import.meta.env.DEV) {
+                console.log('🚀 ProQuote button clicked from Step 3!');
+              }
               sessionStorage.setItem('advancedBuilderConfig', JSON.stringify({
                 batteryKW,
                 durationHours,
-                solarKW: solarKW || 0,
+                solarKW: 0, // Solar config now handled in Step 3 recommendation modal
                 generatorKW: generatorKW || 0,
                 state,
                 zipCode,
@@ -1524,182 +1717,98 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
             </div>
           )}
 
-          {/* Power Boosters Panel - Solar & EV Cards */}
-          {(onSolarConfigClick || onEVConfigClick) && (
+          {/* Selected Opportunities Status Panel - Read-only confirmation of Step 2 selections */}
+          {opportunityPreferences && (opportunityPreferences.wantsSolar || opportunityPreferences.wantsGenerator || opportunityPreferences.wantsEV) && (
             <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-300">⚡ Power Boosters (Click to Configure)</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-300">Selected Opportunities</h2>
+              <p className="text-gray-400 text-sm mb-4">Based on your selections in Step 2. System sizing will be calculated after you complete facility details.</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Solar Card */}
-                {onSolarConfigClick && (
-                  <div 
-                    className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
-                    onClick={onSolarConfigClick}
-                  >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Solar Status Card */}
+                {opportunityPreferences.wantsSolar && (
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-orange-500/30 bg-gradient-to-br from-slate-800/90 to-slate-900/90">
                     {/* Orange gradient header */}
-                    <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 px-5 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                            <Sun className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-white">Add Solar</h3>
-                            <p className="text-orange-100 text-sm flex items-center gap-1">
-                              <span>⭐</span> Very Good Potential
-                            </p>
-                          </div>
+                    <div className="bg-gradient-to-r from-orange-500/80 via-amber-500/80 to-orange-400/80 px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                          <Sun className="w-6 h-6 text-white" />
                         </div>
-                        <ArrowRight className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
+                        <div>
+                          <h3 className="text-lg font-bold text-white">Solar Selected</h3>
+                          <p className="text-orange-100 text-xs">Will be sized based on your rooftop space</p>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Stats row */}
-                    <div className="bg-gradient-to-b from-slate-800 to-slate-900 px-5 py-4 grid grid-cols-3 gap-3 border-x border-slate-700">
-                      <div className="text-center">
-                        <div className="text-yellow-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>⚡</span> Peak Sun
+                    {/* Status info */}
+                    <div className="bg-slate-900/50 px-5 py-4 border-t border-orange-500/20">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <div className="text-emerald-400 text-sm font-medium">Included in Quote</div>
+                          <div className="text-white/70 text-xs mt-0.5">Size calculated in Step 4</div>
                         </div>
-                        <div className="text-2xl font-bold text-white">5.0</div>
-                        <div className="text-xs text-gray-400">hrs/day</div>
-                      </div>
-                      <div className="text-center border-x border-slate-700">
-                        <div className="text-yellow-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>🏆</span> Rating
-                        </div>
-                        <div className="text-lg font-bold text-white">Very Good</div>
-                        <div className="text-xs text-emerald-400">Great for solar!</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-yellow-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>💰</span> Rate
-                        </div>
-                        <div className="text-2xl font-bold text-white">$0.10</div>
-                        <div className="text-xs text-gray-400">per kWh</div>
                       </div>
                     </div>
-                    
-                    {/* Bottom section */}
-                    <div className="bg-slate-900 px-5 py-4 border-x border-b border-slate-700">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                      {solarKW && solarKW > 0 ? (
-                            <>
-                              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <CheckCircle className="w-6 h-6 text-emerald-400" />
-                              </div>
-                              <div>
-                                <div className="text-emerald-400 text-sm font-medium">Configured</div>
-                                <div className="text-white font-bold">{solarKW.toLocaleString()} kW Rooftop</div>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-                                <Sun className="w-5 h-5 text-gray-400" />
-                    </div>
-                              <div>
-                                <div className="text-gray-400 text-sm">Future-proof your facility</div>
-                                <div className="text-white font-medium">BESS optimizes solar savings</div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <button className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm transition-all shadow-lg shadow-orange-500/30">
-                          {solarKW && solarKW > 0 ? 'Edit →' : 'Configure →'}
-                  </button>
-                      </div>
-                    </div>
-                    
-                    {/* Hover glow effect */}
-                    <div className="absolute inset-0 rounded-2xl ring-2 ring-orange-500/0 group-hover:ring-orange-500/50 transition-all pointer-events-none"></div>
                   </div>
                 )}
 
-                {/* EV Chargers Card */}
-                {onEVConfigClick && (
-                  <div 
-                    className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
-                    onClick={onEVConfigClick}
-                  >
+                {/* Generator Status Card */}
+                {opportunityPreferences.wantsGenerator && (
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-red-500/30 bg-gradient-to-br from-slate-800/90 to-slate-900/90">
+                    {/* Red gradient header */}
+                    <div className="bg-gradient-to-r from-red-500/80 via-orange-600/80 to-red-400/80 px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                          <Flame className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">Generator Selected</h3>
+                          <p className="text-red-100 text-xs">Backup power for reliability</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Status info */}
+                    <div className="bg-slate-900/50 px-5 py-4 border-t border-red-500/20">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <div className="text-emerald-400 text-sm font-medium">Included in Quote</div>
+                          <div className="text-white/70 text-xs mt-0.5">Size calculated in Step 4</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* EV Charging Status Card */}
+                {opportunityPreferences.wantsEV && (
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 bg-gradient-to-br from-slate-800/90 to-slate-900/90">
                     {/* Teal/Emerald gradient header */}
-                    <div className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 px-5 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                            <PlugZap className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-white">Add EV Chargers</h3>
-                            <p className="text-emerald-100 text-sm flex items-center gap-1">
-                              <span>⚡</span> Level 2 & DC Fast Charging
-                            </p>
-                          </div>
+                    <div className="bg-gradient-to-r from-emerald-600/80 via-teal-500/80 to-cyan-500/80 px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                          <Zap className="w-6 h-6 text-white" />
                         </div>
-                        <ArrowRight className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
+                        <div>
+                          <h3 className="text-lg font-bold text-white">EV Charging Selected</h3>
+                          <p className="text-emerald-100 text-xs">Level 2 & DC Fast Charging</p>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Stats row */}
-                    <div className="bg-gradient-to-b from-slate-800 to-slate-900 px-5 py-4 grid grid-cols-3 gap-3 border-x border-slate-700">
-                      <div className="text-center">
-                        <div className="text-cyan-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>⚡</span> Peak Rate
+                    {/* Status info */}
+                    <div className="bg-slate-900/50 px-5 py-4 border-t border-emerald-500/20">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <div className="text-emerald-400 text-sm font-medium">Included in Quote</div>
+                          <div className="text-white/70 text-xs mt-0.5">Size calculated in Step 4</div>
                         </div>
-                        <div className="text-2xl font-bold text-white">$0.14</div>
-                        <div className="text-xs text-gray-400">per kWh</div>
-                      </div>
-                      <div className="text-center border-x border-slate-700">
-                        <div className="text-cyan-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>🌙</span> Off-Peak
-                        </div>
-                        <div className="text-2xl font-bold text-white">$0.08</div>
-                        <div className="text-xs text-emerald-400">Save 43%!</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-cyan-400 text-xs font-medium mb-1 flex items-center justify-center gap-1">
-                          <span>⏰</span> Peak Hrs
-                        </div>
-                        <div className="text-lg font-bold text-white">1-7 PM</div>
-                        <div className="text-xs text-gray-400">weekdays</div>
                       </div>
                     </div>
-                    
-                    {/* Bottom section */}
-                    <div className="bg-slate-900 px-5 py-4 border-x border-b border-slate-700">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                      {evChargerCount && evChargerCount > 0 ? (
-                            <>
-                              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <CheckCircle className="w-6 h-6 text-emerald-400" />
-                              </div>
-                              <div>
-                                <div className="text-emerald-400 text-sm font-medium">Configured</div>
-                                <div className="text-white font-bold">{evChargerCount} Chargers</div>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-                                <PlugZap className="w-5 h-5 text-gray-400" />
-                    </div>
-                              <div>
-                                <div className="text-gray-400 text-sm">Future-proof your facility</div>
-                                <div className="text-white font-medium">BESS optimizes charging costs</div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <button className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-500/30">
-                          {evChargerCount && evChargerCount > 0 ? 'Edit →' : 'Configure →'}
-                  </button>
-              </div>
-                    </div>
-                    
-                    {/* Hover glow effect */}
-                    <div className="absolute inset-0 rounded-2xl ring-2 ring-emerald-500/0 group-hover:ring-emerald-500/50 transition-all pointer-events-none"></div>
-            </div>
+                  </div>
                 )}
               </div>
             </section>
@@ -1728,6 +1837,26 @@ export const Step3FacilityDetails: React.FC<Step3Props> = ({
                   </QuestionCard>
                 );
               })}
+            </div>
+          )}
+
+          {/* Review Recommendations Button - Show when questions are complete and user has opportunity preferences */}
+          {onReviewRecommendations && 
+           opportunityPreferences && 
+           (opportunityPreferences.wantsSolar || opportunityPreferences.wantsGenerator || opportunityPreferences.wantsEV) &&
+           answeredCount === visibleQuestions.length && 
+           visibleQuestions.length > 0 && (
+            <div className="mt-8">
+              <button
+                onClick={onReviewRecommendations}
+                className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                Review Recommendations
+              </button>
+              <p className="text-center text-white/50 text-sm mt-2">
+                Get AI-driven recommendations with financial projections before proceeding
+              </p>
             </div>
           )}
         </>

@@ -16,13 +16,14 @@
  * - #060F76 (Arapawa Navy)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CleanInput, SearchableDropdown } from '@/components/MerlinInputComponents';
 import { useCommercialRate } from '@/hooks/useUtilityRates';
 import {
   Sparkles, MapPin, CheckCircle, Sun, Battery, Zap,
   AlertTriangle, ChevronDown, Wand2, ArrowRight,
-  Globe, ChevronRight, TrendingDown, Shield, Leaf, Gauge, Banknote
+  Globe, ChevronRight, TrendingDown, Shield, Leaf, Gauge, Banknote, DollarSign,
+  Power, Activity, AlertCircle
 } from 'lucide-react';
 
 // ============================================
@@ -99,6 +100,7 @@ interface Step1Props {
   state: string;
   zipCode: string;
   goals: string[];
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   electricityRate: number;
   peakSunHours?: number;
   solarRating?: string;
@@ -106,6 +108,7 @@ interface Step1Props {
   onStateChange: (state: string) => void;
   onZipCodeChange: (zip: string) => void;
   onGoalsChange: (goals: string[]) => void;
+  onGridConnectionChange: (type: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive') => void;
   onElectricityRateChange?: (rate: number) => void;
   onContinue?: () => void;
   onOpenAdvanced?: () => void;
@@ -142,6 +145,7 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   state,
   zipCode,
   goals,
+  gridConnection = 'on-grid',
   electricityRate = 0,
   peakSunHours = 0,
   solarRating = '',
@@ -149,6 +153,7 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   onStateChange,
   onZipCodeChange,
   onGoalsChange,
+  onGridConnectionChange,
   onElectricityRateChange,
   onContinue,
   onOpenAdvanced,
@@ -162,14 +167,17 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   );
   
   // Update electricity rate when commercial rate is fetched
+  // Use ref to prevent infinite loops from function reference changes
+  const lastRateRef = useRef<number>(0);
   useEffect(() => {
-    if (commercialRate && commercialRate > 0 && onElectricityRateChange) {
+    if (commercialRate && commercialRate > 0 && commercialRate !== lastRateRef.current && onElectricityRateChange) {
+      lastRateRef.current = commercialRate;
       onElectricityRateChange(commercialRate);
     }
-  }, [commercialRate, onElectricityRateChange]);
+  }, [commercialRate]); // Removed onElectricityRateChange from dependencies
   
-  // Check if user has completed location and at least one goal
-  const canContinue = state && goals.length > 0;
+  // Check if user has completed location, at least one goal, and grid connection
+  const canContinue = state && goals.length > 0 && gridConnection;
   
   // Determine if zip code is entered (locks state dropdown)
   const hasZipCode = Boolean(zipCode && zipCode.length === 5);
@@ -370,7 +378,7 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
   };
   
   return (
-    <div className="px-4 py-8 pb-24">
+    <div className="px-4 py-8 pb-32">
       <div className="max-w-4xl mx-auto">
         {/* Welcome Hero */}
         <div className="text-center mb-8">
@@ -607,6 +615,82 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
               <p className="mt-4 text-center text-[#ffa600] text-sm flex items-center justify-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Please select at least one goal to continue
+              </p>
+            )}
+          </div>
+        )}
+        
+        {/* GRID CONNECTION SECTION - Blue/Teal themed (distinct from goals) */}
+        {state && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 border-2 border-[#68BFFA] shadow-xl mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#68BFFA] to-[#060F76] rounded-2xl flex items-center justify-center">
+                <Power className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Grid Connection Type</h2>
+                <p className="text-sm text-gray-500">Select your grid connection status - this affects system recommendations</p>
+              </div>
+            </div>
+            
+            {/* Clear instruction */}
+            <div className="mb-4 p-3 bg-[#68BFFA]/10 border border-[#68BFFA]/30 rounded-xl">
+              <p className="text-sm text-[#060F76] font-medium flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>Please select one option below by clicking the circle on the right</span>
+              </p>
+            </div>
+            
+            {/* Grid Connection Options */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { id: 'on-grid', label: 'On-Grid', description: 'Connected to utility grid, reliable service', icon: Activity },
+                { id: 'off-grid', label: 'Off-Grid', description: 'No utility connection, requires full backup', icon: Battery },
+                { id: 'limited', label: 'Limited Capacity', description: 'Grid available but capacity constrained', icon: AlertTriangle },
+                { id: 'unreliable', label: 'Unreliable Grid', description: 'Frequent outages or voltage issues', icon: Zap },
+                { id: 'expensive', label: 'Expensive Grid', description: 'High rates or demand charges', icon: DollarSign },
+              ].map((option) => {
+                const Icon = option.icon;
+                const isSelected = gridConnection === option.id;
+                
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => onGridConnectionChange(option.id as any)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      isSelected
+                        ? 'border-[#68BFFA] bg-[#68BFFA]/10 shadow-md shadow-[#68BFFA]/20'
+                        : 'border-gray-200 bg-white hover:border-[#68BFFA]/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#68BFFA]' : 'bg-[#060F76]/10'}`}>
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#060F76]'}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`font-bold text-sm ${isSelected ? 'text-[#060F76]' : 'text-gray-800'}`}>
+                          {option.label}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-0.5">{option.description}</p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected 
+                          ? 'border-[#68BFFA] bg-[#68BFFA] shadow-lg shadow-[#68BFFA]/30' 
+                          : 'border-gray-300 bg-white hover:border-[#68BFFA]'
+                      }`}>
+                        {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Selection hint */}
+            {!gridConnection && (
+              <p className="mt-4 text-center text-[#68BFFA] text-sm flex items-center justify-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Please select your grid connection type to continue
               </p>
             )}
           </div>
