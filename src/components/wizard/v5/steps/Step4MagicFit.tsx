@@ -44,13 +44,18 @@ interface Step4Props {
   durationHours: number;
   solarKW: number;
   generatorKW: number;
-  gridConnection: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
+  // Opportunity preferences from Step 2 modal
+  opportunityPreferences?: {
+    wantsSolar: boolean;
+    wantsGenerator: boolean;
+    wantsEV: boolean;
+  };
   // Handlers
   onBatteryChange: (kw: number) => void;
   onDurationChange: (hours: number) => void;
   onSolarChange: (kw: number) => void;
   onGeneratorChange: (kw: number) => void;
-  onGridConnectionChange: (type: 'on-grid' | 'off-grid' | 'limited') => void;
   // Navigation
   onContinue?: () => void;
   // ProQuote handler
@@ -230,11 +235,11 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
   solarKW,
   generatorKW,
   gridConnection,
+  opportunityPreferences,
   onBatteryChange,
   onDurationChange,
   onSolarChange,
   onGeneratorChange,
-  onGridConnectionChange,
   onContinue,
   onOpenAdvanced,
 }) => {
@@ -302,9 +307,9 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
         return;
       }
 
-      // Skip if inputs haven't changed
-      if (inputsHash === lastInputsHashRef.current && originalRecommendation) {
-        setRecommendation(originalRecommendation);
+      // Skip if inputs haven't changed (use ref to check if already calculated)
+      if (inputsHash === lastInputsHashRef.current) {
+        // Already calculated for these inputs, skip
         setLoading(false);
         return;
       }
@@ -324,12 +329,10 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
           || useCaseData?.buildingCount
           || 1;
         const result = await calculateDatabaseBaseline(selectedIndustry, scale, useCaseData);
+        
         setRecommendation(result);
-        // Store as original if this is the first calculation or inputs changed
-        if (!originalRecommendation || inputsHash !== lastInputsHashRef.current) {
-          setOriginalRecommendation(result);
-          lastInputsHashRef.current = inputsHash;
-        }
+        setOriginalRecommendation(result);
+        lastInputsHashRef.current = inputsHash;
       } catch (error) {
         console.error('❌ Step4: Baseline error:', error);
         setError(error instanceof Error ? error.message : 'Failed to calculate baseline. Please try again.');
@@ -343,26 +346,27 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
           dataSource: 'Error fallback'
         };
         setRecommendation(fallbackRecommendation);
-        if (!originalRecommendation) {
-          setOriginalRecommendation(fallbackRecommendation);
-        }
+        setOriginalRecommendation(fallbackRecommendation);
+        lastInputsHashRef.current = inputsHash;
       } finally {
         setLoading(false);
       }
     }
 
     getRecommendation();
-  }, [selectedIndustry, inputsHash, originalRecommendation]); // Depend on inputsHash to detect changes
+  }, [selectedIndustry, inputsHash]); // ✅ FIXED: Removed originalRecommendation from deps
 
   // Get recommended values (fallback to reasonable defaults)
   // BaselineCalculationResult uses MW, convert to kW
   const recommendedBatteryKW = recommendation ? (recommendation.powerMW * 1000) : (batteryKW || 500);
   
-  // ✅ FIX: Use user-configured solar if provided (from Step 3 modal), otherwise use recommendation
+  // ✅ FIX: Use user-configured solar if provided (from Step 3 modal), otherwise check opportunity preferences
+  // If user selected solar in opportunity discovery, show it even if not configured yet
   const userSolarKW = solarKW > 0 ? solarKW : 0;
+  const wantsSolar = opportunityPreferences?.wantsSolar || false;
   const recommendedSolarKW = userSolarKW > 0 
     ? userSolarKW 
-    : (recommendation ? (recommendation.solarMW * 1000) : Math.round(recommendedBatteryKW * 1.2));
+    : (wantsSolar && recommendation ? (recommendation.solarMW * 1000) : (recommendation ? (recommendation.solarMW * 1000) : Math.round(recommendedBatteryKW * 1.2)));
   
   // ✅ FIX: Include EV load from user config (from Step 3 modal)
   const evLoadKW = useCaseData?.evLoadKW || 0;
@@ -371,16 +375,6 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
   const basePeakDemandKW = recommendation?.peakDemandMW ? (recommendation.peakDemandMW * 1000) : (recommendedBatteryKW * 1.5);
   const peakDemandKW = basePeakDemandKW + evLoadKW;
   
-  // Debug: Log user config values
-  if (import.meta.env.DEV) {
-    console.log('📊 Step4 User Config:', {
-      userSolarKW,
-      evLoadKW,
-      basePeakDemandKW,
-      totalPeakDemandKW: peakDemandKW,
-      useCaseDataKeys: Object.keys(useCaseData || {}),
-    });
-  }
 
   // Calculate configurations for each power level
   const configurations = useMemo(() => {
@@ -395,10 +389,11 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
       const configBatteryKW = Math.round((baseBatteryKW + evBatteryBoost) * superSizeMultiplier);
       const configBatteryKWh = configBatteryKW * level.durationHours;
       
-      // ✅ FIX: Use user's solar if configured, otherwise calculate from battery
+      // ✅ FIX: Use user's solar if configured, otherwise check opportunity preferences
+      // If user wants solar from opportunity discovery, show it even if not configured
       const configSolarKW = userSolarKW > 0 
         ? Math.round(userSolarKW * (level.solarPercent / 100)) // Scale user's solar by level
-        : Math.round(configBatteryKW * (level.solarPercent / 100)); // Default calculation
+        : (wantsSolar ? Math.round(configBatteryKW * (level.solarPercent / 100)) : 0); // Show solar if wanted, otherwise 0
       
       // Calculate savings (simplified - real calculation would use SSOT services)
       const demandChargeSavings = configBatteryKW * 12 * 12; // $12/kW demand charge × 12 months
@@ -527,11 +522,6 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
       </div>
     );
   }
-
-  // Debug: Log when component renders
-  useEffect(() => {
-    console.log('🎯 Step4MagicFit rendered - ProQuote button should be visible');
-  }, []);
 
   return (
     <div className="relative min-h-[800px]">
@@ -901,7 +891,7 @@ export const Step4MagicFit: React.FC<Step4Props> = ({
               <ArrowRight className="w-6 h-6 relative z-10" />
             </button>
             <p className="text-white/50 text-xs mt-2">
-              Or click "Continue" in the bottom right corner →
+              Click the button above to proceed
             </p>
           </div>
         </div>
