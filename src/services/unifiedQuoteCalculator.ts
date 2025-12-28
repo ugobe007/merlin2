@@ -71,7 +71,7 @@ export interface QuoteInput {
   electricityRate?: number;  // $/kWh (default 0.15)
   
   // Grid connection
-  gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection?: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   
   // Use case context (for appropriate savings model)
   useCase?: string;

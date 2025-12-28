@@ -80,54 +80,53 @@ function validateCodePattern(filePath: string, pattern: RegExp, description: str
 
 console.log('🔍 Running Wizard Navigation Validation...\n');
 
-// Test 1: Verify critical files exist
+// Test 1: Verify critical files exist (Wizard V5)
 console.log('📁 Checking file structure...');
-validateFile('src/components/wizard/sections/Step2IndustrySize.tsx', 'Step2IndustrySize component');
-validateFile('src/components/wizard/sections/Step3FacilityDetails.tsx', 'Step3FacilityDetails component');
-validateFile('src/components/wizard/StreamlinedWizard.tsx', 'StreamlinedWizard component');
-validateFile('src/components/wizard/shared/FloatingNavigationArrows.tsx', 'FloatingNavigationArrows component');
-validateFile('src/components/wizard/hooks/useStreamlinedWizard.ts', 'useStreamlinedWizard hook');
+validateFile('src/components/wizard/v5/WizardV5.tsx', 'WizardV5 component');
+validateFile('src/components/wizard/v5/steps/Step1LocationGoals.tsx', 'Step1LocationGoals component');
+validateFile('src/components/wizard/v5/steps/Step2IndustrySelect.tsx', 'Step2IndustrySelect component');
+validateFile('src/components/wizard/v5/steps/Step3FacilityDetails.tsx', 'Step3FacilityDetails component');
+validateFile('src/components/wizard/v5/steps/Step4MagicFit.tsx', 'Step4MagicFit component');
+validateFile('src/components/wizard/v5/steps/Step5QuoteReview.tsx', 'Step5QuoteReview component');
 
-// Test 2: Verify Step2IndustrySize has handleContinue
-console.log('\n🔗 Checking Step2IndustrySize navigation logic...');
+// Test 2: Verify WizardV5 has proper step navigation
+console.log('\n🔗 Checking WizardV5 navigation logic...');
 validateCodePattern(
-  'src/components/wizard/sections/Step2IndustrySize.tsx',
-  /const handleContinue = \(\) =>/,
-  'handleContinue function exists'
+  'src/components/wizard/v5/WizardV5.tsx',
+  /const nextStep = useCallback/,
+  'WizardV5 has nextStep function'
 );
 
 validateCodePattern(
-  'src/components/wizard/sections/Step2IndustrySize.tsx',
-  /onContinue\(\)/,
-  'handleContinue calls onContinue'
+  'src/components/wizard/v5/WizardV5.tsx',
+  /const goToStep = useCallback/,
+  'WizardV5 has goToStep function'
 );
 
 validateCodePattern(
-  'src/components/wizard/sections/Step2IndustrySize.tsx',
-  /onForward=\{handleContinue\}/,
-  'FloatingNavigationArrows uses handleContinue'
-);
-
-// Test 3: Verify StreamlinedWizard has correct onContinue callback
-console.log('\n🔗 Checking StreamlinedWizard navigation callback...');
-validateCodePattern(
-  'src/components/wizard/StreamlinedWizard.tsx',
-  /onContinue=\{\(\) =>/,
-  'Step2IndustrySize has onContinue callback'
+  'src/components/wizard/v5/WizardV5.tsx',
+  /case 0:.*Step1LocationGoals/,
+  'WizardV5 renders Step1LocationGoals for case 0'
 );
 
 validateCodePattern(
-  'src/components/wizard/StreamlinedWizard.tsx',
-  /wizard\.advanceToSection\(2\)/,
-  'onContinue calls advanceToSection(2)'
+  'src/components/wizard/v5/WizardV5.tsx',
+  /case 2:.*Step3FacilityDetails/,
+  'WizardV5 renders Step3FacilityDetails for case 2'
 );
 
-// Test 4: Verify Step3FacilityDetails visibility logic
-console.log('\n🔗 Checking Step3FacilityDetails visibility...');
+// Test 3: Verify Step components have Continue buttons
+console.log('\n🔗 Checking Step component navigation...');
 validateCodePattern(
-  'src/components/wizard/StreamlinedWizard.tsx',
-  /isHidden=\{wizard\.currentSection !== 2\}/,
-  'Step3FacilityDetails shows when currentSection === 2'
+  'src/components/wizard/v5/steps/Step1LocationGoals.tsx',
+  /onContinue/,
+  'Step1LocationGoals has onContinue prop'
+);
+
+validateCodePattern(
+  'src/components/wizard/v5/steps/Step2IndustrySelect.tsx',
+  /onIndustrySelect/,
+  'Step2IndustrySelect has onIndustrySelect prop'
 );
 
 // Test 5: Verify no accidental onOpenProQuote calls

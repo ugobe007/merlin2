@@ -6,6 +6,7 @@ import CarWashEnergy from './components/verticals/CarWashEnergy';
 import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
 import { WizardV5 } from './components/wizard/v5';
+import WizardV6 from "./components/wizard/v6/WizardV6";
 import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder';
 import { QuoteProvider } from './contexts/QuoteContext';
 
@@ -113,6 +114,11 @@ function App() {
   }
   
   // Access via /wizard - V5 Wizard (Clean Build Dec 21, 2025)
+
+  // Access via /wizard-v6 - V6 Wizard (Clean Build Dec 28, 2025)
+  if (pathname === "/wizard-v6") {
+    return <WizardV6 />;
+  }
   if (showWizard) {
     return (
       <WizardV5 
@@ -121,6 +127,9 @@ function App() {
           // TODO: Navigate to quote results
         }}
         onCancel={() => window.location.href = '/'}
+        onOpenAdvanced={() => {
+          window.location.href = '/?advanced=true&view=custom-config';
+        }}
       />
     );
   }

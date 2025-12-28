@@ -198,8 +198,8 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
     
     // Auto-lookup state from zip using 3-digit prefix (more accurate)
     if (normalizedZip.length >= 3) {
-      const prefix3 = zip.substring(0, 3);
-      const prefix2 = zip.substring(0, 2);
+      const prefix3 = normalizedZip.substring(0, 3);
+      const prefix2 = normalizedZip.substring(0, 2);
       
       // 3-digit prefix mapping for accuracy
       const zipToState: Record<string, string> = {
@@ -358,7 +358,9 @@ export const Step1LocationGoals: React.FC<Step1Props> = ({
       
       // Try 3-digit prefix first, then 2-digit
       const matchedState = zipToState[prefix3] || zipToState[prefix2 + '0'];
+      console.log('�� Zip lookup:', { normalizedZip, prefix3, prefix2, matchedState });
       if (matchedState) {
+        console.log('📍 Setting wizardState.state to:', matchedState);
         onStateChange(matchedState);
       }
     }

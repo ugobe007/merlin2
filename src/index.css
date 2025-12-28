@@ -282,6 +282,20 @@ a,
   display: none;  /* Chrome, Safari, Opera */
 }
 
+/* Hide legacy WizardBottomNav components only - allow WizardV5's own nav bar */
+[class*="WizardBottomNav"]:not([data-wizard-v5-nav]),
+body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 /* Custom scrollbar styling for modals */
 .scrollbar-visible {
   scrollbar-width: thin;  /* Firefox */

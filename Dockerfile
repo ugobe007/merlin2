@@ -3,16 +3,25 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Add build timestamp for cache busting
+ARG BUILD_DATE
+ARG BUILD_VERSION=1.0.0
+ENV BUILD_DATE=${BUILD_DATE}
+ENV BUILD_VERSION=${BUILD_VERSION}
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (no cache to ensure fresh install)
+RUN npm ci --no-audit --prefer-offline
 
 # Copy source code
 COPY . .
 
-# Build the app
+# Clear any existing build artifacts
+RUN rm -rf dist node_modules/.vite
+
+# Build the app (this will create fresh dist folder)
 RUN npm run build
 
 # Production stage

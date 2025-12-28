@@ -102,33 +102,37 @@ if (fs.existsSync(heroFile)) {
   }
 }
 
-// 5. Check for Three Pillars color updates
+// 5. Check for Three Pillars color updates (in TrueQuoteModal)
 console.log('5️⃣ Checking Three Pillars colors...');
-if (fs.existsSync(heroFile)) {
-  const content = fs.readFileSync(heroFile, 'utf8');
-  const hasPurple = content.includes('purple-600') && content.includes('purple-900');
-  const hasSky = content.includes('sky-300') && content.includes('blue-500');
-  const hasAmber = content.includes('amber-400') && content.includes('orange-600');
+const trueQuoteModalFile = path.join(process.cwd(), 'src/components/shared/TrueQuoteModal.tsx');
+if (fs.existsSync(trueQuoteModalFile)) {
+  const content = fs.readFileSync(trueQuoteModalFile, 'utf8');
+  const hasBlue = content.includes('from-blue-50') || content.includes('from-sky-300');
+  const hasSky = content.includes('sky-300') || content.includes('sky-200');
+  const hasEmerald = content.includes('from-emerald-50');
+  const hasPurple = content.includes('from-purple-50');
   
-  if (hasPurple && hasSky && hasAmber) {
+  if (hasSky && hasEmerald && hasPurple) {
     console.log('   ✅ Three Pillars have correct gradient colors\n');
   } else {
     console.log('   ❌ Three Pillars missing requested colors:');
-    if (!hasPurple) console.log('      - Deep Purple gradient');
-    if (!hasSky) console.log('      - Light Blue gradient');
-    if (!hasAmber) console.log('      - Amber Orange gradient');
+    if (!hasSky) console.log('      - Light Blue gradient (sky-300)');
+    if (!hasEmerald) console.log('      - Emerald gradient');
+    if (!hasPurple) console.log('      - Purple gradient');
     console.log('');
     issuesFound++;
   }
+} else {
+  console.log('   ⚠️  TrueQuoteModal.tsx not found\n');
 }
 
 // 6. Check Merlin clickability
 console.log('6️⃣ Checking Merlin mascot clickability...');
 if (fs.existsSync(heroFile)) {
   const content = fs.readFileSync(heroFile, 'utf8');
-  const hasOnClick = content.includes('onClick={() => setShowAbout(true)}');
+  const hasOnClick = content.includes('onClick={() => setShowAbout(true)}') || content.includes('onClick={() => setShowMerlinVideo(true)}');
   const hasCursor = content.includes('cursor-pointer');
-  const hasTooltip = content.includes('Merlin') && content.includes('Magic');
+  const hasTooltip = (content.includes('title=') && content.includes('Merlin') && content.includes('Magic')) || content.includes('Merlin Magic');
   
   if (hasOnClick && hasCursor && hasTooltip) {
     console.log('   ✅ Merlin is clickable with tooltip\n');

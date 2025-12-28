@@ -48,7 +48,7 @@ export interface ExtractedSpecs {
   windKW?: number;
   
   // Grid & Technical
-  gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection?: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   voltage?: number;
   frequency?: number;
   
@@ -630,7 +630,7 @@ export function specsToQuoteInput(specs: ExtractedSpecs): {
   solarMW?: number;
   windMW?: number;
   generatorMW?: number;
-  gridConnection?: 'on-grid' | 'off-grid' | 'limited';
+  gridConnection?: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive';
   useCase?: string;
 } {
   return {

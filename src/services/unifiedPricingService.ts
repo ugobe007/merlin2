@@ -37,6 +37,9 @@ import {
   getMarketPriceSummary,
   clearMarketDataCache
 } from './marketDataIntegrationService';
+import { 
+  getVendorPricing 
+} from './vendorPricingIntegrationService';
 import type {
   BatteryPricing,
   InverterPricing,
@@ -183,9 +186,11 @@ const NREL_GENERATOR_PRICING: GeneratorPricing = {
  * Fetch battery pricing from database with intelligent fallback
  * 
  * Priority:
- * 1. calculation_constants table (size-tiered pricing)
- * 2. equipment_pricing table (vendor-specific)
- * 3. NREL ATB 2024 fallback constants
+ * 1. Vendor pricing (approved vendor products - highest confidence)
+ * 2. calculation_constants table (size-tiered pricing)
+ * 3. equipment_pricing table (vendor-specific, synced)
+ * 4. Market data integration (RSS/web sources)
+ * 5. NREL ATB 2024 fallback constants
  */
 async function fetchBatteryPricingFromDB(
   powerMW: number,
@@ -196,7 +201,36 @@ async function fetchBatteryPricingFromDB(
   const energyKWh = energyMWh * 1000;
   
   try {
-    // PRIORITY 1: Try calculation_constants table (database SSOT)
+    // PRIORITY 1: Try vendor pricing (approved vendor products)
+    const vendorPricing = await getVendorPricing('bess', energyKWh, powerMW * 1000);
+    if (vendorPricing && vendorPricing.pricePerKwh) {
+      if (import.meta.env.DEV) {
+        console.log(`🏢 Battery pricing from VENDOR: $${vendorPricing.pricePerKwh}/kWh (${vendorPricing.manufacturer} ${vendorPricing.model})`);
+      }
+      
+      // Apply size-based adjustments if needed
+      let adjustedPrice = vendorPricing.pricePerKwh;
+      if (energyMWh >= 100) {
+        adjustedPrice = adjustedPrice * 0.85; // Utility-scale discount
+      } else if (energyMWh < 20) {
+        adjustedPrice = adjustedPrice * 1.3; // Small system premium
+      }
+      
+      return {
+        pricePerKWh: Math.round(adjustedPrice),
+        manufacturer: vendorPricing.manufacturer,
+        model: vendorPricing.model,
+        chemistry: 'LFP', // Default, could be enhanced
+        warrantyYears: vendorPricing.warrantyYears,
+        cycleLife: 4000, // Default
+        efficiency: 0.85, // Default
+        dataSource: 'database', // Vendor pricing stored in database
+        lastUpdated: vendorPricing.approvedAt,
+        confidence: 'high'
+      };
+    }
+    
+    // PRIORITY 2: Try calculation_constants table (database SSOT)
     let pricePerKWh: number | null = null;
     let dataSource: 'database' | 'nrel' = 'database';
     

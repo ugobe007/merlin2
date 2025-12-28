@@ -301,6 +301,14 @@ export default function ModalManager(props: ModalManagerProps) {
                 setSkipWizardIntro(false);
               }
             }}
+            onOpenAdvanced={() => {
+              setShowSmartWizard(false);
+              if (setShowAdvancedQuoteBuilderModal) {
+                setShowAdvancedQuoteBuilderModal(true);
+              } else {
+                window.location.href = '/?advanced=true&view=custom-config';
+              }
+            }}
           />
         </div>
       )}

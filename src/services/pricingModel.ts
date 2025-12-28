@@ -9,17 +9,23 @@
  * 
  * PRICING BENCHMARKS (December 2025):
  * - Validated against 6+ professional quotes
- * - Cross-referenced with NREL ATB 2024
+ * - Cross-referenced with Q4 2024 - Q1 2025 Market Reality
  * - Regional adjustments for US, UK, EU, Asia
  * 
  * PRICING TIERS:
- * - Residential (< 50 kW): Premium pricing, home-scale equipment
- * - Commercial/C&I (50 kW - 1 MW): Mid-range, modular systems
- * - Utility-Scale (> 1 MW): Volume pricing, standardized units
+ * - Now uses size-based pricing tiers from pricing_configurations table
+ * - Supports 5 pricing levels: low, low_plus, mid, mid_plus, high
+ * - Dual unit support: kW for most systems, MWh for very large systems
+ * - Fallback to hardcoded values if database unavailable
  * 
- * Version: 1.0.0
- * Date: December 4, 2025
- * Last Audit: December 4, 2025
+ * Version: 2.0.0
+ * Date: December 25, 2025
+ * Last Audit: December 25, 2025
+ * 
+ * MIGRATION NOTE:
+ * - Pricing now queried from pricing_configurations table first
+ * - Hardcoded values below are fallbacks only
+ * - See pricingTierService.ts for database queries
  */
 
 // ============================================
@@ -40,11 +46,17 @@ export function determinePricingTier(powerKW: number): PricingTier {
 
 export const BESS_PRICING = {
   // Battery Module Pricing ($/kWh)
-  // Source: NREL ATB 2024 + Professional Quotes (UK EV Hub, Tribal Microgrid, Hampton Heights)
+  // Source: Q4 2024 - Q1 2025 Market Reality (Chinese LFP oversupply, cell price collapse)
+  // Note: NREL ATB 2024 data lags (based on 2022-2023) - current market is 30-40% lower
+  // Market drivers: CATL, BYD, EVE, Hithium competition, container-level pricing
   batteryPerKWh: {
-    residential: 350,   // Home battery systems (Powerwall, Enphase)
-    commercial: 175,    // C&I modular systems (CATL, BYD containers)
-    utility: 140,       // Utility-scale (validated: UK $120, US $140-190)
+    residential: 650,   // $500-800/kWh market range (Q4 2024) - turnkey installed
+    commercial: 325,    // $250-400/kWh market range (100-500 kWh systems, higher integration costs)
+    utility: 110,       // $85-125/kWh market range (3-50 MW systems, container pricing)
+    // Size-based pricing (Q4 2024 - Q1 2025 market reality):
+    // 3-10 MW: $101-125/kWh (container systems, LFP)
+    // 10-50 MW: $95-115/kWh (volume discounts)
+    // 50+ MW: $85-105/kWh (project-level pricing)
   },
   
   // PCS/Inverter Pricing ($/kW)

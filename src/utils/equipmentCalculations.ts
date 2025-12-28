@@ -164,7 +164,7 @@ export const calculateEquipmentBreakdown = async (
   windMW: number = 0,
   generatorMW: number = 0,
   industryData?: any,
-  gridConnection: 'on-grid' | 'off-grid' | 'limited' = 'on-grid',
+  gridConnection: 'on-grid' | 'off-grid' | 'limited' | 'unreliable' | 'expensive' = 'on-grid',
   location: string = 'California',
   options?: EquipmentBreakdownOptions  // NEW: Extended options for fuel type, fuel cells
 ): Promise<EquipmentBreakdown> => {
@@ -206,7 +206,7 @@ export const calculateEquipmentBreakdown = async (
     displayUnitEnergyMWh = totalEnergyMWh;
     displayUnitCost = actualBatteryTotalCost;
     
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`🔋 [Small System Pricing] ${storageSizeMW.toFixed(2)} MW × ${durationHours}hr = ${totalEnergyKWh} kWh @ $${effectivePricePerKWh}/kWh = $${actualBatteryTotalCost.toLocaleString()}`);
     }
   } else {
@@ -289,7 +289,7 @@ export const calculateEquipmentBreakdown = async (
       ? `MPS-${Math.ceil(storageSizeKW / 25) * 25}` // Dynapower modular PCS
       : `Sunny Tripower ${Math.ceil(storageSizeKW / 10) * 10}`;
     
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`⚡ [Small System Inverter] ${storageSizeKW} kW @ $${inverterPerKW}/kW = $${inverterTotalCost.toLocaleString()}`);
     }
   } else {
@@ -343,7 +343,7 @@ export const calculateEquipmentBreakdown = async (
     transformerTotalCost = transformerUnitCost;
     transformerVoltage = "480V/208V"; // Commercial voltage levels
     
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`🔌 [Small System Transformer] ${transformerUnitMVA} MVA @ $${commercialTransformerPerKVA}/kVA = $${transformerTotalCost.toLocaleString()}`);
     }
   } else {
@@ -387,7 +387,7 @@ export const calculateEquipmentBreakdown = async (
     switchgearType = "Low Voltage Distribution Panel";
     switchgearVoltage = "480V";
     
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`🔧 [Small System Switchgear] ${storageSizeKW} kW @ $${commercialSwitchgearPerKW}/kW = $${switchgearTotalCost.toLocaleString()}`);
     }
   } else {
@@ -686,7 +686,7 @@ export const calculateEquipmentBreakdown = async (
       manufacturer: manufacturer
     };
     
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`⚡ [Fuel Cell] ${fuelCellMW} MW ${fuelCellTypeLabel} @ $${costPerKW}/kW = $${(fuelCellQuantity * fuelCellUnitCost).toLocaleString()}`);
     }
   }
@@ -778,9 +778,8 @@ export const calculateEquipmentBreakdown = async (
   let contingencyPercentage = 0.05; // 5% contingency (permitting, unexpected costs)
   
   try {
-    const bopConfig = await import('../services/useCaseService').then(m => 
-      m.useCaseService.getPricingConfig('balance_of_plant_2025')
-    );
+    const { useCaseService } = await import('../services/useCaseService');
+    const bopConfig = await useCaseService.getPricingConfig('balance_of_plant_2025');
     if (bopConfig) {
       logisticsPercentage = bopConfig.logisticsPercentage || 0.08;
       importDutyPercentage = bopConfig.importDutyPercentage || 0.02;
@@ -999,7 +998,7 @@ export const calculateEquipmentBreakdown = async (
     annualOpex: totalAnnualCost
   };
 
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development') {
     console.log(`📦 [Project Cost Breakdown]`, {
       equipment: `$${equipmentCost.toLocaleString()}`,
       installation: `$${totalInstallation.toLocaleString()} (40%)`,

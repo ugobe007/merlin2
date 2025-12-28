@@ -242,6 +242,151 @@ export const updateProduct = async (productId: string, updates: Partial<ProductS
   return data;
 };
 
+/**
+ * Approve a vendor product (Admin only)
+ * This triggers automatic integration into pricing system and ML training
+ * 
+ * Optionally validates product before approval if autoValidate is true
+ */
+export const approveVendorProduct = async (
+  productId: string, 
+  adminId: string,
+  options?: { autoValidate?: boolean; skipValidation?: boolean }
+) => {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured');
+  }
+
+  try {
+    // Auto-validate if requested (unless explicitly skipped)
+    if (options?.autoValidate && !options?.skipValidation) {
+      const { validateVendorProductById } = await import('./vendorValidationService');
+      const validation = await validateVendorProductById(productId);
+      
+      if (!validation.isValid) {
+        return {
+          success: false,
+          error: 'Product validation failed',
+          validation,
+          message: `Product validation score: ${(validation.score * 100).toFixed(0)}%. Requires manual review.`
+        };
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log(`✅ Product validation passed: ${(validation.score * 100).toFixed(0)}%`);
+      }
+    }
+
+    // Update product status to approved
+    const { data: product, error: updateError } = await supabase
+      .from('vendor_products')
+      .update({
+        status: 'approved',
+        approved_by: adminId,
+        approved_at: new Date().toISOString()
+      })
+      .eq('id', productId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+    if (!product) throw new Error('Product not found');
+
+    // Trigger integration services (async, don't wait)
+    Promise.all([
+      // Sync to equipment_pricing table
+      (async () => {
+        const { vendorPricingIntegrationService } = await import('./vendorPricingIntegrationService');
+        return vendorPricingIntegrationService.syncVendorProductOnApproval(productId);
+      })(),
+      // Add to ML training data
+      (async () => {
+        const { vendorDataToMLService } = await import('./vendorDataToMLService');
+        return vendorDataToMLService.addVendorDataToMLTraining(productId);
+      })(),
+      // Send approval email notification
+      sendVendorProductApprovalEmail(product, adminId)
+    ]).catch(err => {
+      console.error('Error triggering vendor product integration:', err);
+      // Don't throw - integration is async, approval succeeded
+    });
+
+    return {
+      success: true,
+      product,
+      message: 'Product approved and integration triggered'
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to approve product'
+    };
+  }
+};
+
+/**
+ * Auto-approve vendor product if validation passes
+ * Returns approval result or validation issues
+ */
+export const autoApproveVendorProduct = async (productId: string, adminId: string) => {
+  const { validateVendorProductById } = await import('./vendorValidationService');
+  const validation = await validateVendorProductById(productId);
+  
+  if (validation.isValid && validation.score >= 0.8) {
+    // Auto-approve
+    return await approveVendorProduct(productId, adminId, { skipValidation: true });
+  } else {
+    // Return validation results for manual review
+    return {
+      success: false,
+      autoApproved: false,
+      validation,
+      message: `Product requires manual review. Validation score: ${(validation.score * 100).toFixed(0)}%`
+    };
+  }
+};
+
+/**
+ * Reject a vendor product (Admin only)
+ */
+export const rejectVendorProduct = async (productId: string, adminId: string, reason: string) => {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured');
+  }
+
+  try {
+    const { data: product, error: updateError } = await supabase
+      .from('vendor_products')
+      .update({
+        status: 'rejected',
+        approved_by: adminId,
+        rejection_reason: reason
+      })
+      .eq('id', productId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+    if (!product) throw new Error('Product not found');
+
+    // Send rejection email notification (async, don't wait)
+    sendVendorProductRejectionEmail(product, adminId, reason).catch(err => {
+      console.error('Error sending rejection email:', err);
+    });
+
+    return {
+      success: true,
+      product,
+      message: 'Product rejected'
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to reject product'
+    };
+  }
+};
+
 // =====================================================
 // RFQs (REQUEST FOR QUOTES)
 // =====================================================
@@ -685,6 +830,115 @@ export const uploadDatasheet = async (file: File, vendorId: string) => {
   };
 };
 
+// =====================================================
+// EMAIL NOTIFICATIONS
+// =====================================================
+
+/**
+ * Send email notification when vendor product is approved
+ */
+async function sendVendorProductApprovalEmail(product: any, adminId: string): Promise<void> {
+  try {
+    // Get vendor info
+    const { data: vendor } = await supabase
+      .from('vendors')
+      .select('email, company_name, contact_name')
+      .eq('id', product.vendor_id)
+      .single();
+
+    if (!vendor || !vendor.email) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ No vendor email found for approval notification');
+      }
+      return;
+    }
+
+    // Queue email (using email_queue table if available)
+    const { error } = await supabase
+      .from('email_queue')
+      .insert({
+        to_email: vendor.email,
+        subject: `✅ Product Approved: ${product.manufacturer} ${product.model}`,
+        body: `
+          <h2>Product Approved!</h2>
+          <p>Dear ${vendor.contact_name || 'Vendor'},</p>
+          <p>Your product submission has been approved and is now active in our pricing system:</p>
+          <ul>
+            <li><strong>Product:</strong> ${product.manufacturer} ${product.model}</li>
+            <li><strong>Category:</strong> ${product.product_category}</li>
+            ${product.price_per_kwh ? `<li><strong>Price:</strong> $${product.price_per_kwh}/kWh</li>` : ''}
+            ${product.price_per_kw ? `<li><strong>Price:</strong> $${product.price_per_kw}/kW</li>` : ''}
+          </ul>
+          <p>Your product is now available for use in quotes and will be included in our ML pricing analysis.</p>
+          <p>Thank you for partnering with Merlin Energy Solutions!</p>
+        `,
+        email_type: 'vendor_product_approved',
+        status: 'queued',
+        created_at: new Date().toISOString()
+      });
+
+    if (error && !error.message.includes('does not exist')) {
+      console.error('Error queuing approval email:', error);
+    } else if (import.meta.env.DEV) {
+      console.log(`✅ Approval email queued for ${vendor.email}`);
+    }
+  } catch (error) {
+    console.error('Error sending approval email:', error);
+  }
+}
+
+/**
+ * Send email notification when vendor product is rejected
+ */
+async function sendVendorProductRejectionEmail(product: any, adminId: string, reason: string): Promise<void> {
+  try {
+    // Get vendor info
+    const { data: vendor } = await supabase
+      .from('vendors')
+      .select('email, company_name, contact_name')
+      .eq('id', product.vendor_id)
+      .single();
+
+    if (!vendor || !vendor.email) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ No vendor email found for rejection notification');
+      }
+      return;
+    }
+
+    // Queue email
+    const { error } = await supabase
+      .from('email_queue')
+      .insert({
+        to_email: vendor.email,
+        subject: `Product Review Required: ${product.manufacturer} ${product.model}`,
+        body: `
+          <h2>Product Review Required</h2>
+          <p>Dear ${vendor.contact_name || 'Vendor'},</p>
+          <p>Your product submission requires additional review before approval:</p>
+          <ul>
+            <li><strong>Product:</strong> ${product.manufacturer} ${product.model}</li>
+            <li><strong>Category:</strong> ${product.product_category}</li>
+            <li><strong>Reason:</strong> ${reason}</li>
+          </ul>
+          <p>Please review your submission and resubmit with the requested corrections. If you have questions, please contact our support team.</p>
+          <p>Thank you for your partnership with Merlin Energy Solutions.</p>
+        `,
+        email_type: 'vendor_product_rejected',
+        status: 'queued',
+        created_at: new Date().toISOString()
+      });
+
+    if (error && !error.message.includes('does not exist')) {
+      console.error('Error queuing rejection email:', error);
+    } else if (import.meta.env.DEV) {
+      console.log(`✅ Rejection email queued for ${vendor.email}`);
+    }
+  } catch (error) {
+    console.error('Error sending rejection email:', error);
+  }
+}
+
 export const vendorService = {
   // Auth
   registerVendor,
@@ -696,6 +950,9 @@ export const vendorService = {
   submitProduct,
   getVendorProducts,
   updateProduct,
+  approveVendorProduct,
+  rejectVendorProduct,
+  autoApproveVendorProduct,
   
   // RFQs
   createRFQ,

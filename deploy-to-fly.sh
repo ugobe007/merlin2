@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Merlin2 Deployment Script for Fly.io
-# This script tests locally, builds production, and deploys to merlin2-fly.dev
+# This script tests locally, builds production, and deploys to merlin2.fly.dev
 
 set -e  # Exit on any error
 
@@ -67,7 +67,7 @@ echo -e "${BLUE}Step 6: Deploy to Fly.io? (y/n)${NC}"
 read -p "" -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}Deploying to merlin2-fly.dev...${NC}"
+    echo -e "${BLUE}Deploying to merlin2.fly.dev...${NC}"
     
     # Check if fly CLI is installed
     if ! command -v fly &> /dev/null; then
@@ -85,7 +85,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     
     echo -e "${GREEN}✅ Deployment complete!${NC}"
     echo ""
-    echo -e "${GREEN}🌐 Your app is live at: https://merlin2-fly.dev${NC}"
+    echo -e "${GREEN}🌐 Your app is live at: https://merlin2.fly.dev${NC}"
     echo ""
     
     # Step 7: Verify deployment
@@ -94,7 +94,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}📋 Test Checklist:${NC}"
-        echo "   1. Navigate to https://merlin2-fly.dev"
+        echo "   1. Navigate to https://merlin2.fly.dev"
         echo "   2. Click 'Smart Wizard' or 'Get Started'"
         echo "   3. Select 'Data Center' template"
         echo "   4. Enter:"
@@ -105,7 +105,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "   6. Check AI Data Collection tab in Admin Panel"
         echo ""
         echo -e "${YELLOW}Opening browser...${NC}"
-        open https://merlin2-fly.dev || echo "Please manually navigate to https://merlin2-fly.dev"
+        open https://merlin2.fly.dev || echo "Please manually navigate to https://merlin2.fly.dev"
     fi
 else
     echo -e "${YELLOW}⚠️  Deployment skipped${NC}"
