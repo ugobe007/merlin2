@@ -711,7 +711,7 @@ export function Step5MagicFit({ state, updateState }: Props) {
                 </div>
 
                 {/* Specs */}
-                <div className={`grid ${calc.evPowerKW > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-3 mb-4 p-3 bg-gradient-to-br from-slate-900/60 via-slate-800/40 to-slate-900/60 rounded-xl border border-slate-700/50`}>
+                <div className={`grid ${(calc.evPowerKW ?? 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-3 mb-4 p-3 bg-gradient-to-br from-slate-900/60 via-slate-800/40 to-slate-900/60 rounded-xl border border-slate-700/50`}>
                   <div>
                     <div className="text-xs text-slate-500 flex items-center gap-1">
                       <Battery className="w-3 h-3" /> Power
@@ -742,7 +742,7 @@ export function Step5MagicFit({ state, updateState }: Props) {
                       {calc.solarKW > 0 ? `${calc.solarKW} kW` : '—'}
                     </div>
                   </div>
-                  {calc.evPowerKW > 0 && (
+                  {(calc.evPowerKW ?? 0) > 0 && (
                     <div>
                       <div className="text-xs text-slate-500 flex items-center gap-1">
                         <Zap className="w-3 h-3" /> EV Power
