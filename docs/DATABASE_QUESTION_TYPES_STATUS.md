@@ -59,3 +59,4 @@ This migration is **safe** - it only:
 - **Square Footage**: The UI code uses `number` type with slider, and automatically adds presets based on field name matching 'square' or 'footage'.
 - **Hours Per Day**: The UI code uses `number` type with slider (no special handling, so it uses the standard slider).
 
+

@@ -263,3 +263,4 @@ console.log(solarResult); // Should return { price: 0.65, unit: '$/W', tier: {..
 
 
 
+

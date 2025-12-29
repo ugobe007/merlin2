@@ -1,9 +1,11 @@
 /**
  * MerlinGuide - Floating wizard assistant
- * Provides contextual guidance for each step
+ * RIGHT SIDE, AUTO-DISMISSES AFTER 5 SECONDS
+ * 
+ * Updated: December 28, 2025
  */
-import React, { useState } from 'react';
-import { X, MessageCircle, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Sparkles, Minus, Lightbulb } from 'lucide-react';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 
 interface MerlinGuideProps {
@@ -29,94 +31,117 @@ const STEP_MESSAGES: Record<number, { title: string; message: string; tip?: stri
     tip: "Don't worry about exact numbers - estimates work great!"
   },
   4: {
-    title: "Boost Your Savings! ⚡",
-    message: "Based on your location, here are some add-ons that could maximize your investment.",
-    tip: "Solar + BESS is a powerful combo in sunny states!"
+    title: "Boost Your ROI! 💰",
+    message: "Based on your location, I've scored these add-on opportunities for you.",
+    tip: "High-scoring options can significantly improve your payback period!"
   },
   5: {
-    title: "Choose Your Power Level",
-    message: "I've calculated three options for you. Each balances cost, savings, and backup duration differently.",
-    tip: "PERFECT FIT is my recommendation for most businesses."
+    title: "Your Perfect Fit",
+    message: "I've calculated three system options based on everything you've told me.",
+    tip: "The recommended option balances cost and capability for most businesses."
   },
   6: {
-    title: "Your Quote is Ready! ✨",
-    message: "Here's your personalized energy storage quote. This is an estimate - request an official quote for exact pricing.",
-    tip: "The 30% Federal ITC makes now a great time to invest!"
+    title: "Your Quote is Ready! 🎊",
+    message: "Here's your personalized BESS quote with TrueQuote™ verified pricing.",
+    tip: "Download the PDF to share with stakeholders!"
   }
 };
 
 export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
-  const [isMinimized, setIsMinimized] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [hasAutoHidden, setHasAutoHidden] = useState(false);
 
-  if (!isVisible) {
+  const stepInfo = STEP_MESSAGES[step] || STEP_MESSAGES[1];
+
+  // Auto-hide after 5 seconds on first load
+  useEffect(() => {
+    if (!hasAutoHidden && isVisible && !isMinimized) {
+      const timer = setTimeout(() => {
+        setIsMinimized(true);
+        setHasAutoHidden(true);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [hasAutoHidden, isVisible, isMinimized]);
+
+  // Reset visibility when step changes (but stay minimized if user minimized)
+  useEffect(() => {
+    if (hasAutoHidden) {
+      // Keep minimized state but show the minimized button
+      setIsVisible(true);
+    }
+  }, [step]);
+
+  if (!isVisible) return null;
+
+  // Minimized state - just show Merlin avatar button
+  if (isMinimized) {
     return (
       <button
-        onClick={() => setIsVisible(true)}
-        className="fixed bottom-24 right-4 z-40 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+        onClick={() => setIsMinimized(false)}
+        className="fixed top-24 right-4 z-40 group"
       >
-        <MessageCircle className="w-6 h-6 text-white" />
+        <div className="relative">
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-purple-500/30 rounded-full blur-md group-hover:bg-purple-500/50 transition-all" />
+          
+          {/* Avatar */}
+          <div className="relative w-14 h-14 rounded-full border-2 border-purple-400 overflow-hidden bg-gradient-to-br from-purple-600 to-cyan-600 shadow-lg group-hover:scale-110 transition-transform">
+            <img 
+              src={merlinImage} 
+              alt="Merlin" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+          
+          {/* Notification dot */}
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center animate-pulse">
+            <Sparkles className="w-2.5 h-2.5 text-amber-900" />
+          </div>
+        </div>
       </button>
     );
   }
 
-  const stepData = STEP_MESSAGES[step] || STEP_MESSAGES[1];
-
-  let contextMessage = stepData.message;
-  if (step === 2 && industry) {
-    contextMessage = `Great choice! ${industry} facilities typically see 20-40% energy savings with BESS.`;
-  }
-  if (step === 4 && state) {
-    contextMessage = `Based on ${state}'s solar potential and EV adoption, here are my recommendations.`;
-  }
-
-  if (isMinimized) {
-    return (
-      <div className="fixed bottom-24 right-4 z-40">
-        <button
-          onClick={() => setIsMinimized(false)}
-          className="relative group"
-        >
-          <img 
-            src={merlinImage} 
-            alt="Merlin" 
-            className="w-16 h-16 rounded-full border-3 border-purple-400 shadow-lg object-cover hover:scale-110 transition-transform"
-          />
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center">
-            <Sparkles className="w-3 h-3 text-purple-900" />
-          </div>
-          <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Click for guidance
-          </div>
-        </button>
-      </div>
-    );
-  }
-
+  // Full expanded state
   return (
-    <div className="fixed bottom-24 right-4 z-40 w-80 max-w-[calc(100vw-2rem)]">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-purple-500/30 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 px-4 py-3 flex items-center justify-between border-b border-purple-500/20">
+    <div className="fixed top-24 right-4 z-40 w-80 animate-in slide-in-from-right duration-300">
+      {/* Card */}
+      <div className="bg-gradient-to-br from-slate-800 via-slate-800 to-purple-900/50 rounded-2xl shadow-2xl border border-purple-500/30 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
           <div className="flex items-center gap-3">
-            <img 
-              src={merlinImage} 
-              alt="Merlin" 
-              className="w-10 h-10 rounded-full border-2 border-purple-400 object-cover"
-            />
+            {/* Avatar */}
+            <div className="relative w-12 h-12 rounded-full border-2 border-purple-400 overflow-hidden bg-gradient-to-br from-purple-600 to-cyan-600">
+              <img 
+                src={merlinImage} 
+                alt="Merlin" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
             <div>
-              <h3 className="text-white font-bold text-sm">Merlin</h3>
+              <h3 className="text-white font-semibold">Merlin</h3>
               <p className="text-purple-300 text-xs">Your Energy Advisor</p>
             </div>
           </div>
+          
+          {/* Controls */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => setIsMinimized(true)}
               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
               title="Minimize"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-              </svg>
+              <Minus className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsVisible(false)}
@@ -128,31 +153,44 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
           </div>
         </div>
 
+        {/* Content */}
         <div className="p-4 space-y-3">
+          {/* Title */}
           <div className="flex items-start gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-amber-400 font-semibold text-sm">{stepData.title}</p>
-              <p className="text-slate-300 text-sm mt-1">{contextMessage}</p>
-            </div>
+            <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+            <h4 className="text-white font-semibold">{stepInfo.title}</h4>
           </div>
+          
+          {/* Message */}
+          <p className="text-slate-300 text-sm leading-relaxed">
+            {stepInfo.message}
+          </p>
 
-          {stepData.tip && (
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
-              <p className="text-purple-300 text-xs">
-                <span className="font-semibold text-purple-400">💡 Tip:</span> {stepData.tip}
-              </p>
+          {/* Tip box */}
+          {stepInfo.tip && (
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-purple-200 text-sm">
+                  <span className="text-amber-400 font-medium">Tip:</span> {stepInfo.tip}
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="px-4 pb-3">
-          <div className="flex gap-1">
+        {/* Progress dots */}
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-center gap-2">
             {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  s === step ? 'bg-purple-500' : s < step ? 'bg-purple-500/50' : 'bg-slate-700'
+                className={`h-1.5 rounded-full transition-all ${
+                  s === step 
+                    ? 'w-6 bg-gradient-to-r from-cyan-400 to-purple-400' 
+                    : s < step
+                      ? 'w-3 bg-purple-500'
+                      : 'w-3 bg-slate-600'
                 }`}
               />
             ))}
@@ -162,3 +200,5 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
     </div>
   );
 }
+
+export default MerlinGuide;

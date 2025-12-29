@@ -6484,3 +6484,4 @@ export function calculateCarportSolarCapacity(
 }
 
 
+

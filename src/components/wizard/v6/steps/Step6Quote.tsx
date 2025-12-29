@@ -3,10 +3,10 @@
  * ====================
  * The final summary with all the numbers
  * 
- * Created: December 28, 2025
+ * Updated: December 28, 2025 - Added button functionality, TrueQuote attribution, dynamic ITC label
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Battery, 
   Sun, 
@@ -21,9 +21,16 @@ import {
   Download,
   Mail,
   Phone,
-  Sparkles
+  Sparkles,
+  Shield,
+  Info
 } from 'lucide-react';
-import type { WizardState } from '../types'; import { POWER_LEVELS } from '../types';
+import type { WizardState } from '../types';
+import { POWER_LEVELS } from '../types';
+import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
+import { exportQuoteAsPDF } from '@/utils/quoteExportUtils';
+import type { QuoteExportData } from '@/utils/quoteExportUtils';
+import sunIcon from '@/assets/images/sun_icon.png';
 
 // ============================================================================
 // COMPONENT
@@ -34,8 +41,10 @@ interface Props {
 }
 
 export function Step6Quote({ state }: Props) {
-  const { calculations, selectedPowerLevel, opportunities } = state;
+  const { calculations, selectedPowerLevel } = state;
   const powerLevel = POWER_LEVELS.find(l => l.id === selectedPowerLevel);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showPricingSources, setShowPricingSources] = useState(false);
 
   if (!calculations || !powerLevel) {
     return (
@@ -45,215 +54,588 @@ export function Step6Quote({ state }: Props) {
     );
   }
 
+  // Calculate ITC percentage dynamically (fallback to 30% if not provided)
+  const itcPercentage = calculations.federalITCRate 
+    ? Math.round(calculations.federalITCRate * 100)
+    : calculations.federalITC > 0 && calculations.totalInvestment > 0
+    ? Math.round((calculations.federalITC / calculations.totalInvestment) * 100)
+    : 30;
+
+  // Generate quote ID if not already set (fallback for backwards compatibility)
+  const quoteId = calculations.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
+
+  // Handle Request Quote button
+  const handleRequestQuote = () => {
+    setShowRequestModal(true);
+  };
+
+  // Handle Download PDF button
+  const handleDownloadPDF = async () => {
+    try {
+      const quoteData: QuoteExportData = {
+        // Project Information
+        projectName: `${state.industryName} - ${powerLevel.name} System`,
+        location: `${state.city || ''} ${state.state || ''}`.trim() || state.zipCode || 'Location TBD',
+        applicationType: 'Commercial',
+        useCase: state.industryName,
+        quoteNumber: quoteId,
+        quoteDate: new Date().toLocaleDateString(),
+
+        // System Specifications
+        storageSizeMW: calculations.bessKW / 1000,
+        storageSizeMWh: calculations.bessKWh / 1000,
+        durationHours: powerLevel.durationHours,
+        chemistry: 'LiFePO4',
+        roundTripEfficiency: 85,
+        installationType: 'Ground Mount',
+        gridConnection: 'Grid-Tied',
+
+        // Electrical Specifications
+        systemVoltage: 480,
+        dcVoltage: 800,
+        inverterType: 'PCS',
+        numberOfInverters: Math.ceil(calculations.bessKW / 500),
+        inverterRating: calculations.bessKW,
+        inverterEfficiency: 96,
+        switchgearType: 'AC Switchgear',
+        switchgearRating: calculations.bessKW * 1.25,
+        bmsType: 'Distributed',
+        transformerRequired: true,
+        transformerRating: calculations.bessKW,
+        transformerVoltage: '480V/13.8kV',
+
+        // Performance & Operations
+        cyclesPerYear: 365,
+        warrantyYears: 15,
+        utilityRate: calculations.utilityRate || 0.12,
+        demandCharge: calculations.demandCharge || 15,
+
+        // Renewables
+        solarPVIncluded: calculations.solarKW > 0,
+        solarCapacityKW: calculations.solarKW,
+        solarPanelType: 'Monocrystalline',
+        solarPanelEfficiency: 21,
+
+        // Financial
+        systemCost: calculations.totalInvestment,
+
+        // Options
+        showAiNote: false,
+      };
+
+      await exportQuoteAsPDF(quoteData);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('Unable to generate PDF. Please try again.');
+    }
+  };
+
+  // Handle Talk to Expert button
+  const handleTalkToExpert = () => {
+    // Open email client with pre-filled subject
+    const subject = encodeURIComponent(`Quote Inquiry - ${state.industryName} - ${quoteId}`);
+    const body = encodeURIComponent(`I'm interested in learning more about this energy storage quote:\n\nQuote ID: ${quoteId}\nIndustry: ${state.industryName}\nLocation: ${state.city || state.state || state.zipCode}\nSystem Size: ${(calculations.bessKW / 1000).toFixed(2)} MW / ${(calculations.bessKWh / 1000).toFixed(2)} MWh`);
+    window.open(`mailto:sales@merlinenergy.com?subject=${subject}&body=${body}`, '_blank');
+  };
+
   return (
-    <div className="space-y-8 pb-8">
-      {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-4">
-          <CheckCircle className="w-4 h-4" />
-          Your Quote is Ready
+    <>
+      <div className="space-y-8 pb-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-4">
+            <CheckCircle className="w-4 h-4" />
+            Your Quote is Ready
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Your Merlin Energy Quote
+          </h1>
+          <p className="text-purple-300">
+            {powerLevel.name} system for your {state.industryName}
+          </p>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Your Merlin Energy Quote
-        </h1>
-        <p className="text-purple-300">
-          {powerLevel.name} system for your {state.industryName}
-        </p>
-      </div>
 
-      {/* Quote Card */}
-      <div className="max-w-3xl mx-auto bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-purple-500/30 overflow-hidden">
-        {/* Project Summary Header */}
-        <div className="p-6 bg-purple-500/10 border-b border-purple-500/20">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-500/20 rounded-xl">
-                <Sparkles className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{powerLevel.name}</h2>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <MapPin className="w-4 h-4" />
-                  {state.city || state.state || state.zipCode}
-                  <span className="mx-1">•</span>
-                  <Building2 className="w-4 h-4" />
-                  {state.industryName}
+        {/* TrueQuote™ Badge */}
+        {calculations.pricingSources && calculations.pricingSources.length > 0 && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowPricingSources(!showPricingSources)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-sm hover:bg-emerald-500/20 transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              TrueQuote™ Verified Pricing
+              <Info className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Pricing Sources Disclosure */}
+        {showPricingSources && calculations.pricingSources && (
+          <div className="max-w-2xl mx-auto p-4 bg-slate-800/50 border border-slate-700 rounded-xl">
+            <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              Pricing Data Sources
+            </h4>
+            <ul className="space-y-1 text-sm text-slate-300">
+              {calculations.pricingSources.map((source, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                  {source}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-slate-500 mt-3">
+              Pricing verified against NREL ATB 2024, EIA utility rates, and vendor databases.
+            </p>
+          </div>
+        )}
+
+        {/* Quote Card */}
+        <div className="max-w-3xl mx-auto bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-purple-500/30 overflow-hidden">
+          {/* Project Summary Header */}
+          <div className="p-6 bg-purple-500/10 border-b border-purple-500/20">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-500/20 rounded-xl">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">{powerLevel.name}</h2>
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <MapPin className="w-4 h-4" />
+                    {state.city || state.state || state.zipCode}
+                    <span className="mx-1">•</span>
+                    <Building2 className="w-4 h-4" />
+                    {state.industryName}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-slate-400">Quote ID</div>
-              <div className="text-white font-mono">MQ-{Date.now().toString(36).toUpperCase()}</div>
+              <div className="text-right">
+                <div className="text-sm text-slate-400">Quote ID</div>
+                <div className="text-white font-mono">{quoteId}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* System Components */}
-        <div className="p-6 border-b border-slate-700">
-          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-            System Components
-          </h3>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* BESS */}
+          {/* System Components */}
+          <div className="p-6 border-b border-slate-700">
+            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
+              System Components
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* BESS */}
+              <div className="p-4 bg-slate-800/50 rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <Battery className="w-5 h-5 text-cyan-400" />
+                  <span className="text-white font-medium">Battery Storage (BESS)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Power Rating</div>
+                    <div className="text-white font-semibold">
+                      {calculations.bessKW >= 1000 
+                        ? `${(calculations.bessKW / 1000).toFixed(1)} MW` 
+                        : `${calculations.bessKW} kW`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Energy Capacity</div>
+                    <div className="text-white font-semibold">
+                      {calculations.bessKWh >= 1000 
+                        ? `${(calculations.bessKWh / 1000).toFixed(1)} MWh` 
+                        : `${calculations.bessKWh} kWh`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Duration</div>
+                    <div className="text-white font-semibold">{powerLevel.durationHours} hours</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Chemistry</div>
+                    <div className="text-white font-semibold">LiFePO4</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Efficiency</div>
+                    <div className="text-white font-semibold">85% RT</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Warranty</div>
+                    <div className="text-white font-semibold">15 years</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Solar (if selected) */}
+              {calculations.solarKW > 0 && (
+                <div className="p-4 bg-slate-800/50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <img src={sunIcon} alt="Sun" className="w-5 h-5" />
+                    <span className="text-white font-medium">Solar Array</span>
+                    {(calculations as any).selectedSolarTier?.name && (
+                      <span className="text-xs text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded">
+                        {(calculations as any).selectedSolarTier.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Capacity</div>
+                      <div className="text-white font-semibold">{calculations.solarKW} kW</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Panels</div>
+                      <div className="text-white font-semibold">
+                        {Math.ceil(calculations.solarKW * 1000 / 500)} panels
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Panel Type</div>
+                      <div className="text-white font-semibold">Monocrystalline</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Efficiency</div>
+                      <div className="text-white font-semibold">21%</div>
+                    </div>
+                    {state.solarData && (
+                      <>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Sun Hours/Day</div>
+                          <div className="text-white font-semibold">{state.solarData.sunHours}</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Solar Rating</div>
+                          <div className="text-white font-semibold">{state.solarData.rating}</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* EV Chargers (if selected) */}
+              {calculations.evChargers > 0 && (
+                <div className="p-4 bg-slate-800/50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Zap className="w-5 h-5 text-emerald-400" />
+                    <span className="text-white font-medium">EV Charging</span>
+                    {(calculations as any).selectedEvTier?.name && (
+                      <span className="text-xs text-emerald-400 bg-emerald-400/20 px-2 py-1 rounded">
+                        {(calculations as any).selectedEvTier.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {(calculations as any).selectedEvTier ? (
+                      <>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Level 2 (L2)</div>
+                          <div className="text-white font-semibold">
+                            {(calculations as any).selectedEvTier.l2Count} chargers
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">DC Fast (DCFC)</div>
+                          <div className="text-white font-semibold">
+                            {(calculations as any).selectedEvTier.dcfcCount} chargers
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Total Power</div>
+                          <div className="text-white font-semibold">
+                            {(calculations as any).selectedEvTier.powerRaw} kW
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Total Stations</div>
+                          <div className="text-white font-semibold">
+                            {(calculations as any).selectedEvTier.l2Count + (calculations as any).selectedEvTier.dcfcCount}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="text-slate-500 text-xs mb-1">Stations</div>
+                          <div className="text-white font-semibold">{calculations.evChargers} Level 3</div>
+                        </div>
+                        {(calculations as any).evPowerKW > 0 && (
+                          <div>
+                            <div className="text-slate-500 text-xs mb-1">Total Power</div>
+                            <div className="text-white font-semibold">{(calculations as any).evPowerKW} kW</div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Generator (if selected) */}
+              {calculations.generatorKW > 0 && (
+                <div className="p-4 bg-slate-800/50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Fuel className="w-5 h-5 text-orange-400" />
+                    <span className="text-white font-medium">Backup Generator</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Capacity</div>
+                      <div className="text-white font-semibold">{calculations.generatorKW} kW</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Fuel Type</div>
+                      <div className="text-white font-semibold">Diesel/Natural Gas</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Runtime</div>
+                      <div className="text-white font-semibold">
+                        {Math.round(500 / (calculations.generatorKW * 0.07))} hrs
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Coverage</div>
+                      <div className="text-white font-semibold">
+                        {calculations.generatorKW >= 400 ? 'Full facility' : 
+                         calculations.generatorKW >= 200 ? 'Critical loads' : 'Emergency only'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Cost Breakdown */}
+          <div className="p-6 border-b border-slate-700">
+            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
+              Cost Breakdown
+            </h3>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400">Battery Storage (BESS)</span>
+                <span className="text-white font-medium">
+                  ${Math.round((calculations.totalInvestment * 0.6)).toLocaleString()}
+                </span>
+              </div>
+              
+              {calculations.solarKW > 0 && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">Solar Array ({calculations.solarKW} kW)</span>
+                  <span className="text-white font-medium">
+                    ${Math.round((calculations.totalInvestment * 0.25)).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              {calculations.evChargers > 0 && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">EV Charging ({calculations.evChargers} stations)</span>
+                  <span className="text-white font-medium">
+                    ${Math.round((calculations.totalInvestment * 0.10)).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              {calculations.generatorKW > 0 && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">Backup Generator ({calculations.generatorKW} kW)</span>
+                  <span className="text-white font-medium">
+                    ${Math.round((calculations.totalInvestment * 0.05)).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400">Installation & Engineering</span>
+                <span className="text-white font-medium">
+                  ${Math.round((calculations.totalInvestment * 0.10)).toLocaleString()}
+                </span>
+              </div>
+              
+              <div className="h-px bg-slate-700 my-3" />
+              
+              <div className="flex justify-between items-center py-2">
+                <span className="text-slate-300 font-semibold">Total Investment</span>
+                <span className="text-white font-bold text-lg">
+                  ${calculations.totalInvestment.toLocaleString()}
+                </span>
+              </div>
+              
+              {calculations.federalITC > 0 && (
+                <>
+                  <div className="flex justify-between items-center py-2 text-emerald-400">
+                    <span className="font-semibold">Federal ITC ({itcPercentage}%)</span>
+                    <span className="font-bold text-lg">-${calculations.federalITC.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="h-px bg-slate-700 my-3" />
+                  
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white font-bold">Net Investment</span>
+                    <span className="text-2xl font-bold text-white">
+                      ${calculations.netInvestment.toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Savings Breakdown */}
+          <div className="p-6 border-b border-slate-700">
+            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
+              Annual Savings Breakdown
+            </h3>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-400">Demand Charge Reduction</span>
+                <span className="text-white font-medium">
+                  ${Math.round(calculations.annualSavings * 0.60).toLocaleString()}
+                </span>
+              </div>
+              
+              {calculations.hasTOU && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">TOU Arbitrage</span>
+                  <span className="text-white font-medium">
+                    ${Math.round(calculations.annualSavings * 0.25).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              {calculations.solarKW > 0 && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">Solar Energy Production</span>
+                  <span className="text-white font-medium">
+                    ${Math.round(calculations.annualSavings * 0.15).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              <div className="h-px bg-slate-700 my-3" />
+              
+              <div className="flex justify-between items-center py-2">
+                <span className="text-slate-300 font-semibold">Total Annual Savings</span>
+                <span className="text-white font-bold text-lg">
+                  ${calculations.annualSavings.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Returns */}
+          <div className="p-6">
+            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
+              Projected Returns
+            </h3>
+            
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-emerald-400">
+                  ${Math.round(calculations.annualSavings / 1000)}K
+                </div>
+                <div className="text-xs text-slate-400 mt-1">Annual Savings</div>
+              </div>
+              
+              <div className="text-center p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                <Calendar className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-cyan-400">
+                  {calculations.paybackYears.toFixed(1)}
+                </div>
+                <div className="text-xs text-slate-400 mt-1">Year Payback</div>
+              </div>
+              
+              <div className="text-center p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-purple-400">
+                  {calculations.tenYearROI}%
+                </div>
+                <div className="text-xs text-slate-400 mt-1">10-Year ROI</div>
+              </div>
+            </div>
+            
+            {/* 10-Year Projection */}
             <div className="p-4 bg-slate-800/50 rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <Battery className="w-5 h-5 text-cyan-400" />
-                <span className="text-white font-medium">Battery Storage (BESS)</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">10-Year Total Savings</span>
+                <span className="text-white font-bold text-lg">
+                  ${(calculations.annualSavings * 10).toLocaleString()}
+                </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-slate-500">Power</div>
-                  <div className="text-white">
-                    {calculations.bessKW >= 1000 
-                      ? `${(calculations.bessKW / 1000).toFixed(1)} MW` 
-                      : `${calculations.bessKW} kW`}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-slate-500">Capacity</div>
-                  <div className="text-white">
-                    {calculations.bessKWh >= 1000 
-                      ? `${(calculations.bessKWh / 1000).toFixed(1)} MWh` 
-                      : `${calculations.bessKWh} kWh`}
-                  </div>
-                </div>
+              <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-700">
+                <span className="text-slate-400 text-sm">Net 10-Year Value</span>
+                <span className="text-emerald-400 font-bold text-lg">
+                  ${((calculations.annualSavings * 10) - calculations.netInvestment).toLocaleString()}
+                </span>
               </div>
             </div>
-
-            {/* Solar (if selected) */}
-            {calculations.solarKW > 0 && (
-              <div className="p-4 bg-slate-800/50 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sun className="w-5 h-5 text-yellow-400" />
-                  <span className="text-white font-medium">Solar Array</span>
-                </div>
-                <div className="text-sm">
-                  <div className="text-slate-500">Capacity</div>
-                  <div className="text-white">{calculations.solarKW} kW</div>
-                </div>
-              </div>
-            )}
-
-            {/* EV Chargers (if selected) */}
-            {calculations.evChargers > 0 && (
-              <div className="p-4 bg-slate-800/50 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  <Zap className="w-5 h-5 text-emerald-400" />
-                  <span className="text-white font-medium">EV Charging</span>
-                </div>
-                <div className="text-sm">
-                  <div className="text-slate-500">Stations</div>
-                  <div className="text-white">{calculations.evChargers} Level 3 Chargers</div>
-                </div>
-              </div>
-            )}
-
-            {/* Generator (if selected) */}
-            {calculations.generatorKW > 0 && (
-              <div className="p-4 bg-slate-800/50 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  <Fuel className="w-5 h-5 text-orange-400" />
-                  <span className="text-white font-medium">Backup Generator</span>
-                </div>
-                <div className="text-sm">
-                  <div className="text-slate-500">Capacity</div>
-                  <div className="text-white">{calculations.generatorKW} kW</div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Financial Summary */}
-        <div className="p-6 border-b border-slate-700">
-          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-            Financial Summary
-          </h3>
+        {/* Utility Rate Info */}
+        {calculations.utilityName && (
+          <div className="max-w-3xl mx-auto p-3 bg-slate-800/30 rounded-lg text-center text-sm text-slate-400">
+            Calculations based on <span className="text-white">{calculations.utilityName}</span> rates: 
+            {' '}${calculations.utilityRate?.toFixed(2) || 'N/A'}/kWh, 
+            {' '}${calculations.demandCharge || 'N/A'}/kW demand charge
+            {calculations.hasTOU && (
+              <span className="text-purple-400"> • TOU pricing available</span>
+            )}
+          </div>
+        )}
+
+        {/* CTA Buttons */}
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row gap-4">
+          <button 
+            onClick={handleRequestQuote}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-cyan-500 transition-all shadow-lg shadow-purple-500/25"
+          >
+            <Mail className="w-5 h-5" />
+            Request Official Quote
+          </button>
           
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Total Investment</span>
-              <span className="text-white font-semibold">
-                ${calculations.totalInvestment.toLocaleString()}
-              </span>
-            </div>
-            
-            {calculations.federalITC > 0 && (
-              <div className="flex justify-between items-center text-emerald-400">
-                <span>Federal ITC (30%)</span>
-                <span>-${calculations.federalITC.toLocaleString()}</span>
-              </div>
-            )}
-            
-            <div className="h-px bg-slate-700 my-2" />
-            
-            <div className="flex justify-between items-center">
-              <span className="text-white font-semibold">Net Investment</span>
-              <span className="text-2xl font-bold text-white">
-                ${calculations.netInvestment.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Returns */}
-        <div className="p-6">
-          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-            Projected Returns
-          </h3>
+          <button 
+            onClick={handleDownloadPDF}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all"
+          >
+            <Download className="w-5 h-5" />
+            Download PDF
+          </button>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-emerald-500/10 rounded-xl">
-              <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-emerald-400">
-                ${Math.round(calculations.annualSavings / 1000)}K
-              </div>
-              <div className="text-xs text-slate-400">Annual Savings</div>
-            </div>
-            
-            <div className="text-center p-4 bg-cyan-500/10 rounded-xl">
-              <Calendar className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-cyan-400">
-                {calculations.paybackYears}
-              </div>
-              <div className="text-xs text-slate-400">Year Payback</div>
-            </div>
-            
-            <div className="text-center p-4 bg-purple-500/10 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-purple-400">
-                {calculations.tenYearROI}%
-              </div>
-              <div className="text-xs text-slate-400">10-Year ROI</div>
-            </div>
-          </div>
+          <button 
+            onClick={handleTalkToExpert}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all"
+          >
+            <Phone className="w-5 h-5" />
+            Talk to Expert
+          </button>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="max-w-3xl mx-auto text-center text-xs text-slate-500">
+          This is an estimate based on the information provided. Final pricing may vary based on 
+          site assessment, utility rates, and equipment availability. Contact us for an official quote.
         </div>
       </div>
 
-      {/* CTA Buttons */}
-      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row gap-4">
-        <button className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-cyan-500 transition-all shadow-lg shadow-purple-500/25">
-          <Mail className="w-5 h-5" />
-          Request Official Quote
-        </button>
-        
-        <button className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all">
-          <Download className="w-5 h-5" />
-          Download PDF
-        </button>
-        
-        <button className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all">
-          <Phone className="w-5 h-5" />
-          Talk to Expert
-        </button>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="max-w-3xl mx-auto text-center text-xs text-slate-500">
-        This is an estimate based on the information provided. Final pricing may vary based on 
-        site assessment, utility rates, and equipment availability. Contact us for an official quote.
-      </div>
-    </div>
+      {/* Request Quote Modal */}
+      <RequestQuoteModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        quoteData={{
+          storageSizeMW: calculations.bessKW / 1000,
+          durationHours: powerLevel.durationHours,
+          energyCapacity: calculations.bessKWh / 1000,
+          solarMW: calculations.solarKW > 0 ? calculations.solarKW / 1000 : 0,
+          totalCost: calculations.totalInvestment,
+          industryName: state.industryName,
+          location: `${state.city || ''} ${state.state || ''}`.trim() || state.zipCode,
+        }}
+      />
+    </>
   );
 }

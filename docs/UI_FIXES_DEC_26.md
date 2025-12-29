@@ -13,3 +13,4 @@
 9. ✅ Remove duplicate rooftop solar square footage question
 10. ✅ Fix Step 4 to show solar/EV options when selected in opportunity discovery
 
+
