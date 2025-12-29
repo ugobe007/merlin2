@@ -144,3 +144,4 @@ This would automatically size solar based on rooftop space when:
 - User selected solar in Step 2
 - User provided rooftop square footage in Step 3
 
+

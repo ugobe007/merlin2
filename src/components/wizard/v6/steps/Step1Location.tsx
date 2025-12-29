@@ -1,294 +1,431 @@
 /**
- * V6 Step 1: Location & Goals
- * Design: V5 clean white cards + V6 simple goal toggles
+ * STEP 1: Location & Goals
+ * ========================
+ * 
+ * Enhanced with:
+ * - Gradient panel for goals section (cyan/violet to white)
+ * - More visual POP on goal buttons
+ * - Better visual hierarchy
+ * 
+ * Updated: December 28, 2025
  */
-import React, { useState, useEffect } from 'react';
-import { MapPin, Sparkles, Check, Globe, CheckCircle } from 'lucide-react';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  MapPin, 
+  Sparkles, 
+  Check, 
+  Globe, 
+  CheckCircle, 
+  ChevronDown,
+  DollarSign,
+  Battery,
+  Leaf,
+  Zap,
+  Sun,
+  TrendingUp,
+  Shield,
+  Target
+} from 'lucide-react';
 import type { WizardState, EnergyGoal } from '../types';
-import { ENERGY_GOALS } from '../types';
 
-// Complete ZIP to State mapping
-const ZIP_TO_STATE: Record<string, string> = {
-  // Nevada
-  '889': 'Nevada', '890': 'Nevada', '891': 'Nevada', '893': 'Nevada',
-  '894': 'Nevada', '895': 'Nevada', '896': 'Nevada', '897': 'Nevada', '898': 'Nevada',
-  // California
-  '900': 'California', '901': 'California', '902': 'California', '903': 'California',
-  '904': 'California', '905': 'California', '906': 'California', '907': 'California',
-  '908': 'California', '910': 'California', '911': 'California', '912': 'California',
-  '913': 'California', '914': 'California', '915': 'California', '916': 'California',
-  '917': 'California', '918': 'California', '919': 'California', '920': 'California',
-  '921': 'California', '922': 'California', '923': 'California', '924': 'California',
-  '925': 'California', '926': 'California', '927': 'California', '928': 'California',
-  '930': 'California', '931': 'California', '932': 'California', '933': 'California',
-  '934': 'California', '935': 'California', '936': 'California', '937': 'California',
-  '938': 'California', '939': 'California', '940': 'California', '941': 'California',
-  '942': 'California', '943': 'California', '944': 'California', '945': 'California',
-  '946': 'California', '947': 'California', '948': 'California', '949': 'California',
-  '950': 'California', '951': 'California', '952': 'California', '953': 'California',
-  '954': 'California', '955': 'California', '956': 'California', '957': 'California',
-  '958': 'California', '959': 'California', '960': 'California', '961': 'California',
-  // Arizona
-  '850': 'Arizona', '851': 'Arizona', '852': 'Arizona', '853': 'Arizona',
-  '855': 'Arizona', '856': 'Arizona', '857': 'Arizona', '859': 'Arizona',
-  '860': 'Arizona', '863': 'Arizona', '864': 'Arizona', '865': 'Arizona',
-  // Texas
-  '750': 'Texas', '751': 'Texas', '752': 'Texas', '753': 'Texas', '754': 'Texas',
-  '755': 'Texas', '756': 'Texas', '757': 'Texas', '758': 'Texas', '759': 'Texas',
-  '760': 'Texas', '761': 'Texas', '762': 'Texas', '763': 'Texas', '764': 'Texas',
-  '765': 'Texas', '766': 'Texas', '767': 'Texas', '768': 'Texas', '769': 'Texas',
-  '770': 'Texas', '771': 'Texas', '772': 'Texas', '773': 'Texas', '774': 'Texas',
-  '775': 'Texas', '776': 'Texas', '777': 'Texas', '778': 'Texas', '779': 'Texas',
-  '780': 'Texas', '781': 'Texas', '782': 'Texas', '783': 'Texas', '784': 'Texas',
-  '785': 'Texas', '786': 'Texas', '787': 'Texas', '788': 'Texas', '789': 'Texas',
-  '790': 'Texas', '791': 'Texas', '792': 'Texas', '793': 'Texas', '794': 'Texas',
-  '795': 'Texas', '796': 'Texas', '797': 'Texas', '798': 'Texas', '799': 'Texas',
-  // Florida
-  '320': 'Florida', '321': 'Florida', '322': 'Florida', '323': 'Florida',
-  '324': 'Florida', '325': 'Florida', '326': 'Florida', '327': 'Florida',
-  '328': 'Florida', '329': 'Florida', '330': 'Florida', '331': 'Florida',
-  '332': 'Florida', '333': 'Florida', '334': 'Florida', '335': 'Florida',
-  '336': 'Florida', '337': 'Florida', '338': 'Florida', '339': 'Florida',
-  '340': 'Florida', '341': 'Florida', '342': 'Florida', '344': 'Florida',
-  '346': 'Florida', '347': 'Florida', '349': 'Florida',
-  // New York
-  '100': 'New York', '101': 'New York', '102': 'New York', '103': 'New York',
-  '104': 'New York', '105': 'New York', '106': 'New York', '107': 'New York',
-  '108': 'New York', '109': 'New York', '110': 'New York', '111': 'New York',
-  '112': 'New York', '113': 'New York', '114': 'New York', '115': 'New York',
-  '116': 'New York', '117': 'New York', '118': 'New York', '119': 'New York',
-  '120': 'New York', '121': 'New York', '122': 'New York', '123': 'New York',
-  '124': 'New York', '125': 'New York', '126': 'New York', '127': 'New York',
-  '128': 'New York', '129': 'New York', '130': 'New York', '131': 'New York',
-  '132': 'New York', '133': 'New York', '134': 'New York', '135': 'New York',
-  '136': 'New York', '137': 'New York', '138': 'New York', '139': 'New York',
-  '140': 'New York', '141': 'New York', '142': 'New York', '143': 'New York',
-  '144': 'New York', '145': 'New York', '146': 'New York', '147': 'New York',
-  '148': 'New York', '149': 'New York',
-  // Colorado
-  '800': 'Colorado', '801': 'Colorado', '802': 'Colorado', '803': 'Colorado',
-  '804': 'Colorado', '805': 'Colorado', '806': 'Colorado', '807': 'Colorado',
-  '808': 'Colorado', '809': 'Colorado', '810': 'Colorado', '811': 'Colorado',
-  '812': 'Colorado', '813': 'Colorado', '814': 'Colorado', '815': 'Colorado', '816': 'Colorado',
-  // Georgia
-  '300': 'Georgia', '301': 'Georgia', '302': 'Georgia', '303': 'Georgia',
-  '304': 'Georgia', '305': 'Georgia', '306': 'Georgia', '307': 'Georgia',
-  '308': 'Georgia', '309': 'Georgia', '310': 'Georgia', '311': 'Georgia',
-  '312': 'Georgia', '313': 'Georgia', '314': 'Georgia', '315': 'Georgia',
-  '316': 'Georgia', '317': 'Georgia', '318': 'Georgia', '319': 'Georgia',
-  // Washington
-  '980': 'Washington', '981': 'Washington', '982': 'Washington', '983': 'Washington',
-  '984': 'Washington', '985': 'Washington', '986': 'Washington', '988': 'Washington',
-  '989': 'Washington', '990': 'Washington', '991': 'Washington', '992': 'Washington',
-  '993': 'Washington', '994': 'Washington',
-  // Oregon
-  '970': 'Oregon', '971': 'Oregon', '972': 'Oregon', '973': 'Oregon',
-  '974': 'Oregon', '975': 'Oregon', '976': 'Oregon', '977': 'Oregon', '978': 'Oregon', '979': 'Oregon',
-  // Illinois
-  '600': 'Illinois', '601': 'Illinois', '602': 'Illinois', '603': 'Illinois',
-  '604': 'Illinois', '605': 'Illinois', '606': 'Illinois', '607': 'Illinois',
-  '608': 'Illinois', '609': 'Illinois', '610': 'Illinois', '611': 'Illinois',
-  '612': 'Illinois', '613': 'Illinois', '614': 'Illinois', '615': 'Illinois',
-  '616': 'Illinois', '617': 'Illinois', '618': 'Illinois', '619': 'Illinois',
-};
-
-const SOLAR_DATA: Record<string, { hours: number; rating: string }> = {
-  'Nevada': { hours: 6.4, rating: 'Excellent' },
-  'Arizona': { hours: 6.5, rating: 'Excellent' },
-  'California': { hours: 5.8, rating: 'Excellent' },
-  'New Mexico': { hours: 6.0, rating: 'Excellent' },
-  'Utah': { hours: 5.6, rating: 'Excellent' },
-  'Colorado': { hours: 5.5, rating: 'Excellent' },
-  'Texas': { hours: 5.3, rating: 'Very Good' },
-  'Florida': { hours: 5.2, rating: 'Very Good' },
-  'Georgia': { hours: 4.8, rating: 'Very Good' },
-  'New York': { hours: 3.8, rating: 'Moderate' },
-  'Illinois': { hours: 4.3, rating: 'Good' },
-  'Washington': { hours: 3.5, rating: 'Moderate' },
-  'Oregon': { hours: 3.9, rating: 'Moderate' },
-};
-
-function getStateFromZip(zip: string): string {
-  const prefix = zip.replace(/\D/g, '').substring(0, 3);
-  return ZIP_TO_STATE[prefix] || '';
-}
-
-function getSolarData(stateName: string) {
-  return SOLAR_DATA[stateName] || { hours: 4.2, rating: 'Good' };
-}
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
 }
 
+interface GoalOption {
+  id: EnergyGoal;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+// ============================================================================
+// SOLAR DATA BY STATE
+// ============================================================================
+
+const STATE_SOLAR_DATA: Record<string, { sunHours: number; rating: string }> = {
+  'AZ': { sunHours: 6.5, rating: 'Excellent' },
+  'NV': { sunHours: 6.4, rating: 'Excellent' },
+  'NM': { sunHours: 6.2, rating: 'Excellent' },
+  'CA': { sunHours: 5.8, rating: 'Excellent' },
+  'UT': { sunHours: 5.6, rating: 'Very Good' },
+  'CO': { sunHours: 5.5, rating: 'Very Good' },
+  'TX': { sunHours: 5.4, rating: 'Very Good' },
+  'FL': { sunHours: 5.3, rating: 'Very Good' },
+  'OK': { sunHours: 5.2, rating: 'Good' },
+  'KS': { sunHours: 5.1, rating: 'Good' },
+  'NC': { sunHours: 5.0, rating: 'Good' },
+  'GA': { sunHours: 5.0, rating: 'Good' },
+  'SC': { sunHours: 5.0, rating: 'Good' },
+  'TN': { sunHours: 4.8, rating: 'Good' },
+  'VA': { sunHours: 4.7, rating: 'Good' },
+  'MD': { sunHours: 4.6, rating: 'Moderate' },
+  'NJ': { sunHours: 4.5, rating: 'Moderate' },
+  'PA': { sunHours: 4.4, rating: 'Moderate' },
+  'NY': { sunHours: 4.3, rating: 'Moderate' },
+  'MA': { sunHours: 4.2, rating: 'Moderate' },
+  'IL': { sunHours: 4.2, rating: 'Moderate' },
+  'OH': { sunHours: 4.1, rating: 'Moderate' },
+  'MI': { sunHours: 4.0, rating: 'Moderate' },
+  'WA': { sunHours: 3.8, rating: 'Fair' },
+  'OR': { sunHours: 3.9, rating: 'Fair' },
+  'MN': { sunHours: 4.0, rating: 'Moderate' },
+  'WI': { sunHours: 4.0, rating: 'Moderate' },
+};
+
+const ZIP_TO_STATE: Record<string, string> = {
+  '0': 'MA', '1': 'NY', '2': 'VA', '3': 'FL', '4': 'MI',
+  '5': 'MN', '6': 'IL', '7': 'TX', '8': 'CO', '9': 'CA',
+};
+
+// More specific ZIP ranges
+const getStateFromZip = (zip: string): string => {
+  const prefix = zip.substring(0, 3);
+  const prefixNum = parseInt(prefix);
+  
+  // Nevada
+  if (prefixNum >= 889 && prefixNum <= 898) return 'NV';
+  // Arizona
+  if (prefixNum >= 850 && prefixNum <= 865) return 'AZ';
+  // California
+  if (prefixNum >= 900 && prefixNum <= 961) return 'CA';
+  // Texas
+  if (prefixNum >= 750 && prefixNum <= 799) return 'TX';
+  // Florida
+  if (prefixNum >= 320 && prefixNum <= 349) return 'FL';
+  // New York
+  if (prefixNum >= 100 && prefixNum <= 149) return 'NY';
+  // Colorado
+  if (prefixNum >= 800 && prefixNum <= 816) return 'CO';
+  
+  // Fallback to first digit
+  return ZIP_TO_STATE[zip[0]] || 'CA';
+};
+
+// ============================================================================
+// GOAL OPTIONS
+// ============================================================================
+
+const GOAL_OPTIONS: GoalOption[] = [
+  {
+    id: 'reduce_costs',
+    label: 'Reduce Energy Costs',
+    description: 'Lower your electricity bills with smart energy management',
+    icon: <DollarSign className="w-6 h-6" />,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
+    borderColor: 'border-amber-500/50'
+  },
+  {
+    id: 'backup_power',
+    label: 'Backup Power Protection',
+    description: 'Keep operations running during outages',
+    icon: <Battery className="w-6 h-6" />,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/20',
+    borderColor: 'border-emerald-500/50'
+  },
+  {
+    id: 'sustainability',
+    label: 'Sustainability / Net Zero',
+    description: 'Meet ESG goals and reduce carbon footprint',
+    icon: <Leaf className="w-6 h-6" />,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    borderColor: 'border-green-500/50'
+  },
+  {
+    id: 'ev_ready',
+    label: 'Prepare for EV Charging',
+    description: 'Future-proof your facility for electric vehicles',
+    icon: <Zap className="w-6 h-6" />,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/20',
+    borderColor: 'border-cyan-500/50'
+  }
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
 export function Step1Location({ state, updateState }: Props) {
   const [zipInput, setZipInput] = useState(state.zipCode);
+  const [isValidZip, setIsValidZip] = useState(false);
   const [isUSA, setIsUSA] = useState(true);
 
+  // Derive state from ZIP
   useEffect(() => {
-    if (zipInput.length >= 3) {
-      const detectedState = getStateFromZip(zipInput);
-      if (detectedState && detectedState !== state.state) {
-        updateState({ state: detectedState });
-      }
+    if (zipInput.length >= 5) {
+      const derivedState = getStateFromZip(zipInput);
+      const solarData = STATE_SOLAR_DATA[derivedState];
+      
+      setIsValidZip(true);
+      updateState({
+        zipCode: zipInput,
+        state: derivedState,
+        solarData: solarData || { sunHours: 4.5, rating: 'Moderate' }
+      });
+    } else {
+      setIsValidZip(false);
     }
-  }, [zipInput, state.state, updateState]);
+  }, [zipInput]);
 
-  const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-    setZipInput(value);
-    updateState({ zipCode: value });
-  };
-
-  const toggleGoal = (goal: EnergyGoal) => {
-    const currentGoals = state.goals;
-    const newGoals = currentGoals.includes(goal)
-      ? currentGoals.filter(g => g !== goal)
-      : [...currentGoals, goal];
+  const toggleGoal = (goalId: EnergyGoal) => {
+    const currentGoals = state.goals || [];
+    const newGoals = currentGoals.includes(goalId)
+      ? currentGoals.filter(g => g !== goalId)
+      : [...currentGoals, goalId];
     updateState({ goals: newGoals });
   };
 
-  const solarInfo = state.state ? getSolarData(state.state) : null;
+  const isGoalSelected = (goalId: EnergyGoal) => state.goals?.includes(goalId) || false;
 
   return (
     <div className="space-y-8 pb-8">
-      {/* Hero */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 bg-purple-600/20 border-2 border-purple-500 rounded-full px-5 py-2 mb-6">
-          <Sparkles className="w-5 h-5 text-amber-400" />
-          <span className="text-white text-sm font-semibold">AI-Powered Quote Builder</span>
+      {/* Hero Section */}
+      <div className="text-center pt-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 rounded-full text-purple-300 text-sm font-medium mb-4">
+          <MapPin className="w-4 h-4" />
+          Step 1: Your Location
         </div>
-        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">Start Saving on Energy</h1>
-        <p className="text-xl text-purple-300">Get a custom energy storage quote in minutes</p>
+        <h1 className="text-4xl font-bold text-white mb-3">
+          Let's Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Perfect Energy Solution</span>
+        </h1>
+        <p className="text-slate-400 text-lg max-w-xl mx-auto">
+          Enter your ZIP code to see solar potential and energy savings for your area.
+        </p>
       </div>
 
-      {/* USA / International Toggle */}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => setIsUSA(true)}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
-            isUSA
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg scale-105 border-2 border-cyan-300'
-              : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
-          }`}
-        >
-          <span className="text-2xl">🇺🇸</span>
-          United States
-        </button>
-        <button
-          onClick={() => setIsUSA(false)}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all ${
-            !isUSA
-              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg scale-105 border-2 border-purple-400'
-              : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-gray-600'
-          }`}
-        >
-          <Globe className="w-6 h-6" />
-          International
-        </button>
-      </div>
+      {/* ZIP Code Input Section */}
+      <div className="max-w-2xl mx-auto">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur-xl" />
+          <div className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
 
-      {/* Location Card - WHITE background for contrast */}
-      <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl p-8 border-2 border-cyan-400 shadow-xl">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center">
-            <MapPin className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">Where&apos;s your project?</h2>
-            <p className="text-sm text-gray-500">We&apos;ll customize recommendations for your area</p>
-          </div>
-        </div>
-
-        {isUSA ? (
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">📮 Zip Code (fastest)</label>
-            <input
-              type="text"
-              value={zipInput}
-              onChange={handleZipChange}
-              placeholder="Enter 5-digit zip"
-              className="w-full px-5 py-4 text-xl text-center bg-white border-2 border-gray-300 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
-            />
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            International support coming soon. Please contact us for a custom quote.
-          </div>
-        )}
-
-        {/* Location Confirmation */}
-        {state.state && (
-          <div className="mt-6 flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-amber-50 rounded-xl border border-cyan-200">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-semibold text-gray-800">{state.state} {state.zipCode && `(${state.zipCode})`}</span>
+            {/* USA / International Toggle */}
+            <div className="flex justify-center gap-3 mb-5">
+              <button
+                onClick={() => setIsUSA(true)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
+                  isUSA
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg border-2 border-cyan-300"
+                    : "bg-slate-700/50 text-gray-400 hover:bg-slate-600/50 border border-slate-600"
+                }`}
+              >
+                <span className="text-xl">🇺🇸</span>
+                USA
+              </button>
+              <button
+                onClick={() => setIsUSA(false)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
+                  !isUSA
+                    ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg border-2 border-purple-400"
+                    : "bg-slate-700/50 text-gray-400 hover:bg-slate-600/50 border border-slate-600"
+                }`}
+              >
+                <span className="text-xl">🌍</span>
+                International
+              </button>
             </div>
-            {solarInfo && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100">
-                  <span className="text-lg">☀️</span>
-                  <span className="font-semibold text-amber-700">{solarInfo.hours} hrs/day</span>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent mb-4" />
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Business ZIP Code
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={zipInput}
+                onChange={(e) => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                placeholder="Enter ZIP code"
+                className="w-full px-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white text-lg placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              />
+              {isValidZip && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  solarInfo.rating === 'Excellent' ? 'bg-emerald-100 text-emerald-700' :
-                  solarInfo.rating === 'Very Good' ? 'bg-green-100 text-green-700' :
-                  solarInfo.rating === 'Good' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {solarInfo.rating} Solar
-                </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Goals Section - Shows after location is set */}
-      {state.state && (
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">What are your energy goals?</h2>
-            <p className="text-purple-300">Select all that apply</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {ENERGY_GOALS.map((goal) => {
-              const isSelected = state.goals.includes(goal.id);
-              return (
-                <button
-                  key={goal.id}
-                  onClick={() => toggleGoal(goal.id)}
-                  className={`relative p-5 rounded-xl border-2 transition-all text-left ${
-                    isSelected 
-                      ? 'border-amber-400 bg-amber-400/20 shadow-lg shadow-amber-500/20' 
-                      : 'border-slate-600 bg-slate-800/50 hover:border-amber-400/50'
-                  }`}
-                >
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-slate-900" />
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{goal.icon}</span>
-                    <span className={`font-semibold ${isSelected ? 'text-white' : 'text-slate-300'}`}>{goal.label}</span>
+      {/* Location Result Card */}
+      {isValidZip && state.state && (
+        <div className="max-w-md mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="relative">
+            {/* Gradient border effect */}
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-2xl opacity-70" />
+            <div className="relative bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-2xl p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
                   </div>
-                </button>
-              );
-            })}
+                  <div>
+                    <p className="text-slate-800 font-semibold text-lg">
+                      {state.state === 'NV' ? 'Nevada' : 
+                       state.state === 'CA' ? 'California' :
+                       state.state === 'AZ' ? 'Arizona' :
+                       state.state === 'TX' ? 'Texas' :
+                       state.state === 'FL' ? 'Florida' :
+                       state.state === 'NY' ? 'New York' :
+                       state.state === 'CO' ? 'Colorado' :
+                       state.state} ({zipInput})
+                    </p>
+                    <p className="text-slate-500 text-sm">Location confirmed</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Sun className="w-5 h-5 text-amber-500" />
+                    <span className="text-amber-600 font-semibold">{state.solarData?.sunHours} hrs/day</span>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    state.solarData?.rating === 'Excellent' ? 'bg-emerald-100 text-emerald-700' :
+                    state.solarData?.rating === 'Very Good' ? 'bg-green-100 text-green-700' :
+                    state.solarData?.rating === 'Good' ? 'bg-blue-100 text-blue-700' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>
+                    {state.solarData?.rating}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Ready indicator */}
-      {state.zipCode.length >= 5 && state.goals.length > 0 && (
-        <div className="max-w-md mx-auto p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-center">
-          <p className="text-emerald-400 font-medium">✓ Ready to continue! Click Next below.</p>
+      {/* Scroll indicator */}
+      {isValidZip && (
+        <div className="text-center text-purple-400 animate-bounce">
+          <p className="text-sm mb-1">Scroll for more</p>
+          <ChevronDown className="w-5 h-5 mx-auto" />
+        </div>
+      )}
+
+      {/* Goals Section - Enhanced Panel */}
+      <div className="max-w-2xl mx-auto">
+        {/* Gradient Panel Container */}
+        <div className="relative">
+          {/* Outer glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-pink-500/30 rounded-3xl blur-lg" />
+          
+          {/* Gradient border */}
+          <div className="absolute -inset-[2px] bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400 rounded-3xl opacity-60" />
+          
+          {/* Panel content */}
+          <div className="relative bg-gradient-to-br from-white via-blue-50/80 to-purple-50/80 rounded-3xl p-8">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 rounded-full text-purple-700 text-xs font-semibold mb-3">
+                <Target className="w-3 h-3" />
+                SELECT YOUR PRIORITIES
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                What are your energy goals?
+              </h2>
+              <p className="text-slate-600">
+                Select all that apply to customize your solution
+              </p>
+            </div>
+
+            {/* Goal Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {GOAL_OPTIONS.map((goal) => {
+                const selected = isGoalSelected(goal.id);
+                return (
+                  <button
+                    key={goal.id}
+                    onClick={() => toggleGoal(goal.id)}
+                    className={`relative group text-left p-5 rounded-2xl border-2 transition-all duration-300 transform hover:scale-[1.02] ${
+                      selected
+                        ? `bg-gradient-to-br from-purple-600 to-cyan-600 border-transparent text-white shadow-xl shadow-purple-500/30`
+                        : `bg-gradient-to-b from-slate-600 to-slate-800 border-slate-500 shadow-lg shadow-slate-900/50 hover:from-slate-500 hover:to-slate-700 hover:-translate-y-1 hover:shadow-lg`
+                    }`}
+                  >
+                    {/* Selection indicator */}
+                    {selected && (
+                      <div className="absolute top-3 right-3">
+                        <div className="p-1 bg-white/20 rounded-full">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Icon */}
+                    <div className={`inline-flex p-3 rounded-xl mb-3 ${
+                      selected 
+                        ? 'bg-white/20' 
+                        : goal.bgColor
+                    }`}>
+                      <span className={selected ? 'text-white' : goal.color}>
+                        {goal.icon}
+                      </span>
+                    </div>
+                    
+                    {/* Text */}
+                    <h3 className={`font-semibold text-lg mb-1 ${
+                      selected ? 'text-white' : 'text-white'
+                    }`}>
+                      {goal.label}
+                    </h3>
+                    <p className={`text-sm ${
+                      selected ? 'text-white/80' : 'text-purple-200'
+                    }`}>
+                      {goal.description}
+                    </p>
+                    
+                    {/* Hover glow for unselected */}
+                    {!selected && (
+                      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${
+                        goal.id === 'reduce_costs' ? 'shadow-lg shadow-amber-500/20' :
+                        goal.id === 'backup_power' ? 'shadow-lg shadow-emerald-500/20' :
+                        goal.id === 'sustainability' ? 'shadow-lg shadow-green-500/20' :
+                        'shadow-lg shadow-cyan-500/20'
+                      }`} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selection summary */}
+            {state.goals && state.goals.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-center gap-2 text-purple-700">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="font-medium">
+                    {state.goals.length} goal{state.goals.length > 1 ? 's' : ''} selected
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick location tag */}
+      {isValidZip && (
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full text-slate-300 text-sm">
+            <MapPin className="w-4 h-4 text-purple-400" />
+            {zipInput} – {state.state}
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+export default Step1Location;

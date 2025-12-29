@@ -9,6 +9,8 @@ import { Step2Industry } from './steps/Step2Industry';
 import { Step3Details } from './steps/Step3Details';
 import { Step4Opportunities } from './steps/Step4Opportunities';
 import { Step5MagicFit } from './steps/Step5MagicFit';
+import { Step3HotelEnergy } from "./steps/Step3HotelEnergy";
+import { Step4Options } from "./steps/Step4Options";
 import { Step6Quote } from './steps/Step6Quote';
 import { MerlinGuide } from './components/MerlinGuide';
 
@@ -28,7 +30,7 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1: return state.zipCode.length >= 5 && state.goals.length > 0;
       case 2: return state.industry !== '';
-      case 3: return state.facilityDetails.squareFootage > 0;
+      case 3: return true; // Database-driven questions handle their own validation
       case 4: return true;
       case 5: return state.selectedPowerLevel !== null;
       case 6: return true;
@@ -40,8 +42,8 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1: return <Step1Location state={state} updateState={updateState} />;
       case 2: return <Step2Industry state={state} updateState={updateState} />;
-      case 3: return <Step3Details state={state} updateState={updateState} />;
-      case 4: return <Step4Opportunities state={state} updateState={updateState} />;
+      case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} />;
+      case 4: return <Step4Options state={state} updateState={updateState} />;
       case 5: return <Step5MagicFit state={state} updateState={updateState} />;
       case 6: return <Step6Quote state={state} />;
       default: return null;
@@ -49,7 +51,7 @@ export default function WizardV6() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-purple-500/20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -194,3 +194,4 @@ console.log('✅ Equipment calculations are properly linked and complete');
 
 
 
+

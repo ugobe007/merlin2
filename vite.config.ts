@@ -33,8 +33,8 @@ export default defineConfig({
           
           // App chunks - split by functionality
           'wizard': [
-            './src/components/wizard/v5/WizardV5.tsx',
-            './src/components/wizard/v5/components/MerlinInputs.tsx',
+            './src/components/wizard/v6/WizardV6.tsx',
+            './src/components/wizard/v6/components/MerlinGuide.tsx',
           ],
           'services': [
             './src/services/centralizedCalculations.ts',

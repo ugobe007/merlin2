@@ -250,3 +250,4 @@ export function getSizeUnits(sizeMW: number): 'kW' | 'MWh' {
   return sizeMW >= 50 ? 'MWh' : 'kW';
 }
 
+

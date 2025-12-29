@@ -16,6 +16,7 @@ export interface WizardState {
   state: string;
   city: string;
   goals: EnergyGoal[];
+  solarData?: { sunHours: number; rating: string }; // Solar irradiance data for location
   
   // Step 2: Industry
   industry: string;
@@ -29,6 +30,14 @@ export interface WizardState {
   
   // Step 5: Selected Power Level
   selectedPowerLevel: PowerLevel | null;
+
+  // Step 4: Options selections
+  selectedOptions?: string[];
+  solarTier?: string | null;
+  evTier?: string | null;
+
+  // Step 4: Options selections
+  useCaseData: Record<string, any>;
   
   // Calculated (populated in Step 5)
   calculations: SystemCalculations | null;
@@ -184,8 +193,19 @@ export interface SystemCalculations {
   tenYearROI: number;
   
   // After incentives
-  federalITC: number;          // 30% of solar
+  federalITC: number;          // ITC amount
+  federalITCRate?: number;     // ITC percentage (e.g., 0.30 for 30%)
   netInvestment: number;       // After ITC
+  
+  // Quote metadata
+  quoteId?: string;            // Unique quote identifier
+  pricingSources?: string[];   // Data source attribution
+  
+  // Utility rate info
+  utilityName?: string;        // Utility company name
+  utilityRate?: number;        // $/kWh
+  demandCharge?: number;       // $/kW
+  hasTOU?: boolean;            // Time-of-use pricing available
 }
 
 // ============================================================================
@@ -211,10 +231,12 @@ export const INITIAL_WIZARD_STATE: WizardState = {
     wantsGenerator: false,
   },
   selectedPowerLevel: null,
+  selectedOptions: ["solar"],
+  solarTier: "recommended",
+  evTier: null,
+  useCaseData: {},
   calculations: null,
 };
-
-// ============================================================================
 // STEP DEFINITIONS
 // ============================================================================
 
