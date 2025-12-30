@@ -12,7 +12,7 @@
  * 
  * Uses: calculateQuote() from unifiedQuoteCalculator (SINGLE SOURCE OF TRUTH)
  * 
- * REFACTORED Dec 2025: Now uses WizardV5 with initialUseCase='car-wash'
+ * REFACTORED Dec 2025: Now uses WizardV6 with car-wash industry selection
  * instead of separate CarWashWizard component (4K+ lines of duplicate code removed)
  */
 
@@ -39,7 +39,7 @@ import carWashPitStop3 from '@/assets/images/Car_Wash_PitStop3.jpg';
 import carWashPitStop4 from '@/assets/images/Car_Wash_PitStop4.jpg';
 import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
-// V5 Wizard (Clean Build Dec 21, 2025)
+// V6 Wizard (Updated Dec 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
 import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
@@ -241,10 +241,6 @@ function ImageCarousel() {
 // ============================================
 
 export default function CarWashEnergy() {
-  // Redirect to wizard with car-wash pre-selected
-  useEffect(() => {
-    window.location.href = '/wizard?industry=car-wash';
-  }, []);
 
   // Database-driven UI limits
   const { limits, loading: limitsLoading } = useCarWashLimits();
@@ -1253,7 +1249,7 @@ export default function CarWashEnergy() {
       )}
       
       {/* ═══════════════════════════════════════════════════════════════════════
-          CAR WASH WIZARD MODAL - Uses WizardV5 with car-wash pre-selected
+          CAR WASH WIZARD MODAL - Uses WizardV6 with car-wash industry selection
           ═══════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div className="fixed inset-0 z-50">

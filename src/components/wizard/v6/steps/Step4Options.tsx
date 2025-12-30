@@ -44,7 +44,12 @@ const Step4Options = ({ state, updateState }: Props) => {
   const [solarTier, setSolarTier] = useState<string | null>(state.solarTier || 'recommended');
   const [evTier, setEvTier] = useState<string | null>(state.evTier || null);
   const [generatorTier, setGeneratorTier] = useState<string | null>(null);
-  const [expandedCard, setExpandedCard] = useState<string | null>('solar');
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set(['solar', 'ev', 'generator']));
+  
+  // Custom EV charger counts (for slider)
+  const [customL2Count, setCustomL2Count] = useState<number>(6);
+  const [customDcfcCount, setCustomDcfcCount] = useState<number>(2);
+  const [useCustomEv, setUseCustomEv] = useState<boolean>(false);
 
   const loc = { city: state.city || 'Las Vegas', state: state.state || 'NV', sunHours: state.useCaseData?.sunHours || 6.3 };
   const ind = { type: state.industryName || 'Hotel / Hospitality', rooms: state.useCaseData?.roomCount || 150 };
@@ -64,8 +69,8 @@ const Step4Options = ({ state, updateState }: Props) => {
   }), []);
 
   const genOpts = useMemo(() => ({
-    essential: calcGen('Essential', 150, 'Diesel'),
-    standard: { ...calcGen('Standard', 300, 'Diesel'), tag: 'Recommended' },
+    essential: calcGen('Essential', 150, 'Natural Gas'),
+    standard: { ...calcGen('Standard', 300, 'Natural Gas'), tag: 'Recommended' },
     full: { ...calcGen('Full Backup', Math.round(peak * 1.1 / 50) * 50, 'Natural Gas'), tag: 'Full Coverage' }
   }), [peak]);
 
@@ -76,6 +81,18 @@ const Step4Options = ({ state, updateState }: Props) => {
   const maxSolar = solarOpts.maximum.annualSavingsRaw;
 
   const sync = (opts: string[], sol: string | null, ev: string | null) => updateState({ selectedOptions: opts, solarTier: sol, evTier: ev });
+
+  const toggleCard = (id: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const toggle = (id: string) => {
     let opts = selectedOptions.includes(id) ? selectedOptions.filter(o => o !== id) : [...selectedOptions, id];
@@ -114,7 +131,7 @@ const Step4Options = ({ state, updateState }: Props) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* SOLAR */}
           <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: selectedOptions.includes('solar') ? '0 4px 24px rgba(251,191,36,0.2), 0 0 0 2px #fbbf24' : '0 4px 20px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('solar') ? '#fffbeb' : '#fff' }} onClick={() => setExpandedCard(expandedCard === 'solar' ? null : 'solar')}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('solar') ? '#fffbeb' : '#fff' }} onClick={() => toggleCard('solar')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>☀️</div>
                 <div>
@@ -127,7 +144,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 <button onClick={e => { e.stopPropagation(); toggle('solar'); }} style={{ padding: '12px 22px', background: selectedOptions.includes('solar') ? 'linear-gradient(135deg, #10b981, #059669)' : '#f1f5f9', border: 'none', borderRadius: 10, color: selectedOptions.includes('solar') ? '#fff' : '#64748b', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{selectedOptions.includes('solar') ? '✓ Added' : 'Add'}</button>
               </div>
             </div>
-            {expandedCard === 'solar' && selectedOptions.includes('solar') && (
+            {expandedCards.has('solar') && selectedOptions.includes('solar') && (
               <div style={{ padding: '0 26px 26px', borderTop: '1px solid #e2e8f0', background: '#fefce8' }}>
                 <div style={{ padding: '18px 0 14px', fontSize: 14, color: '#78716c' }}>📊 Choose configuration based on {(usage/1e6).toFixed(2)}M kWh usage:</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
@@ -153,7 +170,7 @@ const Step4Options = ({ state, updateState }: Props) => {
 
           {/* EV */}
           <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: selectedOptions.includes('ev') ? '0 4px 24px rgba(6,182,212,0.2), 0 0 0 2px #06b6d4' : '0 4px 20px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('ev') ? '#ecfeff' : '#fff' }} onClick={() => setExpandedCard(expandedCard === 'ev' ? null : 'ev')}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('ev') ? '#ecfeff' : '#fff' }} onClick={() => toggleCard('ev')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>⚡</div>
                 <div>
@@ -166,7 +183,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 <button onClick={e => { e.stopPropagation(); toggle('ev'); }} style={{ padding: '12px 22px', background: selectedOptions.includes('ev') ? 'linear-gradient(135deg, #10b981, #059669)' : '#f1f5f9', border: 'none', borderRadius: 10, color: selectedOptions.includes('ev') ? '#fff' : '#64748b', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{selectedOptions.includes('ev') ? '✓ Added' : 'Add'}</button>
               </div>
             </div>
-            {expandedCard === 'ev' && selectedOptions.includes('ev') && (
+            {expandedCards.has('ev') && selectedOptions.includes('ev') && (
               <div style={{ padding: '0 26px 26px', borderTop: '1px solid #e2e8f0', background: '#f0fdfa' }}>
                 <div style={{ padding: '18px 0 14px', fontSize: 14, color: '#0d9488' }}>🔌 Choose charging setup for {ind.rooms}-room property:</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
@@ -186,6 +203,96 @@ const Step4Options = ({ state, updateState }: Props) => {
                     </div>
                   ))}
                 </div>
+                
+                {/* ═══════════════════════════════════════════════════════════════════
+                    CUSTOM EV SLIDERS
+                    ═══════════════════════════════════════════════════════════════════ */}
+                <div style={{ marginTop: 18, padding: 20, background: useCustomEv ? 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(14,165,233,0.1))' : '#fff', borderRadius: 16, border: useCustomEv ? '2px solid #06b6d4' : '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#0d9488' }}>🎛️ Custom Configuration</span>
+                      {useCustomEv && <span style={{ padding: '2px 8px', background: '#06b6d4', borderRadius: 4, fontSize: 10, fontWeight: 700, color: '#fff' }}>ACTIVE</span>}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUseCustomEv(!useCustomEv);
+                        if (!useCustomEv) setEvTier(null);
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        background: useCustomEv ? '#06b6d4' : '#f1f5f9',
+                        border: 'none',
+                        borderRadius: 8,
+                        color: useCustomEv ? '#fff' : '#64748b',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {useCustomEv ? '✓ Using Custom' : 'Customize'}
+                    </button>
+                  </div>
+                  
+                  {useCustomEv && (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                        {/* L2 Charger Slider */}
+                        <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 12, padding: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div>
+                              <span style={{ fontWeight: 600, color: '#1e293b' }}>Level 2 Chargers</span>
+                              <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0 0' }}>7.7 kW each • 4-8 hr charge</p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <button onClick={() => setCustomL2Count(Math.max(0, customL2Count - 1))} disabled={customL2Count <= 0} style={{ width: 28, height: 28, borderRadius: 6, background: customL2Count <= 0 ? '#e2e8f0' : '#f1f5f9', border: 'none', cursor: customL2Count <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: customL2Count <= 0 ? '#94a3b8' : '#1e293b' }}>−</button>
+                              <div style={{ width: 40, textAlign: 'center', fontSize: 20, fontWeight: 700, color: '#0891b2' }}>{customL2Count}</div>
+                              <button onClick={() => setCustomL2Count(Math.min(20, customL2Count + 1))} disabled={customL2Count >= 20} style={{ width: 28, height: 28, borderRadius: 6, background: customL2Count >= 20 ? '#e2e8f0' : '#f1f5f9', border: 'none', cursor: customL2Count >= 20 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: customL2Count >= 20 ? '#94a3b8' : '#1e293b' }}>+</button>
+                            </div>
+                          </div>
+                          <input type="range" min={0} max={20} value={customL2Count} onChange={(e) => setCustomL2Count(Number(e.target.value))} style={{ width: '100%', height: 6, accentColor: '#0891b2', cursor: 'pointer' }} />
+                        </div>
+                        
+                        {/* DCFC Slider */}
+                        <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 12, padding: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div>
+                              <span style={{ fontWeight: 600, color: '#1e293b' }}>DC Fast Chargers</span>
+                              <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0 0' }}>62.5 kW each • 30-60 min</p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <button onClick={() => setCustomDcfcCount(Math.max(0, customDcfcCount - 1))} disabled={customDcfcCount <= 0} style={{ width: 28, height: 28, borderRadius: 6, background: customDcfcCount <= 0 ? '#e2e8f0' : '#f1f5f9', border: 'none', cursor: customDcfcCount <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: customDcfcCount <= 0 ? '#94a3b8' : '#1e293b' }}>−</button>
+                              <div style={{ width: 40, textAlign: 'center', fontSize: 20, fontWeight: 700, color: '#f59e0b' }}>{customDcfcCount}</div>
+                              <button onClick={() => setCustomDcfcCount(Math.min(10, customDcfcCount + 1))} disabled={customDcfcCount >= 10} style={{ width: 28, height: 28, borderRadius: 6, background: customDcfcCount >= 10 ? '#e2e8f0' : '#f1f5f9', border: 'none', cursor: customDcfcCount >= 10 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: customDcfcCount >= 10 ? '#94a3b8' : '#1e293b' }}>+</button>
+                            </div>
+                          </div>
+                          <input type="range" min={0} max={10} value={customDcfcCount} onChange={(e) => setCustomDcfcCount(Number(e.target.value))} style={{ width: '100%', height: 6, accentColor: '#f59e0b', cursor: 'pointer' }} />
+                        </div>
+                      </div>
+                      
+                      {/* Custom Summary */}
+                      <div style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(16,185,129,0.2))', borderRadius: 12, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Total Power</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#0891b2' }}>{Math.round(customL2Count * 7.7 + customDcfcCount * 62.5)} kW</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Monthly Revenue</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#10b981' }}>${(customL2Count * 150 + customDcfcCount * 800).toLocaleString()}</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>Install Cost</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>${(customL2Count * 6000 + customDcfcCount * 45000).toLocaleString()}</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>10yr Revenue</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#8b5cf6' }}>${Math.round((customL2Count * 150 + customDcfcCount * 800) * 12 * 10 / 1000)}k</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
                 <div style={{ marginTop: 18, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #99f6e4' }}>
                   <div style={{ fontWeight: 600, color: '#1e293b', marginBottom: 10, fontSize: 13 }}>⚡ Charger Types</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, fontSize: 12 }}>
@@ -200,7 +307,7 @@ const Step4Options = ({ state, updateState }: Props) => {
 
           {/* GENERATOR */}
           <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: selectedOptions.includes('generator') ? '0 4px 24px rgba(239,68,68,0.2), 0 0 0 2px #ef4444' : '0 4px 20px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('generator') ? '#fef2f2' : '#fff' }} onClick={() => setExpandedCard(expandedCard === 'generator' ? null : 'generator')}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 26px', cursor: 'pointer', background: selectedOptions.includes('generator') ? '#fef2f2' : '#fff' }} onClick={() => toggleCard('generator')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #ef4444, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>🔌</div>
                 <div>
@@ -213,7 +320,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                 <button onClick={e => { e.stopPropagation(); toggle('generator'); }} style={{ padding: '12px 22px', background: selectedOptions.includes('generator') ? 'linear-gradient(135deg, #ef4444, #dc2626)' : '#f1f5f9', border: 'none', borderRadius: 10, color: selectedOptions.includes('generator') ? '#fff' : '#64748b', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{selectedOptions.includes('generator') ? '✓ Added' : 'Add'}</button>
               </div>
             </div>
-            {expandedCard === 'generator' && selectedOptions.includes('generator') && (
+            {expandedCards.has('generator') && selectedOptions.includes('generator') && (
               <div style={{ padding: '0 26px 26px', borderTop: '1px solid #fecaca', background: '#fef2f2' }}>
                 <div style={{ padding: '18px 0 14px', fontSize: 14, color: '#b91c1c' }}>⛽ Choose backup power (Peak: ~{peak} kW):</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
