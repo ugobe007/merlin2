@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Home, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, Sparkles, RotateCcw, X } from 'lucide-react';
 
 import type { WizardState, PowerLevel } from './types';
 import { INITIAL_WIZARD_STATE, WIZARD_STEPS, POWER_LEVELS } from './types';
@@ -8,16 +8,90 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import { Step1Location } from './steps/Step1Location';
 import { Step2Industry } from './steps/Step2Industry';
 import { Step3Details } from './steps/Step3Details';
+import { Step3HotelEnergy } from './steps/Step3HotelEnergy';
+import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
-import { Step3HotelEnergy } from "./steps/Step3HotelEnergy";
-import { Step4Options } from "./steps/Step4Options";
 import { Step6Quote } from './steps/Step6Quote';
 import { MerlinGuide } from './components/MerlinGuide';
+
+// ============================================================================
+// START OVER CONFIRMATION MODAL
+// ============================================================================
+
+interface StartOverModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 10000 }}
+    >
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-slate-800 border border-purple-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <RotateCcw className="w-8 h-8 text-amber-400" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <h2 className="text-xl font-bold text-white text-center mb-2">
+          Start Over?
+        </h2>
+        <p className="text-slate-400 text-center mb-6">
+          Your progress will be reset and you'll return to Industry Selection.
+        </p>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
+          >
+            Yes, Start Over
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN WIZARD COMPONENT
+// ============================================================================
 
 export default function WizardV6() {
   const [state, setState] = useState<WizardState>(INITIAL_WIZARD_STATE);
   const [currentStep, setCurrentStep] = useState(1);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showStartOverModal, setShowStartOverModal] = useState(false);
 
   const updateState = useCallback((updates: Partial<WizardState>) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -26,6 +100,13 @@ export default function WizardV6() {
   const goNext = () => setCurrentStep(prev => Math.min(prev + 1, 6));
   const goBack = () => setCurrentStep(prev => Math.max(prev - 1, 1));
   const goToStep = (step: number) => setCurrentStep(step);
+
+  // Start Over: Reset state and go to Step 2
+  const handleStartOver = () => {
+    setState(INITIAL_WIZARD_STATE);
+    setCurrentStep(2); // Go to Industry Selection
+    setShowStartOverModal(false);
+  };
 
   const canProceed = (): boolean => {
     switch (currentStep) {
@@ -61,10 +142,24 @@ export default function WizardV6() {
         style={{ zIndex: 100 }}
       >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Home className="w-5 h-5 text-purple-400" />
-            <span className="text-white font-semibold">Merlin</span>
+          {/* Left: Logo + Start Over */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Home className="w-5 h-5 text-purple-400" />
+              <span className="text-white font-semibold">Merlin</span>
+            </div>
+            
+            {/* Start Over Button */}
+            <button
+              onClick={() => setShowStartOverModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Start Over</span>
+            </button>
           </div>
+          
+          {/* Right: Step indicator */}
           <div className="text-purple-300 text-sm">Step {currentStep} of 6</div>
         </div>
         
@@ -101,17 +196,17 @@ export default function WizardV6() {
           ═══════════════════════════════════════════════════════════════════════ */}
       <main 
         className="max-w-6xl mx-auto px-4 py-8"
-        style={{ paddingBottom: '120px' }} // Extra padding for fixed footer
+        style={{ paddingBottom: '120px' }}
       >
         {renderStep()}
       </main>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER - Fixed at bottom with HIGH z-index (above all content)
+          FOOTER - Fixed at bottom with HIGH z-index
           ═══════════════════════════════════════════════════════════════════════ */}
       <footer 
         className="fixed bottom-0 left-0 right-0 bg-slate-900/98 backdrop-blur-md border-t border-purple-500/30"
-        style={{ zIndex: 9999 }} // Very high z-index to stay above all content
+        style={{ zIndex: 9999 }}
       >
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           {/* Back Button */}
@@ -156,6 +251,13 @@ export default function WizardV6() {
       
       {/* Merlin Guide (floating assistant) */}
       <MerlinGuide step={currentStep} industry={state.industryName} state={state.state} />
+
+      {/* Start Over Confirmation Modal */}
+      <StartOverModal
+        isOpen={showStartOverModal}
+        onClose={() => setShowStartOverModal(false)}
+        onConfirm={handleStartOver}
+      />
 
       {/* Request Quote Modal - only show when on step 6 */}
       {currentStep === 6 && state.calculations && state.selectedPowerLevel && (

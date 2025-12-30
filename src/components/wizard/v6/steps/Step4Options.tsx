@@ -1,6 +1,31 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { WizardState } from '../types';
 
+// Inject pulse animation CSS
+const pulseStyles = `
+@keyframes subtlePulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    transform: scale(1.03);
+    box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+  }
+}
+.pulse-attention {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+`;
+
+// Inject styles into document head (once)
+if (typeof document !== 'undefined' && !document.getElementById('pulse-styles')) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'pulse-styles';
+  styleEl.textContent = pulseStyles;
+  document.head.appendChild(styleEl);
+}
+
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
@@ -88,7 +113,7 @@ const Step4Options = ({ state, updateState }: Props) => {
   }), []);
 
   const genOpts = useMemo(() => ({
-    essential: calcGen('Essential', 150, 'Diesel'),
+    essential: calcGen('Essential', 150, 'Natural Gas'),
     standard: { ...calcGen('Standard', 300, 'Natural Gas'), tag: 'Recommended' },
     full: { ...calcGen('Full Backup', Math.round(peak * 1.1 / 50) * 50, 'Natural Gas'), tag: 'Full Coverage' }
   }), [peak]);
@@ -115,19 +140,12 @@ const Step4Options = ({ state, updateState }: Props) => {
     });
   }, [solarDecision, evDecision, generatorDecision, solarTier, evTier]);
 
-  const tierStyle = (sel: boolean, color: string): React.CSSProperties => {
-    const shadowColor = sel ? `${color}33` : '';
-    return {
-      padding: 18,
-      background: sel ? '#fff' : 'rgba(255,255,255,0.5)',
-      border: sel ? `2px solid ${color}` : '2px solid rgba(0,0,0,0.1)',
-      borderRadius: 14,
-      cursor: 'pointer',
-      position: 'relative',
-      transition: 'all 0.2s',
-      boxShadow: sel ? `0 4px 16px ${shadowColor}` : 'none'
-    };
-  };
+  const tierStyle = (sel: boolean, color: string): React.CSSProperties => ({ 
+    padding: 18, background: sel ? '#fff' : 'rgba(255,255,255,0.5)', 
+    border: sel ? `2px solid ${color}` : '2px solid rgba(0,0,0,0.1)`, 
+    borderRadius: 14, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', 
+    boxShadow: sel ? `0 4px 16px ${color}33` : 'none' 
+  });
 
   const btnStyle = (sel: boolean, isYes: boolean): React.CSSProperties => ({
     padding: '12px 24px', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -187,8 +205,8 @@ const Step4Options = ({ state, updateState }: Props) => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ textAlign: 'right', marginRight: 8 }}><div style={{ fontSize: 11, color: '#64748b' }}>{curSolar ? 'Selected' : 'Up to'}</div><div style={{ fontSize: 22, fontWeight: 700, color: '#10b981' }}>{curSolar ? curSolar.annualSavings : `$${maxSolar.toLocaleString()}`}/yr</div></div>
-                <button onClick={() => { setSolarDecision('yes'); setSolarExpanded(true); }} style={btnStyle(solarDecision === 'yes', true)}>✓ Add</button>
-                <button onClick={() => { setSolarDecision('no'); setSolarExpanded(false); }} style={btnStyle(solarDecision === 'no', false)}>No Thanks</button>
+                <button onClick={() => { setSolarDecision('yes'); setSolarExpanded(true); }} className={solarDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(solarDecision === 'yes', true)}>✓ Add</button>
+                <button onClick={() => { setSolarDecision('no'); setSolarExpanded(false); }} className={solarDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(solarDecision === 'no', false)}>No Thanks</button>
               </div>
             </div>
             {solarDecision === 'undecided' && <div style={{ padding: '12px 26px', background: '#fef3c7', borderTop: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ fontSize: 16 }}>⚠️</span><span style={{ fontSize: 13, color: '#92400e', fontWeight: 500 }}>Please select "Add" or "No Thanks" to continue</span></div>}
@@ -226,10 +244,10 @@ const Step4Options = ({ state, updateState }: Props) => {
                   <p style={{ color: '#64748b', fontSize: 14, margin: '4px 0 0 0' }}>Properties with EV charging report 23% higher occupancy</p>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', items: 'center', gap: 12 }}>
                 <div style={{ textAlign: 'right', marginRight: 8 }}><div style={{ fontSize: 11, color: '#64748b' }}>{curEv ? 'Selected' : '10yr Revenue'}</div><div style={{ fontSize: 22, fontWeight: 700, color: '#0891b2' }}>${curEv ? Math.round(curEv.tenYearRevenue/1000)+'k' : Math.round(evOpts.premium.tenYearRevenue/1000)+'k+'}</div></div>
-                <button onClick={() => { setEvDecision('yes'); setEvExpanded(true); }} style={btnStyle(evDecision === 'yes', true)}>✓ Add</button>
-                <button onClick={() => { setEvDecision('no'); setEvExpanded(false); }} style={btnStyle(evDecision === 'no', false)}>No Thanks</button>
+                <button onClick={() => { setEvDecision('yes'); setEvExpanded(true); }} className={evDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(evDecision === 'yes', true)}>✓ Add</button>
+                <button onClick={() => { setEvDecision('no'); setEvExpanded(false); }} className={evDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(evDecision === 'no', false)}>No Thanks</button>
               </div>
             </div>
             {evDecision === 'undecided' && <div style={{ padding: '12px 26px', background: '#cffafe', borderTop: '1px solid #22d3ee', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ fontSize: 16 }}>⚠️</span><span style={{ fontSize: 13, color: '#0e7490', fontWeight: 500 }}>Please select "Add" or "No Thanks" to continue</span></div>}
@@ -269,8 +287,8 @@ const Step4Options = ({ state, updateState }: Props) => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ textAlign: 'right', marginRight: 8 }}><div style={{ fontSize: 11, color: '#64748b' }}>{curGen ? 'Selected' : 'From'}</div><div style={{ fontSize: 22, fontWeight: 700, color: '#dc2626' }}>{curGen ? curGen.netCost : '$73k'}</div></div>
-                <button onClick={() => { setGeneratorDecision('yes'); setGeneratorExpanded(true); }} style={btnStyle(generatorDecision === 'yes', true)}>✓ Add</button>
-                <button onClick={() => { setGeneratorDecision('no'); setGeneratorExpanded(false); }} style={btnStyle(generatorDecision === 'no', false)}>No Thanks</button>
+                <button onClick={() => { setGeneratorDecision('yes'); setGeneratorExpanded(true); }} className={generatorDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(generatorDecision === 'yes', true)}>✓ Add</button>
+                <button onClick={() => { setGeneratorDecision('no'); setGeneratorExpanded(false); }} className={generatorDecision === 'undecided' ? 'pulse-attention' : ''} style={btnStyle(generatorDecision === 'no', false)}>No Thanks</button>
               </div>
             </div>
             {generatorDecision === 'undecided' && <div style={{ padding: '12px 26px', background: '#fee2e2', borderTop: '1px solid #fca5a5', display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ fontSize: 16 }}>⚠️</span><span style={{ fontSize: 13, color: '#991b1b', fontWeight: 500 }}>Please select "Add" or "No Thanks" to continue</span></div>}
