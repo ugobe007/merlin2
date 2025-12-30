@@ -1,5 +1,6 @@
 /**
  * V6 Step 2: Industry Selection with Images
+ * Updated: December 30, 2025 - Larger fonts for better readability
  */
 import React from 'react';
 import { Check } from 'lucide-react';
@@ -47,11 +48,11 @@ export function Step2Industry({ state, updateState }: Props) {
   return (
     <div className="space-y-8 pb-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">Select Your Industry</h1>
-        <p className="text-purple-300">This helps us customize your energy solution</p>
+        <h1 className="text-4xl font-bold text-white mb-3">Select Your Industry</h1>
+        <p className="text-purple-300 text-lg">This helps us customize your energy solution</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
         {INDUSTRIES.map((industry) => {
           const isSelected = state.industry === industry.slug;
           return (
@@ -87,9 +88,9 @@ export function Step2Industry({ state, updateState }: Props) {
                 </div>
               )}
 
-              {/* Label */}
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className={`font-semibold text-sm text-center ${
+              {/* Label - LARGER FONTS */}
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p className={`font-bold text-base sm:text-lg text-center leading-tight ${
                   isSelected ? 'text-white' : 'text-white/90'
                 }`}>
                   {industry.name}
@@ -102,7 +103,7 @@ export function Step2Industry({ state, updateState }: Props) {
 
       {state.industry && (
         <div className="max-w-md mx-auto p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-center">
-          <p className="text-emerald-400 font-medium">✓ Selected: <strong>{state.industryName}</strong></p>
+          <p className="text-emerald-400 font-medium text-lg">✓ Selected: <strong>{state.industryName}</strong></p>
         </div>
       )}
     </div>
