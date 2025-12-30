@@ -28,7 +28,7 @@ import {
   BESS_POWER_RATIOS,
   getBESSPowerRatio,
   SOLAR_TO_BESS_RATIO,
-} from '@/components/wizard/_deprecated/legacy/v4-active/constants/wizardConstants';
+} from '@/components/wizard/v6/constants';
 
 // ============================================
 // CUSTOM HOOK
