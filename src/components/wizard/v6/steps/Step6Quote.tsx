@@ -448,7 +448,7 @@ export function Step6Quote({ state }: Props) {
                     </div>
                     <div>
                       <div className="text-slate-500 text-xs mb-1">Fuel Type</div>
-                      <div className="text-white font-semibold">Diesel/Natural Gas</div>
+                      <div className="text-white font-semibold">Natural Gas</div>
                     </div>
                     <div>
                       <div className="text-slate-500 text-xs mb-1">Runtime</div>
