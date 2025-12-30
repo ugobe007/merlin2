@@ -6,7 +6,7 @@
  * Updated: December 29, 2025 - FIXED: Made savings highly visible (was hidden)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Battery, 
   Sun, 
@@ -23,7 +23,8 @@ import {
   Phone,
   Sparkles,
   Shield,
-  Info
+  Info,
+  Plus
 } from 'lucide-react';
 import type { WizardState } from '../types';
 import { POWER_LEVELS } from '../types';
@@ -31,6 +32,11 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import { exportQuoteAsPDF } from '@/utils/quoteExportUtils';
 import type { QuoteExportData } from '@/utils/quoteExportUtils';
 import sunIcon from '@/assets/images/sun_icon.png';
+import { 
+  getIncentivesByZip, 
+  calculateIncentives,
+  type StateIncentive 
+} from '@/services/stateIncentivesService';
 
 // ============================================================================
 // COMPONENT
@@ -45,6 +51,13 @@ export function Step6Quote({ state }: Props) {
   const powerLevel = POWER_LEVELS.find(l => l.id === selectedPowerLevel);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showPricingSources, setShowPricingSources] = useState(false);
+  const [stateIncentives, setStateIncentives] = useState<StateIncentive[]>([]);
+  const [incentiveSummary, setIncentiveSummary] = useState<{
+    totalStateIncentive: number;
+    federalITC: number;
+    netInvestment: number;
+  } | null>(null);
+  const [loadingIncentives, setLoadingIncentives] = useState(true);
 
   if (!calculations || !powerLevel) {
     return (
@@ -84,6 +97,35 @@ export function Step6Quote({ state }: Props) {
     selectedPowerLevel: state.selectedPowerLevel,
     fullCalculations: calculations,
   });
+
+  // Load state incentives
+  useEffect(() => {
+    async function loadIncentives() {
+      if (!state.zipCode || !calculations) return;
+      setLoadingIncentives(true);
+      try {
+        const incentives = await getIncentivesByZip(state.zipCode);
+        setStateIncentives(incentives);
+        const summary = await calculateIncentives(
+          state.zipCode,
+          calculations.totalInvestment,
+          calculations.bessKWh,
+          'commercial',
+          calculations.solarKW > 0
+        );
+        setIncentiveSummary({
+          totalStateIncentive: summary.state_total,
+          federalITC: summary.federal_itc,
+          netInvestment: summary.net_investment
+        });
+      } catch (err) {
+        console.error('Error loading state incentives:', err);
+      } finally {
+        setLoadingIncentives(false);
+      }
+    }
+    loadIncentives();
+  }, [state.zipCode, calculations]);
 
   // Handle Request Quote button
   const handleRequestQuote = () => {
@@ -217,6 +259,41 @@ export function Step6Quote({ state }: Props) {
             </span>
           </div>
         </div>
+
+        {/* State Incentives Section */}
+        {!loadingIncentives && incentiveSummary && incentiveSummary.totalStateIncentive > 0 && (
+          <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-emerald-900/30 to-cyan-900/30 border border-emerald-500/30 rounded-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-6 h-6 text-emerald-400" />
+              <h3 className="text-xl font-bold text-white">State & Federal Incentives</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="p-4 bg-slate-800/50 rounded-xl">
+                <div className="text-slate-400 text-xs mb-1">Federal ITC</div>
+                <div className="text-2xl font-bold text-white">${incentiveSummary.federalITC.toLocaleString()}</div>
+                <div className="text-emerald-400 text-xs mt-1">30% tax credit</div>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-xl">
+                <div className="text-slate-400 text-xs mb-1">State Incentives</div>
+                <div className="text-2xl font-bold text-emerald-400">${incentiveSummary.totalStateIncentive.toLocaleString()}</div>
+                <div className="text-slate-500 text-xs mt-1">{stateIncentives.length} program{stateIncentives.length !== 1 ? 's' : ''}</div>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-xl">
+                <div className="text-slate-400 text-xs mb-1">Net Investment</div>
+                <div className="text-2xl font-bold text-cyan-400">${incentiveSummary.netInvestment.toLocaleString()}</div>
+                <div className="text-slate-500 text-xs mt-1">After incentives</div>
+              </div>
+            </div>
+            {stateIncentives.length > 0 && (
+              <div className="mt-4 p-4 bg-slate-800/30 rounded-xl">
+                <div className="text-sm text-slate-300">
+                  <strong className="text-emerald-400">Available Programs:</strong> {stateIncentives.slice(0, 3).map(i => i.program_name).join(', ')}
+                  {stateIncentives.length > 3 && ` +${stateIncentives.length - 3} more`}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TrueQuote™ Badge */}
         {calculations.pricingSources && calculations.pricingSources.length > 0 && (
@@ -463,6 +540,46 @@ export function Step6Quote({ state }: Props) {
                          calculations.generatorKW >= 200 ? 'Critical loads' : 'Emergency only'}
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Placeholder cards for unselected options */}
+              {calculations.solarKW === 0 && (
+                <div className="p-4 bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-600">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Sun className="w-5 h-5 text-slate-500" />
+                    <span className="text-slate-500 font-medium">Solar Array</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Plus className="w-4 h-4" />
+                    <span>Not selected</span>
+                  </div>
+                </div>
+              )}
+
+              {calculations.evChargers === 0 && (
+                <div className="p-4 bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-600">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Zap className="w-5 h-5 text-slate-500" />
+                    <span className="text-slate-500 font-medium">EV Charging</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Plus className="w-4 h-4" />
+                    <span>Not selected</span>
+                  </div>
+                </div>
+              )}
+
+              {calculations.generatorKW === 0 && (
+                <div className="p-4 bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-600">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Fuel className="w-5 h-5 text-slate-500" />
+                    <span className="text-slate-500 font-medium">Backup Generator</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Plus className="w-4 h-4" />
+                    <span>Not selected</span>
                   </div>
                 </div>
               )}
