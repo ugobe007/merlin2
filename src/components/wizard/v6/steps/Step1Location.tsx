@@ -209,8 +209,14 @@ export function Step1Location({ state, updateState }: Props) {
       {/* ZIP Code Input Section */}
       <div className="max-w-2xl mx-auto">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur-xl" />
-          <div className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+          {/* Outer glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/40 via-purple-700/40 to-indigo-700/40 rounded-3xl blur-lg" />
+          
+          {/* Gradient border */}
+          <div className="absolute -inset-[2px] bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl opacity-70" />
+          
+          {/* Panel content - darker purple gradient */}
+          <div className="relative bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-indigo-900/90 rounded-3xl p-6 border border-purple-600/50">
 
             {/* USA / International Toggle */}
             <div className="flex justify-center gap-3 mb-5">
@@ -219,7 +225,7 @@ export function Step1Location({ state, updateState }: Props) {
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
                   isUSA
                     ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg border-2 border-cyan-300"
-                    : "bg-slate-700/50 text-gray-400 hover:bg-slate-600/50 border border-slate-600"
+                    : "bg-white/60 text-slate-600 hover:bg-white/80 border-2 border-purple-200"
                 }`}
               >
                 <span className="text-xl">🇺🇸</span>
@@ -230,7 +236,7 @@ export function Step1Location({ state, updateState }: Props) {
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
                   !isUSA
                     ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg border-2 border-purple-400"
-                    : "bg-slate-700/50 text-gray-400 hover:bg-slate-600/50 border border-slate-600"
+                    : "bg-white/60 text-slate-600 hover:bg-white/80 border-2 border-purple-200"
                 }`}
               >
                 <span className="text-xl">🌍</span>
@@ -238,8 +244,8 @@ export function Step1Location({ state, updateState }: Props) {
               </button>
             </div>
 
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent mb-4" />
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <div className="h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent mb-4" />
+            <label className="block text-sm font-medium text-purple-200 mb-2">
               Business ZIP Code
             </label>
             <div className="relative">
@@ -248,7 +254,7 @@ export function Step1Location({ state, updateState }: Props) {
                 value={zipInput}
                 onChange={(e) => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
                 placeholder="Enter ZIP code"
-                className="w-full px-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white text-lg placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className="w-full px-4 py-4 bg-white/80 border-2 border-purple-300 rounded-xl text-slate-900 text-lg placeholder-purple-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
               />
               {isValidZip && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">

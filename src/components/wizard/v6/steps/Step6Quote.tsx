@@ -3,7 +3,7 @@
  * ====================
  * The final summary with all the numbers
  * 
- * Updated: December 28, 2025 - Added button functionality, TrueQuote attribution, dynamic ITC label
+ * Updated: December 29, 2025 - FIXED: Made savings highly visible (was hidden)
  */
 
 import React, { useState } from 'react';
@@ -64,6 +64,27 @@ export function Step6Quote({ state }: Props) {
   // Generate quote ID if not already set (fallback for backwards compatibility)
   const quoteId = calculations.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
 
+  // Calculate key savings numbers
+  const tenYearSavings = calculations.annualSavings * 10;
+  const netTenYearValue = tenYearSavings - calculations.netInvestment;
+
+  // Debug logging
+  console.log('🔍 Step 6 Solar Debug - DISPLAY VALUES:', {
+    fromState_solarTier: state.solarTier,
+    fromState_selectedOptions: state.selectedOptions,
+    fromCalculations_solarKW: calculations.solarKW,
+    fromSelectedSolarTier_sizeKw: (calculations as any).selectedSolarTier?.sizeKw,
+    fromSelectedSolarTier_name: (calculations as any).selectedSolarTier?.name,
+    MISMATCH_CHECK: {
+      calculations_solarKW: calculations.solarKW,
+      selectedSolarTier_sizeKw: (calculations as any).selectedSolarTier?.sizeKw,
+      areTheyEqual: calculations.solarKW === (calculations as any).selectedSolarTier?.sizeKw,
+      difference: calculations.solarKW - ((calculations as any).selectedSolarTier?.sizeKw || 0),
+    },
+    selectedPowerLevel: state.selectedPowerLevel,
+    fullCalculations: calculations,
+  });
+
   // Handle Request Quote button
   const handleRequestQuote = () => {
     setShowRequestModal(true);
@@ -73,15 +94,12 @@ export function Step6Quote({ state }: Props) {
   const handleDownloadPDF = async () => {
     try {
       const quoteData: QuoteExportData = {
-        // Project Information
         projectName: `${state.industryName} - ${powerLevel.name} System`,
         location: `${state.city || ''} ${state.state || ''}`.trim() || state.zipCode || 'Location TBD',
         applicationType: 'Commercial',
         useCase: state.industryName,
         quoteNumber: quoteId,
         quoteDate: new Date().toLocaleDateString(),
-
-        // System Specifications
         storageSizeMW: calculations.bessKW / 1000,
         storageSizeMWh: calculations.bessKWh / 1000,
         durationHours: powerLevel.durationHours,
@@ -89,8 +107,6 @@ export function Step6Quote({ state }: Props) {
         roundTripEfficiency: 85,
         installationType: 'Ground Mount',
         gridConnection: 'Grid-Tied',
-
-        // Electrical Specifications
         systemVoltage: 480,
         dcVoltage: 800,
         inverterType: 'PCS',
@@ -103,26 +119,17 @@ export function Step6Quote({ state }: Props) {
         transformerRequired: true,
         transformerRating: calculations.bessKW,
         transformerVoltage: '480V/13.8kV',
-
-        // Performance & Operations
         cyclesPerYear: 365,
         warrantyYears: 15,
         utilityRate: calculations.utilityRate || 0.12,
         demandCharge: calculations.demandCharge || 15,
-
-        // Renewables
         solarPVIncluded: calculations.solarKW > 0,
         solarCapacityKW: calculations.solarKW,
         solarPanelType: 'Monocrystalline',
         solarPanelEfficiency: 21,
-
-        // Financial
         systemCost: calculations.totalInvestment,
-
-        // Options
         showAiNote: false,
       };
-
       await exportQuoteAsPDF(quoteData);
     } catch (error) {
       console.error('PDF export failed:', error);
@@ -132,7 +139,6 @@ export function Step6Quote({ state }: Props) {
 
   // Handle Talk to Expert button
   const handleTalkToExpert = () => {
-    // Open email client with pre-filled subject
     const subject = encodeURIComponent(`Quote Inquiry - ${state.industryName} - ${quoteId}`);
     const body = encodeURIComponent(`I'm interested in learning more about this energy storage quote:\n\nQuote ID: ${quoteId}\nIndustry: ${state.industryName}\nLocation: ${state.city || state.state || state.zipCode}\nSystem Size: ${(calculations.bessKW / 1000).toFixed(2)} MW / ${(calculations.bessKWh / 1000).toFixed(2)} MWh`);
     window.open(`mailto:sales@merlinenergy.com?subject=${subject}&body=${body}`, '_blank');
@@ -153,6 +159,63 @@ export function Step6Quote({ state }: Props) {
           <p className="text-purple-300">
             {powerLevel.name} system for your {state.industryName}
           </p>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            HERO SAVINGS BANNER - THE MOST IMPORTANT NUMBER!
+            Dark background with CYAN electric number
+            ═══════════════════════════════════════════════════════════════════════ */}
+        <div 
+          className="max-w-3xl mx-auto rounded-2xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)',
+            boxShadow: '0 20px 60px rgba(34, 211, 238, 0.15), 0 0 100px rgba(139, 92, 246, 0.1)',
+            border: '1px solid rgba(34, 211, 238, 0.2)',
+          }}
+        >
+          <div className="p-8 text-center">
+            <div className="text-slate-400 text-lg font-medium mb-3">
+              💰 Your 10-Year Savings with Merlin
+            </div>
+            <div 
+              style={{ 
+                fontSize: '4.5rem', 
+                lineHeight: 1,
+                fontWeight: 900,
+                color: '#22d3ee',
+                textShadow: '0 0 40px rgba(34, 211, 238, 0.5), 0 0 80px rgba(34, 211, 238, 0.3)',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              ${tenYearSavings.toLocaleString()}
+            </div>
+            <div className="mt-6 flex items-center justify-center gap-8 text-slate-300">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">${Math.round(calculations.annualSavings / 1000)}K</div>
+                <div className="text-sm text-slate-500">per year</div>
+              </div>
+              <div className="w-px h-10 bg-slate-600" />
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">{calculations.paybackYears.toFixed(1)} yrs</div>
+                <div className="text-sm text-slate-500">payback</div>
+              </div>
+              <div className="w-px h-10 bg-slate-600" />
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">{calculations.tenYearROI}%</div>
+                <div className="text-sm text-slate-500">10yr ROI</div>
+              </div>
+            </div>
+          </div>
+          {/* Net Value Footer */}
+          <div className="px-8 py-4 bg-black/30 border-t border-cyan-500/20 flex items-center justify-between">
+            <span className="text-slate-400">After investment, your net profit:</span>
+            <span 
+              className="text-2xl font-bold"
+              style={{ color: '#10b981' }}
+            >
+              +${netTenYearValue.toLocaleString()}
+            </span>
+          </div>
         </div>
 
         {/* TrueQuote™ Badge */}
@@ -409,169 +472,59 @@ export function Step6Quote({ state }: Props) {
           {/* Cost Breakdown */}
           <div className="p-6 border-b border-slate-700">
             <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-              Cost Breakdown
+              Investment Summary
             </h3>
             
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">Battery Storage (BESS)</span>
-                <span className="text-white font-medium">
-                  ${Math.round((calculations.totalInvestment * 0.6)).toLocaleString()}
-                </span>
-              </div>
-              
-              {calculations.solarKW > 0 && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400">Solar Array ({calculations.solarKW} kW)</span>
-                  <span className="text-white font-medium">
-                    ${Math.round((calculations.totalInvestment * 0.25)).toLocaleString()}
-                  </span>
-                </div>
-              )}
-              
-              {calculations.evChargers > 0 && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400">EV Charging ({calculations.evChargers} stations)</span>
-                  <span className="text-white font-medium">
-                    ${Math.round((calculations.totalInvestment * 0.10)).toLocaleString()}
-                  </span>
-                </div>
-              )}
-              
-              {calculations.generatorKW > 0 && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400">Backup Generator ({calculations.generatorKW} kW)</span>
-                  <span className="text-white font-medium">
-                    ${Math.round((calculations.totalInvestment * 0.05)).toLocaleString()}
-                  </span>
-                </div>
-              )}
-              
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">Installation & Engineering</span>
-                <span className="text-white font-medium">
-                  ${Math.round((calculations.totalInvestment * 0.10)).toLocaleString()}
-                </span>
-              </div>
-              
-              <div className="h-px bg-slate-700 my-3" />
-              
-              <div className="flex justify-between items-center py-2">
-                <span className="text-slate-300 font-semibold">Total Investment</span>
-                <span className="text-white font-bold text-lg">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 px-4 bg-slate-800/30 rounded-lg">
+                <span className="text-slate-300">Total System Investment</span>
+                <span className="text-white font-semibold text-lg">
                   ${calculations.totalInvestment.toLocaleString()}
                 </span>
               </div>
               
               {calculations.federalITC > 0 && (
-                <>
-                  <div className="flex justify-between items-center py-2 text-emerald-400">
-                    <span className="font-semibold">Federal ITC ({itcPercentage}%)</span>
-                    <span className="font-bold text-lg">-${calculations.federalITC.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="h-px bg-slate-700 my-3" />
-                  
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white font-bold">Net Investment</span>
-                    <span className="text-2xl font-bold text-white">
-                      ${calculations.netInvestment.toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Savings Breakdown */}
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-              Annual Savings Breakdown
-            </h3>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">Demand Charge Reduction</span>
-                <span className="text-white font-medium">
-                  ${Math.round(calculations.annualSavings * 0.60).toLocaleString()}
-                </span>
-              </div>
-              
-              {calculations.hasTOU && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400">TOU Arbitrage</span>
-                  <span className="text-white font-medium">
-                    ${Math.round(calculations.annualSavings * 0.25).toLocaleString()}
+                <div className="flex justify-between items-center py-2 px-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                  <span className="text-emerald-400 font-medium">Federal ITC Credit ({itcPercentage}%)</span>
+                  <span className="text-emerald-400 font-bold text-lg">
+                    -${calculations.federalITC.toLocaleString()}
                   </span>
                 </div>
               )}
               
-              {calculations.solarKW > 0 && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400">Solar Energy Production</span>
-                  <span className="text-white font-medium">
-                    ${Math.round(calculations.annualSavings * 0.15).toLocaleString()}
-                  </span>
-                </div>
-              )}
-              
-              <div className="h-px bg-slate-700 my-3" />
-              
-              <div className="flex justify-between items-center py-2">
-                <span className="text-slate-300 font-semibold">Total Annual Savings</span>
-                <span className="text-white font-bold text-lg">
-                  ${calculations.annualSavings.toLocaleString()}
+              <div className="flex justify-between items-center py-3 px-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                <span className="text-white font-bold">Your Net Investment</span>
+                <span className="text-2xl font-black text-white">
+                  ${calculations.netInvestment.toLocaleString()}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Returns */}
-          <div className="p-6">
-            <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">
-              Projected Returns
-            </h3>
-            
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-emerald-400">
-                  ${Math.round(calculations.annualSavings / 1000)}K
-                </div>
-                <div className="text-xs text-slate-400 mt-1">Annual Savings</div>
+          {/* Quick Stats Row */}
+          <div className="p-6 grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+              <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-emerald-400">
+                ${Math.round(calculations.annualSavings / 1000)}K
               </div>
-              
-              <div className="text-center p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                <Calendar className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-cyan-400">
-                  {calculations.paybackYears.toFixed(1)}
-                </div>
-                <div className="text-xs text-slate-400 mt-1">Year Payback</div>
-              </div>
-              
-              <div className="text-center p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-purple-400">
-                  {calculations.tenYearROI}%
-                </div>
-                <div className="text-xs text-slate-400 mt-1">10-Year ROI</div>
-              </div>
+              <div className="text-xs text-slate-400 mt-1">Annual Savings</div>
             </div>
             
-            {/* 10-Year Projection */}
-            <div className="p-4 bg-slate-800/50 rounded-xl">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-sm">10-Year Total Savings</span>
-                <span className="text-white font-bold text-lg">
-                  ${(calculations.annualSavings * 10).toLocaleString()}
-                </span>
+            <div className="text-center p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <Calendar className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-cyan-400">
+                {calculations.paybackYears.toFixed(1)}
               </div>
-              <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-700">
-                <span className="text-slate-400 text-sm">Net 10-Year Value</span>
-                <span className="text-emerald-400 font-bold text-lg">
-                  ${((calculations.annualSavings * 10) - calculations.netInvestment).toLocaleString()}
-                </span>
+              <div className="text-xs text-slate-400 mt-1">Year Payback</div>
+            </div>
+            
+            <div className="text-center p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+              <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-purple-400">
+                {calculations.tenYearROI}%
               </div>
+              <div className="text-xs text-slate-400 mt-1">10-Year ROI</div>
             </div>
           </div>
         </div>
