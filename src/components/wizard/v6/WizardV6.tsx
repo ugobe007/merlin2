@@ -8,7 +8,6 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import { Step1Location } from './steps/Step1Location';
 import { Step2Industry } from './steps/Step2Industry';
 import { Step3Details } from './steps/Step3Details';
-import { Step4Opportunities } from './steps/Step4Opportunities';
 import { Step5MagicFit } from './steps/Step5MagicFit';
 import { Step3HotelEnergy } from "./steps/Step3HotelEnergy";
 import { Step4Options } from "./steps/Step4Options";

@@ -19,7 +19,7 @@ import {
   getRegionalTOUSchedule,
   calculateArbitrageSavings,
   INDUSTRY_BESS_RATIOS,
-} from '@/components/wizard/_deprecated/legacy/v4-active/constants/wizardConstants';
+} from '@/components/wizard/v6/constants';
 
 // ============================================
 // TYPES
