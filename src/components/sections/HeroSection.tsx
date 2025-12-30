@@ -567,7 +567,7 @@ export default function HeroSection({
                   maxWidth: '480px'
                 }}
               >
-                Get your custom energy savings quote in 5 minutes. See exactly how much you'll save with battery storage.{' '}
+                Get your custom energy savings quote in 5 easy steps. See exactly how much you'll save with battery storage.{' '}
                 <button
                   onClick={() => setShowTrueQuoteModal(true)}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105"
@@ -693,7 +693,7 @@ export default function HeroSection({
                 }}
               >
                 <span style={{ fontSize: '18px' }}>🧙</span>
-                <span>See how Merlin works his magic →</span>
+                <span>About Merlin AI →</span>
               </button>
             </div>
 
@@ -883,7 +883,7 @@ export default function HeroSection({
             
             <p className="text-lg md:text-xl text-purple-200/80 max-w-3xl mx-auto leading-relaxed mb-8">
               Stop guessing. Stop calling multiple vendors. Our AI analyzes <span className="text-amber-300 font-semibold">30+ industry configurations</span>, 
-              real utility rates, and <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build your optimal energy system in minutes.
+              real utility rates, and <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build your optimal energy system in 5 easy steps.
             </p>
             
             {/* Data Sources Badge */}
@@ -1326,8 +1326,8 @@ export default function HeroSection({
                 <div className="flex justify-center mb-2">
                   <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">⚡</span>
                 </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">5 min</div>
-                <div className="text-purple-300/70 text-sm">Average Quote Time</div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">5 Steps</div>
+                <div className="text-purple-300/70 text-sm">Easy Quote Process</div>
               </div>
               <div className="group">
                 <div className="flex justify-center mb-2">
@@ -1356,7 +1356,7 @@ export default function HeroSection({
               <span className="text-white relative z-10">Start SmartWizard</span>
               <span className="text-amber-300 relative z-10 group-hover:translate-x-1 transition-transform">→</span>
             </button>
-            <p className="text-purple-300/50 mt-4 text-sm">No signup required • Get your quote in 5 minutes</p>
+            <p className="text-purple-300/50 mt-4 text-sm">No signup required • Get your quote in 5 easy steps</p>
           </div>
         </div>
       </section>
@@ -1815,7 +1815,7 @@ export default function HeroSection({
                 <span>Get Your Personalized Quote</span>
                 <span className="group-hover:translate-x-2 transition-transform">→</span>
               </button>
-              <p className="text-center text-purple-300/40 text-sm mt-3">No signup required • Results in 5 minutes</p>
+              <p className="text-center text-purple-300/40 text-sm mt-3">No signup required • 5 easy steps</p>
             </div>
           </div>
         </div>

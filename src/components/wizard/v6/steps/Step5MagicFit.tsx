@@ -10,11 +10,13 @@
  * - Utility Rates: utilityRateService.ts → EIA 2024 + Utility-specific rates
  * - Demand Charges: utilityRateService.ts → State/Utility specific
  * 
- * Created: December 28, 2025
- * Updated: December 28, 2025 - V6 SSOT Integration
+ * FIXED: December 29, 2025
+ * - Now reads from useCaseData (where Step 3 stores hotel data)
+ * - Calculates BESS from annual energy estimate when available
+ * - Proper data flow from Step 3 → Step 4 → Step 5
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Zap, Battery, Sun, Clock, TrendingUp, Star, Check, Loader2, Info, Shield } from 'lucide-react';
 import type { WizardState, PowerLevel, SystemCalculations } from '../types';
 import { POWER_LEVELS } from '../types';
@@ -55,9 +57,9 @@ interface PricingData {
 
 interface CalculationWithPricing extends SystemCalculations {
   pricingData: PricingData;
-  evPowerKW?: number; // EV power from tier selection
-  selectedSolarTier?: { sizeKw: number; name: string }; // Solar tier data
-  selectedEvTier?: { l2Count: number; dcfcCount: number; powerRaw: number; name: string }; // EV tier data
+  evPowerKW?: number;
+  selectedSolarTier?: { sizeKw: number; name: string };
+  selectedEvTier?: { l2Count: number; dcfcCount: number; powerRaw: number; name: string };
 }
 
 // ============================================================================
@@ -65,10 +67,65 @@ interface CalculationWithPricing extends SystemCalculations {
 // ============================================================================
 
 const FEDERAL_ITC_RATE = 0.30; // 30% ITC for solar AND standalone BESS (as of IRA 2022)
-const EV_CHARGER_COST_PER_UNIT = 40000; // Level 3 DCFC - TODO: Move to pricing service
 
 // ============================================================================
-// STEP 4 CALCULATIONS - Match Step4Options logic
+// INDUSTRY POWER PROFILES - SSOT Reference
+// Source: ASHRAE, DOE, CBECS, Industry Standards
+// ============================================================================
+
+const INDUSTRY_POWER_PROFILES = {
+  hotel: {
+    kwhPerUnit: 12000,      // kWh/room/year (CBECS Hotel benchmark)
+    unitField: 'roomCount',
+    peakFactor: 1.5,        // Peak demand vs average
+    bessRatio: 0.4,         // BESS sized for 40% of peak demand
+    minBessKW: 100,
+    maxBessKW: 5000,
+  },
+  car_wash: {
+    kwhPerUnit: 50000,      // kWh/tunnel/year
+    unitField: 'tunnelCount',
+    peakFactor: 2.0,        // High peak due to motor startups
+    bessRatio: 0.5,
+    minBessKW: 100,
+    maxBessKW: 2000,
+  },
+  ev_charging: {
+    kwhPerUnit: 100000,     // kWh/charger/year (high utilization)
+    unitField: 'chargerCount',
+    peakFactor: 3.0,        // Very peaky load
+    bessRatio: 0.6,
+    minBessKW: 200,
+    maxBessKW: 10000,
+  },
+  data_center: {
+    kwhPerUnit: 60000,      // kWh/rack/year
+    unitField: 'rackCount',
+    peakFactor: 1.2,        // Fairly flat load
+    bessRatio: 0.3,
+    minBessKW: 500,
+    maxBessKW: 50000,
+  },
+  hospital: {
+    kwhPerUnit: 30000,      // kWh/bed/year
+    unitField: 'bedCount',
+    peakFactor: 1.4,
+    bessRatio: 0.5,         // Critical load support
+    minBessKW: 200,
+    maxBessKW: 10000,
+  },
+  // Default for other industries - use sqft
+  default: {
+    kwhPerSqft: 15,         // kWh/sqft/year (commercial average)
+    peakFactor: 1.5,
+    bessRatio: 0.4,
+    minBessKW: 50,
+    maxBessKW: 5000,
+  }
+};
+
+// ============================================================================
+// STEP 4 CALCULATIONS - Match Step4Options logic exactly
 // ============================================================================
 
 interface SolarTierResult {
@@ -114,9 +171,7 @@ function calcSolar(name: string, pct: number, usage: number, sun: number): Solar
   const net = cost * 0.70;
   const savings = prod * 0.12;
   return { 
-    name, 
-    size: `${kw} kW`, 
-    sizeKw: kw, 
+    name, size: `${kw} kW`, sizeKw: kw, 
     coverage: `${Math.round(pct*100)}%`, 
     panels: Math.ceil(kw*1000/500), 
     annualProduction: Math.round(prod).toLocaleString(), 
@@ -140,116 +195,108 @@ function calcEv(name: string, l2: number, dc: number): EvTierResult {
   return { 
     name, 
     chargers: dc > 0 ? `${l2} L2 + ${dc} DC Fast` : `${l2} Level 2`, 
-    l2Count: l2, 
-    dcfcCount: dc, 
-    power: `${powerRaw} kW`, 
-    powerRaw,
+    l2Count: l2, dcfcCount: dc, 
+    power: `${powerRaw} kW`, powerRaw,
     carsPerDay: `${Math.round((l2*2+dc*8)*0.8)}-${l2*2+dc*8}`, 
-    monthlyRevenue: `$${rev.toLocaleString()}`, 
-    monthlyRevenueRaw: rev, 
-    installCost: `$${cost.toLocaleString()}`, 
-    installCostRaw: cost, 
+    monthlyRevenue: `$${rev.toLocaleString()}`, monthlyRevenueRaw: rev, 
+    installCost: `$${cost.toLocaleString()}`, installCostRaw: cost, 
     tenYearRevenue: rev*12*10, 
     guestAppeal: stars 
   };
 }
 
 // ============================================================================
-// INDUSTRY POWER CALCULATIONS
-// These formulas derive base power requirements from facility details
+// FIXED: Calculate Base Power from ACTUAL DATA
+// Now reads from useCaseData (where Step 3 stores data)
 // ============================================================================
 
 function calculateBasePowerKW(state: WizardState): number {
-  const { facilityDetails, industry } = state;
+  const { industry, useCaseData, facilityDetails } = state;
   
-  let basePowerKW = 0;
-  
-  switch (industry) {
-    case 'hotel':
-      // Hotels: 3-5 kW per room (HVAC, lighting, amenities)
-      // Source: ASHRAE 90.1, Hotel Energy Benchmarking
-      basePowerKW = (facilityDetails.roomCount || 0) * 4;
-      break;
-      
-    case 'car_wash':
-      // Car Wash: 100-200 kW per tunnel (pumps, blowers, conveyors)
-      // Source: ICA Industry Standards
-      basePowerKW = (facilityDetails.tunnelCount || 0) * 150;
-      break;
-      
-    case 'ev_charging':
-      // EV Charging: 50-350 kW per charger depending on type
-      // Using 100 kW average (mix of L2 and DCFC)
-      basePowerKW = (facilityDetails.chargerCount || 0) * 100;
-      break;
-      
-    case 'data_center':
-      // Data Center: 5-15 kW per rack (servers, cooling)
-      // Source: Uptime Institute, ASHRAE TC 9.9
-      basePowerKW = (facilityDetails.rackCount || 0) * 8;
-      break;
-      
-    case 'hospital':
-      // Hospital: 4-6 kW per bed (critical systems, HVAC, equipment)
-      // Source: ASHE Energy Benchmarking
-      basePowerKW = (facilityDetails.bedCount || 0) * 5;
-      break;
-      
-    case 'manufacturing':
-      // Manufacturing: 15-25 W/sqft depending on process
-      // Source: DOE Industrial Assessment Centers
-      basePowerKW = facilityDetails.squareFootage * 0.020;
-      break;
-      
-    case 'warehouse':
-      // Warehouse/Logistics: 5-10 W/sqft (lighting, forklifts, HVAC)
-      // Source: EPA ENERGY STAR Portfolio Manager
-      basePowerKW = facilityDetails.squareFootage * 0.008;
-      break;
-      
-    case 'retail':
-      // Retail: 10-15 W/sqft (lighting, HVAC, refrigeration)
-      // Source: CBECS Commercial Building Survey
-      basePowerKW = facilityDetails.squareFootage * 0.012;
-      break;
-      
-    case 'office':
-      // Office: 8-12 W/sqft (lighting, HVAC, equipment)
-      // Source: CBECS, BOMA Experience Exchange
-      basePowerKW = facilityDetails.squareFootage * 0.010;
-      break;
-      
-    case 'college':
-      // College/University: 12-18 W/sqft (labs, dorms, HVAC)
-      // Source: APPA Facilities Performance Indicators
-      basePowerKW = facilityDetails.squareFootage * 0.015;
-      break;
-      
-    case 'restaurant':
-      // Restaurant: 30-50 W/sqft (kitchen equipment, HVAC, refrigeration)
-      // Source: FSTC Food Service Technology Center
-      basePowerKW = facilityDetails.squareFootage * 0.040;
-      break;
-      
-    case 'agriculture':
-      // Agriculture/Indoor Farm: 25-40 W/sqft (grow lights, HVAC, irrigation)
-      // Source: USDA, CEA Industry Data
-      basePowerKW = facilityDetails.squareFootage * 0.030;
-      break;
-      
-    default:
-      // Default commercial: 10 W/sqft
-      basePowerKW = facilityDetails.squareFootage * 0.010;
+  // PRIORITY 1: Use annual energy estimate from Step 3 (most accurate)
+  const annualKwh = useCaseData?.estimatedAnnualKwh;
+  if (annualKwh && annualKwh > 0) {
+    // Calculate peak demand from annual energy
+    // Peak = (Annual kWh / 8760 hours) * peak factor
+    const profile = INDUSTRY_POWER_PROFILES[industry as keyof typeof INDUSTRY_POWER_PROFILES] 
+                    || INDUSTRY_POWER_PROFILES.default;
+    const avgLoadKW = annualKwh / 8760;
+    const peakDemandKW = avgLoadKW * profile.peakFactor;
+    
+    // BESS sized for a portion of peak demand
+    let bessKW = Math.round(peakDemandKW * profile.bessRatio);
+    
+    // Apply min/max constraints
+    bessKW = Math.max(profile.minBessKW, Math.min(profile.maxBessKW, bessKW));
+    
+    console.log('🔋 BESS Sizing from Annual Energy:', {
+      industry,
+      annualKwh,
+      avgLoadKW: Math.round(avgLoadKW),
+      peakFactor: profile.peakFactor,
+      peakDemandKW: Math.round(peakDemandKW),
+      bessRatio: profile.bessRatio,
+      bessKW,
+    });
+    
+    return bessKW;
   }
   
-  // Use grid connection if specified and larger than calculated
-  // Size BESS for 80% of grid capacity (leave headroom)
-  if (facilityDetails.gridConnectionKW > basePowerKW) {
-    basePowerKW = facilityDetails.gridConnectionKW * 0.8;
+  // PRIORITY 2: Use industry-specific unit count from useCaseData
+  const profile = INDUSTRY_POWER_PROFILES[industry as keyof typeof INDUSTRY_POWER_PROFILES];
+  if (profile && 'unitField' in profile) {
+    const unitCount = useCaseData?.[profile.unitField] || facilityDetails?.[profile.unitField as keyof typeof facilityDetails] || 0;
+    if (unitCount > 0) {
+      const annualKwhEstimate = unitCount * profile.kwhPerUnit;
+      const avgLoadKW = annualKwhEstimate / 8760;
+      const peakDemandKW = avgLoadKW * profile.peakFactor;
+      let bessKW = Math.round(peakDemandKW * profile.bessRatio);
+      bessKW = Math.max(profile.minBessKW, Math.min(profile.maxBessKW, bessKW));
+      
+      console.log('🔋 BESS Sizing from Unit Count:', {
+        industry,
+        unitField: profile.unitField,
+        unitCount,
+        annualKwhEstimate,
+        bessKW,
+      });
+      
+      return bessKW;
+    }
   }
   
-  // Minimum viable system: 50 kW
-  return Math.max(50, Math.round(basePowerKW));
+  // PRIORITY 3: Use square footage
+  const sqft = useCaseData?.squareFootage || facilityDetails?.squareFootage || 0;
+  if (sqft > 0) {
+    const defaultProfile = INDUSTRY_POWER_PROFILES.default;
+    const annualKwhEstimate = sqft * defaultProfile.kwhPerSqft;
+    const avgLoadKW = annualKwhEstimate / 8760;
+    const peakDemandKW = avgLoadKW * defaultProfile.peakFactor;
+    let bessKW = Math.round(peakDemandKW * defaultProfile.bessRatio);
+    bessKW = Math.max(defaultProfile.minBessKW, Math.min(defaultProfile.maxBessKW, bessKW));
+    
+    console.log('🔋 BESS Sizing from Square Footage:', {
+      sqft,
+      annualKwhEstimate,
+      bessKW,
+    });
+    
+    return bessKW;
+  }
+  
+  // FALLBACK: Use grid connection if available
+  if (facilityDetails?.gridConnectionKW > 0) {
+    const bessKW = Math.round(facilityDetails.gridConnectionKW * 0.4);
+    console.log('🔋 BESS Sizing from Grid Connection:', {
+      gridConnectionKW: facilityDetails.gridConnectionKW,
+      bessKW,
+    });
+    return Math.max(50, bessKW);
+  }
+  
+  // LAST RESORT: Minimum viable system
+  console.warn('⚠️ BESS Sizing: No data available, using minimum (100 kW)');
+  return 100;
 }
 
 // ============================================================================
@@ -261,9 +308,9 @@ async function calculateSystemAsync(
   multiplier: number, 
   durationHours: number
 ): Promise<CalculationWithPricing> {
-  const { facilityDetails, opportunities, zipCode, solarTier, evTier, selectedOptions, useCaseData } = state;
+  const { opportunities, zipCode, solarTier, evTier, selectedOptions, useCaseData } = state;
   
-  // Calculate base power requirement
+  // Calculate base power requirement using FIXED function
   const basePowerKW = calculateBasePowerKW(state);
   
   // Apply multiplier for power level
@@ -271,17 +318,27 @@ async function calculateSystemAsync(
   const bessKWh = bessKW * durationHours;
   const bessMW = bessKW / 1000;
   
-  // Solar sizing - Use tier selection from Step 4 if available
+  console.log('📊 Step 5 BESS Final Calculation:', {
+    industry: state.industry,
+    basePowerKW,
+    multiplier,
+    bessKW,
+    durationHours,
+    bessKWh,
+    bessMW: bessMW.toFixed(3),
+  });
+  
+  // ========================================
+  // SOLAR SIZING - Use tier from Step 4
+  // ========================================
   let solarKW = 0;
   let solarCost = 0;
   let selectedSolarTier: SolarTierResult | null = null;
   
   if (selectedOptions?.includes('solar') && solarTier) {
-    // Get usage and sun hours from state (same as Step 4 uses)
     const usage = useCaseData?.estimatedAnnualKwh || 1850000;
     const sunHours = useCaseData?.sunHours || state.solarData?.sunHours || 6.3;
     
-    // Calculate solar options (same logic as Step 4)
     const solarOpts = {
       starter: calcSolar('Starter', 0.15, usage, sunHours),
       recommended: calcSolar('Recommended', 0.30, usage, sunHours),
@@ -292,24 +349,33 @@ async function calculateSystemAsync(
     if (selectedSolarTier) {
       solarKW = selectedSolarTier.sizeKw;
       solarCost = selectedSolarTier.installCostRaw;
+      
+      console.log('☀️ Solar from Step 4 Tier:', {
+        tier: solarTier,
+        solarKW,
+        solarCost,
+      });
     }
   }
   const solarMW = solarKW / 1000;
   
-  // Generator sizing (if selected) - covers 50% of critical load
+  // ========================================
+  // GENERATOR SIZING
+  // ========================================
   let generatorKW = 0;
-  if (opportunities.wantsGenerator) {
+  if (opportunities.wantsGenerator || selectedOptions?.includes('generator')) {
     generatorKW = Math.round(bessKW * 0.5);
   }
   
-  // EV chargers - Use tier selection from Step 4 if available
+  // ========================================
+  // EV CHARGER SIZING - Use tier from Step 4
+  // ========================================
   let evChargers = 0;
   let evCost = 0;
   let evPowerKW = 0;
   let selectedEvTier: EvTierResult | null = null;
   
   if (selectedOptions?.includes('ev') && evTier) {
-    // Calculate EV options (same logic as Step 4)
     const evOpts = {
       basic: calcEv('Basic', 4, 0),
       standard: calcEv('Standard', 6, 2),
@@ -321,6 +387,13 @@ async function calculateSystemAsync(
       evChargers = selectedEvTier.l2Count + selectedEvTier.dcfcCount;
       evCost = selectedEvTier.installCostRaw;
       evPowerKW = selectedEvTier.powerRaw;
+      
+      console.log('⚡ EV from Step 4 Tier:', {
+        tier: evTier,
+        evChargers,
+        evPowerKW,
+        evCost,
+      });
     }
   }
   
@@ -330,7 +403,6 @@ async function calculateSystemAsync(
   
   const pricingSources: string[] = [];
   
-  // Fetch all pricing in parallel for performance
   const [batteryPricing, solarPricing, generatorPricing, utilityData, savingsOpp] = await Promise.all([
     getBatteryPricing(bessMW, durationHours, state.state || 'United States'),
     solarKW > 0 ? getSolarPricing(solarMW) : Promise.resolve(null),
@@ -355,103 +427,67 @@ async function calculateSystemAsync(
   // CALCULATE COSTS USING SSOT PRICING
   // ========================================
   
-  // BESS Cost: $/kWh from unified pricing service
+  // BESS Cost
   const bessCost = bessKWh * batteryPricing.pricePerKWh;
   
-  // Solar Cost: Use cost from Step 4 tier selection if available, otherwise use SSOT pricing
-  if (selectedSolarTier) {
-    // solarCost already set above from selectedSolarTier.installCostRaw
-  } else if (solarPricing && solarKW > 0) {
-    // Fallback to SSOT pricing if no tier selected
+  // Solar Cost (use Step 4 tier cost, or SSOT fallback)
+  if (!selectedSolarTier && solarPricing && solarKW > 0) {
     solarCost = solarKW * solarPricing.pricePerWatt * 1000;
   }
   
-  // Generator Cost: $/kW from unified pricing service
+  // Generator Cost
   const generatorCost = generatorPricing ? generatorKW * generatorPricing.pricePerKW : 0;
-  
-  // EV Cost: Use cost from Step 4 tier selection if available
-  // evCost already set above from selectedEvTier.installCostRaw if available
-  if (!selectedEvTier && evChargers > 0) {
-    // Fallback to default calculation if no tier selected
-    evCost = evChargers * EV_CHARGER_COST_PER_UNIT;
-  }
   
   // Total Investment
   const totalInvestment = bessCost + solarCost + generatorCost + evCost;
   
   // ========================================
-  // FEDERAL ITC - Applies to BESS AND Solar (IRA 2022+)
+  // FEDERAL ITC - BESS + Solar qualify
   // ========================================
   
-  // ITC on BESS (standalone storage qualifies as of IRA 2022)
   const bessITC = bessCost * FEDERAL_ITC_RATE;
-  
-  // ITC on Solar
   const solarITC = solarCost * FEDERAL_ITC_RATE;
-  
-  // Total ITC
   const federalITC = bessITC + solarITC;
-  
-  // Net Investment after ITC
   const netInvestment = totalInvestment - federalITC;
   
   // ========================================
-  // CALCULATE SAVINGS USING UTILITY RATES
+  // CALCULATE SAVINGS
   // ========================================
   
-  // Get actual utility rates (or use defaults)
-  const demandCharge = utilityData?.demandCharge || 15; // $/kW
-  const electricityRate = utilityData?.rate || 0.12; // $/kWh
+  const demandCharge = utilityData?.demandCharge || 15;
+  const electricityRate = utilityData?.rate || 0.12;
   const peakRate = utilityData?.peakRate || electricityRate * 1.5;
   const hasTOU = utilityData?.hasTOU || false;
   
-  // DEMAND CHARGE SAVINGS
-  // BESS can shave 20-40% of peak demand (using 30% conservative estimate)
-  // Monthly savings = kW * $/kW * reduction %
-  // Annual = monthly * 12
-  const demandReductionPercent = 0.30;
-  const demandSavings = bessKW * demandCharge * 12 * demandReductionPercent;
+  // Demand charge savings (30% reduction)
+  const demandSavings = bessKW * demandCharge * 12 * 0.30;
   
-  // TOU ARBITRAGE SAVINGS (if utility has TOU rates)
-  // Charge during off-peak, discharge during peak
-  // Assume 250 cycles/year at 80% depth of discharge
+  // TOU arbitrage savings
   let touSavings = 0;
   if (hasTOU && peakRate) {
-    const offPeakRate = utilityData?.rate || electricityRate * 0.6;
+    const offPeakRate = electricityRate * 0.6;
     const spread = peakRate - offPeakRate;
-    const cyclesPerYear = 250;
-    const dod = 0.80; // Depth of discharge
-    touSavings = bessKWh * dod * spread * cyclesPerYear;
+    touSavings = bessKWh * 0.80 * spread * 250; // 250 cycles/year, 80% DOD
   }
   
-  // SOLAR SAVINGS
-  // Use annual production from Step 4 tier selection if available, otherwise calculate
+  // Solar savings
   let solarSavings = 0;
   if (selectedSolarTier) {
-    // Use the annual savings from the tier selection (already calculated)
     solarSavings = selectedSolarTier.annualSavingsRaw;
   } else if (solarKW > 0) {
-    // Fallback calculation if no tier selected
-    const sunHoursPerDay = state.solarData?.sunHours || useCaseData?.sunHours || 5;
-    const productionDaysPerYear = 300; // Account for weather
-    const systemEfficiency = 0.85; // Inverter losses, soiling, etc.
-    const solarKWhProduced = solarKW * sunHoursPerDay * productionDaysPerYear * systemEfficiency;
-    solarSavings = solarKWhProduced * electricityRate;
+    const sunHours = state.solarData?.sunHours || 5;
+    const solarKWh = solarKW * sunHours * 300 * 0.85;
+    solarSavings = solarKWh * electricityRate;
   }
   
-  // TOTAL ANNUAL SAVINGS
   const annualSavings = demandSavings + touSavings + solarSavings;
   
   // ========================================
   // FINANCIAL METRICS
   // ========================================
   
-  // Simple Payback (years)
-  const paybackYears = netInvestment / annualSavings;
-  
-  // 10-Year ROI
-  const tenYearSavings = annualSavings * 10;
-  const tenYearROI = ((tenYearSavings - netInvestment) / netInvestment) * 100;
+  const paybackYears = annualSavings > 0 ? netInvestment / annualSavings : 99;
+  const tenYearROI = annualSavings > 0 ? ((annualSavings * 10 - netInvestment) / netInvestment) * 100 : 0;
   
   // ========================================
   // BUILD RESULT
@@ -475,7 +511,7 @@ async function calculateSystemAsync(
     bessKWh,
     solarKW,
     evChargers,
-    evPowerKW: evPowerKW || 0, // Add EV power from tier selection
+    evPowerKW: evPowerKW || 0,
     generatorKW,
     totalInvestment: Math.round(totalInvestment),
     annualSavings: Math.round(annualSavings),
@@ -485,17 +521,8 @@ async function calculateSystemAsync(
     federalITCRate: FEDERAL_ITC_RATE,
     netInvestment: Math.round(netInvestment),
     pricingData,
-    // Store tier selection data for display
-    selectedSolarTier: selectedSolarTier ? {
-      sizeKw: selectedSolarTier.sizeKw,
-      name: selectedSolarTier.name
-    } : undefined,
-    selectedEvTier: selectedEvTier ? {
-      l2Count: selectedEvTier.l2Count,
-      dcfcCount: selectedEvTier.dcfcCount,
-      powerRaw: selectedEvTier.powerRaw,
-      name: selectedEvTier.name
-    } : undefined
+    selectedSolarTier: selectedSolarTier ? { sizeKw: selectedSolarTier.sizeKw, name: selectedSolarTier.name } : undefined,
+    selectedEvTier: selectedEvTier ? { l2Count: selectedEvTier.l2Count, dcfcCount: selectedEvTier.dcfcCount, powerRaw: selectedEvTier.powerRaw, name: selectedEvTier.name } : undefined
   } as CalculationWithPricing;
 }
 
@@ -514,7 +541,20 @@ export function Step5MagicFit({ state, updateState }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showPricingSources, setShowPricingSources] = useState(false);
 
-  // Fetch calculations on mount and when state changes
+  // Debug: Log state on mount
+  useEffect(() => {
+    console.log('🔍 Step 5 STATE DEBUG:', {
+      industry: state.industry,
+      useCaseData: state.useCaseData,
+      facilityDetails: state.facilityDetails,
+      selectedOptions: state.selectedOptions,
+      solarTier: state.solarTier,
+      evTier: state.evTier,
+      solarData: state.solarData,
+    });
+  }, [state]);
+
+  // Fetch calculations on mount and when relevant state changes
   useEffect(() => {
     async function loadCalculations() {
       setIsLoading(true);
@@ -537,28 +577,20 @@ export function Step5MagicFit({ state, updateState }: Props) {
     }
     
     loadCalculations();
-  }, [state.zipCode, state.industry, state.facilityDetails, state.opportunities]);
+  }, [state.zipCode, state.industry, state.useCaseData, state.selectedOptions, state.solarTier, state.evTier]);
 
   // Update state with calculations when power level is selected
   const selectPowerLevel = (level: PowerLevel) => {
     const selected = calculations.find(c => c.level.id === level);
     if (selected) {
-      // Extract pricingData fields we want to keep, then strip the rest
       const { pricingData, ...calcWithoutPricing } = selected.calc;
-      
-      // Generate quote ID
       const quoteId = `MQ-${Date.now().toString(36).toUpperCase()}`;
       
-      // Build final calculations object with metadata
       const finalCalculations = {
         ...calcWithoutPricing,
-        // Add ITC rate if available
         federalITCRate: FEDERAL_ITC_RATE,
-        // Add quote ID
         quoteId,
-        // Extract pricing sources from pricingData
         pricingSources: pricingData?.pricingSources || [],
-        // Extract utility info from pricingData
         utilityName: pricingData?.utilityName,
         utilityRate: pricingData?.utilityRate,
         demandCharge: pricingData?.demandCharge,
@@ -598,19 +630,14 @@ export function Step5MagicFit({ state, updateState }: Props) {
     );
   }
 
-  // Get pricing sources from first calculation (same for all levels)
   const pricingSources = calculations[0]?.calc.pricingData.pricingSources || [];
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Choose Your Power Level
-        </h1>
-        <p className="text-purple-300">
-          Select the system that fits your needs
-        </p>
+        <h1 className="text-3xl font-bold text-white mb-2">Choose Your Power Level</h1>
+        <p className="text-purple-300">Select the system that fits your needs</p>
       </div>
 
       {/* TrueQuote™ Badge */}
@@ -642,7 +669,6 @@ export function Step5MagicFit({ state, updateState }: Props) {
           </ul>
           <p className="text-xs text-slate-500 mt-3">
             Pricing verified against NREL ATB 2024, EIA utility rates, and vendor databases.
-            Updated within the last 24 hours.
           </p>
         </div>
       )}
@@ -664,33 +690,29 @@ export function Step5MagicFit({ state, updateState }: Props) {
                     ? 'border-purple-400 bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-slate-800/80 scale-105 shadow-purple-500/30'
                     : 'border-orange-400 bg-gradient-to-br from-orange-500/20 via-red-500/10 to-slate-800/80 scale-105 shadow-orange-500/20'
                   : isRecommended
-                  ? level.id === 'perfect_fit'
-                    ? 'border-purple-500/60 bg-gradient-to-br from-slate-800/90 via-purple-900/30 to-slate-800/90 hover:border-purple-400 hover:shadow-purple-500/20'
-                    : 'border-purple-500/50 bg-slate-800/80 hover:border-purple-400'
+                  ? 'border-purple-500/60 bg-gradient-to-br from-slate-800/90 via-purple-900/30 to-slate-800/90 hover:border-purple-400'
                   : level.id === 'starter'
-                  ? 'border-cyan-500/40 bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:border-cyan-400 hover:shadow-cyan-500/10'
-                  : level.id === 'beast_mode'
-                  ? 'border-orange-500/40 bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:border-orange-400 hover:shadow-orange-500/10'
-                  : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
+                  ? 'border-cyan-500/40 bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:border-cyan-400'
+                  : 'border-orange-500/40 bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:border-orange-400'
               }`}
               onClick={() => selectPowerLevel(level.id)}
             >
               {/* Recommended Badge */}
-                  {isRecommended && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full text-white text-xs font-semibold flex items-center gap-1 shadow-lg shadow-purple-500/50">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      MERLIN'S PICK
-                    </div>
-                  )}
+              {isRecommended && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full text-white text-xs font-semibold flex items-center gap-1 shadow-lg">
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                  MERLIN'S PICK
+                </div>
+              )}
 
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-xl ${
-                      level.id === 'starter' ? 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 text-cyan-300 shadow-lg shadow-cyan-500/20' :
-                      level.id === 'perfect_fit' ? 'bg-gradient-to-br from-purple-500/30 to-purple-600/20 text-purple-300 shadow-lg shadow-purple-500/30' :
-                      'bg-gradient-to-br from-orange-500/30 to-orange-600/20 text-orange-300 shadow-lg shadow-orange-500/20'
+                      level.id === 'starter' ? 'bg-cyan-500/30 text-cyan-300' :
+                      level.id === 'perfect_fit' ? 'bg-purple-500/30 text-purple-300' :
+                      'bg-orange-500/30 text-orange-300'
                     }`}>
                       <Zap className="w-6 h-6" />
                     </div>
@@ -700,18 +722,18 @@ export function Step5MagicFit({ state, updateState }: Props) {
                     </div>
                   </div>
                   {isSelected && (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
-                      level.id === 'starter' ? 'bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-500/50' :
-                      level.id === 'perfect_fit' ? 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/50' :
-                      'bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/50'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      level.id === 'starter' ? 'bg-cyan-500' :
+                      level.id === 'perfect_fit' ? 'bg-purple-500' :
+                      'bg-orange-500'
                     }`}>
                       <Check className="w-5 h-5 text-white" />
                     </div>
                   )}
                 </div>
 
-                {/* Specs */}
-                <div className={`grid ${(calc.evPowerKW ?? 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-3 mb-4 p-3 bg-gradient-to-br from-slate-900/60 via-slate-800/40 to-slate-900/60 rounded-xl border border-slate-700/50`}>
+                {/* Specs Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-slate-900/60 rounded-xl border border-slate-700/50">
                   <div>
                     <div className="text-xs text-slate-500 flex items-center gap-1">
                       <Battery className="w-3 h-3" /> Power
@@ -743,22 +765,19 @@ export function Step5MagicFit({ state, updateState }: Props) {
                     </div>
                   </div>
                   {(calc.evPowerKW ?? 0) > 0 && (
-                    <div>
+                    <div className="col-span-2">
                       <div className="text-xs text-slate-500 flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> EV Power
+                        <Zap className="w-3 h-3" /> EV Charging
                       </div>
-                      <div className="text-white font-semibold">{calc.evPowerKW} kW</div>
-                      {calc.selectedEvTier && (
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          {calc.selectedEvTier.l2Count + calc.selectedEvTier.dcfcCount} chargers
-                        </div>
-                      )}
+                      <div className="text-white font-semibold">
+                        {calc.evPowerKW} kW ({calc.evChargers} chargers)
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Investment & ITC */}
-                <div className="p-3 bg-gradient-to-br from-slate-900/60 via-slate-800/40 to-slate-900/60 rounded-xl mb-4 space-y-2 border border-slate-700/50">
+                {/* Investment */}
+                <div className="p-3 bg-slate-900/60 rounded-xl mb-4 space-y-2 border border-slate-700/50">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Total Investment</span>
                     <span className="text-white">${(calc.totalInvestment / 1000).toFixed(0)}K</span>
@@ -779,11 +798,6 @@ export function Step5MagicFit({ state, updateState }: Props) {
                   <div className="text-2xl font-bold text-emerald-400">
                     ${Math.round(calc.annualSavings / 1000)}K<span className="text-sm font-normal">/yr</span>
                   </div>
-                  {calc.pricingData.hasTOU && (
-                    <div className="text-xs text-emerald-300 mt-1">
-                      Includes TOU arbitrage ({calc.pricingData.utilityName})
-                    </div>
-                  )}
                 </div>
 
                 {/* ROI */}
@@ -801,14 +815,14 @@ export function Step5MagicFit({ state, updateState }: Props) {
 
                 {/* Select Button */}
                 <button
-                  className={`w-full mt-4 py-3 rounded-xl font-semibold transition-all shadow-lg ${
+                  className={`w-full mt-4 py-3 rounded-xl font-semibold transition-all ${
                     isSelected
                       ? level.id === 'starter'
-                        ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-cyan-500/50'
+                        ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
                         : level.id === 'perfect_fit'
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/50'
-                        : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-500/50'
-                      : 'bg-gradient-to-r from-slate-700 to-slate-800 text-slate-300 hover:from-slate-600 hover:to-slate-700 hover:shadow-slate-500/20'
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                        : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 >
                   {isSelected ? '✓ SELECTED' : 'SELECT'}
@@ -836,7 +850,7 @@ export function Step5MagicFit({ state, updateState }: Props) {
         <div className="max-w-2xl mx-auto p-3 bg-slate-800/30 rounded-lg text-center text-sm text-slate-400">
           Calculations based on <span className="text-white">{calculations[0].calc.pricingData.utilityName}</span> rates: 
           ${calculations[0].calc.pricingData.utilityRate.toFixed(2)}/kWh, 
-          ${calculations[0].calc.pricingData.demandCharge}/kW demand charge
+          ${calculations[0].calc.pricingData.demandCharge}/kW demand
           {calculations[0].calc.pricingData.hasTOU && (
             <span className="text-purple-400"> • TOU pricing available</span>
           )}
