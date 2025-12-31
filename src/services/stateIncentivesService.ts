@@ -1,10 +1,11 @@
 /**
- * STATE INCENTIVES SERVICE
- * ========================
- * Looks up state-level energy storage incentives by state code or ZIP code
+ * State Energy Storage Incentives Service
+ * ========================================
+ * Fetches state-level incentives from Supabase and calculates total incentives
+ * including Federal ITC for BESS + Solar projects.
  * 
- * Source: DSIRE Database, CPUC SGIP, NYSERDA, state energy offices
  * Created: December 30, 2025
+ * Updated: December 31, 2025 - Fixed calculation to use BEST program only, not sum
  */
 
 import { supabase } from './supabaseClient';
@@ -55,13 +56,16 @@ export interface StateIncentiveSummary {
 }
 
 export interface IncentiveCalculation {
-  federal_itc: number;
-  federal_itc_percent: number;
-  state_incentives: StateIncentive[];
-  state_total: number;
-  combined_total: number;
-  net_investment: number;
-  effective_discount_percent: number;
+  federalITC: number;
+  federalITCRate: number;
+  stateIncentives: number;
+  statePrograms: Array<{
+    program: string;
+    amount: number;
+    type: string;
+  }>;
+  totalIncentives: number;
+  netInvestment: number;
 }
 
 // ============================================================================
@@ -224,13 +228,15 @@ export async function getIncentivesByZip(zipCode: string): Promise<StateIncentiv
 
 /**
  * Calculate total incentives for a system
+ * FIX: Only use BEST program (not sum all), exclude equity programs by default, add sanity cap
  */
 export async function calculateIncentives(
   zipCode: string,
   systemCost: number,
   storagekWh: number,
   sector: 'residential' | 'commercial' = 'commercial',
-  includesSolar: boolean = false
+  includesSolar: boolean = false,
+  isEquityEligible: boolean = false  // New parameter: exclude equity programs by default
 ): Promise<IncentiveCalculation> {
   // Federal ITC (30% for storage with solar, 30% standalone after IRA 2022)
   const federalItcPercent = 0.30;
@@ -240,50 +246,79 @@ export async function calculateIncentives(
   const stateCode = getStateFromZip(zipCode);
   let stateIncentives: StateIncentive[] = [];
   let stateTotal = 0;
+  let allIncentives: StateIncentive[] = [];
+  const statePrograms: Array<{ program: string; amount: number; type: string }> = [];
 
   if (stateCode) {
-    const allIncentives = await getStateIncentives(stateCode);
+    allIncentives = await getStateIncentives(stateCode);
     
-    // Filter by sector and technology
+    // Filter by sector, technology, and exclude equity programs by default
     stateIncentives = allIncentives.filter(inc => {
       const sectorMatch = inc.eligible_sectors?.includes(sector);
       const techMatch = includesSolar 
         ? inc.eligible_technologies?.some(t => ['solar+storage', 'battery', 'standalone'].includes(t))
         : inc.eligible_technologies?.some(t => ['battery', 'standalone'].includes(t));
       const pairingOk = !inc.requires_solar_pairing || includesSolar;
-      return sectorMatch && techMatch && pairingOk;
+      // FIX: Exclude equity programs unless explicitly eligible
+      const equityOk = !inc.equity_program || isEquityEligible;
+      return sectorMatch && techMatch && pairingOk && equityOk;
     });
 
     // Calculate state incentive total (use best available, not stacking)
     if (stateIncentives.length > 0) {
-      // Find best rebate $/kWh
-      const bestRebate = stateIncentives
-        .filter(i => i.incentive_per_kwh && i.incentive_per_kwh > 0)
-        .sort((a, b) => (b.incentive_per_kwh || 0) - (a.incentive_per_kwh || 0))[0];
-
-      // Find best tax credit %
-      const bestTaxCredit = stateIncentives
-        .filter(i => i.incentive_percent && i.incentive_percent > 0)
-        .sort((a, b) => (b.incentive_percent || 0) - (a.incentive_percent || 0))[0];
-
-      if (bestRebate) {
+      // Find best rebate $/kWh (non-equity programs only, unless eligible)
+      const rebatePrograms = stateIncentives.filter(i => 
+        i.incentive_per_kwh && i.incentive_per_kwh > 0 && i.program_type === 'rebate'
+      );
+      if (rebatePrograms.length > 0) {
+        // Sort by incentive amount descending, take best one
+        const bestRebate = rebatePrograms.sort((a, b) => 
+          (b.incentive_per_kwh || 0) - (a.incentive_per_kwh || 0)
+        )[0];
+        
         let rebateAmount = (bestRebate.incentive_per_kwh || 0) * storagekWh;
         if (bestRebate.max_incentive && rebateAmount > bestRebate.max_incentive) {
           rebateAmount = bestRebate.max_incentive;
         }
         stateTotal += rebateAmount;
+        statePrograms.push({
+          program: bestRebate.program_name,
+          amount: Math.round(rebateAmount),
+          type: bestRebate.program_type
+        });
       }
 
-      if (bestTaxCredit) {
+      // Find best tax credit % (separate from rebates, these can sometimes stack)
+      const taxCreditPrograms = stateIncentives.filter(i => 
+        i.incentive_percent && i.incentive_percent > 0 && i.program_type === 'tax_credit'
+      );
+      if (taxCreditPrograms.length > 0) {
+        const bestTaxCredit = taxCreditPrograms.sort((a, b) => 
+          (b.incentive_percent || 0) - (a.incentive_percent || 0)
+        )[0];
+        
         let creditAmount = systemCost * ((bestTaxCredit.incentive_percent || 0) / 100);
         if (bestTaxCredit.max_incentive && creditAmount > bestTaxCredit.max_incentive) {
           creditAmount = bestTaxCredit.max_incentive;
         }
         stateTotal += creditAmount;
+        statePrograms.push({
+          program: bestTaxCredit.program_name,
+          amount: Math.round(creditAmount),
+          type: bestTaxCredit.program_type
+        });
       }
     }
   }
 
+  // SANITY CAP: State incentives should not exceed 35% of system cost
+  const maxStateIncentive = systemCost * 0.35;
+  if (stateTotal > maxStateIncentive) {
+    console.warn(`⚠️ State incentive capped: $${stateTotal.toLocaleString()} → $${maxStateIncentive.toLocaleString()}`);
+    stateTotal = maxStateIncentive;
+  }
+
+  stateTotal = Math.round(stateTotal);
   const combinedTotal = federalItc + stateTotal;
   const netInvestment = systemCost - combinedTotal;
   const effectiveDiscount = (combinedTotal / systemCost) * 100;
@@ -293,22 +328,23 @@ export async function calculateIncentives(
     stateCode,
     systemCost,
     storagekWh,
+    isEquityEligible,
     federalItc,
     stateTotal,
     combinedTotal,
     netInvestment,
     effectiveDiscount: `${effectiveDiscount.toFixed(1)}%`,
-    availableStatePrograms: stateIncentives.map(i => i.program_name)
+    availableStatePrograms: stateIncentives.map(i => i.program_name),
+    equityProgramsExcluded: allIncentives.filter(i => i.equity_program && !isEquityEligible).map(i => i.program_name)
   });
 
   return {
-    federal_itc: federalItc,
-    federal_itc_percent: federalItcPercent * 100,
-    state_incentives: stateIncentives,
-    state_total: Math.round(stateTotal),
-    combined_total: Math.round(combinedTotal),
-    net_investment: Math.round(netInvestment),
-    effective_discount_percent: Math.round(effectiveDiscount * 10) / 10
+    federalITC: federalItc,
+    federalITCRate: federalItcPercent * 100,
+    stateIncentives: stateTotal,
+    statePrograms,
+    totalIncentives: Math.round(combinedTotal),
+    netInvestment: Math.max(0, Math.round(netInvestment))
   };
 }
 

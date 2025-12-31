@@ -56,6 +56,7 @@ export function Step6Quote({ state }: Props) {
     totalStateIncentive: number;
     federalITC: number;
     netInvestment: number;
+    statePrograms?: Array<{ program: string; amount: number; type: string }>;
   } | null>(null);
   const [loadingIncentives, setLoadingIncentives] = useState(true);
 
@@ -102,21 +103,29 @@ export function Step6Quote({ state }: Props) {
   useEffect(() => {
     async function loadIncentives() {
       if (!state.zipCode || !calculations) return;
+      
       setLoadingIncentives(true);
       try {
-        const incentives = await getIncentivesByZip(state.zipCode);
-        setStateIncentives(incentives);
-        const summary = await calculateIncentives(
+        // Calculate incentives with new API (excludes equity programs by default)
+        const result = await calculateIncentives(
           state.zipCode,
           calculations.totalInvestment,
           calculations.bessKWh,
-          'commercial',
-          calculations.solarKW > 0
+          'commercial',  // sector
+          calculations.solarKW > 0,  // includesSolar
+          false  // isEquityEligible (exclude equity programs by default)
         );
+        
+        // Get the raw incentives for display (filtered list)
+        const incentives = await getIncentivesByZip(state.zipCode);
+        setStateIncentives(incentives);
+        
+        // Set the summary with the calculated values
         setIncentiveSummary({
-          totalStateIncentive: summary.state_total,
-          federalITC: summary.federal_itc,
-          netInvestment: summary.net_investment
+          totalStateIncentive: result.stateIncentives,
+          federalITC: result.federalITC,
+          netInvestment: result.netInvestment,
+          statePrograms: result.statePrograms
         });
       } catch (err) {
         console.error('Error loading state incentives:', err);
@@ -124,6 +133,7 @@ export function Step6Quote({ state }: Props) {
         setLoadingIncentives(false);
       }
     }
+    
     loadIncentives();
   }, [state.zipCode, calculations]);
 
@@ -276,7 +286,9 @@ export function Step6Quote({ state }: Props) {
               <div className="p-4 bg-slate-800/50 rounded-xl">
                 <div className="text-slate-400 text-xs mb-1">State Incentives</div>
                 <div className="text-2xl font-bold text-emerald-400">${incentiveSummary.totalStateIncentive.toLocaleString()}</div>
-                <div className="text-slate-500 text-xs mt-1">{stateIncentives.length} program{stateIncentives.length !== 1 ? 's' : ''}</div>
+                <div className="text-slate-500 text-xs mt-1">
+                  {incentiveSummary.statePrograms?.length || stateIncentives.length} program{(incentiveSummary.statePrograms?.length || stateIncentives.length) !== 1 ? 's' : ''}
+                </div>
               </div>
               <div className="p-4 bg-slate-800/50 rounded-xl">
                 <div className="text-slate-400 text-xs mb-1">Net Investment</div>
@@ -605,6 +617,22 @@ export function Step6Quote({ state }: Props) {
                   <span className="text-emerald-400 font-medium">Federal ITC Credit ({itcPercentage}%)</span>
                   <span className="text-emerald-400 font-bold text-lg">
                     -${calculations.federalITC.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              
+              {incentiveSummary && incentiveSummary.totalStateIncentive > 0 && (
+                <div className="flex justify-between items-center py-2 px-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                  <span className="text-emerald-400 font-medium">
+                    State Incentives
+                    {incentiveSummary.statePrograms && incentiveSummary.statePrograms.length > 0 && (
+                      <span className="text-xs text-emerald-300 ml-2">
+                        ({incentiveSummary.statePrograms.map(p => p.program).join(', ')})
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-emerald-400 font-bold text-lg">
+                    -${incentiveSummary.totalStateIncentive.toLocaleString()}
                   </span>
                 </div>
               )}

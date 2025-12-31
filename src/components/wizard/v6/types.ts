@@ -35,6 +35,11 @@ export interface WizardState {
   selectedOptions?: string[];
   solarTier?: string | null;
   evTier?: string | null;
+  customSolarKw?: number;
+  customEvL2?: number;
+  customEvDcfc?: number;
+  customGeneratorKw?: number;
+  generatorFuel?: 'natural-gas' | 'diesel';
 
   // Step 4: Options selections
   useCaseData: Record<string, any>;
