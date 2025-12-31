@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { ArrowLeft, ArrowRight, Home, Sparkles, RotateCcw, X } from 'lucide-react';
 
 import type { WizardState, PowerLevel } from './types';
@@ -13,6 +13,7 @@ import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
 import { Step6Quote } from './steps/Step6Quote';
 import { MerlinGuide } from './components/MerlinGuide';
+import { ValueTicker } from './components/ValueTicker';
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -92,6 +93,16 @@ export default function WizardV6() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showStartOverModal, setShowStartOverModal] = useState(false);
+  
+  // Step 4 state for MerlinGuide triggers
+  const [step4State, setStep4State] = useState({
+    solarDecision: 'undecided' as 'undecided' | 'yes' | 'no',
+    generatorDecision: 'undecided' as 'undecided' | 'yes' | 'no',
+    evDecision: 'undecided' as 'undecided' | 'yes' | 'no',
+    solarMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
+    generatorMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
+    evMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
+  });
 
   const updateState = useCallback((updates: Partial<WizardState>) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -100,6 +111,49 @@ export default function WizardV6() {
   const goNext = () => setCurrentStep(prev => Math.min(prev + 1, 6));
   const goBack = () => setCurrentStep(prev => Math.max(prev - 1, 1));
   const goToStep = (step: number) => setCurrentStep(step);
+
+  // Calculate values for ValueTicker
+  const tickerValues = useMemo(() => {
+    // Base data from Step 3 (useCaseData)
+    const annualUsage = state.useCaseData?.estimatedAnnualKwh || 0;
+    const peakDemand = state.useCaseData?.peakDemandKw || 0;
+    
+    // Utility rates from calculations (Step 5) or defaults
+    const utilityRate = state.calculations?.utilityRate || 0.12;
+    const demandRate = state.calculations?.demandCharge || 15; // $/kW typical commercial rate
+    
+    // Calculate annual energy spend and peak demand charges
+    const annualEnergySpend = annualUsage * utilityRate;
+    const peakDemandCharges = peakDemand * demandRate * 12; // Annual (monthly × 12)
+    
+    // Get system sizes from state (Step 4 custom values or Step 5 calculations)
+    const solarKw = state.customSolarKw || state.calculations?.solarKW || 0;
+    const bessKwh = state.calculations?.bessKWh || 0;
+    const generatorKw = state.customGeneratorKw || 0;
+    const evL2Count = state.customEvL2 || 0;
+    const evDcfcCount = state.customEvDcfc || 0;
+    
+    // Flags based on selectedOptions (set in Step 4)
+    const hasSolar = state.selectedOptions?.includes('solar') || false;
+    const hasGenerator = state.selectedOptions?.includes('generator') || false;
+    const hasEv = state.selectedOptions?.includes('ev') || false;
+    
+    return {
+      annualEnergySpend,
+      peakDemandCharges,
+      annualUsageKwh: annualUsage,
+      solarKw,
+      bessKwh,
+      generatorKw,
+      generatorFuel: state.generatorFuel || 'natural-gas',
+      evL2Count,
+      evDcfcCount,
+      hasSolar,
+      hasGenerator,
+      hasEv,
+      industryType: state.industryName
+    };
+  }, [state]);
 
   // Start Over: Reset state and go to Step 2
   const handleStartOver = () => {
@@ -125,7 +179,7 @@ export default function WizardV6() {
       case 1: return <Step1Location state={state} updateState={updateState} />;
       case 2: return <Step2Industry state={state} updateState={updateState} />;
       case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} />;
-      case 4: return <Step4Options state={state} updateState={updateState} />;
+      case 4: return <Step4Options state={state} updateState={updateState} onStep4StateChange={setStep4State} />;
       case 5: return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
       case 6: return <Step6Quote state={state} />;
       default: return null;
@@ -192,6 +246,18 @@ export default function WizardV6() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
+          VALUE TICKER - Shows on Steps 3-6
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {currentStep >= 3 && (
+        <div className="max-w-6xl mx-auto px-4">
+          <ValueTicker
+            currentStep={currentStep}
+            {...tickerValues}
+          />
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
           MAIN CONTENT - Scrollable area with padding for fixed footer
           ═══════════════════════════════════════════════════════════════════════ */}
       <main 
@@ -250,7 +316,18 @@ export default function WizardV6() {
       </footer>
       
       {/* Merlin Guide (floating assistant) */}
-      <MerlinGuide step={currentStep} industry={state.industryName} state={state.state} />
+      <MerlinGuide 
+        currentStep={currentStep}
+        industrySelected={state.industry !== ''}
+        industryName={state.industryName}
+        stateName={state.state}
+        solarDecision={step4State.solarDecision}
+        generatorDecision={step4State.generatorDecision}
+        evDecision={step4State.evDecision}
+        solarMode={step4State.solarMode}
+        generatorMode={step4State.generatorMode}
+        evMode={step4State.evMode}
+      />
 
       {/* Start Over Confirmation Modal */}
       <StartOverModal

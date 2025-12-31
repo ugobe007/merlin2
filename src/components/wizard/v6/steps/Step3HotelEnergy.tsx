@@ -431,8 +431,19 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <span style={{ fontSize: 14, color: COLORS.value }}> hotels?</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={autofillForCategory} style={{ background: COLORS.primary, border: 'none', borderRadius: 8, padding: '8px 16px', color: COLORS.value, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-                  Yes, autofill
+                <button onClick={autofillForCategory} className="pulse-attention" style={{ 
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                  border: '2px solid #fcd34d', 
+                  borderRadius: 12, 
+                  padding: '12px 24px', 
+                  color: '#1e293b', 
+                  fontWeight: 700, 
+                  cursor: 'pointer', 
+                  fontSize: 15,
+                  boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  ✨ Yes, autofill
                 </button>
                 <button onClick={() => setShowAutofillPrompt(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '8px 16px', color: COLORS.label, cursor: 'pointer', fontSize: 13 }}>
                   I'll customize
