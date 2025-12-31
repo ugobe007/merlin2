@@ -533,16 +533,20 @@ async function calculateSystemAsync(
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
+  goToStep: (step: number) => void;
 }
 
-export function Step5MagicFit({ state, updateState }: Props) {
+export function Step5MagicFit({ state, updateState, goToStep }: Props) {
   const [calculations, setCalculations] = useState<{ level: typeof POWER_LEVELS[0]; calc: CalculationWithPricing }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPricingSources, setShowPricingSources] = useState(false);
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    // Go back to Step 2 (Industry Selection), not main site
+    if (typeof goToStep === 'function') {
+      goToStep(2);
+    }
   };
 
   // Debug: Log state on mount
@@ -646,7 +650,7 @@ export function Step5MagicFit({ state, updateState }: Props) {
           className="absolute right-0 top-0 flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white rounded-xl transition-all border border-slate-600/50"
         >
           <Home className="w-4 h-4" />
-          <span className="text-sm font-medium">Home</span>
+          <span className="text-sm font-medium">Change Industry</span>
         </button>
 
         <h1 className="text-3xl font-bold text-white mb-2">Choose Your Power Level</h1>
