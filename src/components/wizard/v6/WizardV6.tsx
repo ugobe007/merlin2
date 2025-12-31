@@ -126,7 +126,7 @@ export default function WizardV6() {
       case 2: return <Step2Industry state={state} updateState={updateState} />;
       case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} />;
       case 4: return <Step4Options state={state} updateState={updateState} />;
-      case 5: return <Step5MagicFit state={state} updateState={updateState} />;
+      case 5: return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
       case 6: return <Step6Quote state={state} />;
       default: return null;
     }
