@@ -251,6 +251,7 @@ interface Props {
 export function Step1Location({ state, updateState }: Props) {
   const [region, setRegion] = useState<'us' | 'international'>('us');
   const [zipInput, setZipInput] = useState(state.zipCode || '');
+  const [zipError, setZipError] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
@@ -297,17 +298,28 @@ export function Step1Location({ state, updateState }: Props) {
   useEffect(() => {
     if (region === 'us' && zipInput.length >= 5) {
       const stateCode = getStateFromZip(zipInput);
-      console.log('💾 Step 1: Saving zipCode to state', { zipCode: zipInput, stateCode: stateCode || 'US (default)' });
-      updateState({
-        zipCode: zipInput,
-        state: stateCode || 'US',
-        city: '',
-        solarData: locationData ? { sunHours: locationData.sunHours, rating: locationData.solarLabel } : undefined
-      });
+      if (stateCode) {
+        // Valid US zip code
+        setZipError(null);
+        console.log('💾 Step 1: Saving zipCode to state', { zipCode: zipInput, stateCode });
+        updateState({
+          zipCode: zipInput,
+          state: stateCode,
+          city: '',
+          solarData: locationData ? { sunHours: locationData.sunHours, rating: locationData.solarLabel } : undefined
+        });
+      } else {
+        // Invalid zip - not in our database
+        setZipError('Please enter a valid US zip code');
+        updateState(prev => ({ ...prev, zipCode: '', state: '' }));
+      }
     } else if (region === 'us' && zipInput.length > 0 && zipInput.length < 5) {
+      setZipError(null);
       if (state.zipCode && state.zipCode.length >= 5) {
         updateState(prev => ({ ...prev, zipCode: '', state: '' }));
       }
+    } else if (region === 'us' && zipInput.length === 0) {
+      setZipError(null);
     }
     
     if (region === 'international' && selectedCountry && selectedCity) {
@@ -385,8 +397,17 @@ export function Step1Location({ state, updateState }: Props) {
                 value={zipInput}
                 onChange={handleZipChange}
                 placeholder="e.g., 89052"
-                className="w-full px-4 py-3 text-lg bg-purple-500/20 border border-purple-400/40 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 transition-all"
+                className={`w-full px-4 py-3 text-lg bg-purple-500/20 border rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 transition-all ${
+                  zipError 
+                    ? 'border-red-400/60 focus:border-red-400 focus:ring-red-500/30' 
+                    : 'border-purple-400/40 focus:border-purple-400 focus:ring-purple-500/30'
+                }`}
               />
+              {zipError && (
+                <p className="mt-2 text-sm text-red-400 flex items-center gap-2">
+                  <span>⚠️</span> {zipError}
+                </p>
+              )}
             </div>
           ) : (
             <>
