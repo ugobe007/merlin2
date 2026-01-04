@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Zap, Save, Users, Shield, TrendingUp } from 'lucide-react';
+import { X, Sparkles, Zap, Save, Users, TrendingUp } from 'lucide-react';
 
 interface JoinMerlinModalProps {
   isOpen: boolean;

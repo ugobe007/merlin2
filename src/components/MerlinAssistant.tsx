@@ -1,9 +1,9 @@
 /**
  * MerlinAssistant - Floating AI Help Widget
- * 
+ *
  * A friendly floating Merlin icon that provides instant help and answers
  * questions about the platform, BESS technology, and energy storage.
- * 
+ *
  * Features:
  * - Floating button in bottom-right corner
  * - Expandable chat interface
@@ -11,12 +11,12 @@
  * - AI-powered responses (simulated for now)
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import merlinIcon from '@/assets/images/wizard_icon1.png';
+import React, { useState, useRef, useEffect } from "react";
+import merlinIcon from "@/assets/images/wizard_icon1.png";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
 }
@@ -303,7 +303,7 @@ Your complete project summary:
 // Simple AI response generator
 function generateResponse(question: string): string {
   const lowerQuestion = question.toLowerCase().trim();
-  
+
   // Check for step-specific questions
   const stepMatch = lowerQuestion.match(/step\s*(\d)/);
   if (stepMatch) {
@@ -312,9 +312,14 @@ function generateResponse(question: string): string {
       return KNOWLEDGE_BASE[`step ${stepNum}`];
     }
   }
-  
+
   // Check for "what is this step" or "help with current step" or "wizard steps"
-  if (lowerQuestion.includes('this step') || lowerQuestion.includes('current step') || lowerQuestion.includes('what do i do') || lowerQuestion.includes('wizard step')) {
+  if (
+    lowerQuestion.includes("this step") ||
+    lowerQuestion.includes("current step") ||
+    lowerQuestion.includes("what do i do") ||
+    lowerQuestion.includes("wizard step")
+  ) {
     return `I can help you with any step! Just ask:
 
 • "Help with Step 1" - Industry & Location
@@ -327,16 +332,19 @@ function generateResponse(question: string): string {
 
 Or ask me anything about BESS, sizing, costs, or how the platform works!`;
   }
-  
+
   // Check knowledge base
   for (const [key, answer] of Object.entries(KNOWLEDGE_BASE)) {
-    if (lowerQuestion.includes(key) || key.split(' ').every(word => lowerQuestion.includes(word))) {
+    if (
+      lowerQuestion.includes(key) ||
+      key.split(" ").every((word) => lowerQuestion.includes(word))
+    ) {
       return answer;
     }
   }
-  
+
   // Generic helpful responses
-  if (lowerQuestion.includes('solar') || lowerQuestion.includes('pv')) {
+  if (lowerQuestion.includes("solar") || lowerQuestion.includes("pv")) {
     return `**Solar Integration with BESS**
 
 Battery storage works great with solar PV systems:
@@ -348,8 +356,12 @@ Battery storage works great with solar PV systems:
 
 In our calculator, you can specify your existing or planned solar capacity, and we'll optimize the battery size to match.`;
   }
-  
-  if (lowerQuestion.includes('cost') || lowerQuestion.includes('price') || lowerQuestion.includes('expensive')) {
+
+  if (
+    lowerQuestion.includes("cost") ||
+    lowerQuestion.includes("price") ||
+    lowerQuestion.includes("expensive")
+  ) {
     return `**BESS Pricing Overview**
 
 Battery storage costs vary based on:
@@ -366,8 +378,12 @@ Battery storage costs vary based on:
 
 Use our calculator for a personalized estimate based on your specific requirements.`;
   }
-  
-  if (lowerQuestion.includes('backup') || lowerQuestion.includes('outage') || lowerQuestion.includes('blackout')) {
+
+  if (
+    lowerQuestion.includes("backup") ||
+    lowerQuestion.includes("outage") ||
+    lowerQuestion.includes("blackout")
+  ) {
     return `**Backup Power with BESS**
 
 BESS provides reliable backup power when the grid goes down:
@@ -390,7 +406,7 @@ Example: 500 kWh battery ÷ 100 kW load = 5 hours backup
 
 Our calculator asks about your backup requirements to size appropriately.`;
   }
-  
+
   // Default response
   return `Thanks for your question! Here are some things I can help with:
 
@@ -411,10 +427,13 @@ Our calculator asks about your backup requirements to size appropriately.`;
 Feel free to ask about any of these topics!`;
 }
 
-const MerlinAssistant: React.FC<MerlinAssistantProps> = ({ className = '', hideWhenWizardOpen = false }) => {
+const MerlinAssistant: React.FC<MerlinAssistantProps> = ({
+  className = "",
+  hideWhenWizardOpen = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -422,7 +441,7 @@ const MerlinAssistant: React.FC<MerlinAssistantProps> = ({ className = '', hideW
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Focus input when opened
@@ -435,10 +454,11 @@ const MerlinAssistant: React.FC<MerlinAssistantProps> = ({ className = '', hideW
   // Add welcome message on first open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([{
-        id: 'welcome',
-        role: 'assistant',
-        content: `👋 **Hi! I'm Merlin, your energy assistant.**
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: `👋 **Hi! I'm Merlin, your energy assistant.**
 
 I'm here to help you understand BESS technology, navigate the quote builder, and answer questions about our platform.
 
@@ -448,8 +468,9 @@ I'm here to help you understand BESS technology, navigate the quote builder, and
 • What do the financial metrics mean?
 
 Or click one of the suggested questions below!`,
-        timestamp: new Date()
-      }]);
+          timestamp: new Date(),
+        },
+      ]);
     }
   }, [isOpen, messages.length]);
 
@@ -458,29 +479,29 @@ Or click one of the suggested questions below!`,
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: text.trim(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
     setIsTyping(true);
 
     // Simulate AI thinking time
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 700));
 
     const response = generateResponse(text);
-    
+
     const assistantMessage: Message = {
       id: `assistant-${Date.now()}`,
-      role: 'assistant',
+      role: "assistant",
       content: response,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     setIsTyping(false);
-    setMessages(prev => [...prev, assistantMessage]);
+    setMessages((prev) => [...prev, assistantMessage]);
   };
 
   const handleQuickQuestion = (question: string) => {
@@ -488,7 +509,7 @@ Or click one of the suggested questions below!`,
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(inputValue);
     }
@@ -496,15 +517,17 @@ Or click one of the suggested questions below!`,
 
   // Simple markdown-like rendering
   const renderContent = (content: string) => {
-    return content.split('\n').map((line, i) => {
+    return content.split("\n").map((line, i) => {
       // Bold text
-      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      line = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
       // Bullet points
-      if (line.startsWith('• ')) {
-        return <li key={i} className="ml-4" dangerouslySetInnerHTML={{ __html: line.substring(2) }} />;
+      if (line.startsWith("• ")) {
+        return (
+          <li key={i} className="ml-4" dangerouslySetInnerHTML={{ __html: line.substring(2) }} />
+        );
       }
       // Empty line
-      if (line.trim() === '') {
+      if (line.trim() === "") {
         return <br key={i} />;
       }
       return <p key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: line }} />;
@@ -522,7 +545,7 @@ Or click one of the suggested questions below!`,
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed top-20 left-4 z-[9999] w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center border-2 border-purple-400/50 ${className}`}
-        title={isOpen ? 'Close Merlin Assistant' : 'Ask Merlin for Help'}
+        title={isOpen ? "Close Merlin Assistant" : "Ask Merlin for Help"}
       >
         {isOpen ? (
           <span className="text-white text-lg">✕</span>
@@ -552,7 +575,12 @@ Or click one of the suggested questions below!`,
                 title="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -563,35 +591,42 @@ Or click one of the suggested questions below!`,
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2 ${
-                    message.role === 'user'
-                      ? 'bg-purple-600 text-white rounded-br-sm'
-                      : 'bg-white text-gray-800 shadow-sm border border-gray-200 rounded-bl-sm'
+                    message.role === "user"
+                      ? "bg-purple-600 text-white rounded-br-sm"
+                      : "bg-white text-gray-800 shadow-sm border border-gray-200 rounded-bl-sm"
                   }`}
                 >
-                  <div className="text-sm leading-relaxed">
-                    {renderContent(message.content)}
-                  </div>
+                  <div className="text-sm leading-relaxed">{renderContent(message.content)}</div>
                 </div>
               </div>
             ))}
-            
+
             {/* Typing indicator */}
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-white text-gray-800 shadow-sm border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -632,7 +667,12 @@ Or click one of the suggested questions below!`,
                 className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               </button>
             </div>

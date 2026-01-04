@@ -1,16 +1,16 @@
 /**
  * RECOMMENDATION FINANCIAL METRICS
  * ================================
- * 
+ *
  * Calculates financial metrics (conservative and aggressive scenarios)
  * for opportunity recommendations in Step 3 Modal.
- * 
+ *
  * Uses real-time calculations based on user inputs.
  */
 
-import { calculateFinancialMetrics, performScenarioAnalysis, type FinancialCalculationInput } from './centralizedCalculations';
-import { calculateDatabaseBaseline } from './baselineService';
-import type { RecommendationEngineInput, OpportunityRecommendation } from './recommendationEngine';
+import { calculateFinancialMetrics, type FinancialCalculationInput } from "./centralizedCalculations";
+import { calculateDatabaseBaseline } from "./baselineService";
+import type { RecommendationEngineInput, OpportunityRecommendation } from "./recommendationEngine";
 
 export interface FinancialMetrics {
   conservative: {
@@ -55,23 +55,39 @@ export async function calculateRecommendationFinancials(
   );
 
   // Calculate BESS financials (always included)
-  if (recommendations.solar.recommended || recommendations.generator.recommended || recommendations.evCharging.recommended) {
+  if (
+    recommendations.solar.recommended ||
+    recommendations.generator.recommended ||
+    recommendations.evCharging.recommended
+  ) {
     results.bess = await calculateBESSFinancials(input, baseline);
   }
 
   // Calculate Solar financials
   if (recommendations.solar.recommended && recommendations.solar.estimatedCapacityKW) {
-    results.solar = await calculateSolarFinancials(input, baseline, recommendations.solar.estimatedCapacityKW);
+    results.solar = await calculateSolarFinancials(
+      input,
+      baseline,
+      recommendations.solar.estimatedCapacityKW
+    );
   }
 
   // Calculate Generator financials
   if (recommendations.generator.recommended && recommendations.generator.estimatedCapacityKW) {
-    results.generator = await calculateGeneratorFinancials(input, baseline, recommendations.generator.estimatedCapacityKW);
+    results.generator = await calculateGeneratorFinancials(
+      input,
+      baseline,
+      recommendations.generator.estimatedCapacityKW
+    );
   }
 
   // Calculate EV Charging financials
   if (recommendations.evCharging.recommended && recommendations.evCharging.estimatedLoadKW) {
-    results.evCharging = await calculateEVChargingFinancials(input, baseline, recommendations.evCharging.estimatedLoadKW);
+    results.evCharging = await calculateEVChargingFinancials(
+      input,
+      baseline,
+      recommendations.evCharging.estimatedLoadKW
+    );
   }
 
   return results;
@@ -101,7 +117,7 @@ async function calculateBESSFinancials(
   // Aggressive scenario (optimistic)
   const aggressiveInput: FinancialCalculationInput = {
     ...baseInput,
-    electricityRate: baseInput.electricityRate * 1.20, // 20% higher rates
+    electricityRate: baseInput.electricityRate * 1.2, // 20% higher rates
     priceEscalationRate: 0.03, // Higher escalation
   };
 
@@ -152,15 +168,15 @@ async function calculateSolarFinancials(
   const conservativeInput: FinancialCalculationInput = {
     ...baseInput,
     electricityRate: baseInput.electricityRate * 0.85,
-    solarMW: solarMW * 0.90, // 10% lower production
+    solarMW: solarMW * 0.9, // 10% lower production
     priceEscalationRate: 0.01,
   };
 
   // Aggressive scenario
   const aggressiveInput: FinancialCalculationInput = {
     ...baseInput,
-    electricityRate: baseInput.electricityRate * 1.20,
-    solarMW: solarMW * 1.10, // 10% higher production
+    electricityRate: baseInput.electricityRate * 1.2,
+    solarMW: solarMW * 1.1, // 10% higher production
     priceEscalationRate: 0.03,
   };
 
@@ -217,7 +233,7 @@ async function calculateGeneratorFinancials(
   // Aggressive scenario (higher grid rates = more generator value)
   const aggressiveInput: FinancialCalculationInput = {
     ...baseInput,
-    electricityRate: baseInput.electricityRate * 1.20,
+    electricityRate: baseInput.electricityRate * 1.2,
     priceEscalationRate: 0.03,
   };
 
@@ -274,7 +290,7 @@ async function calculateEVChargingFinancials(
   // Aggressive scenario
   const aggressiveInput: FinancialCalculationInput = {
     ...baseInput,
-    electricityRate: baseInput.electricityRate * 1.20,
+    electricityRate: baseInput.electricityRate * 1.2,
     priceEscalationRate: 0.03,
   };
 
@@ -305,5 +321,3 @@ async function calculateEVChargingFinancials(
     },
   };
 }
-
-

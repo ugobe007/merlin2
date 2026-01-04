@@ -1,20 +1,20 @@
 /**
  * @deprecated This file has been moved to @/core/calculations/sizing/
- * 
+ *
  * MIGRATION NOTICE (Stage 4 - Completed):
  * This file is now located at: src/core/calculations/sizing/bessCalculator.ts
- * 
+ *
  * Please update your imports to:
  * import { ... } from '@/core/calculations/sizing';
- * 
+ *
  * This file will be removed in a future cleanup phase.
- * 
+ *
  * ---
- * 
+ *
  * Grid-Synk Industry-Standard BESS Calculations
  * Source: https://grid-synk.com/bess-roi-calculator/
  * LinkedIn: https://www.linkedin.com/posts/yitming_bess-roi-epc-activity-7393855508987863040-Juaq
- * 
+ *
  * Industry-standard formulas for BESS sizing, efficiency, and equipment selection
  * Based on real-world deployments and manufacturer specifications
  */
@@ -38,7 +38,7 @@ export const DEFAULT_BATTERY_PERFORMANCE: BatteryPerformanceParams = {
   cycleEfficiency: 95, // PCS conversion efficiency and battery internal resistance
   cycleLife: 6000, // 6000 cycles
   cyclesPerDay: 1, // 1 cycle per day
-  equivalentYears: 20 // 6000 cycles / (1 cycle/day * 365 days) ≈ 16-20 years
+  equivalentYears: 20, // 6000 cycles / (1 cycle/day * 365 days) ≈ 16-20 years
 };
 
 // ============================================================================
@@ -52,7 +52,7 @@ export interface CRateParams {
 
 export const DEFAULT_CRATE: CRateParams = {
   customerCRate: 0.25, // 0.25C = 4 hour charge/discharge
-  maxCRate: 0.5 // 0.5C maximum for safety and battery life
+  maxCRate: 0.5, // 0.5C maximum for safety and battery life
 };
 
 // ============================================================================
@@ -70,26 +70,26 @@ export interface BatteryModel {
 
 export const STANDARD_BATTERY_MODELS: BatteryModel[] = [
   {
-    name: '261kWh Battery Model',
+    name: "261kWh Battery Model",
     capacityKWh: 261,
     ratedPowerKW: 130, // 0.5C max
-    voltage: '400V',
-    chemistry: 'LFP'
+    voltage: "400V",
+    chemistry: "LFP",
   },
   {
-    name: '3727.36kWh Battery Model',
+    name: "3727.36kWh Battery Model",
     capacityKWh: 3727.36,
     ratedPowerKW: 1863, // 0.5C max
-    voltage: '690V',
-    chemistry: 'LFP'
+    voltage: "690V",
+    chemistry: "LFP",
   },
   {
-    name: '5015.9kWh Battery Model',
+    name: "5015.9kWh Battery Model",
     capacityKWh: 5015.9,
     ratedPowerKW: 2508, // 0.5C max
-    voltage: '690V',
-    chemistry: 'LFP'
-  }
+    voltage: "690V",
+    chemistry: "LFP",
+  },
 ];
 
 // ============================================================================
@@ -105,12 +105,48 @@ export interface PCSModel {
 }
 
 export const STANDARD_PCS_MODELS: PCSModel[] = [
-  { name: 'PCS 1.25MW', ratedPowerMW: 1.25, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' },
-  { name: 'PCS 1.5MW', ratedPowerMW: 1.5, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' },
-  { name: 'PCS 1.75MW', ratedPowerMW: 1.75, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' },
-  { name: 'PCS 2MW', ratedPowerMW: 2.0, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' },
-  { name: 'PCS 2.5MW', ratedPowerMW: 2.5, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' },
-  { name: 'PCS 5MW', ratedPowerMW: 5.0, outputVoltage: '0.69kV', efficiency: 98.5, type: 'Grid-Following, Bi-Directional, IP65' }
+  {
+    name: "PCS 1.25MW",
+    ratedPowerMW: 1.25,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
+  {
+    name: "PCS 1.5MW",
+    ratedPowerMW: 1.5,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
+  {
+    name: "PCS 1.75MW",
+    ratedPowerMW: 1.75,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
+  {
+    name: "PCS 2MW",
+    ratedPowerMW: 2.0,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
+  {
+    name: "PCS 2.5MW",
+    ratedPowerMW: 2.5,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
+  {
+    name: "PCS 5MW",
+    ratedPowerMW: 5.0,
+    outputVoltage: "0.69kV",
+    efficiency: 98.5,
+    type: "Grid-Following, Bi-Directional, IP65",
+  },
 ];
 
 // ============================================================================
@@ -126,13 +162,55 @@ export interface TransformerModel {
 }
 
 export const STANDARD_TRANSFORMER_MODELS: TransformerModel[] = [
-  { name: '1.25MVA Transformer', ratedPowerMVA: 1.25, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '1.5MVA Transformer', ratedPowerMVA: 1.5, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '1.75MVA Transformer', ratedPowerMVA: 1.75, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '2MVA Transformer', ratedPowerMVA: 2.0, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '2.5MVA Transformer', ratedPowerMVA: 2.5, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '3.5MVA Transformer', ratedPowerMVA: 3.5, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' },
-  { name: '5MVA Transformer', ratedPowerMVA: 5.0, primaryVoltage: '0.69kV', secondaryVoltage: '0.4kV', type: 'Dry-Type, Step-Down' }
+  {
+    name: "1.25MVA Transformer",
+    ratedPowerMVA: 1.25,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "1.5MVA Transformer",
+    ratedPowerMVA: 1.5,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "1.75MVA Transformer",
+    ratedPowerMVA: 1.75,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "2MVA Transformer",
+    ratedPowerMVA: 2.0,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "2.5MVA Transformer",
+    ratedPowerMVA: 2.5,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "3.5MVA Transformer",
+    ratedPowerMVA: 3.5,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
+  {
+    name: "5MVA Transformer",
+    ratedPowerMVA: 5.0,
+    primaryVoltage: "0.69kV",
+    secondaryVoltage: "0.4kV",
+    type: "Dry-Type, Step-Down",
+  },
 ];
 
 // ============================================================================
@@ -156,17 +234,17 @@ export interface BESSSizingResult {
   afterCycleEfficiencyMWh: number;
   requiredBatteryCapacityMWh: number;
   usableBatteryCapacityMWh: number;
-  
+
   // Discharge Parameters
   requiredDischargingPowerMW: number;
   customerCRate: number;
   batterySizeBasedOnCRateMW: number;
   cRateSufficient: boolean;
-  
+
   // Charging Parameters
   maxChargePowerMW: number;
   fullChargeTimeHours: number;
-  
+
   // Equipment Recommendations
   recommendedBatteryModels: Array<{
     model: string;
@@ -187,7 +265,7 @@ export interface BESSSizingResult {
 
 /**
  * Calculate BESS sizing using Grid-Synk industry-standard methodology
- * 
+ *
  * Formula breakdown:
  * 1. Initial Capacity = Customer Load (MW) × Duration (hours)
  * 2. After DoD = Initial Capacity / (DoD %)
@@ -201,40 +279,40 @@ export function calculateBESSSizing(input: BESSSizingInput): BESSSizingResult {
   const staticEff = (input.staticEfficiency || DEFAULT_BATTERY_PERFORMANCE.staticEfficiency) / 100;
   const cycleEff = (input.cycleEfficiency || DEFAULT_BATTERY_PERFORMANCE.cycleEfficiency) / 100;
   const cRate = input.customerCRate || DEFAULT_CRATE.customerCRate;
-  
+
   // Step 1: Calculate initial battery capacity (energy needed)
   const initialBatteryCapacityMWh = input.customerLoadMW * input.durationHours;
-  
+
   // Step 2: Account for Depth of Discharge
   // If DoD = 90%, we can only use 90% of battery, so we need more capacity
   const afterDoDMWh = initialBatteryCapacityMWh / dod;
-  
+
   // Step 3: Account for Static Efficiency (self-discharge, BMS standby)
   const afterStaticEfficiencyMWh = afterDoDMWh / staticEff;
-  
+
   // Step 4: Account for Cycle Efficiency (PCS conversion, internal resistance)
   const afterCycleEfficiencyMWh = afterStaticEfficiencyMWh / cycleEff;
-  
+
   // Step 5: Required Battery Capacity (what you must purchase)
   const requiredBatteryCapacityMWh = afterCycleEfficiencyMWh;
-  
+
   // Usable capacity after factoring in DoD
   const usableBatteryCapacityMWh = requiredBatteryCapacityMWh * dod;
-  
+
   // Discharge Parameters
   const requiredDischargingPowerMW = input.customerLoadMW;
   const batterySizeBasedOnCRateMW = usableBatteryCapacityMWh * cRate;
   const cRateSufficient = batterySizeBasedOnCRateMW >= requiredDischargingPowerMW;
-  
+
   // Charging Parameters
   const maxChargePowerMW = usableBatteryCapacityMWh * cRate;
   const fullChargeTimeHours = usableBatteryCapacityMWh / maxChargePowerMW;
-  
+
   // Equipment Recommendations
   const recommendedBatteryModels = selectBatteryModels(requiredBatteryCapacityMWh);
   const recommendedPCS = selectPCS(maxChargePowerMW);
   const recommendedTransformer = selectTransformer(recommendedPCS.totalPowerMW);
-  
+
   return {
     initialBatteryCapacityMWh,
     afterDoDMWh,
@@ -250,39 +328,45 @@ export function calculateBESSSizing(input: BESSSizingInput): BESSSizingResult {
     fullChargeTimeHours,
     recommendedBatteryModels,
     recommendedPCS,
-    recommendedTransformer
+    recommendedTransformer,
   };
 }
 
 /**
  * Select optimal battery models based on required capacity
  */
-function selectBatteryModels(requiredCapacityMWh: number): Array<{model: string; quantity: number; totalCapacityMWh: number}> {
+function selectBatteryModels(
+  requiredCapacityMWh: number
+): Array<{ model: string; quantity: number; totalCapacityMWh: number }> {
   const results = [];
-  
+
   // Try 5015.9kWh model (larger)
   const largeModelQty = Math.ceil((requiredCapacityMWh * 1000) / 5015.9);
   results.push({
-    model: '5015.9kWh Battery',
+    model: "5015.9kWh Battery",
     quantity: largeModelQty,
-    totalCapacityMWh: (largeModelQty * 5015.9) / 1000
+    totalCapacityMWh: (largeModelQty * 5015.9) / 1000,
   });
-  
+
   // Try 3727.36kWh model (smaller)
   const smallModelQty = Math.ceil((requiredCapacityMWh * 1000) / 3727.36);
   results.push({
-    model: '3727.36kWh Battery',
+    model: "3727.36kWh Battery",
     quantity: smallModelQty,
-    totalCapacityMWh: (smallModelQty * 3727.36) / 1000
+    totalCapacityMWh: (smallModelQty * 3727.36) / 1000,
   });
-  
+
   return results;
 }
 
 /**
  * Select optimal PCS based on required power
  */
-function selectPCS(requiredPowerMW: number): {model: string; quantity: number; totalPowerMW: number} {
+function selectPCS(requiredPowerMW: number): {
+  model: string;
+  quantity: number;
+  totalPowerMW: number;
+} {
   // Find smallest PCS that can handle the load
   for (const pcs of STANDARD_PCS_MODELS) {
     const qty = Math.ceil(requiredPowerMW / pcs.ratedPowerMW);
@@ -290,28 +374,32 @@ function selectPCS(requiredPowerMW: number): {model: string; quantity: number; t
       return {
         model: pcs.name,
         quantity: qty,
-        totalPowerMW: qty * pcs.ratedPowerMW
+        totalPowerMW: qty * pcs.ratedPowerMW,
       };
     }
   }
-  
+
   // Default to 5MW if nothing fits
   const qty = Math.ceil(requiredPowerMW / 5.0);
   return {
-    model: 'PCS 5MW',
+    model: "PCS 5MW",
     quantity: qty,
-    totalPowerMW: qty * 5.0
+    totalPowerMW: qty * 5.0,
   };
 }
 
 /**
  * Select optimal transformer based on PCS power
  */
-function selectTransformer(pcsPowerMW: number): {model: string; quantity: number; totalPowerMVA: number} {
+function selectTransformer(pcsPowerMW: number): {
+  model: string;
+  quantity: number;
+  totalPowerMVA: number;
+} {
   // Transformer MVA rating should be ≥ PCS MW rating / power factor
   const powerFactor = 0.95;
   const requiredMVA = pcsPowerMW / powerFactor;
-  
+
   // Find smallest transformer
   for (const transformer of STANDARD_TRANSFORMER_MODELS) {
     const qty = Math.ceil(requiredMVA / transformer.ratedPowerMVA);
@@ -319,17 +407,17 @@ function selectTransformer(pcsPowerMW: number): {model: string; quantity: number
       return {
         model: transformer.name,
         quantity: qty,
-        totalPowerMVA: qty * transformer.ratedPowerMVA
+        totalPowerMVA: qty * transformer.ratedPowerMVA,
       };
     }
   }
-  
+
   // Default to 5MVA
   const qty = Math.ceil(requiredMVA / 5.0);
   return {
-    model: '5MVA Transformer',
+    model: "5MVA Transformer",
     quantity: qty,
-    totalPowerMVA: qty * 5.0
+    totalPowerMVA: qty * 5.0,
   };
 }
 
@@ -363,17 +451,20 @@ export function calculateSolarModuleSeries(params: SolarDesignParams): SolarDesi
   // Formula 1: Maximum number of series modules (based on Voc at cold temp)
   const vocAtCold = params.voc * (1 + (params.tempMin - 25) * (params.kv / 100));
   const maxSeriesModules = Math.floor(params.vdcMax / vocAtCold);
-  
+
   // Formula 2: Minimum series modules for MPPT range (based on Vmp at hot temp)
   const vmpAtHot = params.vpm * (1 + (params.tempMax - 25) * (params.kvPrime / 100));
   const minSeriesModules = Math.ceil(params.vmpptMin / vmpAtHot);
-  
+
   // Recommended: Take the stricter (lower) number to satisfy both conditions
   const recommendedSeriesModules = Math.min(maxSeriesModules, 20); // 20 is typical maximum
-  
+
   return {
     maxSeriesModules,
     minSeriesModules,
-    recommendedSeriesModules: Math.max(minSeriesModules, Math.min(recommendedSeriesModules, maxSeriesModules))
+    recommendedSeriesModules: Math.max(
+      minSeriesModules,
+      Math.min(recommendedSeriesModules, maxSeriesModules)
+    ),
   };
 }

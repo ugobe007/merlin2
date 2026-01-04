@@ -4,7 +4,7 @@
  */
 
 interface OpenAIMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -30,8 +30,8 @@ interface OpenAIResponse {
 
 class OpenAIService {
   private apiKey: string | null = null;
-  private baseUrl = 'https://api.openai.com/v1/chat/completions';
-  
+  private baseUrl = "https://api.openai.com/v1/chat/completions";
+
   // BESS Expert System Prompt - Enhanced with comprehensive market pricing intelligence
   private systemPrompt = `You are an expert AI consultant specializing in Battery Energy Storage Systems (BESS) with access to the latest market pricing and technical intelligence. You provide accurate, data-driven advice based on:
 
@@ -79,9 +79,9 @@ Always provide specific cost estimates, technical specs, and ROI analysis. Ask c
   constructor() {
     // Try to get API key from environment variables
     this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || null;
-    
+
     if (!this.apiKey) {
-      console.warn('OpenAI API key not found. Set VITE_OPENAI_API_KEY in .env file');
+      console.warn("OpenAI API key not found. Set VITE_OPENAI_API_KEY in .env file");
     }
   }
 
@@ -95,26 +95,29 @@ Always provide specific cost estimates, technical specs, and ROI analysis. Ask c
   /**
    * Send a chat message to OpenAI and get a response
    */
-  async sendMessage(userMessage: string, conversationHistory: OpenAIMessage[] = []): Promise<string> {
+  async sendMessage(
+    userMessage: string,
+    conversationHistory: OpenAIMessage[] = []
+  ): Promise<string> {
     if (!this.apiKey) {
       return this.getFallbackResponse(userMessage);
     }
 
     try {
       const messages: OpenAIMessage[] = [
-        { role: 'system', content: this.systemPrompt },
+        { role: "system", content: this.systemPrompt },
         ...conversationHistory,
-        { role: 'user', content: userMessage }
+        { role: "user", content: userMessage },
       ];
 
       const response = await fetch(this.baseUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4-turbo-preview', // Use GPT-4 for better technical knowledge
+          model: "gpt-4-turbo-preview", // Use GPT-4 for better technical knowledge
           messages: messages,
           max_tokens: 1000,
           temperature: 0.7, // Balanced creativity and accuracy
@@ -128,15 +131,14 @@ Always provide specific cost estimates, technical specs, and ROI analysis. Ask c
       }
 
       const data: OpenAIResponse = await response.json();
-      
+
       if (!data.choices || data.choices.length === 0) {
-        throw new Error('No response from OpenAI');
+        throw new Error("No response from OpenAI");
       }
 
       return data.choices[0].message.content.trim();
-
     } catch (error) {
-      console.error('OpenAI Service Error:', error);
+      console.error("OpenAI Service Error:", error);
       return this.getFallbackResponse(userMessage);
     }
   }
@@ -146,9 +148,9 @@ Always provide specific cost estimates, technical specs, and ROI analysis. Ask c
    */
   private getFallbackResponse(userMessage: string): string {
     const input = userMessage.toLowerCase();
-    
+
     // Enhanced fallback responses based on BESS expertise
-    if (input.includes('size') || input.includes('sizing')) {
+    if (input.includes("size") || input.includes("sizing")) {
       return `**System Sizing Guidance** (Expert Mode)
 
 For optimal BESS sizing, I need to understand your specific requirements:
@@ -176,8 +178,8 @@ For optimal BESS sizing, I need to understand your specific requirements:
 
 Could you provide more details about your project scope and primary objectives? I can then give you specific sizing recommendations and cost estimates.`;
     }
-    
-    if (input.includes('cost') || input.includes('price') || input.includes('roi')) {
+
+    if (input.includes("cost") || input.includes("price") || input.includes("roi")) {
       return `**BESS Cost Analysis** (Market Intelligence)
 
 **Current Market Pricing (2025):**
@@ -204,8 +206,8 @@ Could you provide more details about your project scope and primary objectives? 
 
 Would you like me to calculate specific ROI projections for your use case? I can factor in your local utility rates, system size, and application type.`;
     }
-    
-    if (input.includes('use case') || input.includes('application')) {
+
+    if (input.includes("use case") || input.includes("application")) {
       return `**BESS Use Case Analysis** (Application Engineering)
 
 **Primary Revenue Streams:**
@@ -241,8 +243,8 @@ Would you like me to calculate specific ROI projections for your use case? I can
 
 What type of facility/application are you considering? I can provide tailored recommendations based on your specific situation.`;
     }
-    
-    if (input.includes('battery') || input.includes('technology') || input.includes('lithium')) {
+
+    if (input.includes("battery") || input.includes("technology") || input.includes("lithium")) {
       return `**Battery Technology Comparison** (Technical Specifications)
 
 **Lithium-Ion Technologies:**
@@ -314,10 +316,12 @@ What specific aspect of energy storage can I help you with today?`;
   /**
    * Convert conversation messages to OpenAI format
    */
-  formatConversationHistory(messages: Array<{type: 'user' | 'ai', content: string}>): OpenAIMessage[] {
-    return messages.map(msg => ({
-      role: msg.type === 'user' ? 'user' : 'assistant',
-      content: msg.content
+  formatConversationHistory(
+    messages: Array<{ type: "user" | "ai"; content: string }>
+  ): OpenAIMessage[] {
+    return messages.map((msg) => ({
+      role: msg.type === "user" ? "user" : "assistant",
+      content: msg.content,
     }));
   }
 }

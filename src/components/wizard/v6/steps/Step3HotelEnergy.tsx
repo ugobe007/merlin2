@@ -3,9 +3,12 @@ import { supabase } from '@/services/supabaseClient';
 import { Loader2, Plus, Minus } from 'lucide-react';
 import type { WizardState } from '../types';
 
+// Hotel image
+import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
+
 interface Props {
   state: WizardState;
-  updateState: (updates: Partial<WizardState>) => void;
+  updateState: (updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)) => void;
 }
 
 interface QuestionOption {
@@ -189,10 +192,9 @@ const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
 const Step3HotelEnergy = ({ state, updateState }: Props) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [answers, setAnswers] = useState<Record<string, any>>(state.useCaseData || {});
   const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
 
-  // Fetch questions from database
+  // Fetch questions from database and initialize defaults (if missing from state)
   useEffect(() => {
     async function fetchQuestions() {
       const { data, error } = await supabase
@@ -205,35 +207,37 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
         console.error('Error fetching questions:', error);
       } else {
         setQuestions(data || []);
+        
+        // Initialize defaults from database questions (UI initialization only)
+        // SSOT: state.useCaseData (user-provided values) takes precedence
+        const currentData = state.useCaseData || {}; // SSOT - user-provided values
         const defaults: Record<string, any> = {};
+        
         data?.forEach(q => {
-          if (q.default_value && !answers[q.field_name]) {
+          // Only use default if field is not in SSOT (currentData)
+          // Defaults are for UI initialization only, NOT SSOT
+          if (q.default_value && currentData[q.field_name] === undefined) {
             if (q.question_type === 'number') {
               defaults[q.field_name] = parseFloat(q.default_value);
+            } else if (q.question_type === 'boolean') {
+              defaults[q.field_name] = q.default_value === 'true';
             } else {
               defaults[q.field_name] = q.default_value;
             }
           }
         });
+        
+        // Only update if defaults were found (missing fields)
         if (Object.keys(defaults).length > 0) {
-          setAnswers(prev => ({ ...defaults, ...prev }));
+          updateState((prev: WizardState): Partial<WizardState> => ({
+            useCaseData: { ...defaults, ...prev.useCaseData } // defaults first, then SSOT overrides
+          }));
         }
       }
       setLoading(false);
     }
     fetchQuestions();
   }, []);
-
-  // Sync answers to parent state
-  useEffect(() => {
-    const energyEstimate = calculateEnergy();
-    updateState({
-      useCaseData: {
-        ...answers,
-        estimatedAnnualKwh: energyEstimate
-      }
-    });
-  }, [answers]);
 
   const getQuestion = (fieldName: string): Question | undefined => {
     return questions.find(q => q.field_name === fieldName);
@@ -244,20 +248,45 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
     return q?.options || [];
   };
 
+  // SSOT: Get value from state.useCaseData (like Step3Details)
+  const getValue = (fieldName: string) => {
+    const stored = state.useCaseData?.[fieldName];
+    if (stored !== undefined) return stored;
+    
+    const question = getQuestion(fieldName);
+    if (question?.default_value) {
+      if (question.question_type === 'number') return parseFloat(question.default_value);
+      if (question.question_type === 'boolean') return question.default_value === 'true';
+      return question.default_value;
+    }
+    
+    return question?.question_type === 'number' ? 0 : 
+           question?.question_type === 'boolean' ? false :
+           question?.question_type === 'multiselect' ? [] : '';
+  };
+
+  // SSOT: Update value using functional update (like Step3Details)
+  const updateAnswer = (fieldName: string, value: any) => {
+    updateState((prev: WizardState): Partial<WizardState> => ({
+      useCaseData: { ...prev.useCaseData, [fieldName]: value }
+    }));
+  };
+
   const estimatedSqft = useMemo(() => {
     const categoryOptions = getOptions('hotelCategory');
-    const selectedCategory = categoryOptions.find(o => o.value === answers.hotelCategory);
+    const selectedCategory = categoryOptions.find(o => o.value === getValue('hotelCategory'));
     const multiplier = selectedCategory?.sqftMultiplier || 500;
-    return (answers.roomCount || 150) * multiplier;
-  }, [answers.hotelCategory, answers.roomCount, questions]);
+    const roomCount = getValue('roomCount') || (getQuestion('roomCount')?.default_value ? parseFloat(getQuestion('roomCount')!.default_value!) : 150);
+    return roomCount * multiplier;
+  }, [state.useCaseData?.hotelCategory, state.useCaseData?.roomCount, questions]);
 
   const calculateEnergy = (): number => {
-    const sqft = answers.squareFootage > 0 ? answers.squareFootage : estimatedSqft;
+    const sqft = (getValue('squareFootage') || 0) > 0 ? getValue('squareFootage') : estimatedSqft;
     let base = sqft * 15;
 
     ['poolType', 'fitnessCenter', 'spaServices', 'foodBeverage', 'laundryType', 'meetingSpace', 'parkingType'].forEach(field => {
       const options = getOptions(field);
-      const selected = options.find(o => o.value === answers[field]);
+      const selected = options.find(o => o.value === getValue(field));
       if (selected?.energyKwh) {
         base += selected.energyKwh;
       }
@@ -265,7 +294,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
     ['exteriorLoads'].forEach(field => {
       const options = getOptions(field);
-      const selectedValues = answers[field] || [];
+      const selectedValues = getValue(field) || [];
       options.forEach(opt => {
         if (selectedValues.includes(opt.value) && opt.energyKwh) {
           base += opt.energyKwh;
@@ -275,19 +304,46 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
     const elevatorQ = getQuestion('elevatorCount');
     const elevatorEnergy = elevatorQ?.options?.[0]?.energyPerUnit || 8000;
-    base += (answers.elevatorCount || 2) * elevatorEnergy;
+    base += (getValue('elevatorCount') || 2) * elevatorEnergy;
 
     const hvacOptions = getOptions('hvacType');
-    const selectedHvac = hvacOptions.find(o => o.value === answers.hvacType);
+    const selectedHvac = hvacOptions.find(o => o.value === getValue('hvacType'));
     if (selectedHvac?.energyMultiplier) {
       base *= selectedHvac.energyMultiplier;
     }
 
-    const occupancy = answers.avgOccupancy || 65;
+    const occupancy = getValue('avgOccupancy') || 65;
     base *= (occupancy / 100) * 0.7 + 0.3;
 
     return Math.round(base);
   };
+
+  // FIXED: Move state update to useEffect to prevent setState during render
+  const energyEstimate = useMemo(() => calculateEnergy(), [
+    state.useCaseData?.squareFootage,
+    estimatedSqft,
+    state.useCaseData?.poolType,
+    state.useCaseData?.fitnessCenter,
+    state.useCaseData?.spaServices,
+    state.useCaseData?.foodBeverage,
+    state.useCaseData?.laundryType,
+    state.useCaseData?.meetingSpace,
+    state.useCaseData?.parkingType,
+    state.useCaseData?.exteriorLoads,
+    state.useCaseData?.elevatorCount,
+    state.useCaseData?.hvacType,
+    state.useCaseData?.avgOccupancy,
+    questions,
+  ]);
+
+  // Update estimatedAnnualKwh in state when energy estimate changes
+  useEffect(() => {
+    if (state.useCaseData?.estimatedAnnualKwh !== energyEstimate) {
+      updateState((prev: WizardState): Partial<WizardState> => ({
+        useCaseData: { ...prev.useCaseData, estimatedAnnualKwh: energyEstimate }
+      }));
+    }
+  }, [energyEstimate, state.useCaseData?.estimatedAnnualKwh, updateState]);
 
   const autofillForCategory = () => {
     const presets: Record<string, Record<string, string>> = {
@@ -298,23 +354,26 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
       'boutique': { poolType: 'none', fitnessCenter: 'basic', spaServices: 'basic', foodBeverage: 'restaurant', laundryType: 'outsourced', meetingSpace: 'small' },
       'extended': { poolType: 'outdoor', fitnessCenter: 'basic', spaServices: 'none', foodBeverage: 'breakfast', laundryType: 'guest', meetingSpace: 'none' }
     };
-    if (answers.hotelCategory && presets[answers.hotelCategory]) {
-      setAnswers(prev => ({ ...prev, ...presets[answers.hotelCategory] }));
+    const hotelCategory = getValue('hotelCategory');
+    if (hotelCategory && presets[hotelCategory]) {
+      updateState((prev: WizardState): Partial<WizardState> => ({
+        useCaseData: { ...prev.useCaseData, ...presets[hotelCategory] }
+      }));
     }
     setShowAutofillPrompt(false);
   };
 
   const handleCategoryChange = (value: string) => {
-    setAnswers(prev => ({ ...prev, hotelCategory: value }));
+    updateAnswer('hotelCategory', value);
     setShowAutofillPrompt(true);
   };
 
   const toggleMultiselect = (field: string, value: string) => {
-    const current = answers[field] || [];
+    const current = getValue(field) || [];
     if (current.includes(value)) {
-      setAnswers(prev => ({ ...prev, [field]: current.filter((v: string) => v !== value) }));
+      updateAnswer(field, current.filter((v: string) => v !== value));
     } else {
-      setAnswers(prev => ({ ...prev, [field]: [...current, value] }));
+      updateAnswer(field, [...current, value]);
     }
   };
 
@@ -365,26 +424,71 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
           Estimated Annual Usage
         </div>
         <div style={{ fontSize: 32, fontWeight: 700, color: COLORS.value }}>
-          {formatNumber(calculateEnergy())}
+          {formatNumber(energyEstimate)}
           <span style={{ fontSize: 16, fontWeight: 400, marginLeft: 4 }}>kWh</span>
         </div>
         <div style={{ fontSize: 12, color: '#a7f3d0', marginTop: 4 }}>
-          ~{formatNumber(Math.round(calculateEnergy() / 12))} kWh/month
+          ~{formatNumber(Math.round(energyEstimate / 12))} kWh/month
         </div>
       </div>
 
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <h1 style={{ 
-          fontSize: 36, fontWeight: 700, margin: 0,
-          background: 'linear-gradient(135deg, #fff 0%, #94a3b8 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+      {/* Header with Image */}
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ 
+          position: 'relative', 
+          borderRadius: 24, 
+          overflow: 'hidden', 
+          marginBottom: 24,
+          height: 200,
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
         }}>
-          Hotel Energy Profile
-        </h1>
-        <p style={{ color: COLORS.label, marginTop: 8, fontSize: 16 }}>
-          Tell us about your property • {questions.length} questions
-        </p>
+          {/* Hotel Image */}
+          <img 
+            src={hotelImg} 
+            alt="Hotel"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.6
+            }}
+          />
+          
+          {/* Gradient Overlay */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)'
+          }} />
+          
+          {/* Title Overlay */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '24px 32px',
+            textAlign: 'center'
+          }}>
+            <h1 style={{ 
+              fontSize: 36, 
+              fontWeight: 700, 
+              margin: 0,
+              color: COLORS.value,
+              textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+            }}>
+              Hotel Energy Profile
+            </h1>
+            <p style={{ 
+              color: COLORS.label, 
+              marginTop: 8, 
+              fontSize: 16,
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)'
+            }}>
+              Tell us about your property • {questions.length} questions
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -401,15 +505,15 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 key={cat.value}
                 onClick={() => handleCategoryChange(cat.value)}
                 style={{
-                  background: answers.hotelCategory === cat.value 
+                  background: state.useCaseData?.hotelCategory === cat.value 
                     ? `linear-gradient(135deg, ${cat.color}40, ${cat.color}20)`
                     : 'rgba(255,255,255,0.02)',
-                  border: answers.hotelCategory === cat.value 
+                  border: state.useCaseData?.hotelCategory === cat.value 
                     ? `2px solid ${cat.color}`
                     : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 16, padding: '20px 12px', cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  transform: answers.hotelCategory === cat.value ? 'scale(1.02)' : 'scale(1)'
+                  transform: state.useCaseData?.hotelCategory === cat.value ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
                 <div style={{ fontSize: 32, marginBottom: 8 }}>{cat.icon}</div>
@@ -418,34 +522,63 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
             ))}
           </div>
 
-          {showAutofillPrompt && answers.hotelCategory && (
+          {showAutofillPrompt && state.useCaseData?.hotelCategory && (
             <div style={{
               marginTop: 20, padding: '16px 20px',
               background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))',
               borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              position: 'relative',
+              zIndex: 10
             }}>
               <div>
                 <span style={{ fontSize: 14, color: COLORS.value }}>💡 Auto-fill typical amenities for </span>
-                <strong style={{ color: COLORS.value }}>{categoryOptions.find(c => c.value === answers.hotelCategory)?.label}</strong>
+                <strong style={{ color: COLORS.value }}>{categoryOptions.find(c => c.value === state.useCaseData?.hotelCategory)?.label}</strong>
                 <span style={{ fontSize: 14, color: COLORS.value }}> hotels?</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={autofillForCategory} className="pulse-attention" style={{ 
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
-                  border: '2px solid #fcd34d', 
-                  borderRadius: 12, 
-                  padding: '12px 24px', 
-                  color: '#1e293b', 
-                  fontWeight: 700, 
-                  cursor: 'pointer', 
-                  fontSize: 15,
-                  boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
-                  transition: 'all 0.2s ease'
-                }}>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    autofillForCategory();
+                  }} 
+                  className="pulse-attention" 
+                  style={{ 
+                    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                    border: '2px solid #fcd34d', 
+                    borderRadius: 12, 
+                    padding: '12px 24px', 
+                    color: '#1e293b', 
+                    fontWeight: 700, 
+                    cursor: 'pointer', 
+                    fontSize: 15,
+                    boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    zIndex: 20
+                  }}
+                >
                   ✨ Yes, autofill
                 </button>
-                <button onClick={() => setShowAutofillPrompt(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '8px 16px', color: COLORS.label, cursor: 'pointer', fontSize: 13 }}>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowAutofillPrompt(false);
+                  }} 
+                  style={{ 
+                    background: 'transparent', 
+                    border: '1px solid rgba(255,255,255,0.2)', 
+                    borderRadius: 8, 
+                    padding: '8px 16px', 
+                    color: COLORS.label, 
+                    cursor: 'pointer', 
+                    fontSize: 13,
+                    position: 'relative',
+                    zIndex: 20
+                  }}
+                >
                   I'll customize
                 </button>
               </div>
@@ -462,23 +595,26 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
             {/* Guest Rooms with +/- */}
             <SliderWithButtons
               label="Guest Rooms"
-              value={answers.roomCount || 150}
+              value={getValue('roomCount') ?? (roomQ?.default_value ? parseFloat(roomQ.default_value) : 150)}
               min={Number(roomQ?.min_value) || 10}
               max={Number(roomQ?.max_value) || 1000}
               step={10}
-              onChange={(val) => setAnswers(prev => ({ ...prev, roomCount: val }))}
+              onChange={(val) => {
+                console.log('🏨 [Step3HotelEnergy] roomCount changed to:', val);
+                updateAnswer('roomCount', val);
+              }}
               color={COLORS.primary}
             />
 
             {/* Square Footage */}
             <div>
               <label style={{ fontSize: 12, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1 }}>Square Footage</label>
-              <div style={{ fontSize: 28, fontWeight: 700, color: answers.squareFootage > 0 ? COLORS.value : COLORS.muted, marginTop: 8 }}>
-                {formatNumber(answers.squareFootage > 0 ? answers.squareFootage : estimatedSqft)}
+              <div style={{ fontSize: 28, fontWeight: 700, color: (state.useCaseData?.squareFootage || 0) > 0 ? COLORS.value : COLORS.muted, marginTop: 8 }}>
+                {formatNumber((state.useCaseData?.squareFootage || 0) > 0 ? state.useCaseData.squareFootage : estimatedSqft)}
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, cursor: 'pointer' }}>
-                <input type="checkbox" checked={!answers.squareFootage || answers.squareFootage === 0}
-                  onChange={(e) => setAnswers(prev => ({ ...prev, squareFootage: e.target.checked ? 0 : estimatedSqft }))}
+                <input type="checkbox" checked={!state.useCaseData?.squareFootage || state.useCaseData.squareFootage === 0}
+                  onChange={(e) => updateAnswer('squareFootage', e.target.checked ? 0 : estimatedSqft)}
                   style={{ accentColor: COLORS.primary }} />
                 <span style={{ fontSize: 12, color: COLORS.label }}>Auto-estimate</span>
               </label>
@@ -487,11 +623,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
             {/* Avg Occupancy with +/- */}
             <SliderWithButtons
               label="Avg Occupancy"
-              value={answers.avgOccupancy || 65}
+              value={getValue('avgOccupancy') || 65}
               min={Number(occupancyQ?.min_value) || 20}
               max={Number(occupancyQ?.max_value) || 95}
               step={5}
-              onChange={(val) => setAnswers(prev => ({ ...prev, avgOccupancy: val }))}
+              onChange={(val) => updateAnswer('avgOccupancy', val)}
               unit="%"
               color={COLORS.success}
             />
@@ -505,11 +641,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <div style={{ flex: 1 }}>
                   <SliderWithButtons
                     label=""
-                    value={answers.floorCount || 4}
+                    value={getValue('floorCount') || 4}
                     min={Number(floorsQ?.min_value) || 1}
                     max={Number(floorsQ?.max_value) || 50}
                     step={1}
-                    onChange={(val) => setAnswers(prev => ({ ...prev, floorCount: val }))}
+                    onChange={(val) => updateAnswer('floorCount', val)}
                     color={COLORS.purple}
                   />
                 </div>
@@ -517,11 +653,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <div style={{ flex: 1 }}>
                   <SliderWithButtons
                     label=""
-                    value={answers.elevatorCount || 2}
+                    value={getValue('elevatorCount') || 2}
                     min={Number(elevatorsQ?.min_value) || 0}
                     max={Number(elevatorsQ?.max_value) || 20}
                     step={1}
-                    onChange={(val) => setAnswers(prev => ({ ...prev, elevatorCount: val }))}
+                    onChange={(val) => updateAnswer('elevatorCount', val)}
                     color={COLORS.purple}
                   />
                 </div>
@@ -536,11 +672,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
               {hvacOptions.map(opt => (
-                <button key={opt.value} onClick={() => setAnswers(prev => ({ ...prev, hvacType: opt.value }))}
+                <button key={opt.value} onClick={() => updateAnswer('hvacType', opt.value)}
                   style={{
                     flex: 1, padding: '12px 16px',
-                    background: answers.hvacType === opt.value ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255,255,255,0.02)',
-                    border: answers.hvacType === opt.value ? `2px solid ${COLORS.primary}` : `2px solid ${COLORS.cardBorder}`,
+                    background: state.useCaseData?.hvacType === opt.value ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255,255,255,0.02)',
+                    border: state.useCaseData?.hvacType === opt.value ? `2px solid ${COLORS.primary}` : `2px solid ${COLORS.cardBorder}`,
                     borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease'
                   }}>
                   <div style={{ fontSize: 20 }}>{opt.icon}</div>
@@ -569,11 +705,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>{label}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(options.length, 4)}, 1fr)`, gap: 8 }}>
                   {options.map(opt => (
-                    <button key={opt.value} onClick={() => setAnswers(prev => ({ ...prev, [field]: opt.value }))} title={opt.label}
+                    <button key={opt.value} onClick={() => updateAnswer(field, opt.value)} title={opt.label}
                       style={{
                         padding: '14px 8px',
-                        background: answers[field] === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
-                        border: answers[field] === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                        background: state.useCaseData?.[field] === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                        border: state.useCaseData?.[field] === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
                         borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s ease'
                       }}>
                       <div style={{ fontSize: 24 }}>{opt.icon}</div>
@@ -591,11 +727,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: COLORS.heading }}>4 → Parking & Exterior</h2>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {parkingOptions.map(opt => (
-              <button key={opt.value} onClick={() => setAnswers(prev => ({ ...prev, parkingType: opt.value }))}
+              <button key={opt.value} onClick={() => updateAnswer('parkingType', opt.value)}
                 style={{
                   flex: 1, padding: '14px 8px',
-                  background: answers.parkingType === opt.value ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.02)',
-                  border: answers.parkingType === opt.value ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.cardBorder}`,
+                  background: state.useCaseData?.parkingType === opt.value ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.02)',
+                  border: state.useCaseData?.parkingType === opt.value ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 10, cursor: 'pointer'
                 }}>
                 <div style={{ fontSize: 20 }}>{opt.icon}</div>
@@ -609,8 +745,8 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
               <button key={opt.value} onClick={() => toggleMultiselect('exteriorLoads', opt.value)}
                 style={{
                   padding: '8px 12px',
-                  background: (answers.exteriorLoads || []).includes(opt.value) ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.02)',
-                  border: (answers.exteriorLoads || []).includes(opt.value) ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.cardBorder}`,
+                  background: (state.useCaseData?.exteriorLoads || []).includes(opt.value) ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.02)',
+                  border: (state.useCaseData?.exteriorLoads || []).includes(opt.value) ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 8, cursor: 'pointer', fontSize: 12, color: COLORS.value
                 }}>
                 {opt.icon} {opt.label}
@@ -624,11 +760,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: COLORS.warning }}>5 → ☀️ Solar Interest</h2>
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
             {solarInterestOptions.map(opt => (
-              <button key={opt.value} onClick={() => setAnswers(prev => ({ ...prev, solarInterest: opt.value }))}
+              <button key={opt.value} onClick={() => updateAnswer('solarInterest', opt.value)}
                 style={{
                   flex: 1, padding: '10px 6px',
-                  background: answers.solarInterest === opt.value ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.02)',
-                  border: answers.solarInterest === opt.value ? `2px solid ${COLORS.warning}` : `2px solid ${COLORS.cardBorder}`,
+                  background: state.useCaseData?.solarInterest === opt.value ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.02)',
+                  border: state.useCaseData?.solarInterest === opt.value ? `2px solid ${COLORS.warning}` : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 8, cursor: 'pointer', fontSize: 11, color: COLORS.value
                 }}>
                 {opt.label}
@@ -641,8 +777,8 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
               <button key={opt.value} onClick={() => toggleMultiselect('solarSpace', opt.value)}
                 style={{
                   flex: 1, padding: '12px 8px',
-                  background: (answers.solarSpace || []).includes(opt.value) ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.02)',
-                  border: (answers.solarSpace || []).includes(opt.value) ? `2px solid ${COLORS.warning}` : `2px solid ${COLORS.cardBorder}`,
+                  background: (state.useCaseData?.solarSpace || []).includes(opt.value) ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.02)',
+                  border: (state.useCaseData?.solarSpace || []).includes(opt.value) ? `2px solid ${COLORS.warning}` : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 10, cursor: 'pointer'
                 }}>
                 <div style={{ fontSize: 18 }}>{opt.icon}</div>
@@ -660,16 +796,16 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
               <button key={opt.value}
                 onClick={() => {
                   if (opt.value === 'none') {
-                    setAnswers(prev => ({ ...prev, existingGeneration: [] }));
+                    updateAnswer('existingGeneration', []);
                   } else {
                     toggleMultiselect('existingGeneration', opt.value);
                   }
                 }}
                 style={{
                   flex: 1, padding: '20px 16px',
-                  background: (opt.value === 'none' && (answers.existingGeneration || []).length === 0) || (answers.existingGeneration || []).includes(opt.value)
+                  background: (opt.value === 'none' && (state.useCaseData?.existingGeneration || []).length === 0) || (state.useCaseData?.existingGeneration || []).includes(opt.value)
                     ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255,255,255,0.02)',
-                  border: (opt.value === 'none' && (answers.existingGeneration || []).length === 0) || (answers.existingGeneration || []).includes(opt.value)
+                  border: (opt.value === 'none' && (state.useCaseData?.existingGeneration || []).length === 0) || (state.useCaseData?.existingGeneration || []).includes(opt.value)
                     ? `2px solid ${COLORS.primary}` : `2px solid ${COLORS.cardBorder}`,
                   borderRadius: 12, cursor: 'pointer'
                 }}>

@@ -2,7 +2,7 @@
 
 import { Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
 import type { IParagraphOptions } from "docx";
-import type { CalculationBreakdown } from './calculationFormulas';
+import type { CalculationBreakdown } from "./calculationFormulas";
 
 /**
  * Create a paragraph with bold text
@@ -74,10 +74,95 @@ export const createHighlightRow = (cells: string[], shadeColor: string): TableRo
 };
 
 /**
+ * Create a label-value table row (common pattern: bold label, regular value)
+ * @param label - The label text (will be bold)
+ * @param value - The value text (regular weight)
+ * @param labelWidth - Optional width percentage for label cell (default: 30)
+ */
+export const createLabelValueRow = (
+  label: string,
+  value: string,
+  labelWidth?: number
+): TableRow => {
+  return new TableRow({
+    children: [
+      new TableCell({
+        children: [boldParagraph(label)],
+        width: labelWidth ? { size: labelWidth, type: WidthType.PERCENTAGE } : undefined,
+      }),
+      new TableCell({
+        children: [new Paragraph(value)],
+      }),
+    ],
+  });
+};
+
+/**
+ * Create a highlighted label-value row (for totals, special values with color)
+ * @param label - The label text (will be bold)
+ * @param value - The value text (will be bold)
+ * @param color - Optional hex color (default: "7C3AED" - purple)
+ */
+export const createHighlightedLabelValueRow = (
+  label: string,
+  value: string,
+  color: string = "7C3AED"
+): TableRow => {
+  return new TableRow({
+    children: [
+      new TableCell({
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: label,
+                bold: true,
+                color: color,
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableCell({
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: value,
+                bold: true,
+                color: color,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+};
+
+/**
+ * Create a full-width table with label-value rows
+ * @param rows - Array of [label, value] pairs
+ * @param labelWidth - Optional width percentage for label column (default: 30)
+ */
+export const createLabelValueTable = (
+  rows: Array<[string, string]>,
+  labelWidth: number = 30
+): Table => {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: rows.map(([label, value]) => createLabelValueRow(label, value, labelWidth)),
+  });
+};
+
+
+/**
  * Create calculation appendix tables from calculation breakdown
  * Simplified version showing only formulas used
  */
-export const createCalculationTables = (calculations: CalculationBreakdown[]): (Paragraph | Table)[] => {
+export const createCalculationTables = (
+  calculations: CalculationBreakdown[]
+): (Paragraph | Table)[] => {
   const content: (Paragraph | Table)[] = [];
 
   if (!calculations || calculations.length === 0) {
@@ -85,12 +170,14 @@ export const createCalculationTables = (calculations: CalculationBreakdown[]): (
   }
 
   // Group by section
-  const groupedCalcs = calculations.reduce((acc, calc) => {
-    if (!acc[calc.section]) acc[calc.section] = [];
-    acc[calc.section].push(calc);
-    return acc;
-  }, {} as Record<string, CalculationBreakdown[]>);
-
+  const groupedCalcs = calculations.reduce(
+    (acc, calc) => {
+      if (!acc[calc.section]) acc[calc.section] = [];
+      acc[calc.section].push(calc);
+      return acc;
+    },
+    {} as Record<string, CalculationBreakdown[]>
+  );
 
   // Create content for each section
   Object.entries(groupedCalcs).forEach(([section, calcs]) => {
@@ -122,7 +209,7 @@ export const createCalculationTables = (calculations: CalculationBreakdown[]): (
         (calc) =>
           new TableRow({
             children: [
-              new TableCell({ 
+              new TableCell({
                 children: [new Paragraph(calc.category)],
               }),
               new TableCell({

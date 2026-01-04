@@ -1,16 +1,14 @@
 /**
  * BESS Pricing Intelligence Dashboard
- * 
+ *
  * Real-time market integration for energy storage pricing optimization
  * Data Sources: NREL ATB 2024, GridStatus.io, CAISO, PJM, ERCOT, EIA
  */
 
-import { calculateMarketAlignedBESSPricing, getMarketIntelligenceRecommendations } from '../services/marketIntelligence';
-
 export interface PricingIntelligenceData {
   // Current market snapshot
   timestamp: string;
-  
+
   // Live wholesale electricity pricing ($/MWh)
   realTimePricing: {
     caiso: {
@@ -42,7 +40,7 @@ export interface PricingIntelligenceData {
       congestionCosts: number; // $/MWh transmission
     };
   };
-  
+
   // Storage value drivers
   storageOpportunities: {
     arbitrageSpread: number; // Peak-off-peak spread $/MWh
@@ -64,7 +62,7 @@ export interface PricingIntelligenceData {
       renewableIntegration: number; // $/MWh solar/wind firming
     };
   };
-  
+
   // NREL ATB 2024 cost trajectories
   nrelProjections: {
     current2024: {
@@ -86,70 +84,70 @@ export interface PricingIntelligenceData {
 export async function fetchLiveMarketData(): Promise<PricingIntelligenceData> {
   // In production, this would integrate with:
   // - GridStatus.io API
-  // - CAISO OASIS API  
+  // - CAISO OASIS API
   // - PJM Data Miner API
   // - ERCOT OASIS API
   // - EIA Electricity API
-  
+
   // Mock data based on current market conditions (Nov 2025)
   return {
     timestamp: new Date().toISOString(),
-    
+
     realTimePricing: {
       caiso: {
-        current: 45.50,
+        current: 45.5,
         dayAhead: 48.25,
-        peak: 125.00,
-        offPeak: 18.50,
-        renewableCurtailment: 1250 // MW currently curtailed
+        peak: 125.0,
+        offPeak: 18.5,
+        renewableCurtailment: 1250, // MW currently curtailed
       },
       pjm: {
         current: 38.75,
-        dayAhead: 41.20,
-        peak: 85.50,
-        offPeak: 22.10,
-        emergencyEvents: 15 // Events this year
+        dayAhead: 41.2,
+        peak: 85.5,
+        offPeak: 22.1,
+        emergencyEvents: 15, // Events this year
       },
       ercot: {
-        current: 42.30,
-        dayAhead: 39.80,
-        peak: 175.00,
+        current: 42.3,
+        dayAhead: 39.8,
+        peak: 175.0,
         offPeak: 15.25,
-        scarcityPricing: 120 // High-price hours YTD
+        scarcityPricing: 120, // High-price hours YTD
       },
       nyiso: {
-        current: 41.60,
-        dayAhead: 44.10,
+        current: 41.6,
+        dayAhead: 44.1,
         peak: 95.75,
-        offPeak: 25.40,
-        congestionCosts: 8.50
-      }
+        offPeak: 25.4,
+        congestionCosts: 8.5,
+      },
     },
-    
+
     storageOpportunities: {
-      arbitrageSpread: 82.50, // Average peak-off-peak
-      
+      arbitrageSpread: 82.5, // Average peak-off-peak
+
       ancillaryServicePrices: {
         frequencyRegulation: 8500, // $/MW-month
         spinningReserve: 3200,
         nonSpinningReserve: 1800,
-        voltageSupport: 2500
+        voltageSupport: 2500,
       },
-      
+
       capacityMarkets: {
-        pjmBRA: 165.00, // $/MW-day
+        pjmBRA: 165.0, // $/MW-day
         caisoRA: 4500, // $/MW-month
         ercotORDC: 2800, // $/MW operating reserve
-        nyisoICap: 3900 // $/MW-month
+        nyisoICap: 3900, // $/MW-month
       },
-      
+
       gridServices: {
         transmissionDeferral: 85000, // $/MW-year
         distributionDeferral: 125000, // $/MW-year
-        renewableIntegration: 15.50 // $/MWh firming value
-      }
+        renewableIntegration: 15.5, // $/MWh firming value
+      },
     },
-    
+
     // NREL ATB 2024 official data
     nrelProjections: {
       current2024: {
@@ -157,14 +155,14 @@ export async function fetchLiveMarketData(): Promise<PricingIntelligenceData> {
         batteryPackCost: 120, // $/kWh
         powerElectronics: 150, // $/kW
         balanceOfSystem: 28.8, // $/kW (12%)
-        installation: 36 // $/kW (15%)
+        installation: 36, // $/kW (15%)
       },
       projected2030: {
         conservative: 215, // $/kW (10% reduction)
         moderate: 180, // $/kW (25% reduction)
-        advanced: 145 // $/kW (40% reduction)
-      }
-    }
+        advanced: 145, // $/kW (40% reduction)
+      },
+    },
   };
 }
 
@@ -176,96 +174,102 @@ export function analyzeStorageInvestment(
   marketData: PricingIntelligenceData
 ) {
   const energyCapacityMWh = systemSizeMW * durationHours;
-  
+
   // NREL ATB 2024 compliant costs
   const nrelCosts = marketData.nrelProjections.current2024;
   const totalCapex = systemSizeMW * 1000 * nrelCosts.utilitySCALE_4h;
-  
+
   // Market-specific revenue analysis
   const locationMap: Record<string, keyof typeof marketData.realTimePricing> = {
-    'California': 'caiso',
-    'Texas': 'ercot', 
-    'Pennsylvania': 'pjm',
-    'New York': 'nyiso'
+    California: "caiso",
+    Texas: "ercot",
+    Pennsylvania: "pjm",
+    "New York": "nyiso",
   };
-  
-  const regionKey = locationMap[location] || 'caiso';
+
+  const regionKey = locationMap[location] || "caiso";
   const regionData = marketData.realTimePricing[regionKey];
-  
+
   // Revenue calculations
   const arbitrageSpread = regionData.peak - regionData.offPeak;
   const dailyArbitrageRevenue = systemSizeMW * arbitrageSpread * 0.85; // 85% efficiency
   const annualArbitrageRevenue = dailyArbitrageRevenue * 365;
-  
-  const ancillaryRevenue = systemSizeMW * marketData.storageOpportunities.ancillaryServicePrices.frequencyRegulation * 12;
-  
+
+  const ancillaryRevenue =
+    systemSizeMW * marketData.storageOpportunities.ancillaryServicePrices.frequencyRegulation * 12;
+
   // Capacity market revenue (region-specific)
   let capacityRevenue = 0;
-  if (regionKey === 'pjm') {
+  if (regionKey === "pjm") {
     capacityRevenue = systemSizeMW * marketData.storageOpportunities.capacityMarkets.pjmBRA * 365;
-  } else if (regionKey === 'caiso') {
+  } else if (regionKey === "caiso") {
     capacityRevenue = systemSizeMW * marketData.storageOpportunities.capacityMarkets.caisoRA * 12;
   }
-  
+
   const totalAnnualRevenue = annualArbitrageRevenue + ancillaryRevenue + capacityRevenue;
-  
+
   // Operating costs (NREL standard: 2.5% of CAPEX)
   const annualOpex = totalCapex * 0.025;
   const netAnnualRevenue = totalAnnualRevenue - annualOpex;
-  
+
   // Financial metrics
   const simplePayback = totalCapex / netAnnualRevenue;
   const lcoeAvoidance = netAnnualRevenue / (energyCapacityMWh * 365); // $/MWh value
-  
+
   return {
     investment: {
       totalCapex,
       costPerKW: totalCapex / (systemSizeMW * 1000),
       costPerKWh: totalCapex / (energyCapacityMWh * 1000),
-      nrelCompliant: true
+      nrelCompliant: true,
     },
-    
+
     revenue: {
       arbitrage: annualArbitrageRevenue,
       ancillary: ancillaryRevenue,
       capacity: capacityRevenue,
       total: totalAnnualRevenue,
-      revenuePerMW: totalAnnualRevenue / systemSizeMW
+      revenuePerMW: totalAnnualRevenue / systemSizeMW,
     },
-    
+
     operations: {
       annualOpex,
       netRevenue: netAnnualRevenue,
-      operatingMargin: (netAnnualRevenue / totalAnnualRevenue) * 100
+      operatingMargin: (netAnnualRevenue / totalAnnualRevenue) * 100,
     },
-    
+
     metrics: {
       simplePayback,
       lcoeAvoidance,
       irr: calculateIRR(totalCapex, netAnnualRevenue, 15), // 15-year project life
       npv: calculateNPV(totalCapex, netAnnualRevenue, 15, 0.08), // 8% discount rate
-      profitabilityIndex: calculateNPV(totalCapex, netAnnualRevenue, 15, 0.08) / totalCapex
+      profitabilityIndex: calculateNPV(totalCapex, netAnnualRevenue, 15, 0.08) / totalCapex,
     },
-    
+
     marketContext: {
       region: regionKey.toUpperCase(),
       currentLMP: regionData.current,
       arbitrageSpread,
       renewablePenetration: getRenewablePenetration(regionKey),
-      dataSource: 'NREL ATB 2024 + Live Market Data'
+      dataSource: "NREL ATB 2024 + Live Market Data",
     },
-    
-    recommendations: generateInvestmentRecommendations(simplePayback, lcoeAvoidance, regionKey)
+
+    recommendations: generateInvestmentRecommendations(simplePayback, lcoeAvoidance, regionKey),
   };
 }
 
 // Helper functions for financial calculations
 function calculateIRR(initialInvestment: number, annualCashFlow: number, years: number): number {
   // Simplified IRR calculation for constant cash flows
-  return Math.pow(1 + (annualCashFlow / initialInvestment), 1/years) - 1;
+  return Math.pow(1 + annualCashFlow / initialInvestment, 1 / years) - 1;
 }
 
-function calculateNPV(initialInvestment: number, annualCashFlow: number, years: number, discountRate: number): number {
+function calculateNPV(
+  initialInvestment: number,
+  annualCashFlow: number,
+  years: number,
+  discountRate: number
+): number {
   let npv = -initialInvestment;
   for (let year = 1; year <= years; year++) {
     npv += annualCashFlow / Math.pow(1 + discountRate, year);
@@ -275,37 +279,49 @@ function calculateNPV(initialInvestment: number, annualCashFlow: number, years: 
 
 function getRenewablePenetration(region: string): number {
   const renewableData: Record<string, number> = {
-    'caiso': 35,
-    'ercot': 28,
-    'pjm': 18,
-    'nyiso': 25
+    caiso: 35,
+    ercot: 28,
+    pjm: 18,
+    nyiso: 25,
   };
   return renewableData[region] || 20;
 }
 
-function generateInvestmentRecommendations(payback: number, lcoe: number, region: string): string[] {
+function generateInvestmentRecommendations(
+  payback: number,
+  lcoe: number,
+  region: string
+): string[] {
   const recommendations: string[] = [];
-  
+
   if (payback < 6) {
-    recommendations.push('🟢 Excellent investment opportunity - strong returns across all revenue streams');
+    recommendations.push(
+      "🟢 Excellent investment opportunity - strong returns across all revenue streams"
+    );
   } else if (payback < 10) {
-    recommendations.push('🟡 Good investment with moderate returns - consider optimizing revenue stacking');
+    recommendations.push(
+      "🟡 Good investment with moderate returns - consider optimizing revenue stacking"
+    );
   } else {
-    recommendations.push('🔴 Marginal investment - evaluate alternative markets or revenue streams');
+    recommendations.push(
+      "🔴 Marginal investment - evaluate alternative markets or revenue streams"
+    );
   }
-  
+
   if (lcoe > 100) {
-    recommendations.push('💰 High value storage - significant grid benefits justify premium pricing');
+    recommendations.push(
+      "💰 High value storage - significant grid benefits justify premium pricing"
+    );
   }
-  
-  if (region === 'caiso') {
-    recommendations.push('🌞 California: Focus on renewable integration and peak shaving');
-  } else if (region === 'ercot') {
-    recommendations.push('⚡ Texas: Leverage scarcity pricing and grid resilience value');
-  } else if (region === 'pjm') {
-    recommendations.push('🏭 PJM: Capacity markets provide stable long-term revenue');
+
+  if (region === "caiso") {
+    recommendations.push("🌞 California: Focus on renewable integration and peak shaving");
+  } else if (region === "ercot") {
+    recommendations.push("⚡ Texas: Leverage scarcity pricing and grid resilience value");
+  } else if (region === "pjm") {
+    recommendations.push("🏭 PJM: Capacity markets provide stable long-term revenue");
   }
-  
+
   return recommendations;
 }
 

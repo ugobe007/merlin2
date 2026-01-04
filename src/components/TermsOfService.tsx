@@ -1,4 +1,4 @@
-import { X, FileText, Scale, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Scale, AlertTriangle, CheckCircle } from "lucide-react";
 
 interface TermsOfServiceProps {
   onClose: () => void;
@@ -17,8 +17,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             </h2>
             <p className="text-purple-100 mt-1">Last Updated: October 22, 2025</p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-purple-200 hover:text-white transition-colors p-2 rounded-lg hover:bg-purple-700"
           >
             <X size={28} />
@@ -33,8 +33,9 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Agreement to Terms</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  By accessing and using Merlin Energy ("the Platform"), you agree to be bound by these Terms of Service. 
-                  If you do not agree to these terms, please do not use the Platform.
+                  By accessing and using Merlin Energy ("the Platform"), you agree to be bound by
+                  these Terms of Service. If you do not agree to these terms, please do not use the
+                  Platform.
                 </p>
               </div>
             </section>
@@ -42,7 +43,7 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             {/* Use of Platform */}
             <section>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">1. Use of Platform</h3>
-              
+
               <div className="space-y-4">
                 <div className="bg-green-50 border-l-4 border-green-500 p-4">
                   <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -80,11 +81,23 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
               <h3 className="text-2xl font-bold text-gray-900 mb-4">2. Account Responsibilities</h3>
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
                 <ul className="space-y-3 text-gray-700">
-                  <li><strong>Accurate Information:</strong> Provide truthful and complete registration details</li>
-                  <li><strong>Security:</strong> Maintain confidentiality of your password and account</li>
-                  <li><strong>Notifications:</strong> Promptly notify us of any unauthorized access</li>
-                  <li><strong>Responsibility:</strong> You are responsible for all activity under your account</li>
-                  <li><strong>Age Requirement:</strong> You must be 18+ to use this platform</li>
+                  <li>
+                    <strong>Accurate Information:</strong> Provide truthful and complete
+                    registration details
+                  </li>
+                  <li>
+                    <strong>Security:</strong> Maintain confidentiality of your password and account
+                  </li>
+                  <li>
+                    <strong>Notifications:</strong> Promptly notify us of any unauthorized access
+                  </li>
+                  <li>
+                    <strong>Responsibility:</strong> You are responsible for all activity under your
+                    account
+                  </li>
+                  <li>
+                    <strong>Age Requirement:</strong> You must be 18+ to use this platform
+                  </li>
                 </ul>
               </div>
             </section>
@@ -96,7 +109,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
                 <div className="bg-blue-50 rounded-lg p-4">
                   <h4 className="font-bold text-gray-900 mb-2">Free Tier</h4>
                   <p className="text-gray-700 text-sm">
-                    Access to basic features with limitations. May include ads or promotional content.
+                    Access to basic features with limitations. May include ads or promotional
+                    content.
                   </p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4">
@@ -117,16 +131,18 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="space-y-3 text-gray-700">
                   <p>
-                    <strong>Our IP:</strong> The Platform, including all software, algorithms, designs, and content, 
-                    is owned by Merlin Energy and protected by copyright and trademark laws.
+                    <strong>Our IP:</strong> The Platform, including all software, algorithms,
+                    designs, and content, is owned by Merlin Energy and protected by copyright and
+                    trademark laws.
                   </p>
                   <p>
-                    <strong>Your Content:</strong> You retain ownership of data you upload. By using the Platform, 
-                    you grant us a license to use your content to provide services and improve the platform.
+                    <strong>Your Content:</strong> You retain ownership of data you upload. By using
+                    the Platform, you grant us a license to use your content to provide services and
+                    improve the platform.
                   </p>
                   <p>
-                    <strong>Pricing Data:</strong> Data shared for market intelligence becomes part of our 
-                    anonymized database. You cannot withdraw already-shared data.
+                    <strong>Pricing Data:</strong> Data shared for market intelligence becomes part
+                    of our anonymized database. You cannot withdraw already-shared data.
                   </p>
                 </div>
               </div>
@@ -144,7 +160,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
                     <strong>No Guarantee:</strong> We do not guarantee leads will convert to sales
                   </li>
                   <li>
-                    <strong>Lead Quality:</strong> We match based on criteria provided, but cannot verify customer intent
+                    <strong>Lead Quality:</strong> We match based on criteria provided, but cannot
+                    verify customer intent
                   </li>
                   <li>
                     <strong>Payment:</strong> Fees are due within 30 days of project close
@@ -158,27 +175,33 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
 
             {/* Disclaimers */}
             <section>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">6. Disclaimers & Limitations</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                6. Disclaimers & Limitations
+              </h3>
               <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
                 <p className="font-bold text-red-900 mb-3 uppercase">Important Legal Notice:</p>
                 <ul className="space-y-2 text-gray-700 text-sm">
                   <li>
-                    <strong>No Warranties:</strong> Platform provided "AS IS" without warranties of any kind
+                    <strong>No Warranties:</strong> Platform provided "AS IS" without warranties of
+                    any kind
                   </li>
                   <li>
                     <strong>Estimates Only:</strong> Quotes are estimates, not guaranteed prices
                   </li>
                   <li>
-                    <strong>No Professional Advice:</strong> Not a substitute for engineering or legal consultation
+                    <strong>No Professional Advice:</strong> Not a substitute for engineering or
+                    legal consultation
                   </li>
                   <li>
                     <strong>Third-Party Data:</strong> Market data may be inaccurate or outdated
                   </li>
                   <li>
-                    <strong>Availability:</strong> We do not guarantee uninterrupted or error-free service
+                    <strong>Availability:</strong> We do not guarantee uninterrupted or error-free
+                    service
                   </li>
                   <li>
-                    <strong>Limitation of Liability:</strong> Our liability is limited to fees paid in the last 12 months
+                    <strong>Limitation of Liability:</strong> Our liability is limited to fees paid
+                    in the last 12 months
                   </li>
                 </ul>
               </div>
@@ -198,7 +221,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
                   <li>Pose security risks to the platform</li>
                 </ul>
                 <p className="text-gray-700 mt-3">
-                  Upon termination, you lose access to the platform and your data may be deleted after 30 days.
+                  Upon termination, you lose access to the platform and your data may be deleted
+                  after 30 days.
                 </p>
               </div>
             </section>
@@ -207,8 +231,9 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             <section>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">8. Indemnification</h3>
               <p className="text-gray-700">
-                You agree to indemnify and hold Merlin Energy harmless from any claims, damages, or expenses 
-                arising from your use of the platform, violation of these terms, or infringement of third-party rights.
+                You agree to indemnify and hold Merlin Energy harmless from any claims, damages, or
+                expenses arising from your use of the platform, violation of these terms, or
+                infringement of third-party rights.
               </p>
             </section>
 
@@ -216,8 +241,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             <section>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">9. Governing Law</h3>
               <p className="text-gray-700">
-                These terms are governed by the laws of the State of Delaware, USA. Any disputes will be 
-                resolved through binding arbitration in Delaware.
+                These terms are governed by the laws of the State of Delaware, USA. Any disputes
+                will be resolved through binding arbitration in Delaware.
               </p>
             </section>
 
@@ -225,8 +250,8 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             <section>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">10. Changes to Terms</h3>
               <p className="text-gray-700">
-                We may modify these terms at any time. Material changes will be communicated via email or 
-                platform notification. Continued use after changes constitutes acceptance.
+                We may modify these terms at any time. Material changes will be communicated via
+                email or platform notification. Continued use after changes constitutes acceptance.
               </p>
             </section>
 
@@ -234,12 +259,14 @@ export default function TermsOfService({ onClose }: TermsOfServiceProps) {
             <section>
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions?</h3>
-                <p className="text-gray-700 mb-4">
-                  Contact us about these terms:
-                </p>
+                <p className="text-gray-700 mb-4">Contact us about these terms:</p>
                 <div className="space-y-2 text-gray-700">
-                  <p><strong>Email:</strong> legal@merlinenergy.com</p>
-                  <p><strong>Address:</strong> Merlin Energy Inc., Delaware, USA</p>
+                  <p>
+                    <strong>Email:</strong> legal@merlinenergy.com
+                  </p>
+                  <p>
+                    <strong>Address:</strong> Merlin Energy Inc., Delaware, USA
+                  </p>
                 </div>
               </div>
             </section>

@@ -3,12 +3,12 @@
  * ================================
  * Single source of truth for all wizard types
  * Used by StreamlinedWizard and all wizard-related services
- * 
+ *
  * Created: 2025-11-24
  * Updated: 2025-12-01 - Consolidated from SmartWizardV3.types.ts
  */
 
-import type { PowerGapAnalysis } from '@/services/powerGapAnalysis';
+import type { PowerGapAnalysis } from "@/services/powerGapAnalysis";
 
 // ============================================================================
 // DOMAIN TYPES - What the wizard manages
@@ -38,22 +38,22 @@ export interface QuoteConfiguration {
   // Use Case Selection
   useCaseSlug: string | null;
   useCaseAnswers: UseCaseAnswers;
-  
+
   // Sizing
   sizing: BessSizing;
-  
+
   // Location & Pricing
   location: string;
   electricityRate: number;
-  
+
   // Renewables
   wantsSolar: boolean;
   solarSpaceAcres: number;
   wantsEV: boolean;
   evConfig: EVConfiguration;
-  
+
   // Grid
-  gridConnection: 'reliable' | 'unreliable' | 'none';
+  gridConnection: "reliable" | "unreliable" | "none";
 }
 
 // ============================================================================
@@ -76,14 +76,14 @@ export interface WizardUIState {
 export interface SmartWizardState {
   // Domain data
   config: QuoteConfiguration;
-  
+
   // UI state
   ui: WizardUIState;
-  
+
   // Calculated results
   currentQuote: any | null;
   powerGapAnalysis: PowerGapAnalysis | null;
-  
+
   // Available options (from database)
   availableUseCases: any[];
   useCaseDetails: any | null;
@@ -99,33 +99,33 @@ export interface WizardActions {
   nextStep: () => void;
   previousStep: () => void;
   skipIntro: () => void;
-  
+
   // Use Case
   selectUseCase: (slug: string) => void;
   updateAnswers: (answers: Partial<UseCaseAnswers>) => void;
   calculateBaseline: () => Promise<void>;
   calculatePowerGap: () => Promise<void>;
-  
+
   // Sizing
   updateSizing: (updates: Partial<BessSizing>) => void;
-  
+
   // Location
   updateLocation: (location: string) => void;
   updateElectricityRate: (rate: number) => void;
-  
+
   // Renewables
   toggleSolar: (enabled: boolean) => void;
   updateSolarSpaceAcres: (acres: number) => void;
   toggleEV: (enabled: boolean) => void;
   updateEVConfig: (config: Partial<EVConfiguration>) => void;
-  
+
   // Grid
-  updateGridConnection: (connection: 'reliable' | 'unreliable' | 'none') => void;
-  
+  updateGridConnection: (connection: "reliable" | "unreliable" | "none") => void;
+
   // Quote
   buildQuote: () => Promise<void>;
   reset: () => void;
-  
+
   // Lifecycle
   initialize: () => Promise<void>;
 }
@@ -137,10 +137,10 @@ export interface WizardActions {
 export interface UseSmartWizardReturn {
   // State
   state: SmartWizardState;
-  
+
   // Actions
   actions: WizardActions;
-  
+
   // Computed values (derived from state)
   computed: {
     canGoNext: boolean;

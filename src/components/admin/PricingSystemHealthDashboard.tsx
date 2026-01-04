@@ -9,33 +9,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Activity,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Database,
-  Zap,
-  RefreshCw,
-  BarChart3,
-  DollarSign,
-  Cpu,
-  Cloud,
-  CloudOff,
-  ArrowUp,
-  ArrowDown,
-  Minus,
-  Info,
-  Building2
-} from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Clock, Database, Zap, RefreshCw, BarChart3, DollarSign, Cpu, Cloud, CloudOff, ArrowUp, ArrowDown, Info, Building2 } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
-import { 
-  getMarketPriceSummary,
-  getMarketAdjustedPrice,
-  getActivePricingPolicy
-} from '@/services/marketDataIntegrationService';
+import { getMarketPriceSummary } from '@/services/marketDataIntegrationService';
 import { 
   clearAllPricingCaches 
 } from '@/services/unifiedPricingService';

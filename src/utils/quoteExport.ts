@@ -2,13 +2,62 @@
 
 // Power Profile Certificate - Wizard's Journey achievement levels
 const POWER_LEVELS = [
-  { name: 'Apprentice', minKWh: 0, maxKWh: 500, icon: '🪄', gradient: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)', description: 'Beginning your energy journey' },
-  { name: 'Adept', minKWh: 500, maxKWh: 1000, icon: '✨', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', description: 'Mastering energy basics' },
-  { name: 'Conjurer', minKWh: 1000, maxKWh: 2000, icon: '🔮', gradient: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)', description: 'Commanding energy flows' },
-  { name: 'Enchanter', minKWh: 2000, maxKWh: 3500, icon: '⚡', gradient: 'linear-gradient(135deg, #6d28d9 0%, #4338ca 100%)', description: 'Enchanting power systems' },
-  { name: 'Sorcerer', minKWh: 3500, maxKWh: 5000, icon: '🌟', gradient: 'linear-gradient(135deg, #5b21b6 0%, #312e81 100%)', description: 'Wielding significant power' },
-  { name: 'Archmage', minKWh: 5000, maxKWh: 10000, icon: '👑', gradient: 'linear-gradient(135deg, #4338ca 0%, #1e1b4b 100%)', description: 'Master of energy realms' },
-  { name: 'Grand Wizard', minKWh: 10000, maxKWh: Infinity, icon: '🧙‍♂️', gradient: 'linear-gradient(135deg, #5b21b6 0%, #1e1b4b 100%)', description: 'Supreme energy sovereign' }
+  {
+    name: "Apprentice",
+    minKWh: 0,
+    maxKWh: 500,
+    icon: "🪄",
+    gradient: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    description: "Beginning your energy journey",
+  },
+  {
+    name: "Adept",
+    minKWh: 500,
+    maxKWh: 1000,
+    icon: "✨",
+    gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+    description: "Mastering energy basics",
+  },
+  {
+    name: "Conjurer",
+    minKWh: 1000,
+    maxKWh: 2000,
+    icon: "🔮",
+    gradient: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
+    description: "Commanding energy flows",
+  },
+  {
+    name: "Enchanter",
+    minKWh: 2000,
+    maxKWh: 3500,
+    icon: "⚡",
+    gradient: "linear-gradient(135deg, #6d28d9 0%, #4338ca 100%)",
+    description: "Enchanting power systems",
+  },
+  {
+    name: "Sorcerer",
+    minKWh: 3500,
+    maxKWh: 5000,
+    icon: "🌟",
+    gradient: "linear-gradient(135deg, #5b21b6 0%, #312e81 100%)",
+    description: "Wielding significant power",
+  },
+  {
+    name: "Archmage",
+    minKWh: 5000,
+    maxKWh: 10000,
+    icon: "👑",
+    gradient: "linear-gradient(135deg, #4338ca 0%, #1e1b4b 100%)",
+    description: "Master of energy realms",
+  },
+  {
+    name: "Grand Wizard",
+    minKWh: 10000,
+    maxKWh: Infinity,
+    icon: "🧙‍♂️",
+    gradient: "linear-gradient(135deg, #5b21b6 0%, #1e1b4b 100%)",
+    description: "Supreme energy sovereign",
+  },
 ];
 
 interface PowerCertificateData {
@@ -30,18 +79,22 @@ interface PowerCertificateData {
  */
 export const generatePowerCertificate = (data: PowerCertificateData): void => {
   const totalKWh = data.storageSizeMW * data.durationHours * 1000;
-  const powerLevel = POWER_LEVELS.find(
-    level => totalKWh >= level.minKWh && totalKWh < level.maxKWh
-  ) || POWER_LEVELS[0];
-  
-  const levelIndex = POWER_LEVELS.indexOf(powerLevel);
-  const progressToNextLevel = powerLevel.maxKWh === Infinity 
-    ? 100 
-    : Math.min(100, ((totalKWh - powerLevel.minKWh) / (powerLevel.maxKWh - powerLevel.minKWh)) * 100);
+  const powerLevel =
+    POWER_LEVELS.find((level) => totalKWh >= level.minKWh && totalKWh < level.maxKWh) ||
+    POWER_LEVELS[0];
 
-  const printWindow = window.open('', '_blank');
+  const levelIndex = POWER_LEVELS.indexOf(powerLevel);
+  const progressToNextLevel =
+    powerLevel.maxKWh === Infinity
+      ? 100
+      : Math.min(
+          100,
+          ((totalKWh - powerLevel.minKWh) / (powerLevel.maxKWh - powerLevel.minKWh)) * 100
+        );
+
+  const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    alert('Please allow pop-ups to download the certificate');
+    alert("Please allow pop-ups to download the certificate");
     return;
   }
 
@@ -395,11 +448,15 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
             <div class="stat-label">Duration</div>
           </div>
           <div class="stat-box">
-            <div class="stat-icon">${data.solarMW && data.solarMW > 0 ? '☀️' : data.windMW && data.windMW > 0 ? '💨' : '🔌'}</div>
+            <div class="stat-icon">${data.solarMW && data.solarMW > 0 ? "☀️" : data.windMW && data.windMW > 0 ? "💨" : "🔌"}</div>
             <div class="stat-value">${
-              (data.solarMW || 0) + (data.windMW || 0) + (data.generatorMW || 0) / 1000 > 0 
-                ? ((data.solarMW || 0) + (data.windMW || 0) + ((data.generatorMW || 0) / 1000)).toFixed(2) + ' MW' 
-                : 'Grid Only'
+              (data.solarMW || 0) + (data.windMW || 0) + (data.generatorMW || 0) / 1000 > 0
+                ? (
+                    (data.solarMW || 0) +
+                    (data.windMW || 0) +
+                    (data.generatorMW || 0) / 1000
+                  ).toFixed(2) + " MW"
+                : "Grid Only"
             }</div>
             <div class="stat-label">Generation</div>
           </div>
@@ -407,19 +464,22 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         
         <div class="progress-section">
           <div class="level-progress">
-            ${POWER_LEVELS.map((level, i) => `
-              <div class="level-dot ${i < levelIndex ? 'achieved' : ''} ${i === levelIndex ? 'current' : ''}" 
+            ${POWER_LEVELS.map(
+              (level, i) => `
+              <div class="level-dot ${i < levelIndex ? "achieved" : ""} ${i === levelIndex ? "current" : ""}" 
                    title="${level.name}">
               </div>
-            `).join('')}
+            `
+            ).join("")}
           </div>
           <div class="progress-bar-container">
             <div class="progress-bar"></div>
           </div>
           <div class="progress-text">
-            ${powerLevel.maxKWh === Infinity 
-              ? 'Maximum level achieved! You are a true Grand Wizard of energy!' 
-              : `${progressToNextLevel.toFixed(0)}% progress to ${POWER_LEVELS[levelIndex + 1]?.name || 'next level'} (${totalKWh.toFixed(0)} / ${powerLevel.maxKWh} kWh)`
+            ${
+              powerLevel.maxKWh === Infinity
+                ? "Maximum level achieved! You are a true Grand Wizard of energy!"
+                : `${progressToNextLevel.toFixed(0)}% progress to ${POWER_LEVELS[levelIndex + 1]?.name || "next level"} (${totalKWh.toFixed(0)} / ${powerLevel.maxKWh} kWh)`
             }
           </div>
         </div>
@@ -427,8 +487,8 @@ export const generatePowerCertificate = (data: PowerCertificateData): void => {
         <div class="footer-section">
           <div class="date-section">
             <div class="date-label">Certificate Date</div>
-            <div class="date-value">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            ${data.location ? `<div class="date-value" style="font-size: 14px; color: #6b7280; margin-top: 5px;">📍 ${data.location}</div>` : ''}
+            <div class="date-value">${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+            ${data.location ? `<div class="date-value" style="font-size: 14px; color: #6b7280; margin-top: 5px;">📍 ${data.location}</div>` : ""}
           </div>
           
           <div class="signature-section">
@@ -485,25 +545,25 @@ interface QuoteData {
   annualOpex?: number;
   // Power Profile & Opportunity Metrics (Dec 11, 2025)
   powerProfile?: {
-    totalEnergyKWh: number;      // Battery + Solar daily production
-    totalPowerKW: number;        // Battery + Solar + Generator capacity
+    totalEnergyKWh: number; // Battery + Solar daily production
+    totalPowerKW: number; // Battery + Solar + Generator capacity
     batteryKWh: number;
     batteryKW: number;
     solarKW: number;
     generatorKW: number;
   };
   powerGap?: {
-    peakDemandKW: number;        // Calculated peak demand
-    configuredKW: number;        // Total configured power
-    coveragePercent: number;     // Coverage %
-    gapKW: number;               // Shortfall (if any)
-    status: 'covered' | 'partial' | 'gap';
+    peakDemandKW: number; // Calculated peak demand
+    configuredKW: number; // Total configured power
+    coveragePercent: number; // Coverage %
+    gapKW: number; // Shortfall (if any)
+    status: "covered" | "partial" | "gap";
   };
   solarOpportunity?: {
-    solarHours: number;          // Peak sun hours/day
-    rating: number;              // 1-5 rating
-    label: string;               // Limited/Fair/Good/Excellent/Exceptional
-    estimatedLCOE: number;       // $/kWh
+    solarHours: number; // Peak sun hours/day
+    rating: number; // 1-5 rating
+    label: string; // Limited/Fair/Good/Excellent/Exceptional
+    estimatedLCOE: number; // $/kWh
   };
   energyOpportunities?: {
     peakShaving: { active: boolean; value?: string; savings: string };
@@ -517,21 +577,21 @@ interface QuoteData {
 const getIndustryName = (template: string | string[]): string => {
   const templateKey = Array.isArray(template) ? template[0] : template;
   const industryMap: { [key: string]: string } = {
-    'manufacturing': 'Manufacturing Facility',
-    'data-center': 'Data Center',
-    'cold-storage': 'Cold Storage Warehouse',
-    'hospital': 'Hospital',
-    'university': 'University/College Campus',
-    'retail': 'Retail Store',
-    'microgrid': 'Microgrid',
-    'agricultural': 'Agricultural Operation',
-    'car-wash': 'Car Wash',
-    'ev-charging': 'EV Charging Hub',
-    'apartment': 'Apartment Building',
-    'indoor-farm': 'Indoor Farm'
+    manufacturing: "Manufacturing Facility",
+    "data-center": "Data Center",
+    "cold-storage": "Cold Storage Warehouse",
+    hospital: "Hospital",
+    university: "University/College Campus",
+    retail: "Retail Store",
+    microgrid: "Microgrid",
+    agricultural: "Agricultural Operation",
+    "car-wash": "Car Wash",
+    "ev-charging": "EV Charging Hub",
+    apartment: "Apartment Building",
+    "indoor-farm": "Indoor Farm",
   };
   const result = industryMap[templateKey] || templateKey;
-  
+
   // If multiple templates, show count
   if (Array.isArray(template) && template.length > 1) {
     return `${result} (+${template.length - 1} more)`;
@@ -547,37 +607,56 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
     solarMW: quoteData?.solarMW || 0,
     windMW: quoteData?.windMW || 0,
     generatorMW: quoteData?.generatorMW || 0,
-    location: quoteData?.location || 'To Be Determined',
-    industryTemplate: quoteData?.industryTemplate || 'bess',
-    gridConnection: quoteData?.gridConnection || 'grid-tied',
+    location: quoteData?.location || "To Be Determined",
+    industryTemplate: quoteData?.industryTemplate || "bess",
+    gridConnection: quoteData?.gridConnection || "grid-tied",
     totalProjectCost: quoteData?.totalProjectCost || 0,
     annualSavings: quoteData?.annualSavings || 1,
     paybackYears: quoteData?.paybackYears || 0,
     taxCredit: quoteData?.taxCredit || 0,
     netCost: quoteData?.netCost || 1,
-    installationOption: quoteData?.installationOption || 'epc',
-    shippingOption: quoteData?.shippingOption || 'standard',
-    financingOption: quoteData?.financingOption || 'cash',
+    installationOption: quoteData?.installationOption || "epc",
+    shippingOption: quoteData?.shippingOption || "standard",
+    financingOption: quoteData?.financingOption || "cash",
     // New detailed costs with fallbacks to percentage estimates
-    equipmentCost: quoteData?.equipmentCost || equipmentBreakdown?.totals?.equipmentCost || (quoteData?.totalProjectCost * 0.55),
-    installationCost: quoteData?.installationCost || equipmentBreakdown?.totals?.installationCost || (quoteData?.totalProjectCost * 0.25),
-    commissioningCost: quoteData?.commissioningCost || equipmentBreakdown?.commissioning?.totalCommissioning || (quoteData?.totalProjectCost * 0.08),
-    certificationCost: quoteData?.certificationCost || equipmentBreakdown?.certification?.totalCertification || (quoteData?.totalProjectCost * 0.07),
-    totalCapex: quoteData?.totalCapex || equipmentBreakdown?.totals?.totalCapex || quoteData?.totalProjectCost,
-    annualOpex: quoteData?.annualOpex || equipmentBreakdown?.annualCosts?.totalAnnualCost || (quoteData?.totalProjectCost * 0.02),
+    equipmentCost:
+      quoteData?.equipmentCost ||
+      equipmentBreakdown?.totals?.equipmentCost ||
+      quoteData?.totalProjectCost * 0.55,
+    installationCost:
+      quoteData?.installationCost ||
+      equipmentBreakdown?.totals?.installationCost ||
+      quoteData?.totalProjectCost * 0.25,
+    commissioningCost:
+      quoteData?.commissioningCost ||
+      equipmentBreakdown?.commissioning?.totalCommissioning ||
+      quoteData?.totalProjectCost * 0.08,
+    certificationCost:
+      quoteData?.certificationCost ||
+      equipmentBreakdown?.certification?.totalCertification ||
+      quoteData?.totalProjectCost * 0.07,
+    totalCapex:
+      quoteData?.totalCapex ||
+      equipmentBreakdown?.totals?.totalCapex ||
+      quoteData?.totalProjectCost,
+    annualOpex:
+      quoteData?.annualOpex ||
+      equipmentBreakdown?.annualCosts?.totalAnnualCost ||
+      quoteData?.totalProjectCost * 0.02,
   };
-  
+
   // Extract detailed breakdown if available
-  const hasDetailedBreakdown = equipmentBreakdown?.commissioning && equipmentBreakdown?.certification;
-  
+  const hasDetailedBreakdown =
+    equipmentBreakdown?.commissioning && equipmentBreakdown?.certification;
+
   const totalEnergyMWh = q.storageSizeMW * q.durationHours;
   const hasRenewables = q.solarMW > 0 || q.windMW > 0 || q.generatorMW > 0;
   const industryName = getIndustryName(q.industryTemplate);
-  
+
   // Create a professional HTML document for printing/PDF
-  const printWindow = window.open('', '_blank');
+  const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    alert('Please allow pop-ups to download the PDF');
+    alert("Please allow pop-ups to download the PDF");
     return;
   }
 
@@ -859,7 +938,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               </div>
               <div class="info-card">
                 <div class="label">Location</div>
-                <div class="value" style="font-size: 20px;">${q.location || 'To Be Determined'}</div>
+                <div class="value" style="font-size: 20px;">${q.location || "To Be Determined"}</div>
               </div>
             </div>
             
@@ -890,32 +969,35 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                   <div style="font-weight: bold; color: #6B46C1; margin-bottom: 8px;">🎯 Primary Objectives Addressed:</div>
                   <ul style="margin-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
                     <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
-                    <li><strong>Power Quality & Reliability:</strong> ${q.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}</li>
-                    <li><strong>Operational Cost Reduction:</strong> System delivers ${q.paybackYears.toFixed(1)}-year payback with ${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
+                    <li><strong>Power Quality & Reliability:</strong> ${q.gridConnection === "off-grid" ? "Grid-forming inverters enable stable operation without external grid reference" : "Bi-directional inverters provide seamless grid integration with <50ms backup transition"}</li>
+                    <li><strong>Operational Cost Reduction:</strong> System delivers ${q.paybackYears.toFixed(1)}-year payback with ${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
                     <li><strong>Business Continuity:</strong> Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances</li>
-                    ${q.solarMW > 0 || q.windMW > 0 ? '<li><strong>Sustainability Goals:</strong> Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs</li>' : ''}
+                    ${q.solarMW > 0 || q.windMW > 0 ? "<li><strong>Sustainability Goals:</strong> Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs</li>" : ""}
                   </ul>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
                   <div style="font-weight: bold; color: #059669; margin-bottom: 8px;">🏭 Industry-Specific Benefits for ${getIndustryName(q.industryTemplate)}:</div>
                   <div style="color: #4b5563; font-size: 14px; line-height: 1.6;">
-                    ${q.industryTemplate.includes('ev-charging') ? 
-                      `<strong>EV Charging Operations:</strong> Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === 'off-grid' ? 'in remote locations' : 'with grid support'}. Fast charging compatibility ensures customer satisfaction and revenue optimization.` :
-                    q.industryTemplate.includes('manufacturing') ?
-                      `<strong>Manufacturing Continuity:</strong> Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.` :
-                    q.industryTemplate.includes('data-center') ?
-                      `<strong>Data Center Reliability:</strong> Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.` :
-                    q.industryTemplate.includes('hospital') ?
-                      `<strong>Healthcare Facility Support:</strong> Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).` :
-                    q.industryTemplate.includes('cold-storage') ?
-                      `<strong>Cold Storage Efficiency:</strong> Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.` :
-                      `<strong>Commercial Operations:</strong> Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
+                    ${
+                      q.industryTemplate.includes("ev-charging")
+                        ? `<strong>EV Charging Operations:</strong> Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === "off-grid" ? "in remote locations" : "with grid support"}. Fast charging compatibility ensures customer satisfaction and revenue optimization.`
+                        : q.industryTemplate.includes("manufacturing")
+                          ? `<strong>Manufacturing Continuity:</strong> Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.`
+                          : q.industryTemplate.includes("data-center")
+                            ? `<strong>Data Center Reliability:</strong> Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.`
+                            : q.industryTemplate.includes("hospital")
+                              ? `<strong>Healthcare Facility Support:</strong> Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).`
+                              : q.industryTemplate.includes("cold-storage")
+                                ? `<strong>Cold Storage Efficiency:</strong> Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.`
+                                : `<strong>Commercial Operations:</strong> Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
                     }
                   </div>
                 </div>
                 
-                ${q.gridConnection === 'off-grid' ? `
+                ${
+                  q.gridConnection === "off-grid"
+                    ? `
                 <div style="margin-bottom: 15px;">
                   <div style="font-weight: bold; color: #dc2626; margin-bottom: 8px;">🏝️ Off-Grid Operation Capabilities:</div>
                   <ul style="margin-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
@@ -924,7 +1006,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                     <li><strong>Multi-Source Integration:</strong> Seamless coordination between solar, battery, and generator power sources</li>
                     <li><strong>Fuel Optimization:</strong> Generator runtime minimization through intelligent battery dispatch reduces operating costs</li>
                   </ul>
-                </div>` : `
+                </div>`
+                    : `
                 <div style="margin-bottom: 15px;">
                   <div style="font-weight: bold; color: #2563eb; margin-bottom: 8px;">� Grid-Interactive Features:</div>
                   <ul style="margin-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
@@ -933,12 +1016,13 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                     <li><strong>Seamless Backup:</strong> Automatic transfer to island mode during grid outages with <50ms transition</li>
                     <li><strong>Peak Shaving:</strong> Intelligent discharge during high-demand periods reduces utility charges</li>
                   </ul>
-                </div>`}
+                </div>`
+                }
                 
                 <div>
                   <div style="font-weight: bold; color: #7c3aed; margin-bottom: 8px;">📊 Performance Optimization:</div>
                   <div style="color: #4b5563; font-size: 14px; line-height: 1.6;">
-                    The system is optimized for <strong>${((totalEnergyMWh / q.storageSizeMW) * 100 / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
+                    The system is optimized for <strong>${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
                   </div>
                 </div>
               </div>
@@ -949,33 +1033,46 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               </div>
             </div>
             
-            ${hasRenewables || q.gridConnection === 'off-grid' ? `
+            ${
+              hasRenewables || q.gridConnection === "off-grid"
+                ? `
             <div style="margin-top: 20px; padding: 20px; background: #ecfdf5; border-radius: 12px; border-left: 4px solid #10b981;">
-              <div style="font-weight: bold; margin-bottom: 10px; color: #059669; font-size: 18px;">☀️ ${q.gridConnection === 'off-grid' ? 'Power Generation Summary' : 'Renewable Energy Integration'}</div>
+              <div style="font-weight: bold; margin-bottom: 10px; color: #059669; font-size: 18px;">☀️ ${q.gridConnection === "off-grid" ? "Power Generation Summary" : "Renewable Energy Integration"}</div>
               <div style="display: flex; gap: 30px; flex-wrap: wrap; font-size: 16px;">
-                ${q.solarMW > 0 ? `<div>☀️ Solar PV: <strong>${q.solarMW.toFixed(1)} MW</strong> (${(q.solarMW * 1300).toFixed(0)} annual MWh)</div>` : ''}
-                ${q.windMW > 0 ? `<div>💨 Wind: <strong>${q.windMW.toFixed(1)} MW</strong> (${(q.windMW * 2200).toFixed(0)} annual MWh)</div>` : ''}
-                ${q.generatorMW > 0 || q.gridConnection === 'off-grid' ? 
-                  `<div>⚡ Generator: <strong>${q.generatorMW > 0 ? q.generatorMW.toFixed(1) : (q.storageSizeMW * 0.5).toFixed(1)} MW</strong> (${q.gridConnection === 'off-grid' ? 'Primary backup power' : 'Backup'})</div>` : ''}
+                ${q.solarMW > 0 ? `<div>☀️ Solar PV: <strong>${q.solarMW.toFixed(1)} MW</strong> (${(q.solarMW * 1300).toFixed(0)} annual MWh)</div>` : ""}
+                ${q.windMW > 0 ? `<div>💨 Wind: <strong>${q.windMW.toFixed(1)} MW</strong> (${(q.windMW * 2200).toFixed(0)} annual MWh)</div>` : ""}
+                ${
+                  q.generatorMW > 0 || q.gridConnection === "off-grid"
+                    ? `<div>⚡ Generator: <strong>${q.generatorMW > 0 ? q.generatorMW.toFixed(1) : (q.storageSizeMW * 0.5).toFixed(1)} MW</strong> (${q.gridConnection === "off-grid" ? "Primary backup power" : "Backup"})</div>`
+                    : ""
+                }
               </div>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           
           <!-- Power Profile & Opportunity Metrics -->
-          ${quoteData.powerProfile || quoteData.solarOpportunity || quoteData.energyOpportunities ? `
+          ${
+            quoteData.powerProfile || quoteData.solarOpportunity || quoteData.energyOpportunities
+              ? `
           <div class="section" style="page-break-inside: avoid;">
             <div class="section-title">📊 Power Profile & Opportunity Analysis</div>
             
             <!-- Power Profile Summary -->
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
-              ${quoteData.powerProfile ? `
+              ${
+                quoteData.powerProfile
+                  ? `
               <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 25px; border-radius: 15px; border: 2px solid #10b981;">
                 <div style="font-weight: bold; color: #065f46; font-size: 18px; margin-bottom: 15px;">🔋 Power Profile</div>
                 <div style="font-size: 36px; font-weight: bold; color: #059669; margin-bottom: 5px;">
-                  ${quoteData.powerProfile.totalEnergyKWh >= 1000 
-                    ? (quoteData.powerProfile.totalEnergyKWh / 1000).toFixed(1) + ' MWh' 
-                    : Math.round(quoteData.powerProfile.totalEnergyKWh) + ' kWh'}
+                  ${
+                    quoteData.powerProfile.totalEnergyKWh >= 1000
+                      ? (quoteData.powerProfile.totalEnergyKWh / 1000).toFixed(1) + " MWh"
+                      : Math.round(quoteData.powerProfile.totalEnergyKWh) + " kWh"
+                  }
                 </div>
                 <div style="font-size: 14px; color: #047857;">Total Energy Capacity</div>
                 <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; font-size: 13px;">
@@ -983,48 +1080,70 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                     <span style="color: #6b7280;">🔋 Battery:</span>
                     <strong>${Math.round(quoteData.powerProfile.batteryKW)} kW / ${Math.round(quoteData.powerProfile.batteryKWh)} kWh</strong>
                   </div>
-                  ${quoteData.powerProfile.solarKW > 0 ? `
+                  ${
+                    quoteData.powerProfile.solarKW > 0
+                      ? `
                   <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                     <span style="color: #6b7280;">☀️ Solar:</span>
                     <strong>${Math.round(quoteData.powerProfile.solarKW)} kW</strong>
-                  </div>` : ''}
-                  ${quoteData.powerProfile.generatorKW > 0 ? `
+                  </div>`
+                      : ""
+                  }
+                  ${
+                    quoteData.powerProfile.generatorKW > 0
+                      ? `
                   <div style="display: flex; justify-content: space-between;">
                     <span style="color: #6b7280;">⚡ Generator:</span>
                     <strong>${Math.round(quoteData.powerProfile.generatorKW)} kW</strong>
-                  </div>` : ''}
+                  </div>`
+                      : ""
+                  }
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
-              ${quoteData.powerGap ? `
+              ${
+                quoteData.powerGap
+                  ? `
               <div style="background: linear-gradient(135deg, ${
-                quoteData.powerGap.status === 'covered' ? '#ecfdf5, #d1fae5' :
-                quoteData.powerGap.status === 'partial' ? '#fef3c7, #fde68a' :
-                '#fee2e2, #fecaca'
+                quoteData.powerGap.status === "covered"
+                  ? "#ecfdf5, #d1fae5"
+                  : quoteData.powerGap.status === "partial"
+                    ? "#fef3c7, #fde68a"
+                    : "#fee2e2, #fecaca"
               }); padding: 25px; border-radius: 15px; border: 2px solid ${
-                quoteData.powerGap.status === 'covered' ? '#10b981' :
-                quoteData.powerGap.status === 'partial' ? '#f59e0b' :
-                '#ef4444'
+                quoteData.powerGap.status === "covered"
+                  ? "#10b981"
+                  : quoteData.powerGap.status === "partial"
+                    ? "#f59e0b"
+                    : "#ef4444"
               };">
                 <div style="font-weight: bold; color: ${
-                  quoteData.powerGap.status === 'covered' ? '#065f46' :
-                  quoteData.powerGap.status === 'partial' ? '#92400e' :
-                  '#991b1b'
+                  quoteData.powerGap.status === "covered"
+                    ? "#065f46"
+                    : quoteData.powerGap.status === "partial"
+                      ? "#92400e"
+                      : "#991b1b"
                 }; font-size: 18px; margin-bottom: 15px;">⚡ Power Gap Analysis</div>
                 <div style="font-size: 36px; font-weight: bold; color: ${
-                  quoteData.powerGap.status === 'covered' ? '#059669' :
-                  quoteData.powerGap.status === 'partial' ? '#d97706' :
-                  '#dc2626'
+                  quoteData.powerGap.status === "covered"
+                    ? "#059669"
+                    : quoteData.powerGap.status === "partial"
+                      ? "#d97706"
+                      : "#dc2626"
                 }; margin-bottom: 5px;">
                   ${quoteData.powerGap.coveragePercent}%
                 </div>
                 <div style="font-size: 14px; color: #6b7280;">
-                  ${quoteData.powerGap.status === 'covered' 
-                    ? '✓ Peak Demand Fully Covered' 
-                    : quoteData.powerGap.status === 'partial'
-                      ? '⚠ Partial Coverage - Grid Support Needed'
-                      : '⚠ Gap Exists - ' + Math.round(quoteData.powerGap.gapKW) + ' kW Shortfall'}
+                  ${
+                    quoteData.powerGap.status === "covered"
+                      ? "✓ Peak Demand Fully Covered"
+                      : quoteData.powerGap.status === "partial"
+                        ? "⚠ Partial Coverage - Grid Support Needed"
+                        : "⚠ Gap Exists - " + Math.round(quoteData.powerGap.gapKW) + " kW Shortfall"
+                  }
                 </div>
                 <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 8px; font-size: 13px;">
                   <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -1037,16 +1156,20 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                   </div>
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
             </div>
             
             <!-- Solar & Energy Opportunities -->
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-              ${quoteData.solarOpportunity ? `
+              ${
+                quoteData.solarOpportunity
+                  ? `
               <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 25px; border-radius: 15px; border: 2px solid #f59e0b;">
                 <div style="font-weight: bold; color: #92400e; font-size: 18px; margin-bottom: 15px;">☀️ Solar Opportunity</div>
                 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                  ${[1,2,3,4,5].map(i => `<span style="font-size: 28px; opacity: ${i <= quoteData.solarOpportunity!.rating ? 1 : 0.3};">☀️</span>`).join('')}
+                  ${[1, 2, 3, 4, 5].map((i) => `<span style="font-size: 28px; opacity: ${i <= quoteData.solarOpportunity!.rating ? 1 : 0.3};">☀️</span>`).join("")}
                 </div>
                 <div style="font-size: 24px; font-weight: bold; color: #d97706;">${quoteData.solarOpportunity.label}</div>
                 <div style="font-size: 14px; color: #92400e; margin-top: 5px;">${quoteData.solarOpportunity.solarHours.toFixed(1)} peak sun hours/day</div>
@@ -1054,66 +1177,119 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                   <strong>Est. Solar LCOE:</strong> ~${(quoteData.solarOpportunity.estimatedLCOE * 100).toFixed(1)}¢/kWh
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
-              ${quoteData.energyOpportunities ? `
+              ${
+                quoteData.energyOpportunities
+                  ? `
               <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 25px; border-radius: 15px; border: 2px solid #ef4444;">
                 <div style="font-weight: bold; color: #991b1b; font-size: 18px; margin-bottom: 15px;">🔥 Energy Opportunities</div>
                 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                  ${[1,2,3].map(i => `<span style="font-size: 28px; opacity: ${i <= quoteData.energyOpportunities!.activeCount ? 1 : 0.3};">🔥</span>`).join('')}
+                  ${[1, 2, 3].map((i) => `<span style="font-size: 28px; opacity: ${i <= quoteData.energyOpportunities!.activeCount ? 1 : 0.3};">🔥</span>`).join("")}
                 </div>
                 <div style="font-size: 14px; color: #dc2626; font-weight: bold; margin-bottom: 10px;">${quoteData.energyOpportunities.activeCount} Active Opportunities</div>
                 <div style="font-size: 13px; space-y: 8px;">
-                  ${quoteData.energyOpportunities.peakShaving.active ? `
+                  ${
+                    quoteData.energyOpportunities.peakShaving.active
+                      ? `
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="color: #f97316;">🔥</span>
-                    <span><strong>Peak Shaving</strong> ${quoteData.energyOpportunities.peakShaving.value || ''}</span>
-                  </div>` : ''}
-                  ${quoteData.energyOpportunities.arbitrage.active ? `
+                    <span><strong>Peak Shaving</strong> ${quoteData.energyOpportunities.peakShaving.value || ""}</span>
+                  </div>`
+                      : ""
+                  }
+                  ${
+                    quoteData.energyOpportunities.arbitrage.active
+                      ? `
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="color: #f97316;">🔥</span>
-                    <span><strong>Energy Arbitrage</strong> ${quoteData.energyOpportunities.arbitrage.value || ''}</span>
-                  </div>` : ''}
-                  ${quoteData.energyOpportunities.gridStability.active ? `
+                    <span><strong>Energy Arbitrage</strong> ${quoteData.energyOpportunities.arbitrage.value || ""}</span>
+                  </div>`
+                      : ""
+                  }
+                  ${
+                    quoteData.energyOpportunities.gridStability.active
+                      ? `
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="color: #f97316;">🔥</span>
-                    <span><strong>Grid Stability</strong> ${quoteData.energyOpportunities.gridStability.value || ''}</span>
-                  </div>` : ''}
-                  ${quoteData.energyOpportunities.demandResponse.active ? `
+                    <span><strong>Grid Stability</strong> ${quoteData.energyOpportunities.gridStability.value || ""}</span>
+                  </div>`
+                      : ""
+                  }
+                  ${
+                    quoteData.energyOpportunities.demandResponse.active
+                      ? `
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="color: #f97316;">🔥</span>
                     <span><strong>Demand Response</strong></span>
-                  </div>` : ''}
+                  </div>`
+                      : ""
+                  }
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
             </div>
             
             <!-- How Your Quote Aligns -->
             <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-radius: 12px; border-left: 4px solid #7c3aed;">
               <div style="font-weight: bold; color: #5b21b6; font-size: 18px; margin-bottom: 15px;">🎯 How Your Quote Aligns With These Metrics</div>
               <ul style="margin-left: 20px; color: #4c1d95; font-size: 14px; line-height: 1.8;">
-                ${quoteData.powerGap?.status === 'covered' 
-                  ? '<li><strong>✓ Full Coverage:</strong> Your system is sized to meet 100% of your peak demand, ensuring grid independence during peak periods.</li>' 
-                  : quoteData.powerGap?.status === 'partial'
-                    ? '<li><strong>⚠ Partial Coverage:</strong> Consider increasing system size by ' + Math.round((quoteData.powerGap?.gapKW || 0)) + ' kW for full peak demand coverage, or rely on grid during peaks.</li>'
-                    : '<li><strong>System Sizing:</strong> Your configuration is optimized for your facility\'s energy profile.</li>'}
-                ${quoteData.solarOpportunity && quoteData.solarOpportunity.rating >= 3 
-                  ? '<li><strong>☀️ Solar Integration:</strong> Your location has excellent solar potential (' + quoteData.solarOpportunity.solarHours.toFixed(1) + ' hrs/day). Adding solar can reduce your effective energy cost to ~' + (quoteData.solarOpportunity.estimatedLCOE * 100).toFixed(1) + '¢/kWh.</li>'
-                  : ''}
-                ${quoteData.energyOpportunities?.peakShaving.active 
-                  ? '<li><strong>⚡ Peak Shaving:</strong> Your ' + (quoteData.energyOpportunities.peakShaving.value || 'demand charges') + ' make peak shaving a priority. Expected savings: ' + quoteData.energyOpportunities.peakShaving.savings + '.</li>'
-                  : ''}
-                ${quoteData.energyOpportunities?.arbitrage.active 
-                  ? '<li><strong>💱 Arbitrage:</strong> Your utility rate (' + (quoteData.energyOpportunities.arbitrage.value || 'TOU') + ') enables energy arbitrage. Expected savings: ' + quoteData.energyOpportunities.arbitrage.savings + '.</li>'
-                  : ''}
-                ${quoteData.energyOpportunities?.gridStability.active 
-                  ? '<li><strong>🔌 Grid Stability:</strong> With ' + (quoteData.energyOpportunities.gridStability.value || 'reliability concerns') + ', your battery provides critical backup protection. Value: ' + quoteData.energyOpportunities.gridStability.savings + '.</li>'
-                  : ''}
+                ${
+                  quoteData.powerGap?.status === "covered"
+                    ? "<li><strong>✓ Full Coverage:</strong> Your system is sized to meet 100% of your peak demand, ensuring grid independence during peak periods.</li>"
+                    : quoteData.powerGap?.status === "partial"
+                      ? "<li><strong>⚠ Partial Coverage:</strong> Consider increasing system size by " +
+                        Math.round(quoteData.powerGap?.gapKW || 0) +
+                        " kW for full peak demand coverage, or rely on grid during peaks.</li>"
+                      : "<li><strong>System Sizing:</strong> Your configuration is optimized for your facility's energy profile.</li>"
+                }
+                ${
+                  quoteData.solarOpportunity && quoteData.solarOpportunity.rating >= 3
+                    ? "<li><strong>☀️ Solar Integration:</strong> Your location has excellent solar potential (" +
+                      quoteData.solarOpportunity.solarHours.toFixed(1) +
+                      " hrs/day). Adding solar can reduce your effective energy cost to ~" +
+                      (quoteData.solarOpportunity.estimatedLCOE * 100).toFixed(1) +
+                      "¢/kWh.</li>"
+                    : ""
+                }
+                ${
+                  quoteData.energyOpportunities?.peakShaving.active
+                    ? "<li><strong>⚡ Peak Shaving:</strong> Your " +
+                      (quoteData.energyOpportunities.peakShaving.value || "demand charges") +
+                      " make peak shaving a priority. Expected savings: " +
+                      quoteData.energyOpportunities.peakShaving.savings +
+                      ".</li>"
+                    : ""
+                }
+                ${
+                  quoteData.energyOpportunities?.arbitrage.active
+                    ? "<li><strong>💱 Arbitrage:</strong> Your utility rate (" +
+                      (quoteData.energyOpportunities.arbitrage.value || "TOU") +
+                      ") enables energy arbitrage. Expected savings: " +
+                      quoteData.energyOpportunities.arbitrage.savings +
+                      ".</li>"
+                    : ""
+                }
+                ${
+                  quoteData.energyOpportunities?.gridStability.active
+                    ? "<li><strong>🔌 Grid Stability:</strong> With " +
+                      (quoteData.energyOpportunities.gridStability.value ||
+                        "reliability concerns") +
+                      ", your battery provides critical backup protection. Value: " +
+                      quoteData.energyOpportunities.gridStability.savings +
+                      ".</li>"
+                    : ""
+                }
               </ul>
             </div>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
           
           <!-- Financial Summary -->
           <div class="section">
@@ -1156,24 +1332,26 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <div class="highlight-card">
               <div class="description">Estimated Annual Energy Savings</div>
               <div class="big-number">$${(q.annualSavings / 1000).toFixed(0)}K</div>
-              <div class="description">Simple Payback Period: ${q.paybackYears.toFixed(1)} years | 25-Year ROI: ${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%</div>
+              <div class="description">Simple Payback Period: ${q.paybackYears.toFixed(1)} years | 25-Year ROI: ${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</div>
             </div>
             
             <!-- Savings Breakdown -->
             <div style="margin-top: 20px; padding: 20px; background: #f3f4f6; border-radius: 12px;">
               <div style="font-weight: bold; margin-bottom: 15px; color: #374151; font-size: 18px;">💵 Annual Savings Breakdown (Estimated)</div>
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 14px;">
-                <div><span style="color: #6b7280;">Demand Charge Reduction:</span> <strong>$${(q.annualSavings * 0.45 / 1000).toFixed(0)}K</strong></div>
-                <div><span style="color: #6b7280;">Energy Arbitrage (TOU):</span> <strong>$${(q.annualSavings * 0.35 / 1000).toFixed(0)}K</strong></div>
-                <div><span style="color: #6b7280;">Utility Incentives:</span> <strong>$${(q.annualSavings * 0.15 / 1000).toFixed(0)}K</strong></div>
-                <div><span style="color: #6b7280;">Backup Value / Other:</span> <strong>$${(q.annualSavings * 0.05 / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Demand Charge Reduction:</span> <strong>$${((q.annualSavings * 0.45) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Energy Arbitrage (TOU):</span> <strong>$${((q.annualSavings * 0.35) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Utility Incentives:</span> <strong>$${((q.annualSavings * 0.15) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Backup Value / Other:</span> <strong>$${((q.annualSavings * 0.05) / 1000).toFixed(0)}K</strong></div>
               </div>
               <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; font-size: 13px; color: #6b7280;">
-                <strong>Note:</strong> Actual savings will vary based on utility rates, usage patterns, and operational strategy. This estimate assumes typical ${industryName.toLowerCase()} load profiles and current utility rates in ${q.location || 'your area'}.
+                <strong>Note:</strong> Actual savings will vary based on utility rates, usage patterns, and operational strategy. This estimate assumes typical ${industryName.toLowerCase()} load profiles and current utility rates in ${q.location || "your area"}.
               </div>
             </div>
             
-            ${hasDetailedBreakdown ? `
+            ${
+              hasDetailedBreakdown
+                ? `
             <!-- Commissioning & Certification Details -->
             <div style="margin-top: 20px; padding: 20px; background: #ede9fe; border-radius: 12px; border-left: 4px solid #7c3aed;">
               <div style="font-weight: bold; margin-bottom: 15px; color: #5b21b6; font-size: 18px;">🔧 Commissioning & Testing Costs</div>
@@ -1182,7 +1360,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 <div><span style="color: #6b7280;">Site Acceptance Test (SAT):</span> <strong>$${((equipmentBreakdown?.commissioning?.siteAcceptanceTest || q.commissioningCost * 0.27) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">SCADA/EMS Integration:</span> <strong>$${((equipmentBreakdown?.commissioning?.scadaIntegration || q.commissioningCost * 0.32) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">Functional Safety (IEC 61508):</span> <strong>$${((equipmentBreakdown?.commissioning?.functionalSafetyTest || q.commissioningCost * 0.19) / 1000).toFixed(0)}K</strong></div>
-                <div><span style="color: #6b7280;">Performance Testing:</span> <strong>$${((equipmentBreakdown?.commissioning?.performanceTest || q.commissioningCost * 0.10) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Performance Testing:</span> <strong>$${((equipmentBreakdown?.commissioning?.performanceTest || q.commissioningCost * 0.1) / 1000).toFixed(0)}K</strong></div>
               </div>
             </div>
             
@@ -1191,7 +1369,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
                 <div><span style="color: #6b7280;">Interconnection Study:</span> <strong>$${((equipmentBreakdown?.certification?.interconnectionStudy || q.certificationCost * 0.35) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">Utility Grid Upgrades:</span> <strong>$${((equipmentBreakdown?.certification?.utilityUpgrades || q.certificationCost * 0.35) / 1000).toFixed(0)}K</strong></div>
-                <div><span style="color: #6b7280;">Environmental Permits:</span> <strong>$${((equipmentBreakdown?.certification?.environmentalPermits || q.certificationCost * 0.10) / 1000).toFixed(0)}K</strong></div>
+                <div><span style="color: #6b7280;">Environmental Permits:</span> <strong>$${((equipmentBreakdown?.certification?.environmentalPermits || q.certificationCost * 0.1) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">Building Permits:</span> <strong>$${((equipmentBreakdown?.certification?.buildingPermits || q.certificationCost * 0.06) / 1000).toFixed(0)}K</strong></div>
                 <div><span style="color: #6b7280;">Fire Code (NFPA 855):</span> <strong>$${((equipmentBreakdown?.certification?.fireCodeCompliance || q.certificationCost * 0.14) / 1000).toFixed(0)}K</strong></div>
               </div>
@@ -1210,7 +1388,9 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
                 <strong>Year 1 Total:</strong> $${((equipmentBreakdown?.annualCosts?.year1Total || q.annualOpex * 1.25) / 1000).toFixed(0)}K (includes startup activities)
               </div>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           
           <!-- Your Selections -->
@@ -1219,12 +1399,12 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <div class="options-grid">
               <div class="option-card">
                 <div class="icon">🏗️</div>
-                <div class="title">${q.installationOption.replace('-', ' ')}</div>
+                <div class="title">${q.installationOption.replace("-", " ")}</div>
                 <div class="subtitle">Installation</div>
               </div>
               <div class="option-card">
                 <div class="icon">🚢</div>
-                <div class="title">${q.shippingOption.replace('-', ' ')}</div>
+                <div class="title">${q.shippingOption.replace("-", " ")}</div>
                 <div class="subtitle">Shipping</div>
               </div>
               <div class="option-card">
@@ -1248,7 +1428,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
         <div class="footer">
           <div class="company">🧙‍♂️ MERLIN Energy Solutions</div>
           <div>Professional Battery Energy Storage Systems</div>
-          <div style="margin-top: 10px;">Quote Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <div style="margin-top: 10px;">Quote Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
           <div style="margin-top: 5px; font-size: 12px; font-style: italic;">Your trusted energy storage advisor</div>
         </div>
       </div>
@@ -1287,7 +1467,7 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
               <li>Demand Charge Reduction: <strong>Peak shaving analysis</strong></li>
               <li>Time-of-Use Arbitrage: <strong>Peak/off-peak differential</strong></li>
-              <li>Capacity Factor: <strong>${((totalEnergyMWh / q.storageSizeMW) * 100 / 4).toFixed(0)}% daily utilization</strong></li>
+              <li>Capacity Factor: <strong>${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization</strong></li>
               <li>Annual Savings: <strong>$${(q.annualSavings / 1000).toFixed(0)}K/year</strong></li>
               <li>Monthly Savings: <strong>$${(q.annualSavings / 12 / 1000).toFixed(0)}K/month</strong></li>
             </ul>
@@ -1297,8 +1477,8 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
             <h4 style="margin: 0 0 10px 0; color: #B91C1C;">ROI Calculations</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
               <li>Simple Payback: <strong>$${(q.netCost / 1000000).toFixed(2)}M ÷ $${(q.annualSavings / 1000).toFixed(0)}K = ${q.paybackYears.toFixed(1)} years</strong></li>
-              <li>10-Year ROI: <strong>${((q.annualSavings * 10 / q.netCost) * 100).toFixed(0)}%</strong></li>
-              <li>25-Year ROI: <strong>${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%</strong></li>
+              <li>10-Year ROI: <strong>${(((q.annualSavings * 10) / q.netCost) * 100).toFixed(0)}%</strong></li>
+              <li>25-Year ROI: <strong>${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</strong></li>
               <li>O&M Allowance: <strong>$$${((q.totalProjectCost * 0.02) / 1000).toFixed(0)}K/year (2%)</strong></li>
               <li>Degradation Factor: <strong>0.5% per year included</strong></li>
             </ul>
@@ -1309,10 +1489,10 @@ export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void
           <h4 style="margin: 0 0 10px 0; color: #D97706;">Industry-Specific Factors</h4>
           <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
             <li>Use Case: <strong>${getIndustryName(q.industryTemplate)}</strong></li>
-            <li>Load Profile: <strong>${q.gridConnection === 'off-grid' ? 'Off-grid operation with generator backup' : 'Grid-tied with seamless backup capability'}</strong></li>
+            <li>Load Profile: <strong>${q.gridConnection === "off-grid" ? "Off-grid operation with generator backup" : "Grid-tied with seamless backup capability"}</strong></li>
             <li>Compliance Standards: <strong>IEC 61215/61730, IEEE 1547, NFPA 855</strong></li>
-            <li>Installation Type: <strong>${q.gridConnection === 'off-grid' ? 'Standalone microgrid system' : 'Grid-interactive energy storage'}</strong></li>
-            ${q.solarMW > 0 ? `<li>Solar Integration: <strong>${q.solarMW.toFixed(1)} MW PV capacity included</strong></li>` : ''}
+            <li>Installation Type: <strong>${q.gridConnection === "off-grid" ? "Standalone microgrid system" : "Grid-interactive energy storage"}</strong></li>
+            ${q.solarMW > 0 ? `<li>Solar Integration: <strong>${q.solarMW.toFixed(1)} MW PV capacity included</strong></li>` : ""}
           </ul>
         </div>
         
@@ -1419,19 +1599,19 @@ export const generateExcel = (quoteData: QuoteData, equipmentBreakdown: any): vo
     solarMW: quoteData?.solarMW || 0,
     windMW: quoteData?.windMW || 0,
     generatorMW: quoteData?.generatorMW || 0,
-    location: quoteData?.location || 'To Be Determined',
-    industryTemplate: quoteData?.industryTemplate || 'bess',
-    gridConnection: quoteData?.gridConnection || 'grid-tied',
+    location: quoteData?.location || "To Be Determined",
+    industryTemplate: quoteData?.industryTemplate || "bess",
+    gridConnection: quoteData?.gridConnection || "grid-tied",
     totalProjectCost: quoteData?.totalProjectCost || 0,
     annualSavings: quoteData?.annualSavings || 1,
     paybackYears: quoteData?.paybackYears || 0,
     taxCredit: quoteData?.taxCredit || 0,
     netCost: quoteData?.netCost || 1,
-    installationOption: quoteData?.installationOption || 'epc',
-    shippingOption: quoteData?.shippingOption || 'standard',
-    financingOption: quoteData?.financingOption || 'cash',
+    installationOption: quoteData?.installationOption || "epc",
+    shippingOption: quoteData?.shippingOption || "standard",
+    financingOption: quoteData?.financingOption || "cash",
   };
-  
+
   // Safe equipment breakdown defaults
   const eb = {
     generators: equipmentBreakdown?.generators || { totalCost: 0, quantity: 0, unitPowerMW: 0 },
@@ -1441,20 +1621,31 @@ export const generateExcel = (quoteData: QuoteData, equipmentBreakdown: any): vo
     wind: equipmentBreakdown?.wind || { totalCost: 0 },
     transformers: equipmentBreakdown?.transformers || { totalCost: 0 },
     switchgear: equipmentBreakdown?.switchgear || { totalCost: 0 },
-    evChargers: equipmentBreakdown?.evChargers || { totalChargingCost: 0, level2Chargers: { quantity: 0 }, dcFastChargers: { quantity: 0 } },
-    totals: equipmentBreakdown?.totals || { equipmentCost: q.totalProjectCost * 0.7, installationCost: q.totalProjectCost * 0.3 },
+    evChargers: equipmentBreakdown?.evChargers || {
+      totalChargingCost: 0,
+      level2Chargers: { quantity: 0 },
+      dcFastChargers: { quantity: 0 },
+    },
+    totals: equipmentBreakdown?.totals || {
+      equipmentCost: q.totalProjectCost * 0.7,
+      installationCost: q.totalProjectCost * 0.3,
+    },
   };
-  
+
   const totalEnergyMWh = q.storageSizeMW * q.durationHours;
   const industryName = getIndustryName(q.industryTemplate);
-  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  
+  const today = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   // Build system description
-  let systemDescription = 'BESS';
-  if (q.solarMW > 0) systemDescription += ' + Solar';
-  if (q.windMW > 0) systemDescription += ' + Wind';
-  if (q.generatorMW > 0) systemDescription += ' + Generator';
-  
+  let systemDescription = "BESS";
+  if (q.solarMW > 0) systemDescription += " + Solar";
+  if (q.windMW > 0) systemDescription += " + Wind";
+  if (q.generatorMW > 0) systemDescription += " + Generator";
+
   // Create comprehensive CSV content
   const csvContent = `ENERGY SAVINGS QUOTE - MERLIN ENERGY INC.
 Generated Date:,${today}
@@ -1473,14 +1664,30 @@ System Type:,${systemDescription}
 ====================================
 PROFESSIONAL SYSTEM BREAKDOWN
 ====================================
-Subsystem,Description,Capacity/Scope,Estimated Cost (USD ex-VAT),Notes${eb.generators && eb.generators.totalCost > 0 ? `
-${q.gridConnection === 'off-grid' ? 'Backup Generators' : 'Natural Gas Generators'},${q.gridConnection === 'off-grid' ? 'Caterpillar diesel gensets with auto-start/stop' : 'Caterpillar/Cummins NG gensets with paralleling'} (${eb.generators.quantity} units),${(eb.generators.quantity * eb.generators.unitPowerMW).toFixed(1)} MW total,$$${(eb.generators.totalCost / 1000000).toFixed(2)}M,${q.gridConnection === 'off-grid' ? 'Tier 4 Final compliant with sound attenuation' : 'MCPD compliant with sound-attenuated enclosures'}` : ''}
+Subsystem,Description,Capacity/Scope,Estimated Cost (USD ex-VAT),Notes${
+    eb.generators && eb.generators.totalCost > 0
+      ? `
+${q.gridConnection === "off-grid" ? "Backup Generators" : "Natural Gas Generators"},${q.gridConnection === "off-grid" ? "Caterpillar diesel gensets with auto-start/stop" : "Caterpillar/Cummins NG gensets with paralleling"} (${eb.generators.quantity} units),${(eb.generators.quantity * eb.generators.unitPowerMW).toFixed(1)} MW total,$$${(eb.generators.totalCost / 1000000).toFixed(2)}M,${q.gridConnection === "off-grid" ? "Tier 4 Final compliant with sound attenuation" : "MCPD compliant with sound-attenuated enclosures"}`
+      : ""
+  }
 BESS System,LFP battery storage with PCS and fire-rated enclosure,${totalEnergyMWh.toFixed(2)} MWh / ${q.storageSizeMW.toFixed(2)} MW,$$${(eb.batteries.totalCost / 1000000).toFixed(2)}M,"Includes HVAC thermal management, transformer tie-in, SCADA controls"
-Power Conversion,${q.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'},${q.storageSizeMW.toFixed(2)} MW total capacity,$$${(eb.inverters.totalCost / 1000000).toFixed(2)}M,${q.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}${eb.solar && eb.solar.totalCost > 0 ? `
-Photovoltaic Array,${q.gridConnection === 'off-grid' ? 'Ground-mounted PV with MPPT charge controllers' : 'Roof or ground-mounted PV with string inverters'},${q.solarMW.toFixed(1)} MWp DC capacity,$$${(eb.solar.totalCost / 1000000).toFixed(2)}M,IEC 61215/61730 certified modules with 25-year warranty` : ''}${eb.wind && eb.wind.totalCost > 0 ? `
-Wind Generation,Utility-scale wind turbines with grid synchronization,${q.windMW.toFixed(1)} MW rated capacity,$$${(eb.wind.totalCost / 1000000).toFixed(2)}M,IEC 61400 certified with advanced blade control` : ''}
-Medium Voltage Equipment,ABB transformers with protective switchgear and MV distribution,${q.storageSizeMW.toFixed(2)} MW system integration,$$${((eb.transformers.totalCost + eb.switchgear.totalCost) / 1000000).toFixed(2)}M,"Oil-filled transformers with digital protection relays, arc-resistant switchgear"${eb.evChargers && eb.evChargers.totalChargingCost > 0 ? `
-EV Charging Infrastructure,Level 2 and DC fast charging stations with network connectivity,${eb.evChargers.level2Chargers?.quantity || 0} Level 2 + ${eb.evChargers.dcFastChargers?.quantity || 0} DC Fast units,$$${(eb.evChargers.totalChargingCost / 1000000).toFixed(2)}M,OCPP 2.0 compliant with payment processing and load management` : ''}
+Power Conversion,${q.gridConnection === "off-grid" ? "SMA grid-forming hybrid inverters with island mode capability" : "SMA bi-directional grid-tie inverters with seamless transfer"},${q.storageSizeMW.toFixed(2)} MW total capacity,$$${(eb.inverters.totalCost / 1000000).toFixed(2)}M,${q.gridConnection === "off-grid" ? "Grid-forming operation without external reference" : "IEEE 1547 compliant with anti-islanding protection"}${
+    eb.solar && eb.solar.totalCost > 0
+      ? `
+Photovoltaic Array,${q.gridConnection === "off-grid" ? "Ground-mounted PV with MPPT charge controllers" : "Roof or ground-mounted PV with string inverters"},${q.solarMW.toFixed(1)} MWp DC capacity,$$${(eb.solar.totalCost / 1000000).toFixed(2)}M,IEC 61215/61730 certified modules with 25-year warranty`
+      : ""
+  }${
+    eb.wind && eb.wind.totalCost > 0
+      ? `
+Wind Generation,Utility-scale wind turbines with grid synchronization,${q.windMW.toFixed(1)} MW rated capacity,$$${(eb.wind.totalCost / 1000000).toFixed(2)}M,IEC 61400 certified with advanced blade control`
+      : ""
+  }
+Medium Voltage Equipment,ABB transformers with protective switchgear and MV distribution,${q.storageSizeMW.toFixed(2)} MW system integration,$$${((eb.transformers.totalCost + eb.switchgear.totalCost) / 1000000).toFixed(2)}M,"Oil-filled transformers with digital protection relays, arc-resistant switchgear"${
+    eb.evChargers && eb.evChargers.totalChargingCost > 0
+      ? `
+EV Charging Infrastructure,Level 2 and DC fast charging stations with network connectivity,${eb.evChargers.level2Chargers?.quantity || 0} Level 2 + ${eb.evChargers.dcFastChargers?.quantity || 0} DC Fast units,$$${(eb.evChargers.totalChargingCost / 1000000).toFixed(2)}M,OCPP 2.0 compliant with payment processing and load management`
+      : ""
+  }
 Control & Monitoring,Energy management system with SCADA integration and remote monitoring,—,$$${((eb.totals.equipmentCost * 0.05) / 1000000).toFixed(2)}M,"HMI touchscreen interface, cybersecurity compliance, cloud connectivity"
 Balance of Plant,Cabling and civil works with foundations and commissioning,—,$$${(eb.totals.installationCost / 1000000).toFixed(2)}M,"Includes delivery, import duties, and professional commissioning"
 ,,,,
@@ -1492,16 +1699,16 @@ ROI & FINANCIAL SCENARIOS
 ====================================
 Utilization Rate,Annual Savings (USD),Simple Payback (yrs)
 5%,$$${((quoteData.annualSavings * 0.05) / 1000).toFixed(0)}K,${(quoteData.totalProjectCost / (quoteData.annualSavings * 0.05)).toFixed(1)}
-10%,$$${((q.annualSavings * 0.10) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.10)).toFixed(1)}
+10%,$$${((q.annualSavings * 0.1) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.1)).toFixed(1)}
 15%,$$${((q.annualSavings * 0.15) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.15)).toFixed(1)}
 25%,$$${((q.annualSavings * 0.25) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.25)).toFixed(1)}
-50%,$$${((q.annualSavings * 0.50) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.50)).toFixed(1)}
+50%,$$${((q.annualSavings * 0.5) / 1000).toFixed(0)}K,${(q.totalProjectCost / (q.annualSavings * 0.5)).toFixed(1)}
 
 Financial Metrics,,
-10-Year ROI,≈ ${((q.annualSavings * 10 / q.netCost) * 100).toFixed(0)}% (net of O&M),
+10-Year ROI,≈ ${(((q.annualSavings * 10) / q.netCost) * 100).toFixed(0)}% (net of O&M),
 O&M Allowance,≈ $$${((q.totalProjectCost * 0.02) / 1000).toFixed(0)}K / year,
-${q.gridConnection === 'off-grid' ? 'Fuel Cost' : 'Grid Offset Rate'},${q.gridConnection === 'off-grid' ? '≈ $0.08 / kWh (Diesel)' : '≈ $0.12 / kWh (Grid Avoided)'},
-CO₂ Reduction,≈ ${q.gridConnection === 'off-grid' ? '75% vs diesel-only' : '45% vs grid electricity'},
+${q.gridConnection === "off-grid" ? "Fuel Cost" : "Grid Offset Rate"},${q.gridConnection === "off-grid" ? "≈ $0.08 / kWh (Diesel)" : "≈ $0.12 / kWh (Grid Avoided)"},
+CO₂ Reduction,≈ ${q.gridConnection === "off-grid" ? "75% vs diesel-only" : "45% vs grid electricity"},
 TOTAL PROJECT COST,$${(q.totalProjectCost / 1000000).toFixed(2)}M
 Less: Federal ITC Tax Credit (30%),-$${(q.taxCredit / 1000000).toFixed(2)}M
 NET INVESTMENT (After Tax Credit),$${(q.netCost / 1000000).toFixed(2)}M
@@ -1511,7 +1718,7 @@ KEY FINANCIAL METRICS
 ====================================
 Annual Energy Savings,$${(q.annualSavings / 1000).toFixed(0)}K per year
 Simple Payback Period,${q.paybackYears.toFixed(1)} years
-25-Year Return on Investment,${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%
+25-Year Return on Investment,${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%
 Total 25-Year Savings,$${((q.annualSavings * 25) / 1000000).toFixed(2)}M
 
 ====================================
@@ -1521,9 +1728,9 @@ Component,Specification
 Power Output (MW),${q.storageSizeMW.toFixed(2)} MW
 Duration (hours),${q.durationHours} hours
 Total Energy Storage (MWh),${totalEnergyMWh.toFixed(2)} MWh
-${q.solarMW > 0 ? `Solar Generation (MW),${q.solarMW.toFixed(1)} MW` : ''}
-${q.windMW > 0 ? `Wind Generation (MW),${q.windMW.toFixed(1)} MW` : ''}
-${q.generatorMW > 0 ? `Generator Backup (MW),${q.generatorMW.toFixed(1)} MW` : ''}
+${q.solarMW > 0 ? `Solar Generation (MW),${q.solarMW.toFixed(1)} MW` : ""}
+${q.windMW > 0 ? `Wind Generation (MW),${q.windMW.toFixed(1)} MW` : ""}
+${q.generatorMW > 0 ? `Generator Backup (MW),${q.generatorMW.toFixed(1)} MW` : ""}
 Battery Chemistry,Lithium Iron Phosphate (LFP)
 Expected Cycle Life,"6,000+ cycles"
 Round-Trip Efficiency,85-90%
@@ -1537,36 +1744,41 @@ HOW THIS CONFIGURATION MEETS YOUR NEEDS:
 
 🎯 PRIMARY OBJECTIVES ADDRESSED:
 - Energy Storage & Management: ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)} hours backup power and intelligent demand charge management
-- Power Quality & Reliability: ${q.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}
-- Operational Cost Reduction: System delivers ${q.paybackYears.toFixed(1)}-year payback with ${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage
-- Business Continuity: Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances${q.solarMW > 0 || q.windMW > 0 ? '\n- Sustainability Goals: Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs' : ''}
+- Power Quality & Reliability: ${q.gridConnection === "off-grid" ? "Grid-forming inverters enable stable operation without external grid reference" : "Bi-directional inverters provide seamless grid integration with <50ms backup transition"}
+- Operational Cost Reduction: System delivers ${q.paybackYears.toFixed(1)}-year payback with ${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage
+- Business Continuity: Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances${q.solarMW > 0 || q.windMW > 0 ? "\n- Sustainability Goals: Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs" : ""}
 
 🏭 INDUSTRY-SPECIFIC BENEFITS FOR ${getIndustryName(q.industryTemplate).toUpperCase()}:
-${q.industryTemplate.includes('ev-charging') ? 
-  `EV Charging Operations: Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === 'off-grid' ? 'in remote locations' : 'with grid support'}. Fast charging compatibility ensures customer satisfaction and revenue optimization.` :
-q.industryTemplate.includes('manufacturing') ?
-  `Manufacturing Continuity: Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.` :
-q.industryTemplate.includes('data-center') ?
-  `Data Center Reliability: Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.` :
-q.industryTemplate.includes('hospital') ?
-  `Healthcare Facility Support: Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).` :
-q.industryTemplate.includes('cold-storage') ?
-  `Cold Storage Efficiency: Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.` :
-  `Commercial Operations: Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
+${
+  q.industryTemplate.includes("ev-charging")
+    ? `EV Charging Operations: Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === "off-grid" ? "in remote locations" : "with grid support"}. Fast charging compatibility ensures customer satisfaction and revenue optimization.`
+    : q.industryTemplate.includes("manufacturing")
+      ? `Manufacturing Continuity: Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.`
+      : q.industryTemplate.includes("data-center")
+        ? `Data Center Reliability: Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.`
+        : q.industryTemplate.includes("hospital")
+          ? `Healthcare Facility Support: Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).`
+          : q.industryTemplate.includes("cold-storage")
+            ? `Cold Storage Efficiency: Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.`
+            : `Commercial Operations: Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
 }
 
-${q.gridConnection === 'off-grid' ? `🏝️ OFF-GRID OPERATION CAPABILITIES:
+${
+  q.gridConnection === "off-grid"
+    ? `🏝️ OFF-GRID OPERATION CAPABILITIES:
 - Island Mode Operation: Grid-forming inverters provide stable power without external grid reference
 - Automatic Load Management: Smart controls prioritize critical loads during limited generation periods
 - Multi-Source Integration: Seamless coordination between solar, battery, and generator power sources
-- Fuel Optimization: Generator runtime minimization through intelligent battery dispatch reduces operating costs` : `� GRID-INTERACTIVE FEATURES:
+- Fuel Optimization: Generator runtime minimization through intelligent battery dispatch reduces operating costs`
+    : `� GRID-INTERACTIVE FEATURES:
 - Utility Integration: IEEE 1547 compliant interconnection with anti-islanding protection
 - Grid Services: Potential revenue streams from frequency regulation and demand response programs
 - Seamless Backup: Automatic transfer to island mode during grid outages with <50ms transition
-- Peak Shaving: Intelligent discharge during high-demand periods reduces utility charges`}
+- Peak Shaving: Intelligent discharge during high-demand periods reduces utility charges`
+}
 
 � PERFORMANCE OPTIMIZATION:
-The system is optimized for ${((totalEnergyMWh / q.storageSizeMW) * 100 / 4).toFixed(0)}% daily utilization, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
+The system is optimized for ${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
 
 ✓ IMPLEMENTATION INCLUDES:
 Comprehensive site preparation, professional system commissioning, operator training, remote monitoring setup, and complete documentation package for utility interconnection and regulatory compliance.
@@ -1574,8 +1786,8 @@ Comprehensive site preparation, professional system commissioning, operator trai
 ====================================
 YOUR SELECTIONS
 ====================================
-Installation Option:,${q.installationOption.replace('-', ' ').toUpperCase()}
-Shipping Method:,${q.shippingOption.replace('-', ' ').toUpperCase()}
+Installation Option:,${q.installationOption.replace("-", " ").toUpperCase()}
+Shipping Method:,${q.shippingOption.replace("-", " ").toUpperCase()}
 Financing Type:,${q.financingOption}
 
 ====================================
@@ -1633,17 +1845,17 @@ Year 1 Total (includes startup),$${((equipmentBreakdown?.annualCosts?.year1Total
 ESTIMATED SAVINGS BREAKDOWN
 ====================================
 Savings Source,Annual Savings,Percentage
-Demand Charge Reduction,$${(q.annualSavings * 0.45 / 1000).toFixed(0)}K,45%
-Energy Arbitrage,$${(q.annualSavings * 0.35 / 1000).toFixed(0)}K,35%
-Incentives & Credits,$${(q.annualSavings * 0.15 / 1000).toFixed(0)}K,15%
-Backup Power Value,$${(q.annualSavings * 0.05 / 1000).toFixed(0)}K,5%
+Demand Charge Reduction,$${((q.annualSavings * 0.45) / 1000).toFixed(0)}K,45%
+Energy Arbitrage,$${((q.annualSavings * 0.35) / 1000).toFixed(0)}K,35%
+Incentives & Credits,$${((q.annualSavings * 0.15) / 1000).toFixed(0)}K,15%
+Backup Power Value,$${((q.annualSavings * 0.05) / 1000).toFixed(0)}K,5%
 
 ====================================
 25-YEAR FINANCIAL PROJECTION
 ====================================
 Year,Annual Savings,Annual OPEX,Net Annual Benefit,Cumulative Net Position
 1,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025)) / 1000).toFixed(0)}K,-$${((q.netCost - q.annualSavings + (equipmentBreakdown?.annualCosts?.year1Total || q.totalProjectCost * 0.025)) / 1000000).toFixed(2)}M
-5,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 > q.netCost) ? '+' : '-'}$${(Math.abs((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 - q.netCost) / 1000000).toFixed(2)}M
+5,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,${(q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 > q.netCost ? "+" : "-"}$${(Math.abs((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 5 - q.netCost) / 1000000).toFixed(2)}M
 10,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 10 - q.netCost) / 1000000).toFixed(2)}M
 15,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 15 - q.netCost) / 1000000).toFixed(2)}M
 20,$${(q.annualSavings / 1000).toFixed(0)}K,$${((equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02) / 1000).toFixed(0)}K,$${((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) / 1000).toFixed(0)}K,+$${(((q.annualSavings - (equipmentBreakdown?.annualCosts?.totalAnnualCost || q.totalProjectCost * 0.02)) * 20 - q.netCost) / 1000000).toFixed(2)}M
@@ -1683,18 +1895,21 @@ Thank you for considering Merlin Energy for your energy storage needs!
 `;
 
   // Create and download CSV file
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `Merlin_Energy_Quote_${industryName.replace(/\s+/g, '_')}_${Date.now()}.csv`);
-  link.style.visibility = 'hidden';
-  
+
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `Merlin_Energy_Quote_${industryName.replace(/\s+/g, "_")}_${Date.now()}.csv`
+  );
+  link.style.visibility = "hidden";
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   // Clean up URL object
   URL.revokeObjectURL(url);
 };
@@ -1707,45 +1922,49 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     solarMW: quoteData?.solarMW || 0,
     windMW: quoteData?.windMW || 0,
     generatorMW: quoteData?.generatorMW || 0,
-    location: quoteData?.location || 'To Be Determined',
-    industryTemplate: quoteData?.industryTemplate || 'bess',
-    gridConnection: quoteData?.gridConnection || 'grid-tied',
+    location: quoteData?.location || "To Be Determined",
+    industryTemplate: quoteData?.industryTemplate || "bess",
+    gridConnection: quoteData?.gridConnection || "grid-tied",
     totalProjectCost: quoteData?.totalProjectCost || 0,
     annualSavings: quoteData?.annualSavings || 1,
     paybackYears: quoteData?.paybackYears || 0,
     taxCredit: quoteData?.taxCredit || 0,
     netCost: quoteData?.netCost || 1,
-    installationOption: quoteData?.installationOption || 'epc',
-    shippingOption: quoteData?.shippingOption || 'standard',
-    financingOption: quoteData?.financingOption || 'cash',
+    installationOption: quoteData?.installationOption || "epc",
+    shippingOption: quoteData?.shippingOption || "standard",
+    financingOption: quoteData?.financingOption || "cash",
   };
-  
+
   // Log for debugging
-  console.log('generateWord called with:', safeData);
-  
+  console.log("generateWord called with:", safeData);
+
   const totalEnergyMWh = safeData.storageSizeMW * safeData.durationHours;
   const hasRenewables = safeData.solarMW > 0 || safeData.windMW > 0 || safeData.generatorMW > 0;
   const industryName = getIndustryName(safeData.industryTemplate);
-  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  
+  const today = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   // Build system description
-  let systemDescription = 'BESS';
+  let systemDescription = "BESS";
   if (safeData.solarMW > 0) {
-    systemDescription += ' + Solar';
+    systemDescription += " + Solar";
   }
   if (safeData.windMW > 0) {
-    systemDescription += ' + Wind';
+    systemDescription += " + Wind";
   }
   if (safeData.generatorMW > 0) {
-    systemDescription += ' + Generator';
+    systemDescription += " + Generator";
   }
-  
+
   // Customer name (use industry as fallback)
-  const customerName = industryName + ' Facility';
-  
+  const customerName = industryName + " Facility";
+
   // Use safeData for all calculations and display
   const q = safeData;
-  
+
   // Create HTML content that Word can open (.doc format)
   const htmlContent = `
 <!DOCTYPE html>
@@ -1946,24 +2165,25 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       </tr>
       <tr>
         <td style="padding: 10px 15px;"><strong>25-Year ROI:</strong></td>
-        <td style="padding: 10px 15px; text-align: right; color: #7C3AED; font-weight: bold;">${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%</td>
+        <td style="padding: 10px 15px; text-align: right; color: #7C3AED; font-weight: bold;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
       </tr>
     </table>
     
     <div style="background: linear-gradient(135deg, #6B46C1 0%, #553C9A 100%); color: white; padding: 15px; border-radius: 6px; margin-top: 15px;">
       <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">🎯 Designed for ${getIndustryName(q.industryTemplate)} Operations:</div>
       <div style="font-size: 14px; line-height: 1.6;">
-        ${q.industryTemplate.includes('ev-charging') ? 
-          `This BESS configuration is specifically optimized for EV charging facilities, providing demand charge reduction of up to 70%, grid stability during high-power charging events, and 24/7 charging capability. The ${totalEnergyMWh.toFixed(2)} MWh capacity ensures consistent fast-charging service while minimizing utility costs and maximizing revenue potential.` :
-        q.industryTemplate.includes('manufacturing') ?
-          `Engineered for manufacturing operations requiring uninterrupted power and cost optimization. This system provides seamless backup power during outages, reduces demand charges by 15-25%, and ensures critical equipment protection. The ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)}-hour backup capacity protects against costly production shutdowns.` :
-        q.industryTemplate.includes('data-center') ?
-          `Mission-critical configuration for data center operations demanding 99.99%+ uptime. Features <50ms transfer time for seamless backup power, 20-30% demand charge reduction, and grid-independent operation capability. The ${totalEnergyMWh.toFixed(2)} MWh system ensures uninterrupted IT infrastructure operation.` :
-        q.industryTemplate.includes('hospital') ?
-          `Life-safety compliant system designed for healthcare facilities. Provides seamless backup power transition, reduces 24/7 operational energy costs, and meets NFPA 99 healthcare facility requirements. The ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)}-hour capacity ensures patient safety and critical system protection.` :
-        q.industryTemplate.includes('cold-storage') ?
-          `Specialized for temperature-critical cold storage operations. Manages thermal loads during peak demand periods, provides backup power for refrigeration systems, and optimizes energy costs for 24/7 cooling requirements. Prevents costly inventory loss during power outages.` :
-          `Commercial-grade energy storage solution optimized for your facility's operational profile. Delivers reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your specific energy usage patterns and business continuity requirements.`
+        ${
+          q.industryTemplate.includes("ev-charging")
+            ? `This BESS configuration is specifically optimized for EV charging facilities, providing demand charge reduction of up to 70%, grid stability during high-power charging events, and 24/7 charging capability. The ${totalEnergyMWh.toFixed(2)} MWh capacity ensures consistent fast-charging service while minimizing utility costs and maximizing revenue potential.`
+            : q.industryTemplate.includes("manufacturing")
+              ? `Engineered for manufacturing operations requiring uninterrupted power and cost optimization. This system provides seamless backup power during outages, reduces demand charges by 15-25%, and ensures critical equipment protection. The ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)}-hour backup capacity protects against costly production shutdowns.`
+              : q.industryTemplate.includes("data-center")
+                ? `Mission-critical configuration for data center operations demanding 99.99%+ uptime. Features <50ms transfer time for seamless backup power, 20-30% demand charge reduction, and grid-independent operation capability. The ${totalEnergyMWh.toFixed(2)} MWh system ensures uninterrupted IT infrastructure operation.`
+                : q.industryTemplate.includes("hospital")
+                  ? `Life-safety compliant system designed for healthcare facilities. Provides seamless backup power transition, reduces 24/7 operational energy costs, and meets NFPA 99 healthcare facility requirements. The ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)}-hour capacity ensures patient safety and critical system protection.`
+                  : q.industryTemplate.includes("cold-storage")
+                    ? `Specialized for temperature-critical cold storage operations. Manages thermal loads during peak demand periods, provides backup power for refrigeration systems, and optimizes energy costs for 24/7 cooling requirements. Prevents costly inventory loss during power outages.`
+                    : `Commercial-grade energy storage solution optimized for your facility's operational profile. Delivers reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your specific energy usage patterns and business continuity requirements.`
         }
       </div>
     </div>
@@ -1995,13 +2215,17 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         <td style="padding: 8px 10px; font-size: 11px; font-weight: bold; text-align: right; border: 1px solid #E5E7EB; width: 14%;">Estimated Cost</td>
         <td style="padding: 8px 10px; font-size: 11px; font-weight: bold; border: 1px solid #E5E7EB; width: 20%;">Notes</td>
       </tr>
-      ${equipmentBreakdown.generators && equipmentBreakdown.generators.totalCost > 0 ? `<tr>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #059669;">${q.gridConnection === 'off-grid' ? 'Backup Generators' : 'Natural Gas Generators'}</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === 'off-grid' ? 'Caterpillar diesel gensets with auto-start/stop' : 'Caterpillar/Cummins NG gensets with paralleling'} (${equipmentBreakdown.generators.quantity} units)</td>
+      ${
+        equipmentBreakdown.generators && equipmentBreakdown.generators.totalCost > 0
+          ? `<tr>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #059669;">${q.gridConnection === "off-grid" ? "Backup Generators" : "Natural Gas Generators"}</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === "off-grid" ? "Caterpillar diesel gensets with auto-start/stop" : "Caterpillar/Cummins NG gensets with paralleling"} (${equipmentBreakdown.generators.quantity} units)</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${(equipmentBreakdown.generators.quantity * equipmentBreakdown.generators.unitPowerMW).toFixed(1)} MW total</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.generators.totalCost / 1000000).toFixed(2)}M</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">${q.gridConnection === 'off-grid' ? 'Tier 4 Final compliant with sound attenuation' : 'MCPD compliant with sound-attenuated enclosures'}</td>
-      </tr>` : ''}
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">${q.gridConnection === "off-grid" ? "Tier 4 Final compliant with sound attenuation" : "MCPD compliant with sound-attenuated enclosures"}</td>
+      </tr>`
+          : ""
+      }
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #8b5cf6;">BESS System</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">LFP battery storage with PCS and fire-rated enclosure</td>
@@ -2011,25 +2235,33 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       </tr>
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #f59e0b;">Power Conversion</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'}</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === "off-grid" ? "SMA grid-forming hybrid inverters with island mode capability" : "SMA bi-directional grid-tie inverters with seamless transfer"}</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.storageSizeMW.toFixed(2)} MW total capacity</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">${q.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">${q.gridConnection === "off-grid" ? "Grid-forming operation without external reference" : "IEEE 1547 compliant with anti-islanding protection"}</td>
       </tr>
-      ${equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0 ? `<tr>
+      ${
+        equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0
+          ? `<tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #f59e0b;">Photovoltaic Array</td>
-        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === 'off-grid' ? 'Ground-mounted PV with MPPT charge controllers' : 'Roof or ground-mounted PV with string inverters'}</td>
+        <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.gridConnection === "off-grid" ? "Ground-mounted PV with MPPT charge controllers" : "Roof or ground-mounted PV with string inverters"}</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.solarMW.toFixed(1)} MWp DC capacity</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.solar.totalCost / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">IEC 61215/61730 certified modules with 25-year warranty</td>
-      </tr>` : ''}
-      ${equipmentBreakdown.wind && equipmentBreakdown.wind.totalCost > 0 ? `<tr>
+      </tr>`
+          : ""
+      }
+      ${
+        equipmentBreakdown.wind && equipmentBreakdown.wind.totalCost > 0
+          ? `<tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #06b6d4;">Wind Generation</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">Utility-scale wind turbines with grid synchronization</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${q.windMW.toFixed(1)} MW rated capacity</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.wind.totalCost / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">IEC 61400 certified with advanced blade control</td>
-      </tr>` : ''}
+      </tr>`
+          : ""
+      }
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #ef4444;">MV Equipment</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">ABB transformers with protective switchgear and MV distribution</td>
@@ -2037,13 +2269,17 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">Oil-filled transformers with digital protection relays, arc-resistant switchgear</td>
       </tr>
-      ${equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0 ? `<tr>
+      ${
+        equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0
+          ? `<tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #8b5cf6;">EV Charging Infrastructure</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">Level 2 and DC fast charging stations with network connectivity</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">${equipmentBreakdown.evChargers.level2Chargers.quantity} Level 2 + ${equipmentBreakdown.evChargers.dcFastChargers.quantity} DC Fast units</td>
         <td style="padding: 6px 10px; text-align: right; border: 1px solid #E5E7EB; font-weight: 600;">$$${(equipmentBreakdown.evChargers.totalChargingCost / 1000000).toFixed(2)}M</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 10px;">OCPP 2.0 compliant with payment processing and load management</td>
-      </tr>` : ''}
+      </tr>`
+          : ""
+      }
       <tr>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB; font-weight: 600; color: #6b7280;">Control & Monitoring</td>
         <td style="padding: 6px 10px; border: 1px solid #E5E7EB;">Energy management system with SCADA integration and remote monitoring</td>
@@ -2095,8 +2331,8 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         </tr>
         <tr>
           <td style="padding: 6px 12px; border: 1px solid #E5E7EB;">10%</td>
-          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB;">$$${((q.annualSavings * 0.10) / 1000).toFixed(0)}K</td>
-          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB;">${(q.totalProjectCost / (q.annualSavings * 0.10)).toFixed(1)}</td>
+          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB;">$$${((q.annualSavings * 0.1) / 1000).toFixed(0)}K</td>
+          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB;">${(q.totalProjectCost / (q.annualSavings * 0.1)).toFixed(1)}</td>
         </tr>
         <tr>
           <td style="padding: 6px 12px; border: 1px solid #E5E7EB;">15%</td>
@@ -2110,27 +2346,27 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         </tr>
         <tr style="background: #FEF3C7;">
           <td style="padding: 6px 12px; border: 1px solid #E5E7EB; font-weight: bold;">50%</td>
-          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB; font-weight: bold;">$$${((q.annualSavings * 0.50) / 1000).toFixed(0)}K</td>
-          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB; font-weight: bold;">${(q.totalProjectCost / (q.annualSavings * 0.50)).toFixed(1)}</td>
+          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB; font-weight: bold;">$$${((q.annualSavings * 0.5) / 1000).toFixed(0)}K</td>
+          <td style="padding: 6px 12px; text-align: right; border: 1px solid #E5E7EB; font-weight: bold;">${(q.totalProjectCost / (q.annualSavings * 0.5)).toFixed(1)}</td>
         </tr>
       </table>
       
       <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; font-size: 13px; line-height: 1.6;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
           <span><strong>10-Year ROI:</strong></span>
-          <span>≈ ${((q.annualSavings * 10 / q.netCost) * 100).toFixed(0)}% (net of O&M)</span>
+          <span>≈ ${(((q.annualSavings * 10) / q.netCost) * 100).toFixed(0)}% (net of O&M)</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
           <span><strong>O&M Allowance:</strong></span>
           <span>≈ $$${((q.totalProjectCost * 0.02) / 1000).toFixed(0)}K / year</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span><strong>${q.gridConnection === 'off-grid' ? 'Fuel Cost:' : 'Grid Offset Rate:'}</strong></span>
-          <span>${q.gridConnection === 'off-grid' ? '≈ $0.08 / kWh (Diesel)' : '≈ $0.12 / kWh (Grid Avoided)'}</span>
+          <span><strong>${q.gridConnection === "off-grid" ? "Fuel Cost:" : "Grid Offset Rate:"}</strong></span>
+          <span>${q.gridConnection === "off-grid" ? "≈ $0.08 / kWh (Diesel)" : "≈ $0.12 / kWh (Grid Avoided)"}</span>
         </div>
         <div style="display: flex; justify-content: space-between;">
           <span><strong>CO₂ Reduction:</strong></span>
-          <span>≈ ${q.gridConnection === 'off-grid' ? '75% vs diesel-only' : '45% vs grid electricity'}</span>
+          <span>≈ ${q.gridConnection === "off-grid" ? "75% vs diesel-only" : "45% vs grid electricity"}</span>
         </div>
       </div>
     </div>
@@ -2144,7 +2380,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
         </tr>
         <tr>
           <td style="padding: 5px 8px; font-size: 13px; border: none;"><strong>25-Year Return on Investment:</strong></td>
-          <td style="padding: 5px 8px; text-align: right; font-size: 13px; color: #7C3AED; font-weight: bold; border: none;">${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%</td>
+          <td style="padding: 5px 8px; text-align: right; font-size: 13px; color: #7C3AED; font-weight: bold; border: none;">${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%</td>
         </tr>
       </table>
     </div>
@@ -2168,7 +2404,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td style="background-color: #f9fafb; border: 1px solid #d1d5db; padding: 8px 12px; font-weight: bold; font-size: 13px;">Location:</td>
-      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${q.location || 'To Be Determined'}</td>
+      <td style="border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px;">${q.location || "To Be Determined"}</td>
     </tr>
   </table>
   
@@ -2234,54 +2470,61 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   <h4>🎯 Primary Objectives Addressed:</h4>
   <ul>
     <li><strong>Energy Storage & Management:</strong> ${totalEnergyMWh.toFixed(2)} MWh battery system provides ${(totalEnergyMWh / (q.storageSizeMW * 0.7)).toFixed(1)} hours of backup power and intelligent demand charge management</li>
-    <li><strong>Power Quality & Reliability:</strong> ${q.gridConnection === 'off-grid' ? 'Grid-forming inverters enable stable operation without external grid reference' : 'Bi-directional inverters provide seamless grid integration with <50ms backup transition'}</li>
-    <li><strong>Operational Cost Reduction:</strong> System delivers ${q.paybackYears.toFixed(1)}-year payback with ${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
+    <li><strong>Power Quality & Reliability:</strong> ${q.gridConnection === "off-grid" ? "Grid-forming inverters enable stable operation without external grid reference" : "Bi-directional inverters provide seamless grid integration with <50ms backup transition"}</li>
+    <li><strong>Operational Cost Reduction:</strong> System delivers ${q.paybackYears.toFixed(1)}-year payback with ${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}% 25-year ROI through peak shaving and energy arbitrage</li>
     <li><strong>Business Continuity:</strong> Uninterruptible power protection prevents costly shutdowns and ensures critical operations during grid disturbances</li>
-    ${q.solarMW > 0 || q.windMW > 0 ? '<li><strong>Sustainability Goals:</strong> Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs</li>' : ''}
+    ${q.solarMW > 0 || q.windMW > 0 ? "<li><strong>Sustainability Goals:</strong> Renewable energy integration reduces CO₂ emissions while lowering long-term operating costs</li>" : ""}
   </ul>
   
   <h4>🏭 Industry-Specific Benefits for ${getIndustryName(q.industryTemplate)}:</h4>
   <p>
-    ${q.industryTemplate.includes('ev-charging') ? 
-      `<strong>EV Charging Operations:</strong> Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === 'off-grid' ? 'in remote locations' : 'with grid support'}. Fast charging compatibility ensures customer satisfaction and revenue optimization.` :
-    q.industryTemplate.includes('manufacturing') ?
-      `<strong>Manufacturing Continuity:</strong> Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.` :
-    q.industryTemplate.includes('data-center') ?
-      `<strong>Data Center Reliability:</strong> Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.` :
-    q.industryTemplate.includes('hospital') ?
-      `<strong>Healthcare Facility Support:</strong> Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).` :
-    q.industryTemplate.includes('cold-storage') ?
-      `<strong>Cold Storage Efficiency:</strong> Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.` :
-      `<strong>Commercial Operations:</strong> Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
+    ${
+      q.industryTemplate.includes("ev-charging")
+        ? `<strong>EV Charging Operations:</strong> Battery system provides grid stability during high-power charging events, reduces demand charges by up to 70%, and enables 24/7 charging capability ${q.gridConnection === "off-grid" ? "in remote locations" : "with grid support"}. Fast charging compatibility ensures customer satisfaction and revenue optimization.`
+        : q.industryTemplate.includes("manufacturing")
+          ? `<strong>Manufacturing Continuity:</strong> Uninterruptible power protection prevents costly production shutdowns, demand charge optimization reduces operating costs by 15-25%, and backup power ensures critical equipment protection during grid disturbances.`
+          : q.industryTemplate.includes("data-center")
+            ? `<strong>Data Center Reliability:</strong> Mission-critical backup power with <50ms transfer time, demand charge reduction of 20-30%, and grid-independent operation capability ensure 99.99%+ uptime for IT infrastructure.`
+            : q.industryTemplate.includes("hospital")
+              ? `<strong>Healthcare Facility Support:</strong> Life-safety backup power with seamless transition, reduced energy costs for 24/7 operations, and compliance with healthcare facility backup power requirements (NFPA 99).`
+              : q.industryTemplate.includes("cold-storage")
+                ? `<strong>Cold Storage Efficiency:</strong> Thermal load management during peak demand periods, backup power for refrigeration systems, and energy cost optimization for temperature-critical storage operations.`
+                : `<strong>Commercial Operations:</strong> Reliable backup power protection, significant demand charge savings, and operational cost reduction tailored to your facility's energy profile and business continuity requirements.`
     }
   </p>
   
-  ${q.gridConnection === 'off-grid' ? `
+  ${
+    q.gridConnection === "off-grid"
+      ? `
   <h4>🏝️ Off-Grid Operation Capabilities:</h4>
   <ul>
     <li><strong>Island Mode Operation:</strong> Grid-forming inverters provide stable power without external grid reference</li>
     <li><strong>Automatic Load Management:</strong> Smart controls prioritize critical loads during limited generation periods</li>
     <li><strong>Multi-Source Integration:</strong> Seamless coordination between solar, battery, and generator power sources</li>
     <li><strong>Fuel Optimization:</strong> Generator runtime minimization through intelligent battery dispatch reduces operating costs</li>
-  </ul>` : `
+  </ul>`
+      : `
   <h4>🔌 Grid-Interactive Features:</h4>
   <ul>
     <li><strong>Utility Integration:</strong> IEEE 1547 compliant interconnection with anti-islanding protection</li>
     <li><strong>Grid Services:</strong> Potential revenue streams from frequency regulation and demand response programs</li>
     <li><strong>Seamless Backup:</strong> Automatic transfer to island mode during grid outages with <50ms transition</li>
     <li><strong>Peak Shaving:</strong> Intelligent discharge during high-demand periods reduces utility charges</li>
-  </ul>`}
+  </ul>`
+  }
   
   <h4>📊 Performance Optimization:</h4>
   <p>
-    The system is optimized for <strong>${((totalEnergyMWh / q.storageSizeMW) * 100 / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
+    The system is optimized for <strong>${(((totalEnergyMWh / q.storageSizeMW) * 100) / 4).toFixed(0)}% daily utilization</strong>, providing optimal balance between equipment cost and operational savings. Advanced energy management algorithms maximize financial returns through time-of-use arbitrage, demand charge reduction, and renewable energy integration while ensuring equipment longevity through intelligent cycling.
   </p>
   
   <div class="info-box" style="background-color: #EDE9FE; border-left: 4px solid #6B46C1;">
     <strong style="color: #6B46C1;">✓ Implementation Includes:</strong> Comprehensive site preparation, professional system commissioning, operator training, remote monitoring setup, and complete documentation package for utility interconnection and regulatory compliance.
   </div>
   
-  ${hasRenewables ? `
+  ${
+    hasRenewables
+      ? `
   <h3>☀️ Renewable Energy Integration</h3>
   <table>
     <tr>
@@ -2289,29 +2532,43 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <th>Capacity</th>
       <th>Annual Generation</th>
     </tr>
-    ${q.solarMW > 0 ? `
+    ${
+      q.solarMW > 0
+        ? `
     <tr>
       <td>Solar PV</td>
       <td>${q.solarMW.toFixed(1)} MW</td>
       <td>~${(q.solarMW * 1300).toFixed(0)} MWh</td>
     </tr>
-    ` : ''}
-    ${q.windMW > 0 ? `
+    `
+        : ""
+    }
+    ${
+      q.windMW > 0
+        ? `
     <tr>
       <td>Wind</td>
       <td>${q.windMW.toFixed(1)} MW</td>
       <td>~${(q.windMW * 2200).toFixed(0)} MWh</td>
     </tr>
-    ` : ''}
-    ${q.generatorMW > 0 ? `
+    `
+        : ""
+    }
+    ${
+      q.generatorMW > 0
+        ? `
     <tr>
       <td>Generator (Backup)</td>
       <td>${q.generatorMW.toFixed(1)} MW</td>
       <td>On-Demand</td>
     </tr>
-    ` : ''}
+    `
+        : ""
+    }
   </table>
-  ` : ''}
+  `
+      : ""
+  }
   
   <h2>� Professional System Breakdown</h2>
   <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
@@ -2322,13 +2579,17 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px;">Estimated Cost</th>
       <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 11px;">Notes</th>
     </tr>
-    ${equipmentBreakdown.generators && equipmentBreakdown.generators.totalCost > 0 ? `<tr>
-      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #059669;">${q.gridConnection === 'off-grid' ? 'Backup Generators' : 'Natural Gas Generators'}</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === 'off-grid' ? 'Caterpillar diesel gensets with auto-start/stop' : 'Caterpillar/Cummins NG gensets with paralleling'} (${equipmentBreakdown.generators.quantity} units)</td>
+    ${
+      equipmentBreakdown.generators && equipmentBreakdown.generators.totalCost > 0
+        ? `<tr>
+      <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #059669;">${q.gridConnection === "off-grid" ? "Backup Generators" : "Natural Gas Generators"}</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === "off-grid" ? "Caterpillar diesel gensets with auto-start/stop" : "Caterpillar/Cummins NG gensets with paralleling"} (${equipmentBreakdown.generators.quantity} units)</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${(equipmentBreakdown.generators.quantity * equipmentBreakdown.generators.unitPowerMW).toFixed(1)} MW total</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.generators.totalCost / 1000000).toFixed(2)}M</td>
-      <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">${q.gridConnection === 'off-grid' ? 'Tier 4 Final compliant with sound attenuation' : 'MCPD compliant with sound-attenuated enclosures'}</td>
-    </tr>` : ''}
+      <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">${q.gridConnection === "off-grid" ? "Tier 4 Final compliant with sound attenuation" : "MCPD compliant with sound-attenuated enclosures"}</td>
+    </tr>`
+        : ""
+    }
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #8b5cf6;">BESS System</td>
       <td style="border: 1px solid #ddd; padding: 6px;">LFP battery storage with PCS and fire-rated enclosure</td>
@@ -2338,25 +2599,33 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #f59e0b;">Power Conversion</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === 'off-grid' ? 'SMA grid-forming hybrid inverters with island mode capability' : 'SMA bi-directional grid-tie inverters with seamless transfer'}</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === "off-grid" ? "SMA grid-forming hybrid inverters with island mode capability" : "SMA bi-directional grid-tie inverters with seamless transfer"}</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${q.storageSizeMW.toFixed(2)} MW total capacity</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.inverters.totalCost / 1000000).toFixed(2)}M</td>
-      <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">${q.gridConnection === 'off-grid' ? 'Grid-forming operation without external reference' : 'IEEE 1547 compliant with anti-islanding protection'}</td>
+      <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">${q.gridConnection === "off-grid" ? "Grid-forming operation without external reference" : "IEEE 1547 compliant with anti-islanding protection"}</td>
     </tr>
-    ${equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0 ? `<tr>
+    ${
+      equipmentBreakdown.solar && equipmentBreakdown.solar.totalCost > 0
+        ? `<tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #f59e0b;">Photovoltaic Array</td>
-      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === 'off-grid' ? 'Ground-mounted PV with MPPT charge controllers' : 'Roof or ground-mounted PV with string inverters'}</td>
+      <td style="border: 1px solid #ddd; padding: 6px;">${q.gridConnection === "off-grid" ? "Ground-mounted PV with MPPT charge controllers" : "Roof or ground-mounted PV with string inverters"}</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${q.solarMW.toFixed(1)} MWp DC capacity</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.solar.totalCost / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">IEC 61215/61730 certified modules with 25-year warranty</td>
-    </tr>` : ''}
-    ${equipmentBreakdown.wind && equipmentBreakdown.wind.totalCost > 0 ? `<tr>
+    </tr>`
+        : ""
+    }
+    ${
+      equipmentBreakdown.wind && equipmentBreakdown.wind.totalCost > 0
+        ? `<tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #06b6d4;">Wind Generation</td>
       <td style="border: 1px solid #ddd; padding: 6px;">Utility-scale wind turbines with grid synchronization</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${q.windMW.toFixed(1)} MW rated capacity</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.wind.totalCost / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">IEC 61400 certified with advanced blade control</td>
-    </tr>` : ''}
+    </tr>`
+        : ""
+    }
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #ef4444;">MV Equipment</td>
       <td style="border: 1px solid #ddd; padding: 6px;">ABB transformers with protective switchgear and MV distribution</td>
@@ -2364,13 +2633,17 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${((equipmentBreakdown.transformers.totalCost + equipmentBreakdown.switchgear.totalCost) / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">Oil-filled transformers with digital protection relays, arc-resistant switchgear</td>
     </tr>
-    ${equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0 ? `<tr>
+    ${
+      equipmentBreakdown.evChargers && equipmentBreakdown.evChargers.totalChargingCost > 0
+        ? `<tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #8b5cf6;">EV Charging Infrastructure</td>
       <td style="border: 1px solid #ddd; padding: 6px;">Level 2 and DC fast charging stations with network connectivity</td>
       <td style="border: 1px solid #ddd; padding: 6px;">${equipmentBreakdown.evChargers.level2Chargers.quantity} Level 2 + ${equipmentBreakdown.evChargers.dcFastChargers.quantity} DC Fast units</td>
       <td style="border: 1px solid #ddd; padding: 6px; text-align: right; font-weight: bold;">$$${(equipmentBreakdown.evChargers.totalChargingCost / 1000000).toFixed(2)}M</td>
       <td style="border: 1px solid #ddd; padding: 6px; font-size: 10px;">OCPP 2.0 compliant with payment processing and load management</td>
-    </tr>` : ''}
+    </tr>`
+        : ""
+    }
     <tr>
       <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #6b7280;">Control & Monitoring</td>
       <td style="border: 1px solid #ddd; padding: 6px;">Energy management system with SCADA integration and remote monitoring</td>
@@ -2399,10 +2672,10 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
 
   <div style="background-color: #f0fdf4; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
     <h3 style="margin-top: 0;">Financial Metrics Summary</h3>
-    <p><strong>10-Year ROI:</strong> ≈ ${((q.annualSavings * 10 / q.netCost) * 100).toFixed(0)}% (net of O&M)</p>
+    <p><strong>10-Year ROI:</strong> ≈ ${(((q.annualSavings * 10) / q.netCost) * 100).toFixed(0)}% (net of O&M)</p>
     <p><strong>O&M Allowance:</strong> ≈ $$${((q.totalProjectCost * 0.02) / 1000).toFixed(0)}K / year</p>
-    <p><strong>${q.gridConnection === 'off-grid' ? 'Fuel Cost:' : 'Grid Offset Rate:'}</strong> ${q.gridConnection === 'off-grid' ? '≈ $0.08 / kWh (Diesel)' : '≈ $0.12 / kWh (Grid Avoided)'}</p>
-    <p><strong>CO₂ Reduction:</strong> ≈ ${q.gridConnection === 'off-grid' ? '75% vs diesel-only' : '45% vs grid electricity'}</p>
+    <p><strong>${q.gridConnection === "off-grid" ? "Fuel Cost:" : "Grid Offset Rate:"}</strong> ${q.gridConnection === "off-grid" ? "≈ $0.08 / kWh (Diesel)" : "≈ $0.12 / kWh (Grid Avoided)"}</p>
+    <p><strong>CO₂ Reduction:</strong> ≈ ${q.gridConnection === "off-grid" ? "75% vs diesel-only" : "45% vs grid electricity"}</p>
   </div>
 
   <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
@@ -2423,7 +2696,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   <div class="highlight">
     💵 Estimated Annual Savings: $${(q.annualSavings / 1000).toFixed(0)}K<br>
     ⏱️ Simple Payback Period: ${q.paybackYears.toFixed(1)} years<br>
-    📈 25-Year ROI: ${((q.annualSavings * 25 / q.netCost) * 100).toFixed(0)}%
+    📈 25-Year ROI: ${(((q.annualSavings * 25) / q.netCost) * 100).toFixed(0)}%
   </div>
   
   <h2>📋 Your Selections</h2>
@@ -2434,11 +2707,11 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
     </tr>
     <tr>
       <td>Installation Method</td>
-      <td>${q.installationOption.replace('-', ' ').toUpperCase()}</td>
+      <td>${q.installationOption.replace("-", " ").toUpperCase()}</td>
     </tr>
     <tr>
       <td>Shipping & Logistics</td>
-      <td>${q.shippingOption.replace('-', ' ').toUpperCase()}</td>
+      <td>${q.shippingOption.replace("-", " ").toUpperCase()}</td>
     </tr>
     <tr>
       <td>Financing Type</td>
@@ -2449,7 +2722,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   <h2>📝 Important Notes</h2>
   <div class="info-box">
     <ul>
-      <li>This quote is based on current market prices and estimated utility rates for ${industryName.toLowerCase()} facilities in ${q.location || 'your area'}.</li>
+      <li>This quote is based on current market prices and estimated utility rates for ${industryName.toLowerCase()} facilities in ${q.location || "your area"}.</li>
       <li>Actual costs may vary based on site-specific conditions, local requirements, and final engineering assessment.</li>
       <li>Federal Investment Tax Credit (ITC) eligibility and amount should be confirmed with a qualified tax professional.</li>
       <li>Savings estimates assume typical ${industryName.toLowerCase()} load profiles and may vary based on actual usage patterns and operational strategy.</li>
@@ -2481,19 +2754,21 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
 </html>`;
 
   // Create blob with proper Word MIME type
-  const blob = new Blob([htmlContent], { type: 'application/msword' });
-  const link = document.createElement('a');
+  const blob = new Blob([htmlContent], { type: "application/msword" });
+  const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `BESS_Quote_${industryName.replace(/\s+/g, '_')}_${Date.now()}.doc`);
-  link.style.visibility = 'hidden';
-  
+
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `BESS_Quote_${industryName.replace(/\s+/g, "_")}_${Date.now()}.doc`
+  );
+  link.style.visibility = "hidden";
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   // Clean up URL object
   URL.revokeObjectURL(url);
 };
-

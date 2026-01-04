@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
-import type { ProfileData } from '../components/modals/AccountSetup';
+import React, { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
+import type { ProfileData } from "../components/modals/AccountSetup";
 
 // Define all modal state types
 interface ModalStates {
@@ -61,7 +61,7 @@ interface ApplicationData {
   annualSavings: number;
   valueKwh: number;
   warranty: string;
-  currentQuoteStatus: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared';
+  currentQuoteStatus: "draft" | "in-review" | "approved" | "rejected" | "shared";
 }
 
 interface ModalHandlers {
@@ -90,24 +90,26 @@ interface ApplicationSetters {
   setWindMW: (wind: number) => void;
   setGeneratorMW: (generator: number) => void;
   setValueKwh: (value: number) => void;
-  setCurrentQuoteStatus: (status: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared') => void;
+  setCurrentQuoteStatus: (
+    status: "draft" | "in-review" | "approved" | "rejected" | "shared"
+  ) => void;
 }
 
 interface ModalContextType {
   // Modal states
   modals: ModalStates;
-  
+
   // Application data
   data: ApplicationData;
-  
+
   // Modal actions
   openModal: (modalName: keyof ModalStates) => void;
   closeModal: (modalName: keyof ModalStates) => void;
   closeAllModals: () => void;
-  
+
   // Application handlers
   handlers: ModalHandlers;
-  
+
   // Application setters
   setters: ApplicationSetters;
 }
@@ -159,11 +161,11 @@ export function ModalProvider({ children, initialData, handlers, setters }: Moda
   const [modals, setModals] = useState<ModalStates>(initialModalState);
 
   const openModal = (modalName: keyof ModalStates) => {
-    setModals(prev => ({ ...prev, [modalName]: true }));
+    setModals((prev) => ({ ...prev, [modalName]: true }));
   };
 
   const closeModal = (modalName: keyof ModalStates) => {
-    setModals(prev => ({ ...prev, [modalName]: false }));
+    setModals((prev) => ({ ...prev, [modalName]: false }));
   };
 
   const closeAllModals = () => {
@@ -180,17 +182,13 @@ export function ModalProvider({ children, initialData, handlers, setters }: Moda
     setters,
   };
 
-  return (
-    <ModalContext.Provider value={contextValue}>
-      {children}
-    </ModalContext.Provider>
-  );
+  return <ModalContext.Provider value={contextValue}>{children}</ModalContext.Provider>;
 }
 
 export function useModalContext() {
   const context = useContext(ModalContext);
   if (context === undefined) {
-    throw new Error('useModalContext must be used within a ModalProvider');
+    throw new Error("useModalContext must be used within a ModalProvider");
   }
   return context;
 }

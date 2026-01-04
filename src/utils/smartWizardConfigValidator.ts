@@ -6,7 +6,7 @@
 export interface SolarConfig {
   enabled?: boolean;
   capacity?: number;
-  solarSpaceAcres?: number;  // Add solarSpaceAcres property
+  solarSpaceAcres?: number; // Add solarSpaceAcres property
   // Add other solar config properties as needed
 }
 
@@ -25,9 +25,9 @@ export interface WindConfig {
 export interface BessConfig {
   capacity?: number;
   power?: number;
-  capacityMWh?: number;    // Add alternative property names
-  powerMW?: number;        // to support different naming conventions
-  durationHours?: number;  // Add duration hours
+  capacityMWh?: number; // Add alternative property names
+  powerMW?: number; // to support different naming conventions
+  durationHours?: number; // Add duration hours
   // Add other BESS config properties as needed
 }
 
@@ -53,28 +53,28 @@ export function validateSmartWizardConfigs(configs: SmartWizardConfigs): Validat
 
   // Check if configs object exists
   if (!configs) {
-    errors.push('Configs object is null or undefined');
+    errors.push("Configs object is null or undefined");
     return { isValid: false, errors, warnings };
   }
 
   // Validate solar config
   if (configs.solarConfig === undefined) {
-    warnings.push('solarConfig is undefined - will use default values');
+    warnings.push("solarConfig is undefined - will use default values");
   }
 
   // Validate generator config
   if (configs.generatorConfig === undefined) {
-    warnings.push('generatorConfig is undefined - will use default values');
+    warnings.push("generatorConfig is undefined - will use default values");
   }
 
   // Validate wind config
   if (configs.windConfig === undefined) {
-    warnings.push('windConfig is undefined - will use default values');
+    warnings.push("windConfig is undefined - will use default values");
   }
 
   // Validate BESS config
   if (configs.bessConfig === undefined) {
-    warnings.push('bessConfig is undefined - will use default values');
+    warnings.push("bessConfig is undefined - will use default values");
   }
 
   return {
@@ -113,7 +113,7 @@ export function getDefaultConfigs(): SmartWizardConfigs {
  */
 export function ensureCompleteConfigs(configs: Partial<SmartWizardConfigs>): SmartWizardConfigs {
   const defaults = getDefaultConfigs();
-  
+
   return {
     solarConfig: { ...defaults.solarConfig, ...configs.solarConfig },
     generatorConfig: { ...defaults.generatorConfig, ...configs.generatorConfig },
@@ -127,14 +127,14 @@ export function ensureCompleteConfigs(configs: Partial<SmartWizardConfigs>): Sma
  */
 export function logValidationResults(validation: ValidationResult) {
   if (!validation.isValid) {
-    console.error('❌ [SmartWizard Config Validation] Failed:', validation.errors);
+    console.error("❌ [SmartWizard Config Validation] Failed:", validation.errors);
   }
-  
+
   if (validation.warnings.length > 0) {
-    console.warn('⚠️ [SmartWizard Config Validation] Warnings:', validation.warnings);
+    console.warn("⚠️ [SmartWizard Config Validation] Warnings:", validation.warnings);
   }
-  
+
   if (validation.isValid && validation.warnings.length === 0) {
-    console.log('✅ [SmartWizard Config Validation] All configs valid');
+    console.log("✅ [SmartWizard Config Validation] All configs valid");
   }
 }

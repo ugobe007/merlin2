@@ -3,9 +3,22 @@
  * Displays real-time pricing alerts from news articles and industry deals
  */
 
-import React, { useEffect, useState } from 'react';
-import { DollarSign, TrendingDown, TrendingUp, Minus, AlertCircle, CheckCircle, Info, Sparkles } from 'lucide-react';
-import { getRecentPriceAlerts, getExcellentDeals, type EnergyPriceAlert } from '../services/priceAlertService';
+import React, { useEffect, useState } from "react";
+import {
+  DollarSign,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  AlertCircle,
+  CheckCircle,
+  Info,
+  Sparkles,
+} from "lucide-react";
+import {
+  getRecentPriceAlerts,
+  getExcellentDeals,
+  type EnergyPriceAlert,
+} from "../services/priceAlertService";
 
 interface PriceAlertWidgetProps {
   maxAlerts?: number;
@@ -18,7 +31,7 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
   maxAlerts = 5,
   showExcellentDealsOnly = false,
   autoRefresh = true,
-  refreshInterval = 300000 // 5 minutes
+  refreshInterval = 300000, // 5 minutes
 }) => {
   const [alerts, setAlerts] = useState<EnergyPriceAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,14 +40,14 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const data = showExcellentDealsOnly 
+      const data = showExcellentDealsOnly
         ? await getExcellentDeals(maxAlerts)
         : await getRecentPriceAlerts(maxAlerts);
-      
+
       setAlerts(data);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Error fetching price alerts:', error);
+      console.error("Error fetching price alerts:", error);
     } finally {
       setLoading(false);
     }
@@ -52,13 +65,13 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
 
   const getAlertLevelIcon = (level: string) => {
     switch (level) {
-      case 'excellent_deal':
+      case "excellent_deal":
         return <Sparkles className="w-4 h-4 text-green-600" />;
-      case 'good_deal':
+      case "good_deal":
         return <CheckCircle className="w-4 h-4 text-blue-600" />;
-      case 'warning':
+      case "warning":
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-      case 'critical':
+      case "critical":
         return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
         return <Info className="w-4 h-4 text-gray-600" />;
@@ -67,24 +80,24 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
 
   const getAlertLevelColor = (level: string) => {
     switch (level) {
-      case 'excellent_deal':
-        return 'bg-green-50 border-green-200';
-      case 'good_deal':
-        return 'bg-blue-50 border-blue-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'critical':
-        return 'bg-red-50 border-red-200';
+      case "excellent_deal":
+        return "bg-green-50 border-green-200";
+      case "good_deal":
+        return "bg-blue-50 border-blue-200";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200";
+      case "critical":
+        return "bg-red-50 border-red-200";
       default:
-        return 'bg-gray-50 border-gray-200';
+        return "bg-gray-50 border-gray-200";
     }
   };
 
   const getTrendIcon = (trend?: string) => {
     switch (trend) {
-      case 'declining':
+      case "declining":
         return <TrendingDown className="w-4 h-4 text-green-600" />;
-      case 'rising':
+      case "rising":
         return <TrendingUp className="w-4 h-4 text-red-600" />;
       default:
         return <Minus className="w-4 h-4 text-gray-600" />;
@@ -92,21 +105,21 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
   };
 
   const formatPrice = (value: number, unit: string) => {
-    if (unit === 'mwh') {
+    if (unit === "mwh") {
       return `$${(value / 1000).toFixed(0)}k/MWh`;
     }
     return `$${value.toFixed(2)}/${unit.toUpperCase()}`;
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Recently';
+    if (!dateString) return "Recently";
     const date = new Date(dateString);
     const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysAgo === 0) return 'Today';
-    if (daysAgo === 1) return 'Yesterday';
+
+    if (daysAgo === 0) return "Today";
+    if (daysAgo === 1) return "Yesterday";
     if (daysAgo < 7) return `${daysAgo} days ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   if (loading && alerts.length === 0) {
@@ -117,7 +130,7 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
           <h3 className="text-lg font-semibold text-gray-900">Energy Price Alerts</h3>
         </div>
         <div className="animate-pulse space-y-3">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 bg-gray-100 rounded"></div>
           ))}
         </div>
@@ -134,10 +147,11 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
             <DollarSign className="w-6 h-6 text-emerald-600" />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {showExcellentDealsOnly ? 'Excellent Deals' : 'Energy Price Alerts'}
+                {showExcellentDealsOnly ? "Excellent Deals" : "Energy Price Alerts"}
               </h3>
               <p className="text-xs text-gray-500">
-                Updated {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                Updated{" "}
+                {lastUpdated.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
               </p>
             </div>
           </div>
@@ -173,7 +187,7 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
                       {alert.sourceTitle}
                     </h4>
                     <div className="flex items-center space-x-2 mt-1 text-xs text-gray-500">
-                      <span>{alert.sourcePublisher || 'Industry News'}</span>
+                      <span>{alert.sourcePublisher || "Industry News"}</span>
                       <span>•</span>
                       <span>{formatDate(alert.publishDate)}</span>
                     </div>
@@ -189,11 +203,15 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
                       {formatPrice(alert.priceValue, alert.priceUnit)}
                     </div>
                     {alert.priceDifferencePercent !== undefined && (
-                      <div className={`flex items-center space-x-1 text-xs font-medium ${
-                        alert.priceDifferencePercent < 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <div
+                        className={`flex items-center space-x-1 text-xs font-medium ${
+                          alert.priceDifferencePercent < 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
                         {getTrendIcon(alert.priceTrend)}
-                        <span>{Math.abs(alert.priceDifferencePercent).toFixed(1)}% vs baseline</span>
+                        <span>
+                          {Math.abs(alert.priceDifferencePercent).toFixed(1)}% vs baseline
+                        </span>
                       </div>
                     )}
                   </div>
@@ -201,7 +219,9 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
                   {alert.projectSizeMw && (
                     <div className="px-3 py-1 bg-white rounded border border-gray-200">
                       <div className="text-xs text-gray-500">Project Size</div>
-                      <div className="text-sm font-semibold text-gray-900">{alert.projectSizeMw} MW</div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {alert.projectSizeMw} MW
+                      </div>
                     </div>
                   )}
                 </div>
@@ -209,16 +229,16 @@ export const PriceAlertWidget: React.FC<PriceAlertWidgetProps> = ({
                 {alert.relevanceScore && (
                   <div className="text-right">
                     <div className="text-xs text-gray-500">Relevance</div>
-                    <div className="text-sm font-semibold text-gray-900">{alert.relevanceScore}/100</div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {alert.relevanceScore}/100
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Deal Summary */}
               {alert.dealSummary && (
-                <p className="text-sm text-gray-700 mb-2 line-clamp-2">
-                  {alert.dealSummary}
-                </p>
+                <p className="text-sm text-gray-700 mb-2 line-clamp-2">{alert.dealSummary}</p>
               )}
 
               {/* Tags */}
@@ -299,15 +319,18 @@ export const PriceAlertTicker: React.FC<{ maxAlerts?: number }> = ({ maxAlerts =
         {alerts.map((alert, index) => (
           <div key={alert.id || index} className="flex items-center justify-between text-sm">
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 truncate">{alert.vendorCompany || 'Unknown'}</div>
-              <div className="text-xs text-gray-600">{alert.projectLocation || 'Location TBD'}</div>
+              <div className="font-medium text-gray-900 truncate">
+                {alert.vendorCompany || "Unknown"}
+              </div>
+              <div className="text-xs text-gray-600">{alert.projectLocation || "Location TBD"}</div>
             </div>
             <div className="text-right ml-4">
               <div className="font-bold text-green-600">
                 ${alert.priceValue.toFixed(0)}/{alert.priceUnit.toUpperCase()}
               </div>
               <div className="text-xs text-gray-500">
-                {alert.priceDifferencePercent && `${Math.abs(alert.priceDifferencePercent).toFixed(0)}% below`}
+                {alert.priceDifferencePercent &&
+                  `${Math.abs(alert.priceDifferencePercent).toFixed(0)}% below`}
               </div>
             </div>
           </div>

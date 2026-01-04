@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, Edit2, Save, Trash2, Eye } from 'lucide-react';
+import { X, Edit2, Save, Trash2 } from 'lucide-react';
 import type { MarketTrend, BESSConfigurationPattern, CustomerDecisionIndicator, EmergingOpportunity, IndustryAdoptionRate, PricingUpdateRecommendation } from '@/services/marketInferenceEngine';
 
 interface DetailModalProps {

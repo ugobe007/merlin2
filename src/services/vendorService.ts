@@ -1,5 +1,5 @@
-import { supabase, isSupabaseConfigured } from './supabaseClient';
-import type { Vendor, VendorProduct, RFQ, RFQResponse, VendorNotification } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
+import type { VendorProduct, RFQ, VendorNotification } from "./supabaseClient";
 
 // =====================================================
 // VENDOR AUTHENTICATION
@@ -11,7 +11,7 @@ export interface VendorRegistrationData {
   email: string;
   phone?: string;
   password: string;
-  specialty: 'battery' | 'inverter' | 'ems' | 'bos' | 'epc' | 'integrator';
+  specialty: "battery" | "inverter" | "ems" | "bos" | "epc" | "integrator";
   website?: string;
   description?: string;
 }
@@ -26,7 +26,7 @@ export interface VendorLoginData {
  */
 export const registerVendor = async (data: VendorRegistrationData) => {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase is not configured');
+    throw new Error("Supabase is not configured");
   }
 
   try {
@@ -36,19 +36,19 @@ export const registerVendor = async (data: VendorRegistrationData) => {
       password: data.password,
       options: {
         data: {
-          user_type: 'vendor',
+          user_type: "vendor",
           company_name: data.company_name,
-          contact_name: data.contact_name
-        }
-      }
+          contact_name: data.contact_name,
+        },
+      },
     });
 
     if (authError) throw authError;
-    if (!authData.user) throw new Error('Failed to create user');
+    if (!authData.user) throw new Error("Failed to create user");
 
     // 2. Create vendor profile (status: pending by default)
     const { data: vendorData, error: vendorError } = await supabase
-      .from('vendors')
+      .from("vendors")
       .insert({
         id: authData.user.id,
         company_name: data.company_name,
@@ -58,7 +58,7 @@ export const registerVendor = async (data: VendorRegistrationData) => {
         specialty: data.specialty,
         website: data.website,
         description: data.description,
-        status: 'pending'
+        status: "pending",
       })
       .select()
       .single();
@@ -68,12 +68,12 @@ export const registerVendor = async (data: VendorRegistrationData) => {
     return {
       success: true,
       vendor: vendorData,
-      message: 'Registration successful! Your account is pending approval.'
+      message: "Registration successful! Your account is pending approval.",
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || 'Registration failed'
+      error: error.message || "Registration failed",
     };
   }
 };
@@ -83,54 +83,54 @@ export const registerVendor = async (data: VendorRegistrationData) => {
  */
 export const loginVendor = async (data: VendorLoginData) => {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase is not configured');
+    throw new Error("Supabase is not configured");
   }
 
   try {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: data.email,
-      password: data.password
+      password: data.password,
     });
 
     if (authError) throw authError;
-    if (!authData.user) throw new Error('Login failed');
+    if (!authData.user) throw new Error("Login failed");
 
     // Get vendor profile
     const { data: vendorData, error: vendorError } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('id', authData.user.id)
+      .from("vendors")
+      .select("*")
+      .eq("id", authData.user.id)
       .single();
 
     if (vendorError) throw vendorError;
-    if (!vendorData) throw new Error('Vendor profile not found');
+    if (!vendorData) throw new Error("Vendor profile not found");
 
     // Check if approved
-    if (vendorData.status === 'pending') {
+    if (vendorData.status === "pending") {
       await supabase.auth.signOut();
-      throw new Error('Your account is pending approval. Please wait for admin review.');
+      throw new Error("Your account is pending approval. Please wait for admin review.");
     }
 
-    if (vendorData.status === 'rejected' || vendorData.status === 'suspended') {
+    if (vendorData.status === "rejected" || vendorData.status === "suspended") {
       await supabase.auth.signOut();
-      throw new Error('Your account is not active. Please contact support.');
+      throw new Error("Your account is not active. Please contact support.");
     }
 
     // Update last login
     await supabase
-      .from('vendors')
+      .from("vendors")
       .update({ last_login: new Date().toISOString() })
-      .eq('id', authData.user.id);
+      .eq("id", authData.user.id);
 
     return {
       success: true,
       vendor: vendorData,
-      session: authData.session
+      session: authData.session,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || 'Login failed'
+      error: error.message || "Login failed",
     };
   }
 };
@@ -148,13 +148,15 @@ export const logoutVendor = async () => {
  * Get current vendor session
  */
 export const getCurrentVendor = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session) return null;
 
   const { data: vendor, error } = await supabase
-    .from('vendors')
-    .select('*')
-    .eq('id', session.user.id)
+    .from("vendors")
+    .select("*")
+    .eq("id", session.user.id)
     .single();
 
   if (error) throw error;
@@ -166,7 +168,7 @@ export const getCurrentVendor = async () => {
 // =====================================================
 
 export interface ProductSubmissionData {
-  product_category: 'battery' | 'inverter' | 'ems' | 'bos' | 'container';
+  product_category: "battery" | "inverter" | "ems" | "bos" | "container";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -189,15 +191,15 @@ export interface ProductSubmissionData {
  */
 export const submitProduct = async (data: ProductSubmissionData) => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data: product, error } = await supabase
-    .from('vendor_products')
+    .from("vendor_products")
     .insert({
       vendor_id: vendor.id,
       ...data,
-      currency: 'USD',
-      status: 'pending'
+      currency: "USD",
+      status: "pending",
     })
     .select()
     .single();
@@ -211,13 +213,13 @@ export const submitProduct = async (data: ProductSubmissionData) => {
  */
 export const getVendorProducts = async () => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
-    .from('vendor_products')
-    .select('*')
-    .eq('vendor_id', vendor.id)
-    .order('created_at', { ascending: false });
+    .from("vendor_products")
+    .select("*")
+    .eq("vendor_id", vendor.id)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data as VendorProduct[];
@@ -228,13 +230,13 @@ export const getVendorProducts = async () => {
  */
 export const updateProduct = async (productId: string, updates: Partial<ProductSubmissionData>) => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
-    .from('vendor_products')
+    .from("vendor_products")
     .update(updates)
-    .eq('id', productId)
-    .eq('vendor_id', vendor.id)
+    .eq("id", productId)
+    .eq("vendor_id", vendor.id)
     .select()
     .single();
 
@@ -245,33 +247,33 @@ export const updateProduct = async (productId: string, updates: Partial<ProductS
 /**
  * Approve a vendor product (Admin only)
  * This triggers automatic integration into pricing system and ML training
- * 
+ *
  * Optionally validates product before approval if autoValidate is true
  */
 export const approveVendorProduct = async (
-  productId: string, 
+  productId: string,
   adminId: string,
   options?: { autoValidate?: boolean; skipValidation?: boolean }
 ) => {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase is not configured');
+    throw new Error("Supabase is not configured");
   }
 
   try {
     // Auto-validate if requested (unless explicitly skipped)
     if (options?.autoValidate && !options?.skipValidation) {
-      const { validateVendorProductById } = await import('./vendorValidationService');
+      const { validateVendorProductById } = await import("./vendorValidationService");
       const validation = await validateVendorProductById(productId);
-      
+
       if (!validation.isValid) {
         return {
           success: false,
-          error: 'Product validation failed',
+          error: "Product validation failed",
           validation,
-          message: `Product validation score: ${(validation.score * 100).toFixed(0)}%. Requires manual review.`
+          message: `Product validation score: ${(validation.score * 100).toFixed(0)}%. Requires manual review.`,
         };
       }
-      
+
       if (import.meta.env.DEV) {
         console.log(`✅ Product validation passed: ${(validation.score * 100).toFixed(0)}%`);
       }
@@ -279,47 +281,48 @@ export const approveVendorProduct = async (
 
     // Update product status to approved
     const { data: product, error: updateError } = await supabase
-      .from('vendor_products')
+      .from("vendor_products")
       .update({
-        status: 'approved',
+        status: "approved",
         approved_by: adminId,
-        approved_at: new Date().toISOString()
+        approved_at: new Date().toISOString(),
       })
-      .eq('id', productId)
+      .eq("id", productId)
       .select()
       .single();
 
     if (updateError) throw updateError;
-    if (!product) throw new Error('Product not found');
+    if (!product) throw new Error("Product not found");
 
     // Trigger integration services (async, don't wait)
     Promise.all([
       // Sync to equipment_pricing table
       (async () => {
-        const { vendorPricingIntegrationService } = await import('./vendorPricingIntegrationService');
+        const { vendorPricingIntegrationService } =
+          await import("./vendorPricingIntegrationService");
         return vendorPricingIntegrationService.syncVendorProductOnApproval(productId);
       })(),
       // Add to ML training data
       (async () => {
-        const { vendorDataToMLService } = await import('./vendorDataToMLService');
+        const { vendorDataToMLService } = await import("./vendorDataToMLService");
         return vendorDataToMLService.addVendorDataToMLTraining(productId);
       })(),
       // Send approval email notification
-      sendVendorProductApprovalEmail(product, adminId)
-    ]).catch(err => {
-      console.error('Error triggering vendor product integration:', err);
+      sendVendorProductApprovalEmail(product, adminId),
+    ]).catch((err) => {
+      console.error("Error triggering vendor product integration:", err);
       // Don't throw - integration is async, approval succeeded
     });
 
     return {
       success: true,
       product,
-      message: 'Product approved and integration triggered'
+      message: "Product approved and integration triggered",
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || 'Failed to approve product'
+      error: error.message || "Failed to approve product",
     };
   }
 };
@@ -329,9 +332,9 @@ export const approveVendorProduct = async (
  * Returns approval result or validation issues
  */
 export const autoApproveVendorProduct = async (productId: string, adminId: string) => {
-  const { validateVendorProductById } = await import('./vendorValidationService');
+  const { validateVendorProductById } = await import("./vendorValidationService");
   const validation = await validateVendorProductById(productId);
-  
+
   if (validation.isValid && validation.score >= 0.8) {
     // Auto-approve
     return await approveVendorProduct(productId, adminId, { skipValidation: true });
@@ -341,7 +344,7 @@ export const autoApproveVendorProduct = async (productId: string, adminId: strin
       success: false,
       autoApproved: false,
       validation,
-      message: `Product requires manual review. Validation score: ${(validation.score * 100).toFixed(0)}%`
+      message: `Product requires manual review. Validation score: ${(validation.score * 100).toFixed(0)}%`,
     };
   }
 };
@@ -351,38 +354,38 @@ export const autoApproveVendorProduct = async (productId: string, adminId: strin
  */
 export const rejectVendorProduct = async (productId: string, adminId: string, reason: string) => {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase is not configured');
+    throw new Error("Supabase is not configured");
   }
 
   try {
     const { data: product, error: updateError } = await supabase
-      .from('vendor_products')
+      .from("vendor_products")
       .update({
-        status: 'rejected',
+        status: "rejected",
         approved_by: adminId,
-        rejection_reason: reason
+        rejection_reason: reason,
       })
-      .eq('id', productId)
+      .eq("id", productId)
       .select()
       .single();
 
     if (updateError) throw updateError;
-    if (!product) throw new Error('Product not found');
+    if (!product) throw new Error("Product not found");
 
     // Send rejection email notification (async, don't wait)
-    sendVendorProductRejectionEmail(product, adminId, reason).catch(err => {
-      console.error('Error sending rejection email:', err);
+    sendVendorProductRejectionEmail(product, adminId, reason).catch((err) => {
+      console.error("Error sending rejection email:", err);
     });
 
     return {
       success: true,
       product,
-      message: 'Product rejected'
+      message: "Product rejected",
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || 'Failed to reject product'
+      error: error.message || "Failed to reject product",
     };
   }
 };
@@ -401,12 +404,12 @@ export interface CreateRFQData {
   location: string;
   useCase: string;
   isPremium: boolean;
-  
+
   // Customer info
   customerEmail?: string;
   customerName?: string;
   customerPhone?: string;
-  
+
   // Requirements
   requirements?: {
     batteryManufacturer?: string;
@@ -417,39 +420,43 @@ export interface CreateRFQData {
     minCycleLife?: number;
     requiredCertifications?: string[];
   };
-  
+
   // Pricing from SSOT
   standardQuoteCost: number;
   premiumQuoteCost?: number;
-  
+
   // Timeline
-  projectTimeline?: 'immediate' | '3-months' | '6-months' | '12-months';
+  projectTimeline?: "immediate" | "3-months" | "6-months" | "12-months";
 }
 
 /**
  * Create a new RFQ (Request for Quote) from customer quote
- * 
+ *
  * SSOT: Uses data processed through unifiedQuoteCalculator
  * AAD: Accurate pricing from calculateQuote() + premium comparison
  * Workflow: Creates RFQ → Notifies relevant vendors → Vendors respond
  */
 export const createRFQ = async (data: CreateRFQData) => {
   if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured - RFQ stored locally');
-    return { success: true, rfqId: `local-${Date.now()}`, message: 'Quote request saved (offline mode)' };
+    console.warn("Supabase not configured - RFQ stored locally");
+    return {
+      success: true,
+      rfqId: `local-${Date.now()}`,
+      message: "Quote request saved (offline mode)",
+    };
   }
 
   try {
     // Generate RFQ number
-    const rfqNumber = `RFQ-${data.isPremium ? 'P' : 'S'}-${Date.now().toString(36).toUpperCase()}`;
-    
+    const rfqNumber = `RFQ-${data.isPremium ? "P" : "S"}-${Date.now().toString(36).toUpperCase()}`;
+
     // Calculate due date (7 days for standard, 14 for premium)
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + (data.isPremium ? 14 : 7));
-    
+
     // Create RFQ record
     const { data: rfq, error: rfqError } = await supabase
-      .from('rfqs')
+      .from("rfqs")
       .insert({
         rfq_number: rfqNumber,
         project_name: data.projectName,
@@ -461,23 +468,23 @@ export const createRFQ = async (data: CreateRFQData) => {
         location: data.location,
         use_case: data.useCase,
         is_premium: data.isPremium,
-        
+
         // Customer info
         customer_email: data.customerEmail,
         customer_name: data.customerName,
         customer_phone: data.customerPhone,
-        
+
         // Requirements (stored as JSONB)
         requirements: data.requirements || {},
-        
+
         // Pricing reference (SSOT data)
         estimated_budget_min: Math.round(data.standardQuoteCost * 0.9),
         estimated_budget_max: Math.round((data.premiumQuoteCost || data.standardQuoteCost) * 1.1),
-        
+
         // Status
-        status: 'open',
+        status: "open",
         due_date: dueDate.toISOString(),
-        responses_count: 0
+        responses_count: 0,
       })
       .select()
       .single();
@@ -491,15 +498,15 @@ export const createRFQ = async (data: CreateRFQData) => {
       success: true,
       rfqId: rfq.id,
       rfqNumber: rfq.rfq_number,
-      message: data.isPremium 
-        ? 'Premium quote request submitted! Qualified vendors will respond within 14 days.'
-        : 'Quote request submitted! Vendors will respond within 7 days.'
+      message: data.isPremium
+        ? "Premium quote request submitted! Qualified vendors will respond within 14 days."
+        : "Quote request submitted! Vendors will respond within 7 days.",
     };
   } catch (error: any) {
-    console.error('Error creating RFQ:', error);
+    console.error("Error creating RFQ:", error);
     return {
       success: false,
-      error: error.message || 'Failed to create quote request'
+      error: error.message || "Failed to create quote request",
     };
   }
 };
@@ -510,40 +517,40 @@ export const createRFQ = async (data: CreateRFQData) => {
 async function notifyRelevantVendors(rfqId: string, data: CreateRFQData) {
   try {
     // Get vendors that match (approved, specialty matches)
-    const specialties = ['battery', 'inverter', 'integrator', 'epc'];
-    
+    const specialties = ["battery", "inverter", "integrator", "epc"];
+
     const { data: vendors, error } = await supabase
-      .from('vendors')
-      .select('id, email, company_name, specialty')
-      .eq('status', 'approved')
-      .in('specialty', specialties);
+      .from("vendors")
+      .select("id, email, company_name, specialty")
+      .eq("status", "approved")
+      .in("specialty", specialties);
 
     if (error || !vendors?.length) {
-      console.log('No matching vendors found for RFQ notification');
+      console.log("No matching vendors found for RFQ notification");
       return;
     }
 
     // Create notifications for each vendor
-    const notifications = vendors.map(vendor => ({
+    const notifications = vendors.map((vendor) => ({
       vendor_id: vendor.id,
-      type: data.isPremium ? 'premium_rfq' : 'new_rfq',
-      title: data.isPremium 
+      type: data.isPremium ? "premium_rfq" : "new_rfq",
+      title: data.isPremium
         ? `🌟 Premium RFQ: ${data.projectName}`
         : `New RFQ: ${data.projectName}`,
-      message: `${data.systemSizeMW.toFixed(2)} MW / ${data.durationHours}h system in ${data.location}. ` +
-               `Use case: ${data.useCase}. ` +
-               (data.isPremium ? 'Premium equipment required.' : ''),
+      message:
+        `${data.systemSizeMW.toFixed(2)} MW / ${data.durationHours}h system in ${data.location}. ` +
+        `Use case: ${data.useCase}. ` +
+        (data.isPremium ? "Premium equipment required." : ""),
       rfq_id: rfqId,
-      is_read: false
+      is_read: false,
     }));
 
-    await supabase.from('vendor_notifications').insert(notifications);
+    await supabase.from("vendor_notifications").insert(notifications);
 
     // Queue email notifications (processed by background job)
     await queueVendorEmails(vendors, data, rfqId);
-
   } catch (error) {
-    console.error('Error notifying vendors:', error);
+    console.error("Error notifying vendors:", error);
   }
 }
 
@@ -556,11 +563,11 @@ async function queueVendorEmails(
   rfqId: string
 ) {
   try {
-    const emailJobs = vendors.map(vendor => ({
+    const emailJobs = vendors.map((vendor) => ({
       vendor_id: vendor.id,
-      email_type: 'rfq_notification',
+      email_type: "rfq_notification",
       to_email: vendor.email,
-      subject: data.isPremium 
+      subject: data.isPremium
         ? `🌟 Premium Quote Opportunity: ${data.projectName}`
         : `New Quote Opportunity: ${data.projectName}`,
       template_data: {
@@ -573,15 +580,15 @@ async function queueVendorEmails(
         isPremium: data.isPremium,
         requirements: data.requirements,
         rfqId: rfqId,
-        portalUrl: `${window.location.origin}/vendor-portal?rfq=${rfqId}`
+        portalUrl: `${window.location.origin}/vendor-portal?rfq=${rfqId}`,
       },
-      status: 'queued',
-      created_at: new Date().toISOString()
+      status: "queued",
+      created_at: new Date().toISOString(),
     }));
 
-    await supabase.from('email_queue').insert(emailJobs);
+    await supabase.from("email_queue").insert(emailJobs);
   } catch (error) {
-    console.error('Error queuing vendor emails:', error);
+    console.error("Error queuing vendor emails:", error);
   }
 }
 
@@ -590,14 +597,14 @@ async function queueVendorEmails(
  */
 export const getOpenRFQs = async () => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
-    .from('rfqs')
-    .select('*')
-    .eq('status', 'open')
-    .gte('due_date', new Date().toISOString())
-    .order('due_date', { ascending: true });
+    .from("rfqs")
+    .select("*")
+    .eq("status", "open")
+    .gte("due_date", new Date().toISOString())
+    .order("due_date", { ascending: true });
 
   if (error) throw error;
   return data as RFQ[];
@@ -607,11 +614,7 @@ export const getOpenRFQs = async () => {
  * Get RFQ details
  */
 export const getRFQDetails = async (rfqId: string) => {
-  const { data, error } = await supabase
-    .from('rfqs')
-    .select('*')
-    .eq('id', rfqId)
-    .single();
+  const { data, error } = await supabase.from("rfqs").select("*").eq("id", rfqId).single();
 
   if (error) throw error;
   return data as RFQ;
@@ -638,15 +641,15 @@ export interface RFQResponseData {
  */
 export const submitRFQResponse = async (data: RFQResponseData) => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data: response, error } = await supabase
-    .from('rfq_responses')
+    .from("rfq_responses")
     .insert({
       vendor_id: vendor.id,
-      currency: 'USD',
-      status: 'submitted',
-      ...data
+      currency: "USD",
+      status: "submitted",
+      ...data,
     })
     .select()
     .single();
@@ -654,7 +657,7 @@ export const submitRFQResponse = async (data: RFQResponseData) => {
   if (error) throw error;
 
   // Update RFQ response count
-  await supabase.rpc('increment_rfq_responses', { rfq_id: data.rfq_id });
+  await supabase.rpc("increment_rfq_responses", { rfq_id: data.rfq_id });
 
   return response;
 };
@@ -664,11 +667,12 @@ export const submitRFQResponse = async (data: RFQResponseData) => {
  */
 export const getVendorRFQResponses = async () => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
-    .from('rfq_responses')
-    .select(`
+    .from("rfq_responses")
+    .select(
+      `
       *,
       rfqs (
         rfq_number,
@@ -677,9 +681,10 @@ export const getVendorRFQResponses = async () => {
         duration_hours,
         location
       )
-    `)
-    .eq('vendor_id', vendor.id)
-    .order('submitted_at', { ascending: false });
+    `
+    )
+    .eq("vendor_id", vendor.id)
+    .order("submitted_at", { ascending: false });
 
   if (error) throw error;
   return data;
@@ -694,18 +699,15 @@ export const getVendorRFQResponses = async () => {
  */
 export const getVendorNotifications = async (unreadOnly = false) => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
-  let query = supabase
-    .from('vendor_notifications')
-    .select('*')
-    .eq('vendor_id', vendor.id);
+  let query = supabase.from("vendor_notifications").select("*").eq("vendor_id", vendor.id);
 
   if (unreadOnly) {
-    query = query.eq('is_read', false);
+    query = query.eq("is_read", false);
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false });
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw error;
   return data as VendorNotification[];
@@ -716,12 +718,12 @@ export const getVendorNotifications = async (unreadOnly = false) => {
  */
 export const markNotificationRead = async (notificationId: string) => {
   const { error } = await supabase
-    .from('vendor_notifications')
+    .from("vendor_notifications")
     .update({
       is_read: true,
-      read_at: new Date().toISOString()
+      read_at: new Date().toISOString(),
     })
-    .eq('id', notificationId);
+    .eq("id", notificationId);
 
   if (error) throw error;
 };
@@ -731,16 +733,16 @@ export const markNotificationRead = async (notificationId: string) => {
  */
 export const markAllNotificationsRead = async () => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   const { error } = await supabase
-    .from('vendor_notifications')
+    .from("vendor_notifications")
     .update({
       is_read: true,
-      read_at: new Date().toISOString()
+      read_at: new Date().toISOString(),
     })
-    .eq('vendor_id', vendor.id)
-    .eq('is_read', false);
+    .eq("vendor_id", vendor.id)
+    .eq("is_read", false);
 
   if (error) throw error;
 };
@@ -754,40 +756,39 @@ export const markAllNotificationsRead = async () => {
  */
 export const getVendorStats = async () => {
   const vendor = await getCurrentVendor();
-  if (!vendor) throw new Error('Not authenticated');
+  if (!vendor) throw new Error("Not authenticated");
 
   // Get products stats
   const { data: products } = await supabase
-    .from('vendor_products')
-    .select('status')
-    .eq('vendor_id', vendor.id);
+    .from("vendor_products")
+    .select("status")
+    .eq("vendor_id", vendor.id);
 
-  const pendingProducts = products?.filter(p => p.status === 'pending').length || 0;
-  const approvedProducts = products?.filter(p => p.status === 'approved').length || 0;
+  const pendingProducts = products?.filter((p) => p.status === "pending").length || 0;
+  const approvedProducts = products?.filter((p) => p.status === "approved").length || 0;
 
   // Get RFQ responses stats
   const { data: responses } = await supabase
-    .from('rfq_responses')
-    .select('status')
-    .eq('vendor_id', vendor.id);
+    .from("rfq_responses")
+    .select("status")
+    .eq("vendor_id", vendor.id);
 
-  const activeSubmissions = responses?.filter(r => 
-    ['submitted', 'under_review'].includes(r.status)
-  ).length || 0;
+  const activeSubmissions =
+    responses?.filter((r) => ["submitted", "under_review"].includes(r.status)).length || 0;
 
   // Get open RFQs count
   const { count: openRFQsCount } = await supabase
-    .from('rfqs')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'open')
-    .gte('due_date', new Date().toISOString());
+    .from("rfqs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "open")
+    .gte("due_date", new Date().toISOString());
 
   // Get unread notifications
   const { count: unreadNotifications } = await supabase
-    .from('vendor_notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('vendor_id', vendor.id)
-    .eq('is_read', false);
+    .from("vendor_notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("vendor_id", vendor.id)
+    .eq("is_read", false);
 
   return {
     pendingProducts,
@@ -795,7 +796,7 @@ export const getVendorStats = async () => {
     activeSubmissions,
     openRFQs: openRFQsCount || 0,
     quotesThisMonth: vendor.quotes_included_count,
-    unreadNotifications: unreadNotifications || 0
+    unreadNotifications: unreadNotifications || 0,
   };
 };
 
@@ -807,26 +808,24 @@ export const getVendorStats = async () => {
  * Upload datasheet to Supabase Storage
  */
 export const uploadDatasheet = async (file: File, vendorId: string) => {
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.split(".").pop();
   const fileName = `${vendorId}/${Date.now()}.${fileExt}`;
 
-  const { data, error } = await supabase.storage
-    .from('vendor-datasheets')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
+  const { data, error } = await supabase.storage.from("vendor-datasheets").upload(fileName, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
 
   if (error) throw error;
 
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('vendor-datasheets')
-    .getPublicUrl(fileName);
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("vendor-datasheets").getPublicUrl(fileName);
 
   return {
     url: publicUrl,
-    filename: file.name
+    filename: file.name,
   };
 };
 
@@ -841,80 +840,80 @@ async function sendVendorProductApprovalEmail(product: any, adminId: string): Pr
   try {
     // Get vendor info
     const { data: vendor } = await supabase
-      .from('vendors')
-      .select('email, company_name, contact_name')
-      .eq('id', product.vendor_id)
+      .from("vendors")
+      .select("email, company_name, contact_name")
+      .eq("id", product.vendor_id)
       .single();
 
     if (!vendor || !vendor.email) {
       if (import.meta.env.DEV) {
-        console.warn('⚠️ No vendor email found for approval notification');
+        console.warn("⚠️ No vendor email found for approval notification");
       }
       return;
     }
 
     // Queue email (using email_queue table if available)
-    const { error } = await supabase
-      .from('email_queue')
-      .insert({
-        to_email: vendor.email,
-        subject: `✅ Product Approved: ${product.manufacturer} ${product.model}`,
-        body: `
+    const { error } = await supabase.from("email_queue").insert({
+      to_email: vendor.email,
+      subject: `✅ Product Approved: ${product.manufacturer} ${product.model}`,
+      body: `
           <h2>Product Approved!</h2>
-          <p>Dear ${vendor.contact_name || 'Vendor'},</p>
+          <p>Dear ${vendor.contact_name || "Vendor"},</p>
           <p>Your product submission has been approved and is now active in our pricing system:</p>
           <ul>
             <li><strong>Product:</strong> ${product.manufacturer} ${product.model}</li>
             <li><strong>Category:</strong> ${product.product_category}</li>
-            ${product.price_per_kwh ? `<li><strong>Price:</strong> $${product.price_per_kwh}/kWh</li>` : ''}
-            ${product.price_per_kw ? `<li><strong>Price:</strong> $${product.price_per_kw}/kW</li>` : ''}
+            ${product.price_per_kwh ? `<li><strong>Price:</strong> $${product.price_per_kwh}/kWh</li>` : ""}
+            ${product.price_per_kw ? `<li><strong>Price:</strong> $${product.price_per_kw}/kW</li>` : ""}
           </ul>
           <p>Your product is now available for use in quotes and will be included in our ML pricing analysis.</p>
           <p>Thank you for partnering with Merlin Energy Solutions!</p>
         `,
-        email_type: 'vendor_product_approved',
-        status: 'queued',
-        created_at: new Date().toISOString()
-      });
+      email_type: "vendor_product_approved",
+      status: "queued",
+      created_at: new Date().toISOString(),
+    });
 
-    if (error && !error.message.includes('does not exist')) {
-      console.error('Error queuing approval email:', error);
+    if (error && !error.message.includes("does not exist")) {
+      console.error("Error queuing approval email:", error);
     } else if (import.meta.env.DEV) {
       console.log(`✅ Approval email queued for ${vendor.email}`);
     }
   } catch (error) {
-    console.error('Error sending approval email:', error);
+    console.error("Error sending approval email:", error);
   }
 }
 
 /**
  * Send email notification when vendor product is rejected
  */
-async function sendVendorProductRejectionEmail(product: any, adminId: string, reason: string): Promise<void> {
+async function sendVendorProductRejectionEmail(
+  product: any,
+  adminId: string,
+  reason: string
+): Promise<void> {
   try {
     // Get vendor info
     const { data: vendor } = await supabase
-      .from('vendors')
-      .select('email, company_name, contact_name')
-      .eq('id', product.vendor_id)
+      .from("vendors")
+      .select("email, company_name, contact_name")
+      .eq("id", product.vendor_id)
       .single();
 
     if (!vendor || !vendor.email) {
       if (import.meta.env.DEV) {
-        console.warn('⚠️ No vendor email found for rejection notification');
+        console.warn("⚠️ No vendor email found for rejection notification");
       }
       return;
     }
 
     // Queue email
-    const { error } = await supabase
-      .from('email_queue')
-      .insert({
-        to_email: vendor.email,
-        subject: `Product Review Required: ${product.manufacturer} ${product.model}`,
-        body: `
+    const { error } = await supabase.from("email_queue").insert({
+      to_email: vendor.email,
+      subject: `Product Review Required: ${product.manufacturer} ${product.model}`,
+      body: `
           <h2>Product Review Required</h2>
-          <p>Dear ${vendor.contact_name || 'Vendor'},</p>
+          <p>Dear ${vendor.contact_name || "Vendor"},</p>
           <p>Your product submission requires additional review before approval:</p>
           <ul>
             <li><strong>Product:</strong> ${product.manufacturer} ${product.model}</li>
@@ -924,18 +923,18 @@ async function sendVendorProductRejectionEmail(product: any, adminId: string, re
           <p>Please review your submission and resubmit with the requested corrections. If you have questions, please contact our support team.</p>
           <p>Thank you for your partnership with Merlin Energy Solutions.</p>
         `,
-        email_type: 'vendor_product_rejected',
-        status: 'queued',
-        created_at: new Date().toISOString()
-      });
+      email_type: "vendor_product_rejected",
+      status: "queued",
+      created_at: new Date().toISOString(),
+    });
 
-    if (error && !error.message.includes('does not exist')) {
-      console.error('Error queuing rejection email:', error);
+    if (error && !error.message.includes("does not exist")) {
+      console.error("Error queuing rejection email:", error);
     } else if (import.meta.env.DEV) {
       console.log(`✅ Rejection email queued for ${vendor.email}`);
     }
   } catch (error) {
-    console.error('Error sending rejection email:', error);
+    console.error("Error sending rejection email:", error);
   }
 }
 
@@ -945,7 +944,7 @@ export const vendorService = {
   loginVendor,
   logoutVendor,
   getCurrentVendor,
-  
+
   // Products
   submitProduct,
   getVendorProducts,
@@ -953,26 +952,26 @@ export const vendorService = {
   approveVendorProduct,
   rejectVendorProduct,
   autoApproveVendorProduct,
-  
+
   // RFQs
   createRFQ,
   getOpenRFQs,
   getRFQDetails,
-  
+
   // Responses
   submitRFQResponse,
   getVendorRFQResponses,
-  
+
   // Notifications
   getVendorNotifications,
   markNotificationRead,
   markAllNotificationsRead,
-  
+
   // Stats
   getVendorStats,
-  
+
   // Files
-  uploadDatasheet
+  uploadDatasheet,
 };
 
 export default vendorService;

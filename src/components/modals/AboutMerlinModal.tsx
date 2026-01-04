@@ -8,11 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, Zap, Battery, Sun, TrendingUp, Shield, Target, 
-  Calculator, BarChart3, LineChart, PiggyBank, Award,
-  CheckCircle2, ArrowRight, Sparkles, Building2, Globe, Star
-} from 'lucide-react';
+import { X, Zap, Battery, Shield, Target, Calculator, LineChart, PiggyBank, ArrowRight, Sparkles, Globe, Star } from 'lucide-react';
 
 interface AboutMerlinModalProps {
   isOpen: boolean;

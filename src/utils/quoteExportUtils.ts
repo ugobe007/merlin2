@@ -3,9 +3,9 @@
  * Generate PDF, Word (.docx), and Excel (.xlsx) files with watermarks
  */
 
-import { Document, Paragraph, TextRun, AlignmentType, Header, PageNumber, Footer, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
-import { saveAs } from 'file-saver';
-import { loadWatermarkSettings } from '../components/AdminWatermarkSettings';
+import { Document, Paragraph, TextRun, AlignmentType, Header, PageNumber, Footer, BorderStyle } from "docx";
+import { saveAs } from "file-saver";
+import { loadWatermarkSettings } from "../components/AdminWatermarkSettings";
 
 export interface QuoteExportData {
   // Project Information
@@ -64,7 +64,7 @@ export interface QuoteExportData {
 
   // Financial
   systemCost: number;
-  
+
   // Options
   showAiNote?: boolean;
 }
@@ -74,9 +74,9 @@ export interface QuoteExportData {
  */
 function getWatermarkText(): string {
   const settings = loadWatermarkSettings();
-  if (!settings.enabled) return '';
-  
-  const baseText = settings.useCustomText && settings.text ? settings.text : 'merlin certified';
+  if (!settings.enabled) return "";
+
+  const baseText = settings.useCustomText && settings.text ? settings.text : "merlin certified";
   const date = new Date().toLocaleDateString();
   return `${baseText} -- ${date}`;
 }
@@ -92,7 +92,7 @@ export function getWatermarkStyle() {
     opacity: settings.opacity / 100,
     color: settings.color,
     fontSize: settings.fontSize,
-    rotation: settings.rotation
+    rotation: settings.rotation,
   };
 }
 
@@ -107,286 +107,301 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 
   // Create Word document
   const doc = new Document({
-    sections: [{
-      properties: {
-        page: {
-          // Add watermark as background text
-          // Note: docx library doesn't support true diagonal watermarks, but we can add footer text
-        }
+    sections: [
+      {
+        properties: {
+          page: {
+            // Add watermark as background text
+            // Note: docx library doesn't support true diagonal watermarks, but we can add footer text
+          },
+        },
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: watermarkText.toUpperCase(),
+                    size: 16,
+                    color: "CCCCCC",
+                    bold: true,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: `Page `,
+                    size: 20,
+                  }),
+                  new TextRun({
+                    children: [PageNumber.CURRENT],
+                  }),
+                  new TextRun({
+                    text: ` | ${watermarkText}`,
+                    size: 18,
+                    color: "999999",
+                  }),
+                ],
+              }),
+              new Paragraph({
+                alignment: AlignmentType.LEFT,
+                children: [
+                  new TextRun({
+                    text: "NOTE: The AI Assistant is not working for [grid connection capacity].",
+                    size: 18,
+                    color: "CC0000",
+                    italics: true,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: [
+          // Title
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "⚡ MERLIN Energy",
+                size: 48,
+                bold: true,
+                color: "1E40AF",
+              }),
+            ],
+            spacing: { after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Battery Energy Storage System Quote",
+                size: 32,
+                color: "475569",
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // Quote Info
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Quote #${data.quoteNumber} | ${data.quoteDate}`,
+                size: 24,
+                bold: true,
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // Project Information Section
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Project Information",
+                size: 32,
+                bold: true,
+                color: "1E40AF",
+              }),
+            ],
+            spacing: { before: 400, after: 200 },
+            border: {
+              bottom: {
+                color: "1E40AF",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 6,
+              },
+            },
+          }),
+
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Project Name: ", bold: true }),
+              new TextRun({ text: data.projectName }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Location: ", bold: true }),
+              new TextRun({ text: data.location }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Application Type: ", bold: true }),
+              new TextRun({ text: data.applicationType }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Use Case: ", bold: true }),
+              new TextRun({ text: data.useCase }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // System Specifications
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "System Specifications",
+                size: 32,
+                bold: true,
+                color: "1E40AF",
+              }),
+            ],
+            spacing: { before: 400, after: 200 },
+            border: {
+              bottom: {
+                color: "1E40AF",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 6,
+              },
+            },
+          }),
+
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Power Rating: ", bold: true }),
+              new TextRun({ text: `${data.storageSizeMW.toFixed(1)} MW` }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Energy Capacity: ", bold: true }),
+              new TextRun({ text: `${data.storageSizeMWh.toFixed(1)} MWh` }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Duration: ", bold: true }),
+              new TextRun({ text: `${data.durationHours.toFixed(1)} hours` }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Battery Chemistry: ", bold: true }),
+              new TextRun({ text: data.chemistry.toUpperCase() }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Round-Trip Efficiency: ", bold: true }),
+              new TextRun({ text: `${data.roundTripEfficiency}%` }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // Financial Summary
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Investment Summary",
+                size: 32,
+                bold: true,
+                color: "1E40AF",
+              }),
+            ],
+            spacing: { before: 400, after: 200 },
+            border: {
+              bottom: {
+                color: "1E40AF",
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 6,
+              },
+            },
+          }),
+
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Total System Cost: ", bold: true, size: 28 }),
+              new TextRun({
+                text: `$${(data.systemCost / 1000000).toFixed(2)}M`,
+                size: 28,
+                bold: true,
+                color: "059669",
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Cost per kW: ", bold: true }),
+              new TextRun({
+                text: `$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)}/kW`,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Cost per kWh: ", bold: true }),
+              new TextRun({
+                text: `$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)}/kWh`,
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // Footer Notes
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Terms & Conditions",
+                size: 24,
+                bold: true,
+              }),
+            ],
+            spacing: { before: 600, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "• This quote is valid for 30 days from the date of issue.",
+                size: 20,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.",
+                size: 20,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`,
+                size: 20,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+        ],
       },
-      headers: {
-        default: new Header({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: watermarkText.toUpperCase(),
-                  size: 16,
-                  color: "CCCCCC",
-                  bold: true
-                })
-              ]
-            })
-          ]
-        })
-      },
-      footers: {
-        default: new Footer({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: `Page `,
-                  size: 20
-                }),
-                new TextRun({
-                  children: [PageNumber.CURRENT]
-                }),
-                new TextRun({
-                  text: ` | ${watermarkText}`,
-                  size: 18,
-                  color: "999999"
-                })
-              ]
-            }),
-            new Paragraph({
-              alignment: AlignmentType.LEFT,
-              children: [
-                new TextRun({
-                  text: "NOTE: The AI Assistant is not working for [grid connection capacity].",
-                  size: 18,
-                  color: "CC0000",
-                  italics: true
-                })
-              ]
-            })
-          ]
-        })
-      },
-      children: [
-        // Title
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "⚡ MERLIN Energy",
-              size: 48,
-              bold: true,
-              color: "1E40AF"
-            })
-          ],
-          spacing: { after: 200 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "Battery Energy Storage System Quote",
-              size: 32,
-              color: "475569"
-            })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // Quote Info
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Quote #${data.quoteNumber} | ${data.quoteDate}`,
-              size: 24,
-              bold: true
-            })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // Project Information Section
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "Project Information",
-              size: 32,
-              bold: true,
-              color: "1E40AF"
-            })
-          ],
-          spacing: { before: 400, after: 200 },
-          border: {
-            bottom: {
-              color: "1E40AF",
-              space: 1,
-              style: BorderStyle.SINGLE,
-              size: 6
-            }
-          }
-        }),
-
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Project Name: ", bold: true }),
-            new TextRun({ text: data.projectName })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Location: ", bold: true }),
-            new TextRun({ text: data.location })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Application Type: ", bold: true }),
-            new TextRun({ text: data.applicationType })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Use Case: ", bold: true }),
-            new TextRun({ text: data.useCase })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // System Specifications
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "System Specifications",
-              size: 32,
-              bold: true,
-              color: "1E40AF"
-            })
-          ],
-          spacing: { before: 400, after: 200 },
-          border: {
-            bottom: {
-              color: "1E40AF",
-              space: 1,
-              style: BorderStyle.SINGLE,
-              size: 6
-            }
-          }
-        }),
-
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Power Rating: ", bold: true }),
-            new TextRun({ text: `${data.storageSizeMW.toFixed(1)} MW` })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Energy Capacity: ", bold: true }),
-            new TextRun({ text: `${data.storageSizeMWh.toFixed(1)} MWh` })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Duration: ", bold: true }),
-            new TextRun({ text: `${data.durationHours.toFixed(1)} hours` })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Battery Chemistry: ", bold: true }),
-            new TextRun({ text: data.chemistry.toUpperCase() })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Round-Trip Efficiency: ", bold: true }),
-            new TextRun({ text: `${data.roundTripEfficiency}%` })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // Financial Summary
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "Investment Summary",
-              size: 32,
-              bold: true,
-              color: "1E40AF"
-            })
-          ],
-          spacing: { before: 400, after: 200 },
-          border: {
-            bottom: {
-              color: "1E40AF",
-              space: 1,
-              style: BorderStyle.SINGLE,
-              size: 6
-            }
-          }
-        }),
-
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Total System Cost: ", bold: true, size: 28 }),
-            new TextRun({
-              text: `$${(data.systemCost / 1000000).toFixed(2)}M`,
-              size: 28,
-              bold: true,
-              color: "059669"
-            })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Cost per kW: ", bold: true }),
-            new TextRun({ text: `$${(data.systemCost / (data.storageSizeMW * 1000)).toFixed(0)}/kW` })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "Cost per kWh: ", bold: true }),
-            new TextRun({ text: `$${(data.systemCost / (data.storageSizeMWh * 1000)).toFixed(0)}/kWh` })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // Footer Notes
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "Terms & Conditions",
-              size: 24,
-              bold: true
-            })
-          ],
-          spacing: { before: 600, after: 200 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "• This quote is valid for 30 days from the date of issue.", size: 20 })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: "• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.", size: 20 })
-          ],
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: `• Warranty: ${data.warrantyYears} year comprehensive warranty included.`, size: 20 })
-          ],
-          spacing: { after: 100 }
-        })
-      ]
-    }]
+    ],
   });
 
   // Generate and download
@@ -525,19 +540,19 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   `;
 
   // Create a new window and print to PDF
-  const printWindow = window.open('', '_blank');
+  const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-    
+
     // Wait for content to load, then print
     setTimeout(() => {
       printWindow.print();
       // Note: User will need to "Save as PDF" in print dialog
     }, 500);
   } else {
-    alert('Please allow popups to download PDF');
+    alert("Please allow popups to download PDF");
   }
 }
 
@@ -594,10 +609,10 @@ Payment Terms: 50% deposit upon contract signing, 50% upon commissioning
 `.trim();
 
   // Create blob and download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   saveAs(blob, `Merlin_BESS_Quote_${data.quoteNumber}.csv`);
 }
 
 // Re-export Packer for Word document generation
-import { Packer } from 'docx';
+import { Packer } from "docx";
 export { Packer };

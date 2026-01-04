@@ -1,10 +1,10 @@
 /**
  * COMPARE CONFIG TYPES
  * ====================
- * 
+ *
  * TypeScript interfaces for Step 3: Compare & Configure
  * The "Mind Twist" - two-column comparison of Merlin's recommendation vs user config
- * 
+ *
  * @created December 2025
  */
 
@@ -20,16 +20,16 @@ export interface MerlinRecommendation {
   solarKW: number;
   windKW: number;
   generatorKW: number;
-  
+
   // Financials (from SSOT)
   netInvestment: number;
   annualSavings: number;
   paybackYears: number;
   roi25Year: number;
-  
+
   // Metadata
   reasoning: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 // ============================================================================
@@ -42,11 +42,11 @@ export interface UserConfiguration {
   windKW: number;
   generatorKW: number;
   durationHours: number;
-  
+
   // BESS (auto-calculated, NOT user-adjustable)
-  batteryKW: number;      // Calculated from peak demand
-  batteryKWh: number;     // Calculated from duration + efficiency
-  
+  batteryKW: number; // Calculated from peak demand
+  batteryKWh: number; // Calculated from duration + efficiency
+
   // Financials (auto-calculated from SSOT)
   netInvestment: number;
   annualSavings: number;
@@ -61,7 +61,7 @@ export interface UserConfiguration {
 export interface CompareConfigState {
   merlinPick: MerlinRecommendation;
   userConfig: UserConfiguration;
-  selectedSource: 'merlin' | 'user' | null;
+  selectedSource: "merlin" | "user" | null;
   showBESSExplainer: boolean;
   hasUserModified: boolean;
 }
@@ -101,14 +101,14 @@ export interface CompareConfigureSectionProps {
   electricityRate: number;
   demandChargePerKW: number;
   primaryApplication: string;
-  
+
   // From Step 2
   initialSolarKW: number;
   initialWindKW: number;
   initialGeneratorKW: number;
-  
+
   // Callbacks
-  onAcceptConfig: (config: UserConfiguration, source: 'merlin' | 'user') => void;
+  onAcceptConfig: (config: UserConfiguration, source: "merlin" | "user") => void;
   onAdvancedQuoteBuilder: () => void;
 }
 
@@ -116,15 +116,15 @@ export interface CompareConfigureSectionProps {
 // BESS APPLICATION TYPES
 // ============================================================================
 
-export type BESSApplication = 
-  | 'peak-shaving'
-  | 'backup'
-  | 'tou-optimization'
-  | 'solar-consumption'
-  | 'ev-charging'
-  | 'grid-independence'
-  | 'demand-response'
-  | 'frequency-regulation';
+export type BESSApplication =
+  | "peak-shaving"
+  | "backup"
+  | "tou-optimization"
+  | "solar-consumption"
+  | "ev-charging"
+  | "grid-independence"
+  | "demand-response"
+  | "frequency-regulation";
 
 // ============================================================================
 // FINANCIAL INPUTS/OUTPUTS
@@ -149,20 +149,20 @@ export interface FinancialResult {
   generatorCost: number;
   installationCost: number;
   grossCost: number;
-  incentives: number;      // 30% ITC
+  incentives: number; // 30% ITC
   netInvestment: number;
-  
+
   // Savings
   peakShavingSavings: number;
   solarSavings: number;
   touArbitrageSavings: number;
   annualSavings: number;
-  
+
   // ROI
   paybackYears: number;
   roi25Year: number;
   npv25Year: number;
-  
+
   // Source tracking (TrueQuote™)
   sources: {
     batteryCost: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { runDailyDataCollection, getLatestAIData } from '../../services/aiDataCollectionService';
+import { runDailyDataCollection } from '../../services/aiDataCollectionService';
 import { runMLProcessing, getLatestMLInsights, type PriceTrendAnalysis, type MarketInsight } from '../../services/mlProcessingService';
 import { runRSSFetchCycle, checkRSSFeedHealth, RSS_SOURCES, toggleRSSSource } from '../../services/rssAutoFetchService';
 import { Database, TrendingUp, RefreshCw, CheckCircle, XCircle, Clock, BarChart3, Package, DollarSign, Zap, Rss, Brain, AlertTriangle, ArrowUp, ArrowDown, Minus, Plus, Edit2, Trash2, Globe, ExternalLink, Save, X } from 'lucide-react';

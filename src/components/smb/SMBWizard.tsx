@@ -19,11 +19,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, Sun, Battery, Calculator, ChevronRight, ChevronLeft,
-  Building2, Car, Hotel, Utensils, ShoppingBag, MapPin,
-  DollarSign, TrendingUp, Shield, Leaf
-} from 'lucide-react';
+import { Zap, Sun, Battery, ChevronRight, ChevronLeft, Building2, Car, Hotel, Utensils, ShoppingBag, MapPin, DollarSign, TrendingUp, Shield, Leaf } from 'lucide-react';
 
 // Services
 import { getIndustryProfile, type IndustryPowerProfile } from '@/services/industryPowerProfilesService';

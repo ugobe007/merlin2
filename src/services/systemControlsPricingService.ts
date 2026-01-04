@@ -1,13 +1,25 @@
 /**
  * System Controls Pricing Service
  * SCADA, EMS, controllers, automation systems
+ *
+ * ✅ UPDATED Jan 2026: Now database-driven with fallback to hardcoded defaults
+ *
+ * Data Sources (in priority order):
+ * 1. Database `pricing_configurations` table (config_key: 'system_controls_pricing')
+ * 2. Database `pricing_configurations` table (config_key: 'control_systems') - Legacy
+ * 3. Hardcoded defaults (fallback)
+ *
+ * This service provides intelligent fallback from database to defaults,
+ * ensuring pricing can be updated via admin dashboard without code deployment.
  */
+
+import { supabase } from "./supabaseClient";
 
 export interface Controller {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'generator_controller' | 'plc' | 'rtu' | 'protective_relay' | 'energy_management';
+  type: "generator_controller" | "plc" | "rtu" | "protective_relay" | "energy_management";
   application: string;
   features: string[];
   communicationProtocols: string[];
@@ -39,7 +51,7 @@ export interface ScadaSystem {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'hmi' | 'historian' | 'server' | 'workstation' | 'communication_gateway';
+  type: "hmi" | "historian" | "server" | "workstation" | "communication_gateway";
   capacity: {
     tags: number;
     historians: number;
@@ -67,7 +79,12 @@ export interface EnergyManagementSystem {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'microgrid_controller' | 'demand_response' | 'load_forecasting' | 'optimization' | 'analytics';
+  type:
+    | "microgrid_controller"
+    | "demand_response"
+    | "load_forecasting"
+    | "optimization"
+    | "analytics";
   capabilities: string[];
   controlledAssets: string[];
   algorithms: string[];
@@ -78,7 +95,7 @@ export interface EnergyManagementSystem {
     maxAssets: number;
     maxPower: number; // MW
   };
-  deployment: 'cloud' | 'on_premise' | 'hybrid';
+  deployment: "cloud" | "on_premise" | "hybrid";
   pricing: {
     setupFee: number;
     monthlyPerSite: number;
@@ -95,7 +112,7 @@ export interface AutomationSystem {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'building_automation' | 'industrial_automation' | 'process_control' | 'safety_system';
+  type: "building_automation" | "industrial_automation" | "process_control" | "safety_system";
   components: string[];
   controlLoops: number;
   networkTopology: string;
@@ -138,413 +155,496 @@ export interface SystemControlsPricingConfiguration {
 
 class SystemControlsPricingService {
   private configuration: SystemControlsPricingConfiguration;
+  private configCache: SystemControlsPricingConfiguration | null = null;
+  private cacheExpiry: number = 0;
+  private readonly CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
     this.configuration = this.getDefaultConfiguration();
+    // Load from database asynchronously (non-blocking)
+    this.loadFromDatabase().catch((error) => {
+      console.warn("Could not load system controls pricing from database, using defaults:", error);
+    });
+  }
+
+  /**
+   * Load configuration from database (database-first approach)
+   */
+  private async loadFromDatabase(): Promise<SystemControlsPricingConfiguration | null> {
+    // Check cache first
+    if (this.configCache && Date.now() < this.cacheExpiry) {
+      this.configuration = this.configCache;
+      return this.configCache;
+    }
+
+    try {
+      // Try new config key first
+      let configData = null;
+      const { data, error } = await supabase
+        .from("pricing_configurations")
+        .select("*")
+        .eq("config_key", "system_controls_pricing")
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        // Try legacy config key
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("pricing_configurations")
+          .select("*")
+          .eq("config_key", "control_systems")
+          .eq("is_active", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!legacyError && legacyData) {
+          configData = legacyData.config_data;
+        }
+      } else {
+        configData = data.config_data;
+      }
+
+      if (configData) {
+        // Merge database config with defaults (database values override defaults)
+        const dbConfig = this.parseDatabaseConfig(configData);
+        if (dbConfig) {
+          this.configCache = dbConfig;
+          this.cacheExpiry = Date.now() + this.CACHE_DURATION_MS;
+          this.configuration = dbConfig;
+
+          if (import.meta.env.DEV) {
+            console.log("✅ System Controls pricing loaded from database");
+          }
+          return dbConfig;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn("Error loading system controls pricing from database:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Parse database config data into SystemControlsPricingConfiguration
+   */
+  private parseDatabaseConfig(configData: any): SystemControlsPricingConfiguration | null {
+    try {
+      const defaults = this.getDefaultConfiguration();
+
+      // Merge database values with defaults
+      // Database can override pricing but defaults provide full product specs
+      const merged: SystemControlsPricingConfiguration = {
+        controllers: defaults.controllers.map((controller) => {
+          // Check if database has pricing for this controller
+          const dbController = configData.controllers?.find((c: any) => c.id === controller.id);
+          if (dbController && dbController.pricePerUnit) {
+            return { ...controller, pricePerUnit: dbController.pricePerUnit };
+          }
+          return controller;
+        }),
+        scadaSystems: defaults.scadaSystems.map((scada) => {
+          const dbScada = configData.scadaSystems?.find((s: any) => s.id === scada.id);
+          if (dbScada && dbScada.pricePerUnit) {
+            return { ...scada, pricePerUnit: dbScada.pricePerUnit };
+          }
+          return scada;
+        }),
+        energyManagementSystems: defaults.energyManagementSystems.map((ems) => {
+          const dbEms = configData.energyManagementSystems?.find((e: any) => e.id === ems.id);
+          if (dbEms && dbEms.pricing) {
+            return { ...ems, pricing: { ...ems.pricing, ...dbEms.pricing } };
+          }
+          return ems;
+        }),
+        automationSystems: defaults.automationSystems,
+        installationCosts: configData.installationCosts || defaults.installationCosts,
+        integrationCosts: configData.integrationCosts || defaults.integrationCosts,
+        maintenanceContracts: configData.maintenanceContracts || defaults.maintenanceContracts,
+      };
+
+      return merged;
+    } catch (error) {
+      console.error("Error parsing database config:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Force refresh from database (clear cache)
+   */
+  async refreshFromDatabase(): Promise<void> {
+    this.configCache = null;
+    this.cacheExpiry = 0;
+    await this.loadFromDatabase();
   }
 
   private getDefaultConfiguration(): SystemControlsPricingConfiguration {
     return {
       controllers: [
         {
-          id: 'deepsea-dse8610',
-          manufacturer: 'Deep Sea Electronics',
-          model: 'DSE8610 MKII',
-          type: 'generator_controller',
-          application: 'Advanced Generator Set Control and Parallel Operation',
+          id: "deepsea-dse8610",
+          manufacturer: "Deep Sea Electronics",
+          model: "DSE8610 MKII",
+          type: "generator_controller",
+          application: "Advanced Generator Set Control and Parallel Operation",
           features: [
-            'Advanced generator control',
-            'Load management',
-            'Parallel operation up to 32 sets',
-            'AMF (Auto Mains Failure)',
-            'Load sharing',
-            'Power management',
-            'Engine protection',
-            'Remote monitoring',
-            'Event logging',
-            'LCD display with navigation'
+            "Advanced generator control",
+            "Load management",
+            "Parallel operation up to 32 sets",
+            "AMF (Auto Mains Failure)",
+            "Load sharing",
+            "Power management",
+            "Engine protection",
+            "Remote monitoring",
+            "Event logging",
+            "LCD display with navigation",
           ],
           communicationProtocols: [
-            'Modbus RTU',
-            'Modbus TCP',
-            'SNMP',
-            'CAN bus',
-            'Ethernet',
-            'SMS/Email alerts'
+            "Modbus RTU",
+            "Modbus TCP",
+            "SNMP",
+            "CAN bus",
+            "Ethernet",
+            "SMS/Email alerts",
           ],
           inputOutputCount: {
             digitalInputs: 16,
             digitalOutputs: 12,
             analogInputs: 8,
-            analogOutputs: 4
+            analogOutputs: 4,
           },
           powerSupply: {
-            voltage: '8 to 35V DC',
-            consumption: 15
+            voltage: "8 to 35V DC",
+            consumption: 15,
           },
           operatingConditions: {
-            temperatureRange: '-20°C to +70°C',
-            humidity: '95% non-condensing',
-            enclosureRating: 'IP65'
+            temperatureRange: "-20°C to +70°C",
+            humidity: "95% non-condensing",
+            enclosureRating: "IP65",
           },
           warranty: 2,
           pricePerUnit: 2850, // Estimated based on market pricing
           vendor: {
-            company: 'Deep Sea Electronics',
-            contact: 'sales@deepseaelectronics.com',
-            location: 'Hunmanby, UK'
-          }
+            company: "Deep Sea Electronics",
+            contact: "sales@deepseaelectronics.com",
+            location: "Hunmanby, UK",
+          },
         },
         {
-          id: 'woodward-easygen-3500',
-          manufacturer: 'Woodward',
-          model: 'easYgen-3500',
-          type: 'generator_controller',
-          application: 'Integrated Genset Controller',
+          id: "woodward-easygen-3500",
+          manufacturer: "Woodward",
+          model: "easYgen-3500",
+          type: "generator_controller",
+          application: "Integrated Genset Controller",
           features: [
-            'Engine and generator control',
-            'Protection functions',
-            'Load sharing',
-            'Power management',
-            'Mains monitoring',
-            'CAN communication',
-            'Web interface',
-            'Configurable logic'
+            "Engine and generator control",
+            "Protection functions",
+            "Load sharing",
+            "Power management",
+            "Mains monitoring",
+            "CAN communication",
+            "Web interface",
+            "Configurable logic",
           ],
-          communicationProtocols: [
-            'CAN bus',
-            'Modbus RTU',
-            'Modbus TCP',
-            'Ethernet'
-          ],
+          communicationProtocols: ["CAN bus", "Modbus RTU", "Modbus TCP", "Ethernet"],
           inputOutputCount: {
             digitalInputs: 24,
             digitalOutputs: 16,
             analogInputs: 12,
-            analogOutputs: 8
+            analogOutputs: 8,
           },
           powerSupply: {
-            voltage: '9 to 32V DC',
-            consumption: 12
+            voltage: "9 to 32V DC",
+            consumption: 12,
           },
           operatingConditions: {
-            temperatureRange: '-40°C to +70°C',
-            humidity: '95% non-condensing',
-            enclosureRating: 'IP54'
+            temperatureRange: "-40°C to +70°C",
+            humidity: "95% non-condensing",
+            enclosureRating: "IP54",
           },
           warranty: 2,
           pricePerUnit: 3200,
           vendor: {
-            company: 'Woodward Inc.',
-            contact: 'industrial@woodward.com',
-            location: 'Fort Collins, CO'
-          }
+            company: "Woodward Inc.",
+            contact: "industrial@woodward.com",
+            location: "Fort Collins, CO",
+          },
         },
         {
-          id: 'abb-plc-ac500',
-          manufacturer: 'ABB',
-          model: 'AC500 PLC',
-          type: 'plc',
-          application: 'Industrial Automation Control',
+          id: "abb-plc-ac500",
+          manufacturer: "ABB",
+          model: "AC500 PLC",
+          type: "plc",
+          application: "Industrial Automation Control",
           features: [
-            'Modular design',
-            'High-speed processing',
-            'Integrated safety',
-            'Web server',
-            'Multiple communication interfaces',
-            'IEC 61131-3 programming'
+            "Modular design",
+            "High-speed processing",
+            "Integrated safety",
+            "Web server",
+            "Multiple communication interfaces",
+            "IEC 61131-3 programming",
           ],
-          communicationProtocols: [
-            'Ethernet/IP',
-            'Modbus TCP',
-            'PROFINET',
-            'DeviceNet',
-            'CANopen'
-          ],
+          communicationProtocols: ["Ethernet/IP", "Modbus TCP", "PROFINET", "DeviceNet", "CANopen"],
           inputOutputCount: {
             digitalInputs: 32,
             digitalOutputs: 32,
             analogInputs: 16,
-            analogOutputs: 16
+            analogOutputs: 16,
           },
           powerSupply: {
-            voltage: '24V DC',
-            consumption: 25
+            voltage: "24V DC",
+            consumption: 25,
           },
           operatingConditions: {
-            temperatureRange: '-25°C to +60°C',
-            humidity: '95% non-condensing',
-            enclosureRating: 'IP20'
+            temperatureRange: "-25°C to +60°C",
+            humidity: "95% non-condensing",
+            enclosureRating: "IP20",
           },
           warranty: 2,
           pricePerUnit: 4500,
           vendor: {
-            company: 'ABB Inc.',
-            contact: 'automation@abb.com',
-            location: 'Cary, NC'
-          }
+            company: "ABB Inc.",
+            contact: "automation@abb.com",
+            location: "Cary, NC",
+          },
         },
         {
-          id: 'schneider-sepam-80',
-          manufacturer: 'Schneider Electric',
-          model: 'Sepam Series 80',
-          type: 'protective_relay',
-          application: 'Generator Protection and Control',
+          id: "schneider-sepam-80",
+          manufacturer: "Schneider Electric",
+          model: "Sepam Series 80",
+          type: "protective_relay",
+          application: "Generator Protection and Control",
           features: [
-            'Generator protection',
-            'Synchronizing check',
-            'Power measurement',
-            'Event recording',
-            'Communication interfaces',
-            'Web HMI',
-            'Logic programming'
+            "Generator protection",
+            "Synchronizing check",
+            "Power measurement",
+            "Event recording",
+            "Communication interfaces",
+            "Web HMI",
+            "Logic programming",
           ],
-          communicationProtocols: [
-            'IEC 61850',
-            'Modbus',
-            'DNP3',
-            'IEC 60870-5-103'
-          ],
+          communicationProtocols: ["IEC 61850", "Modbus", "DNP3", "IEC 60870-5-103"],
           inputOutputCount: {
             digitalInputs: 20,
             digitalOutputs: 14,
             analogInputs: 10,
-            analogOutputs: 4
+            analogOutputs: 4,
           },
           powerSupply: {
-            voltage: '48 to 250V DC / 110 to 240V AC',
-            consumption: 30
+            voltage: "48 to 250V DC / 110 to 240V AC",
+            consumption: 30,
           },
           operatingConditions: {
-            temperatureRange: '-25°C to +70°C',
-            humidity: '95% non-condensing',
-            enclosureRating: 'IP54'
+            temperatureRange: "-25°C to +70°C",
+            humidity: "95% non-condensing",
+            enclosureRating: "IP54",
           },
           warranty: 3,
           pricePerUnit: 5200,
           vendor: {
-            company: 'Schneider Electric',
-            contact: 'protection@schneider-electric.com',
-            location: 'Grenoble, France'
-          }
-        }
+            company: "Schneider Electric",
+            contact: "protection@schneider-electric.com",
+            location: "Grenoble, France",
+          },
+        },
       ],
       scadaSystems: [
         {
-          id: 'wonderware-system-platform',
-          manufacturer: 'AVEVA',
-          model: 'System Platform 2023',
-          type: 'server',
+          id: "wonderware-system-platform",
+          manufacturer: "AVEVA",
+          model: "System Platform 2023",
+          type: "server",
           capacity: {
             tags: 100000,
             historians: 10,
-            users: 250
+            users: 250,
           },
           features: [
-            'Distributed SCADA',
-            'Historian integration',
-            'Alarm management',
-            'Reporting',
-            'Redundancy',
-            'Web clients',
-            'Mobile access'
+            "Distributed SCADA",
+            "Historian integration",
+            "Alarm management",
+            "Reporting",
+            "Redundancy",
+            "Web clients",
+            "Mobile access",
           ],
-          operatingSystem: 'Windows Server',
+          operatingSystem: "Windows Server",
           hardware: {
-            cpu: 'Intel Xeon Silver 4214',
-            ram: '64GB',
-            storage: '2TB SSD',
-            network: ['Gigabit Ethernet', 'Fiber']
+            cpu: "Intel Xeon Silver 4214",
+            ram: "64GB",
+            storage: "2TB SSD",
+            network: ["Gigabit Ethernet", "Fiber"],
           },
-          softwareLicenses: [
-            'Galaxy',
-            'InTouch HMI',
-            'Historian',
-            'Reports'
-          ],
+          softwareLicenses: ["Galaxy", "InTouch HMI", "Historian", "Reports"],
           warranty: 1,
           pricePerUnit: 125000,
           annualMaintenanceCost: 25000,
           vendor: {
-            company: 'AVEVA',
-            contact: 'sales@aveva.com'
-          }
+            company: "AVEVA",
+            contact: "sales@aveva.com",
+          },
         },
         {
-          id: 'ge-ifix-scada',
-          manufacturer: 'Emerson',
-          model: 'iFIX SCADA',
-          type: 'hmi',
+          id: "ge-ifix-scada",
+          manufacturer: "Emerson",
+          model: "iFIX SCADA",
+          type: "hmi",
           capacity: {
             tags: 50000,
             historians: 5,
-            users: 100
+            users: 100,
           },
           features: [
-            'Advanced graphics',
-            'Real-time data',
-            'Alarm handling',
-            'Trending',
-            'Recipe management',
-            'Security system'
+            "Advanced graphics",
+            "Real-time data",
+            "Alarm handling",
+            "Trending",
+            "Recipe management",
+            "Security system",
           ],
-          operatingSystem: 'Windows',
+          operatingSystem: "Windows",
           hardware: {
-            cpu: 'Intel Core i7',
-            ram: '32GB',
-            storage: '1TB SSD',
-            network: ['Gigabit Ethernet']
+            cpu: "Intel Core i7",
+            ram: "32GB",
+            storage: "1TB SSD",
+            network: ["Gigabit Ethernet"],
           },
-          softwareLicenses: [
-            'iFIX Base',
-            'Database Manager',
-            'Alarm Service'
-          ],
+          softwareLicenses: ["iFIX Base", "Database Manager", "Alarm Service"],
           warranty: 1,
           pricePerUnit: 85000,
           annualMaintenanceCost: 17000,
           vendor: {
-            company: 'Emerson',
-            contact: 'automation.solutions@emerson.com'
-          }
-        }
+            company: "Emerson",
+            contact: "automation.solutions@emerson.com",
+          },
+        },
       ],
       energyManagementSystems: [
         {
-          id: 'schneider-ecostruxure-microgrid',
-          manufacturer: 'Schneider Electric',
-          model: 'EcoStruxure Microgrid Advisor',
-          type: 'microgrid_controller',
+          id: "schneider-ecostruxure-microgrid",
+          manufacturer: "Schneider Electric",
+          model: "EcoStruxure Microgrid Advisor",
+          type: "microgrid_controller",
           capabilities: [
-            'Real-time optimization',
-            'Load forecasting',
-            'Energy trading',
-            'Islanding control',
-            'Asset coordination',
-            'Grid services'
+            "Real-time optimization",
+            "Load forecasting",
+            "Energy trading",
+            "Islanding control",
+            "Asset coordination",
+            "Grid services",
           ],
           controlledAssets: [
-            'Solar PV',
-            'Energy Storage',
-            'Generators',
-            'Loads',
-            'Grid connection'
+            "Solar PV",
+            "Energy Storage",
+            "Generators",
+            "Loads",
+            "Grid connection",
           ],
           algorithms: [
-            'Economic optimization',
-            'Peak shaving',
-            'Load balancing',
-            'Demand response',
-            'Predictive control'
+            "Economic optimization",
+            "Peak shaving",
+            "Load balancing",
+            "Demand response",
+            "Predictive control",
           ],
-          communicationProtocols: [
-            'Modbus TCP',
-            'DNP3',
-            'IEC 61850',
-            'MQTT',
-            'REST APIs'
-          ],
+          communicationProtocols: ["Modbus TCP", "DNP3", "IEC 61850", "MQTT", "REST APIs"],
           integrations: [
-            'EcoStruxure suite',
-            'Third-party systems',
-            'Utility DERMS',
-            'Market platforms'
+            "EcoStruxure suite",
+            "Third-party systems",
+            "Utility DERMS",
+            "Market platforms",
           ],
           scalability: {
             maxSites: 100,
             maxAssets: 1000,
-            maxPower: 50 // MW
+            maxPower: 50, // MW
           },
-          deployment: 'hybrid',
+          deployment: "hybrid",
           pricing: {
             setupFee: 150000,
             monthlyPerSite: 2500,
             perMWCapacity: 25000,
-            implementationCost: 300000
+            implementationCost: 300000,
           },
           vendor: {
-            company: 'Schneider Electric',
-            contact: 'microgrid@schneider-electric.com'
-          }
+            company: "Schneider Electric",
+            contact: "microgrid@schneider-electric.com",
+          },
         },
         {
-          id: 'ge-aems-energy-management',
-          manufacturer: 'GE Digital',
-          model: 'Advanced Energy Management System',
-          type: 'optimization',
+          id: "ge-aems-energy-management",
+          manufacturer: "GE Digital",
+          model: "Advanced Energy Management System",
+          type: "optimization",
           capabilities: [
-            'Energy optimization',
-            'Asset performance',
-            'Predictive analytics',
-            'Market integration',
-            'Carbon tracking',
-            'Reporting'
+            "Energy optimization",
+            "Asset performance",
+            "Predictive analytics",
+            "Market integration",
+            "Carbon tracking",
+            "Reporting",
           ],
           controlledAssets: [
-            'Renewable sources',
-            'Storage systems',
-            'Conventional generation',
-            'Flexible loads'
+            "Renewable sources",
+            "Storage systems",
+            "Conventional generation",
+            "Flexible loads",
           ],
           algorithms: [
-            'Machine learning',
-            'Optimization algorithms',
-            'Forecasting models',
-            'Risk assessment'
+            "Machine learning",
+            "Optimization algorithms",
+            "Forecasting models",
+            "Risk assessment",
           ],
-          communicationProtocols: [
-            'OPC UA',
-            'Modbus',
-            'DNP3',
-            'IEC 61850'
-          ],
-          integrations: [
-            'Predix platform',
-            'Enterprise systems',
-            'Market interfaces'
-          ],
+          communicationProtocols: ["OPC UA", "Modbus", "DNP3", "IEC 61850"],
+          integrations: ["Predix platform", "Enterprise systems", "Market interfaces"],
           scalability: {
             maxSites: 50,
             maxAssets: 500,
-            maxPower: 25 // MW
+            maxPower: 25, // MW
           },
-          deployment: 'cloud',
+          deployment: "cloud",
           pricing: {
             setupFee: 200000,
             monthlyPerSite: 3000,
             perMWCapacity: 30000,
-            implementationCost: 400000
+            implementationCost: 400000,
           },
           vendor: {
-            company: 'GE Digital',
-            contact: 'energy.connections@ge.com'
-          }
-        }
+            company: "GE Digital",
+            contact: "energy.connections@ge.com",
+          },
+        },
       ],
       automationSystems: [
         {
-          id: 'honeywell-building-automation',
-          manufacturer: 'Honeywell',
-          model: 'BACnet Building Controller',
-          type: 'building_automation',
+          id: "honeywell-building-automation",
+          manufacturer: "Honeywell",
+          model: "BACnet Building Controller",
+          type: "building_automation",
           components: [
-            'HVAC control',
-            'Lighting control',
-            'Security systems',
-            'Fire safety',
-            'Energy monitoring'
+            "HVAC control",
+            "Lighting control",
+            "Security systems",
+            "Fire safety",
+            "Energy monitoring",
           ],
           controlLoops: 500,
-          networkTopology: 'BACnet/IP',
-          redundancy: 'Dual controllers',
-          certifications: ['BACnet BTL', 'UL listed'],
+          networkTopology: "BACnet/IP",
+          redundancy: "Dual controllers",
+          certifications: ["BACnet BTL", "UL listed"],
           pricePerPoint: 185,
           baseSystemCost: 45000,
           vendor: {
-            company: 'Honeywell Building Solutions',
-            contact: 'building.solutions@honeywell.com'
-          }
-        }
+            company: "Honeywell Building Solutions",
+            contact: "building.solutions@honeywell.com",
+          },
+        },
       ],
       installationCosts: {
         controllerInstallationPerUnit: 850,
@@ -552,20 +652,20 @@ class SystemControlsPricingService {
         networkingPerPoint: 125,
         commissioningPerSystem: 25000,
         trainingPerDay: 2500,
-        documentationCost: 8000
+        documentationCost: 8000,
       },
       integrationCosts: {
         protocolGateway: 4500,
         customInterfacing: 185, // per hour
         systemTesting: 3500, // per day
-        cybersecuritySetup: 25000
+        cybersecuritySetup: 25000,
       },
       maintenanceContracts: {
         annualControllerMaintenance: 0.15, // 15% of equipment cost
-        scadaSoftwareMaintenance: 0.20, // 20% of software cost
+        scadaSoftwareMaintenance: 0.2, // 20% of software cost
         systemSupportPerHour: 165,
-        remoteMonitoringPerPoint: 45 // per year
-      }
+        remoteMonitoringPerPoint: 45, // per year
+      },
     };
   }
 
@@ -582,8 +682,8 @@ class SystemControlsPricingService {
     totalCost: number;
     breakdown: any;
   } {
-    const controller = this.configuration.controllers.find(ctrl => ctrl.id === controllerId);
-    
+    const controller = this.configuration.controllers.find((ctrl) => ctrl.id === controllerId);
+
     if (!controller) {
       return {
         controller: null,
@@ -591,7 +691,7 @@ class SystemControlsPricingService {
         installationCost: 0,
         integrationCost: 0,
         totalCost: 0,
-        breakdown: {}
+        breakdown: {},
       };
     }
 
@@ -599,16 +699,18 @@ class SystemControlsPricingService {
 
     let installationCost = 0;
     if (includeInstallation) {
-      installationCost = this.configuration.installationCosts.controllerInstallationPerUnit * quantity +
-                        this.configuration.installationCosts.commissioningPerSystem +
-                        this.configuration.installationCosts.documentationCost;
+      installationCost =
+        this.configuration.installationCosts.controllerInstallationPerUnit * quantity +
+        this.configuration.installationCosts.commissioningPerSystem +
+        this.configuration.installationCosts.documentationCost;
     }
 
     let integrationCost = 0;
     if (includeIntegration) {
-      integrationCost = this.configuration.integrationCosts.protocolGateway +
-                       this.configuration.integrationCosts.cybersecuritySetup +
-                       (this.configuration.integrationCosts.systemTesting * 2); // 2 days testing
+      integrationCost =
+        this.configuration.integrationCosts.protocolGateway +
+        this.configuration.integrationCosts.cybersecuritySetup +
+        this.configuration.integrationCosts.systemTesting * 2; // 2 days testing
     }
 
     const totalCost = equipmentCost + installationCost + integrationCost;
@@ -624,21 +726,26 @@ class SystemControlsPricingService {
           model: controller.model,
           pricePerUnit: controller.pricePerUnit,
           quantity,
-          subtotal: equipmentCost
+          subtotal: equipmentCost,
         },
-        installation: includeInstallation ? {
-          perUnit: this.configuration.installationCosts.controllerInstallationPerUnit * quantity,
-          commissioning: this.configuration.installationCosts.commissioningPerSystem,
-          documentation: this.configuration.installationCosts.documentationCost,
-          subtotal: installationCost
-        } : null,
-        integration: includeIntegration ? {
-          protocolGateway: this.configuration.integrationCosts.protocolGateway,
-          cybersecurity: this.configuration.integrationCosts.cybersecuritySetup,
-          testing: this.configuration.integrationCosts.systemTesting * 2,
-          subtotal: integrationCost
-        } : null
-      }
+        installation: includeInstallation
+          ? {
+              perUnit:
+                this.configuration.installationCosts.controllerInstallationPerUnit * quantity,
+              commissioning: this.configuration.installationCosts.commissioningPerSystem,
+              documentation: this.configuration.installationCosts.documentationCost,
+              subtotal: installationCost,
+            }
+          : null,
+        integration: includeIntegration
+          ? {
+              protocolGateway: this.configuration.integrationCosts.protocolGateway,
+              cybersecurity: this.configuration.integrationCosts.cybersecuritySetup,
+              testing: this.configuration.integrationCosts.systemTesting * 2,
+              subtotal: integrationCost,
+            }
+          : null,
+      },
     };
   }
 
@@ -656,8 +763,8 @@ class SystemControlsPricingService {
     annualMaintenanceCost: number;
     breakdown: any;
   } {
-    const scada = this.configuration.scadaSystems.find(s => s.id === scadaId);
-    
+    const scada = this.configuration.scadaSystems.find((s) => s.id === scadaId);
+
     if (!scada) {
       return {
         scadaSystem: null,
@@ -667,7 +774,7 @@ class SystemControlsPricingService {
         customizationCost: 0,
         totalCost: 0,
         annualMaintenanceCost: 0,
-        breakdown: {}
+        breakdown: {},
       };
     }
 
@@ -676,11 +783,13 @@ class SystemControlsPricingService {
 
     let installationCost = 0;
     if (includeInstallation) {
-      installationCost = this.configuration.installationCosts.scadaInstallationPerSystem +
-                        this.configuration.installationCosts.trainingPerDay * 3; // 3 days training
+      installationCost =
+        this.configuration.installationCosts.scadaInstallationPerSystem +
+        this.configuration.installationCosts.trainingPerDay * 3; // 3 days training
     }
 
-    const customizationCost = customizationHours * this.configuration.integrationCosts.customInterfacing;
+    const customizationCost =
+      customizationHours * this.configuration.integrationCosts.customInterfacing;
 
     const totalCost = softwareCost + hardwareCost + installationCost + customizationCost;
 
@@ -695,23 +804,25 @@ class SystemControlsPricingService {
       breakdown: {
         software: {
           licenses: scada.softwareLicenses,
-          cost: softwareCost
+          cost: softwareCost,
         },
         hardware: {
           specifications: scada.hardware,
-          cost: hardwareCost
+          cost: hardwareCost,
         },
-        installation: includeInstallation ? {
-          systemInstallation: this.configuration.installationCosts.scadaInstallationPerSystem,
-          training: this.configuration.installationCosts.trainingPerDay * 3,
-          subtotal: installationCost
-        } : null,
+        installation: includeInstallation
+          ? {
+              systemInstallation: this.configuration.installationCosts.scadaInstallationPerSystem,
+              training: this.configuration.installationCosts.trainingPerDay * 3,
+              subtotal: installationCost,
+            }
+          : null,
         customization: {
           hours: customizationHours,
           hourlyRate: this.configuration.integrationCosts.customInterfacing,
-          subtotal: customizationCost
-        }
-      }
+          subtotal: customizationCost,
+        },
+      },
     };
   }
 
@@ -730,8 +841,8 @@ class SystemControlsPricingService {
     annualOperatingCost: number;
     breakdown: any;
   } {
-    const ems = this.configuration.energyManagementSystems.find(e => e.id === emsId);
-    
+    const ems = this.configuration.energyManagementSystems.find((e) => e.id === emsId);
+
     if (!ems) {
       return {
         ems: null,
@@ -741,7 +852,7 @@ class SystemControlsPricingService {
         totalInitialCost: 0,
         monthlyOperatingCost: 0,
         annualOperatingCost: 0,
-        breakdown: {}
+        breakdown: {},
       };
     }
 
@@ -766,25 +877,25 @@ class SystemControlsPricingService {
           setup: setupCost,
           implementation: implementationCost,
           capacity: capacityCost,
-          subtotal: totalInitialCost
+          subtotal: totalInitialCost,
         },
         operating: {
           monthlyPerSite: ems.pricing.monthlyPerSite,
           sitesCount,
           monthlyTotal: monthlyOperatingCost,
-          annualTotal: annualOperatingCost
-        }
-      }
+          annualTotal: annualOperatingCost,
+        },
+      },
     };
   }
 
   getControllersByType(type: string): Controller[] {
-    return this.configuration.controllers.filter(controller => controller.type === type);
+    return this.configuration.controllers.filter((controller) => controller.type === type);
   }
 
   getControllersByManufacturer(manufacturer: string): Controller[] {
-    return this.configuration.controllers.filter(
-      controller => controller.manufacturer.toLowerCase().includes(manufacturer.toLowerCase())
+    return this.configuration.controllers.filter((controller) =>
+      controller.manufacturer.toLowerCase().includes(manufacturer.toLowerCase())
     );
   }
 
@@ -792,39 +903,81 @@ class SystemControlsPricingService {
     return this.configuration;
   }
 
-  updateConfiguration(newConfig: Partial<SystemControlsPricingConfiguration>): void {
+  /**
+   * Update configuration (for admin dashboard)
+   * Saves to database and updates local cache
+   */
+  async updateConfiguration(
+    newConfig: Partial<SystemControlsPricingConfiguration>
+  ): Promise<boolean> {
     this.configuration = { ...this.configuration, ...newConfig };
+
+    // Save to database
+    try {
+      const { error } = await supabase.from("pricing_configurations").upsert(
+        {
+          config_key: "system_controls_pricing",
+          config_category: "system_controls",
+          config_data: this.configuration,
+          description: "System Controls Pricing Configuration (Controllers, SCADA, EMS)",
+          version: "1.0.0",
+          is_active: true,
+          data_source: "admin",
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "config_key",
+        }
+      );
+
+      if (error) {
+        console.error("Error saving system controls pricing to database:", error);
+        return false;
+      }
+
+      // Clear cache to force refresh
+      this.configCache = null;
+      this.cacheExpiry = 0;
+
+      if (import.meta.env.DEV) {
+        console.log("✅ System Controls pricing saved to database");
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating system controls pricing:", error);
+      return false;
+    }
   }
 
   getPricingSummary() {
     return {
-      controllers: this.configuration.controllers.map(controller => ({
+      controllers: this.configuration.controllers.map((controller) => ({
         id: controller.id,
         manufacturer: controller.manufacturer,
         model: controller.model,
         type: controller.type,
         application: controller.application,
         pricePerUnit: controller.pricePerUnit,
-        communicationProtocols: controller.communicationProtocols
+        communicationProtocols: controller.communicationProtocols,
       })),
-      scadaSystems: this.configuration.scadaSystems.map(scada => ({
+      scadaSystems: this.configuration.scadaSystems.map((scada) => ({
         id: scada.id,
         manufacturer: scada.manufacturer,
         model: scada.model,
         type: scada.type,
         pricePerUnit: scada.pricePerUnit,
         annualMaintenanceCost: scada.annualMaintenanceCost,
-        capacity: scada.capacity
+        capacity: scada.capacity,
       })),
-      energyManagementSystems: this.configuration.energyManagementSystems.map(ems => ({
+      energyManagementSystems: this.configuration.energyManagementSystems.map((ems) => ({
         id: ems.id,
         manufacturer: ems.manufacturer,
         model: ems.model,
         type: ems.type,
         setupFee: ems.pricing.setupFee,
         monthlyPerSite: ems.pricing.monthlyPerSite,
-        perMWCapacity: ems.pricing.perMWCapacity
-      }))
+        perMWCapacity: ems.pricing.perMWCapacity,
+      })),
     };
   }
 }

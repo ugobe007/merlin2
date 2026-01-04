@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, ExternalLink, ArrowRight, Sparkles, Zap, Shield, Gauge, BadgeCheck } from 'lucide-react';
+import { X, ExternalLink, ArrowRight, Sparkles, Shield, BadgeCheck } from 'lucide-react';
 
 // ============================================
 // TYPES

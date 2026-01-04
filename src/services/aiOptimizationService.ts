@@ -1,18 +1,18 @@
 /**
  * AI Optimization Service
- * 
+ *
  * Provides intelligent configuration suggestions using centralized calculations
  * and latest market data from the AI Data Collection Service.
- * 
+ *
  * This ensures AI recommendations are:
  * - CONSISTENT with wizard calculations
  * - Based on CURRENT pricing from database
  * - Informed by LATEST industry best practices
  * - Aware of CURRENT financing options
- * 
+ *
  * Key Principle: AI uses the SAME database-driven calculations as the wizard,
  * enhanced with real-time market intelligence.
- * 
+ *
  * Context-Aware Decision Making:
  * - Uses use case templates to inform renewable recommendations
  * - Considers location constraints (urban vs rural, roof space availability)
@@ -21,10 +21,8 @@
  * - Incorporates latest pricing trends and product availability
  */
 
-import { calculateFinancialMetrics } from './centralizedCalculations';
-import { calculateDatabaseBaseline } from './baselineService';
-import { getLatestAIData } from './aiDataCollectionService';
-
+import { calculateFinancialMetrics } from "./centralizedCalculations";
+import { calculateDatabaseBaseline } from "./baselineService";
 export interface AIOptimizationInput {
   storageSizeMW: number;
   durationHours: number;
@@ -35,32 +33,32 @@ export interface AIOptimizationInput {
   windMW?: number;
   generatorMW?: number;
   useCaseData?: Record<string, any>; // EV charger counts, hotel rooms, etc.
-  gridConnection?: 'grid-tied' | 'microgrid' | 'off-grid'; // Grid reliability context
+  gridConnection?: "grid-tied" | "microgrid" | "off-grid"; // Grid reliability context
   hasBackupRequirement?: boolean; // Critical infrastructure needing backup
   gridConnectivity?: number; // 0-1 grid reliability score
 }
 
 // Use case context for intelligent renewable recommendations
 interface UseCaseContext {
-  hasRoofSpace: boolean;          // Large warehouse, factory = true; Downtown EV charging = false
-  isUrbanDowntown: boolean;       // Dense urban = true; Suburban/rural = false
-  needsBackup: boolean;           // Hospital, data center = true
-  gridReliability: number;        // 0-1 from gridConnectivity
+  hasRoofSpace: boolean; // Large warehouse, factory = true; Downtown EV charging = false
+  isUrbanDowntown: boolean; // Dense urban = true; Suburban/rural = false
+  needsBackup: boolean; // Hospital, data center = true
+  gridReliability: number; // 0-1 from gridConnectivity
   criticalInfrastructure: boolean; // Can't afford outages
-  realEstateConstraint: 'none' | 'moderate' | 'severe';
-  useCaseCategory: 'industrial' | 'commercial' | 'critical' | 'remote' | 'urban';
+  realEstateConstraint: "none" | "moderate" | "severe";
+  useCaseCategory: "industrial" | "commercial" | "critical" | "remote" | "urban";
 }
 
 export interface AIOptimizationSuggestion {
   storageSizeMW: number;
   durationHours: number;
-  solarMW?: number;      // Recommended solar capacity
-  generatorMW?: number;   // Recommended generator capacity
-  windMW?: number;        // Recommended wind capacity
+  solarMW?: number; // Recommended solar capacity
+  generatorMW?: number; // Recommended generator capacity
+  windMW?: number; // Recommended wind capacity
   reasoning: string;
   costImpact: string; // e.g., "Saves $3.2M" or "Adds $1.5M"
   roiImpact: string; // e.g., "Improves payback by 0.8 years"
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   renewableJustification?: string; // Why solar/wind/gen is recommended or not
 }
 
@@ -85,43 +83,73 @@ export interface AIOptimizationResult {
  */
 function analyzeUseCaseContext(input: AIOptimizationInput): UseCaseContext {
   const useCase = input.useCase.toLowerCase();
-  const gridReliability = input.gridConnectivity ?? (input.gridConnection === 'grid-tied' ? 0.9 : input.gridConnection === 'microgrid' ? 0.5 : 0.1);
-  
+  const gridReliability =
+    input.gridConnectivity ??
+    (input.gridConnection === "grid-tied" ? 0.9 : input.gridConnection === "microgrid" ? 0.5 : 0.1);
+
   // Determine if use case has roof space for solar
-  const roofSpaceUseCases = ['warehouse', 'factory', 'manufacturing', 'logistics', 'distribution', 'retail', 'supermarket', 'hotel', 'hospital'];
-  const hasRoofSpace = roofSpaceUseCases.some(uc => useCase.includes(uc));
-  
+  const roofSpaceUseCases = [
+    "warehouse",
+    "factory",
+    "manufacturing",
+    "logistics",
+    "distribution",
+    "retail",
+    "supermarket",
+    "hotel",
+    "hospital",
+  ];
+  const hasRoofSpace = roofSpaceUseCases.some((uc) => useCase.includes(uc));
+
   // Determine if location is urban/downtown with real estate constraints
-  const urbanUseCases = ['ev-charging-downtown', 'parking-garage', 'high-rise', 'apartment', 'condo'];
-  const isUrbanDowntown = urbanUseCases.some(uc => useCase.includes(uc)) || (input.location?.toLowerCase().includes('downtown') ?? false);
-  
+  const urbanUseCases = [
+    "ev-charging-downtown",
+    "parking-garage",
+    "high-rise",
+    "apartment",
+    "condo",
+  ];
+  const isUrbanDowntown =
+    urbanUseCases.some((uc) => useCase.includes(uc)) ||
+    (input.location?.toLowerCase().includes("downtown") ?? false);
+
   // Determine if critical infrastructure needing backup
-  const criticalUseCases = ['hospital', 'datacenter', 'data-center', 'airport', 'emergency', 'police', 'fire'];
-  const criticalInfrastructure = criticalUseCases.some(uc => useCase.includes(uc)) || input.hasBackupRequirement === true;
-  
+  const criticalUseCases = [
+    "hospital",
+    "datacenter",
+    "data-center",
+    "airport",
+    "emergency",
+    "police",
+    "fire",
+  ];
+  const criticalInfrastructure =
+    criticalUseCases.some((uc) => useCase.includes(uc)) || input.hasBackupRequirement === true;
+
   // Determine if backup power is needed
-  const needsBackup = criticalInfrastructure || gridReliability < 0.5 || (input.generatorMW || 0) > 0;
-  
+  const needsBackup =
+    criticalInfrastructure || gridReliability < 0.5 || (input.generatorMW || 0) > 0;
+
   // Determine real estate constraint level
-  let realEstateConstraint: 'none' | 'moderate' | 'severe' = 'none';
+  let realEstateConstraint: "none" | "moderate" | "severe" = "none";
   if (isUrbanDowntown) {
-    realEstateConstraint = 'severe';
+    realEstateConstraint = "severe";
   } else if (!hasRoofSpace && !criticalInfrastructure) {
-    realEstateConstraint = 'moderate';
+    realEstateConstraint = "moderate";
   }
-  
+
   // Categorize use case
-  let useCaseCategory: 'industrial' | 'commercial' | 'critical' | 'remote' | 'urban' = 'commercial';
+  let useCaseCategory: "industrial" | "commercial" | "critical" | "remote" | "urban" = "commercial";
   if (criticalInfrastructure) {
-    useCaseCategory = 'critical';
-  } else if (gridReliability < 0.3 || input.gridConnection === 'off-grid') {
-    useCaseCategory = 'remote';
+    useCaseCategory = "critical";
+  } else if (gridReliability < 0.3 || input.gridConnection === "off-grid") {
+    useCaseCategory = "remote";
   } else if (isUrbanDowntown) {
-    useCaseCategory = 'urban';
-  } else if (roofSpaceUseCases.some(uc => useCase.includes(uc))) {
-    useCaseCategory = 'industrial';
+    useCaseCategory = "urban";
+  } else if (roofSpaceUseCases.some((uc) => useCase.includes(uc))) {
+    useCaseCategory = "industrial";
   }
-  
+
   return {
     hasRoofSpace,
     isUrbanDowntown,
@@ -129,7 +157,7 @@ function analyzeUseCaseContext(input: AIOptimizationInput): UseCaseContext {
     gridReliability,
     criticalInfrastructure,
     realEstateConstraint,
-    useCaseCategory
+    useCaseCategory,
   };
 }
 
@@ -143,8 +171,8 @@ function determineRenewableRecommendations(
   let solar = input.solarMW || 0;
   let generator = input.generatorMW || 0;
   let wind = input.windMW || 0;
-  let reasoning = '';
-  
+  let reasoning = "";
+
   // SOLAR LOGIC: Recommend based on roof space and location
   if (context.hasRoofSpace && !context.isUrbanDowntown && solar === 0) {
     // Recommend solar for facilities with roof space
@@ -157,7 +185,7 @@ function determineRenewableRecommendations(
     // Keep existing solar with justification
     reasoning += `Solar maintained: Provides energy cost savings and sustainability benefits. `;
   }
-  
+
   // GENERATOR LOGIC: Recommend for critical infrastructure or poor grid reliability
   if (context.needsBackup && generator === 0) {
     // Recommend generator for backup power needs
@@ -174,9 +202,13 @@ function determineRenewableRecommendations(
     // Keep existing generator with justification
     reasoning += `Generator maintained: Provides backup power and peak shaving capability. `;
   }
-  
+
   // WIND LOGIC: Only for remote/off-grid locations
-  if ((context.gridReliability < 0.3 || input.gridConnection === 'off-grid') && !context.isUrbanDowntown && wind === 0) {
+  if (
+    (context.gridReliability < 0.3 || input.gridConnection === "off-grid") &&
+    !context.isUrbanDowntown &&
+    wind === 0
+  ) {
     // Recommend wind for remote/off-grid applications
     wind = input.storageSizeMW * 0.8; // 80% of storage as typical wind sizing
     reasoning += `Wind recommended: Limited grid access and rural location suitable for wind turbines. `;
@@ -184,33 +216,43 @@ function determineRenewableRecommendations(
     // Keep existing wind with justification
     reasoning += `Wind maintained: Provides renewable energy diversification. `;
   }
-  
+
   // NO RENEWABLES CASE: Grid-tied urban without special requirements
-  if (solar === 0 && generator === 0 && wind === 0 && context.gridReliability > 0.7 && !context.needsBackup) {
+  if (
+    solar === 0 &&
+    generator === 0 &&
+    wind === 0 &&
+    context.gridReliability > 0.7 &&
+    !context.needsBackup
+  ) {
     reasoning = `Grid-tied configuration appropriate: Reliable grid connection (${(context.gridReliability * 100).toFixed(0)}%) and ${input.useCase} use case don't require renewable integration. System focused on demand charge reduction and energy arbitrage. `;
   }
-  
+
   return { solar, generator, wind, reasoning: reasoning.trim() };
 }
 
 /**
  * Analyze current configuration and provide AI optimization suggestions
- * 
+ *
  * Uses centralized calculations to ensure consistency with wizard
  */
-export async function getAIOptimization(
-  input: AIOptimizationInput
-): Promise<AIOptimizationResult> {
+export async function getAIOptimization(input: AIOptimizationInput): Promise<AIOptimizationResult> {
   try {
-    if (import.meta.env.DEV) { console.log('🤖 AI Optimization analyzing configuration...', input); }
+    if (import.meta.env.DEV) {
+      console.log("🤖 AI Optimization analyzing configuration...", input);
+    }
 
     // STEP 1: Analyze use case context for intelligent recommendations
     const useCaseContext = analyzeUseCaseContext(input);
-    if (import.meta.env.DEV) { console.log('📊 Use case context:', useCaseContext); }
+    if (import.meta.env.DEV) {
+      console.log("📊 Use case context:", useCaseContext);
+    }
 
     // STEP 2: Determine optimal renewable configuration based on context
     const renewableRecommendations = determineRenewableRecommendations(input, useCaseContext);
-    if (import.meta.env.DEV) { console.log('🌱 Renewable recommendations:', renewableRecommendations); }
+    if (import.meta.env.DEV) {
+      console.log("🌱 Renewable recommendations:", renewableRecommendations);
+    }
 
     // STEP 3: Calculate metrics for current configuration
     const currentMetrics = await calculateFinancialMetrics({
@@ -218,11 +260,13 @@ export async function getAIOptimization(
       durationHours: input.durationHours,
       solarMW: input.solarMW || 0,
       windMW: input.windMW || 0,
-      location: input.location || 'California',
-      electricityRate: input.electricityRate || 0.15
+      location: input.location || "California",
+      electricityRate: input.electricityRate || 0.15,
     });
 
-    if (import.meta.env.DEV) { console.log('💰 Current config metrics:', currentMetrics); }
+    if (import.meta.env.DEV) {
+      console.log("💰 Current config metrics:", currentMetrics);
+    }
 
     // STEP 4: Test alternative configurations for optimization opportunities
     // Always preserve/add renewables based on context recommendations
@@ -231,9 +275,9 @@ export async function getAIOptimization(
       storageSizeMW: input.storageSizeMW,
       durationHours: input.durationHours + 2,
       solarMW: renewableRecommendations.solar, // Use context-aware recommendation
-      windMW: renewableRecommendations.wind,   // Use context-aware recommendation
-      location: input.location || 'California',
-      electricityRate: input.electricityRate || 0.15
+      windMW: renewableRecommendations.wind, // Use context-aware recommendation
+      location: input.location || "California",
+      electricityRate: input.electricityRate || 0.15,
     });
 
     // 2. Try increasing power for better coverage
@@ -241,52 +285,63 @@ export async function getAIOptimization(
       storageSizeMW: input.storageSizeMW * 1.2,
       durationHours: input.durationHours,
       solarMW: renewableRecommendations.solar, // Use context-aware recommendation
-      windMW: renewableRecommendations.wind,   // Use context-aware recommendation
-      location: input.location || 'California',
-      electricityRate: input.electricityRate || 0.15
+      windMW: renewableRecommendations.wind, // Use context-aware recommendation
+      location: input.location || "California",
+      electricityRate: input.electricityRate || 0.15,
     });
 
     // 3. Test with recommended renewables if different from current
     let renewableImprovementMetrics = null;
-    const renewablesChanged = 
+    const renewablesChanged =
       renewableRecommendations.solar !== (input.solarMW || 0) ||
       renewableRecommendations.wind !== (input.windMW || 0) ||
       renewableRecommendations.generator !== (input.generatorMW || 0);
-    
+
     if (renewablesChanged) {
       renewableImprovementMetrics = await calculateFinancialMetrics({
         storageSizeMW: input.storageSizeMW,
         durationHours: input.durationHours,
         solarMW: renewableRecommendations.solar,
         windMW: renewableRecommendations.wind,
-        location: input.location || 'California',
-        electricityRate: input.electricityRate || 0.15
+        location: input.location || "California",
+        electricityRate: input.electricityRate || 0.15,
       });
-      if (import.meta.env.DEV) { console.log('🔄 Renewable improvement metrics:', renewableImprovementMetrics); }
+      if (import.meta.env.DEV) {
+        console.log("🔄 Renewable improvement metrics:", renewableImprovementMetrics);
+      }
     }
 
-    if (import.meta.env.DEV) { console.log('📈 Alternative config metrics:', { longerDurationMetrics, largerSizeMetrics, renewableImprovementMetrics }); }
+    if (import.meta.env.DEV) {
+      console.log("📈 Alternative config metrics:", {
+        longerDurationMetrics,
+        largerSizeMetrics,
+        renewableImprovementMetrics,
+      });
+    }
 
     // Find best alternative (shortest payback or highest ROI)
     let bestAlternative = currentMetrics;
-    let bestConfig = { 
-      storageSizeMW: input.storageSizeMW, 
+    let bestConfig = {
+      storageSizeMW: input.storageSizeMW,
       durationHours: input.durationHours,
       solarMW: input.solarMW || 0,
       windMW: input.windMW || 0,
-      generatorMW: input.generatorMW || 0
+      generatorMW: input.generatorMW || 0,
     };
-    let improvement = '';
+    let improvement = "";
 
     // Check if renewable changes improve ROI
-    if (renewableImprovementMetrics && renewableImprovementMetrics.paybackYears < currentMetrics.paybackYears - 0.2) {
+    if (
+      renewableImprovementMetrics &&
+      renewableImprovementMetrics.paybackYears < currentMetrics.paybackYears - 0.2
+    ) {
       bestAlternative = renewableImprovementMetrics;
       bestConfig = {
         storageSizeMW: input.storageSizeMW,
         durationHours: input.durationHours,
         solarMW: renewableRecommendations.solar,
         windMW: renewableRecommendations.wind,
-        generatorMW: renewableRecommendations.generator
+        generatorMW: renewableRecommendations.generator,
       };
       improvement = renewableRecommendations.reasoning;
     }
@@ -295,14 +350,14 @@ export async function getAIOptimization(
     if (longerDurationMetrics.paybackYears < currentMetrics.paybackYears - 0.3) {
       if (!improvement || longerDurationMetrics.paybackYears < bestAlternative.paybackYears) {
         bestAlternative = longerDurationMetrics;
-        bestConfig = { 
-          storageSizeMW: input.storageSizeMW, 
+        bestConfig = {
+          storageSizeMW: input.storageSizeMW,
           durationHours: input.durationHours + 2,
           solarMW: renewableRecommendations.solar,
           windMW: renewableRecommendations.wind,
-          generatorMW: renewableRecommendations.generator
+          generatorMW: renewableRecommendations.generator,
         };
-        improvement = 'longer duration (better arbitrage and resilience)';
+        improvement = "longer duration (better arbitrage and resilience)";
       }
     }
 
@@ -310,14 +365,14 @@ export async function getAIOptimization(
     if (largerSizeMetrics.roi10Year > currentMetrics.roi10Year * 1.15) {
       if (!improvement || largerSizeMetrics.paybackYears < bestAlternative.paybackYears) {
         bestAlternative = largerSizeMetrics;
-        bestConfig = { 
-          storageSizeMW: input.storageSizeMW * 1.2, 
+        bestConfig = {
+          storageSizeMW: input.storageSizeMW * 1.2,
           durationHours: input.durationHours,
           solarMW: renewableRecommendations.solar,
           windMW: renewableRecommendations.wind,
-          generatorMW: renewableRecommendations.generator
+          generatorMW: renewableRecommendations.generator,
         };
-        improvement = 'larger capacity (better demand charge reduction)';
+        improvement = "larger capacity (better demand charge reduction)";
       }
     }
 
@@ -325,44 +380,46 @@ export async function getAIOptimization(
     const isOptimal = !improvement;
 
     if (isOptimal) {
-      if (import.meta.env.DEV) { console.log('✅ Configuration is already optimal!'); }
-      
+      if (import.meta.env.DEV) {
+        console.log("✅ Configuration is already optimal!");
+      }
+
       // Build benchmark comparison message with renewable context
-      let benchmarkMessage = '';
+      let benchmarkMessage = "";
       const benchmark = calculateBenchmarkPercentile(currentMetrics, input.useCase);
-      
+
       if (benchmark) {
         benchmarkMessage = benchmark.comparison;
-        
+
         // Add renewable justification based on context
         if (renewableRecommendations.reasoning) {
           benchmarkMessage += `. ${renewableRecommendations.reasoning}`;
         }
       }
-      
+
       return {
         isOptimal: true,
         currentMetrics: {
           totalCost: currentMetrics.netCost,
           annualSavings: currentMetrics.annualSavings,
           paybackYears: currentMetrics.paybackYears,
-          roi10Year: currentMetrics.roi10Year
+          roi10Year: currentMetrics.roi10Year,
         },
         benchmarkComparison: {
           percentile: benchmark.percentile,
-          comparison: benchmarkMessage
+          comparison: benchmarkMessage,
         },
-        useCaseContext // Include for transparency
+        useCaseContext, // Include for transparency
       };
     }
 
     // Generate optimization suggestion based on best alternative found
     const roiDiff = currentMetrics.paybackYears - bestAlternative.paybackYears;
     const costDiff = bestAlternative.netCost - currentMetrics.netCost;
-    
+
     // Build comprehensive reasoning with improvement type and renewable context
-    let reasoning = `By ${improvement}, you could improve your payback period by ${Math.abs(roiDiff).toFixed(1)} years`;
-    
+    const reasoning = `By ${improvement}, you could improve your payback period by ${Math.abs(roiDiff).toFixed(1)} years`;
+
     const suggestion: AIOptimizationSuggestion = {
       storageSizeMW: bestConfig.storageSizeMW,
       durationHours: bestConfig.durationHours,
@@ -372,11 +429,13 @@ export async function getAIOptimization(
       reasoning,
       costImpact: formatCostImpact(costDiff),
       roiImpact: formatROIImpact(roiDiff),
-      confidence: 'high' as const,
-      renewableJustification: renewableRecommendations.reasoning
+      confidence: "high" as const,
+      renewableJustification: renewableRecommendations.reasoning,
     };
 
-    if (import.meta.env.DEV) { console.log('💡 AI Suggestion:', suggestion); }
+    if (import.meta.env.DEV) {
+      console.log("💡 AI Suggestion:", suggestion);
+    }
 
     return {
       isOptimal: false,
@@ -384,15 +443,14 @@ export async function getAIOptimization(
         totalCost: currentMetrics.netCost,
         annualSavings: currentMetrics.annualSavings,
         paybackYears: currentMetrics.paybackYears,
-        roi10Year: currentMetrics.roi10Year
+        roi10Year: currentMetrics.roi10Year,
       },
       suggestion,
       benchmarkComparison: calculateBenchmarkPercentile(currentMetrics, input.useCase),
-      useCaseContext // Include for transparency
+      useCaseContext, // Include for transparency
     };
-
   } catch (error) {
-    console.error('❌ AI Optimization error:', error);
+    console.error("❌ AI Optimization error:", error);
     // Return neutral result on error
     return {
       isOptimal: true, // Don't confuse user with suggestions if analysis fails
@@ -441,7 +499,7 @@ function formatCostImpact(costDiff: number): string {
   } else if (costDiff < 0) {
     return `Saves $${millions}M in project cost`;
   } else {
-    return 'Similar project cost';
+    return "Similar project cost";
   }
 }
 
@@ -456,20 +514,20 @@ function formatROIImpact(roiDiff: number): string {
   } else if (roiDiff < -0.3) {
     return `Extends payback by ${absDiff} years`;
   } else {
-    return 'Similar payback period';
+    return "Similar payback period";
   }
 }
 
 /**
  * Determine confidence level in suggestion
  */
-function determineConfidence(sizeDiffPercent: number, roiDiff: number): 'high' | 'medium' | 'low' {
+function determineConfidence(sizeDiffPercent: number, roiDiff: number): "high" | "medium" | "low" {
   if (sizeDiffPercent > 50 || Math.abs(roiDiff) > 2) {
-    return 'high'; // Large differences = high confidence suggestion is beneficial
+    return "high"; // Large differences = high confidence suggestion is beneficial
   } else if (sizeDiffPercent > 25 || Math.abs(roiDiff) > 1) {
-    return 'medium';
+    return "medium";
   } else {
-    return 'low';
+    return "low";
   }
 }
 
@@ -498,7 +556,7 @@ function calculateBenchmarkPercentile(
     percentile = 30;
   }
 
-  let comparison = '';
+  let comparison = "";
   if (percentile >= 80) {
     comparison = `Top ${100 - percentile}% for ${useCase} installations`;
   } else if (percentile >= 60) {
@@ -520,12 +578,13 @@ export async function validateConfiguration(
 ): Promise<{ isValid: boolean; warning?: string }> {
   try {
     const baseline = await calculateDatabaseBaseline(input.useCase, 1.0, input.useCaseData);
-    const sizeDiffPercent = Math.abs((input.storageSizeMW - baseline.powerMW) / baseline.powerMW) * 100;
+    const sizeDiffPercent =
+      Math.abs((input.storageSizeMW - baseline.powerMW) / baseline.powerMW) * 100;
 
     if (sizeDiffPercent > 100) {
       return {
         isValid: false,
-        warning: `⚠️ Configuration is ${sizeDiffPercent.toFixed(0)}% different from industry standard. Consider using the recommended ${baseline.powerMW}MW size.`
+        warning: `⚠️ Configuration is ${sizeDiffPercent.toFixed(0)}% different from industry standard. Consider using the recommended ${baseline.powerMW}MW size.`,
       };
     }
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, RotateCcw, Droplet } from 'lucide-react';
+import React, { useState } from "react";
+import { Save, RotateCcw, Droplet } from "lucide-react";
 
 export interface WatermarkSettings {
   enabled: boolean;
@@ -13,31 +13,31 @@ export interface WatermarkSettings {
 
 const DEFAULT_SETTINGS: WatermarkSettings = {
   enabled: true,
-  text: 'merlin certified',
+  text: "merlin certified",
   useCustomText: false,
   opacity: 10,
-  color: '#0b74de',
+  color: "#0b74de",
   fontSize: 48,
-  rotation: -30
+  rotation: -30,
 };
 
 export const loadWatermarkSettings = (): WatermarkSettings => {
   try {
-    const stored = localStorage.getItem('merlin_watermark_settings');
+    const stored = localStorage.getItem("merlin_watermark_settings");
     if (stored) {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
     }
   } catch (error) {
-    console.error('Failed to load watermark settings:', error);
+    console.error("Failed to load watermark settings:", error);
   }
   return DEFAULT_SETTINGS;
 };
 
 export const saveWatermarkSettings = (settings: WatermarkSettings): void => {
   try {
-    localStorage.setItem('merlin_watermark_settings', JSON.stringify(settings));
+    localStorage.setItem("merlin_watermark_settings", JSON.stringify(settings));
   } catch (error) {
-    console.error('Failed to save watermark settings:', error);
+    console.error("Failed to save watermark settings:", error);
   }
 };
 
@@ -48,30 +48,30 @@ interface AdminWatermarkSettingsProps {
 const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose }) => {
   const [settings, setSettings] = useState<WatermarkSettings>(loadWatermarkSettings());
   const [showPreview, setShowPreview] = useState(true);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [saveMessage, setSaveMessage] = useState("");
 
   const handleSave = () => {
     saveWatermarkSettings(settings);
-    setSaveMessage('✅ Settings saved successfully!');
-    setTimeout(() => setSaveMessage(''), 3000);
+    setSaveMessage("✅ Settings saved successfully!");
+    setTimeout(() => setSaveMessage(""), 3000);
   };
 
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
-    setSaveMessage('🔄 Reset to defaults');
-    setTimeout(() => setSaveMessage(''), 3000);
+    setSaveMessage("🔄 Reset to defaults");
+    setTimeout(() => setSaveMessage(""), 3000);
   };
 
   const updateSetting = <K extends keyof WatermarkSettings>(
     key: K,
     value: WatermarkSettings[K]
   ) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const getWatermarkText = () => {
-    if (!settings.enabled) return '';
-    const baseText = settings.useCustomText && settings.text ? settings.text : 'merlin certified';
+    if (!settings.enabled) return "";
+    const baseText = settings.useCustomText && settings.text ? settings.text : "merlin certified";
     return `${baseText} -- ${new Date().toLocaleDateString()}`;
   };
 
@@ -108,7 +108,7 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 <input
                   type="checkbox"
                   checked={settings.enabled}
-                  onChange={(e) => updateSetting('enabled', e.target.checked)}
+                  onChange={(e) => updateSetting("enabled", e.target.checked)}
                   className="w-5 h-5 text-blue-600 rounded"
                 />
                 <div>
@@ -124,17 +124,17 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 <input
                   type="checkbox"
                   checked={settings.useCustomText}
-                  onChange={(e) => updateSetting('useCustomText', e.target.checked)}
+                  onChange={(e) => updateSetting("useCustomText", e.target.checked)}
                   disabled={!settings.enabled}
                   className="w-5 h-5 text-blue-600 rounded disabled:opacity-50"
                 />
                 <span className="font-semibold text-gray-900">Use Custom Text</span>
               </label>
-              
+
               <input
                 type="text"
                 value={settings.text}
-                onChange={(e) => updateSetting('text', e.target.value)}
+                onChange={(e) => updateSetting("text", e.target.value)}
                 disabled={!settings.enabled || !settings.useCustomText}
                 placeholder="merlin certified"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:opacity-50"
@@ -153,7 +153,7 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 min="5"
                 max="50"
                 value={settings.opacity}
-                onChange={(e) => updateSetting('opacity', Number(e.target.value))}
+                onChange={(e) => updateSetting("opacity", Number(e.target.value))}
                 disabled={!settings.enabled}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
               />
@@ -167,14 +167,14 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 <input
                   type="color"
                   value={settings.color}
-                  onChange={(e) => updateSetting('color', e.target.value)}
+                  onChange={(e) => updateSetting("color", e.target.value)}
                   disabled={!settings.enabled}
                   className="w-20 h-10 rounded cursor-pointer disabled:opacity-50"
                 />
                 <input
                   type="text"
                   value={settings.color}
-                  onChange={(e) => updateSetting('color', e.target.value)}
+                  onChange={(e) => updateSetting("color", e.target.value)}
                   disabled={!settings.enabled}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:opacity-50"
                 />
@@ -192,7 +192,7 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 min="24"
                 max="96"
                 value={settings.fontSize}
-                onChange={(e) => updateSetting('fontSize', Number(e.target.value))}
+                onChange={(e) => updateSetting("fontSize", Number(e.target.value))}
                 disabled={!settings.enabled}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
               />
@@ -209,7 +209,7 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 min="-90"
                 max="90"
                 value={settings.rotation}
-                onChange={(e) => updateSetting('rotation', Number(e.target.value))}
+                onChange={(e) => updateSetting("rotation", Number(e.target.value))}
                 disabled={!settings.enabled}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
               />
@@ -260,18 +260,18 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                 {/* Mock Quote Document */}
                 <div className="p-8 text-gray-700">
                   <h2 className="text-2xl font-bold text-blue-900 mb-4">BESS QUOTE</h2>
-                  
+
                   <div className="space-y-4 text-sm">
                     <div>
                       <p className="font-semibold">Project Name:</p>
                       <p>Sample Energy Storage Project</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold">Location:</p>
                       <p>California, USA</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="font-semibold">System Size:</p>
@@ -304,8 +304,8 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
                       transform: `rotate(${settings.rotation}deg)`,
                       fontSize: `${settings.fontSize}px`,
                       color: settings.color,
-                      fontWeight: 'bold',
-                      whiteSpace: 'nowrap'
+                      fontWeight: "bold",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {getWatermarkText()}
@@ -316,8 +316,8 @@ const AdminWatermarkSettings: React.FC<AdminWatermarkSettingsProps> = ({ onClose
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-900">
-                <strong>💡 Tip:</strong> Watermark changes apply to all new quote previews and exports. 
-                Lower opacity (10-20%) works best for professional documents.
+                <strong>💡 Tip:</strong> Watermark changes apply to all new quote previews and
+                exports. Lower opacity (10-20%) works best for professional documents.
               </p>
             </div>
           </div>

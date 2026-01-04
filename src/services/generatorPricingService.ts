@@ -7,7 +7,7 @@ export interface GeneratorSpecification {
   id: string;
   model: string;
   manufacturer: string;
-  fuelType: 'natural_gas' | 'diesel' | 'propane' | 'dual_fuel';
+  fuelType: "natural_gas" | "diesel" | "propane" | "dual_fuel";
   ratedPowerKW: number;
   standbyPowerKW: number;
   engine: {
@@ -28,7 +28,7 @@ export interface GeneratorSpecification {
     type: string;
     features: string[];
   };
-  enclosure: 'open' | 'silent' | 'weather_proof' | 'container';
+  enclosure: "open" | "silent" | "weather_proof" | "container";
   basePrice: number;
   pricePerKW: number;
   vendor: {
@@ -70,163 +70,163 @@ class GeneratorPricingService {
     return {
       generators: [
         {
-          id: 'cummins-6ltaa95-g260-200kw',
-          model: 'Cummins 6LTAA9.5-G260',
-          manufacturer: 'Cummins',
-          fuelType: 'natural_gas',
+          id: "cummins-6ltaa95-g260-200kw",
+          model: "Cummins 6LTAA9.5-G260",
+          manufacturer: "Cummins",
+          fuelType: "natural_gas",
           ratedPowerKW: 200,
           standbyPowerKW: 220,
           engine: {
-            model: '6LTAA9.5-G260',
+            model: "6LTAA9.5-G260",
             displacement: 9.5,
             cylinders: 6,
             ratedSpeedRPM: 1500,
-            fuelConsumption: 0.3 // m³/kW·h
+            fuelConsumption: 0.3, // m³/kW·h
           },
           alternator: {
-            model: 'Stamford HCI444C1',
+            model: "Stamford HCI444C1",
             powerFactor: 0.8,
-            excitationType: 'Brushless',
-            insulationClass: 'H'
+            excitationType: "Brushless",
+            insulationClass: "H",
           },
           controller: {
-            model: 'Deepsea DSE8610',
-            type: 'Digital',
+            model: "Deepsea DSE8610",
+            type: "Digital",
             features: [
-              'Auto start/stop',
-              'Load management',
-              'Parallel operation',
-              'Remote monitoring',
-              'Engine protection'
-            ]
+              "Auto start/stop",
+              "Load management",
+              "Parallel operation",
+              "Remote monitoring",
+              "Engine protection",
+            ],
           },
-          enclosure: 'silent',
+          enclosure: "silent",
           basePrice: 64200, // From Eaton quote
           pricePerKW: 321, // $64,200 / 200kW
           vendor: {
-            company: 'Eaton Power & Equipments',
-            contact: 'eaton@eatonpowerequipments.com',
-            location: '645 NW Enterprise Dr Ste. 103, Port Saint Lucie, FL 34986'
-          }
+            company: "Eaton Power & Equipments",
+            contact: "eaton@eatonpowerequipments.com",
+            location: "645 NW Enterprise Dr Ste. 103, Port Saint Lucie, FL 34986",
+          },
         },
         // Additional generator models with estimated pricing
         {
-          id: 'cummins-diesel-250kw',
-          model: 'Cummins QSL9-G7',
-          manufacturer: 'Cummins',
-          fuelType: 'diesel',
+          id: "cummins-diesel-250kw",
+          model: "Cummins QSL9-G7",
+          manufacturer: "Cummins",
+          fuelType: "diesel",
           ratedPowerKW: 250,
           standbyPowerKW: 275,
           engine: {
-            model: 'QSL9-G7',
+            model: "QSL9-G7",
             displacement: 8.9,
             cylinders: 6,
             ratedSpeedRPM: 1800,
-            fuelConsumption: 18.5 // L/h
+            fuelConsumption: 18.5, // L/h
           },
           alternator: {
-            model: 'Stamford HCI544C',
+            model: "Stamford HCI544C",
             powerFactor: 0.8,
-            excitationType: 'Brushless',
-            insulationClass: 'H'
+            excitationType: "Brushless",
+            insulationClass: "H",
           },
           controller: {
-            model: 'PowerCommand 3.3',
-            type: 'Digital',
+            model: "PowerCommand 3.3",
+            type: "Digital",
             features: [
-              'Auto start/stop',
-              'Load management',
-              'Parallel operation',
-              'Remote monitoring'
-            ]
+              "Auto start/stop",
+              "Load management",
+              "Parallel operation",
+              "Remote monitoring",
+            ],
           },
-          enclosure: 'silent',
+          enclosure: "silent",
           basePrice: 85000,
           pricePerKW: 340,
           vendor: {
-            company: 'Eaton Power & Equipments',
-            contact: 'eaton@eatonpowerequipments.com',
-            location: '645 NW Enterprise Dr Ste. 103, Port Saint Lucie, FL 34986'
-          }
+            company: "Eaton Power & Equipments",
+            contact: "eaton@eatonpowerequipments.com",
+            location: "645 NW Enterprise Dr Ste. 103, Port Saint Lucie, FL 34986",
+          },
         },
         {
-          id: 'caterpillar-gas-500kw',
-          model: 'Caterpillar CG132B-12',
-          manufacturer: 'Caterpillar',
-          fuelType: 'natural_gas',
+          id: "caterpillar-gas-500kw",
+          model: "Caterpillar CG132B-12",
+          manufacturer: "Caterpillar",
+          fuelType: "natural_gas",
           ratedPowerKW: 500,
           standbyPowerKW: 550,
           engine: {
-            model: 'CG132B',
+            model: "CG132B",
             displacement: 12.5,
             cylinders: 12,
             ratedSpeedRPM: 1800,
-            fuelConsumption: 0.35
+            fuelConsumption: 0.35,
           },
           alternator: {
-            model: 'SR4B',
+            model: "SR4B",
             powerFactor: 0.8,
-            excitationType: 'Brushless',
-            insulationClass: 'H'
+            excitationType: "Brushless",
+            insulationClass: "H",
           },
           controller: {
-            model: 'EMCP 4.4',
-            type: 'Digital',
+            model: "EMCP 4.4",
+            type: "Digital",
             features: [
-              'Advanced engine protection',
-              'Load management',
-              'Parallel operation',
-              'Remote monitoring',
-              'Data logging'
-            ]
+              "Advanced engine protection",
+              "Load management",
+              "Parallel operation",
+              "Remote monitoring",
+              "Data logging",
+            ],
           },
-          enclosure: 'weather_proof',
+          enclosure: "weather_proof",
           basePrice: 180000,
           pricePerKW: 360,
           vendor: {
-            company: 'Caterpillar Power Generation',
-            contact: 'power.generation@cat.com',
-            location: 'Multiple Locations'
-          }
-        }
+            company: "Caterpillar Power Generation",
+            contact: "power.generation@cat.com",
+            location: "Multiple Locations",
+          },
+        },
       ],
       installationCosts: {
         baseInstallation: 15000, // Base installation cost
         perKWInstallation: 150, // Additional cost per kW
         sitePreperation: 25000, // Site preparation and foundation
         electricalConnection: 20000, // Electrical connections and switchgear
-        commissioning: 8000 // Testing and commissioning
+        commissioning: 8000, // Testing and commissioning
       },
       maintenanceCosts: {
         annualPerKW: 45, // Annual maintenance cost per kW
         majorOverhaulHours: 12000, // Hours between major overhauls
-        majorOverhaulCostPerKW: 250 // Cost per kW for major overhaul
+        majorOverhaulCostPerKW: 250, // Cost per kW for major overhaul
       },
       parallelConfiguration: {
         baseControlSystemCost: 35000, // Base parallel control system
         perGeneratorSynchronization: 8000, // Cost per additional generator
-        loadSharingCost: 12000 // Load sharing equipment
-      }
+        loadSharingCost: 12000, // Load sharing equipment
+      },
     };
   }
 
   getGeneratorById(id: string): GeneratorSpecification | undefined {
-    return this.configuration.generators.find(gen => gen.id === id);
+    return this.configuration.generators.find((gen) => gen.id === id);
   }
 
   getGeneratorsByPowerRange(minKW: number, maxKW: number): GeneratorSpecification[] {
     return this.configuration.generators.filter(
-      gen => gen.ratedPowerKW >= minKW && gen.ratedPowerKW <= maxKW
+      (gen) => gen.ratedPowerKW >= minKW && gen.ratedPowerKW <= maxKW
     );
   }
 
   getGeneratorsByFuelType(fuelType: string): GeneratorSpecification[] {
-    return this.configuration.generators.filter(gen => gen.fuelType === fuelType);
+    return this.configuration.generators.filter((gen) => gen.fuelType === fuelType);
   }
 
   calculateGeneratorCost(
-    generatorId: string, 
-    quantity: number = 1, 
+    generatorId: string,
+    quantity: number = 1,
     includeInstallation: boolean = true,
     includeParallelOperation: boolean = false
   ): {
@@ -238,7 +238,7 @@ class GeneratorPricingService {
     breakdown: any;
   } {
     const generator = this.getGeneratorById(generatorId);
-    
+
     if (!generator) {
       return {
         generator: null,
@@ -246,15 +246,15 @@ class GeneratorPricingService {
         installationCost: 0,
         parallelCost: 0,
         totalCost: 0,
-        breakdown: {}
+        breakdown: {},
       };
     }
 
     const equipmentCost = generator.basePrice * quantity;
-    
+
     let installationCost = 0;
     if (includeInstallation) {
-      installationCost = 
+      installationCost =
         this.configuration.installationCosts.baseInstallation * quantity +
         this.configuration.installationCosts.perKWInstallation * generator.ratedPowerKW * quantity +
         this.configuration.installationCosts.sitePreperation +
@@ -264,7 +264,7 @@ class GeneratorPricingService {
 
     let parallelCost = 0;
     if (includeParallelOperation && quantity > 1) {
-      parallelCost = 
+      parallelCost =
         this.configuration.parallelConfiguration.baseControlSystemCost +
         this.configuration.parallelConfiguration.perGeneratorSynchronization * (quantity - 1) +
         this.configuration.parallelConfiguration.loadSharingCost;
@@ -282,21 +282,31 @@ class GeneratorPricingService {
         unitPrice: generator.basePrice,
         quantity,
         equipmentSubtotal: equipmentCost,
-        installation: includeInstallation ? {
-          base: this.configuration.installationCosts.baseInstallation * quantity,
-          perKW: this.configuration.installationCosts.perKWInstallation * generator.ratedPowerKW * quantity,
-          sitePrep: this.configuration.installationCosts.sitePreperation,
-          electrical: this.configuration.installationCosts.electricalConnection * quantity,
-          commissioning: this.configuration.installationCosts.commissioning * quantity,
-          subtotal: installationCost
-        } : null,
-        parallel: includeParallelOperation && quantity > 1 ? {
-          controlSystem: this.configuration.parallelConfiguration.baseControlSystemCost,
-          synchronization: this.configuration.parallelConfiguration.perGeneratorSynchronization * (quantity - 1),
-          loadSharing: this.configuration.parallelConfiguration.loadSharingCost,
-          subtotal: parallelCost
-        } : null
-      }
+        installation: includeInstallation
+          ? {
+              base: this.configuration.installationCosts.baseInstallation * quantity,
+              perKW:
+                this.configuration.installationCosts.perKWInstallation *
+                generator.ratedPowerKW *
+                quantity,
+              sitePrep: this.configuration.installationCosts.sitePreperation,
+              electrical: this.configuration.installationCosts.electricalConnection * quantity,
+              commissioning: this.configuration.installationCosts.commissioning * quantity,
+              subtotal: installationCost,
+            }
+          : null,
+        parallel:
+          includeParallelOperation && quantity > 1
+            ? {
+                controlSystem: this.configuration.parallelConfiguration.baseControlSystemCost,
+                synchronization:
+                  this.configuration.parallelConfiguration.perGeneratorSynchronization *
+                  (quantity - 1),
+                loadSharing: this.configuration.parallelConfiguration.loadSharingCost,
+                subtotal: parallelCost,
+              }
+            : null,
+      },
     };
   }
 
@@ -311,7 +321,7 @@ class GeneratorPricingService {
     totalAnnualCost: number;
   } {
     const generator = this.getGeneratorById(generatorId);
-    
+
     if (!generator) {
       return { fuelCost: 0, maintenanceCost: 0, totalAnnualCost: 0 };
     }
@@ -326,7 +336,7 @@ class GeneratorPricingService {
     return {
       fuelCost,
       maintenanceCost,
-      totalAnnualCost: fuelCost + maintenanceCost
+      totalAnnualCost: fuelCost + maintenanceCost,
     };
   }
 
@@ -345,7 +355,7 @@ class GeneratorPricingService {
 
   // Get pricing summary for quick reference
   getPricingSummary() {
-    return this.configuration.generators.map(gen => ({
+    return this.configuration.generators.map((gen) => ({
       id: gen.id,
       model: gen.model,
       manufacturer: gen.manufacturer,
@@ -353,7 +363,7 @@ class GeneratorPricingService {
       fuelType: gen.fuelType,
       pricePerKW: gen.pricePerKW,
       basePrice: gen.basePrice,
-      vendor: gen.vendor.company
+      vendor: gen.vendor.company,
     }));
   }
 }

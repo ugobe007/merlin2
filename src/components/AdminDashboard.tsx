@@ -1,23 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Users, Settings, TrendingUp, Database, Zap, Shield, BarChart3, Server, Cpu, Activity, CheckCircle, AlertTriangle, Clock, DollarSign, FileText, Sparkles, RefreshCw, Star, Crown, Play, Pause, Eye, Brain, BarChart, Gauge, Wrench, Layers } from 'lucide-react';
-import { PricingAdminDashboard } from './PricingAdminDashboard';
-import CalculationsAdmin from './admin/CalculationsAdmin';
-import UseCaseConfigManager from './admin/UseCaseConfigManager';
-import CacheStatistics from './admin/CacheStatistics';
-import AIDataCollectionAdmin from './admin/AIDataCollectionAdmin';
-import PricingSystemHealthDashboard from './admin/PricingSystemHealthDashboard';
-import SystemHealthDashboard from './admin/SystemHealthDashboard';
-import MarketIntelligenceDashboard from './admin/MarketIntelligenceDashboard';
-import { getUseCaseProfiles, getEquipmentCatalog, calculatePremiumComparison, type EquipmentTier } from '../services/premiumConfigurationService';
-import merlinImage from '@/assets/images/new_profile_merlin.png';
+import React, { useState, useEffect } from "react";
+import {
+  Home,
+  Users,
+  Settings,
+  TrendingUp,
+  Database,
+  Zap,
+  Shield,
+  BarChart3,
+  Server,
+  Cpu,
+  Activity,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  FileText,
+  Sparkles,
+  RefreshCw,
+  Star,
+  Crown,
+  Play,
+  Pause,
+  // Eye, // Unused
+  Brain,
+  // BarChart, // Unused
+  Gauge,
+  // Wrench, // Unused
+  Layers,
+} from "lucide-react";
+import { PricingAdminDashboard } from "./PricingAdminDashboard";
+import CalculationsAdmin from "./admin/CalculationsAdmin";
+import UseCaseConfigManager from "./admin/UseCaseConfigManager";
+import CacheStatistics from "./admin/CacheStatistics";
+import AIDataCollectionAdmin from "./admin/AIDataCollectionAdmin";
+import PricingSystemHealthDashboard from "./admin/PricingSystemHealthDashboard";
+import SystemHealthDashboard from "./admin/SystemHealthDashboard";
+import MarketIntelligenceDashboard from "./admin/MarketIntelligenceDashboard";
+import {
+  getUseCaseProfiles,
+  // getEquipmentCatalog, // Unused
+  calculatePremiumComparison,
+  type EquipmentTier,
+} from "../services/premiumConfigurationService";
+import merlinImage from "@/assets/images/new_profile_merlin.png";
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 
 /**
  * System Administrator Dashboard
- * 
+ *
  * Access: Currently accessible to anyone (will be protected by Supabase Auth later)
  * Features: User management, use case manager, system settings, analytics
- * 
+ *
  * DESIGN: Matches Merlin Wizard aesthetic - light purple theme, rounded cards
  */
 
@@ -29,7 +63,7 @@ interface AdminStats {
   quotesGeneratedToday: number;
   activeSessions: number;
   monthlyRevenue: number;
-  systemHealth: 'operational' | 'degraded' | 'down';
+  systemHealth: "operational" | "degraded" | "down";
   uptime: number;
   apiResponseTime: number;
   errorRate: number;
@@ -39,10 +73,30 @@ interface AdminStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'marketIntelligence' | 'systemHealth' | 'godSettings' | 'matching' | 'premium' | 'realtime' | 'workflows' | 'health' | 'users' | 'analytics' | 'settings' | 'useCases' | 'pricing' | 'pricingHealth' | 'calculations' | 'cache' | 'migration' | 'aiData'>('dashboard');
-  const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+  const [activeTab, setActiveTab] = useState<
+    | "dashboard"
+    | "marketIntelligence"
+    | "systemHealth"
+    | "godSettings"
+    | "matching"
+    | "premium"
+    | "realtime"
+    | "workflows"
+    | "health"
+    | "users"
+    | "analytics"
+    | "settings"
+    | "useCases"
+    | "pricing"
+    | "pricingHealth"
+    | "calculations"
+    | "cache"
+    | "migration"
+    | "aiData"
+  >("dashboard");
+  // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
-  
+
   // Enhanced mock data (will be replaced with Supabase queries and real-time APIs)
   const stats: AdminStats = {
     totalUsers: 1247,
@@ -52,91 +106,188 @@ const AdminDashboard: React.FC = () => {
     quotesGeneratedToday: 145,
     activeSessions: 23,
     monthlyRevenue: 3613,
-    systemHealth: 'operational',
+    systemHealth: "operational",
     uptime: 99.97,
     apiResponseTime: 142,
     errorRate: 0.08,
     activeWorkflows: 8,
     completedWorkflows: 1247,
-    failedWorkflows: 3
+    failedWorkflows: 3,
   };
 
   // Navigation panels - organized by category
   const navigationPanels = [
     {
-      title: 'Overview & Analytics',
+      title: "Overview & Analytics",
       icon: BarChart3,
       items: [
-        { key: 'dashboard', label: 'System Dashboard', icon: BarChart3, description: 'System overview and statistics' },
-        { key: 'marketIntelligence', label: 'Market Intelligence', icon: Brain, description: 'AI-powered market analysis and trends', highlight: true },
-        { key: 'analytics', label: 'Analytics', icon: TrendingUp, description: 'Business analytics and reports' },
-      ]
+        {
+          key: "dashboard",
+          label: "System Dashboard",
+          icon: BarChart3,
+          description: "System overview and statistics",
+        },
+        {
+          key: "marketIntelligence",
+          label: "Market Intelligence",
+          icon: Brain,
+          description: "AI-powered market analysis and trends",
+          highlight: true,
+        },
+        {
+          key: "analytics",
+          label: "Analytics",
+          icon: TrendingUp,
+          description: "Business analytics and reports",
+        },
+      ],
     },
     {
-      title: 'System Health & Monitoring',
+      title: "System Health & Monitoring",
       icon: Activity,
       items: [
-        { key: 'systemHealth', label: 'System Health', icon: Activity, description: 'Comprehensive system health checks' },
-        { key: 'pricingHealth', label: 'Pricing Health', icon: Gauge, description: 'Pricing system status and validation' },
-      ]
+        {
+          key: "systemHealth",
+          label: "System Health",
+          icon: Activity,
+          description: "Comprehensive system health checks",
+        },
+        {
+          key: "pricingHealth",
+          label: "Pricing Health",
+          icon: Gauge,
+          description: "Pricing system status and validation",
+        },
+      ],
     },
     {
-      title: 'Configuration & Management',
+      title: "Configuration & Management",
       icon: Settings,
       items: [
-        { key: 'pricing', label: 'Pricing Admin', icon: DollarSign, description: 'Manage pricing configurations' },
-        { key: 'calculations', label: 'Calculations', icon: Cpu, description: 'Calculation engine management' },
-        { key: 'useCases', label: 'Use Cases', icon: Layers, description: 'Use case configuration' },
-        { key: 'aiData', label: 'AI Data Collection', icon: Database, description: 'AI training data management' },
-        { key: 'cache', label: 'Cache Statistics', icon: Database, description: 'Cache performance metrics' },
-      ]
+        {
+          key: "pricing",
+          label: "Pricing Admin",
+          icon: DollarSign,
+          description: "Manage pricing configurations",
+        },
+        {
+          key: "calculations",
+          label: "Calculations",
+          icon: Cpu,
+          description: "Calculation engine management",
+        },
+        {
+          key: "useCases",
+          label: "Use Cases",
+          icon: Layers,
+          description: "Use case configuration",
+        },
+        {
+          key: "aiData",
+          label: "AI Data Collection",
+          icon: Database,
+          description: "AI training data management",
+        },
+        {
+          key: "cache",
+          label: "Cache Statistics",
+          icon: Database,
+          description: "Cache performance metrics",
+        },
+      ],
     },
     {
-      title: 'Advanced Features',
+      title: "Advanced Features",
       icon: Sparkles,
       items: [
-        { key: 'matching', label: 'Matching Engine', icon: Sparkles, description: 'Live matching engine' },
-        { key: 'premium', label: 'MERLIN Premium', icon: Crown, description: 'Premium configuration management' },
-        { key: 'realtime', label: 'Real-Time Monitor', icon: Activity, description: 'Real-time system monitoring' },
-        { key: 'workflows', label: 'Workflows', icon: Zap, description: 'Workflow management' },
-      ]
+        {
+          key: "matching",
+          label: "Matching Engine",
+          icon: Sparkles,
+          description: "Live matching engine",
+        },
+        {
+          key: "premium",
+          label: "MERLIN Premium",
+          icon: Crown,
+          description: "Premium configuration management",
+        },
+        {
+          key: "realtime",
+          label: "Real-Time Monitor",
+          icon: Activity,
+          description: "Real-time system monitoring",
+        },
+        { key: "workflows", label: "Workflows", icon: Zap, description: "Workflow management" },
+      ],
     },
     {
-      title: 'Administration',
+      title: "Administration",
       icon: Shield,
       items: [
-        { key: 'godSettings', label: 'GOD Settings', icon: Shield, description: 'System-level settings' },
-        { key: 'settings', label: 'Settings', icon: Settings, description: 'General settings' },
-      ]
+        {
+          key: "godSettings",
+          label: "GOD Settings",
+          icon: Shield,
+          description: "System-level settings",
+        },
+        { key: "settings", label: "Settings", icon: Settings, description: "General settings" },
+      ],
     },
   ];
-  
+
   // Live Matching Engine State
   const [matchingLive, setMatchingLive] = useState(true);
-  const [liveMatches, setLiveMatches] = useState<Array<{
-    id: string;
-    time: string;
-    quoteId: string;
-    useCase: string;
-    vendor: string;
-    score: number;
-    equipment: string;
-    powerMW: number;
-    tier: EquipmentTier;
-  }>>([]);
-  
+  const [liveMatches, setLiveMatches] = useState<
+    Array<{
+      id: string;
+      time: string;
+      quoteId: string;
+      useCase: string;
+      vendor: string;
+      score: number;
+      equipment: string;
+      powerMW: number;
+      tier: EquipmentTier;
+    }>
+  >([]);
+
   // Premium Configuration State
-  const [selectedPremiumUseCase, setSelectedPremiumUseCase] = useState<string>('hotel');
+  const [selectedPremiumUseCase, setSelectedPremiumUseCase] = useState<string>("hotel");
   const [premiumComparison, setPremiumComparison] = useState<any>(null);
-  
+
   // Simulated live matching feed
   useEffect(() => {
     if (!matchingLive) return;
-    
-    const vendors = ['Tesla', 'BYD', 'CATL', 'Fluence', 'SMA Solar', 'Dynapower', 'Eaton', 'Schneider'];
-    const useCases = ['hotel', 'car-wash', 'ev-charging', 'hospital', 'data-center', 'manufacturing', 'office'];
-    const equipmentTypes = ['BESS Module', 'PCS Inverter', 'Transformer', 'Switchgear', 'Solar Array', 'Microgrid Controller'];
-    
+
+    const vendors = [
+      "Tesla",
+      "BYD",
+      "CATL",
+      "Fluence",
+      "SMA Solar",
+      "Dynapower",
+      "Eaton",
+      "Schneider",
+    ];
+    const useCases = [
+      "hotel",
+      "car-wash",
+      "ev-charging",
+      "hospital",
+      "data-center",
+      "manufacturing",
+      "office",
+    ];
+    const equipmentTypes = [
+      "BESS Module",
+      "PCS Inverter",
+      "Transformer",
+      "Switchgear",
+      "Solar Array",
+      "Microgrid Controller",
+    ];
+
     const interval = setInterval(() => {
       const newMatch = {
         id: `match-${Date.now()}`,
@@ -147,15 +298,15 @@ const AdminDashboard: React.FC = () => {
         score: Math.floor(75 + Math.random() * 25),
         equipment: equipmentTypes[Math.floor(Math.random() * equipmentTypes.length)],
         powerMW: Math.round((0.1 + Math.random() * 4.9) * 10) / 10,
-        tier: ['standard', 'premium', 'enterprise'][Math.floor(Math.random() * 3)] as EquipmentTier
+        tier: ["standard", "premium", "enterprise"][Math.floor(Math.random() * 3)] as EquipmentTier,
       };
-      
-      setLiveMatches(prev => [newMatch, ...prev].slice(0, 20));
+
+      setLiveMatches((prev) => [newMatch, ...prev].slice(0, 20));
     }, 3000);
-    
+
     return () => clearInterval(interval);
   }, [matchingLive]);
-  
+
   // Load premium comparison when use case changes
   useEffect(() => {
     const comparison = calculatePremiumComparison(selectedPremiumUseCase, 1, 4, 0.5);
@@ -167,9 +318,18 @@ const AdminDashboard: React.FC = () => {
       {/* Animated Background with deeper purple, light blue, and slate blue */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-slate-300/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-10 right-10 w-64 h-64 bg-blue-400/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div
+          className="absolute top-40 right-20 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/3 w-80 h-80 bg-slate-300/15 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute -bottom-10 right-10 w-64 h-64 bg-blue-400/15 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "0.5s" }}
+        ></div>
       </div>
 
       {/* Header - Wizard-like styling */}
@@ -178,9 +338,9 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <img 
-                  src={merlinImage} 
-                  alt="Merlin" 
+                <img
+                  src={merlinImage}
+                  alt="Merlin"
                   className="w-14 h-14 object-contain drop-shadow-lg"
                 />
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-700 to-slate-600 rounded-full flex items-center justify-center">
@@ -194,10 +354,10 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-sm text-gray-500">System Administration & Control</p>
               </div>
             </div>
-            
+
             {/* Exit to Home Button - Smaller, professional */}
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = "/")}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-700 to-slate-600 hover:from-purple-800 hover:to-slate-700 text-white text-sm rounded-lg font-medium shadow-md shadow-purple-700/30 hover:shadow-lg hover:shadow-purple-800/40 transition-all duration-200"
             >
               <Home className="w-3.5 h-3.5" />
@@ -208,14 +368,17 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Navigation Panels - Organized by category */}
-      {activeTab === 'dashboard' && (
+      {activeTab === "dashboard" && (
         <div className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 border-b border-blue-200/50">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {navigationPanels.map((panel, panelIndex) => {
                 const PanelIcon = panel.icon;
                 return (
-                  <div key={panelIndex} className="bg-white/80 backdrop-blur-md rounded-xl border border-purple-200/50 shadow-lg shadow-purple-500/5 p-4">
+                  <div
+                    key={panelIndex}
+                    className="bg-white/80 backdrop-blur-md rounded-xl border border-purple-200/50 shadow-lg shadow-purple-500/5 p-4"
+                  >
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
                       <PanelIcon className="w-5 h-5 text-purple-700" />
                       <h3 className="font-semibold text-gray-900 text-sm">{panel.title}</h3>
@@ -229,19 +392,27 @@ const AdminDashboard: React.FC = () => {
                             onClick={() => setActiveTab(item.key as typeof activeTab)}
                             className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all duration-200 ${
                               activeTab === item.key
-                                ? 'bg-gradient-to-r from-purple-700 to-slate-600 text-white shadow-md'
+                                ? "bg-gradient-to-r from-purple-700 to-slate-600 text-white shadow-md"
                                 : item.highlight
-                                ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-300 hover:shadow-md'
-                                : 'bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200'
+                                  ? "bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-300 hover:shadow-md"
+                                  : "bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                             }`}
                           >
-                            <ItemIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                              activeTab === item.key ? 'text-white' : item.highlight ? 'text-purple-700' : 'text-gray-600'
-                            }`} />
+                            <ItemIcon
+                              className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                                activeTab === item.key
+                                  ? "text-white"
+                                  : item.highlight
+                                    ? "text-purple-700"
+                                    : "text-gray-600"
+                              }`}
+                            />
                             <div className="flex-1 min-w-0">
-                              <div className={`font-medium text-sm ${
-                                activeTab === item.key ? 'text-white' : 'text-gray-900'
-                              }`}>
+                              <div
+                                className={`font-medium text-sm ${
+                                  activeTab === item.key ? "text-white" : "text-gray-900"
+                                }`}
+                              >
                                 {item.label}
                                 {item.highlight && (
                                   <span className="ml-2 px-1.5 py-0.5 bg-purple-200 text-purple-800 text-xs rounded-full font-semibold">
@@ -249,9 +420,11 @@ const AdminDashboard: React.FC = () => {
                                   </span>
                                 )}
                               </div>
-                              <div className={`text-xs mt-0.5 ${
-                                activeTab === item.key ? 'text-white/80' : 'text-gray-500'
-                              }`}>
+                              <div
+                                className={`text-xs mt-0.5 ${
+                                  activeTab === item.key ? "text-white/80" : "text-gray-500"
+                                }`}
+                              >
                                 {item.description}
                               </div>
                             </div>
@@ -268,11 +441,11 @@ const AdminDashboard: React.FC = () => {
       )}
 
       {/* Back to Dashboard Button - Show when not on dashboard */}
-      {activeTab !== 'dashboard' && (
+      {activeTab !== "dashboard" && (
         <div className="relative bg-white/50 backdrop-blur-md border-b border-blue-200/50">
           <div className="max-w-7xl mx-auto px-6 py-3">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => setActiveTab("dashboard")}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-700 to-slate-600 text-white rounded-lg hover:from-purple-800 hover:to-slate-700 shadow-md transition-all duration-200"
             >
               <Home className="w-4 h-4" />
@@ -284,19 +457,14 @@ const AdminDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-6 py-6">
-        
         {/* Market Intelligence Tab */}
-        {activeTab === 'marketIntelligence' && (
-          <MarketIntelligenceDashboard />
-        )}
+        {activeTab === "marketIntelligence" && <MarketIntelligenceDashboard />}
 
         {/* System Health Tab */}
-        {activeTab === 'systemHealth' && (
-          <SystemHealthDashboard />
-        )}
+        {activeTab === "systemHealth" && <SystemHealthDashboard />}
 
         {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
+        {activeTab === "dashboard" && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -311,7 +479,7 @@ const AdminDashboard: React.FC = () => {
                 Live
               </div>
             </div>
-            
+
             {/* Stats Grid - Compact cards */}
             <div className="grid md:grid-cols-4 gap-4">
               {/* Total Users */}
@@ -320,14 +488,22 @@ const AdminDashboard: React.FC = () => {
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-sky-400 rounded-lg flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">+12%</span>
+                  <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                    +12%
+                  </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{stats.totalUsers.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {stats.totalUsers.toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-500 mt-0.5">Total Users</p>
                 {/* Mini chart placeholder */}
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[40, 65, 45, 70, 55, 80, 60].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-blue-400/50 to-blue-300/20 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-blue-400/50 to-blue-300/20 rounded-sm"
+                      style={{ height: `${h}%` }}
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -338,13 +514,19 @@ const AdminDashboard: React.FC = () => {
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+8%</span>
+                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    +8%
+                  </span>
                 </div>
                 <p className="text-2xl font-bold text-gray-800">{stats.quotesGeneratedToday}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Quotes Today</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[30, 50, 40, 75, 60, 85, 70].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-emerald-500/40 to-emerald-500/10 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-emerald-500/40 to-emerald-500/10 rounded-sm"
+                      style={{ height: `${h}%` }}
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -355,13 +537,21 @@ const AdminDashboard: React.FC = () => {
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center">
                     <DollarSign className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">+15%</span>
+                  <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                    +15%
+                  </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">${stats.monthlyRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  ${stats.monthlyRevenue.toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-500 mt-0.5">Monthly Revenue</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[45, 55, 50, 65, 70, 80, 90].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-purple-600/50 to-purple-500/20 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-purple-600/50 to-purple-500/20 rounded-sm"
+                      style={{ height: `${h}%` }}
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -381,7 +571,11 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-gray-500 mt-0.5">Active Sessions</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[60, 45, 70, 55, 80, 65, 75].map((h, i) => (
-                    <div key={i} className="flex-1 bg-gradient-to-t from-orange-500/40 to-orange-500/10 rounded-sm" style={{height: `${h}%`}}></div>
+                    <div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-orange-500/40 to-orange-500/10 rounded-sm"
+                      style={{ height: `${h}%` }}
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -393,11 +587,13 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md flex items-center justify-center">
                   <Zap className="w-3 h-3 text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Quick Actions</h3>
+                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                  Quick Actions
+                </h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button 
-                  onClick={() => setActiveTab('useCases')}
+                <button
+                  onClick={() => setActiveTab("useCases")}
                   className="group flex items-center gap-2 p-3 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200/50 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -405,9 +601,9 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <span className="text-sm font-medium text-gray-700">Use Cases</span>
                 </button>
-                
-                <button 
-                  onClick={() => setActiveTab('users')}
+
+                <button
+                  onClick={() => setActiveTab("users")}
                   className="group flex items-center gap-2 p-3 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200/50 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -415,19 +611,19 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <span className="text-sm font-medium text-gray-700">Users</span>
                 </button>
-                
-                <button 
-                  onClick={() => setActiveTab('analytics')}
+
+                <button
+                  onClick={() => setActiveTab("analytics")}
                   className="group flex items-center gap-2 p-3 bg-gradient-to-br from-purple-100 to-slate-100 hover:from-purple-200 hover:to-slate-200 border border-purple-300/50 hover:border-purple-400 rounded-xl transition-all duration-200 hover:shadow-md"
-                  >
+                >
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-700 to-slate-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">Analytics</span>
                 </button>
-                
-                <button 
-                  onClick={() => setActiveTab('settings')}
+
+                <button
+                  onClick={() => setActiveTab("settings")}
                   className="group flex items-center gap-2 p-3 bg-gradient-to-br from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 border border-orange-200/50 hover:border-orange-300 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -439,31 +635,47 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* System Status Banner - Compact */}
-            <div className={`rounded-xl p-3 flex items-center justify-between ${
-              stats.systemHealth === 'operational' 
-                ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50' 
-                : stats.systemHealth === 'degraded'
-                ? 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50'
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50'
-            }`}>
+            <div
+              className={`rounded-xl p-3 flex items-center justify-between ${
+                stats.systemHealth === "operational"
+                  ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50"
+                  : stats.systemHealth === "degraded"
+                    ? "bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50"
+                    : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50"
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full animate-pulse ${
-                  stats.systemHealth === 'operational' ? 'bg-emerald-500' : 
-                  stats.systemHealth === 'degraded' ? 'bg-amber-500' : 'bg-red-500'
-                }`}></div>
-                <span className="text-sm font-medium text-gray-700">All systems {stats.systemHealth}</span>
+                <div
+                  className={`w-2 h-2 rounded-full animate-pulse ${
+                    stats.systemHealth === "operational"
+                      ? "bg-emerald-500"
+                      : stats.systemHealth === "degraded"
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                  }`}
+                ></div>
+                <span className="text-sm font-medium text-gray-700">
+                  All systems {stats.systemHealth}
+                </span>
               </div>
               <div className="flex items-center gap-6 text-sm text-gray-600">
-                <span>Uptime: <span className="font-semibold text-emerald-600">{stats.uptime}%</span></span>
-                <span>API: <span className="font-semibold text-blue-600">{stats.apiResponseTime}ms</span></span>
-                <span>Errors: <span className="font-semibold text-gray-700">{stats.errorRate}%</span></span>
+                <span>
+                  Uptime: <span className="font-semibold text-emerald-600">{stats.uptime}%</span>
+                </span>
+                <span>
+                  API:{" "}
+                  <span className="font-semibold text-blue-600">{stats.apiResponseTime}ms</span>
+                </span>
+                <span>
+                  Errors: <span className="font-semibold text-gray-700">{stats.errorRate}%</span>
+                </span>
               </div>
             </div>
           </div>
         )}
 
         {/* Workflows Tab */}
-        {activeTab === 'workflows' && (
+        {activeTab === "workflows" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -490,20 +702,41 @@ const AdminDashboard: React.FC = () => {
             {/* Workflow Stats */}
             <div className="grid md:grid-cols-4 gap-4">
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">Active</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-500">{stats.activeWorkflows}</p>
+                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                  Active
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-500">
+                  {stats.activeWorkflows}
+                </p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-emerald-200 shadow-lg">
-                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">Completed</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">{stats.completedWorkflows}</p>
+                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+                  Completed
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                  {stats.completedWorkflows}
+                </p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-red-200 shadow-lg">
-                <p className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-1">Failed</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-600">{stats.failedWorkflows}</p>
+                <p className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-1">
+                  Failed
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-600">
+                  {stats.failedWorkflows}
+                </p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
-                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">Success Rate</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">{(((stats.completedWorkflows) / (stats.completedWorkflows + stats.failedWorkflows)) * 100).toFixed(1)}%</p>
+                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
+                  Success Rate
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">
+                  {(
+                    (stats.completedWorkflows /
+                      (stats.completedWorkflows + stats.failedWorkflows)) *
+                    100
+                  ).toFixed(1)}
+                  %
+                </p>
               </div>
             </div>
 
@@ -517,16 +750,39 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="p-4 space-y-3">
                 {[
-                  { id: 'wf-001', name: 'Quote Generation Pipeline', user: 'user@example.com', started: '2 min ago', status: 'processing' },
-                  { id: 'wf-002', name: 'ML Analytics Processing', user: 'admin@merlin.com', started: '5 min ago', status: 'running' },
-                  { id: 'wf-003', name: 'Data Export Job', user: 'system', started: '12 min ago', status: 'finalizing' },
+                  {
+                    id: "wf-001",
+                    name: "Quote Generation Pipeline",
+                    user: "user@example.com",
+                    started: "2 min ago",
+                    status: "processing",
+                  },
+                  {
+                    id: "wf-002",
+                    name: "ML Analytics Processing",
+                    user: "admin@merlin.com",
+                    started: "5 min ago",
+                    status: "running",
+                  },
+                  {
+                    id: "wf-003",
+                    name: "Data Export Job",
+                    user: "system",
+                    started: "12 min ago",
+                    status: "finalizing",
+                  },
                 ].map((workflow) => (
-                  <div key={workflow.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-100/50 to-slate-100/50 rounded-xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all">
+                  <div
+                    key={workflow.id}
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-100/50 to-slate-100/50 rounded-xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
                       <div>
                         <p className="text-gray-800 font-semibold">{workflow.name}</p>
-                        <p className="text-gray-500 text-sm">ID: {workflow.id} • User: {workflow.user}</p>
+                        <p className="text-gray-500 text-sm">
+                          ID: {workflow.id} • User: {workflow.user}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -546,7 +802,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* System Health Tab */}
-        {activeTab === 'health' && (
+        {activeTab === "health" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -556,15 +812,24 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-bold text-gray-800">System Health Monitor</h2>
               </div>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-                stats.systemHealth === 'operational' ? 'bg-emerald-100 text-emerald-700' :
-                stats.systemHealth === 'degraded' ? 'bg-amber-100 text-amber-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                <div className={`w-2 h-2 rounded-full animate-pulse ${
-                  stats.systemHealth === 'operational' ? 'bg-emerald-500' :
-                  stats.systemHealth === 'degraded' ? 'bg-amber-500' : 'bg-red-500'
-                }`}></div>
+              <div
+                className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+                  stats.systemHealth === "operational"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : stats.systemHealth === "degraded"
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-red-100 text-red-700"
+                }`}
+              >
+                <div
+                  className={`w-2 h-2 rounded-full animate-pulse ${
+                    stats.systemHealth === "operational"
+                      ? "bg-emerald-500"
+                      : stats.systemHealth === "degraded"
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                  }`}
+                ></div>
                 <span className="font-semibold capitalize">{stats.systemHealth}</span>
               </div>
             </div>
@@ -572,23 +837,39 @@ const AdminDashboard: React.FC = () => {
             {/* Health Overview */}
             <div className="grid md:grid-cols-4 gap-4">
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-emerald-200 shadow-lg">
-                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">Uptime</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">{stats.uptime}%</p>
+                <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+                  Uptime
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                  {stats.uptime}%
+                </p>
                 <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-blue-300 shadow-lg">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">API Response</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">{stats.apiResponseTime}ms</p>
+                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                  API Response
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
+                  {stats.apiResponseTime}ms
+                </p>
                 <p className="text-xs text-gray-500 mt-1">Average</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-purple-200 shadow-lg">
-                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">Error Rate</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">{stats.errorRate}%</p>
+                <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
+                  Error Rate
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-slate-600">
+                  {stats.errorRate}%
+                </p>
                 <p className="text-xs text-gray-500 mt-1">Last 24 hours</p>
               </div>
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-2xl border border-orange-200 shadow-lg">
-                <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide mb-1">Active Sessions</p>
-                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">{stats.activeSessions}</p>
+                <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide mb-1">
+                  Active Sessions
+                </p>
+                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">
+                  {stats.activeSessions}
+                </p>
                 <p className="text-xs text-gray-500 mt-1">Current</p>
               </div>
             </div>
@@ -603,22 +884,52 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="p-4 grid md:grid-cols-2 gap-3">
                 {[
-                  { name: 'Database', status: 'healthy', latency: '12ms', last_check: '30s ago' },
-                  { name: 'API Gateway', status: 'healthy', latency: '45ms', last_check: '15s ago' },
-                  { name: 'Authentication', status: 'healthy', latency: '89ms', last_check: '1m ago' },
-                  { name: 'File Storage', status: 'warning', latency: '234ms', last_check: '2m ago' },
-                  { name: 'ML Analytics Engine', status: 'healthy', latency: '156ms', last_check: '45s ago' },
-                  { name: 'Email Service', status: 'healthy', latency: '67ms', last_check: '1m ago' },
+                  { name: "Database", status: "healthy", latency: "12ms", last_check: "30s ago" },
+                  {
+                    name: "API Gateway",
+                    status: "healthy",
+                    latency: "45ms",
+                    last_check: "15s ago",
+                  },
+                  {
+                    name: "Authentication",
+                    status: "healthy",
+                    latency: "89ms",
+                    last_check: "1m ago",
+                  },
+                  {
+                    name: "File Storage",
+                    status: "warning",
+                    latency: "234ms",
+                    last_check: "2m ago",
+                  },
+                  {
+                    name: "ML Analytics Engine",
+                    status: "healthy",
+                    latency: "156ms",
+                    last_check: "45s ago",
+                  },
+                  {
+                    name: "Email Service",
+                    status: "healthy",
+                    latency: "67ms",
+                    last_check: "1m ago",
+                  },
                 ].map((component) => (
-                  <div key={component.name} className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
-                    component.status === 'healthy' ? 'bg-emerald-50/50 border-emerald-200' :
-                    component.status === 'warning' ? 'bg-amber-50/50 border-amber-200' :
-                    'bg-red-50/50 border-red-200'
-                  }`}>
+                  <div
+                    key={component.name}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
+                      component.status === "healthy"
+                        ? "bg-emerald-50/50 border-emerald-200"
+                        : component.status === "warning"
+                          ? "bg-amber-50/50 border-amber-200"
+                          : "bg-red-50/50 border-red-200"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
-                      {component.status === 'healthy' ? (
+                      {component.status === "healthy" ? (
                         <CheckCircle className="w-5 h-5 text-emerald-500" />
-                      ) : component.status === 'warning' ? (
+                      ) : component.status === "warning" ? (
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
                       ) : (
                         <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -637,7 +948,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
+        {activeTab === "analytics" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-3">
@@ -646,7 +957,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <h2 className="text-xl font-bold text-gray-800">Site Analytics</h2>
             </div>
-            
+
             {/* Performance Metrics */}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-blue-200 shadow-lg">
@@ -669,7 +980,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-emerald-200 shadow-lg">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-emerald-600" />
@@ -716,7 +1027,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Users Tab */}
-        {activeTab === 'users' && (
+        {activeTab === "users" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -753,21 +1064,40 @@ const AdminDashboard: React.FC = () => {
             <div className="space-y-4">
               {/* Example Users */}
               {[
-                { email: 'john@example.com', tier: 'free', quotesUsed: 2, joined: 'Jan 15, 2025' },
-                { email: 'sarah@company.com', tier: 'premium', quotesUsed: 47, joined: 'Dec 3, 2024' },
-                { email: 'mike@business.com', tier: 'semi_premium', quotesUsed: 18, joined: 'Feb 1, 2025' }
+                { email: "john@example.com", tier: "free", quotesUsed: 2, joined: "Jan 15, 2025" },
+                {
+                  email: "sarah@company.com",
+                  tier: "premium",
+                  quotesUsed: 47,
+                  joined: "Dec 3, 2024",
+                },
+                {
+                  email: "mike@business.com",
+                  tier: "semi_premium",
+                  quotesUsed: 18,
+                  joined: "Feb 1, 2025",
+                },
               ].map((user, idx) => (
-                <div key={idx} className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all">
+                <div
+                  key={idx}
+                  className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-800 font-semibold">{user.email}</p>
                       <div className="flex gap-4 mt-2 text-sm">
-                        <span className={`px-2 py-1 rounded-lg ${
-                          user.tier === 'premium' ? 'bg-purple-100 text-purple-700' :
-                          user.tier === 'semi_premium' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {user.tier === 'semi_premium' ? 'Semi-Premium' : user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
+                        <span
+                          className={`px-2 py-1 rounded-lg ${
+                            user.tier === "premium"
+                              ? "bg-purple-100 text-purple-700"
+                              : user.tier === "semi_premium"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {user.tier === "semi_premium"
+                            ? "Semi-Premium"
+                            : user.tier.charAt(0).toUpperCase() + user.tier.slice(1)}
                         </span>
                         <span className="text-gray-500">Joined: {user.joined}</span>
                         <span className="text-gray-500">Quotes: {user.quotesUsed}</span>
@@ -792,15 +1122,16 @@ const AdminDashboard: React.FC = () => {
             {/* Coming Soon Notice */}
             <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl">
               <p className="text-blue-700 text-sm">
-                💡 <strong>Coming Soon:</strong> Full user management with Supabase integration. You'll be able to change tiers, reset quote limits, view detailed activity, and manage subscriptions.
+                💡 <strong>Coming Soon:</strong> Full user management with Supabase integration.
+                You'll be able to change tiers, reset quote limits, view detailed activity, and
+                manage subscriptions.
               </p>
             </div>
           </div>
         )}
 
-
         {/* Use Cases Tab */}
-        {activeTab === 'useCases' && (
+        {activeTab === "useCases" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -818,32 +1149,59 @@ const AdminDashboard: React.FC = () => {
             {/* Use Case List */}
             <div className="space-y-4">
               {[
-                { name: 'Car Wash', icon: '🚗', tier: 'free', active: true, quotesGenerated: 89 },
-                { name: 'Indoor Farm', icon: '🌱', tier: 'semi_premium', active: true, quotesGenerated: 34 },
-                { name: 'Hotel', icon: '🏨', tier: 'free', active: true, quotesGenerated: 67 },
-                { name: 'Airport', icon: '✈️', tier: 'premium', active: true, quotesGenerated: 12 },
-                { name: 'College/University', icon: '🎓', tier: 'semi_premium', active: true, quotesGenerated: 45 }
+                { name: "Car Wash", icon: "🚗", tier: "free", active: true, quotesGenerated: 89 },
+                {
+                  name: "Indoor Farm",
+                  icon: "🌱",
+                  tier: "semi_premium",
+                  active: true,
+                  quotesGenerated: 34,
+                },
+                { name: "Hotel", icon: "🏨", tier: "free", active: true, quotesGenerated: 67 },
+                { name: "Airport", icon: "✈️", tier: "premium", active: true, quotesGenerated: 12 },
+                {
+                  name: "College/University",
+                  icon: "🎓",
+                  tier: "semi_premium",
+                  active: true,
+                  quotesGenerated: 45,
+                },
               ].map((useCase, idx) => (
-                <div key={idx} className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all">
+                <div
+                  key={idx}
+                  className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <span className="text-4xl">{useCase.icon}</span>
                       <div>
                         <p className="text-gray-800 font-semibold text-lg">{useCase.name}</p>
                         <div className="flex gap-3 mt-2 text-sm">
-                          <span className={`px-2 py-1 rounded-lg ${
-                            useCase.tier === 'premium' ? 'bg-purple-100 text-purple-700' :
-                            useCase.tier === 'semi_premium' ? 'bg-blue-100 text-blue-700' :
-                            'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            {useCase.tier === 'semi_premium' ? 'Semi-Premium' : useCase.tier.charAt(0).toUpperCase() + useCase.tier.slice(1)}
+                          <span
+                            className={`px-2 py-1 rounded-lg ${
+                              useCase.tier === "premium"
+                                ? "bg-purple-100 text-purple-700"
+                                : useCase.tier === "semi_premium"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            {useCase.tier === "semi_premium"
+                              ? "Semi-Premium"
+                              : useCase.tier.charAt(0).toUpperCase() + useCase.tier.slice(1)}
                           </span>
-                          <span className={`px-2 py-1 rounded-lg ${
-                            useCase.active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {useCase.active ? 'Active' : 'Inactive'}
+                          <span
+                            className={`px-2 py-1 rounded-lg ${
+                              useCase.active
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {useCase.active ? "Active" : "Inactive"}
                           </span>
-                          <span className="text-gray-500">{useCase.quotesGenerated} quotes generated</span>
+                          <span className="text-gray-500">
+                            {useCase.quotesGenerated} quotes generated
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -866,15 +1224,19 @@ const AdminDashboard: React.FC = () => {
             {/* Info Notice */}
             <div className="bg-purple-50 border border-purple-200 p-4 rounded-2xl">
               <p className="text-purple-700 text-sm">
-                📚 <strong>Current Templates:</strong> These use cases are defined in <code className="bg-purple-100 px-2 py-1 rounded">src/data/useCaseTemplates.ts</code>. 
-                After Supabase integration, you'll create and edit them directly in this interface!
+                📚 <strong>Current Templates:</strong> These use cases are defined in{" "}
+                <code className="bg-purple-100 px-2 py-1 rounded">
+                  src/data/useCaseTemplates.ts
+                </code>
+                . After Supabase integration, you'll create and edit them directly in this
+                interface!
               </p>
             </div>
           </div>
         )}
 
         {/* Pricing Configuration Tab */}
-        {activeTab === 'pricing' && (
+        {activeTab === "pricing" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-3">
@@ -883,12 +1245,14 @@ const AdminDashboard: React.FC = () => {
               </div>
               <h2 className="text-xl font-bold text-gray-800">Pricing Configuration</h2>
             </div>
-            
+
             <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-purple-200 shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">Equipment Pricing Management</h3>
-                  <p className="text-gray-500">Manage all equipment pricing assumptions based on real vendor quotes</p>
+                  <p className="text-gray-500">
+                    Manage all equipment pricing assumptions based on real vendor quotes
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowPricingAdmin(true)}
@@ -897,23 +1261,27 @@ const AdminDashboard: React.FC = () => {
                   Open Pricing Dashboard
                 </button>
               </div>
-              
+
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200">
                   <h4 className="font-semibold text-gray-800 mb-2">🔋 BESS Systems</h4>
                   <p className="text-gray-600 text-sm">Small (&lt;1MWh): ~$200/kWh</p>
                   <p className="text-gray-600 text-sm">Medium (1-10MWh): ~$155/kWh</p>
                   <p className="text-gray-600 text-sm">Utility (10+MWh): ~$140/kWh</p>
-                  <p className="text-blue-600 text-xs mt-2">NREL ATB 2024 via unifiedPricingService</p>
+                  <p className="text-blue-600 text-xs mt-2">
+                    NREL ATB 2024 via unifiedPricingService
+                  </p>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
                   <h4 className="font-semibold text-gray-800 mb-2">⚡ Generators</h4>
                   <p className="text-gray-600 text-sm">Natural Gas: ~$700/kW</p>
                   <p className="text-gray-600 text-sm">Diesel: ~$500/kW</p>
-                  <p className="text-blue-600 text-xs mt-2">NREL ATB 2024 via unifiedPricingService</p>
+                  <p className="text-blue-600 text-xs mt-2">
+                    NREL ATB 2024 via unifiedPricingService
+                  </p>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-200">
                   <h4 className="font-semibold text-gray-800 mb-2">🚗 EV Charging</h4>
                   <p className="text-gray-600 text-sm">Level 2: $2-8k/unit</p>
@@ -921,11 +1289,12 @@ const AdminDashboard: React.FC = () => {
                   <p className="text-blue-600 text-xs mt-2">evChargingCalculations.ts SSOT</p>
                 </div>
               </div>
-              
+
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p className="text-red-700 text-sm">
-                  ⚠️ <strong>Important:</strong> Balance of Plant configured under 15% guideline: 
-                  12% BOP + 8% EPC + 5% Contingency = 25% total installation costs. Daily pricing validation active.
+                  ⚠️ <strong>Important:</strong> Balance of Plant configured under 15% guideline:
+                  12% BOP + 8% EPC + 5% Contingency = 25% total installation costs. Daily pricing
+                  validation active.
                 </p>
               </div>
             </div>
@@ -961,7 +1330,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* GOD Settings Tab - Master Control Panel */}
-        {activeTab === 'godSettings' && (
+        {activeTab === "godSettings" && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -971,7 +1340,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">GOD Settings</h2>
-                  <p className="text-xs text-red-500 font-medium">⚠️ Master Control - Changes affect entire system</p>
+                  <p className="text-xs text-red-500 font-medium">
+                    ⚠️ Master Control - Changes affect entire system
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -990,14 +1361,53 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { id: 'quoteGeneration', label: 'Quote Generation', desc: 'Enable/disable all quote generation', enabled: true, critical: true },
-                  { id: 'aiRecommendations', label: 'AI Recommendations', desc: 'ML-powered sizing suggestions', enabled: true, critical: false },
-                  { id: 'realTimePricing', label: 'Real-Time Pricing', desc: 'Live market price updates', enabled: true, critical: false },
-                  { id: 'vendorMatching', label: 'Vendor Matching', desc: 'Auto-match quotes to vendors', enabled: false, critical: false },
-                  { id: 'emailNotifications', label: 'Email Notifications', desc: 'System email alerts', enabled: true, critical: false },
-                  { id: 'maintenanceMode', label: 'Maintenance Mode', desc: 'Show maintenance page to users', enabled: false, critical: true },
+                  {
+                    id: "quoteGeneration",
+                    label: "Quote Generation",
+                    desc: "Enable/disable all quote generation",
+                    enabled: true,
+                    critical: true,
+                  },
+                  {
+                    id: "aiRecommendations",
+                    label: "AI Recommendations",
+                    desc: "ML-powered sizing suggestions",
+                    enabled: true,
+                    critical: false,
+                  },
+                  {
+                    id: "realTimePricing",
+                    label: "Real-Time Pricing",
+                    desc: "Live market price updates",
+                    enabled: true,
+                    critical: false,
+                  },
+                  {
+                    id: "vendorMatching",
+                    label: "Vendor Matching",
+                    desc: "Auto-match quotes to vendors",
+                    enabled: false,
+                    critical: false,
+                  },
+                  {
+                    id: "emailNotifications",
+                    label: "Email Notifications",
+                    desc: "System email alerts",
+                    enabled: true,
+                    critical: false,
+                  },
+                  {
+                    id: "maintenanceMode",
+                    label: "Maintenance Mode",
+                    desc: "Show maintenance page to users",
+                    enabled: false,
+                    critical: true,
+                  },
                 ].map((sw) => (
-                  <div key={sw.id} className={`flex items-center justify-between p-3 rounded-lg ${sw.critical ? 'bg-red-100/50 border border-red-200' : 'bg-white/80 border border-gray-200'}`}>
+                  <div
+                    key={sw.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${sw.critical ? "bg-red-100/50 border border-red-200" : "bg-white/80 border border-gray-200"}`}
+                  >
                     <div>
                       <p className="text-sm font-semibold text-gray-800 flex items-center gap-1">
                         {sw.label}
@@ -1005,8 +1415,12 @@ const AdminDashboard: React.FC = () => {
                       </p>
                       <p className="text-xs text-gray-500">{sw.desc}</p>
                     </div>
-                    <button className={`relative w-12 h-6 rounded-full transition-all ${sw.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`}>
-                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all ${sw.enabled ? 'left-6' : 'left-0.5'}`}></div>
+                    <button
+                      className={`relative w-12 h-6 rounded-full transition-all ${sw.enabled ? "bg-emerald-500" : "bg-gray-300"}`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all ${sw.enabled ? "left-6" : "left-0.5"}`}
+                      ></div>
                     </button>
                   </div>
                 ))}
@@ -1021,20 +1435,61 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { id: 'marginMultiplier', label: 'Margin Multiplier', value: 1.15, unit: 'x', desc: 'Applied to all equipment costs' },
-                  { id: 'contingencyRate', label: 'Contingency Rate', value: 5.0, unit: '%', desc: 'Project contingency buffer' },
-                  { id: 'taxCreditRate', label: 'ITC Rate', value: 30.0, unit: '%', desc: 'Federal Investment Tax Credit' },
-                  { id: 'discountRate', label: 'Discount Rate', value: 8.0, unit: '%', desc: 'NPV/IRR calculations' },
-                  { id: 'escalationRate', label: 'Escalation Rate', value: 2.5, unit: '%', desc: 'Annual cost escalation' },
-                  { id: 'degradationRate', label: 'Battery Degradation', value: 2.0, unit: '%/yr', desc: 'Annual capacity loss' },
+                  {
+                    id: "marginMultiplier",
+                    label: "Margin Multiplier",
+                    value: 1.15,
+                    unit: "x",
+                    desc: "Applied to all equipment costs",
+                  },
+                  {
+                    id: "contingencyRate",
+                    label: "Contingency Rate",
+                    value: 5.0,
+                    unit: "%",
+                    desc: "Project contingency buffer",
+                  },
+                  {
+                    id: "taxCreditRate",
+                    label: "ITC Rate",
+                    value: 30.0,
+                    unit: "%",
+                    desc: "Federal Investment Tax Credit",
+                  },
+                  {
+                    id: "discountRate",
+                    label: "Discount Rate",
+                    value: 8.0,
+                    unit: "%",
+                    desc: "NPV/IRR calculations",
+                  },
+                  {
+                    id: "escalationRate",
+                    label: "Escalation Rate",
+                    value: 2.5,
+                    unit: "%",
+                    desc: "Annual cost escalation",
+                  },
+                  {
+                    id: "degradationRate",
+                    label: "Battery Degradation",
+                    value: 2.0,
+                    unit: "%/yr",
+                    desc: "Annual capacity loss",
+                  },
                 ].map((param) => (
-                  <div key={param.id} className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-200/50">
-                    <label className="text-xs font-medium text-gray-600 block mb-1">{param.label}</label>
+                  <div
+                    key={param.id}
+                    className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-200/50"
+                  >
+                    <label className="text-xs font-medium text-gray-600 block mb-1">
+                      {param.label}
+                    </label>
                     <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         defaultValue={param.value}
-                        step={param.unit === 'x' ? 0.01 : 0.1}
+                        step={param.unit === "x" ? 0.01 : 0.1}
                         className="w-full bg-white border border-purple-200 rounded-lg px-3 py-1.5 text-gray-800 text-sm font-semibold focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none"
                       />
                       <span className="text-xs text-gray-500 w-10">{param.unit}</span>
@@ -1056,18 +1511,47 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="space-y-2">
                 {[
-                  { time: '2 hours ago', user: 'admin@merlin.com', action: 'Changed margin multiplier from 1.12 to 1.15', type: 'pricing' },
-                  { time: '1 day ago', user: 'admin@merlin.com', action: 'Enabled AI Recommendations', type: 'feature' },
-                  { time: '3 days ago', user: 'system', action: 'Auto-updated ITC rate to 30%', type: 'system' },
-                  { time: '1 week ago', user: 'admin@merlin.com', action: 'Disabled maintenance mode', type: 'critical' },
+                  {
+                    time: "2 hours ago",
+                    user: "admin@merlin.com",
+                    action: "Changed margin multiplier from 1.12 to 1.15",
+                    type: "pricing",
+                  },
+                  {
+                    time: "1 day ago",
+                    user: "admin@merlin.com",
+                    action: "Enabled AI Recommendations",
+                    type: "feature",
+                  },
+                  {
+                    time: "3 days ago",
+                    user: "system",
+                    action: "Auto-updated ITC rate to 30%",
+                    type: "system",
+                  },
+                  {
+                    time: "1 week ago",
+                    user: "admin@merlin.com",
+                    action: "Disabled maintenance mode",
+                    type: "critical",
+                  },
                 ].map((log, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm"
+                  >
                     <div className="flex items-center gap-3">
-                      <span className={`w-2 h-2 rounded-full ${
-                        log.type === 'critical' ? 'bg-red-500' : 
-                        log.type === 'pricing' ? 'bg-purple-500' : 
-                        log.type === 'feature' ? 'bg-blue-500' : 'bg-gray-400'
-                      }`}></span>
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          log.type === "critical"
+                            ? "bg-red-500"
+                            : log.type === "pricing"
+                              ? "bg-purple-500"
+                              : log.type === "feature"
+                                ? "bg-blue-500"
+                                : "bg-gray-400"
+                        }`}
+                      ></span>
                       <span className="text-gray-700">{log.action}</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -1082,7 +1566,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Matching Engine Tab */}
-        {activeTab === 'matching' && (
+        {activeTab === "matching" && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -1092,7 +1576,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">Matching Engine</h2>
-                  <p className="text-xs text-purple-600 font-medium">AI-powered vendor & equipment matching</p>
+                  <p className="text-xs text-purple-600 font-medium">
+                    AI-powered vendor & equipment matching
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1109,17 +1595,24 @@ const AdminDashboard: React.FC = () => {
             {/* Matching Stats */}
             <div className="grid md:grid-cols-4 gap-4">
               {[
-                { label: 'Active Vendors', value: '24', change: '+3', color: 'blue' },
-                { label: 'Match Rate', value: '94.2%', change: '+2.1%', color: 'emerald' },
-                { label: 'Avg Match Time', value: '1.2s', change: '-0.3s', color: 'purple' },
-                { label: 'Pending Matches', value: '7', change: '', color: 'orange' },
+                { label: "Active Vendors", value: "24", change: "+3", color: "blue" },
+                { label: "Match Rate", value: "94.2%", change: "+2.1%", color: "emerald" },
+                { label: "Avg Match Time", value: "1.2s", change: "-0.3s", color: "purple" },
+                { label: "Pending Matches", value: "7", change: "", color: "orange" },
               ].map((stat, idx) => (
-                <div key={idx} className={`bg-white/80 backdrop-blur-md rounded-xl p-4 border border-${stat.color}-100/50 shadow-lg`}>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{stat.label}</p>
+                <div
+                  key={idx}
+                  className={`bg-white/80 backdrop-blur-md rounded-xl p-4 border border-${stat.color}-100/50 shadow-lg`}
+                >
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {stat.label}
+                  </p>
                   <div className="flex items-end justify-between mt-1">
                     <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
                     {stat.change && (
-                      <span className={`text-xs font-medium ${stat.change.startsWith('+') ? 'text-emerald-600' : 'text-blue-600'}`}>
+                      <span
+                        className={`text-xs font-medium ${stat.change.startsWith("+") ? "text-emerald-600" : "text-blue-600"}`}
+                      >
                         {stat.change}
                       </span>
                     )}
@@ -1136,26 +1629,31 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { rule: 'Price Priority', weight: 35, desc: 'Prefer lower cost vendors' },
-                  { rule: 'Lead Time', weight: 25, desc: 'Faster delivery = higher score' },
-                  { rule: 'Quality Rating', weight: 20, desc: 'Vendor quality history' },
-                  { rule: 'Regional Preference', weight: 15, desc: 'Local vendors preferred' },
-                  { rule: 'Past Performance', weight: 5, desc: 'Previous project success' },
+                  { rule: "Price Priority", weight: 35, desc: "Prefer lower cost vendors" },
+                  { rule: "Lead Time", weight: 25, desc: "Faster delivery = higher score" },
+                  { rule: "Quality Rating", weight: 20, desc: "Vendor quality history" },
+                  { rule: "Regional Preference", weight: 15, desc: "Local vendors preferred" },
+                  { rule: "Past Performance", weight: 5, desc: "Previous project success" },
                 ].map((rule, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg">
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg"
+                  >
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-800">{rule.rule}</p>
                       <p className="text-xs text-gray-500">{rule.desc}</p>
                     </div>
                     <div className="flex items-center gap-2 w-48">
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
                         defaultValue={rule.weight}
                         className="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
                       />
-                      <span className="text-sm font-bold text-purple-700 w-12 text-right">{rule.weight}%</span>
+                      <span className="text-sm font-bold text-purple-700 w-12 text-right">
+                        {rule.weight}%
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -1172,44 +1670,61 @@ const AdminDashboard: React.FC = () => {
                 <button
                   onClick={() => setMatchingLive(!matchingLive)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                    matchingLive 
-                      ? 'bg-emerald-100 text-emerald-700' 
-                      : 'bg-gray-100 text-gray-600'
+                    matchingLive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
                   }`}
                 >
                   {matchingLive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                  {matchingLive ? 'Pause' : 'Resume'}
+                  {matchingLive ? "Pause" : "Resume"}
                 </button>
               </div>
               <div className="space-y-2 max-h-80 overflow-y-auto">
-                {liveMatches.length > 0 ? liveMatches.map((match) => (
-                  <div key={match.id} className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all cursor-pointer animate-fade-in">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
-                        match.score >= 95 ? 'bg-emerald-500' : match.score >= 90 ? 'bg-blue-500' : 'bg-orange-500'
-                      }`}>
-                        {match.score}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-gray-800">{match.quoteId}</p>
-                          <span className={`px-1.5 py-0.5 text-xs rounded ${
-                            match.tier === 'premium' ? 'bg-purple-100 text-purple-700' :
-                            match.tier === 'enterprise' ? 'bg-amber-100 text-amber-700' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            {match.tier}
-                          </span>
+                {liveMatches.length > 0 ? (
+                  liveMatches.map((match) => (
+                    <div
+                      key={match.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all cursor-pointer animate-fade-in"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
+                            match.score >= 95
+                              ? "bg-emerald-500"
+                              : match.score >= 90
+                                ? "bg-blue-500"
+                                : "bg-orange-500"
+                          }`}
+                        >
+                          {match.score}
                         </div>
-                        <p className="text-xs text-gray-500">{match.equipment} • {match.powerMW} MW</p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-gray-800">{match.quoteId}</p>
+                            <span
+                              className={`px-1.5 py-0.5 text-xs rounded ${
+                                match.tier === "premium"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : match.tier === "enterprise"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {match.tier}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {match.equipment} • {match.powerMW} MW
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-purple-700">{match.vendor}</p>
+                        <p className="text-xs text-gray-400">
+                          {match.useCase} • {match.time}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-purple-700">{match.vendor}</p>
-                      <p className="text-xs text-gray-400">{match.useCase} • {match.time}</p>
-                    </div>
-                  </div>
-                )) : (
+                  ))
+                ) : (
                   <div className="text-center py-8 text-gray-400">
                     <Sparkles className="w-8 h-8 mx-auto mb-2 animate-pulse" />
                     <p className="text-sm">Waiting for matches...</p>
@@ -1221,7 +1736,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* MERLIN Premium Tab - NEW */}
-        {activeTab === 'premium' && (
+        {activeTab === "premium" && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -1231,17 +1746,24 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">MERLIN Premium Benchmarks</h2>
-                  <p className="text-xs text-amber-600 font-medium">Premium equipment configurations for each use case</p>
+                  <p className="text-xs text-amber-600 font-medium">
+                    Premium equipment configurations for each use case
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <select 
+                <select
                   value={selectedPremiumUseCase}
                   onChange={(e) => setSelectedPremiumUseCase(e.target.value)}
                   className="text-sm bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
                 >
-                  {Object.keys(getUseCaseProfiles()).map(uc => (
-                    <option key={uc} value={uc}>{uc.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</option>
+                  {Object.keys(getUseCaseProfiles()).map((uc) => (
+                    <option key={uc} value={uc}>
+                      {uc
+                        .split("-")
+                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(" ")}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1265,17 +1787,51 @@ const AdminDashboard: React.FC = () => {
                     ${Math.round(premiumComparison.standard.totalCost).toLocaleString()}
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Batteries</span><span className="text-gray-700">${Math.round(premiumComparison.standard.breakdown.batteries).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Inverters</span><span className="text-gray-700">${Math.round(premiumComparison.standard.breakdown.inverters).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Transformer</span><span className="text-gray-700">${Math.round(premiumComparison.standard.breakdown.transformer).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Controller</span><span className="text-gray-700">${Math.round(premiumComparison.standard.breakdown.microgridController).toLocaleString()}</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Batteries</span>
+                      <span className="text-gray-700">
+                        $
+                        {Math.round(
+                          premiumComparison.standard.breakdown.batteries
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Inverters</span>
+                      <span className="text-gray-700">
+                        $
+                        {Math.round(
+                          premiumComparison.standard.breakdown.inverters
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Transformer</span>
+                      <span className="text-gray-700">
+                        $
+                        {Math.round(
+                          premiumComparison.standard.breakdown.transformer
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Controller</span>
+                      <span className="text-gray-700">
+                        $
+                        {Math.round(
+                          premiumComparison.standard.breakdown.microgridController
+                        ).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Premium */}
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border-2 border-amber-300 shadow-lg relative overflow-hidden">
                   <div className="absolute top-2 right-2">
-                    <span className="px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">RECOMMENDED</span>
+                    <span className="px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">
+                      RECOMMENDED
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
@@ -1283,7 +1839,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-amber-800 uppercase">MERLIN Premium</h3>
-                      <p className="text-xs text-amber-600">Optimized for {selectedPremiumUseCase}</p>
+                      <p className="text-xs text-amber-600">
+                        Optimized for {selectedPremiumUseCase}
+                      </p>
                     </div>
                   </div>
                   <div className="text-3xl font-bold text-amber-800 mb-4">
@@ -1293,10 +1851,38 @@ const AdminDashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-amber-700">Premium Batteries</span><span className="text-amber-800 font-medium">${Math.round(premiumComparison.premium.breakdown.batteries).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-amber-700">Advanced Inverters</span><span className="text-amber-800 font-medium">${Math.round(premiumComparison.premium.breakdown.inverters).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-amber-700">Smart Transformer</span><span className="text-amber-800 font-medium">${Math.round(premiumComparison.premium.breakdown.transformer).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-amber-700">AI Controller</span><span className="text-amber-800 font-medium">${Math.round(premiumComparison.premium.breakdown.microgridController).toLocaleString()}</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">Premium Batteries</span>
+                      <span className="text-amber-800 font-medium">
+                        $
+                        {Math.round(premiumComparison.premium.breakdown.batteries).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">Advanced Inverters</span>
+                      <span className="text-amber-800 font-medium">
+                        $
+                        {Math.round(premiumComparison.premium.breakdown.inverters).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">Smart Transformer</span>
+                      <span className="text-amber-800 font-medium">
+                        $
+                        {Math.round(
+                          premiumComparison.premium.breakdown.transformer
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">AI Controller</span>
+                      <span className="text-amber-800 font-medium">
+                        $
+                        {Math.round(
+                          premiumComparison.premium.breakdown.microgridController
+                        ).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1353,7 +1939,9 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Controllers */}
                 <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-                  <h4 className="text-sm font-bold text-amber-800 mb-2">🎛️ Microgrid Controllers</h4>
+                  <h4 className="text-sm font-bold text-amber-800 mb-2">
+                    🎛️ Microgrid Controllers
+                  </h4>
                   <div className="text-xs text-amber-700 space-y-1">
                     <p>• Schneider EcoStruxure Advisor</p>
                     <p>• AI-based optimization</p>
@@ -1404,7 +1992,7 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Real-Time Monitoring Tab */}
-        {activeTab === 'realtime' && (
+        {activeTab === "realtime" && (
           <div className="space-y-5">
             {/* Section Header */}
             <div className="flex items-center justify-between">
@@ -1414,7 +2002,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">Real-Time Monitoring</h2>
-                  <p className="text-xs text-emerald-600 font-medium">Live system metrics & user activity</p>
+                  <p className="text-xs text-emerald-600 font-medium">
+                    Live system metrics & user activity
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1433,18 +2023,29 @@ const AdminDashboard: React.FC = () => {
             {/* Live Metrics */}
             <div className="grid md:grid-cols-5 gap-3">
               {[
-                { label: 'Active Users', value: '23', icon: Users, color: 'blue', live: true },
-                { label: 'Quotes/Min', value: '4.2', icon: FileText, color: 'purple', live: true },
-                { label: 'API Latency', value: '142ms', icon: Zap, color: 'emerald', live: true },
-                { label: 'Error Rate', value: '0.08%', icon: AlertTriangle, color: 'orange', live: false },
-                { label: 'CPU Usage', value: '34%', icon: Cpu, color: 'gray', live: true },
+                { label: "Active Users", value: "23", icon: Users, color: "blue", live: true },
+                { label: "Quotes/Min", value: "4.2", icon: FileText, color: "purple", live: true },
+                { label: "API Latency", value: "142ms", icon: Zap, color: "emerald", live: true },
+                {
+                  label: "Error Rate",
+                  value: "0.08%",
+                  icon: AlertTriangle,
+                  color: "orange",
+                  live: false,
+                },
+                { label: "CPU Usage", value: "34%", icon: Cpu, color: "gray", live: true },
               ].map((metric, idx) => {
                 const Icon = metric.icon;
                 return (
-                  <div key={idx} className="bg-white/80 backdrop-blur-md rounded-xl p-3 border border-gray-100/50 shadow-md">
+                  <div
+                    key={idx}
+                    className="bg-white/80 backdrop-blur-md rounded-xl p-3 border border-gray-100/50 shadow-md"
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <Icon className={`w-4 h-4 text-${metric.color}-500`} />
-                      {metric.live && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>}
+                      {metric.live && (
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                      )}
                     </div>
                     <p className="text-xl font-bold text-gray-800">{metric.value}</p>
                     <p className="text-xs text-gray-500">{metric.label}</p>
@@ -1463,20 +2064,59 @@ const AdminDashboard: React.FC = () => {
                 </h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {[
-                    { user: 'john@company.com', action: 'Generated quote for Hotel', time: 'just now', type: 'quote' },
-                    { user: 'sarah@business.com', action: 'Viewed EV Charging wizard', time: '30s ago', type: 'view' },
-                    { user: 'mike@enterprise.com', action: 'Exported PDF report', time: '1m ago', type: 'export' },
-                    { user: 'anna@startup.com', action: 'Saved quote Q-2024-1248', time: '2m ago', type: 'save' },
-                    { user: 'guest-4521', action: 'Started Car Wash wizard', time: '3m ago', type: 'start' },
-                    { user: 'david@corp.com', action: 'Updated account settings', time: '5m ago', type: 'settings' },
+                    {
+                      user: "john@company.com",
+                      action: "Generated quote for Hotel",
+                      time: "just now",
+                      type: "quote",
+                    },
+                    {
+                      user: "sarah@business.com",
+                      action: "Viewed EV Charging wizard",
+                      time: "30s ago",
+                      type: "view",
+                    },
+                    {
+                      user: "mike@enterprise.com",
+                      action: "Exported PDF report",
+                      time: "1m ago",
+                      type: "export",
+                    },
+                    {
+                      user: "anna@startup.com",
+                      action: "Saved quote Q-2024-1248",
+                      time: "2m ago",
+                      type: "save",
+                    },
+                    {
+                      user: "guest-4521",
+                      action: "Started Car Wash wizard",
+                      time: "3m ago",
+                      type: "start",
+                    },
+                    {
+                      user: "david@corp.com",
+                      action: "Updated account settings",
+                      time: "5m ago",
+                      type: "settings",
+                    },
                   ].map((activity, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg text-sm">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg text-sm"
+                    >
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          activity.type === 'quote' ? 'bg-purple-500' :
-                          activity.type === 'export' ? 'bg-emerald-500' :
-                          activity.type === 'save' ? 'bg-blue-500' : 'bg-gray-400'
-                        }`}></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            activity.type === "quote"
+                              ? "bg-purple-500"
+                              : activity.type === "export"
+                                ? "bg-emerald-500"
+                                : activity.type === "save"
+                                  ? "bg-blue-500"
+                                  : "bg-gray-400"
+                          }`}
+                        ></div>
                         <span className="text-gray-800 font-medium">{activity.user}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
@@ -1496,16 +2136,19 @@ const AdminDashboard: React.FC = () => {
                 </h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {[
-                    { event: 'NREL API sync completed', status: 'success', time: 'just now' },
-                    { event: 'Cache refreshed (pricing)', status: 'success', time: '2m ago' },
-                    { event: 'ML model prediction batch', status: 'success', time: '5m ago' },
-                    { event: 'Database backup completed', status: 'success', time: '15m ago' },
-                    { event: 'RSS feed update (12 articles)', status: 'success', time: '30m ago' },
-                    { event: 'Vendor API rate limit warning', status: 'warning', time: '1h ago' },
+                    { event: "NREL API sync completed", status: "success", time: "just now" },
+                    { event: "Cache refreshed (pricing)", status: "success", time: "2m ago" },
+                    { event: "ML model prediction batch", status: "success", time: "5m ago" },
+                    { event: "Database backup completed", status: "success", time: "15m ago" },
+                    { event: "RSS feed update (12 articles)", status: "success", time: "30m ago" },
+                    { event: "Vendor API rate limit warning", status: "warning", time: "1h ago" },
                   ].map((event, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-lg text-sm">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-lg text-sm"
+                    >
                       <div className="flex items-center gap-2">
-                        {event.status === 'success' ? (
+                        {event.status === "success" ? (
                           <CheckCircle className="w-4 h-4 text-emerald-500" />
                         ) : (
                           <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -1521,13 +2164,15 @@ const AdminDashboard: React.FC = () => {
 
             {/* Performance Graph Placeholder */}
             <div className="bg-white/80 backdrop-blur-md rounded-xl p-5 border border-purple-100/50 shadow-lg">
-              <h3 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-4">📈 Request Volume (Last Hour)</h3>
+              <h3 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-4">
+                📈 Request Volume (Last Hour)
+              </h3>
               <div className="h-32 flex items-end gap-1">
                 {Array.from({ length: 60 }, (_, i) => {
                   const height = Math.random() * 60 + 20;
                   return (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className="flex-1 bg-gradient-to-t from-purple-500/60 to-purple-500/20 rounded-t-sm hover:from-purple-500 hover:to-purple-400 transition-all cursor-pointer"
                       style={{ height: `${height}%` }}
                       title={`${Math.floor(height / 10)} requests`}
@@ -1545,31 +2190,21 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Calculations & Formulas Tab */}
-        {activeTab === 'calculations' && (
-          <CalculationsAdmin />
-        )}
+        {activeTab === "calculations" && <CalculationsAdmin />}
 
         {/* Pricing System Health Tab */}
-        {activeTab === 'pricingHealth' && (
-          <PricingSystemHealthDashboard />
-        )}
+        {activeTab === "pricingHealth" && <PricingSystemHealthDashboard />}
 
         {/* Use Case Configurations Tab */}
-        {activeTab === 'useCases' && (
-          <UseCaseConfigManager />
-        )}
+        {activeTab === "useCases" && <UseCaseConfigManager />}
         {/* Cache Performance Tab */}
-        {activeTab === 'cache' && (
-          <CacheStatistics />
-        )}
+        {activeTab === "cache" && <CacheStatistics />}
 
         {/* AI Data Collection Tab */}
-        {activeTab === 'aiData' && (
-          <AIDataCollectionAdmin />
-        )}
+        {activeTab === "aiData" && <AIDataCollectionAdmin />}
 
         {/* Migration Tab */}
-        {activeTab === 'migration' && (
+        {activeTab === "migration" && (
           <div className="bg-white/90 backdrop-blur-sm border border-purple-200 rounded-2xl p-8 shadow-xl">
             <div className="text-center py-12">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">Migration Manager</h3>
@@ -1585,7 +2220,7 @@ const AdminDashboard: React.FC = () => {
 
         {/* Settings Tab */}
         {/* Settings Tab */}
-        {activeTab === 'settings' && (
+        {activeTab === "settings" && (
           <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-3">
@@ -1603,17 +2238,27 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="space-y-4">
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
                   <div>
                     <span className="text-gray-800 font-semibold">Require Login</span>
-                    <p className="text-gray-500 text-sm">Make the app private - users must create an account</p>
+                    <p className="text-gray-500 text-sm">
+                      Make the app private - users must create an account
+                    </p>
                   </div>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
                   <div>
                     <span className="text-gray-800 font-semibold">Maintenance Mode</span>
-                    <p className="text-gray-500 text-sm">Temporarily disable public access for maintenance</p>
+                    <p className="text-gray-500 text-sm">
+                      Temporarily disable public access for maintenance
+                    </p>
                   </div>
                 </label>
               </div>
@@ -1625,7 +2270,7 @@ const AdminDashboard: React.FC = () => {
                 <Users className="w-5 h-5 text-purple-600" />
                 Tier Limits
               </h3>
-              
+
               <div className="space-y-6">
                 {/* Free Tier */}
                 <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-4 rounded-xl border border-gray-200">
@@ -1633,11 +2278,19 @@ const AdminDashboard: React.FC = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-gray-600 text-sm">Quotes per user</label>
-                      <input type="number" defaultValue={3} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={3}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                     <div>
                       <label className="text-gray-600 text-sm">Quote validity (days)</label>
-                      <input type="number" defaultValue={30} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={30}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1648,15 +2301,27 @@ const AdminDashboard: React.FC = () => {
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
                       <label className="text-gray-600 text-sm">Monthly quotes</label>
-                      <input type="number" defaultValue={25} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={25}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                     <div>
                       <label className="text-gray-600 text-sm">Saved quotes</label>
-                      <input type="number" defaultValue={5} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={5}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                     <div>
                       <label className="text-gray-600 text-sm">Price (USD/month)</label>
-                      <input type="number" defaultValue={19} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={19}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1667,15 +2332,29 @@ const AdminDashboard: React.FC = () => {
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
                       <label className="text-gray-600 text-sm">Monthly quotes</label>
-                      <input type="text" defaultValue="Unlimited" disabled className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1" />
+                      <input
+                        type="text"
+                        defaultValue="Unlimited"
+                        disabled
+                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1"
+                      />
                     </div>
                     <div>
                       <label className="text-gray-600 text-sm">Saved quotes</label>
-                      <input type="text" defaultValue="Unlimited" disabled className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1" />
+                      <input
+                        type="text"
+                        defaultValue="Unlimited"
+                        disabled
+                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2 text-gray-400 mt-1"
+                      />
                     </div>
                     <div>
                       <label className="text-gray-600 text-sm">Price (USD/month)</label>
-                      <input type="number" defaultValue={49} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all" />
+                      <input
+                        type="number"
+                        defaultValue={49}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-800 mt-1 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1689,18 +2368,17 @@ const AdminDashboard: React.FC = () => {
             {/* Info Notice */}
             <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl">
               <p className="text-orange-700 text-sm">
-                🔧 <strong>Configuration:</strong> These settings will be stored in the <code className="bg-orange-100 px-2 py-1 rounded">system_settings</code> table once Supabase is connected.
+                🔧 <strong>Configuration:</strong> These settings will be stored in the{" "}
+                <code className="bg-orange-100 px-2 py-1 rounded">system_settings</code> table once
+                Supabase is connected.
               </p>
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Pricing Admin Dashboard Modal */}
-      <PricingAdminDashboard 
-        isOpen={showPricingAdmin} 
-        onClose={() => setShowPricingAdmin(false)} 
-      />
+      <PricingAdminDashboard isOpen={showPricingAdmin} onClose={() => setShowPricingAdmin(false)} />
     </div>
   );
 };

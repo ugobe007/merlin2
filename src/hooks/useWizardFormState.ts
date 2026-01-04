@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 /**
  * Solar space configuration interface
@@ -17,7 +17,7 @@ export interface SolarSpaceConfig {
  * Wind configuration interface
  */
 export interface WindConfig {
-  turbineModel: 'small' | 'medium' | 'large' | 'xl';
+  turbineModel: "small" | "medium" | "large" | "xl";
   turbineCount: number;
   avgWindSpeed: number;
   hubHeight: number;
@@ -28,7 +28,7 @@ export interface WindConfig {
  * Generator configuration interface
  */
 export interface GeneratorConfig {
-  fuelType: 'diesel' | 'natural-gas' | 'propane' | 'biodiesel';
+  fuelType: "diesel" | "natural-gas" | "propane" | "biodiesel";
   runtimeHours: number;
   loadFactor: number;
   manualMW: number;
@@ -66,7 +66,7 @@ export interface AIBaselineData {
 
 /**
  * Custom hook for managing all wizard form state
- * 
+ *
  * Organizes state by logical sections:
  * - Templates & Industry
  * - Use Case Data
@@ -75,21 +75,22 @@ export interface AIBaselineData {
  * - Location & Pricing
  * - Advanced Analytics
  * - AI Suggestions
- * 
+ *
  * @returns Form state and setter functions
  */
 export function useWizardFormState() {
   // ============================================
   // SECTION 1: Templates & Industry
   // ============================================
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [useTemplate, setUseTemplate] = useState(true);
 
   // ============================================
   // SECTION 2: Use Case Data (Step 1 responses)
   // ============================================
   const [useCaseData, setUseCaseData] = useState<{ [key: string]: any }>({});
-  const [aiUseCaseRecommendation, setAiUseCaseRecommendation] = useState<AIUseCaseRecommendation | null>(null);
+  const [aiUseCaseRecommendation, setAiUseCaseRecommendation] =
+    useState<AIUseCaseRecommendation | null>(null);
 
   // ============================================
   // SECTION 3: System Configuration (BESS sizing)
@@ -113,44 +114,44 @@ export function useWizardFormState() {
     parkingAreaSqFt: 0,
     hasOpenLand: false,
     openLandAcres: 0,
-    autoCalculated: false
+    autoCalculated: false,
   });
 
   // EV charger configuration
   const [evChargerConfig, setEVChargerConfig] = useState<EVChargerConfig>({
     hasChargers: false,
     level2Count: 0,
-    dcFastCount: 0
+    dcFastCount: 0,
   });
 
   // Wind configuration
   const [windConfig, setWindConfig] = useState<WindConfig>({
-    turbineModel: 'small',
+    turbineModel: "small",
     turbineCount: 1,
     avgWindSpeed: 12,
     hubHeight: 80,
-    manualMW: 0
+    manualMW: 0,
   });
 
   // Generator configuration
   const [generatorConfig, setGeneratorConfig] = useState<GeneratorConfig>({
-    fuelType: 'natural-gas',
+    fuelType: "natural-gas",
     runtimeHours: 8760,
     loadFactor: 0.75,
-    manualMW: 0
+    manualMW: 0,
   });
 
   // ============================================
   // SECTION 5: Location & Pricing
   // ============================================
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState("");
   const [electricityRate, setElectricityRate] = useState(0.15);
   const [knowsRate, setKnowsRate] = useState(false);
 
   // Installation, shipping, financing options
-  const [selectedInstallation, setSelectedInstallation] = useState('epc');
-  const [selectedShipping, setSelectedShipping] = useState('best-value');
-  const [selectedFinancing, setSelectedFinancing] = useState('cash');
+  const [selectedInstallation, setSelectedInstallation] = useState("epc");
+  const [selectedShipping, setSelectedShipping] = useState("best-value");
+  const [selectedFinancing, setSelectedFinancing] = useState("cash");
 
   // Cost breakdown
   const [costs, setCosts] = useState({
@@ -158,7 +159,7 @@ export function useWizardFormState() {
     installation: 0,
     shipping: 0,
     softCosts: 0,
-    total: 0
+    total: 0,
   });
 
   // Equipment breakdown (batteries, inverters, containers, etc.)
@@ -179,16 +180,18 @@ export function useWizardFormState() {
   // ============================================
   // SECTION 7: AI Suggestions & Baseline
   // ============================================
-  const [aiSuggestions, setAiSuggestions] = useState<Array<{
-    type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
-    title: string;
-    description: string;
-    currentValue: string;
-    suggestedValue: string;
-    impact: string;
-    savings?: string;
-    action: () => void;
-  }>>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<
+    Array<{
+      type: "optimization" | "cost-saving" | "performance" | "warning";
+      title: string;
+      description: string;
+      currentValue: string;
+      suggestedValue: string;
+      impact: string;
+      savings?: string;
+      action: () => void;
+    }>
+  >([]);
 
   const [aiBaseline, setAiBaseline] = useState<AIBaselineData | null>(null);
 
@@ -200,7 +203,7 @@ export function useWizardFormState() {
    * Reset all form state to defaults
    */
   const resetFormState = () => {
-    setSelectedTemplate('');
+    setSelectedTemplate("");
     setUseTemplate(true);
     setUseCaseData({});
     setAiUseCaseRecommendation(null);
@@ -217,38 +220,38 @@ export function useWizardFormState() {
       parkingAreaSqFt: 0,
       hasOpenLand: false,
       openLandAcres: 0,
-      autoCalculated: false
+      autoCalculated: false,
     });
     setEVChargerConfig({
       hasChargers: false,
       level2Count: 0,
-      dcFastCount: 0
+      dcFastCount: 0,
     });
     setWindConfig({
-      turbineModel: 'small',
+      turbineModel: "small",
       turbineCount: 1,
       avgWindSpeed: 12,
       hubHeight: 80,
-      manualMW: 0
+      manualMW: 0,
     });
     setGeneratorConfig({
-      fuelType: 'natural-gas',
+      fuelType: "natural-gas",
       runtimeHours: 8760,
       loadFactor: 0.75,
-      manualMW: 0
+      manualMW: 0,
     });
-    setLocation('');
+    setLocation("");
     setElectricityRate(0.15);
     setKnowsRate(false);
-    setSelectedInstallation('epc');
-    setSelectedShipping('best-value');
-    setSelectedFinancing('cash');
+    setSelectedInstallation("epc");
+    setSelectedShipping("best-value");
+    setSelectedFinancing("cash");
     setCosts({
       equipment: 0,
       installation: 0,
       shipping: 0,
       softCosts: 0,
-      total: 0
+      total: 0,
     });
     setEquipmentBreakdown(null);
     setShowAdvancedAnalytics(false);
@@ -293,35 +296,35 @@ export function useWizardFormState() {
       industry: selectedTemplate,
       useTemplate,
       useCaseAnswers: useCaseData,
-      
+
       // BESS Configuration
       storageSizeMW,
       durationHours,
       storageCapacityMWh: storageSizeMW * durationHours,
-      
+
       // Renewables
       includeRenewables,
       solarMW,
       windMW,
       generatorMW,
       totalRenewableMW: getTotalRenewableCapacity(),
-      
+
       // Location & Economics
       location,
       electricityRate,
-      
+
       // Options
       installation: selectedInstallation,
       shipping: selectedShipping,
       financing: selectedFinancing,
-      
+
       // Costs
       costs,
       equipmentBreakdown,
-      
+
       // Total System
       totalSystemMW: getTotalSystemCapacity(),
-      hasRenewables: hasRenewables()
+      hasRenewables: hasRenewables(),
     };
   };
 
@@ -331,19 +334,19 @@ export function useWizardFormState() {
     setSelectedTemplate,
     useTemplate,
     setUseTemplate,
-    
+
     // Use Case Data
     useCaseData,
     setUseCaseData,
     aiUseCaseRecommendation,
     setAiUseCaseRecommendation,
-    
+
     // System Configuration
     storageSizeMW,
     setStorageSizeMW,
     durationHours,
     setDurationHours,
-    
+
     // Renewables & Power Generation
     includeRenewables,
     setIncludeRenewables,
@@ -361,7 +364,7 @@ export function useWizardFormState() {
     setWindConfig,
     generatorConfig,
     setGeneratorConfig,
-    
+
     // Location & Pricing
     location,
     setLocation,
@@ -379,7 +382,7 @@ export function useWizardFormState() {
     setCosts,
     equipmentBreakdown,
     setEquipmentBreakdown,
-    
+
     // Advanced Analytics
     showAdvancedAnalytics,
     setShowAdvancedAnalytics,
@@ -397,19 +400,19 @@ export function useWizardFormState() {
     setMpcStrategy,
     analyticsConfidence,
     setAnalyticsConfidence,
-    
+
     // AI Suggestions
     aiSuggestions,
     setAiSuggestions,
     aiBaseline,
     setAiBaseline,
-    
+
     // Helper functions
     resetFormState,
     getTotalRenewableCapacity,
     getTotalSystemCapacity,
     hasRenewables,
-    getConfigurationSummary
+    getConfigurationSummary,
   };
 }
 

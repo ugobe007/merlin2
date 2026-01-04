@@ -1,11 +1,9 @@
 /**
  * @deprecated This file is a stub for legacy code compatibility.
  * New code should use unifiedPricingService.ts instead.
- * 
+ *
  * This file will be removed once all legacy imports are updated.
  */
-
-import { getBatteryPricing } from '@/services/unifiedPricingService';
 
 /**
  * @deprecated Use unifiedPricingService.getBatteryPricing() instead

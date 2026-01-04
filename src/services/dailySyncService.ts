@@ -10,7 +10,7 @@ export interface SyncJob {
   schedule: string;
   lastRun?: string;
   nextRun?: string;
-  status: 'idle' | 'running' | 'success' | 'error';
+  status: "idle" | "running" | "success" | "error";
   errorMessage?: string;
 }
 
@@ -53,7 +53,7 @@ export class DailySyncService {
       jobs: [],
       errors: [],
       warnings: [],
-      summary: 'No sync jobs configured'
+      summary: "No sync jobs configured",
     };
   }
 
@@ -64,17 +64,17 @@ export class DailySyncService {
   async runJob(jobId: string): Promise<SyncJob> {
     return {
       id: jobId,
-      name: 'Job',
-      schedule: 'N/A',
-      status: 'idle'
+      name: "Job",
+      schedule: "N/A",
+      status: "idle",
     };
   }
 
   getServiceStatus() {
     return {
       isRunning: false,
-      nextSync: 'Not scheduled',
-      lastSync: 'Never'
+      nextSync: "Not scheduled",
+      lastSync: "Never",
     };
   }
 

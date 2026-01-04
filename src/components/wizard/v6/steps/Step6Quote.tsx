@@ -37,6 +37,8 @@ import {
   calculateIncentives,
   type StateIncentive 
 } from '@/services/stateIncentivesService';
+import { TrueQuoteVerifyBadge } from '../components/TrueQuoteVerifyBadge';
+import { useTrueQuote } from '@/hooks/useTrueQuote';
 
 // ============================================================================
 // COMPONENT
@@ -59,7 +61,50 @@ export function Step6Quote({ state }: Props) {
     statePrograms?: Array<{ program: string; amount: number; type: string }>;
   } | null>(null);
   const [loadingIncentives, setLoadingIncentives] = useState(true);
+  
+  // TrueQuote™ Verification Data
+  const trueQuoteData = useTrueQuote(state);
 
+  // Load state incentives
+  // MUST be before any early returns to comply with React hooks rules
+  useEffect(() => {
+    async function loadIncentives() {
+      if (!state.zipCode || !calculations) return;
+      
+      setLoadingIncentives(true);
+      try {
+        // Calculate incentives with new API (excludes equity programs by default)
+        const result = await calculateIncentives(
+          state.zipCode,
+          calculations.totalInvestment,
+          calculations.bessKWh,
+          'commercial',  // sector
+          calculations.solarKW > 0,  // includesSolar
+          false  // isEquityEligible (exclude equity programs by default)
+        );
+        
+        // Get the raw incentives for display (filtered list)
+        const incentives = await getIncentivesByZip(state.zipCode);
+        setStateIncentives(incentives);
+        
+        // Set the summary with the calculated values
+        setIncentiveSummary({
+          totalStateIncentive: result.stateIncentives,
+          federalITC: result.federalITC,
+          netInvestment: result.netInvestment,
+          statePrograms: result.statePrograms
+        });
+      } catch (err) {
+        console.error('Error loading state incentives:', err);
+      } finally {
+        setLoadingIncentives(false);
+      }
+    }
+    
+    loadIncentives();
+  }, [state.zipCode, calculations]);
+
+  // Early return check - MUST be after all hooks
   if (!calculations || !powerLevel) {
     return (
       <div className="text-center py-12">
@@ -99,44 +144,6 @@ export function Step6Quote({ state }: Props) {
     fullCalculations: calculations,
   });
 
-  // Load state incentives
-  useEffect(() => {
-    async function loadIncentives() {
-      if (!state.zipCode || !calculations) return;
-      
-      setLoadingIncentives(true);
-      try {
-        // Calculate incentives with new API (excludes equity programs by default)
-        const result = await calculateIncentives(
-          state.zipCode,
-          calculations.totalInvestment,
-          calculations.bessKWh,
-          'commercial',  // sector
-          calculations.solarKW > 0,  // includesSolar
-          false  // isEquityEligible (exclude equity programs by default)
-        );
-        
-        // Get the raw incentives for display (filtered list)
-        const incentives = await getIncentivesByZip(state.zipCode);
-        setStateIncentives(incentives);
-        
-        // Set the summary with the calculated values
-        setIncentiveSummary({
-          totalStateIncentive: result.stateIncentives,
-          federalITC: result.federalITC,
-          netInvestment: result.netInvestment,
-          statePrograms: result.statePrograms
-        });
-      } catch (err) {
-        console.error('Error loading state incentives:', err);
-      } finally {
-        setLoadingIncentives(false);
-      }
-    }
-    
-    loadIncentives();
-  }, [state.zipCode, calculations]);
-
   // Handle Request Quote button
   const handleRequestQuote = () => {
     setShowRequestModal(true);
@@ -173,7 +180,7 @@ export function Step6Quote({ state }: Props) {
         transformerVoltage: '480V/13.8kV',
         cyclesPerYear: 365,
         warrantyYears: 15,
-        utilityRate: calculations.utilityRate || 0.12,
+        utilityRate: calculations.utilityRate || 0.12, // SSOT: Fallback to EIA 2024 national average commercial rate
         demandCharge: calculations.demandCharge || 15,
         solarPVIncluded: calculations.solarKW > 0,
         solarCapacityKW: calculations.solarKW,
@@ -208,9 +215,18 @@ export function Step6Quote({ state }: Props) {
           <h1 className="text-3xl font-bold text-white mb-2">
             Your Merlin Energy Quote
           </h1>
-          <p className="text-purple-300">
+          <p className="text-purple-300 mb-4">
             {powerLevel.name} system for your {state.industryName}
           </p>
+          {/* Quote ID with TrueQuote™ Badge */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-sm text-slate-400">Quote ID: {quoteId}</span>
+            <TrueQuoteVerifyBadge
+              quoteId={quoteId}
+              worksheetData={trueQuoteData}
+              variant="compact"
+            />
+          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════
@@ -492,6 +508,14 @@ export function Step6Quote({ state }: Props) {
                             {(calculations as any).selectedEvTier.dcfcCount} chargers
                           </div>
                         </div>
+                        {(calculations as any).selectedEvTier.ultraFastCount > 0 && (
+                          <div>
+                            <div className="text-slate-500 text-xs mb-1">Ultra-Fast</div>
+                            <div className="text-white font-semibold">
+                              {(calculations as any).selectedEvTier.ultraFastCount} chargers
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <div className="text-slate-500 text-xs mb-1">Total Power</div>
                           <div className="text-white font-semibold">
@@ -499,9 +523,15 @@ export function Step6Quote({ state }: Props) {
                           </div>
                         </div>
                         <div>
+                          <div className="text-slate-500 text-xs mb-1">Ultra-Fast</div>
+                          <div className="text-white font-semibold">
+                            {((calculations as any).selectedEvTier.ultraFastCount || 0)} chargers
+                          </div>
+                        </div>
+                        <div>
                           <div className="text-slate-500 text-xs mb-1">Total Stations</div>
                           <div className="text-white font-semibold">
-                            {(calculations as any).selectedEvTier.l2Count + (calculations as any).selectedEvTier.dcfcCount}
+                            {(calculations as any).selectedEvTier.l2Count + (calculations as any).selectedEvTier.dcfcCount + ((calculations as any).selectedEvTier.ultraFastCount || 0)}
                           </div>
                         </div>
                       </>

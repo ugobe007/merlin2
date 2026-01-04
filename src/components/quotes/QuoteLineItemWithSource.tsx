@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { Info, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { SourceAttributionTooltip, SourceBadge } from './SourceAttributionTooltip';
+import { SourceAttributionTooltip } from './SourceAttributionTooltip';
 import type { BenchmarkSource } from '@/services/benchmarkSources';
 
 // Re-export for convenience

@@ -3,7 +3,12 @@
  * Provides safe fallbacks for config update functions that may not be defined
  */
 
-import type { SolarConfig, GeneratorConfig, WindConfig, BessConfig } from './smartWizardConfigValidator';
+import type {
+  SolarConfig,
+  GeneratorConfig,
+  WindConfig,
+  BessConfig,
+} from "./smartWizardConfigValidator";
 
 export interface ConfigUpdaters {
   updateSolarConfig?: (config: Partial<SolarConfig>) => void;
@@ -30,14 +35,14 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
           updaters.updateSolarConfig(config);
         } else if (updaters.setSolarConfig) {
           // Fallback to setSolarConfig if updateSolarConfig doesn't exist
-          console.warn('⚠️ updateSolarConfig not found, using setSolarConfig instead');
+          console.warn("⚠️ updateSolarConfig not found, using setSolarConfig instead");
           // Note: This may require merging with existing config
           updaters.setSolarConfig(config as SolarConfig);
         } else {
-          console.error('❌ No solar config updater function available');
+          console.error("❌ No solar config updater function available");
         }
       } catch (error) {
-        console.error('❌ Error updating solar config:', error);
+        console.error("❌ Error updating solar config:", error);
       }
     },
 
@@ -49,13 +54,13 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
         if (updaters.updateGeneratorConfig) {
           updaters.updateGeneratorConfig(config);
         } else if (updaters.setGeneratorConfig) {
-          console.warn('⚠️ updateGeneratorConfig not found, using setGeneratorConfig instead');
+          console.warn("⚠️ updateGeneratorConfig not found, using setGeneratorConfig instead");
           updaters.setGeneratorConfig(config as GeneratorConfig);
         } else {
-          console.error('❌ No generator config updater function available');
+          console.error("❌ No generator config updater function available");
         }
       } catch (error) {
-        console.error('❌ Error updating generator config:', error);
+        console.error("❌ Error updating generator config:", error);
       }
     },
 
@@ -67,13 +72,13 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
         if (updaters.updateWindConfig) {
           updaters.updateWindConfig(config);
         } else if (updaters.setWindConfig) {
-          console.warn('⚠️ updateWindConfig not found, using setWindConfig instead');
+          console.warn("⚠️ updateWindConfig not found, using setWindConfig instead");
           updaters.setWindConfig(config as WindConfig);
         } else {
-          console.error('❌ No wind config updater function available');
+          console.error("❌ No wind config updater function available");
         }
       } catch (error) {
-        console.error('❌ Error updating wind config:', error);
+        console.error("❌ Error updating wind config:", error);
       }
     },
 
@@ -85,13 +90,13 @@ export function createSafeConfigUpdaters(updaters: ConfigUpdaters) {
         if (updaters.updateBessConfig) {
           updaters.updateBessConfig(config);
         } else if (updaters.setBessConfig) {
-          console.warn('⚠️ updateBessConfig not found, using setBessConfig instead');
+          console.warn("⚠️ updateBessConfig not found, using setBessConfig instead");
           updaters.setBessConfig(config as BessConfig);
         } else {
-          console.error('❌ No BESS config updater function available');
+          console.error("❌ No BESS config updater function available");
         }
       } catch (error) {
-        console.error('❌ Error updating BESS config:', error);
+        console.error("❌ Error updating BESS config:", error);
       }
     },
   };
@@ -107,20 +112,20 @@ export function validateConfigUpdaters(updaters: ConfigUpdaters): {
   const missing: string[] = [];
 
   if (!updaters.updateSolarConfig && !updaters.setSolarConfig) {
-    missing.push('updateSolarConfig or setSolarConfig');
+    missing.push("updateSolarConfig or setSolarConfig");
   }
   if (!updaters.updateGeneratorConfig && !updaters.setGeneratorConfig) {
-    missing.push('updateGeneratorConfig or setGeneratorConfig');
+    missing.push("updateGeneratorConfig or setGeneratorConfig");
   }
   if (!updaters.updateWindConfig && !updaters.setWindConfig) {
-    missing.push('updateWindConfig or setWindConfig');
+    missing.push("updateWindConfig or setWindConfig");
   }
   if (!updaters.updateBessConfig && !updaters.setBessConfig) {
-    missing.push('updateBessConfig or setBessConfig');
+    missing.push("updateBessConfig or setBessConfig");
   }
 
   if (missing.length > 0) {
-    console.warn('⚠️ [Config Updaters] Missing functions:', missing);
+    console.warn("⚠️ [Config Updaters] Missing functions:", missing);
   }
 
   return {

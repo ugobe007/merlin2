@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface Vendor {
   id: string;
@@ -54,30 +54,30 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
   const [vendorQuotes, setVendorQuotes] = useState<VendorQuote[]>([]);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'vendors' | 'products' | 'quotes'>('quotes');
+  const [activeTab, setActiveTab] = useState<"vendors" | "products" | "quotes">("quotes");
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [showUploadQuote, setShowUploadQuote] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [quotePricing, setQuotePricing] = useState({
-    battery_kwh: '',
-    pcs_kw: '',
-    bos_percent: '',
-    epc_percent: '',
-    notes: ''
+    battery_kwh: "",
+    pcs_kw: "",
+    bos_percent: "",
+    epc_percent: "",
+    notes: "",
   });
-  
+
   const [newVendor, setNewVendor] = useState({
-    name: '',
-    contact_email: '',
-    contact_phone: '',
-    address: '',
-    website: '',
-    specialty: '',
-    notes: ''
+    name: "",
+    contact_email: "",
+    contact_phone: "",
+    address: "",
+    website: "",
+    specialty: "",
+    notes: "",
   });
 
   // Disabled localhost API since server is down - using local storage fallback
-  const API_BASE = '/api/db'; // Always use production API path or fallback to local storage
+  const API_BASE = "/api/db"; // Always use production API path or fallback to local storage
 
   useEffect(() => {
     if (isOpen) {
@@ -88,7 +88,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
 
   const fetchVendorQuotes = async () => {
     // For now, use local storage
-    const stored = localStorage.getItem('vendor_quotes');
+    const stored = localStorage.getItem("vendor_quotes");
     if (stored) {
       setVendorQuotes(JSON.parse(stored));
     }
@@ -116,40 +116,47 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         setProducts(data);
       }
     } catch (error) {
+      console.error('Failed to fetch vendor products:', error);
     }
   };
 
   const createVendor = async () => {
     if (!newVendor.name || !newVendor.contact_email) return;
-    
+
     try {
       const response = await fetch(`${API_BASE}/vendors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newVendor)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newVendor),
       });
-      
+
       if (response.ok) {
         setNewVendor({
-          name: '', contact_email: '', contact_phone: '',
-          address: '', website: '', specialty: '', notes: ''
+          name: "",
+          contact_email: "",
+          contact_phone: "",
+          address: "",
+          website: "",
+          specialty: "",
+          notes: "",
         });
         setShowAddVendor(false);
         fetchVendors();
       }
     } catch (error) {
+      console.error('Failed to create vendor:', error);
     }
   };
 
   const handleVendorSelect = (vendor: Vendor) => {
     setSelectedVendor(vendor);
-    setActiveTab('products');
+    setActiveTab("products");
     fetchVendorProducts(vendor.id);
   };
 
   const handleUploadQuote = () => {
     if (!uploadFile || !selectedVendor) return;
-    
+
     const newQuote: VendorQuote = {
       id: Date.now().toString(),
       vendor_id: selectedVendor.id,
@@ -159,26 +166,30 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
       pricing_data: {
         battery_kwh: quotePricing.battery_kwh ? parseFloat(quotePricing.battery_kwh) : undefined,
         pcs_kw: quotePricing.pcs_kw ? parseFloat(quotePricing.pcs_kw) : undefined,
-        bos_percent: quotePricing.bos_percent ? parseFloat(quotePricing.bos_percent) / 100 : undefined,
-        epc_percent: quotePricing.epc_percent ? parseFloat(quotePricing.epc_percent) / 100 : undefined,
-        notes: quotePricing.notes
-      }
+        bos_percent: quotePricing.bos_percent
+          ? parseFloat(quotePricing.bos_percent) / 100
+          : undefined,
+        epc_percent: quotePricing.epc_percent
+          ? parseFloat(quotePricing.epc_percent) / 100
+          : undefined,
+        notes: quotePricing.notes,
+      },
     };
 
     const updated = [...vendorQuotes, newQuote];
     setVendorQuotes(updated);
-    localStorage.setItem('vendor_quotes', JSON.stringify(updated));
-    
+    localStorage.setItem("vendor_quotes", JSON.stringify(updated));
+
     // Reset form
     setUploadFile(null);
-    setQuotePricing({ battery_kwh: '', pcs_kw: '', bos_percent: '', epc_percent: '', notes: '' });
+    setQuotePricing({ battery_kwh: "", pcs_kw: "", bos_percent: "", epc_percent: "", notes: "" });
     setShowUploadQuote(false);
   };
 
   const deleteQuote = (quoteId: string) => {
-    const updated = vendorQuotes.filter(q => q.id !== quoteId);
+    const updated = vendorQuotes.filter((q) => q.id !== quoteId);
     setVendorQuotes(updated);
-    localStorage.setItem('vendor_quotes', JSON.stringify(updated));
+    localStorage.setItem("vendor_quotes", JSON.stringify(updated));
   };
 
   if (!isOpen) return null;
@@ -189,10 +200,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-800">Vendor & Product Manager</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
             ×
           </button>
         </div>
@@ -200,31 +208,31 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
         {/* Tabs */}
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab('quotes')}
+            onClick={() => setActiveTab("quotes")}
             className={`px-6 py-3 font-medium ${
-              activeTab === 'quotes'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "quotes"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             📋 Vendor Quotes ({vendorQuotes.length})
           </button>
           <button
-            onClick={() => setActiveTab('vendors')}
+            onClick={() => setActiveTab("vendors")}
             className={`px-6 py-3 font-medium ${
-              activeTab === 'vendors'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "vendors"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             🏢 Vendors ({vendors.length})
           </button>
           <button
-            onClick={() => setActiveTab('products')}
+            onClick={() => setActiveTab("products")}
             className={`px-6 py-3 font-medium ${
-              activeTab === 'products'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "products"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             📦 Products ({products.length})
@@ -233,14 +241,14 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'quotes' && (
+          {activeTab === "quotes" && (
             <div className="h-full p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold">Uploaded Vendor Quotes</h3>
                 <button
                   onClick={() => {
                     if (vendors.length === 0) {
-                      alert('Please add vendors first in the Vendors tab');
+                      alert("Please add vendors first in the Vendors tab");
                       return;
                     }
                     setShowUploadQuote(true);
@@ -255,17 +263,26 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                 <div className="text-center text-gray-500 mt-12">
                   <div className="text-6xl mb-4">📋</div>
                   <p className="text-lg">No vendor quotes uploaded yet</p>
-                  <p className="text-sm mt-2">Upload vendor quotes to compare pricing with Merlin's estimates</p>
+                  <p className="text-sm mt-2">
+                    Upload vendor quotes to compare pricing with Merlin's estimates
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {vendorQuotes.map((quote) => (
-                    <div key={quote.id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <div
+                      key={quote.id}
+                      className="border rounded-lg p-4 hover:shadow-lg transition-shadow"
+                    >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-bold text-lg">{quote.vendor_name || 'Unknown Vendor'}</h4>
+                          <h4 className="font-bold text-lg">
+                            {quote.vendor_name || "Unknown Vendor"}
+                          </h4>
                           <p className="text-sm text-gray-600">{quote.file_name}</p>
-                          <p className="text-xs text-gray-400">{new Date(quote.upload_date).toLocaleDateString()}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(quote.upload_date).toLocaleDateString()}
+                          </p>
                         </div>
                         <button
                           onClick={() => deleteQuote(quote.id)}
@@ -282,7 +299,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                           {quote.pricing_data.battery_kwh && (
                             <div className="flex justify-between text-sm">
                               <span>Battery:</span>
-                              <span className="font-bold">${quote.pricing_data.battery_kwh}/kWh</span>
+                              <span className="font-bold">
+                                ${quote.pricing_data.battery_kwh}/kWh
+                              </span>
                             </div>
                           )}
                           {quote.pricing_data.pcs_kw && (
@@ -294,17 +313,23 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                           {quote.pricing_data.bos_percent !== undefined && (
                             <div className="flex justify-between text-sm">
                               <span>BOS:</span>
-                              <span className="font-bold">{(quote.pricing_data.bos_percent * 100).toFixed(1)}%</span>
+                              <span className="font-bold">
+                                {(quote.pricing_data.bos_percent * 100).toFixed(1)}%
+                              </span>
                             </div>
                           )}
                           {quote.pricing_data.epc_percent !== undefined && (
                             <div className="flex justify-between text-sm">
                               <span>EPC:</span>
-                              <span className="font-bold">{(quote.pricing_data.epc_percent * 100).toFixed(1)}%</span>
+                              <span className="font-bold">
+                                {(quote.pricing_data.epc_percent * 100).toFixed(1)}%
+                              </span>
                             </div>
                           )}
                           {quote.pricing_data.notes && (
-                            <div className="text-xs text-gray-600 mt-2 italic">{quote.pricing_data.notes}</div>
+                            <div className="text-xs text-gray-600 mt-2 italic">
+                              {quote.pricing_data.notes}
+                            </div>
                           )}
                         </div>
                       )}
@@ -315,7 +340,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeTab === 'vendors' && (
+          {activeTab === "vendors" && (
             <div className="h-full flex">
               {/* Vendor List */}
               <div className="w-1/3 border-r h-full overflow-y-auto">
@@ -327,7 +352,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                     Add New Vendor
                   </button>
                 </div>
-                
+
                 {isLoading ? (
                   <div className="p-4 text-center">Loading vendors...</div>
                 ) : (
@@ -337,7 +362,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                         key={vendor.id}
                         onClick={() => handleVendorSelect(vendor)}
                         className={`p-3 rounded border cursor-pointer hover:bg-gray-50 ${
-                          selectedVendor?.id === vendor.id ? 'bg-blue-50 border-blue-300' : ''
+                          selectedVendor?.id === vendor.id ? "bg-blue-50 border-blue-300" : ""
                         }`}
                       >
                         <div className="font-semibold">{vendor.name}</div>
@@ -370,15 +395,21 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                       {selectedVendor.website && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Website</label>
-                          <a href={selectedVendor.website} target="_blank" rel="noopener noreferrer" 
-                             className="text-blue-600 hover:underline">
+                          <a
+                            href={selectedVendor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
                             {selectedVendor.website}
                           </a>
                         </div>
                       )}
                       {selectedVendor.specialty && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Specialty</label>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Specialty
+                          </label>
                           <div className="text-gray-900">{selectedVendor.specialty}</div>
                         </div>
                       )}
@@ -405,13 +436,11 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeTab === 'products' && (
+          {activeTab === "products" && (
             <div className="h-full p-6">
               {selectedVendor ? (
                 <div>
-                  <h3 className="text-xl font-bold mb-4">
-                    Products from {selectedVendor.name}
-                  </h3>
+                  <h3 className="text-xl font-bold mb-4">Products from {selectedVendor.name}</h3>
                   {products.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {products.map((product) => (
@@ -428,9 +457,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                             </div>
                           )}
                           {product.availability && (
-                            <div className="text-xs text-blue-600 mt-1">
-                              {product.availability}
-                            </div>
+                            <div className="text-xs text-blue-600 mt-1">{product.availability}</div>
                           )}
                         </div>
                       ))}
@@ -481,9 +508,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                   <input
                     type="tel"
                     value={newVendor.contact_phone}
@@ -492,9 +517,7 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Specialty
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
                   <input
                     type="text"
                     value={newVendor.specialty}
@@ -534,21 +557,23 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                     Select Vendor *
                   </label>
                   <select
-                    value={selectedVendor?.id || ''}
+                    value={selectedVendor?.id || ""}
                     onChange={(e) => {
-                      const vendor = vendors.find(v => v.id === e.target.value);
+                      const vendor = vendors.find((v) => v.id === e.target.value);
                       setSelectedVendor(vendor || null);
                     }}
                     className="w-full border rounded-md px-3 py-2"
                     required
                   >
                     <option value="">Choose a vendor...</option>
-                    {vendors.map(vendor => (
-                      <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                      </option>
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Quote File (PDF/Excel) *
@@ -565,7 +590,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900 mb-3">Extract Pricing Data (optional):</p>
+                  <p className="text-sm font-medium text-blue-900 mb-3">
+                    Extract Pricing Data (optional):
+                  </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs text-gray-700 mb-1">Battery ($/kWh)</label>
@@ -573,7 +600,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                         type="number"
                         step="0.01"
                         value={quotePricing.battery_kwh}
-                        onChange={(e) => setQuotePricing({ ...quotePricing, battery_kwh: e.target.value })}
+                        onChange={(e) =>
+                          setQuotePricing({ ...quotePricing, battery_kwh: e.target.value })
+                        }
                         className="w-full border rounded-md px-2 py-1 text-sm"
                         placeholder="250.00"
                       />
@@ -584,7 +613,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                         type="number"
                         step="0.01"
                         value={quotePricing.pcs_kw}
-                        onChange={(e) => setQuotePricing({ ...quotePricing, pcs_kw: e.target.value })}
+                        onChange={(e) =>
+                          setQuotePricing({ ...quotePricing, pcs_kw: e.target.value })
+                        }
                         className="w-full border rounded-md px-2 py-1 text-sm"
                         placeholder="200.00"
                       />
@@ -595,7 +626,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                         type="number"
                         step="0.1"
                         value={quotePricing.bos_percent}
-                        onChange={(e) => setQuotePricing({ ...quotePricing, bos_percent: e.target.value })}
+                        onChange={(e) =>
+                          setQuotePricing({ ...quotePricing, bos_percent: e.target.value })
+                        }
                         className="w-full border rounded-md px-2 py-1 text-sm"
                         placeholder="15"
                       />
@@ -606,7 +639,9 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                         type="number"
                         step="0.1"
                         value={quotePricing.epc_percent}
-                        onChange={(e) => setQuotePricing({ ...quotePricing, epc_percent: e.target.value })}
+                        onChange={(e) =>
+                          setQuotePricing({ ...quotePricing, epc_percent: e.target.value })
+                        }
                         className="w-full border rounded-md px-2 py-1 text-sm"
                         placeholder="10"
                       />
@@ -629,7 +664,13 @@ const VendorManager: React.FC<VendorManagerProps> = ({ isOpen, onClose }) => {
                   onClick={() => {
                     setShowUploadQuote(false);
                     setUploadFile(null);
-                    setQuotePricing({ battery_kwh: '', pcs_kw: '', bos_percent: '', epc_percent: '', notes: '' });
+                    setQuotePricing({
+                      battery_kwh: "",
+                      pcs_kw: "",
+                      bos_percent: "",
+                      epc_percent: "",
+                      notes: "",
+                    });
                   }}
                   className="px-4 py-2 border rounded-md hover:bg-gray-50"
                 >

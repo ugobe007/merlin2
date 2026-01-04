@@ -6,7 +6,7 @@ export interface AdminCredentials {
   password: string;
 }
 
-export type AdminRole = 'super_admin' | 'admin' | 'limited_admin';
+export type AdminRole = "super_admin" | "admin" | "limited_admin";
 
 export interface AdminUser {
   email: string;
@@ -32,13 +32,13 @@ export class AdminAuthService {
   private getAdminCredentials(): AdminCredentials[] {
     const defaultCredentials: AdminCredentials[] = [
       {
-        email: 'admin@merlinenergy.net',
-        password: 'merlin2025'
+        email: "admin@merlinenergy.net",
+        password: "merlin2025",
       },
       {
-        email: 'viewer@merlinenergy.net',
-        password: 'viewer2025'
-      }
+        email: "viewer@merlinenergy.net",
+        password: "viewer2025",
+      },
     ];
 
     // Try to load from environment variables
@@ -48,7 +48,7 @@ export class AdminAuthService {
     if (envEmail && envPassword) {
       return [
         { email: envEmail, password: envPassword },
-        ...defaultCredentials // Keep default as fallback
+        ...defaultCredentials, // Keep default as fallback
       ];
     }
 
@@ -59,7 +59,7 @@ export class AdminAuthService {
         const accounts = JSON.parse(adminAccounts) as AdminCredentials[];
         return [...accounts, ...defaultCredentials];
       } catch (error) {
-        console.warn('Invalid VITE_ADMIN_ACCOUNTS format, using defaults');
+        console.warn("Invalid VITE_ADMIN_ACCOUNTS format, using defaults");
       }
     }
 
@@ -69,9 +69,9 @@ export class AdminAuthService {
   // Authenticate admin user
   authenticate(email: string, password: string): boolean {
     const validCredentials = this.getAdminCredentials();
-    
+
     const matchingCredential = validCredentials.find(
-      cred => cred.email === email && cred.password === password
+      (cred) => cred.email === email && cred.password === password
     );
 
     if (matchingCredential) {
@@ -80,15 +80,18 @@ export class AdminAuthService {
         email: matchingCredential.email,
         role: role,
         lastLogin: new Date().toISOString(),
-        permissions: this.getPermissions(matchingCredential.email, role)
+        permissions: this.getPermissions(matchingCredential.email, role),
       };
 
       // Store session
-      sessionStorage.setItem('admin_session', JSON.stringify({
-        email: this.currentAdmin.email,
-        loginTime: this.currentAdmin.lastLogin,
-        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString() // 8 hours
-      }));
+      sessionStorage.setItem(
+        "admin_session",
+        JSON.stringify({
+          email: this.currentAdmin.email,
+          loginTime: this.currentAdmin.lastLogin,
+          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours
+        })
+      );
 
       return true;
     }
@@ -98,12 +101,16 @@ export class AdminAuthService {
 
   // Get role based on email pattern
   private determineRoleFromEmail(email: string): AdminRole {
-    if (email.includes('super') || email === 'admin@merlinenergy.net') {
-      return 'super_admin';
-    } else if (email.includes('viewer') || email.includes('limited') || email === 'viewer@merlinenergy.net') {
-      return 'limited_admin';
+    if (email.includes("super") || email === "admin@merlinenergy.net") {
+      return "super_admin";
+    } else if (
+      email.includes("viewer") ||
+      email.includes("limited") ||
+      email === "viewer@merlinenergy.net"
+    ) {
+      return "limited_admin";
     }
-    return 'admin';
+    return "admin";
   }
 
   // Get permissions based on admin email and role
@@ -111,38 +118,38 @@ export class AdminAuthService {
     const adminRole = role || this.determineRoleFromEmail(email);
     // Limited admin permissions (view-only, no destructive actions)
     const limitedAdminPermissions = [
-      'view_pricing',
-      'view_validation',
-      'run_validation',
-      'view_database',
-      'export_config'  // Can export but not import
+      "view_pricing",
+      "view_validation",
+      "run_validation",
+      "view_database",
+      "export_config", // Can export but not import
     ];
 
     // Regular admin permissions (can edit but not system-level changes)
     const adminPermissions = [
       ...limitedAdminPermissions,
-      'edit_pricing',
-      'save_pricing',
-      'sync_database'
+      "edit_pricing",
+      "save_pricing",
+      "sync_database",
     ];
 
     // Super admin permissions (full access)
     const superAdminPermissions = [
       ...adminPermissions,
-      'reset_to_defaults',
-      'import_config',
-      'manage_users',
-      'system_config',
-      'delete_data',
-      'export_data'
+      "reset_to_defaults",
+      "import_config",
+      "manage_users",
+      "system_config",
+      "delete_data",
+      "export_data",
     ];
 
     switch (adminRole) {
-      case 'limited_admin':
+      case "limited_admin":
         return limitedAdminPermissions;
-      case 'super_admin':
+      case "super_admin":
         return superAdminPermissions;
-      case 'admin':
+      case "admin":
       default:
         return adminPermissions;
     }
@@ -155,7 +162,7 @@ export class AdminAuthService {
 
   // Check if session is valid
   isSessionValid(): boolean {
-    const sessionData = sessionStorage.getItem('admin_session');
+    const sessionData = sessionStorage.getItem("admin_session");
     if (!sessionData) return false;
 
     try {
@@ -179,27 +186,27 @@ export class AdminAuthService {
   // Logout admin user
   logout(): void {
     this.currentAdmin = null;
-    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem("admin_session");
   }
 
   // Get admin panel access methods
   static getAccessMethods(): { method: string; description: string; instructions: string }[] {
     return [
       {
-        method: 'Floating Button',
-        description: 'Purple gear icon in bottom-right corner',
-        instructions: 'Click the ⚙️ button with pulse animation'
+        method: "Floating Button",
+        description: "Purple gear icon in bottom-right corner",
+        instructions: "Click the ⚙️ button with pulse animation",
       },
       {
-        method: 'Keyboard Shortcut',
-        description: 'Quick access via keyboard',
-        instructions: 'Press Ctrl+Shift+A (Windows) or Cmd+Shift+A (Mac)'
+        method: "Keyboard Shortcut",
+        description: "Quick access via keyboard",
+        instructions: "Press Ctrl+Shift+A (Windows) or Cmd+Shift+A (Mac)",
       },
       {
-        method: 'Direct URL',
-        description: 'URL parameter access',
-        instructions: 'Add ?admin=true to any URL (still requires authentication)'
-      }
+        method: "Direct URL",
+        description: "URL parameter access",
+        instructions: "Add ?admin=true to any URL (still requires authentication)",
+      },
     ];
   }
 
@@ -207,11 +214,14 @@ export class AdminAuthService {
   static getCredentialInfo(): { email: string; source: string; role: AdminRole }[] {
     const service = AdminAuthService.getInstance();
     const credentials = service.getAdminCredentials();
-    
-    return credentials.map(cred => ({
+
+    return credentials.map((cred) => ({
       email: cred.email,
-      source: cred.email === 'admin@merlinenergy.net' || cred.email === 'viewer@merlinenergy.net' ? 'Default' : 'Environment',
-      role: service.determineRoleFromEmail(cred.email)
+      source:
+        cred.email === "admin@merlinenergy.net" || cred.email === "viewer@merlinenergy.net"
+          ? "Default"
+          : "Environment",
+      role: service.determineRoleFromEmail(cred.email),
     }));
   }
 

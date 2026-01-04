@@ -1,18 +1,18 @@
 /**
  * Data Integration Service - Unified API
- * 
+ *
  * Purpose: Single entry point that combines:
  * 1. Database queries (use_case_templates + equipment_database)
  * 2. Calculation engine (baselineService.ts) - Replaces deprecated bessDataService
  * 3. Solar sizing (solarSizingService.ts)
  * 4. Cache management (calculation_cache table)
- * 
+ *
  * Benefits:
  * - Single API call returns everything needed for a quote
  * - Automatic caching (70% faster for repeat requests)
  * - Fallback to static templates if database unavailable
  * - Usage analytics tracking
- * 
+ *
  * Usage:
  * const data = await getUseCaseWithCalculations({
  *   slug: 'car-wash',
@@ -23,12 +23,12 @@
  * });
  */
 
-import { supabase } from './supabaseClient';
-import { calculateBESSSize } from './baselineService'; // Migrated from deprecated bessDataService
-import { calculateFinancialMetrics } from './centralizedCalculations';
-import { calculateSolarBESSSystem } from './solarSizingService';
-import { getUseCaseBySlug } from '../data/useCaseTemplates';
-import crypto from 'crypto';
+import { supabase } from "./supabaseClient";
+import { calculateBESSSize } from "./baselineService"; // Migrated from deprecated bessDataService
+import { calculateFinancialMetrics } from "./centralizedCalculations";
+import { calculateSolarBESSSystem } from "./solarSizingService";
+import { getUseCaseBySlug } from "../data/useCaseTemplates";
+import crypto from "crypto";
 
 // ============================================================================
 // TYPES
@@ -43,7 +43,14 @@ export interface GetUseCaseParams {
   autonomyDays?: number;
 }
 
-import type { PowerProfile, FinancialParams, SolarCompatibility, CustomQuestion, IndustryStandards, CalculationResults } from '@/types';
+import type {
+  PowerProfile,
+  FinancialParams,
+  SolarCompatibility,
+  CustomQuestion,
+  IndustryStandards,
+  CalculationResults,
+} from "@/types";
 
 export interface UseCaseWithCalculations {
   template: {
@@ -88,38 +95,44 @@ export async function getUseCaseWithCalculations(
   params: GetUseCaseParams
 ): Promise<UseCaseWithCalculations> {
   const startTime = Date.now();
-  
+
   const { slug, facilitySize, location, customAnswers, solarEnabled, autonomyDays } = params;
-  
-  if (import.meta.env.DEV) { console.log(`🔍 Fetching use case: ${slug}`); }
+
+  if (import.meta.env.DEV) {
+    console.log(`🔍 Fetching use case: ${slug}`);
+  }
 
   try {
     // STEP 1: Check cache first (fastest path)
     const cacheKey = generateCacheKey(params);
     const cached = await checkCalculationCache(cacheKey);
-    
-    if (cached && cached.calculation_version === '2.1.0') {
+
+    if (cached && cached.calculation_version === "2.1.0") {
       const executionTime = Date.now() - startTime;
-      if (import.meta.env.DEV) { console.log(`✅ Cache hit! (${executionTime}ms)`); }
-      
+      if (import.meta.env.DEV) {
+        console.log(`✅ Cache hit! (${executionTime}ms)`);
+      }
+
       return {
         ...cached.calculation_results,
         fromCache: true,
-        executionTimeMs: executionTime
+        executionTimeMs: executionTime,
       };
     }
 
     // STEP 2: Fetch template from database
-    if (import.meta.env.DEV) { console.log('📥 Fetching from database...'); }
+    if (import.meta.env.DEV) {
+      console.log("📥 Fetching from database...");
+    }
     const { data: templateData, error: templateError } = await supabase
-      .from('use_case_templates')
-      .select('*')
-      .eq('slug', slug)
-      .eq('is_active', true)
+      .from("use_case_templates")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_active", true)
       .single();
 
     if (templateError) {
-      console.warn('⚠️  Database fetch failed, using static fallback');
+      console.warn("⚠️  Database fetch failed, using static fallback");
       return await fetchFromStaticTemplates(params);
     }
 
@@ -129,14 +142,14 @@ export async function getUseCaseWithCalculations(
 
     // STEP 3: Fetch equipment
     const { data: equipmentData, error: equipmentError } = await supabase
-      .from('equipment_database')
-      .select('*')
-      .eq('use_case_template_id', templateData.id)
-      .eq('is_active', true)
-      .order('display_order');
+      .from("equipment_database")
+      .select("*")
+      .eq("use_case_template_id", templateData.id)
+      .eq("is_active", true)
+      .order("display_order");
 
     if (equipmentError) {
-      console.error('Error fetching equipment:', equipmentError);
+      console.error("Error fetching equipment:", equipmentError);
     }
 
     // Transform database format to component format
@@ -154,56 +167,63 @@ export async function getUseCaseWithCalculations(
       customQuestions: templateData.custom_questions || [],
       recommendedApplications: templateData.recommended_applications || [],
       industryStandards: templateData.industry_standards || {},
-      version: templateData.version
+      version: templateData.version,
     };
 
-    const equipment = (equipmentData || []).map(eq => ({
+    const equipment = (equipmentData || []).map((eq) => ({
       id: eq.id,
       name: eq.name,
       powerKw: eq.power_kw,
       dutyCycle: eq.duty_cycle,
-      description: eq.description || '',
-      category: eq.category || '',
-      dataSource: eq.data_source || ''
+      description: eq.description || "",
+      category: eq.category || "",
+      dataSource: eq.data_source || "",
     }));
 
     // STEP 4: Run calculations
-    if (import.meta.env.DEV) { console.log('🧮 Running calculations...'); }
-    
+    if (import.meta.env.DEV) {
+      console.log("🧮 Running calculations...");
+    }
+
     // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
     const powerRatingMW = template.powerProfile.peakLoadKw / 1000;
     const durationHours = 4; // Default, can be customized
-    
+
     // Use centralized financial metrics calculator (database-driven)
     const financialMetrics = await calculateFinancialMetrics({
       storageSizeMW: powerRatingMW,
       durationHours,
-      location: location || 'United States', // Use provided location or default
+      location: location || "United States", // Use provided location or default
       electricityRate: 0.12, // Default rate, can be region-specific
       solarMW: 0, // Will be added in step 5 if enabled
-      includeNPV: true
+      includeNPV: true,
     });
 
     const sizing = calculateBESSSize({
       peakDemandkW: template.powerProfile.peakLoadKw,
       averageDemandkW: template.powerProfile.avgLoadKw || template.powerProfile.peakLoadKw * 0.5,
-      dailyEnergyConsumptionkWh: template.powerProfile.dailyLoadkWh || template.powerProfile.peakLoadKw * template.powerProfile.dailyOperatingHours,
+      dailyEnergyConsumptionkWh:
+        template.powerProfile.dailyLoadkWh ||
+        template.powerProfile.peakLoadKw * template.powerProfile.dailyOperatingHours,
       useCase: template.slug,
-      primaryObjective: 'all'
+      primaryObjective: "all",
     });
 
     // STEP 5: Add solar if enabled
     let solarCalculations = null;
     if (solarEnabled && template.solarCompatibility?.recommended) {
-      if (import.meta.env.DEV) { console.log('☀️  Calculating solar integration...'); }
-      
+      if (import.meta.env.DEV) {
+        console.log("☀️  Calculating solar integration...");
+      }
+
       solarCalculations = calculateSolarBESSSystem({
-        dailyLoadkWh: (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
+        dailyLoadkWh:
+          (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
         peakLoadkW: sizing.recommendedPowerMW * 1000,
         location,
         autonomyDays: autonomyDays || template.solarCompatibility.autonomyDays || 3,
         systemVoltage: 480,
-        temperatureC: 20
+        temperatureC: 20,
       });
     }
 
@@ -236,7 +256,7 @@ export async function getUseCaseWithCalculations(
         },
       },
       fromCache: false,
-      executionTimeMs: Date.now() - startTime
+      executionTimeMs: Date.now() - startTime,
     } as UseCaseWithCalculations;
 
     // STEP 6: Cache results
@@ -245,14 +265,17 @@ export async function getUseCaseWithCalculations(
     // STEP 7: Update usage stats
     await incrementTemplateUsage(templateData.id);
 
-    if (import.meta.env.DEV) { console.log(`✅ Complete! (${results.executionTimeMs}ms)`); }
+    if (import.meta.env.DEV) {
+      console.log(`✅ Complete! (${results.executionTimeMs}ms)`);
+    }
     return results;
-
   } catch (error) {
-    console.error('❌ Error in getUseCaseWithCalculations:', error);
-    
+    console.error("❌ Error in getUseCaseWithCalculations:", error);
+
     // Fallback to static templates
-    if (import.meta.env.DEV) { console.log('🔄 Falling back to static templates...'); }
+    if (import.meta.env.DEV) {
+      console.log("🔄 Falling back to static templates...");
+    }
     return await fetchFromStaticTemplates(params);
   }
 }
@@ -272,11 +295,11 @@ function generateCacheKey(params: GetUseCaseParams): string {
     location: params.location,
     customAnswers: JSON.stringify(params.customAnswers || {}),
     solarEnabled: params.solarEnabled || false,
-    autonomyDays: params.autonomyDays || 3
+    autonomyDays: params.autonomyDays || 3,
   };
-  
+
   const str = JSON.stringify(sortedParams, Object.keys(sortedParams).sort());
-  return crypto.createHash('md5').update(str).digest('hex');
+  return crypto.createHash("md5").update(str).digest("hex");
 }
 
 /**
@@ -285,10 +308,10 @@ function generateCacheKey(params: GetUseCaseParams): string {
 async function checkCalculationCache(inputHash: string) {
   try {
     const { data, error } = await supabase
-      .from('calculation_cache')
-      .select('*')
-      .eq('input_hash', inputHash)
-      .gt('expires_at', new Date().toISOString())
+      .from("calculation_cache")
+      .select("*")
+      .eq("input_hash", inputHash)
+      .gt("expires_at", new Date().toISOString())
       .single();
 
     if (error || !data) {
@@ -297,7 +320,7 @@ async function checkCalculationCache(inputHash: string) {
 
     return data;
   } catch (error) {
-    console.error('Cache check error:', error);
+    console.error("Cache check error:", error);
     return null;
   }
 }
@@ -305,30 +328,26 @@ async function checkCalculationCache(inputHash: string) {
 /**
  * Save calculation results to cache
  */
-async function saveToCalculationCache(
-  inputHash: string,
-  results: any,
-  executionTimeMs: number
-) {
+async function saveToCalculationCache(inputHash: string, results: any, executionTimeMs: number) {
   try {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    await supabase
-      .from('calculation_cache')
-      .upsert({
-        input_hash: inputHash,
-        calculation_type: 'unified',
-        input_data: { hash: inputHash },
-        calculation_results: results,
-        calculation_version: '2.1.0',
-        execution_time_ms: executionTimeMs,
-        expires_at: expiresAt.toISOString()
-      });
+    await supabase.from("calculation_cache").upsert({
+      input_hash: inputHash,
+      calculation_type: "unified",
+      input_data: { hash: inputHash },
+      calculation_results: results,
+      calculation_version: "2.1.0",
+      execution_time_ms: executionTimeMs,
+      expires_at: expiresAt.toISOString(),
+    });
 
-    if (import.meta.env.DEV) { console.log('💾 Results cached for 7 days'); }
+    if (import.meta.env.DEV) {
+      console.log("💾 Results cached for 7 days");
+    }
   } catch (error) {
-    console.error('Cache save error:', error);
+    console.error("Cache save error:", error);
     // Non-fatal - continue without caching
   }
 }
@@ -339,21 +358,23 @@ async function saveToCalculationCache(
 export async function clearExpiredCache(): Promise<number> {
   try {
     const { data, error } = await supabase
-      .from('calculation_cache')
+      .from("calculation_cache")
       .delete()
-      .lt('expires_at', new Date().toISOString())
+      .lt("expires_at", new Date().toISOString())
       .select();
 
     if (error) {
-      console.error('Error clearing cache:', error);
+      console.error("Error clearing cache:", error);
       return 0;
     }
 
     const count = data?.length || 0;
-    if (import.meta.env.DEV) { console.log(`🗑️  Cleared ${count} expired cache entries`); }
+    if (import.meta.env.DEV) {
+      console.log(`🗑️  Cleared ${count} expired cache entries`);
+    }
     return count;
   } catch (error) {
-    console.error('Cache cleanup error:', error);
+    console.error("Cache cleanup error:", error);
     return 0;
   }
 }
@@ -364,21 +385,23 @@ export async function clearExpiredCache(): Promise<number> {
 export async function clearAllCache(): Promise<number> {
   try {
     const { data, error } = await supabase
-      .from('calculation_cache')
+      .from("calculation_cache")
       .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all
+      .neq("id", "00000000-0000-0000-0000-000000000000") // Delete all
       .select();
 
     if (error) {
-      console.error('Error clearing cache:', error);
+      console.error("Error clearing cache:", error);
       return 0;
     }
 
     const count = data?.length || 0;
-    if (import.meta.env.DEV) { console.log(`🗑️  Cleared ALL ${count} cache entries`); }
+    if (import.meta.env.DEV) {
+      console.log(`🗑️  Cleared ALL ${count} cache entries`);
+    }
     return count;
   } catch (error) {
-    console.error('Cache cleanup error:', error);
+    console.error("Cache cleanup error:", error);
     return 0;
   }
 }
@@ -396,7 +419,9 @@ async function fetchFromStaticTemplates(
   const startTime = Date.now();
   const { slug, facilitySize, location, customAnswers, solarEnabled } = params;
 
-  if (import.meta.env.DEV) { console.log('📄 Using static templates fallback...'); }
+  if (import.meta.env.DEV) {
+    console.log("📄 Using static templates fallback...");
+  }
 
   const staticTemplate = getUseCaseBySlug(slug);
   if (!staticTemplate) {
@@ -418,7 +443,7 @@ async function fetchFromStaticTemplates(
     customQuestions: staticTemplate.customQuestions || [],
     recommendedApplications: staticTemplate.recommendedApplications || [],
     industryStandards: {},
-    version: '1.0.0'
+    version: "1.0.0",
   };
 
   const equipment = (staticTemplate.equipment || []).map((eq, index) => ({
@@ -426,38 +451,40 @@ async function fetchFromStaticTemplates(
     name: eq.name,
     powerKw: eq.powerKw,
     dutyCycle: eq.dutyCycle,
-    description: eq.description || '',
-    category: '',
-    dataSource: ''
+    description: eq.description || "",
+    category: "",
+    dataSource: "",
   }));
 
   // ✅ SINGLE SOURCE OF TRUTH: Use centralizedCalculations.calculateFinancialMetrics()
   const financialMetrics = await calculateFinancialMetrics({
     storageSizeMW: template.powerProfile.peakLoadKw / 1000,
     durationHours: 4,
-    location: location || 'United States', // Use provided location or default
+    location: location || "United States", // Use provided location or default
     electricityRate: 0.12, // Default rate
     solarMW: 0,
-    includeNPV: true
+    includeNPV: true,
   });
 
   const sizing = calculateBESSSize({
     peakDemandkW: template.powerProfile.peakLoadKw,
     averageDemandkW: template.powerProfile.typicalLoadKw,
-    dailyEnergyConsumptionkWh: template.powerProfile.typicalLoadKw * template.powerProfile.dailyOperatingHours,
+    dailyEnergyConsumptionkWh:
+      template.powerProfile.typicalLoadKw * template.powerProfile.dailyOperatingHours,
     useCase: template.slug,
-    primaryObjective: 'all'
+    primaryObjective: "all",
   });
 
   let solarCalculations = null;
   if (solarEnabled) {
     solarCalculations = calculateSolarBESSSystem({
-      dailyLoadkWh: (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
+      dailyLoadkWh:
+        (sizing.recommendedCapacityMWh * 1000) / template.powerProfile.dailyOperatingHours,
       peakLoadkW: sizing.recommendedPowerMW * 1000,
       location,
       autonomyDays: 3,
       systemVoltage: 480,
-      temperatureC: 20
+      temperatureC: 20,
     });
   }
 
@@ -490,7 +517,7 @@ async function fetchFromStaticTemplates(
       },
     },
     fromCache: false,
-    executionTimeMs: Date.now() - startTime
+    executionTimeMs: Date.now() - startTime,
   } as UseCaseWithCalculations;
 }
 
@@ -503,11 +530,11 @@ async function fetchFromStaticTemplates(
  */
 async function incrementTemplateUsage(templateId: string) {
   try {
-    await supabase.rpc('increment_template_usage', { 
-      template_id: templateId 
+    await supabase.rpc("increment_template_usage", {
+      template_id: templateId,
     });
   } catch (error) {
-    console.error('Error incrementing usage:', error);
+    console.error("Error incrementing usage:", error);
     // Non-fatal
   }
 }
@@ -518,24 +545,25 @@ async function incrementTemplateUsage(templateId: string) {
 export async function getCacheStats() {
   try {
     const { data, error } = await supabase
-      .from('calculation_cache')
-      .select('calculation_type, execution_time_ms, created_at');
+      .from("calculation_cache")
+      .select("calculation_type, execution_time_ms, created_at");
 
     if (error) {
       return null;
     }
 
     const total = data?.length || 0;
-    const avgTime = data?.reduce((sum, item) => sum + (item.execution_time_ms || 0), 0) / total || 0;
+    const avgTime =
+      data?.reduce((sum, item) => sum + (item.execution_time_ms || 0), 0) / total || 0;
 
     return {
       total,
       avgExecutionTimeMs: Math.round(avgTime),
       oldestEntry: data?.[0]?.created_at,
-      newestEntry: data?.[data.length - 1]?.created_at
+      newestEntry: data?.[data.length - 1]?.created_at,
     };
   } catch (error) {
-    console.error('Error getting cache stats:', error);
+    console.error("Error getting cache stats:", error);
     return null;
   }
 }

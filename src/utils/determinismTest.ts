@@ -1,18 +1,18 @@
 /**
  * DETERMINISM TESTING UTILITY
  * ============================
- * 
+ *
  * This utility helps identify non-deterministic behavior in the Smart Wizard.
  * Run the same inputs multiple times and verify that outputs are IDENTICAL.
- * 
+ *
  * Usage:
  * import { testDeterminism } from '@/utils/determinismTest';
  * const results = await testDeterminism(inputs, 10); // Run 10 times
  * if (results.isDeterministic) { ... }
  */
 
-import { calculateDatabaseBaseline } from '../services/baselineService';
-import { calculateFinancialMetrics } from '../services/centralizedCalculations';
+import { calculateDatabaseBaseline } from "../services/baselineService";
+import { calculateFinancialMetrics } from "../services/centralizedCalculations";
 
 export interface TestInput {
   template: string;
@@ -51,12 +51,11 @@ export async function testDeterminism(
   input: TestInput,
   iterations: number = 10
 ): Promise<TestResult> {
-  
   console.log(`🧪 [Determinism Test] Starting ${iterations} iterations...`);
   console.log(`🧪 [Determinism Test] Input:`, input);
-  
+
   const outputs: Array<any> = [];
-  
+
   for (let i = 0; i < iterations; i++) {
     try {
       // Step 1: Calculate baseline
@@ -65,16 +64,16 @@ export async function testDeterminism(
         input.scale,
         input.useCaseData
       );
-      
+
       // Step 2: Calculate financial metrics
       const financial = await calculateFinancialMetrics({
         storageSizeMW: baseline.powerMW,
         durationHours: baseline.durationHrs,
         solarMW: baseline.solarMW,
         location: input.location,
-        electricityRate: input.electricityRate
+        electricityRate: input.electricityRate,
       });
-      
+
       outputs.push({
         iteration: i + 1,
         powerMW: baseline.powerMW,
@@ -83,37 +82,38 @@ export async function testDeterminism(
         totalProjectCost: financial.totalProjectCost,
         netCost: financial.netCost,
         annualSavings: financial.annualSavings,
-        paybackYears: financial.paybackYears
+        paybackYears: financial.paybackYears,
       });
-      
+
       console.log(`✅ [Determinism Test] Iteration ${i + 1}/${iterations} complete`);
-      
     } catch (error) {
       console.error(`❌ [Determinism Test] Iteration ${i + 1} failed:`, error);
       outputs.push({
         iteration: i + 1,
-        error: String(error)
+        error: String(error),
       });
     }
   }
-  
+
   // Analyze variance
-  const powerMWs = outputs.filter(o => !o.error).map((o: any) => o.powerMW);
-  const costs = outputs.filter(o => !o.error).map((o: any) => o.netCost);
-  const paybacks = outputs.filter(o => !o.error).map((o: any) => o.paybackYears);
-  
+  const powerMWs = outputs.filter((o) => !o.error).map((o: any) => o.powerMW);
+  const costs = outputs.filter((o) => !o.error).map((o: any) => o.netCost);
+  const paybacks = outputs.filter((o) => !o.error).map((o: any) => o.paybackYears);
+
   const uniqueOutputs = new Set(
-    outputs.filter(o => !o.error).map((o: any) => 
-      JSON.stringify({
-        powerMW: o.powerMW,
-        totalProjectCost: o.totalProjectCost,
-        paybackYears: o.paybackYears
-      })
-    )
+    outputs
+      .filter((o) => !o.error)
+      .map((o: any) =>
+        JSON.stringify({
+          powerMW: o.powerMW,
+          totalProjectCost: o.totalProjectCost,
+          paybackYears: o.paybackYears,
+        })
+      )
   ).size;
-  
+
   const result: TestResult = {
-    isDeterministic: uniqueOutputs === 1 && outputs.every(o => !o.error),
+    isDeterministic: uniqueOutputs === 1 && outputs.every((o) => !o.error),
     runCount: iterations,
     uniqueOutputs,
     outputs,
@@ -121,31 +121,35 @@ export async function testDeterminism(
       powerMW: {
         min: Math.min(...powerMWs),
         max: Math.max(...powerMWs),
-        range: Math.max(...powerMWs) - Math.min(...powerMWs)
+        range: Math.max(...powerMWs) - Math.min(...powerMWs),
       },
       totalCost: {
         min: Math.min(...costs),
         max: Math.max(...costs),
-        range: Math.max(...costs) - Math.min(...costs)
+        range: Math.max(...costs) - Math.min(...costs),
       },
       payback: {
         min: Math.min(...paybacks),
         max: Math.max(...paybacks),
-        range: Math.max(...paybacks) - Math.min(...paybacks)
-      }
+        range: Math.max(...paybacks) - Math.min(...paybacks),
+      },
     },
-    timestamp: new Date()
+    timestamp: new Date(),
   };
-  
+
   console.log(`🧪 [Determinism Test] Results:`, result);
-  
+
   if (result.isDeterministic) {
-    console.log(`✅ [Determinism Test] PASS - All ${iterations} iterations produced identical results`);
+    console.log(
+      `✅ [Determinism Test] PASS - All ${iterations} iterations produced identical results`
+    );
   } else {
-    console.error(`❌ [Determinism Test] FAIL - Found ${uniqueOutputs} different outputs across ${iterations} iterations`);
+    console.error(
+      `❌ [Determinism Test] FAIL - Found ${uniqueOutputs} different outputs across ${iterations} iterations`
+    );
     console.error(`❌ [Determinism Test] Variance:`, result.variance);
   }
-  
+
   return result;
 }
 
@@ -154,18 +158,18 @@ export async function testDeterminism(
  */
 export async function testOfficeBuildingDeterminism(): Promise<TestResult> {
   const input: TestInput = {
-    template: 'office-building',
+    template: "office-building",
     scale: 1.0,
     useCaseData: {
-      facilitySize: 'small',
+      facilitySize: "small",
       peakLoad: 0.5, // User's reported input
-      operatingHours: 12
+      operatingHours: 12,
     },
     storageSizeMW: 0.5,
     durationHours: 4,
     electricityRate: 0.15,
-    location: 'California'
+    location: "California",
   };
-  
+
   return testDeterminism(input, 10);
 }

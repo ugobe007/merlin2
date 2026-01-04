@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface UtilityRate {
   id: string;
@@ -22,202 +22,209 @@ interface UtilityRate {
 
 interface UtilityRatesManagerProps {
   onClose: () => void;
-  onSelectRate: (rate: UtilityRate, rateType: 'residential' | 'commercial' | 'industrial') => void;
+  onSelectRate: (rate: UtilityRate, rateType: "residential" | "commercial" | "industrial") => void;
   currentRate?: number;
 }
 
-const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSelectRate, currentRate }) => {
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedUtility, setSelectedUtility] = useState('');
-  const [rateType, setRateType] = useState<'residential' | 'commercial' | 'industrial'>('commercial');
-  const [searchTerm, setSearchTerm] = useState('');
+const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({
+  onClose,
+  onSelectRate,
+  currentRate,
+}) => {
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedUtility, setSelectedUtility] = useState("");
+  const [rateType, setRateType] = useState<"residential" | "commercial" | "industrial">(
+    "commercial"
+  );
+  const [searchTerm, setSearchTerm] = useState("");
   const [useTOU, setUseTOU] = useState(false);
 
   // Mock utility rates database - in production, this would come from an API
   const utilityRates: UtilityRate[] = [
     {
-      id: '1',
-      state: 'California',
-      utility: 'Pacific Gas & Electric (PG&E)',
+      id: "1",
+      state: "California",
+      utility: "Pacific Gas & Electric (PG&E)",
       residentialRate: 0.32,
       commercialRate: 0.28,
       industrialRate: 0.18,
-      demandCharge: 18.50,
+      demandCharge: 18.5,
       hasTOU: true,
       touRates: {
         peak: 0.42,
         offPeak: 0.22,
         superOffPeak: 0.15,
-        peakHours: '4pm-9pm weekdays',
-        offPeakHours: 'All other times'
+        peakHours: "4pm-9pm weekdays",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'PG&E Rate Schedule E-19'
+      effectiveDate: "2025-01-01",
+      source: "PG&E Rate Schedule E-19",
     },
     {
-      id: '2',
-      state: 'California',
-      utility: 'Southern California Edison (SCE)',
-      residentialRate: 0.30,
+      id: "2",
+      state: "California",
+      utility: "Southern California Edison (SCE)",
+      residentialRate: 0.3,
       commercialRate: 0.26,
       industrialRate: 0.17,
-      demandCharge: 17.20,
+      demandCharge: 17.2,
       hasTOU: true,
       touRates: {
         peak: 0.38,
-        offPeak: 0.20,
+        offPeak: 0.2,
         superOffPeak: 0.14,
-        peakHours: '4pm-9pm weekdays',
-        offPeakHours: 'All other times'
+        peakHours: "4pm-9pm weekdays",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'SCE TOU-GS-3'
+      effectiveDate: "2025-01-01",
+      source: "SCE TOU-GS-3",
     },
     {
-      id: '3',
-      state: 'Texas',
-      utility: 'Oncor Electric Delivery',
+      id: "3",
+      state: "Texas",
+      utility: "Oncor Electric Delivery",
       residentialRate: 0.14,
       commercialRate: 0.12,
       industrialRate: 0.09,
-      demandCharge: 8.50,
+      demandCharge: 8.5,
       hasTOU: true,
       touRates: {
         peak: 0.18,
-        offPeak: 0.10,
-        peakHours: '2pm-7pm summer',
-        offPeakHours: 'All other times'
+        offPeak: 0.1,
+        peakHours: "2pm-7pm summer",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'Oncor Tariff for Retail Delivery Service'
+      effectiveDate: "2025-01-01",
+      source: "Oncor Tariff for Retail Delivery Service",
     },
     {
-      id: '4',
-      state: 'Texas',
-      utility: 'CenterPoint Energy',
+      id: "4",
+      state: "Texas",
+      utility: "CenterPoint Energy",
       residentialRate: 0.13,
       commercialRate: 0.11,
       industrialRate: 0.08,
-      demandCharge: 7.80,
+      demandCharge: 7.8,
       hasTOU: false,
-      effectiveDate: '2025-01-01',
-      source: 'CenterPoint Standard Service'
+      effectiveDate: "2025-01-01",
+      source: "CenterPoint Standard Service",
     },
     {
-      id: '5',
-      state: 'New York',
-      utility: 'Con Edison',
+      id: "5",
+      state: "New York",
+      utility: "Con Edison",
       residentialRate: 0.28,
       commercialRate: 0.24,
       industrialRate: 0.16,
-      demandCharge: 16.40,
+      demandCharge: 16.4,
       hasTOU: true,
       touRates: {
         peak: 0.35,
         offPeak: 0.18,
-        peakHours: '8am-10pm weekdays',
-        offPeakHours: 'Nights and weekends'
+        peakHours: "8am-10pm weekdays",
+        offPeakHours: "Nights and weekends",
       },
-      effectiveDate: '2025-01-01',
-      source: 'Con Edison SC-9 Rate I'
+      effectiveDate: "2025-01-01",
+      source: "Con Edison SC-9 Rate I",
     },
     {
-      id: '6',
-      state: 'Massachusetts',
-      utility: 'Eversource',
+      id: "6",
+      state: "Massachusetts",
+      utility: "Eversource",
       residentialRate: 0.26,
       commercialRate: 0.22,
       industrialRate: 0.15,
-      demandCharge: 14.30,
+      demandCharge: 14.3,
       hasTOU: true,
       touRates: {
         peak: 0.31,
         offPeak: 0.17,
-        peakHours: '12pm-8pm summer',
-        offPeakHours: 'All other times'
+        peakHours: "12pm-8pm summer",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'Eversource G-3'
+      effectiveDate: "2025-01-01",
+      source: "Eversource G-3",
     },
     {
-      id: '7',
-      state: 'Florida',
-      utility: 'Florida Power & Light (FPL)',
+      id: "7",
+      state: "Florida",
+      utility: "Florida Power & Light (FPL)",
       residentialRate: 0.13,
       commercialRate: 0.11,
       industrialRate: 0.08,
-      demandCharge: 9.20,
+      demandCharge: 9.2,
       hasTOU: true,
       touRates: {
         peak: 0.16,
         offPeak: 0.09,
-        peakHours: '12pm-9pm weekdays',
-        offPeakHours: 'All other times'
+        peakHours: "12pm-9pm weekdays",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'FPL GSDT-1'
+      effectiveDate: "2025-01-01",
+      source: "FPL GSDT-1",
     },
     {
-      id: '8',
-      state: 'Illinois',
-      utility: 'ComEd',
+      id: "8",
+      state: "Illinois",
+      utility: "ComEd",
       residentialRate: 0.15,
       commercialRate: 0.13,
-      industrialRate: 0.10,
-      demandCharge: 10.50,
+      industrialRate: 0.1,
+      demandCharge: 10.5,
       hasTOU: false,
-      effectiveDate: '2025-01-01',
-      source: 'ComEd Standard Delivery'
+      effectiveDate: "2025-01-01",
+      source: "ComEd Standard Delivery",
     },
     {
-      id: '9',
-      state: 'Arizona',
-      utility: 'Arizona Public Service (APS)',
+      id: "9",
+      state: "Arizona",
+      utility: "Arizona Public Service (APS)",
       residentialRate: 0.13,
       commercialRate: 0.11,
       industrialRate: 0.08,
-      demandCharge: 8.90,
+      demandCharge: 8.9,
       hasTOU: true,
       touRates: {
         peak: 0.19,
         offPeak: 0.08,
-        peakHours: '3pm-8pm summer',
-        offPeakHours: 'All other times'
+        peakHours: "3pm-8pm summer",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'APS E-32 M TOU'
+      effectiveDate: "2025-01-01",
+      source: "APS E-32 M TOU",
     },
     {
-      id: '10',
-      state: 'Colorado',
-      utility: 'Xcel Energy',
+      id: "10",
+      state: "Colorado",
+      utility: "Xcel Energy",
       residentialRate: 0.14,
       commercialRate: 0.12,
       industrialRate: 0.09,
-      demandCharge: 9.80,
+      demandCharge: 9.8,
       hasTOU: true,
       touRates: {
         peak: 0.17,
-        offPeak: 0.10,
-        peakHours: '2pm-7pm summer',
-        offPeakHours: 'All other times'
+        offPeak: 0.1,
+        peakHours: "2pm-7pm summer",
+        offPeakHours: "All other times",
       },
-      effectiveDate: '2025-01-01',
-      source: 'Xcel SGS-TOU'
-    }
+      effectiveDate: "2025-01-01",
+      source: "Xcel SGS-TOU",
+    },
   ];
 
-  const states = Array.from(new Set(utilityRates.map(r => r.state))).sort();
+  const states = Array.from(new Set(utilityRates.map((r) => r.state))).sort();
 
-  const filteredRates = utilityRates.filter(rate => {
+  const filteredRates = utilityRates.filter((rate) => {
     const matchesState = !selectedState || rate.state === selectedState;
-    const matchesSearch = !searchTerm || 
+    const matchesSearch =
+      !searchTerm ||
       rate.utility.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rate.state.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesState && matchesSearch;
   });
 
-  const selectedRateData = filteredRates.find(r => r.utility === selectedUtility);
+  const selectedRateData = filteredRates.find((r) => r.utility === selectedUtility);
 
   const handleApplyRate = () => {
     if (selectedRateData) {
@@ -231,10 +238,14 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
       return rate.touRates.peak;
     }
     switch (rateType) {
-      case 'residential': return rate.residentialRate;
-      case 'commercial': return rate.commercialRate;
-      case 'industrial': return rate.industrialRate;
-      default: return rate.commercialRate;
+      case "residential":
+        return rate.residentialRate;
+      case "commercial":
+        return rate.commercialRate;
+      case "industrial":
+        return rate.industrialRate;
+      default:
+        return rate.commercialRate;
     }
   };
 
@@ -276,30 +287,28 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
                 <select
                   value={selectedState}
                   onChange={(e) => {
                     setSelectedState(e.target.value);
-                    setSelectedUtility('');
+                    setSelectedUtility("");
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">All States</option>
-                  {states.map(state => (
-                    <option key={state} value={state}>{state}</option>
+                  {states.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rate Type
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rate Type</label>
                 <div className="space-y-2">
-                  {['residential', 'commercial', 'industrial'].map((type) => (
+                  {["residential", "commercial", "industrial"].map((type) => (
                     <label key={type} className="flex items-center">
                       <input
                         type="radio"
@@ -343,12 +352,14 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
                 </h3>
               </div>
               <div className="overflow-y-auto max-h-96">
-                {filteredRates.map(rate => (
+                {filteredRates.map((rate) => (
                   <button
                     key={rate.id}
                     onClick={() => setSelectedUtility(rate.utility)}
                     className={`w-full text-left p-3 border-b border-gray-100 hover:bg-purple-50 transition-colors ${
-                      selectedUtility === rate.utility ? 'bg-purple-100 border-l-4 border-l-purple-600' : ''
+                      selectedUtility === rate.utility
+                        ? "bg-purple-100 border-l-4 border-l-purple-600"
+                        : ""
                     }`}
                   >
                     <div className="font-medium text-gray-900">{rate.utility}</div>
@@ -375,15 +386,21 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
                       <div className="space-y-2">
                         <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span className="text-sm">Residential</span>
-                          <span className="font-semibold">${selectedRateData.residentialRate.toFixed(3)}/kWh</span>
+                          <span className="font-semibold">
+                            ${selectedRateData.residentialRate.toFixed(3)}/kWh
+                          </span>
                         </div>
                         <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span className="text-sm">Commercial</span>
-                          <span className="font-semibold">${selectedRateData.commercialRate.toFixed(3)}/kWh</span>
+                          <span className="font-semibold">
+                            ${selectedRateData.commercialRate.toFixed(3)}/kWh
+                          </span>
                         </div>
                         <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span className="text-sm">Industrial</span>
-                          <span className="font-semibold">${selectedRateData.industrialRate.toFixed(3)}/kWh</span>
+                          <span className="font-semibold">
+                            ${selectedRateData.industrialRate.toFixed(3)}/kWh
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -425,7 +442,9 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
                           </div>
                           {selectedRateData.touRates.superOffPeak && (
                             <div className="p-2 bg-blue-50 rounded">
-                              <div className="text-xs text-blue-600 font-medium">Super Off-Peak</div>
+                              <div className="text-xs text-blue-600 font-medium">
+                                Super Off-Peak
+                              </div>
                               <div className="font-semibold text-blue-700">
                                 ${selectedRateData.touRates.superOffPeak.toFixed(3)}/kWh
                               </div>
@@ -454,9 +473,7 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
                           <span className="text-lg">/kWh</span>
                         </div>
                         {useTOU && selectedRateData.hasTOU && (
-                          <div className="text-xs text-purple-700 mt-1">
-                            Peak TOU Rate
-                          </div>
+                          <div className="text-xs text-purple-700 mt-1">Peak TOU Rate</div>
                         )}
                       </div>
                     </div>
@@ -478,9 +495,10 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
               <div className="flex-1">
                 <h4 className="font-semibold text-yellow-900 mb-1">About These Rates</h4>
                 <p className="text-sm text-yellow-800">
-                  Rates are updated regularly from public utility tariff schedules. Actual rates may vary based on 
-                  specific rate schedules, time of use, demand charges, and other factors. Always verify with your 
-                  local utility for the most accurate pricing. These rates are for estimation purposes only.
+                  Rates are updated regularly from public utility tariff schedules. Actual rates may
+                  vary based on specific rate schedules, time of use, demand charges, and other
+                  factors. Always verify with your local utility for the most accurate pricing.
+                  These rates are for estimation purposes only.
                 </p>
               </div>
             </div>
@@ -500,8 +518,8 @@ const UtilityRatesManager: React.FC<UtilityRatesManagerProps> = ({ onClose, onSe
             disabled={!selectedRateData}
             className={`px-6 py-2 rounded-md font-semibold ${
               selectedRateData
-                ? 'bg-purple-600 text-white hover:bg-purple-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
             Apply Rate to Quote

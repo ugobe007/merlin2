@@ -1,46 +1,46 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 // Define the list of all modals used in BessQuoteBuilder
-type ModalName = 
-  | 'showJoinModal'
-  | 'showAuthModal'
-  | 'showUserProfile'
-  | 'showSmartWizard'
-  | 'showVendorManager'
-  | 'showPricingPlans'
-  | 'showWelcomeModal'
-  | 'showAccountSetup'
-  | 'showEnhancedProfile'
-  | 'showAnalytics'
-  | 'showEnhancedAnalytics'
-  | 'showEnhancedBESSAnalytics'
-  | 'showFinancing'
-  | 'showTemplates'
-  | 'showAbout'
-  | 'showVendorPortal'
-  | 'showChatModal'
-  | 'showPortfolio'
-  | 'showCalculationModal'
-  | 'showSaveProjectModal'
-  | 'showLoadProjectModal'
-  | 'showPricingDataCapture'
-  | 'showMarketIntelligence'
-  | 'showVendorSponsorship'
-  | 'showPrivacyPolicy'
-  | 'showCostSavingsModal'
-  | 'showRevenueModal'
-  | 'showSustainabilityModal'
-  | 'showTermsOfService'
-  | 'showSecuritySettings'
-  | 'showSystemHealth'
-  | 'showStatusPage'
-  | 'showUtilityRates'
-  | 'showQuoteTemplates'
-  | 'showPricingPresets'
-  | 'showReviewWorkflow'
-  | 'showQuotePreview'
-  | 'showLayoutPreferenceModal'
-  | 'showVerticalRedirect';
+type ModalName =
+  | "showJoinModal"
+  | "showAuthModal"
+  | "showUserProfile"
+  | "showSmartWizard"
+  | "showVendorManager"
+  | "showPricingPlans"
+  | "showWelcomeModal"
+  | "showAccountSetup"
+  | "showEnhancedProfile"
+  | "showAnalytics"
+  | "showEnhancedAnalytics"
+  | "showEnhancedBESSAnalytics"
+  | "showFinancing"
+  | "showTemplates"
+  | "showAbout"
+  | "showVendorPortal"
+  | "showChatModal"
+  | "showPortfolio"
+  | "showCalculationModal"
+  | "showSaveProjectModal"
+  | "showLoadProjectModal"
+  | "showPricingDataCapture"
+  | "showMarketIntelligence"
+  | "showVendorSponsorship"
+  | "showPrivacyPolicy"
+  | "showCostSavingsModal"
+  | "showRevenueModal"
+  | "showSustainabilityModal"
+  | "showTermsOfService"
+  | "showSecuritySettings"
+  | "showSystemHealth"
+  | "showStatusPage"
+  | "showUtilityRates"
+  | "showQuoteTemplates"
+  | "showPricingPresets"
+  | "showReviewWorkflow"
+  | "showQuotePreview"
+  | "showLayoutPreferenceModal"
+  | "showVerticalRedirect";
 
 type ModalState = Record<ModalName, boolean>;
 
@@ -93,19 +93,19 @@ export const useModalManager = () => {
 
   // Open a specific modal
   const openModal = (modalName: ModalName) => {
-    setModals(prev => ({ ...prev, [modalName]: true }));
+    setModals((prev) => ({ ...prev, [modalName]: true }));
   };
 
   // Close a specific modal
   const closeModal = (modalName: ModalName) => {
-    setModals(prev => ({ ...prev, [modalName]: false }));
+    setModals((prev) => ({ ...prev, [modalName]: false }));
   };
 
   // Close all modals (useful for global close actions)
   const closeAllModals = () => {
-    setModals(prev => {
+    setModals((prev) => {
       const closedModals: ModalState = {} as ModalState;
-      Object.keys(prev).forEach(key => {
+      Object.keys(prev).forEach((key) => {
         closedModals[key as ModalName] = false;
       });
       return closedModals;
@@ -114,7 +114,7 @@ export const useModalManager = () => {
 
   // Toggle a modal
   const toggleModal = (modalName: ModalName) => {
-    setModals(prev => ({ ...prev, [modalName]: !prev[modalName] }));
+    setModals((prev) => ({ ...prev, [modalName]: !prev[modalName] }));
   };
 
   // Check if a modal is open
@@ -130,7 +130,7 @@ export const useModalManager = () => {
     closeAllModals,
     toggleModal,
     isModalOpen,
-    openModalCount
+    openModalCount,
   };
 };
 

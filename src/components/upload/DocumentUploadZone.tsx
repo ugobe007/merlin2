@@ -22,11 +22,7 @@ import {
   FileType, Trash2
 } from 'lucide-react';
 import { parseDocuments, type ParsedDocument } from '@/services/documentParserService';
-import { 
-  extractSpecsFromDocuments, 
-  validateExtractedData,
-  type ExtractedSpecsData 
-} from '@/services/openAIExtractionService';
+import { extractSpecsFromDocuments, type ExtractedSpecsData } from '@/services/openAIExtractionService';
 
 // ============================================
 // TYPES

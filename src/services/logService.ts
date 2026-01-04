@@ -1,9 +1,9 @@
 /**
  * Centralized Logging Service
- * 
+ *
  * Provides structured logging with multiple log levels and optional remote logging.
  * Replaces scattered console.log statements with a consistent logging interface.
- * 
+ *
  * Features:
  * - Multiple log levels (debug, info, warn, error)
  * - Automatic environment detection (DEV vs PROD)
@@ -11,20 +11,20 @@
  * - Console output formatting with colors/emojis
  * - Optional remote logging integration
  * - Performance metrics tracking
- * 
+ *
  * Usage:
  * ```typescript
  * import { logger } from '@/services/logService';
- * 
+ *
  * logger.info('User logged in', { userId: '123', method: 'email' });
  * logger.warn('API response slow', { endpoint: '/api/data', duration: 5000 });
  * logger.error('Database connection failed', error);
  * ```
  */
 
-import type { LogEntry } from '@/types';
+import type { LogEntry } from "@/types";
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogContext {
   component?: string;
@@ -50,7 +50,7 @@ class LogService {
   constructor() {
     // Default configuration
     this.config = {
-      minLevel: import.meta.env.DEV ? 'debug' : 'info',
+      minLevel: import.meta.env.DEV ? "debug" : "info",
       enableConsole: true,
       enableRemote: import.meta.env.PROD || false,
       remoteEndpoint: import.meta.env.VITE_LOG_ENDPOINT,
@@ -61,7 +61,7 @@ class LogService {
     this.sessionId = this.generateSessionId();
 
     if (import.meta.env.DEV) {
-      console.log('🔧 LogService initialized (DEV mode)');
+      console.log("🔧 LogService initialized (DEV mode)");
     }
   }
 
@@ -76,39 +76,40 @@ class LogService {
    * Log a debug message (only in development)
    */
   public debug(message: string, context?: LogContext): void {
-    this.log('debug', message, context);
+    this.log("debug", message, context);
   }
 
   /**
    * Log an informational message
    */
   public info(message: string, context?: LogContext): void {
-    this.log('info', message, context);
+    this.log("info", message, context);
   }
 
   /**
    * Log a warning message
    */
   public warn(message: string, context?: LogContext): void {
-    this.log('warn', message, context);
+    this.log("warn", message, context);
   }
 
   /**
    * Log an error message
    */
   public error(message: string, error?: Error | any, context?: LogContext): void {
-    const errorContext = error instanceof Error
-      ? {
-          ...context,
-          error: {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-          },
-        }
-      : { ...context, error };
+    const errorContext =
+      error instanceof Error
+        ? {
+            ...context,
+            error: {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            },
+          }
+        : { ...context, error };
 
-    this.log('error', message, errorContext);
+    this.log("error", message, errorContext);
   }
 
   /**
@@ -118,7 +119,7 @@ class LogService {
     this.info(`⚡ Performance: ${operation}`, {
       ...context,
       duration: `${duration}ms`,
-      type: 'performance',
+      type: "performance",
     });
   }
 
@@ -190,7 +191,7 @@ class LogService {
   }
 
   private shouldLog(level: LogLevel): boolean {
-    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+    const levels: LogLevel[] = ["debug", "info", "warn", "error"];
     const minLevelIndex = levels.indexOf(this.config.minLevel);
     const currentLevelIndex = levels.indexOf(level);
     return currentLevelIndex >= minLevelIndex;
@@ -202,38 +203,38 @@ class LogService {
     const prefix = this.getLogPrefix(level);
 
     // Format message with context
-    const contextStr = entry.context ? `[${entry.context}]` : '';
+    const contextStr = entry.context ? `[${entry.context}]` : "";
     const fullMessage = `${prefix} ${timestamp} ${contextStr} ${message}`;
 
     // Log based on level
     switch (level) {
-      case 'debug':
-        console.log(fullMessage, data || '');
+      case "debug":
+        console.log(fullMessage, data || "");
         break;
-      case 'info':
-        console.info(fullMessage, data || '');
+      case "info":
+        console.info(fullMessage, data || "");
         break;
-      case 'warn':
-        console.warn(fullMessage, data || '');
+      case "warn":
+        console.warn(fullMessage, data || "");
         break;
-      case 'error':
-        console.error(fullMessage, data || '');
+      case "error":
+        console.error(fullMessage, data || "");
         break;
     }
   }
 
   private getLogPrefix(level: LogLevel): string {
     switch (level) {
-      case 'debug':
-        return '🔍';
-      case 'info':
-        return 'ℹ️';
-      case 'warn':
-        return '⚠️';
-      case 'error':
-        return '❌';
+      case "debug":
+        return "🔍";
+      case "info":
+        return "ℹ️";
+      case "warn":
+        return "⚠️";
+      case "error":
+        return "❌";
       default:
-        return '📝';
+        return "📝";
     }
   }
 
@@ -254,9 +255,9 @@ class LogService {
     try {
       // Send log to remote endpoint (non-blocking)
       fetch(this.config.remoteEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(entry),
         // Don't wait for response
@@ -264,7 +265,7 @@ class LogService {
       }).catch((error) => {
         // Silent fail for remote logging
         if (import.meta.env.DEV) {
-          console.warn('Failed to send log to remote:', error);
+          console.warn("Failed to send log to remote:", error);
         }
       });
     } catch (error) {
@@ -289,15 +290,15 @@ export const log = {
   debug: (message: string, context?: LogContext) => logger.debug(message, context),
   info: (message: string, context?: LogContext) => logger.info(message, context),
   warn: (message: string, context?: LogContext) => logger.warn(message, context),
-  error: (message: string, error?: Error | any, context?: LogContext) => 
+  error: (message: string, error?: Error | any, context?: LogContext) =>
     logger.error(message, error, context),
-  performance: (operation: string, duration: number, context?: LogContext) => 
+  performance: (operation: string, duration: number, context?: LogContext) =>
     logger.performance(operation, duration, context),
   startTimer: (label: string) => logger.startTimer(label),
 };
 
 // Make logger available in window for debugging (DEV only)
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
+if (typeof window !== "undefined" && import.meta.env.DEV) {
   (window as any).logger = logger;
-  console.log('🔧 Logger available at window.logger');
+  console.log("🔧 Logger available at window.logger");
 }

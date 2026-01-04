@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, MapPin, Target, Calendar, X, CheckCircle } from 'lucide-react';
-import { supabase } from '../services/supabaseClient';
+import React, { useState, useEffect } from "react";
+import { User, Mail, MapPin, Target, Calendar, CheckCircle } from "lucide-react";
+import { supabase } from "../services/supabaseClient";
 
 interface ProjectInfoFormProps {
   onComplete: (data: {
@@ -24,12 +24,12 @@ interface ProjectInfoFormProps {
 
 export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, initialData }) => {
   const [formData, setFormData] = useState({
-    projectName: initialData?.projectName || '',
-    projectLocation: initialData?.projectLocation || '',
-    projectGoals: initialData?.projectGoals || '',
-    projectSchedule: initialData?.projectSchedule || '',
-    userName: initialData?.userName || '',
-    email: initialData?.email || '',
+    projectName: initialData?.projectName || "",
+    projectLocation: initialData?.projectLocation || "",
+    projectGoals: initialData?.projectGoals || "",
+    projectSchedule: initialData?.projectSchedule || "",
+    userName: initialData?.userName || "",
+    email: initialData?.email || "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,20 +39,22 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         // User is logged in, pre-fill email and name
         const { data: profile } = await supabase
-          .from('users')
-          .select('email, full_name')
-          .eq('id', user.id)
+          .from("users")
+          .select("email, full_name")
+          .eq("id", user.id)
           .single();
 
         if (profile) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            email: profile.email || user.email || '',
-            userName: profile.full_name || user.user_metadata?.full_name || '',
+            email: profile.email || user.email || "",
+            userName: profile.full_name || user.user_metadata?.full_name || "",
           }));
         }
       }
@@ -64,21 +66,21 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
     const newErrors: Record<string, string> = {};
 
     if (!formData.projectName.trim()) {
-      newErrors.projectName = 'Project name is required';
+      newErrors.projectName = "Project name is required";
     }
 
     if (!formData.projectGoals.trim()) {
-      newErrors.projectGoals = 'Project goals are required';
+      newErrors.projectGoals = "Project goals are required";
     }
 
     if (!formData.userName.trim()) {
-      newErrors.userName = 'Your name is required';
+      newErrors.userName = "Your name is required";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     setErrors(newErrors);
@@ -97,26 +99,28 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
     try {
       // Check if user is already logged in
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
       let userId: string | undefined;
 
       if (currentUser) {
         // User is already logged in
         userId = currentUser.id;
-        
+
         // Update user profile if needed
         await supabase
-          .from('users')
+          .from("users")
           .update({
             full_name: formData.userName,
             email: formData.email,
           })
-          .eq('id', currentUser.id);
+          .eq("id", currentUser.id);
       } else {
         // Create new account
-        const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
-        
+        const tempPassword = Math.random().toString(36).slice(-12) + "A1!";
+
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: tempPassword,
@@ -130,18 +134,21 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
         if (signUpError) {
           // Check if user already exists
-          if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
+          if (
+            signUpError.message.includes("already registered") ||
+            signUpError.message.includes("already exists")
+          ) {
             // Try to sign in (they'll need to reset password, but we can still create the account record)
             const { data: existingUser } = await supabase
-              .from('users')
-              .select('id')
-              .eq('email', formData.email)
+              .from("users")
+              .select("id")
+              .eq("email", formData.email)
               .single();
 
             if (existingUser) {
               userId = existingUser.id;
             } else {
-              throw new Error('Account exists but profile not found. Please sign in first.');
+              throw new Error("Account exists but profile not found. Please sign in first.");
             }
           } else {
             throw signUpError;
@@ -150,21 +157,22 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
           userId = authData.user.id;
 
           // Create user profile
-          await supabase
-            .from('users')
-            .upsert({
+          await supabase.from("users").upsert(
+            {
               id: authData.user.id,
               email: formData.email,
               full_name: formData.userName,
               created_at: new Date().toISOString(),
-            }, {
-              onConflict: 'id',
-            });
+            },
+            {
+              onConflict: "id",
+            }
+          );
         }
       }
 
       if (!userId) {
-        throw new Error('Failed to create or retrieve user account');
+        throw new Error("Failed to create or retrieve user account");
       }
 
       // Store project info in sessionStorage for quote generation
@@ -177,10 +185,10 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
         createdAt: new Date().toISOString(),
       };
 
-      sessionStorage.setItem('projectInfo', JSON.stringify(projectInfo));
+      sessionStorage.setItem("projectInfo", JSON.stringify(projectInfo));
 
       setIsComplete(true);
-      
+
       // Call onComplete with all data
       onComplete({
         ...formData,
@@ -191,11 +199,10 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
       setTimeout(() => {
         setIsComplete(false);
       }, 2000);
-
     } catch (error: any) {
-      console.error('Error creating account:', error);
+      console.error("Error creating account:", error);
       setErrors({
-        submit: error.message || 'Failed to create account. Please try again.',
+        submit: error.message || "Failed to create account. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -214,7 +221,10 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-slate-800/90 via-purple-900/50 to-slate-800/90 backdrop-blur-md border-2 border-purple-500/30 rounded-2xl p-6 mb-6 shadow-2xl">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-gradient-to-br from-slate-800/90 via-purple-900/50 to-slate-800/90 backdrop-blur-md border-2 border-purple-500/30 rounded-2xl p-6 mb-6 shadow-2xl"
+    >
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
@@ -239,13 +249,11 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
             placeholder="e.g., Hotel Energy Storage System"
             className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.projectName ? 'border-red-500' : 'border-purple-500/50 focus:border-purple-400'
+              errors.projectName ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
             }`}
             required
           />
-          {errors.projectName && (
-            <p className="text-red-400 text-xs mt-1">{errors.projectName}</p>
-          )}
+          {errors.projectName && <p className="text-red-400 text-xs mt-1">{errors.projectName}</p>}
         </div>
 
         {/* Project Location - Optional */}
@@ -273,7 +281,9 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             value={formData.projectGoals}
             onChange={(e) => setFormData({ ...formData, projectGoals: e.target.value })}
             className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.projectGoals ? 'border-red-500' : 'border-purple-500/50 focus:border-purple-400'
+              errors.projectGoals
+                ? "border-red-500"
+                : "border-purple-500/50 focus:border-purple-400"
             }`}
             required
           >
@@ -322,13 +332,11 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
             placeholder="John Doe"
             className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.userName ? 'border-red-500' : 'border-purple-500/50 focus:border-purple-400'
+              errors.userName ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
             }`}
             required
           />
-          {errors.userName && (
-            <p className="text-red-400 text-xs mt-1">{errors.userName}</p>
-          )}
+          {errors.userName && <p className="text-red-400 text-xs mt-1">{errors.userName}</p>}
         </div>
 
         {/* Email - Required */}
@@ -343,13 +351,11 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="john@example.com"
             className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-              errors.email ? 'border-red-500' : 'border-purple-500/50 focus:border-purple-400'
+              errors.email ? "border-red-500" : "border-purple-500/50 focus:border-purple-400"
             }`}
             required
           />
-          {errors.email && (
-            <p className="text-red-400 text-xs mt-1">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
         </div>
       </div>
 
@@ -361,7 +367,8 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
 
       <div className="mt-6 flex items-center justify-between">
         <p className="text-xs text-purple-200/60">
-          <span className="text-red-400">*</span> Required fields. Account required to download quotes.
+          <span className="text-red-400">*</span> Required fields. Account required to download
+          quotes.
         </p>
         <button
           type="submit"
@@ -384,4 +391,3 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({ onComplete, in
     </form>
   );
 };
-

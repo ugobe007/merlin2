@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export interface AdvancedConfig {
   projectReference: string;
@@ -15,16 +15,16 @@ export interface AdvancedConfig {
 
 export const useAdvancedConfig = () => {
   const [config, setConfig] = useState<AdvancedConfig>({
-    projectReference: '',
-    customerName: '',
-    siteLocation: '',
-    powerMW: '',
-    energyMWh: '',
-    voltage: '480V',
-    projectDescription: '',
-    executiveSummary: '',
-    technicalSpecifications: '',
-    commercialTerms: '',
+    projectReference: "",
+    customerName: "",
+    siteLocation: "",
+    powerMW: "",
+    energyMWh: "",
+    voltage: "480V",
+    projectDescription: "",
+    executiveSummary: "",
+    technicalSpecifications: "",
+    commercialTerms: "",
   });
 
   return { config, setConfig };

@@ -1,19 +1,19 @@
 /**
  * Vendor Pricing Integration Service
  * ===================================
- * 
+ *
  * Integrates approved vendor product pricing into the unified pricing system.
- * 
+ *
  * Flow:
  * 1. Vendor submits product → vendor_products table (status: 'pending')
  * 2. Admin approves → status: 'approved'
  * 3. This service syncs approved products to equipment_pricing table
  * 4. unifiedPricingService uses vendor pricing as priority source
- * 
+ *
  * Created: December 25, 2025
  */
 
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 // ============================================================================
 // TYPES
@@ -22,7 +22,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 export interface VendorProductPricing {
   id: string;
   vendorId: string;
-  productCategory: 'battery' | 'inverter' | 'ems' | 'bos' | 'container';
+  productCategory: "battery" | "inverter" | "ems" | "bos" | "container";
   manufacturer: string;
   model: string;
   capacityKwh?: number;
@@ -47,7 +47,7 @@ export interface EquipmentPricingRecord {
   warranty_years: number;
   certifications?: string[];
   vendor_id?: string;
-  source: 'vendor_submission';
+  source: "vendor_submission";
   confidence_score: number;
   effective_date: string;
   expires_at?: string;
@@ -68,7 +68,7 @@ export async function syncApprovedVendorProducts(): Promise<{
 }> {
   if (!isSupabaseConfigured()) {
     if (import.meta.env.DEV) {
-      console.warn('⚠️ Supabase not configured - cannot sync vendor pricing');
+      console.warn("⚠️ Supabase not configured - cannot sync vendor pricing");
     }
     return { synced: 0, errors: 0, skipped: 0 };
   }
@@ -76,19 +76,19 @@ export async function syncApprovedVendorProducts(): Promise<{
   try {
     // Get all approved vendor products
     const { data: vendorProducts, error: fetchError } = await supabase
-      .from('vendor_products')
-      .select('*')
-      .eq('status', 'approved')
-      .order('approved_at', { ascending: false });
+      .from("vendor_products")
+      .select("*")
+      .eq("status", "approved")
+      .order("approved_at", { ascending: false });
 
     if (fetchError) {
-      console.error('❌ Failed to fetch approved vendor products:', fetchError);
+      console.error("❌ Failed to fetch approved vendor products:", fetchError);
       return { synced: 0, errors: 1, skipped: 0 };
     }
 
     if (!vendorProducts || vendorProducts.length === 0) {
       if (import.meta.env.DEV) {
-        console.log('ℹ️ No approved vendor products to sync');
+        console.log("ℹ️ No approved vendor products to sync");
       }
       return { synced: 0, errors: 0, skipped: 0 };
     }
@@ -113,7 +113,7 @@ export async function syncApprovedVendorProducts(): Promise<{
           warranty_years: product.warranty_years,
           certifications: product.certifications || [],
           vendor_id: product.vendor_id,
-          source: 'vendor_submission',
+          source: "vendor_submission",
           confidence_score: 0.9, // High confidence for approved vendor data
           effective_date: product.approved_at || product.created_at,
           expires_at: getExpirationDate(product.approved_at || product.created_at), // 90 days
@@ -121,23 +121,26 @@ export async function syncApprovedVendorProducts(): Promise<{
 
         // Check if record already exists (by manufacturer + model + vendor_id)
         const { data: existing } = await supabase
-          .from('equipment_pricing')
-          .select('id')
-          .eq('manufacturer', equipmentPricing.manufacturer)
-          .eq('model', equipmentPricing.model)
-          .eq('vendor_id', equipmentPricing.vendor_id)
-          .eq('source', 'vendor_submission')
+          .from("equipment_pricing")
+          .select("id")
+          .eq("manufacturer", equipmentPricing.manufacturer)
+          .eq("model", equipmentPricing.model)
+          .eq("vendor_id", equipmentPricing.vendor_id)
+          .eq("source", "vendor_submission")
           .single();
 
         if (existing) {
           // Update existing record
           const { error: updateError } = await supabase
-            .from('equipment_pricing')
+            .from("equipment_pricing")
             .update(equipmentPricing)
-            .eq('id', existing.id);
+            .eq("id", existing.id);
 
           if (updateError) {
-            console.error(`❌ Failed to update equipment_pricing for ${product.model}:`, updateError);
+            console.error(
+              `❌ Failed to update equipment_pricing for ${product.model}:`,
+              updateError
+            );
             errors++;
           } else {
             synced++;
@@ -148,24 +151,34 @@ export async function syncApprovedVendorProducts(): Promise<{
         } else {
           // Insert new record
           const { error: insertError } = await supabase
-            .from('equipment_pricing')
+            .from("equipment_pricing")
             .insert(equipmentPricing);
 
           if (insertError) {
             // Check if it's a constraint error (table might not exist yet)
-            if (insertError.message.includes('does not exist') || insertError.message.includes('relation')) {
+            if (
+              insertError.message.includes("does not exist") ||
+              insertError.message.includes("relation")
+            ) {
               if (import.meta.env.DEV) {
-                console.warn(`⚠️ equipment_pricing table not found - skipping sync for ${product.model}`);
+                console.warn(
+                  `⚠️ equipment_pricing table not found - skipping sync for ${product.model}`
+                );
               }
               skipped++;
             } else {
-              console.error(`❌ Failed to insert equipment_pricing for ${product.model}:`, insertError);
+              console.error(
+                `❌ Failed to insert equipment_pricing for ${product.model}:`,
+                insertError
+              );
               errors++;
             }
           } else {
             synced++;
             if (import.meta.env.DEV) {
-              console.log(`✅ Synced vendor product to equipment_pricing: ${product.manufacturer} ${product.model}`);
+              console.log(
+                `✅ Synced vendor product to equipment_pricing: ${product.manufacturer} ${product.model}`
+              );
             }
           }
         }
@@ -176,12 +189,14 @@ export async function syncApprovedVendorProducts(): Promise<{
     }
 
     if (import.meta.env.DEV) {
-      console.log(`📊 Vendor pricing sync complete: ${synced} synced, ${errors} errors, ${skipped} skipped`);
+      console.log(
+        `📊 Vendor pricing sync complete: ${synced} synced, ${errors} errors, ${skipped} skipped`
+      );
     }
 
     return { synced, errors, skipped };
   } catch (error) {
-    console.error('❌ Fatal error in syncApprovedVendorProducts:', error);
+    console.error("❌ Fatal error in syncApprovedVendorProducts:", error);
     return { synced: 0, errors: 1, skipped: 0 };
   }
 }
@@ -190,14 +205,14 @@ export async function syncApprovedVendorProducts(): Promise<{
  * Map vendor product category to equipment type for equipment_pricing table
  */
 function mapProductCategoryToEquipmentType(
-  category: 'battery' | 'inverter' | 'ems' | 'bos' | 'container'
+  category: "battery" | "inverter" | "ems" | "bos" | "container"
 ): string {
   const mapping: Record<string, string> = {
-    battery: 'bess',
-    inverter: 'inverter',
-    ems: 'ems',
-    bos: 'bos',
-    container: 'container',
+    battery: "bess",
+    inverter: "inverter",
+    ems: "ems",
+    bos: "bos",
+    container: "container",
   };
   return mapping[category] || category;
 }
@@ -208,7 +223,7 @@ function mapProductCategoryToEquipmentType(
 function getExpirationDate(approvedDate: string): string {
   const date = new Date(approvedDate);
   date.setDate(date.getDate() + 90); // 90 days validity
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 // ============================================================================
@@ -220,7 +235,16 @@ function getExpirationDate(approvedDate: string): string {
  * Used by unifiedPricingService as priority source
  */
 export async function getVendorPricing(
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator' | 'inverter' | 'ev-charger' | 'ems' | 'bos' | 'container',
+  equipmentType:
+    | "bess"
+    | "solar"
+    | "wind"
+    | "generator"
+    | "inverter"
+    | "ev-charger"
+    | "ems"
+    | "bos"
+    | "container",
   capacityKwh?: number,
   powerKw?: number
 ): Promise<VendorProductPricing | null> {
@@ -237,11 +261,11 @@ export async function getVendorPricing(
 
     // Build query
     let query = supabase
-      .from('vendor_products')
-      .select('*')
-      .eq('status', 'approved')
-      .eq('product_category', productCategory)
-      .order('approved_at', { ascending: false })
+      .from("vendor_products")
+      .select("*")
+      .eq("status", "approved")
+      .eq("product_category", productCategory)
+      .order("approved_at", { ascending: false })
       .limit(10); // Get most recent approved products
 
     // Filter by capacity if provided
@@ -249,24 +273,20 @@ export async function getVendorPricing(
       // Find products within 20% of requested capacity
       const minCapacity = capacityKwh * 0.8;
       const maxCapacity = capacityKwh * 1.2;
-      query = query
-        .gte('capacity_kwh', minCapacity)
-        .lte('capacity_kwh', maxCapacity);
+      query = query.gte("capacity_kwh", minCapacity).lte("capacity_kwh", maxCapacity);
     }
 
     // Filter by power if provided
     if (powerKw) {
       const minPower = powerKw * 0.8;
       const maxPower = powerKw * 1.2;
-      query = query
-        .gte('power_kw', minPower)
-        .lte('power_kw', maxPower);
+      query = query.gte("power_kw", minPower).lte("power_kw", maxPower);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('❌ Failed to fetch vendor pricing:', error);
+      console.error("❌ Failed to fetch vendor pricing:", error);
       return null;
     }
 
@@ -292,7 +312,7 @@ export async function getVendorPricing(
       approvedAt: new Date(product.approved_at || product.created_at),
     };
   } catch (error) {
-    console.error('❌ Error fetching vendor pricing:', error);
+    console.error("❌ Error fetching vendor pricing:", error);
     return null;
   }
 }
@@ -302,14 +322,14 @@ export async function getVendorPricing(
  */
 function mapEquipmentTypeToProductCategory(
   equipmentType: string
-): 'battery' | 'inverter' | 'ems' | 'bos' | 'container' | null {
-  const mapping: Record<string, 'battery' | 'inverter' | 'ems' | 'bos' | 'container'> = {
-    bess: 'battery',
-    battery: 'battery',
-    inverter: 'inverter',
-    ems: 'ems',
-    bos: 'bos',
-    container: 'container',
+): "battery" | "inverter" | "ems" | "bos" | "container" | null {
+  const mapping: Record<string, "battery" | "inverter" | "ems" | "bos" | "container"> = {
+    bess: "battery",
+    battery: "battery",
+    inverter: "inverter",
+    ems: "ems",
+    bos: "bos",
+    container: "container",
   };
   return mapping[equipmentType] || null;
 }
@@ -326,30 +346,32 @@ export async function syncVendorProductOnApproval(productId: string): Promise<bo
   try {
     // Get the approved product
     const { data: product, error: fetchError } = await supabase
-      .from('vendor_products')
-      .select('*')
-      .eq('id', productId)
-      .eq('status', 'approved')
+      .from("vendor_products")
+      .select("*")
+      .eq("id", productId)
+      .eq("status", "approved")
       .single();
 
     if (fetchError || !product) {
-      console.error('❌ Failed to fetch approved product:', fetchError);
+      console.error("❌ Failed to fetch approved product:", fetchError);
       return false;
     }
 
     // Sync to equipment_pricing
     const result = await syncApprovedVendorProducts();
-    
+
     if (result.synced > 0) {
       if (import.meta.env.DEV) {
-        console.log(`✅ Auto-synced approved vendor product: ${product.manufacturer} ${product.model}`);
+        console.log(
+          `✅ Auto-synced approved vendor product: ${product.manufacturer} ${product.model}`
+        );
       }
       return true;
     }
 
     return false;
   } catch (error) {
-    console.error('❌ Error syncing vendor product on approval:', error);
+    console.error("❌ Error syncing vendor product on approval:", error);
     return false;
   }
 }
@@ -365,7 +387,3 @@ export const vendorPricingIntegrationService = {
 };
 
 export default vendorPricingIntegrationService;
-
-
-
-

@@ -17,24 +17,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, 
-  Sun, TrendingDown, Shield, Sparkles, Car, X, Battery, Bolt,
-  Gauge, Clock, MapPin, ChevronDown
-} from 'lucide-react';
+import { Calculator, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Shield, Sparkles, X, Battery, Bolt, Gauge, ChevronDown } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
-import { 
-  calculateEVChargingPowerSimple,
-  EV_CHARGER_SPECS_SIMPLE 
-} from '@/services/evChargingCalculations';
+import { calculateEVChargingPowerSimple } from '@/services/evChargingCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 import evChargingImage from '@/assets/images/ev_charging_station.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // V5 Wizard (Clean Build Dec 21, 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
-import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 

@@ -13,22 +13,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  TrendingUp, TrendingDown, Minus, BarChart3, Zap, Lightbulb,
-  Building2, ArrowUp, ArrowDown, RefreshCw, CheckCircle, XCircle,
-  AlertCircle, DollarSign, Activity, Target, Sparkles, ExternalLink
-} from 'lucide-react';
-import { 
-  runMarketInference,
-  generateSampleInference,
-  type MarketInference,
-  type MarketTrend,
-  type BESSConfigurationPattern,
-  type CustomerDecisionIndicator,
-  type EmergingOpportunity,
-  type IndustryAdoptionRate,
-  type PricingUpdateRecommendation
-} from '@/services/marketInferenceEngine';
+import { TrendingUp, TrendingDown, Minus, BarChart3, Zap, Lightbulb, Building2, RefreshCw, AlertCircle, DollarSign, Activity, Target, ExternalLink } from 'lucide-react';
+import { runMarketInference, type MarketInference, type MarketTrend, type BESSConfigurationPattern, type CustomerDecisionIndicator, type EmergingOpportunity, type IndustryAdoptionRate, type PricingUpdateRecommendation } from '@/services/marketInferenceEngine';
 import { supabase } from '@/services/supabaseClient';
 import MarketIntelligenceDetailModal from './MarketIntelligenceDetailModal';
 

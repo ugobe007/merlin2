@@ -9,11 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, 
-  Database, Code, Calculator, Link, Shield, FileText, 
-  Zap, TrendingUp, Clock, BarChart3
-} from 'lucide-react';
+import { Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Database, Code, Calculator, Link, Shield, FileText, Zap, TrendingUp, BarChart3 } from 'lucide-react';
 import { runSystemHealthCheck, type SystemHealthReport, type HealthCheckResult } from '@/services/systemHealthCheck';
 
 const SystemHealthDashboard: React.FC = () => {

@@ -1,268 +1,165 @@
-# BESS Quote Builder - Test Suite Documentation
+# Merlin Wizard E2E Tests
 
-## Overview
+End-to-end tests for the Merlin industry profile questionnaire wizard using three testing frameworks:
 
-This test suite addresses critical issues identified in console logs and provides comprehensive testing for the BESS (Battery Energy Storage Systems) Quote Builder application.
+## Frameworks
 
-## Issues Identified from Console Logs
+### 1. Playwright (`/e2e`)
+- Full browser automation
+- Cross-browser testing (Chrome, Firefox, Safari)
+- Mobile viewport testing
+- Built-in parallelization
+- Video/screenshot capture
 
-### 🔴 Critical Issues
+### 2. Puppeteer (`/puppeteer`)
+- Chrome/Chromium automation
+- Screenshot comparison
+- PDF report generation
+- Performance metrics
+- Custom visual testing
 
-1. **Duplicate BaselineService Calls**
-   - **Issue**: BaselineService.fetchConfiguration called 6 times with identical parameters
-   - **Impact**: Performance degradation, unnecessary API calls
-   - **Location**: `baselineService.ts:216-218`
-   - **Test Coverage**: `bess-workflow-tests.test.ts` - "should fetch configuration only once for identical parameters"
+### 3. Stagehand (`/stagehand`)
+- AI-powered browser automation
+- Natural language test actions
+- Resilient to UI changes
+- Semantic element selection
+- Automatic data extraction
 
-2. **Multiple Supabase Client Instances**
-   - **Issue**: Multiple GoTrueClient instances detected in same browser context
-   - **Impact**: Undefined behavior, potential state conflicts
-   - **Location**: `@supabase_supabase-js.js:8252`
-   - **Test Coverage**: `bess-workflow-e2e.spec.ts` - "should not create multiple Supabase client instances"
+---
 
-### ⚠️ Performance Issues
+## Quick Start
 
-3. **Excessive Component Re-renders**
-   - **Issue**: AdvancedQuoteBuilder rendering multiple times unnecessarily
-   - **Impact**: UI lag, poor user experience
-   - **Location**: `BessQuoteBuilder.tsx:830`
-   - **Test Coverage**: Performance tests for re-render detection
+```bash
+# Install dependencies
+npm install
 
-4. **Node Module Compatibility Warnings**
-   - **Issue**: Stream, timers, and events modules externalized for browser
-   - **Impact**: RSS parser functionality may be limited
-   - **Location**: `rss-parser.js`
-   - **Recommendation**: Consider alternative RSS parsing library for browser
+# Install Playwright browsers
+npx playwright install
 
-## Test Suite Structure
+# Run all tests
+npm test
+
+# Run specific framework
+npm run test:playwright
+npm run test:puppeteer
+npm run test:stagehand
+```
+
+---
+
+## Test Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm test` | Run all test suites |
+| `npm run test:playwright` | Playwright tests (headless) |
+| `npm run test:playwright:ui` | Playwright with UI mode |
+| `npm run test:playwright:debug` | Playwright with debugger |
+| `npm run test:playwright:headed` | Playwright visible browser |
+| `npm run test:puppeteer` | Puppeteer visual tests |
+| `npm run test:stagehand` | AI-powered Stagehand tests |
+| `npm run test:smoke` | Quick smoke tests only |
+| `npm run report` | View Playwright HTML report |
+
+### Industry-Specific Tests
+
+```bash
+npm run test:hotel
+npm run test:carwash
+npm run test:datacenter
+npm run test:hospital
+npm run test:manufacturing
+npm run test:retail
+npm run test:restaurant
+npm run test:office
+npm run test:university
+npm run test:evcharging
+```
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TEST_URL` | `http://localhost:5173` | Base URL for tests |
+| `CI` | - | Set in CI environments |
+| `ANTHROPIC_API_KEY` | - | Required for Stagehand tests |
+
+---
+
+## Test Structure
 
 ```
 tests/
-├── unit/
-│   └── workflow.test.ts             # Unit & Integration Tests
-├── e2e/
-│   └── bess-quote-builder.test.ts   # End-to-End Tests
-├── utils/
-│   └── test-helpers.ts              # Test Utilities & Mocks
-├── setup.ts                         # Global Test Setup
-└── README.md                        # This file
+├── e2e/                          # Playwright tests
+│   └── wizard.spec.ts            # Main wizard test suite
+├── puppeteer/                    # Puppeteer tests
+│   ├── setup.ts                  # Jest setup
+│   └── wizard.test.ts            # Visual/PDF tests
+├── stagehand/                    # Stagehand tests
+│   └── wizard.test.ts            # AI-powered tests
+├── screenshots/                  # Generated screenshots
+├── playwright.config.ts          # Playwright config
+├── jest.puppeteer.config.js      # Jest config for Puppeteer
+└── package.json                  # Test dependencies
 ```
 
-## Installation
+---
 
-```bash
-# Install test dependencies
-npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/react-hooks @testing-library/user-event @testing-library/jest-dom jsdom
+## Test Coverage
 
-# For E2E tests
-npm install --save-dev @playwright/test
+### All 10 Industries Tested
 
-# Install Playwright browsers (first time only)
-npx playwright install
-```
+| Industry | Playwright | Puppeteer | Stagehand |
+|----------|------------|-----------|-----------|
+| Hotel | ✅ Full flow | ✅ Visual | ✅ AI |
+| Car Wash | ✅ Full flow | ✅ Visual | ✅ AI |
+| EV Charging | ✅ Full flow | ✅ Visual | ✅ AI |
+| Data Center | ✅ Full flow | ✅ Visual | ✅ AI |
+| Manufacturing | ✅ Full flow | ✅ Visual | ✅ AI |
+| Hospital | ✅ Full flow | ✅ Visual | ✅ AI |
+| University | ✅ Full flow | ✅ Visual | ✅ AI |
+| Retail | ✅ Full flow | ✅ Visual | ✅ AI |
+| Restaurant | ✅ Full flow | ✅ Visual | ✅ AI |
+| Office | ✅ Full flow | ✅ Visual | ✅ AI |
 
-## Running Tests
+### Test Categories
 
-### Unit & Integration Tests
+- **Navigation**: Page loading, step navigation, back/forward
+- **Industry Selection**: All 10 industries selectable
+- **Question Flow**: Conditional questions, required fields
+- **Validation**: Error messages, range validation
+- **Calculations**: Output verification, range checking
+- **Responsive**: Mobile, tablet, desktop viewports
+- **Performance**: Load time, calculation time
+- **Visual**: Screenshots, PDF generation
 
-```bash
-# Run all tests
-npm run test
+---
 
-# Run tests in watch mode
-npm run test:watch
+## Expected Results Ranges
 
-# Run tests with coverage
-npm run test:coverage
+| Industry | Peak kW Range | BESS kWh Range |
+|----------|---------------|----------------|
+| Hotel (175 rooms) | 250 - 600 | 200 - 800 |
+| Car Wash (express) | 150 - 400 | 100 - 400 |
+| Data Center (100 racks) | 800 - 2000 | 500 - 2000 |
+| Hospital (200 beds) | 1500 - 4000 | 1000 - 4000 |
+| Manufacturing (150K sqft) | 1000 - 3000 | 500 - 2000 |
+| Retail (grocery) | 300 - 600 | 300 - 1000 |
+| Restaurant (casual) | 100 - 250 | 100 - 400 |
+| Office (mid-rise) | 400 - 1000 | 200 - 800 |
+| University (large) | 30000 - 100000 | 20000 - 75000 |
+| EV Hub (16 DCFC) | 1000 - 3000 | 500 - 2000 |
 
-# Run tests with UI
-npm run test:ui
+---
 
-# Run specific test file
-npm run test workflow.test.ts
-```
+## CI Integration
 
-### End-to-End Tests
+### GitHub Actions
 
-```bash
-# Run E2E tests
-npm run test:e2e
-
-# Run E2E tests with UI
-npm run test:e2e:ui
-
-# Run E2E tests in headed mode
-npm run test:e2e:headed
-```
-
-## Package.json Scripts
-
-Add these to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
-  }
-}
-```
-
-## Test Categories
-
-### 1. Baseline Service Tests
-Tests for configuration fetching, caching, and duplicate call prevention.
-
-**Key Tests:**
-- ✅ Configuration caching
-- ✅ Duplicate call detection
-- ✅ Use case data validation
-- ✅ Cache management
-
-**Priority Fix - Request Deduplication:**
-```typescript
-// Implement in baselineService.ts
-class BaselineService {
-  private pendingRequests = new Map<string, Promise<any>>();
-  
-  async fetchConfiguration(useCase: string, data: any) {
-    const key = this.getCacheKey(useCase, data);
-    
-    // Check for pending request
-    if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key);
-    }
-    
-    // Check cache
-    if (this.cache.has(key)) {
-      return this.cache.get(key);
-    }
-    
-    // Make new request
-    const promise = this.makeRequest(useCase, data);
-    this.pendingRequests.set(key, promise);
-    
-    try {
-      const result = await promise;
-      this.cache.set(key, result);
-      return result;
-    } finally {
-      this.pendingRequests.delete(key);
-    }
-  }
-}
-```
-
-### 2. AI Data Collection Tests
-Tests for daily update workflow, data fetching, and scheduling.
-
-**Key Tests:**
-- ✅ Parallel data fetching
-- ✅ Update completion time
-- ✅ Data collection results
-- ✅ Next collection scheduling
-- ✅ Error handling
-
-**Expected Results:**
-- Pricing: 3 items
-- Products: 9 items
-- Financing: 2 items
-- News: 14 items
-- Incentives: 3 items
-- Total time: < 1 second
-
-### 3. Smart Wizard State Management
-Tests for modal state, timing tracking, and user interactions.
-
-**Key Tests:**
-- ✅ Page load time tracking
-- ✅ Modal visibility toggling
-- ✅ State change logging
-- ✅ Call stack verification
-
-### 4. Performance Tests
-Tests to ensure application meets performance benchmarks.
-
-**Benchmarks:**
-- Baseline fetch: < 200ms
-- Component renders: < 10 per action
-- Page load: < 3 seconds
-- Daily update: < 2 seconds
-
-### 5. Integration Tests
-End-to-end workflow testing from initialization to quote generation.
-
-**Workflows Tested:**
-- ✅ Service initialization
-- ✅ Data collection
-- ✅ Baseline calculation
-- ✅ Quote generation
-- ✅ Error recovery
-
-## Mock Data
-
-The test suite includes comprehensive mock data for:
-- Use case configurations (car-wash, hotel, data-center, office-building)
-- Baseline calculation results
-- AI data collection results
-- Quote generation outputs
-
-See `tests/utils/test-helpers.ts` for all mock data structures.
-
-## Performance Monitoring
-
-```typescript
-import { PerformanceMonitor } from '@/tests/utils/test-helpers';
-
-const monitor = new PerformanceMonitor();
-
-test('should track performance', async () => {
-  const start = Date.now();
-  await someOperation();
-  monitor.recordMetric('operation', Date.now() - start);
-  
-  monitor.report();
-});
-```
-
-## Debugging Tips
-
-### Enable Verbose Logging
-```typescript
-// In test file
-import { captureConsoleLogs } from '@/tests/utils/test-helpers';
-
-const { logs, restore } = captureConsoleLogs();
-// ... run tests ...
-console.log(logs);
-restore();
-```
-
-### Debug Specific Tests
-```bash
-# Run single test
-npm run test -- -t "should fetch configuration only once"
-
-# Debug mode
-node --inspect-brk ./node_modules/.bin/vitest run
-```
-
-### View Test UI
-```bash
-npm run test:ui
-# Opens browser with interactive test runner
-```
-
-## Continuous Integration
-
-### GitHub Actions Example
 ```yaml
-name: Tests
+name: E2E Tests
 
 on: [push, pull_request]
 
@@ -270,155 +167,106 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - run: npm install
-      - run: npm run test:coverage
-      - run: npx playwright install
-      - run: npm run test:e2e
+          node-version: 20
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npm run test:playwright
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
 ```
 
-## Coverage Reports
+---
 
-After running `npm run test:coverage`, view reports at:
-- HTML: `./coverage/index.html`
-- JSON: `./coverage/coverage-final.json`
-- LCOV: `./coverage/lcov.info`
+## Debugging
 
-**Current Coverage Thresholds:**
-- Lines: 70%
-- Functions: 70%
-- Branches: 70%
-- Statements: 70%
+### Playwright
+```bash
+# Debug mode with inspector
+npx playwright test --debug
 
-## Recommended Fixes
+# UI mode for interactive debugging
+npx playwright test --ui
 
-### Priority 1: Duplicate BaselineService Calls ⚠️
-**Issue**: 6 identical calls to fetchConfiguration
-**Solution**: Implement request deduplication
-
-```typescript
-// In baselineService.ts
-private pendingRequests = new Map<string, Promise<any>>();
-
-async fetchConfiguration(useCase: string, useCaseData: any) {
-  const cacheKey = this.getCacheKey(useCase, useCaseData);
-  
-  // Return pending request if exists
-  if (this.pendingRequests.has(cacheKey)) {
-    return this.pendingRequests.get(cacheKey);
-  }
-  
-  // Create new request
-  const promise = this.makeApiRequest(useCase, useCaseData);
-  this.pendingRequests.set(cacheKey, promise);
-  
-  try {
-    const result = await promise;
-    this.cache.set(cacheKey, result);
-    return result;
-  } finally {
-    this.pendingRequests.delete(cacheKey);
-  }
-}
+# Run single test
+npx playwright test -g "Hotel"
 ```
 
-### Priority 2: Supabase Client Singleton ⚠️
-**Issue**: Multiple GoTrueClient instances
-**Solution**: Implement singleton pattern
+### Puppeteer
+```bash
+# Run with visible browser
+HEADLESS=false npm run test:puppeteer
 
-```typescript
-// supabaseClient.ts
-let instance: SupabaseClient | null = null;
-
-export function getSupabaseClient() {
-  if (!instance) {
-    instance = createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY
-    );
-  }
-  return instance;
-}
+# Run single test file
+npx jest tests/puppeteer/wizard.test.ts --testNamePattern="Hotel"
 ```
 
-### Priority 3: Component Re-render Optimization 🔧
-**Issue**: AdvancedQuoteBuilder rendering multiple times
-**Solution**: Use React.memo and useCallback
+### Stagehand
+```bash
+# Enable verbose logging
+STAGEHAND_VERBOSE=true npm run test:stagehand
+```
 
+---
+
+## Adding New Tests
+
+### Playwright Example
 ```typescript
-const AdvancedQuoteBuilder = React.memo(({ showModal, onClose, data }) => {
-  const processedData = useMemo(() => 
-    data.map(item => ({ ...item, calculated: item.value * 2 })),
-    [data]
-  );
+test('should complete new industry flow', async ({ page }) => {
+  await navigateToWizard(page);
+  await selectIndustry(page, 'newIndustry');
   
-  if (!showModal) return null;
+  // Fill questions
+  await fillQuestion(page, 'questionId', 'value', 'select');
   
-  return <Modal>...</Modal>;
+  // Submit and verify
+  await submitWizard(page);
+  const results = await getResults(page);
+  expect(results.peakKw).toBeGreaterThan(100);
+});
+```
+
+### Stagehand Example
+```typescript
+await stagehand.act({
+  action: 'Select the new industry and fill in 50,000 square feet'
 });
 
-// In parent component
-const handleClose = useCallback(() => setShowModal(false), []);
+const results = await stagehand.extract({
+  instruction: 'Get the peak demand and BESS recommendation',
+  schema: QuoteResultSchema
+});
 ```
 
-## Known Issues
+---
 
-1. **RSS Parser Warnings**: Browser compatibility warnings are expected. Consider using a browser-specific RSS library or fetching RSS on the server side.
+## Troubleshooting
 
-2. **Test Flakiness**: Some E2E tests may be flaky due to timing. Adjust timeout values in `playwright.config.ts` if needed.
+### Tests timing out
+- Increase timeout in config
+- Check if dev server is running
+- Verify selectors match current UI
 
-3. **Coverage Thresholds**: Currently set to 70%. Adjust in `vitest.config.ts` as needed.
+### Screenshots not capturing
+- Check `tests/screenshots/` directory exists
+- Verify write permissions
 
-## Test File Locations
+### Stagehand API errors
+- Ensure `ANTHROPIC_API_KEY` is set
+- Check API rate limits
 
-After implementation, tests will be located at:
-- **Unit Tests**: `tests/unit/workflow.test.ts`
-- **E2E Tests**: `tests/e2e/bess-quote-builder.test.ts`
-- **Utilities**: `tests/utils/test-helpers.ts`
-- **Setup**: `tests/setup.ts`
+---
 
-## Quick Start
+## License
 
-```bash
-# 1. Install dependencies
-npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/jest-dom jsdom @playwright/test
-
-# 2. Install Playwright browsers
-npx playwright install
-
-# 3. Run unit tests
-npm run test
-
-# 4. Run E2E tests
-npm run test:e2e
-
-# 5. View coverage
-npm run test:coverage
-open coverage/index.html
-```
-
-## Contributing
-
-When adding new features:
-1. Write tests first (TDD approach)
-2. Ensure all tests pass
-3. Maintain coverage above 70%
-4. Update this README if adding new test categories
-
-## Support
-
-For issues or questions:
-1. Check console logs for specific error messages
-2. Review test output for failure details
-3. Use `npm run test:ui` for interactive debugging
-4. Check Playwright trace files for E2E failures
-
-## Test Maintenance
-
-- Update mock data when API responses change
-- Review and update performance benchmarks quarterly
-- Add new test cases for bug fixes
-- Remove obsolete tests when features are deprecated
+Internal use only - Noah Energy / Merlin Platform

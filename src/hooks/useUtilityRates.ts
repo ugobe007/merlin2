@@ -1,23 +1,23 @@
 /**
  * USE UTILITY RATES HOOK
  * ======================
- * 
+ *
  * React hook for fetching utility rates by ZIP code.
  * Provides automatic caching, loading states, and error handling.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getUtilityRatesByZip, 
+import { useState, useEffect, useCallback } from "react";
+import {
+  getUtilityRatesByZip,
   getCommercialRateByZip,
   getBESSSavingsOpportunity,
-  type ZipCodeUtilityData 
-} from '@/services/utilityRateService';
+  type ZipCodeUtilityData,
+} from "@/services/utilityRateService";
 
 interface UseUtilityRatesResult {
   // Full utility data
   data: ZipCodeUtilityData | null;
-  
+
   // Simplified rate info
   rate: number | null;
   demandCharge: number | null;
@@ -25,16 +25,16 @@ interface UseUtilityRatesResult {
   utilityName: string | null;
   state: string | null;
   hasTOU: boolean;
-  
+
   // Savings opportunity
   savingsScore: number | null;
-  savingsRating: 'excellent' | 'good' | 'fair' | 'poor' | null;
+  savingsRating: "excellent" | "good" | "fair" | "poor" | null;
   savingsReasons: string[];
-  
+
   // Status
   loading: boolean;
   error: string | null;
-  
+
   // Actions
   refetch: () => void;
 }
@@ -51,12 +51,12 @@ export function useUtilityRates(zipCode: string | null): UseUtilityRatesResult {
   } | null>(null);
   const [savings, setSavings] = useState<{
     score: number;
-    rating: 'excellent' | 'good' | 'fair' | 'poor';
+    rating: "excellent" | "good" | "fair" | "poor";
     reasons: string[];
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const fetchRates = useCallback(async () => {
     if (!zipCode || zipCode.length < 5) {
       setData(null);
@@ -64,10 +64,10 @@ export function useUtilityRates(zipCode: string | null): UseUtilityRatesResult {
       setSavings(null);
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch all data in parallel
       const [fullData, rateData, savingsData] = await Promise.all([
@@ -75,22 +75,22 @@ export function useUtilityRates(zipCode: string | null): UseUtilityRatesResult {
         getCommercialRateByZip(zipCode),
         getBESSSavingsOpportunity(zipCode),
       ]);
-      
+
       setData(fullData);
       setSimpleRate(rateData);
       setSavings(savingsData);
     } catch (err) {
-      console.error('Error fetching utility rates:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch utility rates');
+      console.error("Error fetching utility rates:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch utility rates");
     } finally {
       setLoading(false);
     }
   }, [zipCode]);
-  
+
   useEffect(() => {
     fetchRates();
   }, [fetchRates]);
-  
+
   return {
     data,
     rate: simpleRate?.rate ?? null,
@@ -119,25 +119,25 @@ export function useCommercialRate(zipCode: string | null): {
   const [rate, setRate] = useState<number | null>(null);
   const [demandCharge, setDemandCharge] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     if (!zipCode || zipCode.length < 5) {
       setRate(null);
       setDemandCharge(null);
       return;
     }
-    
+
     setLoading(true);
     getCommercialRateByZip(zipCode)
-      .then(data => {
+      .then((data) => {
         setRate(data?.rate ?? null);
         setDemandCharge(data?.demandCharge ?? null);
       })
-      .catch(err => {
-        console.error('Error fetching rate:', err);
+      .catch((err) => {
+        console.error("Error fetching rate:", err);
       })
       .finally(() => setLoading(false));
   }, [zipCode]);
-  
+
   return { rate, demandCharge, loading };
 }

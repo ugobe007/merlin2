@@ -1,21 +1,21 @@
 /**
  * DOCUMENT PARSING SERVICE
  * ========================
- * 
+ *
  * Extracts text content from uploaded documents (PDF, Excel, CSV)
  * for AI-powered spec extraction.
- * 
+ *
  * Supported formats:
  * - PDF: Uses pdfjs-dist
  * - Excel (.xlsx, .xls): Uses xlsx library
  * - CSV: Native parsing
  * - Text (.txt): Direct read
- * 
+ *
  * @module documentParsingService
  */
 
-import * as pdfjsLib from 'pdfjs-dist';
-import * as XLSX from 'xlsx';
+import * as pdfjsLib from "pdfjs-dist";
+import * as XLSX from "xlsx";
 
 // Configure PDF.js worker
 // In production, use CDN worker for better performance
@@ -23,7 +23,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.j
 
 export interface ParsedDocument {
   filename: string;
-  fileType: 'pdf' | 'excel' | 'csv' | 'text' | 'unknown';
+  fileType: "pdf" | "excel" | "csv" | "text" | "unknown";
   textContent: string;
   pageCount?: number;
   sheetNames?: string[];
@@ -53,46 +53,46 @@ export async function parseDocument(
 ): Promise<ParsedDocument> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const startTime = performance.now();
-  
+
   // Validate file size
   if (file.size > (opts.maxFileSize || DEFAULT_OPTIONS.maxFileSize!)) {
     return {
       filename: file.name,
-      fileType: 'unknown',
-      textContent: '',
+      fileType: "unknown",
+      textContent: "",
       parseTime: performance.now() - startTime,
       error: `File too large. Maximum size is ${Math.round((opts.maxFileSize || DEFAULT_OPTIONS.maxFileSize!) / 1024 / 1024)}MB`,
     };
   }
-  
+
   const fileType = getFileType(file);
-  
+
   try {
     switch (fileType) {
-      case 'pdf':
+      case "pdf":
         return await parsePDF(file, opts, startTime);
-      case 'excel':
+      case "excel":
         return await parseExcel(file, startTime);
-      case 'csv':
+      case "csv":
         return await parseCSV(file, startTime);
-      case 'text':
+      case "text":
         return await parseText(file, startTime);
       default:
         return {
           filename: file.name,
-          fileType: 'unknown',
-          textContent: '',
+          fileType: "unknown",
+          textContent: "",
           parseTime: performance.now() - startTime,
-          error: `Unsupported file type: ${file.type || file.name.split('.').pop()}`,
+          error: `Unsupported file type: ${file.type || file.name.split(".").pop()}`,
         };
     }
   } catch (error) {
     return {
       filename: file.name,
       fileType,
-      textContent: '',
+      textContent: "",
       parseTime: performance.now() - startTime,
-      error: error instanceof Error ? error.message : 'Unknown parsing error',
+      error: error instanceof Error ? error.message : "Unknown parsing error",
     };
   }
 }
@@ -100,32 +100,32 @@ export async function parseDocument(
 /**
  * Determine file type from MIME type or extension
  */
-function getFileType(file: File): ParsedDocument['fileType'] {
-  const extension = file.name.split('.').pop()?.toLowerCase();
+function getFileType(file: File): ParsedDocument["fileType"] {
+  const extension = file.name.split(".").pop()?.toLowerCase();
   const mimeType = file.type.toLowerCase();
-  
-  if (mimeType === 'application/pdf' || extension === 'pdf') {
-    return 'pdf';
+
+  if (mimeType === "application/pdf" || extension === "pdf") {
+    return "pdf";
   }
-  
+
   if (
-    mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-    mimeType === 'application/vnd.ms-excel' ||
-    extension === 'xlsx' ||
-    extension === 'xls'
+    mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    mimeType === "application/vnd.ms-excel" ||
+    extension === "xlsx" ||
+    extension === "xls"
   ) {
-    return 'excel';
+    return "excel";
   }
-  
-  if (mimeType === 'text/csv' || extension === 'csv') {
-    return 'csv';
+
+  if (mimeType === "text/csv" || extension === "csv") {
+    return "csv";
   }
-  
-  if (mimeType.startsWith('text/') || extension === 'txt') {
-    return 'text';
+
+  if (mimeType.startsWith("text/") || extension === "txt") {
+    return "text";
   }
-  
-  return 'unknown';
+
+  return "unknown";
 }
 
 /**
@@ -138,11 +138,11 @@ async function parsePDF(
 ): Promise<ParsedDocument> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  
+
   const maxPages = Math.min(pdf.numPages, options.maxPages || 50);
   const textParts: string[] = [];
   const metadata: Record<string, string> = {};
-  
+
   // Extract metadata if available
   if (options.includeMetadata) {
     try {
@@ -158,21 +158,19 @@ async function parsePDF(
       // Metadata extraction failed, continue without it
     }
   }
-  
+
   // Extract text from each page
   for (let i = 1; i <= maxPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
+    const pageText = textContent.items.map((item: any) => item.str).join(" ");
     textParts.push(pageText);
   }
-  
+
   return {
     filename: file.name,
-    fileType: 'pdf',
-    textContent: textParts.join('\n\n'),
+    fileType: "pdf",
+    textContent: textParts.join("\n\n"),
     pageCount: pdf.numPages,
     metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     parseTime: performance.now() - startTime,
@@ -184,23 +182,23 @@ async function parsePDF(
  */
 async function parseExcel(file: File, startTime: number): Promise<ParsedDocument> {
   const arrayBuffer = await file.arrayBuffer();
-  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-  
+  const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
   const textParts: string[] = [];
-  
+
   // Process each sheet
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
-    
+
     // Convert to CSV for text extraction
     const csvContent = XLSX.utils.sheet_to_csv(sheet);
     textParts.push(`=== Sheet: ${sheetName} ===\n${csvContent}`);
   }
-  
+
   return {
     filename: file.name,
-    fileType: 'excel',
-    textContent: textParts.join('\n\n'),
+    fileType: "excel",
+    textContent: textParts.join("\n\n"),
     sheetNames: workbook.SheetNames,
     parseTime: performance.now() - startTime,
   };
@@ -211,10 +209,10 @@ async function parseExcel(file: File, startTime: number): Promise<ParsedDocument
  */
 async function parseCSV(file: File, startTime: number): Promise<ParsedDocument> {
   const text = await file.text();
-  
+
   return {
     filename: file.name,
-    fileType: 'csv',
+    fileType: "csv",
     textContent: text,
     parseTime: performance.now() - startTime,
   };
@@ -225,10 +223,10 @@ async function parseCSV(file: File, startTime: number): Promise<ParsedDocument> 
  */
 async function parseText(file: File, startTime: number): Promise<ParsedDocument> {
   const text = await file.text();
-  
+
   return {
     filename: file.name,
-    fileType: 'text',
+    fileType: "text",
     textContent: text,
     parseTime: performance.now() - startTime,
   };
@@ -241,5 +239,5 @@ export async function parseMultipleDocuments(
   files: File[],
   options: DocumentParseOptions = {}
 ): Promise<ParsedDocument[]> {
-  return Promise.all(files.map(file => parseDocument(file, options)));
+  return Promise.all(files.map((file) => parseDocument(file, options)));
 }

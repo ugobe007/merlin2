@@ -17,22 +17,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, 
-  Sun, TrendingDown, Shield, Sparkles, X, Battery, ChevronDown,
-  Gauge, Building2, Wifi, Car, Coffee, Waves, Dumbbell,
-  Users, Briefcase, Utensils, Shirt, TreePine, Flag, Droplets, Wand2,
-  Leaf, Receipt
-} from 'lucide-react';
+import { DollarSign, CheckCircle, ArrowRight, Sun, Sparkles, X, Battery, Building2, Car, Leaf, Receipt } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
-import { 
-  calculateHotelPowerSimple, 
-  HOTEL_CLASS_PROFILES_SIMPLE, 
-  HOTEL_AMENITY_POWER_SIMPLE,
-  type HotelClassSimple,
-  type HotelAmenitySimple
-} from '@/services/useCasePowerCalculations';
+import { calculateHotelPowerSimple, type HotelClassSimple, type HotelAmenitySimple } from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 import hotelImage from '@/assets/images/hotel_motel_holidayinn_1.jpg';
@@ -43,8 +31,7 @@ import hotelImage5 from '@/assets/images/hotel_motel_holidayinn_4.jpg';
 import evChargingHotelImage from '@/assets/images/ev_charging_hotel.jpg';
 // V5 Wizard (Clean Build Dec 21, 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
-import { TrustBadgesInline, MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
-import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
+import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 
 // ============================================

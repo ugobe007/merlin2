@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { getConstant } from '../services/calculationConstantsService';
+import React, { useState, useMemo, useEffect } from "react";
+import { getConstant } from "../services/calculationConstantsService";
 
 /**
  * AdvancedAnalytics - Interactive What-If Analysis Tool
- * 
+ *
  * NOTE: This component INTENTIONALLY does local calculations because it's
  * an interactive tool with sliders that let users adjust parameters in real-time.
- * 
+ *
  * The BASE VALUES (degradation, discount rate, O&M) come from the database
  * via calculationConstantsService (SINGLE SOURCE OF TRUTH).
- * 
+ *
  * Users can then adjust these values with sliders to see how changes affect ROI.
  */
 
@@ -38,11 +38,7 @@ interface FinancialMetrics {
   averageAnnualReturn: number;
 }
 
-const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
-  isOpen,
-  onClose,
-  projectData,
-}) => {
+const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ isOpen, onClose, projectData }) => {
   // ═══════════════════════════════════════════════════════════════════════════
   // LOAD BASE VALUES FROM DATABASE (SINGLE SOURCE OF TRUTH)
   // These are the defaults - users can adjust with sliders for "what-if" analysis
@@ -53,23 +49,29 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   const [inflationRate, setInflationRate] = useState(0.03);
   const [operatingCostsPercent, setOperatingCostsPercent] = useState(0.025);
   const [constantsLoaded, setConstantsLoaded] = useState(false);
-  
+
   // Load database constants on mount
   useEffect(() => {
     const loadConstants = async () => {
       try {
         const [degradation, discount, oAndM] = await Promise.all([
-          getConstant('BATTERY_DEGRADATION_RATE'),
-          getConstant('DISCOUNT_RATE'),
-          getConstant('O_AND_M_PERCENT'),
+          getConstant("BATTERY_DEGRADATION_RATE"),
+          getConstant("DISCOUNT_RATE"),
+          getConstant("O_AND_M_PERCENT"),
         ]);
         if (degradation !== null) setDegradationRate(degradation);
         if (discount !== null) setDiscountRate(projectData.discountRate || discount);
         if (oAndM !== null) setOperatingCostsPercent(oAndM);
         setConstantsLoaded(true);
-        if (import.meta.env.DEV) { console.log('[AdvancedAnalytics] Loaded constants from database:', { degradation, discount, oAndM }); }
+        if (import.meta.env.DEV) {
+          console.log("[AdvancedAnalytics] Loaded constants from database:", {
+            degradation,
+            discount,
+            oAndM,
+          });
+        }
       } catch (error) {
-        console.warn('[AdvancedAnalytics] Using fallback constants:', error);
+        console.warn("[AdvancedAnalytics] Using fallback constants:", error);
         setConstantsLoaded(true);
       }
     };
@@ -79,13 +81,13 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
   // Calculate advanced financial metrics
   const metrics = useMemo((): FinancialMetrics => {
     const { totalCapEx, annualSavings } = projectData;
-    
+
     // NPV Calculation with degradation and inflation
     let npv = -totalCapEx;
     let cumulativeCashFlow = -totalCapEx;
     let breakEvenYear = 0;
     let totalSavings = 0;
-    
+
     for (let year = 1; year <= batteryLifeYears; year++) {
       // Degradation reduces savings over time
       const degradationFactor = Math.pow(1 - degradationRate, year - 1);
@@ -93,15 +95,15 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       const inflationFactor = Math.pow(1 + inflationRate, year - 1);
       // Operating costs
       const operatingCosts = totalCapEx * operatingCostsPercent;
-      
-      const yearSavings = (annualSavings * degradationFactor * inflationFactor) - operatingCosts;
+
+      const yearSavings = annualSavings * degradationFactor * inflationFactor - operatingCosts;
       const discountFactor = Math.pow(1 + discountRate, year);
       const presentValue = yearSavings / discountFactor;
-      
+
       npv += presentValue;
       cumulativeCashFlow += yearSavings;
       totalSavings += yearSavings;
-      
+
       if (cumulativeCashFlow > 0 && breakEvenYear === 0) {
         breakEvenYear = year;
       }
@@ -114,7 +116,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     let irr = 0;
     let testRate = 0.05;
     let increment = 0.01;
-    
+
     // SSOT: IRR Calculation using Newton-Raphson approximation
     // This is for sensitivity analysis visualization - production quotes use centralizedCalculations.ts
     for (let i = 0; i < 100; i++) {
@@ -123,15 +125,15 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         const degradationFactor = Math.pow(1 - degradationRate, year - 1);
         const inflationFactor = Math.pow(1 + inflationRate, year - 1);
         const operatingCosts = totalCapEx * operatingCostsPercent;
-        const yearSavings = (annualSavings * degradationFactor * inflationFactor) - operatingCosts;
+        const yearSavings = annualSavings * degradationFactor * inflationFactor - operatingCosts;
         testNPV += yearSavings / Math.pow(1 + testRate, year); // SSOT: DCF formula
       }
-      
+
       if (Math.abs(testNPV) < 1000) {
         irr = testRate;
         break;
       }
-      
+
       if (testNPV > 0) {
         testRate += increment;
       } else {
@@ -143,7 +145,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     // ROI Calculations
     const savings10Year = calculateTotalSavings(10);
     const roi10Year = ((savings10Year - totalCapEx) / totalCapEx) * 100;
-    
+
     const savings20Year = calculateTotalSavings(20);
     const roi20Year = ((savings20Year - totalCapEx) / totalCapEx) * 100;
 
@@ -153,7 +155,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
         const degradationFactor = Math.pow(1 - degradationRate, year - 1);
         const inflationFactor = Math.pow(1 + inflationRate, year - 1);
         const operatingCosts = totalCapEx * operatingCostsPercent;
-        total += (annualSavings * degradationFactor * inflationFactor) - operatingCosts;
+        total += annualSavings * degradationFactor * inflationFactor - operatingCosts;
       }
       return total;
     }
@@ -170,7 +172,14 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
       totalLifetimeSavings: totalSavings,
       averageAnnualReturn,
     };
-  }, [projectData, batteryLifeYears, discountRate, degradationRate, inflationRate, operatingCostsPercent]);
+  }, [
+    projectData,
+    batteryLifeYears,
+    discountRate,
+    degradationRate,
+    inflationRate,
+    operatingCostsPercent,
+  ]);
 
   // Sensitivity Analysis Data
   const sensitivityData = useMemo(() => {
@@ -178,7 +187,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
     const baseAnnualSavings = projectData.annualSavings;
     const baseCapEx = projectData.totalCapEx;
 
-    return variations.map(percent => {
+    return variations.map((percent) => {
       const adjustedSavings = baseAnnualSavings * (1 + percent / 100);
       const adjustedCapEx = baseCapEx * (1 + percent / 100);
       const payback = adjustedCapEx / adjustedSavings;
@@ -221,21 +230,29 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-green-100 to-green-50 p-6 rounded-xl border-2 border-green-400 shadow-lg">
               <p className="text-sm font-semibold text-green-700 mb-1">Net Present Value (NPV)</p>
-              <p className={`text-3xl font-bold ${metrics.npv > 0 ? 'text-green-700' : 'text-red-700'}`}>
+              <p
+                className={`text-3xl font-bold ${metrics.npv > 0 ? "text-green-700" : "text-red-700"}`}
+              >
                 ${(metrics.npv / 1000000).toFixed(2)}M
               </p>
-              <p className="text-xs text-gray-600 mt-2">@ {(discountRate * 100).toFixed(1)}% discount rate</p>
+              <p className="text-xs text-gray-600 mt-2">
+                @ {(discountRate * 100).toFixed(1)}% discount rate
+              </p>
             </div>
 
             <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-6 rounded-xl border-2 border-blue-400 shadow-lg">
-              <p className="text-sm font-semibold text-blue-700 mb-1">Internal Rate of Return (IRR)</p>
+              <p className="text-sm font-semibold text-blue-700 mb-1">
+                Internal Rate of Return (IRR)
+              </p>
               <p className="text-3xl font-bold text-blue-700">{metrics.irr.toFixed(2)}%</p>
               <p className="text-xs text-gray-600 mt-2">Annual return rate</p>
             </div>
 
             <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-6 rounded-xl border-2 border-purple-400 shadow-lg">
               <p className="text-sm font-semibold text-purple-700 mb-1">Payback Period</p>
-              <p className="text-3xl font-bold text-purple-700">{metrics.paybackPeriod.toFixed(1)} yrs</p>
+              <p className="text-3xl font-bold text-purple-700">
+                {metrics.paybackPeriod.toFixed(1)} yrs
+              </p>
               <p className="text-xs text-gray-600 mt-2">Break-even: Year {metrics.breakEvenYear}</p>
             </div>
 
@@ -250,12 +267,19 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 
           {/* ROI Timeline */}
           <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">📈 Return on Investment Timeline</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              📈 Return on Investment Timeline
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-300">
                 <p className="text-sm font-semibold text-gray-700">5-Year ROI</p>
                 <p className="text-2xl font-bold text-blue-700">
-                  {(((projectData.annualSavings * 5 - projectData.totalCapEx) / projectData.totalCapEx) * 100).toFixed(1)}%
+                  {(
+                    ((projectData.annualSavings * 5 - projectData.totalCapEx) /
+                      projectData.totalCapEx) *
+                    100
+                  ).toFixed(1)}
+                  %
                 </p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg border border-green-300">
@@ -264,7 +288,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
               </div>
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-300">
                 <p className="text-sm font-semibold text-gray-700">20-Year ROI</p>
-                <p className="text-2xl font-bold text-purple-700">{metrics.roi20Year.toFixed(1)}%</p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {metrics.roi20Year.toFixed(1)}%
+                </p>
               </div>
             </div>
           </div>
@@ -274,7 +300,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             <h3 className="text-2xl font-bold text-gray-800 mb-4">⚙️ Financial Assumptions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Battery Life (years)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Battery Life (years)
+                </label>
                 <input
                   type="number"
                   value={batteryLifeYears}
@@ -285,7 +313,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Discount Rate (%)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Discount Rate (%)
+                </label>
                 <input
                   type="number"
                   value={(discountRate * 100).toFixed(1)}
@@ -297,7 +327,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Degradation Rate (%/year)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Degradation Rate (%/year)
+                </label>
                 <input
                   type="number"
                   value={(degradationRate * 100).toFixed(1)}
@@ -309,7 +341,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Inflation Rate (%/year)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Inflation Rate (%/year)
+                </label>
                 <input
                   type="number"
                   value={(inflationRate * 100).toFixed(1)}
@@ -321,11 +355,15 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">O&M Costs (% of CapEx)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  O&M Costs (% of CapEx)
+                </label>
                 <input
                   type="number"
                   value={(operatingCostsPercent * 100).toFixed(2)}
-                  onChange={(e) => setOperatingCostsPercent((parseFloat(e.target.value) || 2.5) / 100)}
+                  onChange={(e) =>
+                    setOperatingCostsPercent((parseFloat(e.target.value) || 2.5) / 100)
+                  }
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   step="0.1"
                   min="0"
@@ -333,7 +371,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Avg Annual Return</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Avg Annual Return
+                </label>
                 <div className="w-full px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg font-bold text-gray-800">
                   {metrics.averageAnnualReturn.toFixed(2)}%
                 </div>
@@ -344,7 +384,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
           {/* Sensitivity Analysis */}
           <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-lg">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">📊 Sensitivity Analysis</h3>
-            <p className="text-sm text-gray-600 mb-4">Impact of ±30% changes in annual savings on key metrics:</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Impact of ±30% changes in annual savings on key metrics:
+            </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -358,16 +400,35 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                   {sensitivityData.map((row, index) => (
                     <tr
                       key={index}
-                      className={`border-b border-gray-200 ${row.percent === 0 ? 'bg-blue-100 font-bold' : 'hover:bg-gray-50'}`}
+                      className={`border-b border-gray-200 ${row.percent === 0 ? "bg-blue-100 font-bold" : "hover:bg-gray-50"}`}
                     >
                       <td className="px-4 py-3">
-                        <span className={row.percent > 0 ? 'text-green-700' : row.percent < 0 ? 'text-red-700' : 'text-gray-800'}>
-                          {row.percent > 0 ? '+' : ''}{row.percent}%
+                        <span
+                          className={
+                            row.percent > 0
+                              ? "text-green-700"
+                              : row.percent < 0
+                                ? "text-red-700"
+                                : "text-gray-800"
+                          }
+                        >
+                          {row.percent > 0 ? "+" : ""}
+                          {row.percent}%
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold">{row.payback.toFixed(2)} years</td>
                       <td className="px-4 py-3 text-right font-semibold">
-                        <span className={row.roi10 > 100 ? 'text-green-700' : row.roi10 < 0 ? 'text-red-700' : 'text-gray-800'}>
+                        {row.payback.toFixed(2)} years
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold">
+                        <span
+                          className={
+                            row.roi10 > 100
+                              ? "text-green-700"
+                              : row.roi10 < 0
+                                ? "text-red-700"
+                                : "text-gray-800"
+                          }
+                        >
                           {row.roi10.toFixed(1)}%
                         </span>
                       </td>
@@ -386,17 +447,20 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                 const degradationFactor = Math.pow(1 - degradationRate, year);
                 const inflationFactor = Math.pow(1 + inflationRate, year);
                 const operatingCosts = projectData.totalCapEx * operatingCostsPercent;
-                const yearSavings = (projectData.annualSavings * degradationFactor * inflationFactor) - operatingCosts;
-                const cumulativeFlow = (yearSavings * (year + 1)) - projectData.totalCapEx;
+                const yearSavings =
+                  projectData.annualSavings * degradationFactor * inflationFactor - operatingCosts;
+                const cumulativeFlow = yearSavings * (year + 1) - projectData.totalCapEx;
                 const maxValue = projectData.totalCapEx * 2;
-                const barWidth = Math.abs(cumulativeFlow) / maxValue * 100;
+                const barWidth = (Math.abs(cumulativeFlow) / maxValue) * 100;
 
                 return (
                   <div key={year} className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-600 w-16">Year {year + 1}</span>
+                    <span className="text-xs font-semibold text-gray-600 w-16">
+                      Year {year + 1}
+                    </span>
                     <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${cumulativeFlow > 0 ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-red-500 to-red-600'}`}
+                        className={`h-full rounded-full ${cumulativeFlow > 0 ? "bg-gradient-to-r from-green-500 to-green-600" : "bg-gradient-to-r from-red-500 to-red-600"}`}
                         style={{ width: `${Math.min(barWidth, 100)}%` }}
                       />
                       <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-800">

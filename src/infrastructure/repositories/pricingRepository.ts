@@ -11,7 +11,6 @@
  */
 
 import { supabase } from '@/services/supabaseClient';
-import type { Database } from '@/types/database.types';
 import type {
   BatteryPricing,
   InverterPricing,

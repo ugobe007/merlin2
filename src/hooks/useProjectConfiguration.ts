@@ -1,15 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 /**
  * Project Configuration Hook
- * 
+ *
  * Manages all project-level configuration state including:
  * - Project identification (name, location)
  * - Application type and use case
  * - Battery chemistry and performance specs
  * - Financial parameters (utility rates, demand charges)
  * - Installation preferences
- * 
+ *
  * Extracted from AdvancedQuoteBuilder.tsx (Phase 3.2)
  */
 
@@ -19,17 +19,17 @@ export interface ProjectConfiguration {
   location: string;
   applicationType: string;
   useCase: string;
-  
+
   // Battery Specifications
   chemistry: string;
   roundTripEfficiency: number;
   warrantyYears: number;
   cyclesPerYear: number;
-  
+
   // Financial Parameters
   utilityRate: number;
   demandCharge: number;
-  
+
   // Installation Details
   installationType: string;
   gridConnection: string;
@@ -59,18 +59,18 @@ export interface UseProjectConfigurationReturn {
 }
 
 const DEFAULT_CONFIG: ProjectConfiguration = {
-  projectName: '',
-  location: '',
-  applicationType: 'commercial',
-  useCase: 'peak-shaving',
-  chemistry: 'lfp',
+  projectName: "",
+  location: "",
+  applicationType: "commercial",
+  useCase: "peak-shaving",
+  chemistry: "lfp",
   roundTripEfficiency: 90,
   warrantyYears: 10,
   cyclesPerYear: 365,
   utilityRate: 0.12,
   demandCharge: 15,
-  installationType: 'outdoor',
-  gridConnection: 'ac-coupled',
+  installationType: "outdoor",
+  gridConnection: "ac-coupled",
   inverterEfficiency: 96,
 };
 
@@ -79,28 +79,28 @@ export function useProjectConfiguration(
 ): UseProjectConfigurationReturn {
   // Merge initial config with defaults
   const initial = { ...DEFAULT_CONFIG, ...initialConfig };
-  
+
   // Project Identification
   const [projectName, setProjectName] = useState(initial.projectName);
   const [location, setLocation] = useState(initial.location);
   const [applicationType, setApplicationType] = useState(initial.applicationType);
   const [useCase, setUseCase] = useState(initial.useCase);
-  
+
   // Battery Specifications
   const [chemistry, setChemistry] = useState(initial.chemistry);
   const [roundTripEfficiency, setRoundTripEfficiency] = useState(initial.roundTripEfficiency);
   const [warrantyYears, setWarrantyYears] = useState(initial.warrantyYears);
   const [cyclesPerYear, setCyclesPerYear] = useState(initial.cyclesPerYear);
-  
+
   // Financial Parameters
   const [utilityRate, setUtilityRate] = useState(initial.utilityRate);
   const [demandCharge, setDemandCharge] = useState(initial.demandCharge);
-  
+
   // Installation Details
   const [installationType, setInstallationType] = useState(initial.installationType);
   const [gridConnection, setGridConnection] = useState(initial.gridConnection);
   const [inverterEfficiency, setInverterEfficiency] = useState(initial.inverterEfficiency);
-  
+
   // Reset all values to defaults
   const resetToDefaults = useCallback(() => {
     setProjectName(DEFAULT_CONFIG.projectName);
@@ -117,7 +117,7 @@ export function useProjectConfiguration(
     setGridConnection(DEFAULT_CONFIG.gridConnection);
     setInverterEfficiency(DEFAULT_CONFIG.inverterEfficiency);
   }, []);
-  
+
   return {
     config: {
       projectName,

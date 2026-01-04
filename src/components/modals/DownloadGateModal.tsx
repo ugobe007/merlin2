@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, User, Building2, CheckCircle, AlertCircle, Download, Lock, UserCheck, Sparkles } from 'lucide-react';
+import { X, Mail, User, Building2, CheckCircle, AlertCircle, Download, UserCheck, Sparkles } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { authService } from '../../services/authService';
 

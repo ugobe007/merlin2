@@ -1,13 +1,13 @@
 /**
  * EXAMPLE CO-LOCATED COMPONENT TEST
- * 
+ *
  * This demonstrates the co-location pattern for component tests
  * Place this file next to your component: BessQuoteBuilder.test.tsx
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 // import { BessQuoteBuilder } from './BessQuoteBuilder'; // Uncomment when ready
 
 // Mock component for demonstration
@@ -23,7 +23,7 @@ const MockBessQuoteBuilder = () => (
   </div>
 );
 
-describe('BessQuoteBuilder Component', () => {
+describe("BessQuoteBuilder Component", () => {
   const renderComponent = () => {
     return render(
       <BrowserRouter>
@@ -32,70 +32,70 @@ describe('BessQuoteBuilder Component', () => {
     );
   };
 
-  it('renders without crashing', () => {
+  it("renders without crashing", () => {
     renderComponent();
-    expect(screen.getByTestId('quote-builder')).toBeInTheDocument();
+    expect(screen.getByTestId("quote-builder")).toBeInTheDocument();
   });
 
-  it('displays facility type dropdown', () => {
+  it("displays facility type dropdown", () => {
     renderComponent();
-    const dropdown = screen.getByTestId('facility-type');
+    const dropdown = screen.getByTestId("facility-type");
     expect(dropdown).toBeInTheDocument();
   });
 
-  it('displays square footage input', () => {
+  it("displays square footage input", () => {
     renderComponent();
-    const input = screen.getByTestId('square-footage');
+    const input = screen.getByTestId("square-footage");
     expect(input).toBeInTheDocument();
-    expect(input).toHaveAttribute('type', 'number');
+    expect(input).toHaveAttribute("type", "number");
   });
 
-  it('displays generate quote button', () => {
+  it("displays generate quote button", () => {
     renderComponent();
-    const button = screen.getByTestId('generate-quote');
+    const button = screen.getByTestId("generate-quote");
     expect(button).toBeInTheDocument();
   });
 
-  it('allows facility type selection', async () => {
+  it("allows facility type selection", async () => {
     renderComponent();
-    const dropdown = screen.getByTestId('facility-type') as HTMLSelectElement;
-    
-    fireEvent.change(dropdown, { target: { value: 'medical_office' } });
+    const dropdown = screen.getByTestId("facility-type") as HTMLSelectElement;
+
+    fireEvent.change(dropdown, { target: { value: "medical_office" } });
     await waitFor(() => {
-      expect(dropdown.value).toBe('medical_office');
+      expect(dropdown.value).toBe("medical_office");
     });
   });
 
-  it('allows square footage input', async () => {
+  it("allows square footage input", async () => {
     renderComponent();
-    const input = screen.getByTestId('square-footage') as HTMLInputElement;
-    
-    fireEvent.change(input, { target: { value: '50000' } });
+    const input = screen.getByTestId("square-footage") as HTMLInputElement;
+
+    fireEvent.change(input, { target: { value: "50000" } });
     await waitFor(() => {
-      expect(input.value).toBe('50000');
+      expect(input.value).toBe("50000");
     });
   });
 
-  it('handles generate quote button click', async () => {
+  it("handles generate quote button click", async () => {
     renderComponent();
-    const button = screen.getByTestId('generate-quote');
-    
+    const button = screen.getByTestId("generate-quote");
+
     fireEvent.click(button);
     // Add assertions for what should happen after click
   });
 });
 
-describe('BessQuoteBuilder Integration', () => {
-  it('integrates with quote calculation service', async () => {
+describe("BessQuoteBuilder Integration", () => {
+  it("integrates with quote calculation service", async () => {
     // Test integration with actual services
     renderComponent();
-    
-    const dropdown = screen.getByTestId('facility-type');
-    const input = screen.getByTestId('square-footage');
-    const button = screen.getByTestId('generate-quote');
 
-    fireEvent.change(dropdown, { target: { value: 'medical_office' } });
-    fireEvent.change(input, { target: { value: '50000' } });
+    const dropdown = screen.getByTestId("facility-type");
+    const input = screen.getByTestId("square-footage");
+    const button = screen.getByTestId("generate-quote");
+
+    fireEvent.change(dropdown, { target: { value: "medical_office" } });
+    fireEvent.change(input, { target: { value: "50000" } });
     fireEvent.click(button);
 
     // Wait for calculation results
@@ -105,11 +105,11 @@ describe('BessQuoteBuilder Integration', () => {
   });
 });
 
-describe('BessQuoteBuilder Error Handling', () => {
-  it('shows validation error for empty square footage', async () => {
+describe("BessQuoteBuilder Error Handling", () => {
+  it("shows validation error for empty square footage", async () => {
     renderComponent();
-    
-    const button = screen.getByTestId('generate-quote');
+
+    const button = screen.getByTestId("generate-quote");
     fireEvent.click(button);
 
     // Should show validation error
@@ -118,10 +118,10 @@ describe('BessQuoteBuilder Error Handling', () => {
     // });
   });
 
-  it('handles API errors gracefully', async () => {
+  it("handles API errors gracefully", async () => {
     // Mock API error
-    const mockError = vi.fn(() => Promise.reject(new Error('API Error')));
-    
+    // const mockError = vi.fn(() => Promise.reject(new Error("API Error"))); // Unused
+
     renderComponent();
     // Test error handling
   });
@@ -129,7 +129,7 @@ describe('BessQuoteBuilder Error Handling', () => {
 
 /**
  * CO-LOCATION BEST PRACTICES:
- * 
+ *
  * 1. Keep component tests next to the component file
  * 2. Test user-facing behavior, not implementation details
  * 3. Use data-testid for reliable element selection

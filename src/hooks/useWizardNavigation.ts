@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 
 /**
  * Custom hook for managing wizard navigation state and transitions
- * 
+ *
  * Handles:
  * - Step transitions (forward/backward)
  * - Intro screen and completion page states
@@ -10,7 +10,7 @@ import { useState, useRef } from 'react';
  * - Quickstart mode tracking
  * - Step validation
  * - Smooth scrolling on navigation
- * 
+ *
  * @param skipIntro - Whether to skip the intro screen and start at step 0
  * @returns Navigation state and control functions
  */
@@ -22,7 +22,7 @@ export function useWizardNavigation(skipIntro: boolean = false) {
   const [showAIWizard, setShowAIWizard] = useState(false);
   const [isQuickstart, setIsQuickstart] = useState(false);
   const [wizardInitialized, setWizardInitialized] = useState(false);
-  
+
   // Ref for scrollable content (used by modal wrapper)
   const modalContentRef = useRef<HTMLDivElement>(null);
 
@@ -32,9 +32,9 @@ export function useWizardNavigation(skipIntro: boolean = false) {
    */
   const scrollToTop = () => {
     if (modalContentRef.current) {
-      modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      modalContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -70,7 +70,7 @@ export function useWizardNavigation(skipIntro: boolean = false) {
    */
   const handleBack = () => {
     scrollToTop();
-    
+
     if (step > 0) {
       setStep(step - 1);
     }
@@ -136,14 +136,14 @@ export function useWizardNavigation(skipIntro: boolean = false) {
    */
   const getStepTitle = (stepNumber: number = step): string => {
     const titles = [
-      'Choose Your Industry',           // Step 0
-      'Tell Us About Your Operation',   // Step 1
-      'Configure Your System',          // Step 2
-      'Power Generation Options',       // Step 3
-      'Location & Pricing',             // Step 4
-      'Review Your Quote'               // Step 5
+      "Choose Your Industry", // Step 0
+      "Tell Us About Your Operation", // Step 1
+      "Configure Your System", // Step 2
+      "Power Generation Options", // Step 3
+      "Location & Pricing", // Step 4
+      "Review Your Quote", // Step 5
     ];
-    return titles[stepNumber] || '';
+    return titles[stepNumber] || "";
   };
 
   /**
@@ -185,7 +185,7 @@ export function useWizardNavigation(skipIntro: boolean = false) {
     isQuickstart,
     wizardInitialized,
     modalContentRef,
-    
+
     // Actions
     handleNext,
     handleBack,
@@ -195,7 +195,7 @@ export function useWizardNavigation(skipIntro: boolean = false) {
     toggleAIWizard,
     resetWizard,
     scrollToTop,
-    
+
     // Utilities
     getStepTitle,
     getProgressPercentage,
@@ -203,14 +203,14 @@ export function useWizardNavigation(skipIntro: boolean = false) {
     isFirstStep,
     isLastStep,
     isShowingIntro,
-    
+
     // Direct setters (for advanced use cases)
     setStep,
     setShowIntro,
     setShowCompletePage,
     setShowAIWizard,
     setIsQuickstart,
-    setWizardInitialized
+    setWizardInitialized,
   };
 }
 

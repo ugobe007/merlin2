@@ -14,7 +14,7 @@ export type {
   BESSApplication,
   FinancialInputs,
   FinancialResult,
-} from './compareConfig';
+} from "./compareConfig";
 
 // Magic Fit™ types (Step 4 - December 2025)
 export type {
@@ -30,7 +30,7 @@ export type {
   ScenarioComparison,
   ScenarioInputs,
   CurrentConfig,
-} from './magicFit';
+} from "./magicFit";
 
 export interface User {
   id: string;
@@ -38,7 +38,7 @@ export interface User {
   name?: string;
   firstName?: string;
   lastName?: string;
-  role?: 'admin' | 'user' | 'viewer';
+  role?: "admin" | "user" | "viewer";
   company?: string;
   phone?: string;
   title?: string;
@@ -49,10 +49,10 @@ export interface User {
   website?: string;
   companyWebsite?: string;
   bio?: string;
-  tier?: 'free' | 'professional' | 'enterprise_pro' | 'business';
-  accountType?: 'individual' | 'company';
-  companyRole?: 'owner' | 'admin' | 'member';
-  profileVisibility?: 'public' | 'private';
+  tier?: "free" | "professional" | "enterprise_pro" | "business";
+  accountType?: "individual" | "company";
+  companyRole?: "owner" | "admin" | "member";
+  profileVisibility?: "public" | "private";
   publicProfileSlug?: string;
   createdAt?: string;
   lastLogin?: string;
@@ -80,9 +80,9 @@ export interface TeamMember {
   lastName?: string;
   profilePhoto?: string;
   jobTitle?: string;
-  role: 'admin' | 'user' | 'viewer';
-  companyRole?: 'owner' | 'admin' | 'member';
-  status: 'active' | 'invited' | 'inactive';
+  role: "admin" | "user" | "viewer";
+  companyRole?: "owner" | "admin" | "member";
+  status: "active" | "invited" | "inactive";
   invitedAt?: string;
   joinedAt?: string;
   lastActive?: string;
@@ -97,7 +97,7 @@ export interface EquipmentBreakdown {
   quantity: number;
   unitPrice: number;
   subtotal: number;
-  category?: 'battery' | 'solar' | 'wind' | 'generator' | 'controls' | 'electronics';
+  category?: "battery" | "solar" | "wind" | "generator" | "controls" | "electronics";
 }
 
 export interface SystemDetails {
@@ -158,9 +158,9 @@ export interface FinancialParams {
 export interface SolarCompatibility {
   roofArea: number; // sq ft
   usableArea: number; // sq ft
-  orientation: 'south' | 'southeast' | 'southwest' | 'east' | 'west';
+  orientation: "south" | "southeast" | "southwest" | "east" | "west";
   tilt: number; // degrees
-  shading: 'none' | 'minimal' | 'moderate' | 'heavy';
+  shading: "none" | "minimal" | "moderate" | "heavy";
   structuralCapacity: boolean;
   solarIrradiance: number; // kWh/m²/day
   recommendedCapacity: number; // MW
@@ -170,7 +170,7 @@ export interface CustomQuestion {
   id: string;
   question: string;
   answer?: string | number | boolean; // Optional because DB may not have answers yet
-  type: 'text' | 'number' | 'boolean' | 'select';
+  type: "text" | "number" | "boolean" | "select";
   options?: string[];
   required?: boolean;
 }
@@ -179,7 +179,7 @@ export interface IndustryStandards {
   industryType: string;
   typicalLoadProfile: string;
   peakHours: string[];
-  seasonality: 'high' | 'medium' | 'low';
+  seasonality: "high" | "medium" | "low";
   loadVariability: number; // 0-1
   recommendations: {
     batterySize: string;
@@ -290,7 +290,7 @@ export interface CacheEntry<T> {
 export interface LogEntry {
   id: string;
   timestamp: string;
-  level: 'debug' | 'info' | 'warn' | 'error';
+  level: "debug" | "info" | "warn" | "error";
   message: string;
   context?: string;
   data?: Record<string, any>;
@@ -306,4 +306,4 @@ export type {
   StateUtilityData,
   SolarResourceData,
   SavingsScoutResult,
-} from './savingsScout';
+} from "./savingsScout";
