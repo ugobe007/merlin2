@@ -274,10 +274,12 @@ export function mapWizardStateToTrueQuoteInput(state: WizardState): TrueQuoteInp
       facilityData,
     },
     options: {
-      solarInterested: state.selectedOptions?.includes('solar') || false,
-      evInterested: state.selectedOptions?.includes('ev') || false,
-      generatorInterested: state.selectedOptions?.includes('generator') || false,
-      generatorFuel: state.generatorFuel,
+      solarEnabled: state.selectedOptions?.includes('solar') || false,
+      evChargingEnabled: state.selectedOptions?.includes('ev') || false,
+      generatorEnabled: state.selectedOptions?.includes('generator') || false,
+      level2Chargers: state.customEvL2,
+      dcFastChargers: state.customEvDcfc,
+      ultraFastChargers: state.customEvUltraFast,
     },
   };
 }
