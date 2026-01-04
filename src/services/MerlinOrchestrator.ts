@@ -226,8 +226,8 @@ function translateWizardState(state: WizardState): MerlinRequest {
     // User preferences (from Step 4)
     preferences: {
       solar: {
-        interested: state.solarInterested || false,
-        customSizeKw: state.customSolarKwp,
+        interested: state.selectedOptions?.includes("solar") || false,
+        customSizeKw: state.customSolarKw,
       },
       generator: {
         interested: state.customGeneratorKw ? state.customGeneratorKw > 0 : false,
@@ -241,8 +241,8 @@ function translateWizardState(state: WizardState): MerlinRequest {
         ultraFastCount: state.customEvUltraFast,
       },
       bess: {
-        customPowerKw: state.customBessKw,
-        customEnergyKwh: state.customBessKwh,
+        customPowerKw: state.calculations?.bessKW,
+        customEnergyKwh: state.calculations?.bessKWh,
       },
     },
 
