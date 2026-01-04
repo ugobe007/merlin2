@@ -1,4 +1,22 @@
 /**
+ * @deprecated This file is being phased out in favor of the Porsche 911 Architecture.
+ * 
+ * NEW ARCHITECTURE (use these instead):
+ * - MerlinOrchestrator.ts - General contractor
+ * - TrueQuoteEngineV2.ts - Prime sub contractor (SSOT)
+ * - calculators/*.ts - Modular calculation functions
+ * - MagicFit.ts - Option generation
+ * - validators/proposalValidator.ts - Authentication
+ * 
+ * This file is kept temporarily for:
+ * - useTrueQuote.ts hook (powers TrueQuoteVerifyBadge)
+ * - TRUEQUOTE_CONSTANTS (being moved to data/constants.ts)
+ * - INDUSTRY_CONFIGS (being moved to data/industryConfigs.ts)
+ * 
+ * Migration target: Q1 2026
+ */
+
+/**
  * TRUEQUOTE™ CALCULATION ENGINE v2.0.0
  * THE SINGLE SOURCE OF TRUTH FOR ALL MERLIN CALCULATIONS
  * @author Noah Energy Solutions
