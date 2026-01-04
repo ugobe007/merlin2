@@ -1,33 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import UseCaseROI from '../UseCaseROI';
 import type { UseCaseData } from '../UseCaseROI';
 // QuoteBuilderLanding moved to legacy - using wizard v5
 import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
-import { calculateBESSPricing } from '../../utils/bessPricing';
-import { calculateEquipmentBreakdown } from '../../utils/equipmentCalculations';
 import { QuoteEngine } from '@/core/calculations';
 import merlinImage from "../../assets/images/new_profile_merlin.png";
-import { MethodologyStatement, TrustBadgesInline } from '../shared/IndustryComplianceBadges';
-import { TrueQuoteBadge } from '../shared/TrueQuoteBadge';
+import { MethodologyStatement } from '../shared/IndustryComplianceBadges';
 import { TrueQuoteModal } from '../shared/TrueQuoteModal';
 import badgeGoldIcon from '../../assets/images/badge_gold_icon.jpg';
 import badgeIcon from '../../assets/images/badge_icon.jpg';
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
-import { DISPLAY_PRICING, COST_MULTIPLIERS } from '@/constants/marketing';
+import { COST_MULTIPLIERS } from '@/constants/marketing';
 
 // Import use case images
 import carWashValet from "../../assets/images/car_wash_valet.jpg";
-import carWashPitStop from "../../assets/images/Car_Wash_PitStop.jpg";
-import carWashPitStop1 from "../../assets/images/Car_Wash_PitStop1.jpg";
-import carWashPitStop2 from "../../assets/images/Car_Wash_PitStop2.jpg";
-import carWashPitStop3 from "../../assets/images/Car_Wash_PitStop3.jpg";
-import carWashPitStop4 from "../../assets/images/Car_Wash_PitStop4.jpg";
-import carWashPitStop5 from "../../assets/images/Car_Wash_PitStop5.jpg";
-import carWashPreen from "../../assets/images/Car_Wash_Preen.jpg";
-import carWashRobot from "../../assets/images/car_wash_robot.jpg";
-import carWashTunnel from "../../assets/images/car_wash_tunnel.jpg";
-import carWashAuto from "../../assets/images/Car_Wash_Auto.jpg";
 import carWash1 from "../../assets/images/carwash1.jpg";
 import hospitalImage from "../../assets/images/hospital_1.jpg";
 import hospital2Image from "../../assets/images/hospital_2.jpg";
@@ -40,7 +26,6 @@ import hotelImage from "../../assets/images/hotel_motel_holidayinn_1.jpg";
 import hotelHolidayInn1 from "../../assets/images/hotel_motel_holidayinn_1.jpg";
 import hotelHolidayInn2 from "../../assets/images/hotel_motel_holidayinn_2.jpg";
 import hotelHolidayInn3 from "../../assets/images/hotel_motel_holidayinn_3.jpg";
-import hotelHolidayInn4 from "../../assets/images/hotel_motel_holidayinn_4.jpg";
 // Data center images
 import dataCenter1 from "../../assets/images/data-centers/data-center-1.jpg";
 import dataCenter2 from "../../assets/images/data-centers/data-center-2.jpg";
@@ -48,30 +33,19 @@ import dataCenter3 from "../../assets/images/data-centers/data-center-3.jpg";
 // Manufacturing images
 import manufacturing1 from "../../assets/images/manufacturing_1.jpg";
 import manufacturing2 from "../../assets/images/manufacturing_2.jpg";
-import manufacturing3 from "../../assets/images/manufacturing_3.jpg";
 // Logistics images
 import logistics1 from "../../assets/images/logistics_1.jpg";
 import logistics2 from "../../assets/images/logistics_2.jpeg";
-import logistics3 from "../../assets/images/logistics_3.jpg";
 // Office building images
 import officeBuilding1 from "../../assets/images/office_building1.jpg";
-import officeBuilding2 from "../../assets/images/office_building2.jpg";
-import officeBuilding3 from "../../assets/images/office_building3.jpg";
 // Indoor farm images
 import indoorFarm1 from "../../assets/images/indoor_farm1.jpeg";
-import indoorFarm2 from "../../assets/images/indoor_farm2.jpg";
-import indoorFarm3 from "../../assets/images/indoor_farm3.jpg";
 // Marine image
-import marine1 from "../../assets/images/marine_1.webp";
 // Additional airport images
 import airport1 from "../../assets/images/airport_1.jpg";
-import airport2 from "../../assets/images/airport_2.jpg";
 // College/University images
 import college1 from "../../assets/images/college_1.jpg";
 import college3 from "../../assets/images/college_3.jpg";
-import college4 from "../../assets/images/college_4.webp";
-import college5 from "../../assets/images/college_5.jpg";
-
 // Hero use cases with real financial data - Diverse Industries (Alternating Pattern)
 const heroUseCases = [
   {
@@ -495,12 +469,12 @@ export default function HeroSection({
         <div className="relative z-10 min-h-screen">
           {/* ========== NEW HERO DESIGN - Two Column Grid ========== */}
           <div 
-            className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr]"
+            className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch"
           >
             
             {/* ========== LEFT PANEL - Darker Purple Gradient ========== */}
             <div 
-              className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none lg:my-4 my-0"
+              className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
               style={{
                 background: 'linear-gradient(165deg, #2d1a54 0%, #3d2272 40%, #4a2888 70%, #3d2272 100%)',
                 boxShadow: '20px 0 80px rgba(0,0,0,0.5)'
@@ -592,7 +566,16 @@ export default function HeroSection({
 
               {/* CTA Button - Professional Typography */}
               <button
-                onClick={() => setShowSmartWizard(true)}
+                onClick={() => {
+                  // ✅ FIXED: Clear persisted wizard state to ensure fresh start at Step 1
+                  try {
+                    localStorage.removeItem('merlin-wizard-state');
+                    sessionStorage.removeItem('merlin-wizard-step');
+                  } catch (e) {
+                    console.error('Failed to clear wizard state:', e);
+                  }
+                  setShowSmartWizard(true);
+                }}
                 className="inline-flex items-center justify-center gap-2.5 mb-4 transition-all duration-300"
                 style={{
                   background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)',
@@ -698,7 +681,7 @@ export default function HeroSection({
             </div>
 
             {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
-            <div className="relative overflow-hidden lg:min-h-full min-h-[500px]">
+            <div className="relative overflow-hidden lg:h-full min-h-[500px]">
               <div className="absolute inset-0">
                 {heroUseCases.map((useCase, index) => (
                   <div
