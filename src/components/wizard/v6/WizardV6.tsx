@@ -285,10 +285,10 @@ export default function WizardV6() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left: Logo + Start Over */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
               <Home className="w-5 h-5 text-purple-400" />
               <span className="text-white font-semibold">Merlin</span>
-            </div>
+            </a>
             
             {/* Start Over Button */}
             <button

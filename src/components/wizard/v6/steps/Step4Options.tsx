@@ -798,7 +798,7 @@ export function Step4Options({ state, updateState }: Props) {
   const [solarSizeKwp, setSolarSizeKwp] = useState(state.customSolarKw || 850);
   
   // EV state - 3 separate sliders
-  const [evEnabled, setEvEnabled] = useState(false);
+  const [evEnabled, setEvEnabled] = useState((state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0) > 0);
   const [level2Count, setLevel2Count] = useState(state.customEvL2 || 0);
   const [dcFastCount, setDcFastCount] = useState(state.customEvDcfc || 0);
   const [ultraFastCount, setUltraFastCount] = useState(state.customEvUltraFast || 0);

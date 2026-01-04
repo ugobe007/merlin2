@@ -490,39 +490,33 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(min, value - step))}
-          className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-        >
-          <Minus className="w-5 h-5" />
-        </button>
-        <div className="flex-1 text-center px-4 py-3 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
-          <span className="text-2xl font-bold text-white">{formatNumber(value)}</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => onChange(Math.min(max, value + step))}
-          className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-      </div>
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(min, value - step))}
+        className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+      >
+        <Minus className="w-5 h-5" />
+      </button>
       <input
-        type="range"
+        type="number"
         min={min}
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className={`w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer ${scheme.numberSliderAccent}`}
+        onChange={(e) => {
+          const newValue = parseFloat(e.target.value) || min;
+          onChange(Math.max(min, Math.min(max, newValue)));
+        }}
+        className="flex-1 text-center px-4 py-3 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 text-white text-lg font-bold focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/30"
       />
-      <div className="flex justify-between text-xs text-slate-400 px-1">
-        <span>{formatNumber(min)}</span>
-        <span>{formatNumber(max)}</span>
-      </div>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(max, value + step))}
+        className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+      >
+        <Plus className="w-5 h-5" />
+      </button>
     </div>
   );
 }
@@ -624,10 +618,140 @@ function TextInput({ question, value, onChange, colorScheme }: { question: Custo
 }
 
 // ============================================================================
+// QUESTION PAIRING CONFIGURATION
+// ============================================================================
+
+// Define pairs of questions that should be rendered side-by-side
+// Matches by field_name or question_text keywords
+const QUESTION_PAIRS: Array<[string | RegExp, string | RegExp]> = [
+  // Car wash: Number of Bays/Tunnels with Tunnel Length
+  [/number.*(?:bay|tunnel)/i, /tunnel.*length/i],
+  [/bay.*count/i, /tunnel.*length/i],
+  // Car wash: Vacuum Stations with High-Pressure Pumps
+  [/vacuum.*station/i, /(?:high.*pressure|pressure).*pump/i],
+  [/vacuum/i, /(?:high.*pressure|pressure).*pump/i],
+];
+
+// Check if two questions should be paired
+function shouldPairQuestions(q1: CustomQuestion, q2: CustomQuestion): boolean {
+  for (const [pattern1, pattern2] of QUESTION_PAIRS) {
+    const match1 = typeof pattern1 === 'string' 
+      ? q1.field_name.includes(pattern1) || q1.question_text.toLowerCase().includes(pattern1.toLowerCase())
+      : pattern1.test(q1.field_name) || pattern1.test(q1.question_text);
+    const match2 = typeof pattern2 === 'string'
+      ? q2.field_name.includes(pattern2) || q2.question_text.toLowerCase().includes(pattern2.toLowerCase())
+      : pattern2.test(q2.field_name) || pattern2.test(q2.question_text);
+    
+    if (match1 && match2) return true;
+  }
+  return false;
+}
+
+// Group questions into pairs
+function groupQuestionsIntoPairs(questions: CustomQuestion[]): Array<CustomQuestion | CustomQuestion[]> {
+  const result: Array<CustomQuestion | CustomQuestion[]> = [];
+  const used = new Set<number>();
+  
+  for (let i = 0; i < questions.length; i++) {
+    if (used.has(i)) continue;
+    
+    // Only pair number-type questions
+    if (questions[i].question_type === 'number') {
+      // Look for a matching pair
+      for (let j = i + 1; j < questions.length; j++) {
+        if (used.has(j)) continue;
+        if (questions[j].question_type === 'number' && shouldPairQuestions(questions[i], questions[j])) {
+          result.push([questions[i], questions[j]]);
+          used.add(i);
+          used.add(j);
+          break;
+        }
+      }
+      if (!used.has(i)) {
+        result.push(questions[i]);
+        used.add(i);
+      }
+    } else {
+      result.push(questions[i]);
+      used.add(i);
+    }
+  }
+  
+  return result;
+}
+
+// ============================================================================
+// COMPACT QUESTION ITEM COMPONENT (for paired questions)
+// ============================================================================
+
+function CompactQuestionItem({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: any; onChange: (v: any) => void; colorScheme?: ColorScheme }) {
+  const scheme = colorScheme || COLOR_SCHEMES[0];
+  const iconName = question.icon_name || 'HelpCircle';
+  
+  return (
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-2">
+        <div className={`w-7 h-7 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+          <LucideIcon name={iconName} className={`w-3.5 h-3.5 ${scheme.questionIconText}`} />
+        </div>
+        <h4 className="text-white font-semibold text-xs flex-1">
+          {question.question_text}
+          {question.is_required && <span className="text-pink-400 ml-1">*</span>}
+        </h4>
+      </div>
+      {question.help_text && (
+        <p className="text-xs text-slate-400 mb-2 ml-9">{question.help_text}</p>
+      )}
+      <div>
+        {question.question_type === 'select' && <PillSelect question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'number' && <NumberInput question={question} value={value || 0} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'boolean' && <BooleanInput question={question} value={value} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'multiselect' && <MultiselectInput question={question} value={value || []} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'text' && <TextInput question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // QUESTION ITEM COMPONENT
 // ============================================================================
 
-function QuestionItem({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: any; onChange: (v: any) => void; colorScheme?: ColorScheme }) {
+function QuestionItem({ question, value, onChange, colorScheme, compact }: { question: CustomQuestion; value: any; onChange: (v: any) => void; colorScheme?: ColorScheme; compact?: boolean }) {
+  if (compact) {
+    return <CompactQuestionItem question={question} value={value} onChange={onChange} colorScheme={colorScheme} />;
+  }
+  
+  const scheme = colorScheme || COLOR_SCHEMES[0];
+  const iconName = question.icon_name || 'HelpCircle';
+  
+  return (
+    <div className="py-4 border-b border-amber-500/20 last:border-b-0">
+      <div className="flex items-start gap-3 mb-3">
+        <div className={`w-9 h-9 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+          <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
+        </div>
+        <div className="flex-1">
+          <h4 className="text-white font-semibold text-sm">
+            {question.question_text}
+            {question.is_required && <span className="text-pink-400 ml-1">*</span>}
+          </h4>
+          {question.help_text && (
+            <p className="text-xs text-slate-400 mt-1">{question.help_text}</p>
+          )}
+        </div>
+      </div>
+      
+      <div className="ml-12">
+        {question.question_type === 'select' && <PillSelect question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'number' && <NumberInput question={question} value={value || 0} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'boolean' && <BooleanInput question={question} value={value} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'multiselect' && <MultiselectInput question={question} value={value || []} onChange={onChange} colorScheme={scheme} />}
+        {question.question_type === 'text' && <TextInput question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
+      </div>
+    </div>
+  );
+}
   const scheme = colorScheme || COLOR_SCHEMES[0];
   const iconName = question.icon_name || 'HelpCircle';
   
@@ -742,15 +866,41 @@ function ExpandableSection({
       {isExpanded && (
         <div className="px-4 pb-4">
           <div className="border-t border-amber-500/30 pt-3">
-            {section.questions.map((question) => (
-              <QuestionItem
-                key={question.id}
-                question={question}
-                value={getValue(question)}
-                onChange={(val) => updateAnswer(question.field_name, val)}
-                colorScheme={scheme}
-              />
-            ))}
+            {groupQuestionsIntoPairs(section.questions).map((item, idx) => {
+              if (Array.isArray(item)) {
+                // Render paired questions side-by-side
+                const [q1, q2] = item;
+                return (
+                  <div key={`pair-${q1.id}-${q2.id}`} className="py-4 border-b border-amber-500/20 last:border-b-0">
+                    <div className="grid grid-cols-2 gap-4">
+                      <CompactQuestionItem
+                        question={q1}
+                        value={getValue(q1)}
+                        onChange={(val) => updateAnswer(q1.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                      <CompactQuestionItem
+                        question={q2}
+                        value={getValue(q2)}
+                        onChange={(val) => updateAnswer(q2.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    </div>
+                  </div>
+                );
+              } else {
+                // Render single question
+                return (
+                  <QuestionItem
+                    key={item.id}
+                    question={item}
+                    value={getValue(item)}
+                    onChange={(val) => updateAnswer(item.field_name, val)}
+                    colorScheme={scheme}
+                  />
+                );
+              }
+            })}
           </div>
         </div>
       )}
