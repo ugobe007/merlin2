@@ -13,7 +13,7 @@
  * SSOT Compliance: ✅
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Sun, Zap, Check, X, Star, Settings2, Leaf, Battery, Sparkles, Info, Calculator, AlertTriangle } from 'lucide-react';
+import { Sun, Zap, Check, X, Star, Settings2, Leaf, Battery, Sparkles, Info, Calculator, AlertTriangle, Fuel } from 'lucide-react';
 import type { WizardState } from '../types';
 
 // ============================================================================
@@ -104,12 +104,37 @@ function useSolarCalculations(
             recommendedSize = Math.min(10000, Math.max(500, Math.round(peakLoadMW * 1000 * 0.4 / 50) * 50));
             break;
           case 'hotel':
-            const rooms = state.useCaseData?.numRooms || Math.floor(sqft / 500);
-            recommendedSize = Math.min(5000, Math.max(100, Math.round(rooms * 4 / 50) * 50));
+          case 'hotel-hospitality':
+            // Support multiple field names for rooms
+            const hotelRooms = parseInt(
+              state.useCaseData?.roomCount || 
+              state.useCaseData?.numberOfRooms || 
+              state.useCaseData?.facilitySize ||
+              state.useCaseData?.rooms
+            ) || Math.floor(sqft / 500);
+            // ~4 kWp per room is industry standard for hotels
+            recommendedSize = Math.min(5000, Math.max(100, Math.round(hotelRooms * 4 / 50) * 50));
+            break;
+          case 'car_wash':
+          case 'carwash':
+            // Car wash: estimate 30% of site for solar (roof + covered vacuum area)
+            // User should ideally provide roof_area, but fallback to 30% of site
+            const roofArea = state.useCaseData?.roofArea || state.useCaseData?.coveredArea || (sqft * 0.30);
+            // ~15 watts per sq ft for commercial solar
+            recommendedSize = Math.min(2000, Math.max(50, Math.round(roofArea * 0.015 / 25) * 25));
             break;
           case 'manufacturing':
           case 'warehouse':
             recommendedSize = Math.min(8000, Math.max(200, Math.round(sqft * 0.010 / 50) * 50));
+            break;
+          case 'restaurant':
+            recommendedSize = Math.min(500, Math.max(25, Math.round(sqft * 0.008 / 25) * 25));
+            break;
+          case 'retail':
+            recommendedSize = Math.min(3000, Math.max(100, Math.round(sqft * 0.008 / 50) * 50));
+            break;
+          case 'office':
+            recommendedSize = Math.min(4000, Math.max(100, Math.round(sqft * 0.006 / 50) * 50));
             break;
           default:
             recommendedSize = Math.min(5000, Math.max(100, Math.round(sqft * 0.005 / 50) * 50));
@@ -589,6 +614,178 @@ function EVConfig({
   );
 }
 
+
+// ============================================================================
+// GENERATOR CONFIGURATION COMPONENT
+// ============================================================================
+
+interface GeneratorConfigProps {
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  sizeKw: number;
+  onSizeChange: (size: number) => void;
+  fuelType: 'natural-gas' | 'diesel';
+  onFuelTypeChange: (fuel: 'natural-gas' | 'diesel') => void;
+  state: WizardState;
+}
+
+function GeneratorConfig({ 
+  enabled, onToggle, sizeKw, onSizeChange, fuelType, onFuelTypeChange, state
+}: GeneratorConfigProps) {
+  // Check if state is high-risk for weather (FL, TX coast, LA, etc.)
+  const highRiskStates = ['FL', 'LA', 'TX', 'NC', 'SC', 'GA', 'AL', 'MS'];
+  const isHighRiskState = highRiskStates.includes(state.state || '');
+  
+  return (
+    <div className={`rounded-2xl overflow-hidden transition-all duration-300 ${
+      enabled 
+        ? 'bg-gradient-to-br from-orange-900/40 to-red-900/40 border-2 border-orange-500/60' 
+        : 'bg-slate-800/60 border border-slate-600'
+    }`}>
+      {/* Header */}
+      <div className="p-5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+            enabled ? 'bg-orange-500' : 'bg-slate-700'
+          }`}>
+            <Fuel className={`w-7 h-7 ${enabled ? 'text-white' : 'text-slate-400'}`} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Backup Generator</h3>
+            <p className="text-slate-400 text-sm">Reliable backup power for outages</p>
+          </div>
+        </div>
+        
+        {/* YES/NO Toggle */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => onToggle(true)}
+            className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
+              enabled
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+            }`}
+          >
+            <Check className="w-5 h-5" />
+            YES
+          </button>
+          <button
+            onClick={() => onToggle(false)}
+            className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
+              !enabled
+                ? 'bg-slate-600 text-white'
+                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+            }`}
+          >
+            <X className="w-5 h-5" />
+            NO
+          </button>
+        </div>
+      </div>
+
+      {/* High-risk state alert */}
+      {!enabled && isHighRiskState && (
+        <div className="mx-5 mb-4 p-3 bg-amber-500/20 border border-amber-500/50 rounded-xl flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-amber-200 text-sm font-medium">Recommended for {state.state}</p>
+            <p className="text-amber-200/70 text-xs mt-1">
+              Your location has higher risk of severe weather and power outages. A backup generator ensures continuous operation.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Content when YES */}
+      {enabled && (
+        <div className="px-5 pb-5 space-y-4">
+          <div className="h-px bg-orange-500/30" />
+          
+          {/* Fuel Type Selection */}
+          <div>
+            <label className="text-sm text-slate-400 mb-2 block">Fuel Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => onFuelTypeChange('natural-gas')}
+                className={`p-4 rounded-xl transition-all text-left ${
+                  fuelType === 'natural-gas'
+                    ? 'bg-gradient-to-br from-blue-500/30 to-cyan-500/30 border-2 border-blue-400'
+                    : 'bg-slate-700/50 border border-slate-600 hover:border-blue-500/50'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">🔵</span>
+                  <span className={`font-bold ${fuelType === 'natural-gas' ? 'text-blue-400' : 'text-slate-300'}`}>
+                    Natural Gas
+                  </span>
+                  {fuelType === 'natural-gas' && <Check className="w-4 h-4 text-emerald-400 ml-auto" />}
+                </div>
+                <p className="text-xs text-slate-400">Cleaner, lower fuel costs</p>
+              </button>
+              
+              <button
+                onClick={() => onFuelTypeChange('diesel')}
+                className={`p-4 rounded-xl transition-all text-left ${
+                  fuelType === 'diesel'
+                    ? 'bg-gradient-to-br from-amber-500/30 to-orange-500/30 border-2 border-amber-400'
+                    : 'bg-slate-700/50 border border-slate-600 hover:border-amber-500/50'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">🟠</span>
+                  <span className={`font-bold ${fuelType === 'diesel' ? 'text-amber-400' : 'text-slate-300'}`}>
+                    Diesel
+                  </span>
+                  {fuelType === 'diesel' && <Check className="w-4 h-4 text-emerald-400 ml-auto" />}
+                </div>
+                <p className="text-xs text-slate-400">Higher power, more portable</p>
+              </button>
+            </div>
+          </div>
+          
+          {/* Size Slider */}
+          <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-slate-400">Generator Size</div>
+              <div className="text-2xl font-bold text-orange-400">{sizeKw.toLocaleString()} kW</div>
+            </div>
+            <input
+              type="range"
+              min={100}
+              max={5000}
+              step={100}
+              value={sizeKw}
+              onChange={(e) => onSizeChange(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-600 rounded-full appearance-none cursor-pointer accent-orange-500"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-2">
+              <span>100 kW</span>
+              <span>5,000 kW</span>
+            </div>
+            
+            {/* Quick select buttons */}
+            <div className="flex gap-2 mt-4 flex-wrap">
+              {[250, 500, 750, 1000, 1500, 2000].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => onSizeChange(size)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    sizeKw === size
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
+                  }`}
+                >
+                  {size >= 1000 ? `${size/1000}MW` : `${size}kW`}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -605,6 +802,11 @@ export function Step4Options({ state, updateState }: Props) {
   const [level2Count, setLevel2Count] = useState(state.customEvL2 || 0);
   const [dcFastCount, setDcFastCount] = useState(state.customEvDcfc || 0);
   const [ultraFastCount, setUltraFastCount] = useState(state.customEvUltraFast || 0);
+  
+  // Generator state
+  const [generatorEnabled, setGeneratorEnabled] = useState(state.customGeneratorKw ? state.customGeneratorKw > 0 : false);
+  const [generatorKw, setGeneratorKw] = useState(state.customGeneratorKw || 500);
+  const [generatorFuel, setGeneratorFuel] = useState<'natural-gas' | 'diesel'>(state.generatorFuel || 'natural-gas');
 
   // ================================================================
   // SSOT: Get calculations from centralized services
@@ -716,12 +918,15 @@ export function Step4Options({ state, updateState }: Props) {
       customEvL2: evEnabled ? level2Count : 0,
       customEvDcfc: evEnabled ? dcFastCount : 0,
       customEvUltraFast: evEnabled ? ultraFastCount : 0,
+      customGeneratorKw: generatorEnabled ? generatorKw : 0,
+      generatorFuel: generatorFuel,
       selectedOptions: [
         ...(solarEnabled ? ['solar'] : []),
-        ...(evEnabled && (level2Count > 0 || dcFastCount > 0 || ultraFastCount > 0) ? ['ev'] : [])
+        ...(evEnabled && (level2Count > 0 || dcFastCount > 0 || ultraFastCount > 0) ? ['ev'] : []),
+        ...(generatorEnabled ? ['generator'] : [])
       ],
     });
-  }, [solarEnabled, solarSizeKwp, evEnabled, level2Count, dcFastCount, ultraFastCount, updateState]);
+  }, [solarEnabled, solarSizeKwp, evEnabled, level2Count, dcFastCount, ultraFastCount, generatorEnabled, generatorKw, generatorFuel, updateState]);
 
   // Merlin message based on selections
   const getMerlinMessage = useCallback(() => {
@@ -821,6 +1026,12 @@ export function Step4Options({ state, updateState }: Props) {
                   </span>
                 </div>
               )}
+              {generatorEnabled && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 rounded-lg">
+                  <Fuel className="w-4 h-4 text-orange-400" />
+                  <span className="text-orange-400 text-sm font-medium">{generatorKw.toLocaleString()} kW</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -844,6 +1055,17 @@ export function Step4Options({ state, updateState }: Props) {
           onDcFastCountChange={setDcFastCount}
           ultraFastCount={ultraFastCount}
           onUltraFastCountChange={setUltraFastCount}
+        />
+
+        {/* Generator Configuration */}
+        <GeneratorConfig
+          enabled={generatorEnabled}
+          onToggle={setGeneratorEnabled}
+          sizeKw={generatorKw}
+          onSizeChange={setGeneratorKw}
+          fuelType={generatorFuel}
+          onFuelTypeChange={setGeneratorFuel}
+          state={state}
         />
 
         {/* Info Note */}
