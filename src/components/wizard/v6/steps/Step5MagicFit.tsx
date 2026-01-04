@@ -133,7 +133,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     
     // Update wizard state with selected calculations
     updateState({
-      selectedPowerLevel: tier === 'starter' ? 'starter' : tier === 'perfectFit' ? 'recommended' : 'maximum',
+      selectedPowerLevel: tier === 'starter' ? 'starter' : tier === 'perfectFit' ? 'perfect_fit' : 'beast_mode',
       calculations: {
         bessKW: option.bess.powerKW,
         bessKWh: option.bess.energyKWh,
@@ -245,7 +245,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           <div className="mt-3">
             <TrueQuoteVerifyBadge 
               quoteId={quoteResult.quoteId}
-              verifiedAt={quoteResult.verification.verifiedAt}
+              worksheetData={null}
+              variant="compact"
             />
           </div>
         )}
