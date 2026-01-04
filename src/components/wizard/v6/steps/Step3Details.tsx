@@ -618,27 +618,42 @@ function TextInput({ question, value, onChange, colorScheme }: { question: Custo
 // ============================================================================
 
 // Define pairs of questions that should be rendered side-by-side
-// Matches by field_name or question_text keywords
+// Matches by field_name or question_text keywords (case-insensitive)
 const QUESTION_PAIRS: Array<[string | RegExp, string | RegExp]> = [
   // Car wash: Number of Bays/Tunnels with Tunnel Length
+  [/number.*(?:wash.*tunnel|tunnel.*or.*bay|bay.*or.*tunnel)/i, /tunnel.*length/i],
   [/number.*(?:bay|tunnel)/i, /tunnel.*length/i],
   [/bay.*count/i, /tunnel.*length/i],
   // Car wash: Vacuum Stations with High-Pressure Pumps
   [/vacuum.*station/i, /(?:high.*pressure|pressure).*pump/i],
+  [/number.*vacuum/i, /(?:number.*pump|high.*pressure.*pump)/i],
   [/vacuum/i, /(?:high.*pressure|pressure).*pump/i],
 ];
 
 // Check if two questions should be paired
 function shouldPairQuestions(q1: CustomQuestion, q2: CustomQuestion): boolean {
+  const q1Text = `${q1.field_name} ${q1.question_text}`.toLowerCase();
+  const q2Text = `${q2.field_name} ${q2.question_text}`.toLowerCase();
+  
   for (const [pattern1, pattern2] of QUESTION_PAIRS) {
     const match1 = typeof pattern1 === 'string' 
-      ? q1.field_name.includes(pattern1) || q1.question_text.toLowerCase().includes(pattern1.toLowerCase())
-      : pattern1.test(q1.field_name) || pattern1.test(q1.question_text);
+      ? q1Text.includes(pattern1.toLowerCase())
+      : pattern1.test(q1Text);
     const match2 = typeof pattern2 === 'string'
-      ? q2.field_name.includes(pattern2) || q2.question_text.toLowerCase().includes(pattern2.toLowerCase())
-      : pattern2.test(q2.field_name) || pattern2.test(q2.question_text);
+      ? q2Text.includes(pattern2.toLowerCase())
+      : pattern2.test(q2Text);
     
     if (match1 && match2) return true;
+    
+    // Also check reverse order
+    const reverseMatch1 = typeof pattern2 === 'string'
+      ? q1Text.includes(pattern2.toLowerCase())
+      : pattern2.test(q1Text);
+    const reverseMatch2 = typeof pattern1 === 'string'
+      ? q2Text.includes(pattern1.toLowerCase())
+      : pattern1.test(q2Text);
+    
+    if (reverseMatch1 && reverseMatch2) return true;
   }
   return false;
 }
@@ -748,37 +763,6 @@ function QuestionItem({ question, value, onChange, colorScheme, compact }: { que
     </div>
   );
 }
-  const scheme = colorScheme || COLOR_SCHEMES[0];
-  const iconName = question.icon_name || 'HelpCircle';
-  
-  return (
-    <div className="py-4 border-b border-amber-500/20 last:border-b-0">
-      <div className="flex items-start gap-3 mb-3">
-        <div className={`w-9 h-9 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
-          <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">
-            {question.question_text}
-            {question.is_required && <span className="text-pink-400 ml-1">*</span>}
-          </h4>
-          {question.help_text && (
-            <p className="text-xs text-slate-400 mt-1">{question.help_text}</p>
-          )}
-        </div>
-      </div>
-      
-      <div className="ml-12">
-        {question.question_type === 'select' && <PillSelect question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
-        {question.question_type === 'number' && <NumberInput question={question} value={value || 0} onChange={onChange} colorScheme={scheme} />}
-        {question.question_type === 'boolean' && <BooleanInput question={question} value={value} onChange={onChange} colorScheme={scheme} />}
-        {question.question_type === 'multiselect' && <MultiselectInput question={question} value={value || []} onChange={onChange} colorScheme={scheme} />}
-        {question.question_type === 'text' && <TextInput question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
-      </div>
-    </div>
-  );
-}
-
 // ============================================================================
 // EXPANDABLE SECTION - BETTER COLORS + SCROLL TO TOP
 // ============================================================================
