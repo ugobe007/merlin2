@@ -5,35 +5,24 @@
  * - Database field names → TrueQuote Engine field names
  * - Database subtype values → TrueQuote Engine subtypes
  *
- * This configuration is derived from TrueQuoteEngine.INDUSTRY_CONFIGS
- * and should be validated against the database at build/test time.
+ * This configuration defines valid subtypes and field mappings.
+ * Part of the Porsche 911 Architecture - SSOT for wizard mappings.
  */
 
-import { INDUSTRY_CONFIGS } from "./TrueQuoteEngine";
+// INDUSTRY_CONFIGS import removed - using static VALID_SUBTYPES instead
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VALID SUBTYPES (Extracted from TrueQuote Engine)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Get all valid subtypes for each industry from TrueQuote Engine
- * This is the SINGLE SOURCE OF TRUTH for valid subtypes
+ * Valid subtypes are defined statically in VALID_SUBTYPES below.
+ * The dynamic getValidSubtypes() function was removed as it was unused.
  */
-export function getValidSubtypes(): Record<string, string[]> {
-  const subtypes: Record<string, string[]> = {};
-
-  for (const [industry, config] of Object.entries(INDUSTRY_CONFIGS)) {
-    if (config.subtypes && !subtypes[config.slug]) {
-      subtypes[config.slug] = Object.keys(config.subtypes);
-    }
-  }
-
-  return subtypes;
-}
 
 /**
- * Valid subtypes per industry (extracted from TrueQuote Engine)
- * This should match INDUSTRY_CONFIGS exactly
+ * Valid subtypes per industry
+ * This is the SINGLE SOURCE OF TRUTH for valid TrueQuote subtypes
  */
 export const VALID_SUBTYPES: Record<string, string[]> = {
   "data-center": ["tier_1", "tier_2", "tier_3", "tier_4", "hyperscale"],

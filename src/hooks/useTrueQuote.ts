@@ -22,7 +22,8 @@ import type {
 // ============================================================================
 // SSOT IMPORTS - Use TrueQuoteEngine for ALL calculations
 // ============================================================================
-import { calculateTrueQuote, TRUEQUOTE_CONSTANTS } from "@/services/TrueQuoteEngine";
+import { calculateTrueQuote } from "@/services/TrueQuoteEngine";
+import { TRUEQUOTE_CONSTANTS } from "@/services/data/constants";
 import { mapWizardStateToTrueQuoteInput } from "@/components/wizard/v6/utils/trueQuoteMapper";
 
 // ============================================================================
