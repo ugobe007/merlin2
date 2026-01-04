@@ -1,18 +1,170 @@
 /**
  * TrueQuote Engine Input Mapper
  * ==============================
- * Maps WizardState to TrueQuoteInput format
- * Shared between Step 4 and Step 5
+ * Maps WizardState to MerlinRequest format (Porsche 911 Architecture)
  * 
- * ✅ REFACTORED: Now uses systematic configuration instead of if/else blocks
+ * ✅ SSOT COMPLIANT - January 2026 Refactor
+ * 
+ * This mapper translates the UI wizard state into the standardized
+ * MerlinRequest format that flows through:
+ * 
+ * WizardState → MerlinRequest → TrueQuoteEngineV2 → MagicFit → Result
  */
 
 import type { WizardState } from '../types';
+import type { 
+  MerlinRequest, 
+  EnergyGoal, 
+  Industry,
+  GeneratorFuel 
+} from '@/services/contracts';
+import { createMerlinRequest } from '@/services/contracts';
+
+// ============================================================================
+// LEGACY SUPPORT - Old TrueQuoteInput format (for gradual migration)
+// ============================================================================
 import type { TrueQuoteInput } from '@/services/TrueQuoteEngine';
 import { mapSubtype, mapFieldName, DEFAULT_SUBTYPES } from '@/services/trueQuoteMapperConfig';
 
-// Industry slug normalization
-const industryTypeMap: Record<string, string> = {
+// ============================================================================
+// INDUSTRY SLUG NORMALIZATION
+// ============================================================================
+
+const INDUSTRY_NORMALIZE: Record<string, Industry> = {
+  'data_center': 'data_center',
+  'data-center': 'data_center',
+  'ev_charging': 'ev_charging',
+  'ev-charging': 'ev_charging',
+  'car_wash': 'car_wash',
+  'car-wash': 'car_wash',
+  'hotel': 'hotel',
+  'hospital': 'hospital',
+  'manufacturing': 'manufacturing',
+  'retail': 'retail',
+  'restaurant': 'restaurant',
+  'office': 'office',
+  'college': 'college',
+  'university': 'college',
+  'agriculture': 'agriculture',
+  'warehouse': 'warehouse',
+  'casino': 'casino',
+  'apartment': 'apartment',
+  'apartments': 'apartment',
+  'apartment-building': 'apartment',
+  'cold-storage': 'cold_storage',
+  'cold_storage': 'cold_storage',
+  'shopping-center': 'shopping_center',
+  'shopping-mall': 'shopping_center',
+  'shopping_mall': 'shopping_center',
+  'indoor-farm': 'indoor_farm',
+  'indoor_farm': 'indoor_farm',
+  'government': 'government',
+  'public-building': 'government',
+  'airport': 'airport',
+  'gas_station': 'gas_station',
+  'gas-station': 'gas_station',
+  'residential': 'residential',
+  'microgrid': 'microgrid',
+};
+
+/**
+ * Normalize industry string to Industry enum
+ */
+function normalizeIndustry(industry: string | undefined): Industry {
+  if (!industry) return 'hotel';
+  const normalized = industry.toLowerCase().replace(/-/g, '_');
+  return INDUSTRY_NORMALIZE[normalized] || INDUSTRY_NORMALIZE[industry] || 'hotel';
+}
+
+// ============================================================================
+// NEW MAPPER - Creates MerlinRequest for Porsche 911 Architecture
+// ============================================================================
+
+/**
+ * Map WizardState to MerlinRequest format
+ * This is the NEW mapper for the Porsche 911 architecture
+ */
+export function mapWizardStateToMerlinRequest(state: WizardState): MerlinRequest {
+  const industry = normalizeIndustry(state.industry);
+  
+  return createMerlinRequest({
+    // Location
+    location: {
+      zipCode: state.zipCode || '',
+      country: state.country || 'US',
+      state: state.state || '',
+      city: state.city || '',
+    },
+
+    // Goals (ensure we have valid EnergyGoal types)
+    goals: normalizeGoals(state.goals),
+
+    // Facility
+    facility: {
+      industry,
+      industryName: state.industryName || state.industry || 'Unknown',
+      useCaseData: state.useCaseData || {},
+    },
+
+    // User preferences from Step 4
+    preferences: {
+      solar: {
+        interested: state.selectedOptions?.includes('solar') || false,
+        customSizeKw: state.customSolarKw,
+      },
+      generator: {
+        interested: state.selectedOptions?.includes('generator') || 
+                   (state.customGeneratorKw !== undefined && state.customGeneratorKw > 0),
+        customSizeKw: state.customGeneratorKw,
+        fuelType: state.generatorFuel as GeneratorFuel | undefined,
+      },
+      ev: {
+        interested: state.selectedOptions?.includes('ev') ||
+                   ((state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0)) > 0,
+        l2Count: state.customEvL2,
+        dcfcCount: state.customEvDcfc,
+        ultraFastCount: state.customEvUltraFast,
+      },
+      bess: {
+        customPowerKw: state.calculations?.bessKW,
+        customEnergyKwh: state.calculations?.bessKWh,
+      },
+    },
+
+    // Metadata
+    requestId: `MR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+    requestedAt: new Date().toISOString(),
+    version: '1.0',
+  });
+}
+
+/**
+ * Normalize goals array to valid EnergyGoal types
+ */
+function normalizeGoals(goals: string[] | undefined): EnergyGoal[] {
+  const validGoals: EnergyGoal[] = [
+    'reduce_costs',
+    'backup_power',
+    'sustainability',
+    'grid_independence',
+    'peak_shaving',
+    'generate_revenue',
+  ];
+  
+  if (!goals || goals.length === 0) {
+    // Default goals if none selected
+    return ['reduce_costs', 'backup_power', 'sustainability'];
+  }
+  
+  return goals.filter((g): g is EnergyGoal => validGoals.includes(g as EnergyGoal));
+}
+
+// ============================================================================
+// LEGACY MAPPER - For backward compatibility during migration
+// ============================================================================
+
+// Industry slug normalization (old format with dashes)
+const industryTypeMapLegacy: Record<string, string> = {
   'data_center': 'data-center',
   'data-center': 'data-center',
   'ev_charging': 'ev-charging',
@@ -45,7 +197,7 @@ const industryTypeMap: Record<string, string> = {
 };
 
 /**
- * Get subtype field name for an industry
+ * Get subtype field name for an industry (legacy)
  */
 function getSubtypeFieldName(industry: string): string {
   const fieldMap: Record<string, string> = {
@@ -71,169 +223,61 @@ function getSubtypeFieldName(industry: string): string {
   return fieldMap[industry] || 'type';
 }
 
+/**
+ * LEGACY: Map WizardState to old TrueQuoteInput format
+ * @deprecated Use mapWizardStateToMerlinRequest instead
+ */
 export function mapWizardStateToTrueQuoteInput(state: WizardState): TrueQuoteInput {
   // Normalize industry slug
-  const industryType = industryTypeMap[state.industry] || state.industry;
+  const industryType = industryTypeMapLegacy[state.industry] || state.industry;
   
-  // ✅ SYSTEMATIC: Extract subtype using configuration
+  // Extract subtype using configuration
   const subtypeFieldName = getSubtypeFieldName(industryType);
   const dbSubtypeValue = state.useCaseData?.[subtypeFieldName] || 
-                         state.useCaseData?.hospital_type || 
-                         state.useCaseData?.hotel_type ||
-                         state.useCaseData?.hotelCategory ||
-                         state.useCaseData?.washType ||
-                         state.useCaseData?.wash_type;
+                         state.facilityDetails?.[subtypeFieldName as keyof typeof state.facilityDetails];
   
-  // Use systematic mapping function from config
-  let subtype = mapSubtype(industryType, dbSubtypeValue);
-  if (!subtype) {
-    // Fallback to default if mapping fails
-    subtype = DEFAULT_SUBTYPES[industryType] || 'default';
-  }
+  // Map database value to TrueQuote format
+  const mappedSubtype = dbSubtypeValue 
+    ? mapSubtype(industryType, dbSubtypeValue)
+    : DEFAULT_SUBTYPES[industryType] || 'standard';
+
+  // Build facility data from useCaseData
+  const facilityData: Record<string, number | string | boolean> = {};
   
-  // Special handling for university (enrollment-based logic takes precedence)
-  if (industryType === 'university') {
-    const enrollment = state.useCaseData?.enrollment || state.useCaseData?.studentCount;
-    if (enrollment) {
-      const num = parseFloat(String(enrollment));
-      if (num < 5000) subtype = 'communityCollege';
-      else if (num < 20000) subtype = 'regionalPublic';
-      else if (num < 30000) subtype = 'largeState';
-      else subtype = 'majorResearch';
-    }
-  }
-  
-  // Normalize facilityData field names using configuration
-  const facilityData: Record<string, any> = {};
   if (state.useCaseData) {
-    for (const [key, value] of Object.entries(state.useCaseData)) {
+    Object.entries(state.useCaseData).forEach(([key, value]) => {
       const mappedKey = mapFieldName(industryType, key);
-      facilityData[mappedKey] = value;
-    }
-  }
-  
-  // ✅ SPECIAL LOGIC: Hotel amenity strings → boolean modifiers
-  if (industryType === 'hotel') {
-    if (!facilityData.roomCount || facilityData.roomCount === 0) {
-      console.error('❌ CRITICAL: Hotel roomCount is missing! This is required for accurate BESS sizing.');
-      console.error('   Step3HotelEnergy must capture roomCount from user input.');
-    }
-    
-    // Map amenity strings to boolean triggers for TrueQuoteEngine modifiers
-    if (facilityData.foodBeverage && facilityData.foodBeverage !== 'none') {
-      facilityData.hasRestaurant = true;
-    }
-    if (facilityData.spaServices && facilityData.spaServices !== 'none') {
-      facilityData.hasSpa = true;
-    }
-    if (facilityData.poolType && facilityData.poolType !== 'none') {
-      facilityData.hasPool = true;
-    }
-    if (facilityData.meetingSpace && facilityData.meetingSpace !== 'none') {
-      facilityData.hasConferenceCenter = true;
-    }
-    if (facilityData.laundryType && facilityData.laundryType !== 'none' && facilityData.laundryType !== 'outsourced') {
-      facilityData.hasLaundry = true;
-    }
-    if (facilityData.fitnessCenter && facilityData.fitnessCenter !== 'none') {
-      facilityData.hasFitnessCenter = true;
-    }
-    
-    // 🔍 DEBUG: Log what modifiers were applied
-    const appliedModifiers = [];
-    if (facilityData.hasRestaurant) appliedModifiers.push('Restaurant (+15%)');
-    if (facilityData.hasSpa) appliedModifiers.push('Spa (+10%)');
-    if (facilityData.hasPool) appliedModifiers.push('Pool (+5%)');
-    if (facilityData.hasConferenceCenter) appliedModifiers.push('Conference Center (+20%)');
-    if (appliedModifiers.length > 0) {
-      console.log('✅ Step 3 Modifiers Applied:', appliedModifiers.join(', '));
-    }
-  }
-  
-  // ✅ SPECIAL LOGIC: Hospital modifiers (ICU, OR, MRI)
-  if (industryType === 'hospital') {
-    // Ensure bedCount is present (TrueQuote Engine uses this for per_bed calculations)
-    if (facilityData.bedCount && !facilityData.beds) {
-      facilityData.beds = parseFloat(String(facilityData.bedCount));
-    }
-    
-    // Map hospital specific fields to TrueQuote Engine modifier triggers
-    if (facilityData.icuBeds && parseFloat(String(facilityData.icuBeds)) > 0) {
-      facilityData.hasICU = true;
-    }
-    if (facilityData.operatingRooms && parseFloat(String(facilityData.operatingRooms)) > 0) {
-      facilityData.hasOR = true;
-    }
-    // Check for imaging equipment (MRI, CT Scan, Xray)
-    if (facilityData.imagingEquipment) {
-      const imaging = Array.isArray(facilityData.imagingEquipment) 
-        ? facilityData.imagingEquipment 
-        : [facilityData.imagingEquipment];
-      const imagingStr = imaging.map(i => String(i).toLowerCase()).join(',');
-      if (imagingStr.includes('mri') || imagingStr.includes('ct') || imagingStr.includes('scan')) {
-        facilityData.hasMRI = true;
+      if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+        facilityData[mappedKey] = value;
       }
-    }
-  }
-  
-  // Handle special field mappings (using mapFieldName, but also handle specific cases)
-  // Apartment: Map unitCount → units for TrueQuote Engine
-  if (industryType === 'apartment' && facilityData.unitCount && !facilityData.units) {
-    facilityData.units = parseFloat(String(facilityData.unitCount));
-  }
-  
-  // Data Center: Map targetPUE → powerUsageEffectiveness
-  if (industryType === 'data-center' && facilityData.targetPUE && !facilityData.powerUsageEffectiveness) {
-    facilityData.powerUsageEffectiveness = parseFloat(String(facilityData.targetPUE));
-  }
-  
-  // Cold Storage: Map storageVolume (cubic feet) → facilitySqFt (divide by 30 for avg ceiling height)
-  if (industryType === 'cold-storage' && facilityData.storageVolume && !facilityData.facilitySqFt) {
-    const volumeCuFt = parseFloat(String(facilityData.storageVolume));
-    facilityData.facilitySqFt = Math.round(volumeCuFt / 30); // 30ft average cold storage ceiling
-  }
-  
-  // 🔍 DEBUG: Log what we're passing to TrueQuote Engine
-  // Always log in development (check for localhost or dev environment)
-  const isDev = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' ||
-    (window as any).__DEV__
-  );
-  
-  if (isDev) {
-    console.log('🔍 [mapWizardStateToTrueQuoteInput] DEBUG:', {
-      industry: state.industry,
-      industryType,
-      subtype,
-      subtypeFieldName,
-      dbSubtypeValue,
-      useCaseData: state.useCaseData || {},
-      useCaseDataKeys: state.useCaseData ? Object.keys(state.useCaseData) : [],
-      facilityData: facilityData,
-      facilityDataKeys: Object.keys(facilityData),
-      facilityDataSample: Object.fromEntries(Object.entries(facilityData).slice(0, 10)),
     });
   }
-  
-  // Build TrueQuoteInput matching the interface structure
+
+  // Also include facilityDetails if present
+  if (state.facilityDetails) {
+    Object.entries(state.facilityDetails).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && !facilityData[key]) {
+        facilityData[key] = value as number | string | boolean;
+      }
+    });
+  }
+
   return {
     location: {
-      zipCode: state.zipCode || '89052',
-      state: state.state || 'NV',
+      zipCode: state.zipCode,
+      state: state.state,
     },
+    goals: state.goals || [],
     industry: {
       type: industryType,
-      subtype: subtype,
-      facilityData: facilityData,
+      subtype: mappedSubtype,
+      facilityData,
     },
     options: {
-      solarEnabled: state.selectedOptions?.includes('solar') || false,
-      evChargingEnabled: state.selectedOptions?.includes('ev') || false,
-      generatorEnabled: state.selectedOptions?.includes('generator') || false,
-      level2Chargers: state.customEvL2 || 0,
-      dcFastChargers: state.customEvDcfc || 0,
-      ultraFastChargers: state.customEvUltraFast || 0,
+      solarInterested: state.selectedOptions?.includes('solar') || false,
+      evInterested: state.selectedOptions?.includes('ev') || false,
+      generatorInterested: state.selectedOptions?.includes('generator') || false,
+      generatorFuel: state.generatorFuel,
     },
   };
 }
