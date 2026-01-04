@@ -7,6 +7,7 @@ import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
 // DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
 import WizardV6 from "./components/wizard/v6/WizardV6";
+import MetaCalculationsPage from "./pages/MetaCalculationsPage";
 // import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from './contexts/QuoteContext';
 
@@ -113,6 +114,11 @@ function App() {
     return <HotelEnergy />;
   }
   
+
+  // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
+  if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
+    return <MetaCalculationsPage />;
+  }
 
   // Access via /wizard or /wizard-v6 - V6 Wizard (Clean Build Dec 28, 2025)
   if (pathname === "/wizard" || pathname === "/wizard-v6") {
