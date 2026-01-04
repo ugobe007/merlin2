@@ -267,7 +267,6 @@ export function mapWizardStateToTrueQuoteInput(state: WizardState): TrueQuoteInp
       zipCode: state.zipCode,
       state: state.state,
     },
-    goals: state.goals || [],
     industry: {
       type: industryType,
       subtype: mappedSubtype,
