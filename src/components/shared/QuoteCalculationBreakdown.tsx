@@ -20,10 +20,7 @@
  */
 
 import React, { useState } from 'react';
-import { 
-  ChevronDown, ChevronUp, Calculator, Battery, Sun, Wind, 
-  Zap, DollarSign, Info, ExternalLink, FileText, Sparkles
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Calculator, Battery, Sun, Zap, DollarSign, Info, ExternalLink, FileText, Sparkles } from 'lucide-react';
 
 // ============================================
 // INTERFACES

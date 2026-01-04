@@ -9,13 +9,13 @@
  * @param targetAnnualKWh - Optional: target annual kWh (for reverse sizing)
  * @returns Sizing result with area, panel count, annual kWh, and source/citation
  */
-import { getSolarILRWithSource } from '@/services/benchmarkSources';
+import { getSolarILRWithSource } from "@/services/benchmarkSources";
 
 export function calculateSolarSizing({
   solarCapacityKW,
-  panelType = 'monocrystalline',
+  panelType = "monocrystalline",
   panelEfficiency = 20.5,
-  region = 'midwest',
+  region = "midwest",
   targetAnnualKWh,
 }: {
   solarCapacityKW: number;
@@ -39,7 +39,7 @@ export function calculateSolarSizing({
     northwest: 1200,
   } as const;
   type RegionKey = keyof typeof regionSunHours;
-  const safeRegion = (region in regionSunHours ? region : 'midwest') as RegionKey;
+  const safeRegion = (region in regionSunHours ? region : "midwest") as RegionKey;
   const sunHours = regionSunHours[safeRegion];
 
   // Panel count (round up)
@@ -59,7 +59,7 @@ export function calculateSolarSizing({
   }
 
   // TrueQuote™: Get ILR ratio and source
-  const ilr = getSolarILRWithSource('dc_coupled');
+  const ilr = getSolarILRWithSource("dc_coupled");
 
   // Source/citation
   const citation = `NREL ATB 2024, typical sun-hours: ${sunHours}/yr, panel: ${panelWattage}W ${panelType} (${eff}% eff). ILR: ${ilr.ratio} (${ilr.citation})`;
@@ -80,20 +80,20 @@ export function calculateSolarSizing({
 }
 /**
  * USE CASE POWER CALCULATIONS - SINGLE SOURCE OF TRUTH
- * 
+ *
  * ⚠️ CRITICAL: ALL power calculations must go through this file!
- * 
+ *
  * This file contains industry-standard power calculations for each use case.
  * Values are based on:
  * - Energy Star Portfolio Manager benchmarks
  * - CBECS (Commercial Buildings Energy Consumption Survey) 2018
  * - ASHRAE standards
  * - Industry-specific research papers
- * 
+ *
  * EV CHARGING NOTE: For full EV Charging Hub calculations (with multiple charger
  * types, HPC support, and cost estimation), use evChargingCalculations.ts which
  * is the SINGLE SOURCE OF TRUTH for EV-specific calculations.
- * 
+ *
  * DO NOT modify these calculations without consulting industry data!
  */
 
@@ -108,74 +108,74 @@ export interface PowerCalculationResult {
 /**
  * INDUSTRY POWER DENSITY STANDARDS (W/sq ft) - PEAK DEMAND
  * Source: Energy Star Portfolio Manager, CBECS 2018, ASHRAE 90.1
- * 
+ *
  * NOTE: These are PEAK DEMAND values, not average consumption!
  * Average consumption is typically 20-40% of peak demand.
  * BESS sizing requires peak demand to ensure adequate backup.
  */
 export const POWER_DENSITY_STANDARDS = {
   // Office & Commercial (Peak demand, not average)
-  office: 6.0,              // 5-7 W/sq ft peak (lighting, HVAC, computers at full load)
-  retail: 8.0,              // 6-10 W/sq ft peak (lighting intensive)
-  shoppingCenter: 10.0,     // 8-12 W/sq ft peak (anchor stores, common areas, HVAC)
-  
+  office: 6.0, // 5-7 W/sq ft peak (lighting, HVAC, computers at full load)
+  retail: 8.0, // 6-10 W/sq ft peak (lighting intensive)
+  shoppingCenter: 10.0, // 8-12 W/sq ft peak (anchor stores, common areas, HVAC)
+
   // Industrial
-  warehouse: 2.0,           // 1-3 W/sq ft peak (forklifts, lighting, HVAC)
-  manufacturing: 15.0,      // 10-25 W/sq ft peak (varies by industry)
-  coldStorage: 8.0,         // 6-12 W/sq ft peak (refrigeration compressors cycling)
-  foodProcessing: 12.0,     // 8-15 W/sq ft peak (processing equipment)
-  
+  warehouse: 2.0, // 1-3 W/sq ft peak (forklifts, lighting, HVAC)
+  manufacturing: 15.0, // 10-25 W/sq ft peak (varies by industry)
+  coldStorage: 8.0, // 6-12 W/sq ft peak (refrigeration compressors cycling)
+  foodProcessing: 12.0, // 8-15 W/sq ft peak (processing equipment)
+
   // High-Density
-  datacenter: 150,          // 100-200 W/sq ft (IT + cooling)
-  indoorFarm: 50,           // 40-60 W/sq ft peak (grow lights + HVAC)
-  casino: 18,               // 15-22 W/sq ft peak (24/7, gaming equipment)
-  
+  datacenter: 150, // 100-200 W/sq ft (IT + cooling)
+  indoorFarm: 50, // 40-60 W/sq ft peak (grow lights + HVAC)
+  casino: 18, // 15-22 W/sq ft peak (24/7, gaming equipment)
+
   // Hospitality (per room/bed, not sq ft)
-  hotelPerRoom: 3.5,        // 3-4 kW peak per room (HVAC spikes)
-  hospitalPerBed: 5.0,     // 4-6 kW peak per bed (ASHRAE with concurrency factor)
-  
+  hotelPerRoom: 3.5, // 3-4 kW peak per room (HVAC spikes)
+  hospitalPerBed: 5.0, // 4-6 kW peak per bed (ASHRAE with concurrency factor)
+
   // Special
-  agriculturePerAcre: 0.6,  // 0.3-1.0 kW/acre (irrigation pumps at peak)
+  agriculturePerAcre: 0.6, // 0.3-1.0 kW/acre (irrigation pumps at peak)
   // Airport uses tiered calculation - see calculateAirportPower()
   // Small Regional (<1M): 2-6 MW, Medium (1-5M): 6-18 MW, Large (5-15M): 18-55 MW
   // Major Hub (15-50M): 55-175 MW, Mega Hub (50-100M+): 175-500+ MW
-  airportPerMillion: 3.5,   // Average ~3.5 MW/M (but actual calc is tiered)
+  airportPerMillion: 3.5, // Average ~3.5 MW/M (but actual calc is tiered)
 };
 
 /**
  * DATACENTER TIER STANDARDS - SSOT for BESS sizing by tier
  * Source: Uptime Institute Tier Classification System
- * 
+ *
  * Tier I:   99.671% uptime (28.8 hrs downtime/year) - Basic capacity
- * Tier II:  99.741% uptime (22.0 hrs downtime/year) - Redundant components  
+ * Tier II:  99.741% uptime (22.0 hrs downtime/year) - Redundant components
  * Tier III: 99.982% uptime (1.6 hrs downtime/year) - Concurrently maintainable
  * Tier IV:  99.995% uptime (0.4 hrs downtime/year) - Fault tolerant
  */
 export const DATACENTER_TIER_STANDARDS = {
   tier1: {
-    name: 'Tier I (Basic Capacity)',
-    bessMultiplier: 0.30,      // 30% of IT load
+    name: "Tier I (Basic Capacity)",
+    bessMultiplier: 0.3, // 30% of IT load
     durationHours: 2,
-    description: 'Basic capacity, single path, no redundancy'
+    description: "Basic capacity, single path, no redundancy",
   },
   tier2: {
-    name: 'Tier II (Redundant Components)',
-    bessMultiplier: 0.40,      // 40% of IT load
+    name: "Tier II (Redundant Components)",
+    bessMultiplier: 0.4, // 40% of IT load
     durationHours: 3,
-    description: 'Redundant capacity components, single path'
+    description: "Redundant capacity components, single path",
   },
   tier3: {
-    name: 'Tier III (Concurrently Maintainable)',
-    bessMultiplier: 0.50,      // 50% of IT load
+    name: "Tier III (Concurrently Maintainable)",
+    bessMultiplier: 0.5, // 50% of IT load
     durationHours: 4,
-    description: 'Multiple paths, one active, concurrently maintainable'
+    description: "Multiple paths, one active, concurrently maintainable",
   },
   tier4: {
-    name: 'Tier IV (Fault Tolerant)',
-    bessMultiplier: 0.70,      // 70% of IT load
+    name: "Tier IV (Fault Tolerant)",
+    bessMultiplier: 0.7, // 70% of IT load
     durationHours: 6,
-    description: 'Multiple active paths, fault tolerant'
-  }
+    description: "Multiple active paths, fault tolerant",
+  },
 };
 
 // ============================================================================
@@ -189,59 +189,59 @@ export const DATACENTER_TIER_STANDARDS = {
  */
 export const DATA_CENTER_CLASSIFICATIONS = {
   edge: {
-    name: 'Edge/Micro Data Center',
-    description: 'Small-scale, distributed edge computing facilities',
-    itLoad: { min: 50, max: 500 },           // kW
+    name: "Edge/Micro Data Center",
+    description: "Small-scale, distributed edge computing facilities",
+    itLoad: { min: 50, max: 500 }, // kW
     totalFacilityLoad: { min: 75, max: 750 }, // kW (with PUE)
     rackCount: { min: 5, max: 50 },
-    floorSpace: { min: 500, max: 5000 },      // sq ft
-    typicalTier: 'tier1-tier2',
+    floorSpace: { min: 500, max: 5000 }, // sq ft
+    typicalTier: "tier1-tier2",
     pue: { typical: 2.0, bestInClass: 1.5 },
-    loadFactor: { min: 0.40, max: 0.60 },
+    loadFactor: { min: 0.4, max: 0.6 },
   },
   small: {
-    name: 'Small Data Center',
-    description: 'Enterprise colocation, small cloud provider',
-    itLoad: { min: 500, max: 2000 },          // kW
+    name: "Small Data Center",
+    description: "Enterprise colocation, small cloud provider",
+    itLoad: { min: 500, max: 2000 }, // kW
     totalFacilityLoad: { min: 750, max: 3000 }, // kW
     rackCount: { min: 50, max: 200 },
-    floorSpace: { min: 5000, max: 20000 },    // sq ft
-    typicalTier: 'tier2-tier3',
+    floorSpace: { min: 5000, max: 20000 }, // sq ft
+    typicalTier: "tier2-tier3",
     pue: { typical: 1.65, bestInClass: 1.3 },
-    loadFactor: { min: 0.50, max: 0.70 },
+    loadFactor: { min: 0.5, max: 0.7 },
   },
   medium: {
-    name: 'Medium Data Center',
-    description: 'Regional colocation, enterprise campus',
-    itLoad: { min: 2000, max: 10000 },        // kW (2-10 MW)
+    name: "Medium Data Center",
+    description: "Regional colocation, enterprise campus",
+    itLoad: { min: 2000, max: 10000 }, // kW (2-10 MW)
     totalFacilityLoad: { min: 3000, max: 15000 }, // kW
     rackCount: { min: 200, max: 1000 },
-    floorSpace: { min: 20000, max: 100000 },  // sq ft
-    typicalTier: 'tier3',
+    floorSpace: { min: 20000, max: 100000 }, // sq ft
+    typicalTier: "tier3",
     pue: { typical: 1.45, bestInClass: 1.2 },
-    loadFactor: { min: 0.60, max: 0.80 },
+    loadFactor: { min: 0.6, max: 0.8 },
   },
   large: {
-    name: 'Large Data Center',
-    description: 'Major cloud provider, financial services',
-    itLoad: { min: 10000, max: 50000 },       // kW (10-50 MW)
+    name: "Large Data Center",
+    description: "Major cloud provider, financial services",
+    itLoad: { min: 10000, max: 50000 }, // kW (10-50 MW)
     totalFacilityLoad: { min: 15000, max: 75000 }, // kW
     rackCount: { min: 1000, max: 5000 },
     floorSpace: { min: 100000, max: 500000 }, // sq ft
-    typicalTier: 'tier3-tier4',
-    pue: { typical: 1.30, bestInClass: 1.1 },
-    loadFactor: { min: 0.70, max: 0.85 },
+    typicalTier: "tier3-tier4",
+    pue: { typical: 1.3, bestInClass: 1.1 },
+    loadFactor: { min: 0.7, max: 0.85 },
   },
   hyperscale: {
-    name: 'Hyperscale Data Center',
-    description: 'Major cloud/internet companies (AWS, Google, Meta)',
-    itLoad: { min: 50000, max: 200000 },      // kW (50-200+ MW)
+    name: "Hyperscale Data Center",
+    description: "Major cloud/internet companies (AWS, Google, Meta)",
+    itLoad: { min: 50000, max: 200000 }, // kW (50-200+ MW)
     totalFacilityLoad: { min: 75000, max: 300000 }, // kW
     rackCount: { min: 5000, max: 50000 },
     floorSpace: { min: 500000, max: 2000000 }, // sq ft
-    typicalTier: 'tier3-tier4',
+    typicalTier: "tier3-tier4",
     pue: { typical: 1.15, bestInClass: 1.05 },
-    loadFactor: { min: 0.75, max: 0.90 },
+    loadFactor: { min: 0.75, max: 0.9 },
   },
 } as const;
 
@@ -253,30 +253,30 @@ export type DataCenterClassification = keyof typeof DATA_CENTER_CLASSIFICATIONS;
  */
 export const DATA_CENTER_RACK_DENSITY = {
   lowDensity: {
-    name: 'Low Density',
-    powerPerRack: { min: 3, max: 7 },         // kW
-    typicalServers: '10-20 1U servers',
+    name: "Low Density",
+    powerPerRack: { min: 3, max: 7 }, // kW
+    typicalServers: "10-20 1U servers",
     heatOutputBTU: { min: 10000, max: 24000 },
     airflowCFM: { min: 300, max: 600 },
   },
   mediumDensity: {
-    name: 'Medium Density',
-    powerPerRack: { min: 7, max: 15 },        // kW
-    typicalServers: '20-30 servers',
+    name: "Medium Density",
+    powerPerRack: { min: 7, max: 15 }, // kW
+    typicalServers: "20-30 servers",
     heatOutputBTU: { min: 24000, max: 51000 },
     airflowCFM: { min: 600, max: 1200 },
   },
   highDensity: {
-    name: 'High Density',
-    powerPerRack: { min: 15, max: 30 },       // kW
-    typicalServers: '30-42 servers',
+    name: "High Density",
+    powerPerRack: { min: 15, max: 30 }, // kW
+    typicalServers: "30-42 servers",
     heatOutputBTU: { min: 51000, max: 102000 },
     airflowCFM: { min: 1200, max: 2500 },
   },
   ultraHighDensity: {
-    name: 'Ultra-High Density (AI/GPU)',
-    powerPerRack: { min: 30, max: 100 },      // kW
-    typicalServers: '4-16 GPU servers',
+    name: "Ultra-High Density (AI/GPU)",
+    powerPerRack: { min: 30, max: 100 }, // kW
+    typicalServers: "4-16 GPU servers",
     heatOutputBTU: { min: 102000, max: 341000 },
     airflowCFM: { min: 2500, max: 8000 },
   },
@@ -288,27 +288,112 @@ export const DATA_CENTER_RACK_DENSITY = {
 export const DATA_CENTER_POWER_EQUIPMENT = {
   // Utility Service
   utilityService: {
-    edge: { voltage: '480V-13.8kV', transformer: { min: 500, max: 1000 }, feeds: 1, substation: false },
-    small: { voltage: '4.16-13.8kV', transformer: { min: 2000, max: 5000 }, feeds: '1-2', substation: 'rare' },
-    medium: { voltage: '12.47-34.5kV', transformer: { min: 10000, max: 25000 }, feeds: '2-4', substation: 'often' },
-    large: { voltage: '34.5-138kV', transformer: { min: 30000, max: 100000 }, feeds: '2-4', substation: true },
-    hyperscale: { voltage: '69-345kV', transformer: { min: 100000, max: 500000 }, feeds: '4+', substation: 'multiple' },
+    edge: {
+      voltage: "480V-13.8kV",
+      transformer: { min: 500, max: 1000 },
+      feeds: 1,
+      substation: false,
+    },
+    small: {
+      voltage: "4.16-13.8kV",
+      transformer: { min: 2000, max: 5000 },
+      feeds: "1-2",
+      substation: "rare",
+    },
+    medium: {
+      voltage: "12.47-34.5kV",
+      transformer: { min: 10000, max: 25000 },
+      feeds: "2-4",
+      substation: "often",
+    },
+    large: {
+      voltage: "34.5-138kV",
+      transformer: { min: 30000, max: 100000 },
+      feeds: "2-4",
+      substation: true,
+    },
+    hyperscale: {
+      voltage: "69-345kV",
+      transformer: { min: 100000, max: 500000 },
+      feeds: "4+",
+      substation: "multiple",
+    },
   },
   // UPS Systems
   ups: {
-    edge: { moduleSize: { min: 10, max: 100 }, units: '1-4', redundancy: 'N or N+1', efficiency: { min: 94, max: 96 }, runtime: '5-15 min' },
-    small: { moduleSize: { min: 100, max: 500 }, units: '4-10', redundancy: 'N+1', efficiency: { min: 95, max: 97 }, runtime: '10-20 min' },
-    medium: { moduleSize: { min: 500, max: 1500 }, units: '10-30', redundancy: 'N+1 or 2N', efficiency: { min: 96, max: 98 }, runtime: '10-15 min' },
-    large: { moduleSize: { min: 1000, max: 3000 }, units: '30-100', redundancy: '2N', efficiency: { min: 96, max: 98 }, runtime: '10-15 min' },
-    hyperscale: { moduleSize: { min: 1500, max: 4000 }, units: '100-500+', redundancy: '2N or distributed', efficiency: { min: 97, max: 99 }, runtime: '5-15 min' },
+    edge: {
+      moduleSize: { min: 10, max: 100 },
+      units: "1-4",
+      redundancy: "N or N+1",
+      efficiency: { min: 94, max: 96 },
+      runtime: "5-15 min",
+    },
+    small: {
+      moduleSize: { min: 100, max: 500 },
+      units: "4-10",
+      redundancy: "N+1",
+      efficiency: { min: 95, max: 97 },
+      runtime: "10-20 min",
+    },
+    medium: {
+      moduleSize: { min: 500, max: 1500 },
+      units: "10-30",
+      redundancy: "N+1 or 2N",
+      efficiency: { min: 96, max: 98 },
+      runtime: "10-15 min",
+    },
+    large: {
+      moduleSize: { min: 1000, max: 3000 },
+      units: "30-100",
+      redundancy: "2N",
+      efficiency: { min: 96, max: 98 },
+      runtime: "10-15 min",
+    },
+    hyperscale: {
+      moduleSize: { min: 1500, max: 4000 },
+      units: "100-500+",
+      redundancy: "2N or distributed",
+      efficiency: { min: 97, max: 99 },
+      runtime: "5-15 min",
+    },
   },
   // Backup Generators
   generators: {
-    edge: { size: { min: 100, max: 500 }, units: '1-2', redundancy: 'N', fuel: 'diesel', startTime: '10-15 sec' },
-    small: { size: { min: 1000, max: 2500 }, units: '2-4', redundancy: 'N+1', fuel: 'diesel', startTime: '10-15 sec' },
-    medium: { size: { min: 2000, max: 3500 }, units: '4-12', redundancy: 'N+1 or 2N', fuel: 'diesel', startTime: '10-12 sec' },
-    large: { size: { min: 2500, max: 3500 }, units: '12-50', redundancy: '2N', fuel: 'diesel/gas', startTime: '8-12 sec' },
-    hyperscale: { size: { min: 2500, max: 3500 }, units: '50-200+', redundancy: '2N', fuel: 'diesel/gas/HVO', startTime: '8-10 sec' },
+    edge: {
+      size: { min: 100, max: 500 },
+      units: "1-2",
+      redundancy: "N",
+      fuel: "diesel",
+      startTime: "10-15 sec",
+    },
+    small: {
+      size: { min: 1000, max: 2500 },
+      units: "2-4",
+      redundancy: "N+1",
+      fuel: "diesel",
+      startTime: "10-15 sec",
+    },
+    medium: {
+      size: { min: 2000, max: 3500 },
+      units: "4-12",
+      redundancy: "N+1 or 2N",
+      fuel: "diesel",
+      startTime: "10-12 sec",
+    },
+    large: {
+      size: { min: 2500, max: 3500 },
+      units: "12-50",
+      redundancy: "2N",
+      fuel: "diesel/gas",
+      startTime: "8-12 sec",
+    },
+    hyperscale: {
+      size: { min: 2500, max: 3500 },
+      units: "50-200+",
+      redundancy: "2N",
+      fuel: "diesel/gas/HVO",
+      startTime: "8-10 sec",
+    },
   },
 } as const;
 
@@ -319,43 +404,106 @@ export const DATA_CENTER_POWER_EQUIPMENT = {
 export const DATA_CENTER_COOLING_EQUIPMENT = {
   // CRAC (Computer Room Air Conditioning) - DX cooling
   crac: {
-    edge: { unitCapacity: { min: 10, max: 30 }, units: '2-10', compressorKW: { min: 3, max: 10 }, fanKW: { min: 1, max: 3 } },
-    small: { unitCapacity: { min: 30, max: 100 }, units: '10-40', compressorKW: { min: 10, max: 35 }, fanKW: { min: 3, max: 8 } },
-    medium: { unitCapacity: { min: 50, max: 150 }, units: '40-150', compressorKW: { min: 15, max: 50 }, fanKW: { min: 5, max: 12 } },
+    edge: {
+      unitCapacity: { min: 10, max: 30 },
+      units: "2-10",
+      compressorKW: { min: 3, max: 10 },
+      fanKW: { min: 1, max: 3 },
+    },
+    small: {
+      unitCapacity: { min: 30, max: 100 },
+      units: "10-40",
+      compressorKW: { min: 10, max: 35 },
+      fanKW: { min: 3, max: 8 },
+    },
+    medium: {
+      unitCapacity: { min: 50, max: 150 },
+      units: "40-150",
+      compressorKW: { min: 15, max: 50 },
+      fanKW: { min: 5, max: 12 },
+    },
     large: null, // Use CRAH for large/hyperscale
     hyperscale: null,
   },
   // CRAH (Computer Room Air Handlers) - Chilled water
   crah: {
     edge: null, // Too small for CRAH
-    small: { unitCapacity: { min: 50, max: 150 }, units: '5-20', fanKW: { min: 5, max: 15 } },
-    medium: { unitCapacity: { min: 100, max: 300 }, units: '20-75', fanKW: { min: 10, max: 25 } },
-    large: { unitCapacity: { min: 200, max: 500 }, units: '75-250', fanKW: { min: 15, max: 40 } },
-    hyperscale: { unitCapacity: { min: 300, max: 750 }, units: '250-1000+', fanKW: { min: 20, max: 60 } },
+    small: { unitCapacity: { min: 50, max: 150 }, units: "5-20", fanKW: { min: 5, max: 15 } },
+    medium: { unitCapacity: { min: 100, max: 300 }, units: "20-75", fanKW: { min: 10, max: 25 } },
+    large: { unitCapacity: { min: 200, max: 500 }, units: "75-250", fanKW: { min: 15, max: 40 } },
+    hyperscale: {
+      unitCapacity: { min: 300, max: 750 },
+      units: "250-1000+",
+      fanKW: { min: 20, max: 60 },
+    },
   },
   // Chiller Plant
   chillers: {
     edge: null,
-    small: { capacityTons: { min: 200, max: 750 }, powerKW: { min: 150, max: 600 }, units: '2-4', kwPerTon: { min: 0.6, max: 0.9 } },
-    medium: { capacityTons: { min: 500, max: 2000 }, powerKW: { min: 400, max: 1600 }, units: '4-10', kwPerTon: { min: 0.5, max: 0.8 } },
-    large: { capacityTons: { min: 1500, max: 4000 }, powerKW: { min: 1200, max: 3200 }, units: '10-30', kwPerTon: { min: 0.5, max: 0.7 } },
-    hyperscale: { capacityTons: { min: 2000, max: 5000 }, powerKW: { min: 1600, max: 4000 }, units: '30-100+', kwPerTon: { min: 0.4, max: 0.6 } },
+    small: {
+      capacityTons: { min: 200, max: 750 },
+      powerKW: { min: 150, max: 600 },
+      units: "2-4",
+      kwPerTon: { min: 0.6, max: 0.9 },
+    },
+    medium: {
+      capacityTons: { min: 500, max: 2000 },
+      powerKW: { min: 400, max: 1600 },
+      units: "4-10",
+      kwPerTon: { min: 0.5, max: 0.8 },
+    },
+    large: {
+      capacityTons: { min: 1500, max: 4000 },
+      powerKW: { min: 1200, max: 3200 },
+      units: "10-30",
+      kwPerTon: { min: 0.5, max: 0.7 },
+    },
+    hyperscale: {
+      capacityTons: { min: 2000, max: 5000 },
+      powerKW: { min: 1600, max: 4000 },
+      units: "30-100+",
+      kwPerTon: { min: 0.4, max: 0.6 },
+    },
   },
   // Cooling Towers
   coolingTowers: {
     edge: null,
-    small: { capacityTons: { min: 300, max: 1000 }, fanKW: { min: 15, max: 40 }, cells: '2-6' },
-    medium: { capacityTons: { min: 750, max: 3000 }, fanKW: { min: 25, max: 75 }, cells: '6-20' },
-    large: { capacityTons: { min: 2000, max: 6000 }, fanKW: { min: 40, max: 100 }, cells: '20-60' },
-    hyperscale: { capacityTons: { min: 3000, max: 8000 }, fanKW: { min: 50, max: 150 }, cells: '60-200+' },
+    small: { capacityTons: { min: 300, max: 1000 }, fanKW: { min: 15, max: 40 }, cells: "2-6" },
+    medium: { capacityTons: { min: 750, max: 3000 }, fanKW: { min: 25, max: 75 }, cells: "6-20" },
+    large: { capacityTons: { min: 2000, max: 6000 }, fanKW: { min: 40, max: 100 }, cells: "20-60" },
+    hyperscale: {
+      capacityTons: { min: 3000, max: 8000 },
+      fanKW: { min: 50, max: 150 },
+      cells: "60-200+",
+    },
   },
   // Pumping Systems
   pumps: {
-    edge: { chilledWaterKW: null, condenserKW: null, glycolKW: null, totalPumps: '2-4' },
-    small: { chilledWaterKW: { min: 15, max: 50 }, condenserKW: { min: 15, max: 50 }, glycolKW: { min: 5, max: 15 }, totalPumps: '4-12' },
-    medium: { chilledWaterKW: { min: 50, max: 200 }, condenserKW: { min: 50, max: 200 }, glycolKW: { min: 15, max: 60 }, totalPumps: '12-40' },
-    large: { chilledWaterKW: { min: 200, max: 800 }, condenserKW: { min: 200, max: 800 }, glycolKW: { min: 60, max: 200 }, totalPumps: '40-150' },
-    hyperscale: { chilledWaterKW: { min: 800, max: 3000 }, condenserKW: { min: 800, max: 3000 }, glycolKW: { min: 200, max: 750 }, totalPumps: '150-500+' },
+    edge: { chilledWaterKW: null, condenserKW: null, glycolKW: null, totalPumps: "2-4" },
+    small: {
+      chilledWaterKW: { min: 15, max: 50 },
+      condenserKW: { min: 15, max: 50 },
+      glycolKW: { min: 5, max: 15 },
+      totalPumps: "4-12",
+    },
+    medium: {
+      chilledWaterKW: { min: 50, max: 200 },
+      condenserKW: { min: 50, max: 200 },
+      glycolKW: { min: 15, max: 60 },
+      totalPumps: "12-40",
+    },
+    large: {
+      chilledWaterKW: { min: 200, max: 800 },
+      condenserKW: { min: 200, max: 800 },
+      glycolKW: { min: 60, max: 200 },
+      totalPumps: "40-150",
+    },
+    hyperscale: {
+      chilledWaterKW: { min: 800, max: 3000 },
+      condenserKW: { min: 800, max: 3000 },
+      glycolKW: { min: 200, max: 750 },
+      totalPumps: "150-500+",
+    },
   },
 } as const;
 
@@ -365,31 +513,83 @@ export const DATA_CENTER_COOLING_EQUIPMENT = {
 export const DATA_CENTER_ADVANCED_COOLING = {
   directLiquidCooling: {
     edge: null,
-    small: { cduCount: '1-5', cduPowerKW: { min: 3, max: 10 }, heatRejectionKW: { min: 30, max: 75 } },
-    medium: { cduCount: '5-20', cduPowerKW: { min: 5, max: 15 }, heatRejectionKW: { min: 50, max: 100 } },
-    large: { cduCount: '20-100', cduPowerKW: { min: 10, max: 25 }, heatRejectionKW: { min: 75, max: 150 } },
-    hyperscale: { cduCount: '100-500+', cduPowerKW: { min: 15, max: 40 }, heatRejectionKW: { min: 100, max: 200 } },
+    small: {
+      cduCount: "1-5",
+      cduPowerKW: { min: 3, max: 10 },
+      heatRejectionKW: { min: 30, max: 75 },
+    },
+    medium: {
+      cduCount: "5-20",
+      cduPowerKW: { min: 5, max: 15 },
+      heatRejectionKW: { min: 50, max: 100 },
+    },
+    large: {
+      cduCount: "20-100",
+      cduPowerKW: { min: 10, max: 25 },
+      heatRejectionKW: { min: 75, max: 150 },
+    },
+    hyperscale: {
+      cduCount: "100-500+",
+      cduPowerKW: { min: 15, max: 40 },
+      heatRejectionKW: { min: 100, max: 200 },
+    },
   },
   immersionCooling: {
     edge: null,
-    small: { tankCapacityKW: { min: 10, max: 50 }, tanks: '1-10', pue: '1.02-1.05', pumpKW: { min: 0.5, max: 2 } },
-    medium: { tankCapacityKW: { min: 50, max: 200 }, tanks: '10-50', pue: '1.02-1.05', pumpKW: { min: 1, max: 4 } },
-    large: { tankCapacityKW: { min: 100, max: 500 }, tanks: '50-200', pue: '1.02-1.05', pumpKW: { min: 2, max: 6 } },
-    hyperscale: { tankCapacityKW: { min: 200, max: 1000 }, tanks: '200-1000+', pue: '1.02-1.05', pumpKW: { min: 3, max: 8 } },
+    small: {
+      tankCapacityKW: { min: 10, max: 50 },
+      tanks: "1-10",
+      pue: "1.02-1.05",
+      pumpKW: { min: 0.5, max: 2 },
+    },
+    medium: {
+      tankCapacityKW: { min: 50, max: 200 },
+      tanks: "10-50",
+      pue: "1.02-1.05",
+      pumpKW: { min: 1, max: 4 },
+    },
+    large: {
+      tankCapacityKW: { min: 100, max: 500 },
+      tanks: "50-200",
+      pue: "1.02-1.05",
+      pumpKW: { min: 2, max: 6 },
+    },
+    hyperscale: {
+      tankCapacityKW: { min: 200, max: 1000 },
+      tanks: "200-1000+",
+      pue: "1.02-1.05",
+      pumpKW: { min: 3, max: 8 },
+    },
   },
   rearDoorHeatExchangers: {
-    edge: { count: '0-10', fanKW: { min: 0.3, max: 0.8 } },
-    small: { count: '10-50', fanKW: { min: 0.3, max: 0.8 } },
-    medium: { count: '50-200', fanKW: { min: 0.3, max: 0.8 } },
-    large: { count: '200-1000', fanKW: { min: 0.3, max: 0.8 } },
-    hyperscale: { count: '1000-5000', fanKW: { min: 0.3, max: 0.8 } },
+    edge: { count: "0-10", fanKW: { min: 0.3, max: 0.8 } },
+    small: { count: "10-50", fanKW: { min: 0.3, max: 0.8 } },
+    medium: { count: "50-200", fanKW: { min: 0.3, max: 0.8 } },
+    large: { count: "200-1000", fanKW: { min: 0.3, max: 0.8 } },
+    hyperscale: { count: "1000-5000", fanKW: { min: 0.3, max: 0.8 } },
   },
   economizerSystems: {
-    edge: { airside: 'rare', waterside: false, economHoursPerYear: 0 },
-    small: { airside: 'optional', waterside: 'optional', economHoursPerYear: { min: 2000, max: 5000 } },
-    medium: { airside: 'common', waterside: 'common', economHoursPerYear: { min: 3000, max: 6000 } },
-    large: { airside: 'common', waterside: 'standard', economHoursPerYear: { min: 4000, max: 7000 } },
-    hyperscale: { airside: 'standard', waterside: 'standard', economHoursPerYear: { min: 5000, max: 8000 } },
+    edge: { airside: "rare", waterside: false, economHoursPerYear: 0 },
+    small: {
+      airside: "optional",
+      waterside: "optional",
+      economHoursPerYear: { min: 2000, max: 5000 },
+    },
+    medium: {
+      airside: "common",
+      waterside: "common",
+      economHoursPerYear: { min: 3000, max: 6000 },
+    },
+    large: {
+      airside: "common",
+      waterside: "standard",
+      economHoursPerYear: { min: 4000, max: 7000 },
+    },
+    hyperscale: {
+      airside: "standard",
+      waterside: "standard",
+      economHoursPerYear: { min: 5000, max: 8000 },
+    },
   },
 } as const;
 
@@ -399,17 +599,42 @@ export const DATA_CENTER_ADVANCED_COOLING = {
 export const DATA_CENTER_BATTERY_SYSTEMS = {
   // Traditional VRLA/Lead-Acid UPS Batteries
   vrla: {
-    edge: { capacityKWh: { min: 50, max: 500 }, stringVoltage: '480-600 VDC', strings: '2-8', replacementYears: '4-6' },
-    small: { capacityKWh: { min: 500, max: 2000 }, stringVoltage: '480-600 VDC', strings: '8-30', replacementYears: '4-6' },
-    medium: { capacityKWh: { min: 2000, max: 10000 }, stringVoltage: '480-600 VDC', strings: '30-100', replacementYears: '4-6' },
-    large: { capacityKWh: { min: 10000, max: 50000 }, stringVoltage: '480-600 VDC', strings: '100-400', replacementYears: '4-6' },
-    hyperscale: { capacityKWh: { min: 50000, max: 200000 }, stringVoltage: '480-600 VDC', strings: '400-2000+', replacementYears: '4-6' },
+    edge: {
+      capacityKWh: { min: 50, max: 500 },
+      stringVoltage: "480-600 VDC",
+      strings: "2-8",
+      replacementYears: "4-6",
+    },
+    small: {
+      capacityKWh: { min: 500, max: 2000 },
+      stringVoltage: "480-600 VDC",
+      strings: "8-30",
+      replacementYears: "4-6",
+    },
+    medium: {
+      capacityKWh: { min: 2000, max: 10000 },
+      stringVoltage: "480-600 VDC",
+      strings: "30-100",
+      replacementYears: "4-6",
+    },
+    large: {
+      capacityKWh: { min: 10000, max: 50000 },
+      stringVoltage: "480-600 VDC",
+      strings: "100-400",
+      replacementYears: "4-6",
+    },
+    hyperscale: {
+      capacityKWh: { min: 50000, max: 200000 },
+      stringVoltage: "480-600 VDC",
+      strings: "400-2000+",
+      replacementYears: "4-6",
+    },
   },
   // Lithium-Ion Battery Systems
   lithiumIon: {
-    energyDensityMultiplier: '3-4x VRLA',
-    cycleLife: '3000-5000 cycles',
-    replacementYears: '10-15',
+    energyDensityMultiplier: "3-4x VRLA",
+    cycleLife: "3000-5000 cycles",
+    replacementYears: "10-15",
     bmsKW: {
       edge: { min: 0.2, max: 1 },
       small: { min: 1, max: 5 },
@@ -432,7 +657,7 @@ export const DATA_CENTER_BATTERY_SYSTEMS = {
  */
 export const DATA_CENTER_AUXILIARY_LOADS = {
   edge: {
-    description: 'Edge/Micro (50-500 kW IT)',
+    description: "Edge/Micro (50-500 kW IT)",
     coolingTotalKW: { min: 30, max: 375 },
     powerDistributionLossesKW: { min: 5, max: 50 },
     upsLossesKW: { min: 2, max: 30 },
@@ -441,10 +666,10 @@ export const DATA_CENTER_AUXILIARY_LOADS = {
     bmsDcimKW: { min: 1, max: 3 },
     officeSupportKW: { min: 10, max: 40 },
     totalAuxiliaryKW: { min: 52, max: 518 },
-    auxAsPercentOfIT: { min: 50, max: 100 },  // Edge has high overhead
+    auxAsPercentOfIT: { min: 50, max: 100 }, // Edge has high overhead
   },
   small: {
-    description: 'Small (500 kW - 2 MW IT)',
+    description: "Small (500 kW - 2 MW IT)",
     coolingTotalKW: { min: 375, max: 1500 },
     powerDistributionLossesKW: { min: 50, max: 200 },
     upsLossesKW: { min: 30, max: 100 },
@@ -456,7 +681,7 @@ export const DATA_CENTER_AUXILIARY_LOADS = {
     auxAsPercentOfIT: { min: 50, max: 100 },
   },
   medium: {
-    description: 'Medium (2-10 MW IT)',
+    description: "Medium (2-10 MW IT)",
     coolingTotalKW: { min: 1500, max: 7500 },
     powerDistributionLossesKW: { min: 200, max: 1000 },
     upsLossesKW: { min: 100, max: 400 },
@@ -468,7 +693,7 @@ export const DATA_CENTER_AUXILIARY_LOADS = {
     auxAsPercentOfIT: { min: 30, max: 50 },
   },
   large: {
-    description: 'Large (10-50 MW IT)',
+    description: "Large (10-50 MW IT)",
     coolingTotalKW: { min: 7500, max: 35000 },
     powerDistributionLossesKW: { min: 1000, max: 5000 },
     upsLossesKW: { min: 400, max: 2000 },
@@ -480,7 +705,7 @@ export const DATA_CENTER_AUXILIARY_LOADS = {
     auxAsPercentOfIT: { min: 20, max: 35 },
   },
   hyperscale: {
-    description: 'Hyperscale (50-200+ MW IT)',
+    description: "Hyperscale (50-200+ MW IT)",
     coolingTotalKW: { min: 35000, max: 120000 },
     powerDistributionLossesKW: { min: 5000, max: 20000 },
     upsLossesKW: { min: 2000, max: 6000 },
@@ -543,41 +768,41 @@ export const DATA_CENTER_BESS_SIZING = {
     recommendedMWh: { min: 0.1, max: 0.5 },
     recommendedMW: { min: 0.05, max: 0.25 },
     durationHours: 1,
-    primaryUseCase: 'Short-term UPS bridge, demand charge reduction',
+    primaryUseCase: "Short-term UPS bridge, demand charge reduction",
     gridServicesCapable: false,
-    roiYears: { typical: 6, range: '5-8' },
+    roiYears: { typical: 6, range: "5-8" },
   },
   small: {
     recommendedMWh: { min: 0.5, max: 3 },
     recommendedMW: { min: 0.25, max: 1.5 },
     durationHours: 2,
-    primaryUseCase: 'UPS enhancement, peak shaving, demand response',
+    primaryUseCase: "UPS enhancement, peak shaving, demand response",
     gridServicesCapable: true,
-    roiYears: { typical: 5, range: '4-7' },
+    roiYears: { typical: 5, range: "4-7" },
   },
   medium: {
     recommendedMWh: { min: 3, max: 15 },
     recommendedMW: { min: 1.5, max: 8 },
     durationHours: 2,
-    primaryUseCase: 'Grid services, frequency regulation, demand management',
+    primaryUseCase: "Grid services, frequency regulation, demand management",
     gridServicesCapable: true,
-    roiYears: { typical: 4, range: '3-6' },
+    roiYears: { typical: 4, range: "3-6" },
   },
   large: {
     recommendedMWh: { min: 15, max: 75 },
     recommendedMW: { min: 8, max: 40 },
-    durationHours: '1.5-2',
-    primaryUseCase: 'Grid-scale services, wholesale market, critical backup',
+    durationHours: "1.5-2",
+    primaryUseCase: "Grid-scale services, wholesale market, critical backup",
     gridServicesCapable: true,
-    roiYears: { typical: 4, range: '3-5' },
+    roiYears: { typical: 4, range: "3-5" },
   },
   hyperscale: {
     recommendedMWh: { min: 75, max: 300 },
     recommendedMW: { min: 40, max: 150 },
-    durationHours: '1-2',
-    primaryUseCase: 'Market participation, grid stability, renewable integration',
+    durationHours: "1-2",
+    primaryUseCase: "Market participation, grid stability, renewable integration",
     gridServicesCapable: true,
-    roiYears: { typical: 3, range: '2-5' },
+    roiYears: { typical: 3, range: "2-5" },
   },
 } as const;
 
@@ -586,39 +811,39 @@ export const DATA_CENTER_BESS_SIZING = {
  */
 export const DATA_CENTER_GRID_REQUIREMENTS = {
   edge: {
-    interconnectionStudy: 'minimal',
-    timelineMonths: '1-3',
-    networkUpgrades: 'none',
+    interconnectionStudy: "minimal",
+    timelineMonths: "1-3",
+    networkUpgrades: "none",
     dedicatedCircuits: false,
     substationRequired: false,
   },
   small: {
-    interconnectionStudy: 'fast-track',
-    timelineMonths: '3-12',
-    networkUpgrades: 'minor',
-    dedicatedCircuits: 'optional',
+    interconnectionStudy: "fast-track",
+    timelineMonths: "3-12",
+    networkUpgrades: "minor",
+    dedicatedCircuits: "optional",
     substationRequired: false,
   },
   medium: {
-    interconnectionStudy: 'full study',
-    timelineMonths: '12-24',
-    networkUpgrades: 'moderate',
-    dedicatedCircuits: 'often',
-    substationRequired: 'often',
+    interconnectionStudy: "full study",
+    timelineMonths: "12-24",
+    networkUpgrades: "moderate",
+    dedicatedCircuits: "often",
+    substationRequired: "often",
   },
   large: {
-    interconnectionStudy: 'system impact',
-    timelineMonths: '24-48',
-    networkUpgrades: 'significant',
+    interconnectionStudy: "system impact",
+    timelineMonths: "24-48",
+    networkUpgrades: "significant",
     dedicatedCircuits: true,
     substationRequired: true,
   },
   hyperscale: {
-    interconnectionStudy: 'facilities study',
-    timelineMonths: '36-60+',
-    networkUpgrades: 'major/new circuits',
-    dedicatedCircuits: 'multiple',
-    substationRequired: 'customer-owned',
+    interconnectionStudy: "facilities study",
+    timelineMonths: "36-60+",
+    networkUpgrades: "major/new circuits",
+    dedicatedCircuits: "multiple",
+    substationRequired: "customer-owned",
   },
 } as const;
 
@@ -629,7 +854,7 @@ export const DATA_CENTER_GRID_REQUIREMENTS = {
 
 export const OFFICE_BUILDING_CLASSIFICATIONS = {
   smallOffice: {
-    name: 'Small Office',
+    name: "Small Office",
     sqFtRange: { min: 10000, max: 50000 },
     peakLoadKW: { min: 75, max: 400 },
     wPerSqFt: { min: 6, max: 10, typical: 8 },
@@ -638,7 +863,7 @@ export const OFFICE_BUILDING_CLASSIFICATIONS = {
     loadFactor: 0.52,
   },
   mediumOffice: {
-    name: 'Medium Office',
+    name: "Medium Office",
     sqFtRange: { min: 50000, max: 150000 },
     peakLoadKW: { min: 400, max: 1200 },
     wPerSqFt: { min: 7, max: 12, typical: 9.5 },
@@ -647,7 +872,7 @@ export const OFFICE_BUILDING_CLASSIFICATIONS = {
     loadFactor: 0.55,
   },
   largeOffice: {
-    name: 'Large Office',
+    name: "Large Office",
     sqFtRange: { min: 150000, max: 500000 },
     peakLoadKW: { min: 1200, max: 4000 },
     wPerSqFt: { min: 8, max: 14, typical: 11 },
@@ -656,16 +881,16 @@ export const OFFICE_BUILDING_CLASSIFICATIONS = {
     loadFactor: 0.58,
   },
   highRiseTower: {
-    name: 'High-Rise Tower',
+    name: "High-Rise Tower",
     sqFtRange: { min: 500000, max: 2000000 },
     peakLoadKW: { min: 4000, max: 16000 },
     wPerSqFt: { min: 10, max: 16, typical: 13 },
     floors: { min: 20, max: 60 },
     occupants: { min: 2500, max: 10000 },
-    loadFactor: 0.60,
+    loadFactor: 0.6,
   },
   corporateCampus: {
-    name: 'Corporate Campus',
+    name: "Corporate Campus",
     sqFtRange: { min: 1000000, max: 10000000 },
     peakLoadKW: { min: 10000, max: 80000 },
     wPerSqFt: { min: 8, max: 14, typical: 11 },
@@ -700,7 +925,7 @@ export type OfficeClassification = keyof typeof OFFICE_BUILDING_CLASSIFICATIONS;
 
 export const UNIVERSITY_CLASSIFICATIONS = {
   smallCollege: {
-    name: 'Small College',
+    name: "Small College",
     enrollment: { min: 1000, max: 5000 },
     peakLoadMW: { min: 5, max: 28 },
     kWPerStudent: { min: 2, max: 4, typical: 3 },
@@ -710,7 +935,7 @@ export const UNIVERSITY_CLASSIFICATIONS = {
     loadFactor: 0.575,
   },
   mediumUniversity: {
-    name: 'Medium University',
+    name: "Medium University",
     enrollment: { min: 5000, max: 15000 },
     peakLoadMW: { min: 22, max: 115 },
     kWPerStudent: { min: 3, max: 5, typical: 4 },
@@ -720,7 +945,7 @@ export const UNIVERSITY_CLASSIFICATIONS = {
     loadFactor: 0.625,
   },
   largeUniversity: {
-    name: 'Large University',
+    name: "Large University",
     enrollment: { min: 15000, max: 35000 },
     peakLoadMW: { min: 75, max: 420 },
     kWPerStudent: { min: 4, max: 6, typical: 5 },
@@ -730,7 +955,7 @@ export const UNIVERSITY_CLASSIFICATIONS = {
     loadFactor: 0.66,
   },
   majorResearch: {
-    name: 'Major Research University',
+    name: "Major Research University",
     enrollment: { min: 35000, max: 60000 },
     peakLoadMW: { min: 235, max: 1250 },
     kWPerStudent: { min: 5, max: 8, typical: 6.5 },
@@ -740,7 +965,7 @@ export const UNIVERSITY_CLASSIFICATIONS = {
     loadFactor: 0.685,
   },
   megaUniversity: {
-    name: 'Mega University/System',
+    name: "Mega University/System",
     enrollment: { min: 60000, max: 100000 },
     peakLoadMW: { min: 630, max: 3700 },
     kWPerStudent: { min: 5, max: 7, typical: 6 },
@@ -780,64 +1005,64 @@ export type UniversityClassification = keyof typeof UNIVERSITY_CLASSIFICATIONS;
  */
 export const AIRPORT_CLASSIFICATIONS = {
   smallRegional: {
-    name: 'Small Regional Airport',
-    description: 'Regional/commuter airports serving local communities',
-    annualPassengers: { min: 0, max: 1000000 },           // < 1 million
-    totalFacilityLoad: { min: 2000, max: 10000 },         // 2-10 MW
-    terminalArea: { min: 50000, max: 150000 },            // sq ft
+    name: "Small Regional Airport",
+    description: "Regional/commuter airports serving local communities",
+    annualPassengers: { min: 0, max: 1000000 }, // < 1 million
+    totalFacilityLoad: { min: 2000, max: 10000 }, // 2-10 MW
+    terminalArea: { min: 50000, max: 150000 }, // sq ft
     runways: { min: 1, max: 2 },
     gates: { min: 3, max: 10 },
-    loadFactor: { min: 0.50, max: 0.65 },
-    peakDemand: { min: 2000, max: 6000 },                 // kW
-    avgOperating: { min: 1500, max: 4000 },               // kW
+    loadFactor: { min: 0.5, max: 0.65 },
+    peakDemand: { min: 2000, max: 6000 }, // kW
+    avgOperating: { min: 1500, max: 4000 }, // kW
   },
   mediumRegional: {
-    name: 'Medium Regional Airport',
-    description: 'Regional airports with multiple carriers',
-    annualPassengers: { min: 1000000, max: 5000000 },     // 1-5 million
-    totalFacilityLoad: { min: 10000, max: 30000 },        // 10-30 MW
-    terminalArea: { min: 150000, max: 500000 },           // sq ft
+    name: "Medium Regional Airport",
+    description: "Regional airports with multiple carriers",
+    annualPassengers: { min: 1000000, max: 5000000 }, // 1-5 million
+    totalFacilityLoad: { min: 10000, max: 30000 }, // 10-30 MW
+    terminalArea: { min: 150000, max: 500000 }, // sq ft
     runways: { min: 1, max: 2 },
     gates: { min: 10, max: 25 },
-    loadFactor: { min: 0.55, max: 0.70 },
-    peakDemand: { min: 6000, max: 18000 },                // kW
-    avgOperating: { min: 4000, max: 12000 },              // kW
+    loadFactor: { min: 0.55, max: 0.7 },
+    peakDemand: { min: 6000, max: 18000 }, // kW
+    avgOperating: { min: 4000, max: 12000 }, // kW
   },
   largeRegional: {
-    name: 'Large Regional Airport',
-    description: 'Large regional/small hub airports',
-    annualPassengers: { min: 5000000, max: 15000000 },    // 5-15 million
-    totalFacilityLoad: { min: 30000, max: 75000 },        // 30-75 MW
-    terminalArea: { min: 500000, max: 1500000 },          // sq ft
+    name: "Large Regional Airport",
+    description: "Large regional/small hub airports",
+    annualPassengers: { min: 5000000, max: 15000000 }, // 5-15 million
+    totalFacilityLoad: { min: 30000, max: 75000 }, // 30-75 MW
+    terminalArea: { min: 500000, max: 1500000 }, // sq ft
     runways: { min: 2, max: 3 },
     gates: { min: 25, max: 50 },
-    loadFactor: { min: 0.60, max: 0.75 },
-    peakDemand: { min: 18000, max: 55000 },               // kW
-    avgOperating: { min: 12000, max: 35000 },             // kW
+    loadFactor: { min: 0.6, max: 0.75 },
+    peakDemand: { min: 18000, max: 55000 }, // kW
+    avgOperating: { min: 12000, max: 35000 }, // kW
   },
   majorHub: {
-    name: 'Major Hub Airport',
-    description: 'Major hub airports with international service',
-    annualPassengers: { min: 15000000, max: 50000000 },   // 15-50 million
-    totalFacilityLoad: { min: 75000, max: 200000 },       // 75-200 MW
-    terminalArea: { min: 1500000, max: 5000000 },         // sq ft
+    name: "Major Hub Airport",
+    description: "Major hub airports with international service",
+    annualPassengers: { min: 15000000, max: 50000000 }, // 15-50 million
+    totalFacilityLoad: { min: 75000, max: 200000 }, // 75-200 MW
+    terminalArea: { min: 1500000, max: 5000000 }, // sq ft
     runways: { min: 3, max: 5 },
     gates: { min: 50, max: 120 },
-    loadFactor: { min: 0.65, max: 0.80 },
-    peakDemand: { min: 55000, max: 175000 },              // kW
-    avgOperating: { min: 35000, max: 110000 },            // kW
+    loadFactor: { min: 0.65, max: 0.8 },
+    peakDemand: { min: 55000, max: 175000 }, // kW
+    avgOperating: { min: 35000, max: 110000 }, // kW
   },
   megaHub: {
-    name: 'Mega Hub Airport',
-    description: 'World\'s largest airports (ATL, DXB, DFW, etc.)',
-    annualPassengers: { min: 50000000, max: 150000000 },  // 50-100+ million
-    totalFacilityLoad: { min: 200000, max: 650000 },      // 200-500+ MW
-    terminalArea: { min: 5000000, max: 15000000 },        // sq ft
+    name: "Mega Hub Airport",
+    description: "World's largest airports (ATL, DXB, DFW, etc.)",
+    annualPassengers: { min: 50000000, max: 150000000 }, // 50-100+ million
+    totalFacilityLoad: { min: 200000, max: 650000 }, // 200-500+ MW
+    terminalArea: { min: 5000000, max: 15000000 }, // sq ft
     runways: { min: 4, max: 7 },
     gates: { min: 120, max: 250 },
-    loadFactor: { min: 0.70, max: 0.85 },
-    peakDemand: { min: 175000, max: 500000 },             // kW
-    avgOperating: { min: 110000, max: 325000 },           // kW
+    loadFactor: { min: 0.7, max: 0.85 },
+    peakDemand: { min: 175000, max: 500000 }, // kW
+    avgOperating: { min: 110000, max: 325000 }, // kW
   },
 } as const;
 
@@ -849,28 +1074,32 @@ export type AirportClassification = keyof typeof AIRPORT_CLASSIFICATIONS;
  */
 export const AIRPORT_AIRFIELD_LIGHTING = {
   runwayLighting: {
-    highIntensity: {      // HIRL (per runway)
+    highIntensity: {
+      // HIRL (per runway)
       smallRegional: { min: 10, max: 25 },
       mediumRegional: { min: 15, max: 35 },
       largeRegional: { min: 20, max: 50 },
       majorHub: { min: 25, max: 60 },
       megaHub: { min: 30, max: 75 },
     },
-    edgeLights: {         // Per runway
+    edgeLights: {
+      // Per runway
       smallRegional: { min: 8, max: 20 },
       mediumRegional: { min: 12, max: 30 },
       largeRegional: { min: 15, max: 40 },
       majorHub: { min: 20, max: 50 },
       megaHub: { min: 25, max: 60 },
     },
-    centerlineLights: {   // Per runway (CAT II/III)
+    centerlineLights: {
+      // Per runway (CAT II/III)
       smallRegional: null,
       mediumRegional: { min: 5, max: 15 },
       largeRegional: { min: 10, max: 25 },
       majorHub: { min: 15, max: 35 },
       megaHub: { min: 20, max: 45 },
     },
-    touchdownZone: {      // TDZ per runway
+    touchdownZone: {
+      // TDZ per runway
       smallRegional: null,
       mediumRegional: { min: 8, max: 20 },
       largeRegional: { min: 12, max: 30 },
@@ -879,21 +1108,24 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
     },
   },
   approachLighting: {
-    alsf2CatIIIII: {     // Per system
+    alsf2CatIIIII: {
+      // Per system
       smallRegional: null,
       mediumRegional: null,
       largeRegional: { min: 30, max: 75 },
       majorHub: { min: 40, max: 100 },
       megaHub: { min: 50, max: 125 },
     },
-    alsf1CatI: {         // Per system
+    alsf1CatI: {
+      // Per system
       smallRegional: null,
       mediumRegional: { min: 15, max: 40 },
       largeRegional: { min: 20, max: 50 },
       majorHub: { min: 25, max: 60 },
       megaHub: { min: 30, max: 75 },
     },
-    papiVasi: {          // Per runway
+    papiVasi: {
+      // Per runway
       smallRegional: { min: 2, max: 5 },
       mediumRegional: { min: 3, max: 6 },
       largeRegional: { min: 4, max: 8 },
@@ -902,7 +1134,8 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
     },
   },
   taxiwayLighting: {
-    edgeLights: {        // Total taxiway system
+    edgeLights: {
+      // Total taxiway system
       smallRegional: { min: 15, max: 40 },
       mediumRegional: { min: 40, max: 100 },
       largeRegional: { min: 100, max: 250 },
@@ -925,7 +1158,8 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
     },
   },
   apronLighting: {
-    highMast: {          // Total apron/ramp
+    highMast: {
+      // Total apron/ramp
       smallRegional: { min: 20, max: 60 },
       mediumRegional: { min: 60, max: 150 },
       largeRegional: { min: 150, max: 400 },
@@ -941,7 +1175,8 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
     },
   },
   lightingControl: {
-    vault: {             // Airfield Lighting Vault
+    vault: {
+      // Airfield Lighting Vault
       smallRegional: { min: 5, max: 15 },
       mediumRegional: { min: 15, max: 40 },
       largeRegional: { min: 40, max: 100 },
@@ -955,7 +1190,8 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
       majorHub: { min: 200, max: 500 },
       megaHub: { min: 500, max: 1200 },
     },
-    alcms: {             // Control system
+    alcms: {
+      // Control system
       smallRegional: { min: 2, max: 5 },
       mediumRegional: { min: 5, max: 12 },
       largeRegional: { min: 12, max: 30 },
@@ -970,14 +1206,16 @@ export const AIRPORT_AIRFIELD_LIGHTING = {
  * Source: FAA Order 6750.16E
  */
 export const AIRPORT_NAVAIDS = {
-  ilsLocalizer: {        // Per system
+  ilsLocalizer: {
+    // Per system
     smallRegional: { min: 2, max: 5 },
     mediumRegional: { min: 3, max: 6 },
     largeRegional: { min: 4, max: 8 },
     majorHub: { min: 5, max: 10 },
     megaHub: { min: 5, max: 10 },
   },
-  ilsGlideSlope: {       // Per system
+  ilsGlideSlope: {
+    // Per system
     smallRegional: { min: 1, max: 3 },
     mediumRegional: { min: 2, max: 4 },
     largeRegional: { min: 2, max: 5 },
@@ -991,21 +1229,24 @@ export const AIRPORT_NAVAIDS = {
     majorHub: { min: 5, max: 12 },
     megaHub: { min: 5, max: 12 },
   },
-  asosAwos: {            // Weather station
+  asosAwos: {
+    // Weather station
     smallRegional: { min: 1, max: 3 },
     mediumRegional: { min: 2, max: 4 },
     largeRegional: { min: 3, max: 6 },
     majorHub: { min: 4, max: 8 },
     megaHub: { min: 5, max: 10 },
   },
-  asr: {                 // Airport Surveillance Radar
+  asr: {
+    // Airport Surveillance Radar
     smallRegional: null,
     mediumRegional: { min: 20, max: 50 },
     largeRegional: { min: 30, max: 75 },
     majorHub: { min: 40, max: 100 },
     megaHub: { min: 50, max: 125 },
   },
-  asdeX: {               // Surface Detection
+  asdeX: {
+    // Surface Detection
     smallRegional: null,
     mediumRegional: null,
     largeRegional: { min: 15, max: 40 },
@@ -1013,11 +1254,11 @@ export const AIRPORT_NAVAIDS = {
     megaHub: { min: 35, max: 80 },
   },
   numberOfIlsSystems: {
-    smallRegional: '1-2',
-    mediumRegional: '2-4',
-    largeRegional: '4-8',
-    majorHub: '8-16',
-    megaHub: '16-30+',
+    smallRegional: "1-2",
+    mediumRegional: "2-4",
+    largeRegional: "4-8",
+    majorHub: "8-16",
+    megaHub: "16-30+",
   },
 } as const;
 
@@ -1048,7 +1289,8 @@ export const AIRPORT_ATC = {
       megaHub: { min: 400, max: 1000 },
     },
   },
-  tracon: {              // Terminal Radar Approach Control
+  tracon: {
+    // Terminal Radar Approach Control
     smallRegional: null,
     mediumRegional: { min: 50, max: 150 },
     largeRegional: { min: 150, max: 400 },
@@ -1076,7 +1318,8 @@ export const AIRPORT_ATC = {
  */
 export const AIRPORT_TERMINAL_HVAC = {
   centralPlant: {
-    chillers: {          // Total capacity in tons & power
+    chillers: {
+      // Total capacity in tons & power
       smallRegional: { tons: { min: 200, max: 600 }, powerKW: { min: 150, max: 500 } },
       mediumRegional: { tons: { min: 600, max: 2000 }, powerKW: { min: 500, max: 1500 } },
       largeRegional: { tons: { min: 2000, max: 6000 }, powerKW: { min: 1500, max: 4500 } },
@@ -1090,7 +1333,8 @@ export const AIRPORT_TERMINAL_HVAC = {
       majorHub: { min: 2500, max: 8000 },
       megaHub: { min: 8000, max: 25000 },
     },
-    boilers: {           // Electric equivalent
+    boilers: {
+      // Electric equivalent
       smallRegional: { min: 200, max: 600 },
       mediumRegional: { min: 600, max: 2000 },
       largeRegional: { min: 2000, max: 6000 },
@@ -1179,7 +1423,8 @@ export const AIRPORT_BAGGAGE_HANDLING = {
       majorHub: { min: 300, max: 1000 },
       megaHub: { min: 1000, max: 3500 },
     },
-    dcvSystem: {          // Destination Coded Vehicles
+    dcvSystem: {
+      // Destination Coded Vehicles
       smallRegional: null,
       mediumRegional: null,
       largeRegional: { min: 50, max: 200 },
@@ -1210,11 +1455,11 @@ export const AIRPORT_BAGGAGE_HANDLING = {
       megaHub: { min: 1200, max: 4000 },
     },
     numberOfClaimDevices: {
-      smallRegional: '2-6',
-      mediumRegional: '6-15',
-      largeRegional: '15-40',
-      majorHub: '40-100',
-      megaHub: '100-250+',
+      smallRegional: "2-6",
+      mediumRegional: "6-15",
+      largeRegional: "15-40",
+      majorHub: "40-100",
+      megaHub: "100-250+",
     },
   },
   totalBhs: {
@@ -1253,11 +1498,11 @@ export const AIRPORT_SECURITY = {
       megaHub: { min: 300, max: 800 },
     },
     checkpointLanes: {
-      smallRegional: '2-6',
-      mediumRegional: '6-15',
-      largeRegional: '15-40',
-      majorHub: '40-100',
-      megaHub: '100-250+',
+      smallRegional: "2-6",
+      mediumRegional: "6-15",
+      largeRegional: "15-40",
+      majorHub: "40-100",
+      megaHub: "100-250+",
     },
     powerPerLane: {
       smallRegional: { min: 5, max: 10 },
@@ -1276,11 +1521,11 @@ export const AIRPORT_SECURITY = {
       megaHub: { min: 1000, max: 3000 },
     },
     numberOfEdsUnits: {
-      smallRegional: '1-3',
-      mediumRegional: '3-8',
-      largeRegional: '8-25',
-      majorHub: '25-75',
-      megaHub: '75-200+',
+      smallRegional: "1-3",
+      mediumRegional: "3-8",
+      largeRegional: "8-25",
+      majorHub: "25-75",
+      megaHub: "75-200+",
     },
   },
   accessControlSurveillance: {
@@ -1320,11 +1565,11 @@ export const AIRPORT_SECURITY = {
       megaHub: { min: 600, max: 2000 },
     },
     numberOfCctvCameras: {
-      smallRegional: '50-200',
-      mediumRegional: '200-600',
-      largeRegional: '600-2,000',
-      majorHub: '2,000-6,000',
-      megaHub: '6,000-20,000+',
+      smallRegional: "50-200",
+      mediumRegional: "200-600",
+      largeRegional: "600-2,000",
+      majorHub: "2,000-6,000",
+      megaHub: "6,000-20,000+",
     },
   },
 } as const;
@@ -1334,21 +1579,56 @@ export const AIRPORT_SECURITY = {
  */
 export const AIRPORT_GSE = {
   electricGseFleet: {
-    baggageTractors: { powerPerUnit: { min: 15, max: 25 }, units: {
-      smallRegional: '3-10', mediumRegional: '10-30', largeRegional: '30-100', majorHub: '100-300', megaHub: '300-800'
-    }},
-    beltLoaders: { powerPerUnit: { min: 20, max: 35 }, units: {
-      smallRegional: '2-8', mediumRegional: '8-25', largeRegional: '25-75', majorHub: '75-200', megaHub: '200-600'
-    }},
-    pushbackTugs: { powerPerUnit: { min: 75, max: 200 }, units: {
-      smallRegional: '1-4', mediumRegional: '4-12', largeRegional: '12-40', majorHub: '40-120', megaHub: '120-350'
-    }},
-    cateringTrucks: { powerPerUnit: { min: 40, max: 80 }, units: {
-      smallRegional: '1-4', mediumRegional: '4-12', largeRegional: '12-35', majorHub: '35-100', megaHub: '100-300'
-    }},
-    groundPowerUnits: { powerPerUnit: { min: 90, max: 150 }, units: {
-      smallRegional: '2-8', mediumRegional: '8-20', largeRegional: '20-50', majorHub: '50-120', megaHub: '120-250'
-    }},
+    baggageTractors: {
+      powerPerUnit: { min: 15, max: 25 },
+      units: {
+        smallRegional: "3-10",
+        mediumRegional: "10-30",
+        largeRegional: "30-100",
+        majorHub: "100-300",
+        megaHub: "300-800",
+      },
+    },
+    beltLoaders: {
+      powerPerUnit: { min: 20, max: 35 },
+      units: {
+        smallRegional: "2-8",
+        mediumRegional: "8-25",
+        largeRegional: "25-75",
+        majorHub: "75-200",
+        megaHub: "200-600",
+      },
+    },
+    pushbackTugs: {
+      powerPerUnit: { min: 75, max: 200 },
+      units: {
+        smallRegional: "1-4",
+        mediumRegional: "4-12",
+        largeRegional: "12-40",
+        majorHub: "40-120",
+        megaHub: "120-350",
+      },
+    },
+    cateringTrucks: {
+      powerPerUnit: { min: 40, max: 80 },
+      units: {
+        smallRegional: "1-4",
+        mediumRegional: "4-12",
+        largeRegional: "12-35",
+        majorHub: "35-100",
+        megaHub: "100-300",
+      },
+    },
+    groundPowerUnits: {
+      powerPerUnit: { min: 90, max: 150 },
+      units: {
+        smallRegional: "2-8",
+        mediumRegional: "8-20",
+        largeRegional: "20-50",
+        majorHub: "50-120",
+        megaHub: "120-250",
+      },
+    },
   },
   gseChargingInfrastructure: {
     chargingStations: {
@@ -1359,11 +1639,11 @@ export const AIRPORT_GSE = {
       megaHub: { min: 8000, max: 25000 },
     },
     numberOfChargePoints: {
-      smallRegional: '5-20',
-      mediumRegional: '20-60',
-      largeRegional: '60-200',
-      majorHub: '200-600',
-      megaHub: '600-1,500+',
+      smallRegional: "5-20",
+      mediumRegional: "20-60",
+      largeRegional: "60-200",
+      majorHub: "200-600",
+      megaHub: "600-1,500+",
     },
   },
 } as const;
@@ -1372,7 +1652,8 @@ export const AIRPORT_GSE = {
  * Airport Gate Power Systems (kW)
  */
 export const AIRPORT_GATE_POWER = {
-  fixedGroundPower: {    // 400 Hz per gate
+  fixedGroundPower: {
+    // 400 Hz per gate
     perGate: {
       smallRegional: { min: 90, max: 150 },
       mediumRegional: { min: 90, max: 150 },
@@ -1388,7 +1669,8 @@ export const AIRPORT_GATE_POWER = {
       megaHub: { min: 15000, max: 45000 },
     },
   },
-  preconditionedAir: {   // PCA per gate
+  preconditionedAir: {
+    // PCA per gate
     perGate: {
       smallRegional: { min: 50, max: 100 },
       mediumRegional: { min: 50, max: 100 },
@@ -1404,7 +1686,8 @@ export const AIRPORT_GATE_POWER = {
       megaHub: { min: 12000, max: 45000 },
     },
   },
-  frequencyConverters: {  // Auxiliary
+  frequencyConverters: {
+    // Auxiliary
     smallRegional: { min: 5, max: 15 },
     mediumRegional: { min: 15, max: 40 },
     largeRegional: { min: 40, max: 100 },
@@ -1425,12 +1708,13 @@ export const AIRPORT_AUXILIARY_FACILITIES = {
       majorHub: { min: 2200, max: 6000 },
       megaHub: { min: 6000, max: 17000 },
     },
-    storageCapacity: {   // gallons
-      smallRegional: '100K-500K',
-      mediumRegional: '500K-2M',
-      largeRegional: '2-10M',
-      majorHub: '10-50M',
-      megaHub: '50-200M+',
+    storageCapacity: {
+      // gallons
+      smallRegional: "100K-500K",
+      mediumRegional: "500K-2M",
+      largeRegional: "2-10M",
+      majorHub: "10-50M",
+      megaHub: "50-200M+",
     },
   },
   deIcing: {
@@ -1442,14 +1726,15 @@ export const AIRPORT_AUXILIARY_FACILITIES = {
       megaHub: { min: 5500, max: 15000 },
     },
     positions: {
-      smallRegional: '1-3',
-      mediumRegional: '3-8',
-      largeRegional: '8-20',
-      majorHub: '20-50',
-      megaHub: '50-100+',
+      smallRegional: "1-3",
+      mediumRegional: "3-8",
+      largeRegional: "8-20",
+      majorHub: "20-50",
+      megaHub: "50-100+",
     },
   },
-  arff: {                // Aircraft Rescue & Firefighting
+  arff: {
+    // Aircraft Rescue & Firefighting
     total: {
       smallRegional: { min: 30, max: 80 },
       mediumRegional: { min: 80, max: 200 },
@@ -1458,11 +1743,11 @@ export const AIRPORT_AUXILIARY_FACILITIES = {
       megaHub: { min: 1200, max: 3000 },
     },
     stations: {
-      smallRegional: '1',
-      mediumRegional: '1-2',
-      largeRegional: '2-3',
-      majorHub: '3-5',
-      megaHub: '5-8+',
+      smallRegional: "1",
+      mediumRegional: "1-2",
+      largeRegional: "2-3",
+      majorHub: "3-5",
+      megaHub: "5-8+",
     },
   },
   cargo: {
@@ -1473,12 +1758,13 @@ export const AIRPORT_AUXILIARY_FACILITIES = {
       majorHub: { min: 3500, max: 10000 },
       megaHub: { min: 10000, max: 33000 },
     },
-    area: {              // sq ft
-      smallRegional: '10,000-30,000',
-      mediumRegional: '30,000-100,000',
-      largeRegional: '100,000-400,000',
-      majorHub: '400,000-1.5M',
-      megaHub: '1.5-5M+',
+    area: {
+      // sq ft
+      smallRegional: "10,000-30,000",
+      mediumRegional: "30,000-100,000",
+      largeRegional: "100,000-400,000",
+      majorHub: "400,000-1.5M",
+      megaHub: "1.5-5M+",
     },
   },
   maintenance: {
@@ -1489,12 +1775,13 @@ export const AIRPORT_AUXILIARY_FACILITIES = {
       majorHub: { min: 6000, max: 18000 },
       megaHub: { min: 18000, max: 55000 },
     },
-    hangarArea: {        // sq ft
-      smallRegional: '20,000-60,000',
-      mediumRegional: '60,000-200,000',
-      largeRegional: '200,000-750,000',
-      majorHub: '750,000-2.5M',
-      megaHub: '2.5-8M+',
+    hangarArea: {
+      // sq ft
+      smallRegional: "20,000-60,000",
+      mediumRegional: "60,000-200,000",
+      largeRegional: "200,000-750,000",
+      majorHub: "750,000-2.5M",
+      megaHub: "2.5-8M+",
     },
   },
 } as const;
@@ -1563,18 +1850,18 @@ export const AIRPORT_TERMINAL_ELECTRICAL = {
       megaHub: { min: 2000, max: 8000 },
     },
     numberOfEscalators: {
-      smallRegional: '4-15',
-      mediumRegional: '15-40',
-      largeRegional: '40-100',
-      majorHub: '100-300',
-      megaHub: '300-800+',
+      smallRegional: "4-15",
+      mediumRegional: "15-40",
+      largeRegional: "40-100",
+      majorHub: "100-300",
+      megaHub: "300-800+",
     },
     numberOfElevators: {
-      smallRegional: '2-8',
-      mediumRegional: '8-25',
-      largeRegional: '25-75',
-      majorHub: '75-200',
-      megaHub: '200-500+',
+      smallRegional: "2-8",
+      mediumRegional: "8-25",
+      largeRegional: "25-75",
+      majorHub: "75-200",
+      megaHub: "200-500+",
     },
   },
 } as const;
@@ -1604,7 +1891,8 @@ export const AIRPORT_IT_COMMUNICATIONS = {
     majorHub: { min: 120, max: 400 },
     megaHub: { min: 400, max: 1200 },
   },
-  fidsBidsDisplays: {    // Flight Info Display
+  fidsBidsDisplays: {
+    // Flight Info Display
     smallRegional: { min: 10, max: 30 },
     mediumRegional: { min: 30, max: 80 },
     largeRegional: { min: 80, max: 200 },
@@ -1618,7 +1906,8 @@ export const AIRPORT_IT_COMMUNICATIONS = {
     majorHub: { min: 60, max: 180 },
     megaHub: { min: 180, max: 500 },
   },
-  dasCellular: {         // Distributed Antenna System
+  dasCellular: {
+    // Distributed Antenna System
     smallRegional: { min: 5, max: 15 },
     mediumRegional: { min: 15, max: 40 },
     largeRegional: { min: 40, max: 120 },
@@ -1647,11 +1936,11 @@ export const AIRPORT_EMERGENCY_POWER = {
       megaHub: { min: 75000, max: 200000 },
     },
     numberOfGenerators: {
-      smallRegional: '1-3',
-      mediumRegional: '3-8',
-      largeRegional: '8-20',
-      majorHub: '20-50',
-      megaHub: '50-150+',
+      smallRegional: "1-3",
+      mediumRegional: "3-8",
+      largeRegional: "8-20",
+      majorHub: "20-50",
+      megaHub: "50-150+",
     },
     unitSize: {
       smallRegional: { min: 500, max: 1000 },
@@ -1660,12 +1949,13 @@ export const AIRPORT_EMERGENCY_POWER = {
       majorHub: { min: 2500, max: 3500 },
       megaHub: { min: 2500, max: 4000 },
     },
-    fuelStorage: {       // gallons
-      smallRegional: '5,000-20,000',
-      mediumRegional: '20,000-100,000',
-      largeRegional: '100,000-500,000',
-      majorHub: '500,000-2M',
-      megaHub: '2-10M',
+    fuelStorage: {
+      // gallons
+      smallRegional: "5,000-20,000",
+      mediumRegional: "20,000-100,000",
+      largeRegional: "100,000-500,000",
+      majorHub: "500,000-2M",
+      megaHub: "2-10M",
     },
   },
   ups: {
@@ -1694,41 +1984,41 @@ export const AIRPORT_BESS_SIZING = {
     recommendedMWh: { min: 0.25, max: 1 },
     recommendedMW: { min: 0.125, max: 0.5 },
     durationHours: 2,
-    primaryUseCase: 'Demand charge reduction, backup power bridge',
+    primaryUseCase: "Demand charge reduction, backup power bridge",
     gridServicesCapable: false,
-    roiYears: { typical: 6, range: '5-8' },
+    roiYears: { typical: 6, range: "5-8" },
   },
   mediumRegional: {
     recommendedMWh: { min: 1, max: 5 },
     recommendedMW: { min: 0.5, max: 2.5 },
     durationHours: 2,
-    primaryUseCase: 'Peak shaving, demand response, ATC backup',
+    primaryUseCase: "Peak shaving, demand response, ATC backup",
     gridServicesCapable: true,
-    roiYears: { typical: 5, range: '4-7' },
+    roiYears: { typical: 5, range: "4-7" },
   },
   largeRegional: {
     recommendedMWh: { min: 5, max: 25 },
     recommendedMW: { min: 2.5, max: 12 },
     durationHours: 2,
-    primaryUseCase: 'Grid services, wholesale market, critical backup',
+    primaryUseCase: "Grid services, wholesale market, critical backup",
     gridServicesCapable: true,
-    roiYears: { typical: 4, range: '3-6' },
+    roiYears: { typical: 4, range: "3-6" },
   },
   majorHub: {
     recommendedMWh: { min: 25, max: 100 },
     recommendedMW: { min: 12, max: 50 },
     durationHours: 2,
-    primaryUseCase: 'Grid-scale services, microgrid, renewable integration',
+    primaryUseCase: "Grid-scale services, microgrid, renewable integration",
     gridServicesCapable: true,
-    roiYears: { typical: 4, range: '3-5' },
+    roiYears: { typical: 4, range: "3-5" },
   },
   megaHub: {
     recommendedMWh: { min: 100, max: 500 },
     recommendedMW: { min: 50, max: 250 },
     durationHours: 2,
-    primaryUseCase: 'Market participation, grid stability, net-zero targets',
+    primaryUseCase: "Market participation, grid stability, net-zero targets",
     gridServicesCapable: true,
-    roiYears: { typical: 3, range: '2-5' },
+    roiYears: { typical: 3, range: "2-5" },
   },
 } as const;
 
@@ -1737,115 +2027,113 @@ export const AIRPORT_BESS_SIZING = {
  */
 export const AIRPORT_GRID_REQUIREMENTS = {
   smallRegional: {
-    serviceVoltage: '4.16-13.8 kV',
-    interconnectionStudy: 'minimal',
-    timelineMonths: '3-12',
-    dedicatedFeeders: '1-2',
+    serviceVoltage: "4.16-13.8 kV",
+    interconnectionStudy: "minimal",
+    timelineMonths: "3-12",
+    dedicatedFeeders: "1-2",
     onSiteSubstation: false,
-    redundancy: 'N',
+    redundancy: "N",
   },
   mediumRegional: {
-    serviceVoltage: '12.47-34.5 kV',
-    interconnectionStudy: 'standard',
-    timelineMonths: '6-18',
-    dedicatedFeeders: '2-4',
-    onSiteSubstation: 'often',
-    redundancy: 'N+1',
+    serviceVoltage: "12.47-34.5 kV",
+    interconnectionStudy: "standard",
+    timelineMonths: "6-18",
+    dedicatedFeeders: "2-4",
+    onSiteSubstation: "often",
+    redundancy: "N+1",
   },
   largeRegional: {
-    serviceVoltage: '34.5-69 kV',
-    interconnectionStudy: 'full impact study',
-    timelineMonths: '12-36',
-    dedicatedFeeders: '4-8',
+    serviceVoltage: "34.5-69 kV",
+    interconnectionStudy: "full impact study",
+    timelineMonths: "12-36",
+    dedicatedFeeders: "4-8",
     onSiteSubstation: true,
-    redundancy: 'N+1',
+    redundancy: "N+1",
   },
   majorHub: {
-    serviceVoltage: '69-138 kV',
-    interconnectionStudy: 'system study',
-    timelineMonths: '24-48',
-    dedicatedFeeders: '8-20',
+    serviceVoltage: "69-138 kV",
+    interconnectionStudy: "system study",
+    timelineMonths: "24-48",
+    dedicatedFeeders: "8-20",
     onSiteSubstation: true,
-    redundancy: '2N',
+    redundancy: "2N",
   },
   megaHub: {
-    serviceVoltage: '138-345 kV',
-    interconnectionStudy: 'facilities study',
-    timelineMonths: '36-72',
-    dedicatedFeeders: '20-50+',
-    onSiteSubstation: 'HV yard',
-    redundancy: '2N or better',
+    serviceVoltage: "138-345 kV",
+    interconnectionStudy: "facilities study",
+    timelineMonths: "36-72",
+    dedicatedFeeders: "20-50+",
+    onSiteSubstation: "HV yard",
+    redundancy: "2N or better",
   },
 } as const;
-
-
 
 export const AMENITY_POWER_STANDARDS = {
   // Water Features
   swimmingPool: {
-    name: 'Swimming Pool',
-    powerKW: 25,               // Pumps, heating, lighting peak
-    description: 'Pool pumps, heating, underwater lighting'
+    name: "Swimming Pool",
+    powerKW: 25, // Pumps, heating, lighting peak
+    description: "Pool pumps, heating, underwater lighting",
   },
   spaHotTub: {
-    name: 'Spa/Hot Tub',
-    powerKW: 20,               // Heating elements, jets, pumps
-    description: 'Spa heating, jet pumps, circulation'
+    name: "Spa/Hot Tub",
+    powerKW: 20, // Heating elements, jets, pumps
+    description: "Spa heating, jet pumps, circulation",
   },
-  
+
   // Fitness & Recreation
   fitnessCenter: {
-    name: 'Fitness Center',
-    powerKW: 15,               // Equipment, HVAC, lighting
-    description: 'Gym equipment, enhanced HVAC, lighting'
+    name: "Fitness Center",
+    powerKW: 15, // Equipment, HVAC, lighting
+    description: "Gym equipment, enhanced HVAC, lighting",
   },
   tennisCourtLighted: {
-    name: 'Lighted Tennis Court',
-    powerKW: 8,                // Per court lighting
-    description: 'Sports lighting per court'
+    name: "Lighted Tennis Court",
+    powerKW: 8, // Per court lighting
+    description: "Sports lighting per court",
   },
-  
+
   // Food & Beverage
   restaurant: {
-    name: 'Full-Service Restaurant',
-    powerKW: 50,               // Kitchen equipment, HVAC, lighting
-    description: 'Commercial kitchen, dining area HVAC'
+    name: "Full-Service Restaurant",
+    powerKW: 50, // Kitchen equipment, HVAC, lighting
+    description: "Commercial kitchen, dining area HVAC",
   },
   barLounge: {
-    name: 'Bar/Lounge',
-    powerKW: 20,               // Refrigeration, lighting, audio
-    description: 'Beverage coolers, ambient lighting, A/V'
+    name: "Bar/Lounge",
+    powerKW: 20, // Refrigeration, lighting, audio
+    description: "Beverage coolers, ambient lighting, A/V",
   },
   banquetHall: {
-    name: 'Banquet/Conference Hall',
-    powerKW: 30,               // Per 5000 sq ft
-    description: 'HVAC, lighting, A/V equipment'
+    name: "Banquet/Conference Hall",
+    powerKW: 30, // Per 5000 sq ft
+    description: "HVAC, lighting, A/V equipment",
   },
-  
+
   // Guest Services
   laundryFacility: {
-    name: 'Commercial Laundry',
-    powerKW: 40,               // Industrial washers, dryers
-    description: 'Commercial laundry equipment'
+    name: "Commercial Laundry",
+    powerKW: 40, // Industrial washers, dryers
+    description: "Commercial laundry equipment",
   },
   parkingGarage: {
-    name: 'Parking Garage',
-    powerKW: 5,                // Per 100 spaces
-    description: 'Lighting, ventilation, gates'
+    name: "Parking Garage",
+    powerKW: 5, // Per 100 spaces
+    description: "Lighting, ventilation, gates",
   },
-  
+
   // EV Charging (reference only - use evChargingCalculations.ts for full calcs)
   evChargingL2: {
-    name: 'EV Charger (Level 2)',
-    powerKW: 7.2,              // Standard 7.2 kW charger
-    description: 'Guest/valet EV charging'
-  }
+    name: "EV Charger (Level 2)",
+    powerKW: 7.2, // Standard 7.2 kW charger
+    description: "Guest/valet EV charging",
+  },
 };
 
 /**
  * Calculate power requirement for Office Building
  * Source: ASHRAE 90.1, CBECS 2018
- * 
+ *
  * @param sqFt - Office building square footage
  * @returns Power in MW
  */
@@ -1855,13 +2143,13 @@ export function calculateOfficePower(sqFt: number): PowerCalculationResult {
   const wattsPerSqFt = POWER_DENSITY_STANDARDS.office; // 6.0 W/sq ft peak
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.03, Math.round(powerMW * 100) / 100), // Min 30kW
     durationHrs: 4, // Standard backup duration
     description: `Office: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'ASHRAE 90.1 peak demand (6 W/sq ft)',
-    inputs: { sqFt, wattsPerSqFt }
+    calculationMethod: "ASHRAE 90.1 peak demand (6 W/sq ft)",
+    inputs: { sqFt, wattsPerSqFt },
   };
 }
 
@@ -1885,7 +2173,7 @@ export interface HotelPowerOptions {
 /**
  * Calculate power requirement for Hotel
  * Now uses comprehensive equipment-based calculation from BESS Sizing Questionnaire
- * 
+ *
  * UPDATED Dec 2025: Now includes amenities in calculation!
  * - Pool: +50 kW (pumps, heating, lighting)
  * - Restaurant: +75 kW (kitchen equipment, walk-in coolers)
@@ -1894,10 +2182,10 @@ export interface HotelPowerOptions {
  * - EV Charging: +60 kW (default 8 Level 2 ports)
  * - Laundry: +40 kW (washers, dryers, ironers)
  * - Conference Center: +30 kW (AV, lighting, HVAC)
- * 
+ *
  * For detailed calculations with amenities, use calculateHotelPowerDetailed()
  * For full equipment breakdown, use calculateHotelPowerFromEquipment()
- * 
+ *
  * @param roomCount - Number of hotel rooms (exact count for precise calculation)
  * @param options - Optional: hotelClass and amenities configuration
  * @returns Power in MW
@@ -1908,80 +2196,81 @@ export function calculateHotelPower(
 ): PowerCalculationResult {
   // ═══════════════════════════════════════════════════════════════════════════
   // HOTEL POWER CALCULATION - SSOT using validated benchmarks
-  // 
+  //
   // UPDATED Dec 2025: Now includes amenities!
-  // 
+  //
   // Validated: Marriott Lancaster 133 rooms = 384 kW = 2.89 kW/room
-  // 
+  //
   // Using HOTEL_CLASS_PROFILES peakKWPerRoom × 0.75 diversity:
   // - economy: 2.5 × 0.75 = 1.875 kW/room actual
   // - midscale: 4.0 × 0.75 = 3.0 kW/room actual ← Matches Marriott!
   // - upscale: 5.0 × 0.75 = 3.75 kW/room actual
   // - luxury: 7.0 × 0.75 = 5.25 kW/room actual
-  // 
+  //
   // Plus amenity loads from HOTEL_AMENITY_SPECS
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   // Handle backward compatibility: options can be string (hotelClass) or object
   let hotelClass: string | undefined;
-  let amenities: HotelPowerOptions['amenities'] = {};
-  
-  if (typeof options === 'string') {
+  let amenities: HotelPowerOptions["amenities"] = {};
+
+  if (typeof options === "string") {
     hotelClass = options;
   } else if (options) {
     hotelClass = options.hotelClass;
     amenities = options.amenities || {};
   }
-  
+
   // Determine hotel class from room count if not specified
-  let effectiveClass = hotelClass?.toLowerCase() || 'midscale';
-  
+  let effectiveClass = hotelClass?.toLowerCase() || "midscale";
+
   if (!hotelClass) {
     // Infer class from room count
     if (roomCount <= 75) {
-      effectiveClass = 'economy';
+      effectiveClass = "economy";
     } else if (roomCount <= 200) {
-      effectiveClass = 'midscale';
+      effectiveClass = "midscale";
     } else if (roomCount <= 400) {
-      effectiveClass = 'upscale';
+      effectiveClass = "upscale";
     } else {
-      effectiveClass = 'luxury';
+      effectiveClass = "luxury";
     }
   }
-  
+
   // Map to standard class names
   switch (effectiveClass) {
-    case 'budget':
-    case 'boutique':
-      effectiveClass = 'economy';
+    case "budget":
+    case "boutique":
+      effectiveClass = "economy";
       break;
-    case 'select-service':
-    case 'selectservice':
-      effectiveClass = 'midscale';
+    case "select-service":
+    case "selectservice":
+      effectiveClass = "midscale";
       break;
-    case 'full-service':
-    case 'fullservice':
-      effectiveClass = 'upscale';
+    case "full-service":
+    case "fullservice":
+      effectiveClass = "upscale";
       break;
-    case 'resort':
-    case 'corporate':
-    case 'convention':
-      effectiveClass = 'luxury';
+    case "resort":
+    case "corporate":
+    case "convention":
+      effectiveClass = "luxury";
       break;
   }
-  
+
   // Get profile (default to midscale if unknown)
-  const profile = HOTEL_CLASS_PROFILES[effectiveClass as keyof typeof HOTEL_CLASS_PROFILES] 
-                  || HOTEL_CLASS_PROFILES.midscale;
-  
+  const profile =
+    HOTEL_CLASS_PROFILES[effectiveClass as keyof typeof HOTEL_CLASS_PROFILES] ||
+    HOTEL_CLASS_PROFILES.midscale;
+
   // Calculate base peak demand: rooms × peakKWPerRoom × 0.75 diversity
   const diversityFactor = 0.75;
   const basePeakKW = roomCount * profile.peakKWPerRoom * diversityFactor;
-  
+
   // Calculate amenity loads from HOTEL_AMENITY_SPECS
   let amenityPeakKW = 0;
   const amenityDetails: string[] = [];
-  
+
   if (amenities?.pool) {
     amenityPeakKW += HOTEL_AMENITY_SPECS.pool.peakKW;
     amenityDetails.push(`Pool +${HOTEL_AMENITY_SPECS.pool.peakKW}kW`);
@@ -2010,23 +2299,23 @@ export function calculateHotelPower(
     amenityPeakKW += HOTEL_AMENITY_SPECS.conferenceCenter.peakKW;
     amenityDetails.push(`Conference +${HOTEL_AMENITY_SPECS.conferenceCenter.peakKW}kW`);
   }
-  
+
   // Apply 0.6 diversity to amenities (not all run at peak simultaneously)
   const amenityDiversity = 0.6;
   const diversifiedAmenityKW = amenityPeakKW * amenityDiversity;
-  
+
   // Total peak demand
   const peakDemandKW = basePeakKW + diversifiedAmenityKW;
   const powerMW = peakDemandKW / 1000;
-  
+
   // Build description
   let description = `${profile.name} Hotel (${roomCount} rooms): ${Math.round(basePeakKW)} kW base`;
   if (amenityDetails.length > 0) {
-    description += ` + ${Math.round(diversifiedAmenityKW)} kW amenities (${amenityDetails.join(', ')})`;
+    description += ` + ${Math.round(diversifiedAmenityKW)} kW amenities (${amenityDetails.join(", ")})`;
   }
   description += ` = ${Math.round(peakDemandKW)} kW total`;
-  
-  console.log('🏨 [calculateHotelPower] SSOT calculation with amenities:', {
+
+  console.log("🏨 [calculateHotelPower] SSOT calculation with amenities:", {
     roomCount,
     hotelClass: effectiveClass,
     peakKWPerRoom: profile.peakKWPerRoom,
@@ -2038,16 +2327,16 @@ export function calculateHotelPower(
     totalPeakKW: Math.round(peakDemandKW),
     powerMW: Math.round(powerMW * 100) / 100,
   });
-  
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
     durationHrs: 4, // Standard hotel backup duration
     description,
-    calculationMethod: 'SSOT: HOTEL_CLASS_PROFILES + HOTEL_AMENITY_SPECS (validated Dec 2025)',
-    inputs: { 
-      roomCount, 
-      hotelClass: effectiveClass, 
-      peakKWPerRoom: profile.peakKWPerRoom, 
+    calculationMethod: "SSOT: HOTEL_CLASS_PROFILES + HOTEL_AMENITY_SPECS (validated Dec 2025)",
+    inputs: {
+      roomCount,
+      hotelClass: effectiveClass,
+      peakKWPerRoom: profile.peakKWPerRoom,
       diversityFactor,
       amenities,
       basePeakKW: Math.round(basePeakKW),
@@ -2066,66 +2355,66 @@ export function calculateHotelPower(
 /**
  * Hotel Classification & Typical Power Profiles
  * Source: Hotel Energy Specification Sheet
- * 
+ *
  * UPDATED Dec 2025: Peak ranges aligned with HOTEL_CLASS_PROFILES
  * Validated against Marriott Lancaster: 133 rooms = 384 kW (2.89 kW/room)
- * 
+ *
  * Formula: rooms × peakKWPerRoom (from HOTEL_CLASS_PROFILES) × 0.75 diversity
  * - economy/smallBoutique: 2.5 kW/room → 1.875 kW/room actual
- * - midscale/mediumSelectService: 4.0 kW/room → 3.0 kW/room actual  
+ * - midscale/mediumSelectService: 4.0 kW/room → 3.0 kW/room actual
  * - upscale/largeFullService: 5.0 kW/room → 3.75 kW/room actual
  * - luxury/luxuryResort: 7.0 kW/room → 5.25 kW/room actual
  */
 export const HOTEL_FACILITY_TYPES = {
   smallBoutique: {
-    name: 'Small/Boutique',
+    name: "Small/Boutique",
     roomRange: { min: 20, max: 75 },
-    connected: { min: 50, max: 190 },      // kW (rooms × 2.5)
-    peak: { min: 38, max: 141 },           // kW (connected × 0.75)
-    avgOperating: { min: 20, max: 70 },    // kW
-    kWPerRoom: { min: 2.0, max: 3.0 },     // CORRECTED: Was 5-8, now 2-3
-    loadFactor: { min: 0.40, max: 0.50 },
-    demandDiversity: { min: 0.70, max: 0.80 }, // Higher diversity for small hotels
+    connected: { min: 50, max: 190 }, // kW (rooms × 2.5)
+    peak: { min: 38, max: 141 }, // kW (connected × 0.75)
+    avgOperating: { min: 20, max: 70 }, // kW
+    kWPerRoom: { min: 2.0, max: 3.0 }, // CORRECTED: Was 5-8, now 2-3
+    loadFactor: { min: 0.4, max: 0.5 },
+    demandDiversity: { min: 0.7, max: 0.8 }, // Higher diversity for small hotels
   },
   mediumSelectService: {
-    name: 'Medium/Select-Service',
+    name: "Medium/Select-Service",
     roomRange: { min: 75, max: 150 },
-    connected: { min: 300, max: 600 },     // kW (rooms × 4.0)
-    peak: { min: 225, max: 450 },          // kW (connected × 0.75) - Marriott 133 rooms = 384 kW
-    avgOperating: { min: 100, max: 225 },  // kW
-    kWPerRoom: { min: 3.5, max: 4.5 },     // CORRECTED: Was 5-7, now 3.5-4.5
+    connected: { min: 300, max: 600 }, // kW (rooms × 4.0)
+    peak: { min: 225, max: 450 }, // kW (connected × 0.75) - Marriott 133 rooms = 384 kW
+    avgOperating: { min: 100, max: 225 }, // kW
+    kWPerRoom: { min: 3.5, max: 4.5 }, // CORRECTED: Was 5-7, now 3.5-4.5
     loadFactor: { min: 0.45, max: 0.55 },
-    demandDiversity: { min: 0.70, max: 0.80 },
+    demandDiversity: { min: 0.7, max: 0.8 },
   },
   largeFullService: {
-    name: 'Large/Full-Service',
+    name: "Large/Full-Service",
     roomRange: { min: 150, max: 400 },
-    connected: { min: 750, max: 2000 },    // kW (rooms × 5.0)
-    peak: { min: 563, max: 1500 },         // kW (connected × 0.75) - 300 rooms ≈ 900 kW
-    avgOperating: { min: 280, max: 750 },  // kW
-    kWPerRoom: { min: 4.5, max: 5.5 },     // CORRECTED: Was 5-8, now 4.5-5.5
-    loadFactor: { min: 0.50, max: 0.60 },
-    demandDiversity: { min: 0.70, max: 0.80 },
+    connected: { min: 750, max: 2000 }, // kW (rooms × 5.0)
+    peak: { min: 563, max: 1500 }, // kW (connected × 0.75) - 300 rooms ≈ 900 kW
+    avgOperating: { min: 280, max: 750 }, // kW
+    kWPerRoom: { min: 4.5, max: 5.5 }, // CORRECTED: Was 5-8, now 4.5-5.5
+    loadFactor: { min: 0.5, max: 0.6 },
+    demandDiversity: { min: 0.7, max: 0.8 },
   },
   luxuryResort: {
-    name: 'Luxury/Resort',
+    name: "Luxury/Resort",
     roomRange: { min: 200, max: 500 },
-    connected: { min: 1400, max: 3500 },   // kW (rooms × 7.0)
-    peak: { min: 1050, max: 2625 },        // kW (connected × 0.75)
+    connected: { min: 1400, max: 3500 }, // kW (rooms × 7.0)
+    peak: { min: 1050, max: 2625 }, // kW (connected × 0.75)
     avgOperating: { min: 500, max: 1300 }, // kW
-    kWPerRoom: { min: 6.0, max: 8.0 },     // CORRECTED: Was 8-12, now 6-8
-    loadFactor: { min: 0.50, max: 0.60 },
-    demandDiversity: { min: 0.70, max: 0.80 },
+    kWPerRoom: { min: 6.0, max: 8.0 }, // CORRECTED: Was 8-12, now 6-8
+    loadFactor: { min: 0.5, max: 0.6 },
+    demandDiversity: { min: 0.7, max: 0.8 },
   },
   corporateConvention: {
-    name: 'Corporate/Convention',
+    name: "Corporate/Convention",
     roomRange: { min: 300, max: 1000 },
-    connected: { min: 2100, max: 7000 },   // kW (rooms × 7.0)
-    peak: { min: 1575, max: 5250 },        // kW (connected × 0.75)
+    connected: { min: 2100, max: 7000 }, // kW (rooms × 7.0)
+    peak: { min: 1575, max: 5250 }, // kW (connected × 0.75)
     avgOperating: { min: 800, max: 2600 }, // kW
-    kWPerRoom: { min: 6.0, max: 8.0 },     // CORRECTED: Was 6-10, now 6-8
+    kWPerRoom: { min: 6.0, max: 8.0 }, // CORRECTED: Was 6-10, now 6-8
     loadFactor: { min: 0.55, max: 0.65 },
-    demandDiversity: { min: 0.70, max: 0.80 },
+    demandDiversity: { min: 0.7, max: 0.8 },
   },
 } as const;
 
@@ -2204,7 +2493,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 50, max: 120, typical: 85 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // DOMESTIC HOT WATER
   // ═══════════════════════════════════════════════════════════════════════
@@ -2231,7 +2520,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 100, max: 200, typical: 150 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // LIGHTING SYSTEMS
   // ═══════════════════════════════════════════════════════════════════════
@@ -2278,7 +2567,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 100, max: 400, typical: 250 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // FOOD SERVICE / KITCHEN
   // ═══════════════════════════════════════════════════════════════════════
@@ -2333,7 +2622,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 30, max: 60, typical: 45 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // LAUNDRY OPERATIONS
   // ═══════════════════════════════════════════════════════════════════════
@@ -2360,7 +2649,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 100, max: 200, typical: 150 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // VERTICAL TRANSPORTATION
   // ═══════════════════════════════════════════════════════════════════════
@@ -2388,7 +2677,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 8, max: 20 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // POOL & SPA
   // ═══════════════════════════════════════════════════════════════════════
@@ -2429,7 +2718,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 75, max: 200, typical: 137 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // FITNESS CENTER
   // ═══════════════════════════════════════════════════════════════════════
@@ -2451,7 +2740,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 100, max: 250, typical: 175 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // IT & BUSINESS SYSTEMS
   // ═══════════════════════════════════════════════════════════════════════
@@ -2492,7 +2781,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       corporateConvention: { min: 15, max: 50, typical: 32 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // GUEST ROOM LOADS (PER ROOM)
   // ═══════════════════════════════════════════════════════════════════════
@@ -2530,7 +2819,7 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
       totalPerRoom: { min: 4.5, max: 8.5, typical: 6.5 },
     },
   },
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // MISCELLANEOUS SYSTEMS
   // ═══════════════════════════════════════════════════════════════════════
@@ -2579,21 +2868,21 @@ export const HOTEL_EQUIPMENT_POWER_DB = {
 export const HOTEL_AMENITY_DEFAULTS = {
   smallBoutique: {
     hasPool: false,
-    hasRestaurant: false,  // Typically breakfast only
+    hasRestaurant: false, // Typically breakfast only
     hasSpa: false,
     hasFitnessCenter: true,
-    hasLaundry: false,     // Often outsourced
+    hasLaundry: false, // Often outsourced
     hasConference: false,
     parkingLevels: 0,
     numElevators: 1,
   },
   mediumSelectService: {
-    hasPool: true,         // Indoor pool common
-    hasRestaurant: true,   // Breakfast + limited menu
+    hasPool: true, // Indoor pool common
+    hasRestaurant: true, // Breakfast + limited menu
     hasSpa: false,
     hasFitnessCenter: true,
     hasLaundry: true,
-    hasConference: true,   // Small meeting rooms
+    hasConference: true, // Small meeting rooms
     parkingLevels: 1,
     numElevators: 2,
   },
@@ -2608,9 +2897,9 @@ export const HOTEL_AMENITY_DEFAULTS = {
     numElevators: 4,
   },
   luxuryResort: {
-    hasPool: true,         // Multiple pools
-    hasRestaurant: true,   // Multiple restaurants
-    hasSpa: true,          // Full spa
+    hasPool: true, // Multiple pools
+    hasRestaurant: true, // Multiple restaurants
+    hasSpa: true, // Full spa
     hasFitnessCenter: true,
     hasLaundry: true,
     hasConference: true,
@@ -2623,7 +2912,7 @@ export const HOTEL_AMENITY_DEFAULTS = {
     hasSpa: true,
     hasFitnessCenter: true,
     hasLaundry: true,
-    hasConference: true,   // Major conference facility
+    hasConference: true, // Major conference facility
     parkingLevels: 3,
     numElevators: 12,
   },
@@ -2649,12 +2938,14 @@ export interface HotelEquipmentInput {
  * Calculate hotel power using REAL equipment specs from BESS Sizing Questionnaire
  * This is the SSOT calculation based on actual hotel equipment specifications
  */
-export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): PowerCalculationResult {
+export function calculateHotelPowerFromEquipment(
+  input: HotelEquipmentInput
+): PowerCalculationResult {
   const { roomCount, facilityType, amenities } = input;
   const facility = HOTEL_FACILITY_TYPES[facilityType];
   const equipPower = HOTEL_EQUIPMENT_POWER_DB;
   const defaultAmenities = HOTEL_AMENITY_DEFAULTS[facilityType];
-  
+
   // Merge provided amenities with defaults
   const amen = {
     hasPool: amenities?.hasPool ?? defaultAmenities.hasPool,
@@ -2667,25 +2958,30 @@ export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): Po
     numElevators: amenities?.numElevators ?? defaultAmenities.numElevators,
     numConferenceRooms: amenities?.numConferenceRooms ?? 2,
   };
-  
+
   const breakdown: Record<string, number> = {};
-  
+
   // Determine room class based on facility type
-  const roomClass = facilityType === 'luxuryResort' ? 'luxury' :
-                    facilityType === 'largeFullService' ? 'upscale' :
-                    facilityType === 'mediumSelectService' ? 'standard' : 'budgetSelect';
-  
+  const roomClass =
+    facilityType === "luxuryResort"
+      ? "luxury"
+      : facilityType === "largeFullService"
+        ? "upscale"
+        : facilityType === "mediumSelectService"
+          ? "standard"
+          : "budgetSelect";
+
   // ═══════════════════════════════════════════════════════════════════════
   // GUEST ROOM LOADS
   // ═══════════════════════════════════════════════════════════════════════
   const roomLoads = equipPower.guestRoomLoads[roomClass];
-  breakdown['guestRooms'] = roomCount * roomLoads.totalPerRoom.typical;
-  
+  breakdown["guestRooms"] = roomCount * roomLoads.totalPerRoom.typical;
+
   // ═══════════════════════════════════════════════════════════════════════
   // HVAC CENTRAL PLANT
   // ═══════════════════════════════════════════════════════════════════════
   const hvac = equipPower.hvac;
-  breakdown['hvacCentralPlant'] = 
+  breakdown["hvacCentralPlant"] =
     hvac.chiller[facilityType].typical +
     hvac.coolingTowerFans[facilityType].typical +
     hvac.chilledWaterPumps[facilityType].typical +
@@ -2693,43 +2989,43 @@ export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): Po
     hvac.hotWaterPumps[facilityType].typical +
     hvac.ahusTotal[facilityType].typical +
     hvac.exhaustFansTotal[facilityType].typical;
-  
+
   // Kitchen exhaust (if restaurant)
   if (amen.hasRestaurant) {
-    breakdown['hvacCentralPlant'] += hvac.kitchenHoodExhaust[facilityType].typical;
+    breakdown["hvacCentralPlant"] += hvac.kitchenHoodExhaust[facilityType].typical;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // DOMESTIC HOT WATER
   // ═══════════════════════════════════════════════════════════════════════
   const dhw = equipPower.domesticHotWater;
-  breakdown['domesticHotWater'] = 
+  breakdown["domesticHotWater"] =
     dhw.waterHeatersElectric[facilityType].typical +
     dhw.recirculationPumps[facilityType].typical +
     dhw.boosterHeaters[facilityType].typical;
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // LIGHTING
   // ═══════════════════════════════════════════════════════════════════════
   const lighting = equipPower.lighting;
-  breakdown['lighting'] = 
+  breakdown["lighting"] =
     lighting.lobbyPublicAreas[facilityType].typical +
     lighting.corridorsCirculation[facilityType].typical +
     lighting.exteriorLandscape[facilityType].typical;
-  
+
   if (amen.parkingLevels > 0) {
-    breakdown['lighting'] += lighting.parkingPerLevel[facilityType].typical * amen.parkingLevels;
+    breakdown["lighting"] += lighting.parkingPerLevel[facilityType].typical * amen.parkingLevels;
   }
   if (amen.hasConference) {
-    breakdown['lighting'] += lighting.ballroomEventSpace[facilityType].typical;
+    breakdown["lighting"] += lighting.ballroomEventSpace[facilityType].typical;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // FOOD SERVICE (if restaurant)
   // ═══════════════════════════════════════════════════════════════════════
   if (amen.hasRestaurant) {
     const food = equipPower.foodService;
-    breakdown['foodService'] = 
+    breakdown["foodService"] =
       food.walkInCooler[facilityType].typical +
       food.walkInFreezer[facilityType].typical +
       food.commercialOvens[facilityType].typical +
@@ -2738,100 +3034,103 @@ export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): Po
       food.dishwashers[facilityType].typical +
       food.iceMachines[facilityType].typical;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // LAUNDRY (if on-site)
   // ═══════════════════════════════════════════════════════════════════════
   if (amen.hasLaundry) {
     const laundry = equipPower.laundry;
-    breakdown['laundry'] = 
+    breakdown["laundry"] =
       laundry.commercialWashers[facilityType].typical +
       laundry.commercialDryers[facilityType].typical +
       laundry.ironersPressers[facilityType].typical;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // ELEVATORS
   // ═══════════════════════════════════════════════════════════════════════
   const elev = equipPower.elevators;
-  breakdown['elevators'] = 
+  breakdown["elevators"] =
     elev.passengerPerCar[facilityType].typical * amen.numElevators +
     elev.serviceElevator[facilityType].typical;
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // POOL & SPA (if applicable)
   // ═══════════════════════════════════════════════════════════════════════
   if (amen.hasPool) {
     const pool = equipPower.poolSpa;
-    breakdown['poolSpa'] = 
+    breakdown["poolSpa"] =
       pool.poolCirculationPumps[facilityType].typical +
       pool.poolHeaterElectric[facilityType].typical +
       pool.poolDehumidification[facilityType].typical;
-    
+
     if (amen.hasSpa) {
-      breakdown['poolSpa'] += 
-        pool.spaHotTubHeater[facilityType].typical +
-        pool.saunaSteamRoom[facilityType].typical;
+      breakdown["poolSpa"] +=
+        pool.spaHotTubHeater[facilityType].typical + pool.saunaSteamRoom[facilityType].typical;
     }
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // FITNESS CENTER
   // ═══════════════════════════════════════════════════════════════════════
   if (amen.hasFitnessCenter) {
-    breakdown['fitnessCenter'] = equipPower.fitnessCenter.totalFitnessCenter[facilityType].typical;
+    breakdown["fitnessCenter"] = equipPower.fitnessCenter.totalFitnessCenter[facilityType].typical;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // IT & BUSINESS SYSTEMS
   // ═══════════════════════════════════════════════════════════════════════
   const it = equipPower.itSystems;
-  breakdown['itSystems'] = 
+  breakdown["itSystems"] =
     it.serverRoomMdf[facilityType].typical +
     it.posSystemsTotal[facilityType].typical +
     it.wifiInfrastructure[facilityType].typical +
     it.businessCenter[facilityType].typical;
-  
+
   if (amen.hasConference) {
-    breakdown['itSystems'] += it.conferenceAvPerRoom[facilityType].typical * amen.numConferenceRooms;
+    breakdown["itSystems"] +=
+      it.conferenceAvPerRoom[facilityType].typical * amen.numConferenceRooms;
   }
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // MISCELLANEOUS SYSTEMS
   // ═══════════════════════════════════════════════════════════════════════
   const misc = equipPower.miscSystems;
-  breakdown['miscSystems'] = 
+  breakdown["miscSystems"] =
     misc.fireLifeSafety[facilityType].typical +
     misc.securitySystems[facilityType].typical +
     misc.buildingAutomation[facilityType].typical +
     misc.sumpSewagePumps[facilityType].typical +
     misc.domesticWaterBooster[facilityType].typical;
-  
+
   // ═══════════════════════════════════════════════════════════════════════
   // TOTAL CONNECTED LOAD
   // ═══════════════════════════════════════════════════════════════════════
   const totalConnectedKW = Object.values(breakdown).reduce((sum, kw) => sum + (kw || 0), 0);
-  
+
   // Apply demand diversity factor (not all equipment runs at peak simultaneously)
   const diversityFactor = (facility.demandDiversity.min + facility.demandDiversity.max) / 2;
   const peakDemandKW = Math.round(totalConnectedKW * diversityFactor);
-  
+
   // Validate against facility type benchmarks
   const facilityPeak = facility.peak;
   const validatedPeakKW = Math.max(facilityPeak.min, Math.min(facilityPeak.max, peakDemandKW));
-  
+
   const powerMW = validatedPeakKW / 1000;
-  
+
   // Build description with top power consumers
   const sortedBreakdown = Object.entries(breakdown)
     .filter(([_, kw]) => kw > 20)
     .sort((a, b) => b[1] - a[1]);
-  
-  const topConsumers = sortedBreakdown.slice(0, 3).map(([name, kw]) => `${name}: ${kw.toFixed(0)}kW`).join(', ');
-  
+
+  const topConsumers = sortedBreakdown
+    .slice(0, 3)
+    .map(([name, kw]) => `${name}: ${kw.toFixed(0)}kW`)
+    .join(", ");
+
   const description = `${facility.name} Hotel (${roomCount} rooms): ${topConsumers} → ${validatedPeakKW} kW peak`;
-  
-  console.log('🏨 [calculateHotelPowerFromEquipment] Detailed breakdown:', {
+
+  console.log("🏨 [calculateHotelPowerFromEquipment] Detailed breakdown:", {
     facilityType,
     roomCount,
     facilityName: facility.name,
@@ -2842,32 +3141,39 @@ export function calculateHotelPowerFromEquipment(input: HotelEquipmentInput): Po
     validatedPeakKW,
     facilityBenchmark: facilityPeak,
   });
-  
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
     durationHrs: 4, // Standard hotel backup duration
     description,
-    calculationMethod: 'BESS Sizing Questionnaire hotel equipment specs',
-    inputs: { roomCount, facilityType, amenities: amen, breakdown, totalConnectedKW, peakDemandKW: validatedPeakKW },
+    calculationMethod: "BESS Sizing Questionnaire hotel equipment specs",
+    inputs: {
+      roomCount,
+      facilityType,
+      amenities: amen,
+      breakdown,
+      totalConnectedKW,
+      peakDemandKW: validatedPeakKW,
+    },
   };
 }
 
 // ============================================
 // HOTEL CLASS PROFILES - Energy and Peak Demand
 // Source: CBECS 2018, ASHRAE 90.1, Marriott energy benchmarks
-// 
+//
 // IMPORTANT: peakKWPerRoom is CONNECTED LOAD (before diversity)
 // Peak demand = rooms × peakKWPerRoom × 0.75 (diversity factor)
 // DO NOT multiply by occupancy - that applies to energy (kWh) only
-// 
+//
 // Validated Dec 2025: Marriott Lancaster 133 rooms = 384 kW peak
 // → 2.89 kW/room actual = 3.85 kW/room connected (÷ 0.75 diversity)
 // ============================================
 export const HOTEL_CLASS_PROFILES = {
-  economy: { kWhPerRoom: 25, peakKWPerRoom: 2.5, name: 'Economy/Budget', hvacTons: 0.5 },
-  midscale: { kWhPerRoom: 35, peakKWPerRoom: 4.0, name: 'Midscale', hvacTons: 0.75 },
-  upscale: { kWhPerRoom: 50, peakKWPerRoom: 5.0, name: 'Upscale', hvacTons: 1.0 },
-  luxury: { kWhPerRoom: 75, peakKWPerRoom: 7.0, name: 'Luxury/Resort', hvacTons: 1.5 },
+  economy: { kWhPerRoom: 25, peakKWPerRoom: 2.5, name: "Economy/Budget", hvacTons: 0.5 },
+  midscale: { kWhPerRoom: 35, peakKWPerRoom: 4.0, name: "Midscale", hvacTons: 0.75 },
+  upscale: { kWhPerRoom: 50, peakKWPerRoom: 5.0, name: "Upscale", hvacTons: 1.0 },
+  luxury: { kWhPerRoom: 75, peakKWPerRoom: 7.0, name: "Luxury/Resort", hvacTons: 1.5 },
 } as const;
 
 export type HotelClass = keyof typeof HOTEL_CLASS_PROFILES;
@@ -2877,13 +3183,13 @@ export type HotelClass = keyof typeof HOTEL_CLASS_PROFILES;
 // Source: ASHRAE HVAC Applications Handbook, hospitality audits
 // ============================================
 export const HOTEL_AMENITY_SPECS = {
-  pool: { name: 'Pool & Hot Tub', peakKW: 50, dailyKWh: 300 },
-  restaurant: { name: 'Restaurant/Kitchen', peakKW: 75, dailyKWh: 400 },
-  spa: { name: 'Spa/Sauna/Steam', peakKW: 40, dailyKWh: 200 },
-  fitnessCenter: { name: 'Fitness Center', peakKW: 15, dailyKWh: 100 },
-  evCharging: { name: 'EV Charging', peakKW: 60, dailyKWh: 200 }, // Default, overridden by config
-  laundry: { name: 'On-Site Laundry', peakKW: 40, dailyKWh: 250 },
-  conferenceCenter: { name: 'Conference/Meeting Rooms', peakKW: 30, dailyKWh: 150 },
+  pool: { name: "Pool & Hot Tub", peakKW: 50, dailyKWh: 300 },
+  restaurant: { name: "Restaurant/Kitchen", peakKW: 75, dailyKWh: 400 },
+  spa: { name: "Spa/Sauna/Steam", peakKW: 40, dailyKWh: 200 },
+  fitnessCenter: { name: "Fitness Center", peakKW: 15, dailyKWh: 100 },
+  evCharging: { name: "EV Charging", peakKW: 60, dailyKWh: 200 }, // Default, overridden by config
+  laundry: { name: "On-Site Laundry", peakKW: 40, dailyKWh: 250 },
+  conferenceCenter: { name: "Conference/Meeting Rooms", peakKW: 30, dailyKWh: 150 },
 } as const;
 
 export type HotelAmenity = keyof typeof HOTEL_AMENITY_SPECS;
@@ -2893,10 +3199,10 @@ export type HotelAmenity = keyof typeof HOTEL_AMENITY_SPECS;
 // Older buildings typically have higher energy consumption
 // ============================================
 export const BUILDING_AGE_FACTORS = {
-  new: 0.85,      // Built in last 5 years, efficient systems
-  modern: 1.0,    // 5-15 years old, baseline
-  older: 1.15,    // 15-30 years old, some efficiency loss
-  historic: 1.3,  // 30+ years, significant efficiency loss
+  new: 0.85, // Built in last 5 years, efficient systems
+  modern: 1.0, // 5-15 years old, baseline
+  older: 1.15, // 15-30 years old, some efficiency loss
+  historic: 1.3, // 30+ years, significant efficiency loss
 } as const;
 
 export type BuildingAge = keyof typeof BUILDING_AGE_FACTORS;
@@ -2905,9 +3211,9 @@ export type BuildingAge = keyof typeof BUILDING_AGE_FACTORS;
 // SEASONALITY FACTORS - Annual energy swing by hotel type
 // ============================================
 export const SEASONALITY_FACTORS = {
-  low: 0.05,      // ±5% swing (airport hotels, highway motels)
+  low: 0.05, // ±5% swing (airport hotels, highway motels)
   moderate: 0.15, // ±15% swing (business hotels)
-  high: 0.30,     // ±30% swing (beach resorts, ski lodges)
+  high: 0.3, // ±30% swing (beach resorts, ski lodges)
 } as const;
 
 export type Seasonality = keyof typeof SEASONALITY_FACTORS;
@@ -2947,21 +3253,21 @@ export interface HotelPowerResult extends PowerCalculationResult {
   basePeakKW: number;
   amenityPeakKW: number;
   totalPeakKW: number;
-  
+
   // Energy metrics
   dailyKWh: number;
   monthlyKWh: number;
-  
+
   // Financial (if rates provided)
   monthlyDemandCharges: number;
   monthlyEnergyCharges: number;
   totalMonthlyCharges: number;
-  
+
   // Seasonality
   seasonalMultiplier: number;
   peakSeasonMonthlyKWh: number;
   offSeasonMonthlyKWh: number;
-  
+
   // Peak hours arbitrage
   peakHoursDuration: number;
   peakEnergyKWh: number;
@@ -2972,7 +3278,7 @@ export interface HotelPowerResult extends PowerCalculationResult {
 /**
  * DETAILED HOTEL POWER CALCULATION
  * Migrated from HotelWizard.tsx for SSOT compliance
- * 
+ *
  * This function provides comprehensive hotel power analysis including:
  * - Room-based load by hotel class
  * - Building age efficiency factors
@@ -2980,7 +3286,7 @@ export interface HotelPowerResult extends PowerCalculationResult {
  * - EV charging with configurable ports
  * - Seasonality impact
  * - Peak hours arbitrage potential
- * 
+ *
  * @param input - Detailed hotel configuration
  * @returns Comprehensive power calculation with financial metrics
  */
@@ -2988,7 +3294,7 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
   const classProfile = HOTEL_CLASS_PROFILES[input.hotelClass];
   const ageFactor = BUILDING_AGE_FACTORS[input.buildingAge];
   const occupancyFactor = input.avgOccupancy / 100;
-  
+
   // ════════════════════════════════════════════════════════════════
   // BASE LOAD FROM ROOMS
   // ════════════════════════════════════════════════════════════════
@@ -2998,18 +3304,18 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
   // ════════════════════════════════════════════════════════════════
   let basePeakKW = input.rooms * classProfile.peakKWPerRoom; // NO occupancy factor for peak!
   let dailyKWh = input.rooms * classProfile.kWhPerRoom * occupancyFactor; // Occupancy affects energy
-  
+
   // Apply building age efficiency factor
   basePeakKW *= ageFactor;
   dailyKWh *= ageFactor;
-  
+
   // ════════════════════════════════════════════════════════════════
   // AMENITY LOADS
   // ════════════════════════════════════════════════════════════════
   let amenityPeakKW = 0;
-  
+
   Object.entries(input.amenities).forEach(([key, enabled]) => {
-    if (enabled && key !== 'evCharging') {
+    if (enabled && key !== "evCharging") {
       const spec = HOTEL_AMENITY_SPECS[key as HotelAmenity];
       if (spec) {
         amenityPeakKW += spec.peakKW;
@@ -3017,28 +3323,28 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
       }
     }
   });
-  
+
   // ════════════════════════════════════════════════════════════════
   // EV CHARGING - Dynamic configuration
   // ════════════════════════════════════════════════════════════════
   if (input.amenities.evCharging && input.evChargingConfig) {
     const config = input.evChargingConfig;
     const level1kW = 1.4; // Standard Level 1
-    
-    const evPeakKW = 
-      (config.numLevel1Ports * level1kW) +
-      (config.numLevel2Ports * config.level2Power) + 
-      (config.numDCFCPorts * config.dcfcPower);
-    
+
+    const evPeakKW =
+      config.numLevel1Ports * level1kW +
+      config.numLevel2Ports * config.level2Power +
+      config.numDCFCPorts * config.dcfcPower;
+
     // Daily usage assumptions:
     // L1: 8 hours/day (overnight charging)
     // L2: 4 hours/day (guest charging)
     // DCFC: 2 hours/day (quick top-ups)
-    const evDailyKWh = 
-      (config.numLevel1Ports * level1kW * 8) +
-      (config.numLevel2Ports * config.level2Power * 4) + 
-      (config.numDCFCPorts * config.dcfcPower * 2);
-    
+    const evDailyKWh =
+      config.numLevel1Ports * level1kW * 8 +
+      config.numLevel2Ports * config.level2Power * 4 +
+      config.numDCFCPorts * config.dcfcPower * 2;
+
     amenityPeakKW += evPeakKW;
     dailyKWh += evDailyKWh;
   } else if (input.amenities.evCharging) {
@@ -3046,55 +3352,55 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
     amenityPeakKW += HOTEL_AMENITY_SPECS.evCharging.peakKW;
     dailyKWh += HOTEL_AMENITY_SPECS.evCharging.dailyKWh;
   }
-  
+
   // ════════════════════════════════════════════════════════════════
   // SEASONALITY IMPACT
   // ════════════════════════════════════════════════════════════════
   const seasonalSwing = SEASONALITY_FACTORS[input.operations.seasonality];
   const seasonalMultiplier = 1 + seasonalSwing;
-  
+
   // Weighted annual average:
   // Peak season: 4 months, Shoulder: 4 months, Off season: 4 months
   const peakSeasonDailyKWh = dailyKWh * (1 + seasonalSwing);
   const offSeasonDailyKWh = dailyKWh * (1 - seasonalSwing);
   const weightedDailyKWh = (peakSeasonDailyKWh * 4 + dailyKWh * 4 + offSeasonDailyKWh * 4) / 12;
-  
+
   // ════════════════════════════════════════════════════════════════
   // TOTAL PEAK WITH DIVERSITY FACTOR
   // Not all equipment runs at peak simultaneously (75% factor)
   // ════════════════════════════════════════════════════════════════
   const totalPeakKW = Math.round((basePeakKW + amenityPeakKW) * 0.75);
-  
+
   // ════════════════════════════════════════════════════════════════
   // PEAK HOURS ANALYSIS - BESS discharge opportunity
   // Dec 2025: Now uses industry-specific load profile (hotels = 0.55 evening peak)
   // ════════════════════════════════════════════════════════════════
   const peakHoursDuration = input.operations.peakHoursEnd - input.operations.peakHoursStart;
-  
+
   // Hotels: 55% of daily energy during peak hours (evening check-in/dinner)
   // This is lower than daytime businesses like offices (70%)
   // Source: CBECS 2018 hospitality load profiles, ASHRAE
   const peakHoursLoadFactor = 0.55; // Hotel-specific (was 0.65 generic)
   const peakEnergyKWh = Math.round(weightedDailyKWh * peakHoursLoadFactor);
   const offPeakEnergyKWh = Math.round(weightedDailyKWh * (1 - peakHoursLoadFactor));
-  
+
   // ════════════════════════════════════════════════════════════════
   // MONTHLY CALCULATIONS
   // ════════════════════════════════════════════════════════════════
   const monthlyKWh = Math.round(weightedDailyKWh * 30);
   const peakSeasonMonthlyKWh = Math.round(peakSeasonDailyKWh * 30);
   const offSeasonMonthlyKWh = Math.round(offSeasonDailyKWh * 30);
-  
+
   // ════════════════════════════════════════════════════════════════
   // FINANCIAL CALCULATIONS (if rates provided)
   // ════════════════════════════════════════════════════════════════
   const electricityRate = input.electricityRate || 0.12; // Default $0.12/kWh
   const demandCharge = input.demandCharge || 15; // Default $15/kW
-  
+
   const monthlyDemandCharges = Math.round(totalPeakKW * demandCharge);
   const monthlyEnergyCharges = Math.round(monthlyKWh * electricityRate);
   const totalMonthlyCharges = monthlyDemandCharges + monthlyEnergyCharges;
-  
+
   // ════════════════════════════════════════════════════════════════
   // ARBITRAGE SAVINGS POTENTIAL
   // TOU rate differential: peak ~1.5x, off-peak ~0.6x
@@ -3102,23 +3408,23 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
   const peakRate = electricityRate * 1.5;
   const offPeakRate = electricityRate * 0.6;
   const rateDifferential = peakRate - offPeakRate;
-  
+
   // BESS can shift ~80% of peak energy to off-peak charging
   const shiftableEnergyKWh = peakEnergyKWh * 0.8;
   const dailyArbitrageSavings = shiftableEnergyKWh * rateDifferential;
   const monthlyArbitrageSavings = Math.round(dailyArbitrageSavings * 30);
-  
+
   // ════════════════════════════════════════════════════════════════
   // RETURN COMPREHENSIVE RESULT
   // ════════════════════════════════════════════════════════════════
   const powerMW = totalPeakKW / 1000;
-  
+
   return {
     // PowerCalculationResult base fields
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
     durationHrs: 4, // Standard hotel backup duration
     description: `Hotel: ${input.rooms} rooms (${classProfile.name}) × ${classProfile.peakKWPerRoom} kW/room = ${totalPeakKW} kW peak`,
-    calculationMethod: 'CBECS hospitality with amenities, seasonality, and arbitrage analysis',
+    calculationMethod: "CBECS hospitality with amenities, seasonality, and arbitrage analysis",
     inputs: {
       rooms: input.rooms,
       hotelClass: input.hotelClass,
@@ -3126,26 +3432,26 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
       avgOccupancy: input.avgOccupancy,
       amenities: input.amenities,
     },
-    
+
     // Power breakdown
     basePeakKW: Math.round(basePeakKW),
     amenityPeakKW: Math.round(amenityPeakKW),
     totalPeakKW,
-    
+
     // Energy metrics
     dailyKWh: Math.round(weightedDailyKWh),
     monthlyKWh,
-    
+
     // Financial
     monthlyDemandCharges,
     monthlyEnergyCharges,
     totalMonthlyCharges,
-    
+
     // Seasonality
     seasonalMultiplier,
     peakSeasonMonthlyKWh,
     offSeasonMonthlyKWh,
-    
+
     // Peak hours arbitrage
     peakHoursDuration,
     peakEnergyKWh,
@@ -3153,7 +3459,6 @@ export function calculateHotelPowerDetailed(input: HotelPowerInput): HotelPowerR
     arbitrageSavingsPotential: monthlyArbitrageSavings,
   };
 }
-
 
 // ============================================================================
 // CAR WASH POWER CALCULATIONS - SINGLE SOURCE OF TRUTH
@@ -3172,7 +3477,7 @@ export const CAR_WASH_EQUIPMENT_POWER = {
     rollerCallUp: 0.5,
     controls: 0.5,
   },
-  
+
   // Washing Equipment (20-35 kW total)
   washing: {
     topBrush: 4, // 3.7-4.5 kW per unit
@@ -3180,20 +3485,20 @@ export const CAR_WASH_EQUIPMENT_POWER = {
     mitterCurtain: 1, // 0.75-1 kW per unit
     wheelBrush: 0.6, // 0.5-0.75 kW per unit
   },
-  
+
   // High-Pressure Systems (15-25 kW total)
   highPressure: {
     pumpStation: 11, // 15 HP = 11 kW
     undercarriageWash: 2.5, // 2-5 HP
   },
-  
+
   // Chemical Application (3-8 kW total)
   chemical: {
     pumpStation: 1.5, // per station, 2-4 typical
     foamGenerator: 0.5,
     tireShine: 0.3,
   },
-  
+
   // Drying Systems (30-90 kW total) - LARGEST CONSUMER
   drying: {
     standardBlower: 7.5, // 10 HP = 7.5 kW per unit, 4-8 typical
@@ -3201,33 +3506,33 @@ export const CAR_WASH_EQUIPMENT_POWER = {
     windBlade: 15, // 20 HP
     sideMounted: 9, // 10-15 HP per side
   },
-  
+
   // Vacuum Systems (15-60 kW depending on config)
   vacuum: {
     standAlone3Motor: 3.6, // 4.8 HP total
     centralSystem: 30, // 10-75 HP turbine
     detailing: 4.5, // 4-8 HP
   },
-  
+
   // Water Heating (electric components only)
   waterHeating: {
     controls: 1,
     recircPump: 0.75,
     tankless: 25, // 9-47 kW if electric
   },
-  
+
   // Air Compression (4-12 kW)
   airCompression: {
     compressor: 7.5, // 5-15 HP
     dryer: 0.75,
   },
-  
+
   // Water Reclamation (3-10 kW)
   waterReclaim: {
     reclaimPump: 4, // 3-7.5 HP
     filtration: 1.5,
   },
-  
+
   // HVAC & Facility (5-20 kW)
   facility: {
     lighting: 6, // 2-12 kW tunnel
@@ -3236,7 +3541,7 @@ export const CAR_WASH_EQUIPMENT_POWER = {
     security: 0.3,
     gates: 0.75,
   },
-  
+
   // Specialty (5-15 kW)
   specialty: {
     reverseOsmosis: 2.5, // 2-5 HP
@@ -3249,20 +3554,20 @@ export const CAR_WASH_EQUIPMENT_POWER = {
  */
 export const CAR_WASH_AUTOMATION_LEVELS = {
   legacy: {
-    name: 'Legacy',
-    description: 'Older electromechanical systems (pre-2010)',
+    name: "Legacy",
+    description: "Older electromechanical systems (pre-2010)",
     powerMultiplier: 0.85, // Less efficient, but simpler
     additionalKW: 2, // Basic controls
   },
   standard: {
-    name: 'Standard',
-    description: 'Current PLC-based automation (2010-2020)',
+    name: "Standard",
+    description: "Current PLC-based automation (2010-2020)",
     powerMultiplier: 1.0,
     additionalKW: 4, // PLC + sensors + HMI
   },
   modern: {
-    name: 'Modern/AI',
-    description: 'AI vision systems, real-time adaptation (2020+)',
+    name: "Modern/AI",
+    description: "AI vision systems, real-time adaptation (2020+)",
     powerMultiplier: 1.08, // Slightly more for AI processing
     additionalKW: 8, // Vision + AI + edge computing
   },
@@ -3277,35 +3582,35 @@ export interface CarWashEquipmentConfig {
   // Conveyor
   hasConveyor: boolean;
   conveyorHP: number;
-  
+
   // Washing
   topBrushes: number;
   wrapAroundBrushes: number;
   mitterCurtains: number;
   wheelBrushes: number;
-  
+
   // High Pressure
   highPressurePumps: number;
   hasUndercarriage: boolean;
-  
+
   // Drying
   standardBlowers: number;
   hasWindBlade: boolean;
   hasHighPerformanceDryer: boolean;
-  
+
   // Vacuum
   hasCentralVacuum: boolean;
   vacuumStations: number;
-  
+
   // Chemical
   chemicalStations: number;
   hasTireShine: boolean;
-  
+
   // Water
   hasWaterReclaim: boolean;
   hasReverseOsmosis: boolean;
-  waterHeatingType: 'electric' | 'gas' | 'none';
-  
+  waterHeatingType: "electric" | "gas" | "none";
+
   // Air Compression
   airCompressorHP: number;
 }
@@ -3346,7 +3651,7 @@ export interface CarWashPowerResult extends PowerCalculationResult {
 /**
  * DETAILED CAR WASH EQUIPMENT POWER CALCULATION
  * Migrated from CarWashWizard.tsx for SSOT compliance
- * 
+ *
  * Calculates power requirements based on detailed equipment configuration:
  * - Conveyor systems
  * - Washing equipment (brushes, curtains)
@@ -3356,35 +3661,35 @@ export interface CarWashPowerResult extends PowerCalculationResult {
  * - Chemical application
  * - Water treatment
  * - Facility loads
- * 
+ *
  * @param input - Complete car wash configuration
  * @returns Detailed power analysis with financial metrics
  */
 export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWashPowerResult {
   const { equipment, operations, automationLevel } = input;
   const EQUIPMENT_POWER = CAR_WASH_EQUIPMENT_POWER;
-  
+
   let peakKW = 0;
-  
+
   // Conveyor
   if (equipment.hasConveyor) {
     peakKW += equipment.conveyorHP * 0.746; // HP to kW
     peakKW += EQUIPMENT_POWER.conveyor.rollerCallUp;
     peakKW += EQUIPMENT_POWER.conveyor.controls;
   }
-  
+
   // Washing Equipment
   peakKW += equipment.topBrushes * EQUIPMENT_POWER.washing.topBrush;
   peakKW += equipment.wrapAroundBrushes * EQUIPMENT_POWER.washing.wrapAroundBrush;
   peakKW += equipment.mitterCurtains * EQUIPMENT_POWER.washing.mitterCurtain;
   peakKW += equipment.wheelBrushes * EQUIPMENT_POWER.washing.wheelBrush;
-  
+
   // High Pressure
   peakKW += equipment.highPressurePumps * EQUIPMENT_POWER.highPressure.pumpStation;
   if (equipment.hasUndercarriage) {
     peakKW += EQUIPMENT_POWER.highPressure.undercarriageWash;
   }
-  
+
   // Drying - LARGEST CONSUMER (30-40% of total)
   peakKW += equipment.standardBlowers * EQUIPMENT_POWER.drying.standardBlower;
   if (equipment.hasWindBlade) {
@@ -3393,21 +3698,21 @@ export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWas
   if (equipment.hasHighPerformanceDryer) {
     peakKW += EQUIPMENT_POWER.drying.highPerformance;
   }
-  
+
   // Vacuum - Central system and standalone stations can coexist
   if (equipment.hasCentralVacuum) {
     peakKW += EQUIPMENT_POWER.vacuum.centralSystem;
   }
   // Standalone vacuum stations (in parking lot / self-serve bays)
   peakKW += equipment.vacuumStations * EQUIPMENT_POWER.vacuum.standAlone3Motor;
-  
+
   // Chemical
   peakKW += equipment.chemicalStations * EQUIPMENT_POWER.chemical.pumpStation;
   peakKW += EQUIPMENT_POWER.chemical.foamGenerator;
   if (equipment.hasTireShine) {
     peakKW += EQUIPMENT_POWER.chemical.tireShine;
   }
-  
+
   // Water
   if (equipment.hasWaterReclaim) {
     peakKW += EQUIPMENT_POWER.waterReclaim.reclaimPump;
@@ -3416,63 +3721,63 @@ export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWas
   if (equipment.hasReverseOsmosis) {
     peakKW += EQUIPMENT_POWER.specialty.reverseOsmosis;
   }
-  if (equipment.waterHeatingType === 'electric') {
+  if (equipment.waterHeatingType === "electric") {
     peakKW += EQUIPMENT_POWER.waterHeating.tankless;
-  } else if (equipment.waterHeatingType === 'gas') {
+  } else if (equipment.waterHeatingType === "gas") {
     peakKW += EQUIPMENT_POWER.waterHeating.controls;
     peakKW += EQUIPMENT_POWER.waterHeating.recircPump;
   }
   // 'none' = no water heating power consumption
-  
+
   // Air Compression
   peakKW += equipment.airCompressorHP * 0.746;
   peakKW += EQUIPMENT_POWER.airCompression.dryer;
-  
+
   // Facility
   peakKW += EQUIPMENT_POWER.facility.lighting;
   peakKW += EQUIPMENT_POWER.facility.controls;
   peakKW += EQUIPMENT_POWER.facility.pos;
   peakKW += EQUIPMENT_POWER.facility.security;
   peakKW += EQUIPMENT_POWER.facility.gates;
-  
+
   // Automation Systems (based on level)
   const autoLevel = CAR_WASH_AUTOMATION_LEVELS[automationLevel];
   peakKW += autoLevel.additionalKW;
-  
+
   // Apply automation efficiency multiplier
   peakKW *= autoLevel.powerMultiplier;
-  
+
   // Load diversity factor (not all equipment runs simultaneously)
   const diversityFactor = 0.7; // 70% typical
   const avgKW = peakKW * diversityFactor;
-  
+
   // Daily energy
   const peakHours = operations.peakHoursEnd - operations.peakHoursStart;
   const offPeakHours = operations.hoursPerDay - peakHours;
-  const dailyKWh = (peakKW * peakHours * 0.85) + (avgKW * offPeakHours * 0.6);
-  
+  const dailyKWh = peakKW * peakHours * 0.85 + avgKW * offPeakHours * 0.6;
+
   // Monthly
   const monthlyKWh = dailyKWh * operations.daysPerWeek * 4.33;
-  
+
   // Costs (if rates provided)
   const demandCharges = input.demandCharge ? Math.round(peakKW * input.demandCharge) : 0;
   const energyCharges = input.electricityRate ? Math.round(monthlyKWh * input.electricityRate) : 0;
-  
+
   const powerMW = peakKW / 1000;
-  
+
   return {
     // Base PowerCalculationResult
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100),
     durationHrs: Math.max(2, peakHours), // Duration based on peak hours
     description: `Car wash: ${Math.round(peakKW)} kW peak demand, ${Math.round(avgKW)} kW average`,
-    calculationMethod: 'Equipment-based calculation with load diversity',
+    calculationMethod: "Equipment-based calculation with load diversity",
     inputs: {
       automationLevel,
       hasConveyor: equipment.hasConveyor,
       standardBlowers: equipment.standardBlowers,
       hasCentralVacuum: equipment.hasCentralVacuum,
     },
-    
+
     // Extended CarWashPowerResult
     peakDemandKW: Math.round(peakKW),
     avgDemandKW: Math.round(avgKW),
@@ -3483,24 +3788,23 @@ export function calculateCarWashEquipmentPower(input: CarWashPowerInput): CarWas
   };
 }
 
-
 /**
  * Calculate power requirement for Hospital
  * Source: ASHRAE healthcare guidelines, CBECS 2018, Energy Star Healthcare
- * 
+ *
  * Benchmarks:
  * - Community hospital (100 beds): 300-500 kW peak → 4 kW/bed
- * - Regional hospital (250 beds): 1-1.5 MW peak → 5 kW/bed  
+ * - Regional hospital (250 beds): 1-1.5 MW peak → 5 kW/bed
  * - Academic medical center (500+ beds): 3-5 MW peak → 6-8 kW/bed
- * 
+ *
  * @param bedCount - Number of hospital beds
  * @param hospitalType - Type of hospital (affects kW/bed)
  * @returns Power in MW
  */
 export function calculateHospitalPower(
   bedCount: number,
-  hospitalType: 'community' | 'regional' | 'academic' | 'specialty' = 'regional',
-  operatingHours: 'limited' | 'extended' | '24_7' = '24_7'
+  hospitalType: "community" | "regional" | "academic" | "specialty" = "regional",
+  operatingHours: "limited" | "extended" | "24_7" = "24_7"
 ): PowerCalculationResult {
   // kW per bed varies by hospital type
   // Community: basic services, lower acuity
@@ -3508,44 +3812,44 @@ export function calculateHospitalPower(
   // Academic: teaching hospital, higher acuity, research equipment
   // Specialty: cardiac, cancer, trauma - highest equipment density
   const kWPerBedByType = {
-    community: 4.0,  // Basic services
-    regional: 5.0,   // Standard acute care
-    academic: 6.0,   // Teaching/research hospital
-    specialty: 7.5,  // Cardiac, cancer, trauma centers
+    community: 4.0, // Basic services
+    regional: 5.0, // Standard acute care
+    academic: 6.0, // Teaching/research hospital
+    specialty: 7.5, // Cardiac, cancer, trauma centers
   };
-  
+
   // Operating hours multiplier (NEW - Dec 13, 2025)
   // Source: Healthcare facility operational standards
   const hoursMultiplier = {
-    limited: 0.4,    // 8am-6pm outpatient/clinic (10 hours)
-    extended: 0.7,   // 6am-10pm urgent care (16 hours)
-    '24_7': 1.0      // Full hospital (24 hours)
+    limited: 0.4, // 8am-6pm outpatient/clinic (10 hours)
+    extended: 0.7, // 6am-10pm urgent care (16 hours)
+    "24_7": 1.0, // Full hospital (24 hours)
   }[operatingHours];
-  
+
   const kWPerBed = kWPerBedByType[hospitalType];
   const basePowerKW = bedCount * kWPerBed;
   const powerKW = basePowerKW * hoursMultiplier;
   const powerMW = powerKW / 1000;
-  
+
   const hoursLabel = {
-    limited: 'Limited Hours (8am-6pm)',
-    extended: 'Extended Hours (6am-10pm)',
-    '24_7': '24/7 Operations'
+    limited: "Limited Hours (8am-6pm)",
+    extended: "Extended Hours (6am-10pm)",
+    "24_7": "24/7 Operations",
   }[operatingHours];
-  
+
   return {
     powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100), // Min 200kW
     durationHrs: 8, // Hospitals need longer backup for critical care
     description: `${hospitalType.charAt(0).toUpperCase() + hospitalType.slice(1)} Hospital: ${bedCount} beds × ${kWPerBed} kW/bed × ${hoursMultiplier} (${hoursLabel}) = ${powerKW.toFixed(0)} kW`,
     calculationMethod: `ASHRAE healthcare peak demand (${kWPerBed} kW/bed for ${hospitalType}, ${hoursLabel})`,
-    inputs: { bedCount, hospitalType, kWPerBed, operatingHours, hoursMultiplier }
+    inputs: { bedCount, hospitalType, kWPerBed, operatingHours, hoursMultiplier },
   };
 }
 
 /**
  * Calculate power requirement for Data Center
  * Source: Uptime Institute, industry standards
- * 
+ *
  * @param itLoadKW - IT equipment load in kW (if known)
  * @param rackCount - Number of server racks (alternative)
  * @param rackDensityKW - Power per rack (default 8kW)
@@ -3556,39 +3860,49 @@ export function calculateDatacenterPower(
   rackCount?: number,
   rackDensityKW: number = 8
 ): PowerCalculationResult {
-  console.log('🏢 [calculateDatacenterPower] INPUTS:', { itLoadKW, rackCount, rackDensityKW });
-  
+  console.log("🏢 [calculateDatacenterPower] INPUTS:", { itLoadKW, rackCount, rackDensityKW });
+
   let powerKW: number;
   let method: string;
-  
+
   if (itLoadKW && itLoadKW > 0) {
     // Direct IT load specified - add 50% for cooling (PUE ~1.5)
     powerKW = itLoadKW * 1.5;
     method = `Direct IT load ${itLoadKW}kW × 1.5 PUE`;
-    console.log('🏢 [calculateDatacenterPower] Using IT Load method:', { itLoadKW, powerKW, method });
+    console.log("🏢 [calculateDatacenterPower] Using IT Load method:", {
+      itLoadKW,
+      powerKW,
+      method,
+    });
   } else if (rackCount && rackCount > 0) {
     // Calculate from rack count
     const itPower = rackCount * rackDensityKW;
     powerKW = itPower * 1.5; // PUE ~1.5
     method = `${rackCount} racks × ${rackDensityKW}kW × 1.5 PUE`;
-    console.log('🏢 [calculateDatacenterPower] Using Rack Count method:', { rackCount, rackDensityKW, itPower, powerKW, method });
+    console.log("🏢 [calculateDatacenterPower] Using Rack Count method:", {
+      rackCount,
+      rackDensityKW,
+      itPower,
+      powerKW,
+      method,
+    });
   } else {
     // Default small datacenter
     powerKW = 2000; // 2 MW default
-    method = 'Default 2MW datacenter';
-    console.log('⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!');
+    method = "Default 2MW datacenter";
+    console.log("⚠️ [calculateDatacenterPower] USING DEFAULT - No itLoadKW or rackCount provided!");
   }
-  
+
   const powerMW = powerKW / 1000;
-  
-  console.log('🏢 [calculateDatacenterPower] FINAL OUTPUT:', { powerKW, powerMW, method });
-  
+
+  console.log("🏢 [calculateDatacenterPower] FINAL OUTPUT:", { powerKW, powerMW, method });
+
   return {
     powerMW: Math.max(0.5, Math.round(powerMW * 100) / 100), // Min 500kW
     durationHrs: 4, // Standard UPS backup target
     description: `Data Center: ${method} = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'Uptime Institute standards (PUE 1.5)',
-    inputs: { itLoadKW, rackCount, rackDensityKW }
+    calculationMethod: "Uptime Institute standards (PUE 1.5)",
+    inputs: { itLoadKW, rackCount, rackDensityKW },
   };
 }
 
@@ -3601,28 +3915,28 @@ export function calculateDatacenterPower(
  */
 export interface DataCenterPowerFromEquipmentInput {
   // IT Load specification (pick one method)
-  itLoadKW?: number;                         // Direct IT load in kW
-  rackCount?: number;                        // Number of racks
-  rackDensity?: 'lowDensity' | 'mediumDensity' | 'highDensity' | 'ultraHighDensity';
-  customRackPowerKW?: number;                // Custom power per rack
-  
+  itLoadKW?: number; // Direct IT load in kW
+  rackCount?: number; // Number of racks
+  rackDensity?: "lowDensity" | "mediumDensity" | "highDensity" | "ultraHighDensity";
+  customRackPowerKW?: number; // Custom power per rack
+
   // Rack breakdown (optional detail)
   computeRacks?: number;
   storageRacks?: number;
   networkRacks?: number;
-  gpuRacks?: number;                         // High-density AI/GPU racks
-  
+  gpuRacks?: number; // High-density AI/GPU racks
+
   // Facility classification
   classification?: DataCenterClassification;
-  tier?: 'tier1' | 'tier2' | 'tier3' | 'tier4';
-  
+  tier?: "tier1" | "tier2" | "tier3" | "tier4";
+
   // Efficiency overrides
-  targetPUE?: number;                        // Override default PUE
-  hasEconomizer?: boolean;                   // Airside/waterside economizer
-  hasLiquidCooling?: boolean;                // Direct liquid cooling for GPUs
-  
+  targetPUE?: number; // Override default PUE
+  hasEconomizer?: boolean; // Airside/waterside economizer
+  hasLiquidCooling?: boolean; // Direct liquid cooling for GPUs
+
   // Options
-  includeAuxiliaryLoads?: boolean;           // Include full auxiliary breakdown
+  includeAuxiliaryLoads?: boolean; // Include full auxiliary breakdown
 }
 
 /**
@@ -3632,17 +3946,17 @@ export interface DataCenterPowerFromEquipmentResult {
   // IT Load
   itLoadKW: number;
   itLoadMW: number;
-  
+
   // Total Facility Load (IT + overhead)
   totalFacilityLoadKW: number;
   totalFacilityLoadMW: number;
-  pue: number;                               // Power Usage Effectiveness
-  
+  pue: number; // Power Usage Effectiveness
+
   // Classification
   classifiedAs: DataCenterClassification;
-  classificationDetails: typeof DATA_CENTER_CLASSIFICATIONS[DataCenterClassification];
+  classificationDetails: (typeof DATA_CENTER_CLASSIFICATIONS)[DataCenterClassification];
   tier: string;
-  
+
   // Auxiliary breakdown
   auxiliaryBreakdown: {
     coolingKW: number;
@@ -3654,7 +3968,7 @@ export interface DataCenterPowerFromEquipmentResult {
     officeSupportKW: number;
     totalAuxiliaryKW: number;
   };
-  
+
   // BESS recommendation
   bessRecommendation: {
     powerMW: { min: number; max: number };
@@ -3667,7 +3981,7 @@ export interface DataCenterPowerFromEquipmentResult {
       bessKWh: number;
     };
   };
-  
+
   // Equipment sizing estimates
   equipmentSizing: {
     upsCapacityKW: number;
@@ -3675,14 +3989,14 @@ export interface DataCenterPowerFromEquipmentResult {
     chillerCapacityTons: number;
     transformerCapacityMVA: number;
   };
-  
+
   // Validation
   validation: {
     isValid: boolean;
     warnings: string[];
     withinClassBounds: boolean;
   };
-  
+
   description: string;
   calculationMethod: string;
 }
@@ -3691,53 +4005,57 @@ export interface DataCenterPowerFromEquipmentResult {
  * Classify data center based on IT load
  */
 function classifyDataCenter(itLoadKW: number): DataCenterClassification {
-  if (itLoadKW <= 500) return 'edge';
-  if (itLoadKW <= 2000) return 'small';
-  if (itLoadKW <= 10000) return 'medium';
-  if (itLoadKW <= 50000) return 'large';
-  return 'hyperscale';
+  if (itLoadKW <= 500) return "edge";
+  if (itLoadKW <= 2000) return "small";
+  if (itLoadKW <= 10000) return "medium";
+  if (itLoadKW <= 50000) return "large";
+  return "hyperscale";
 }
 
 /**
  * Calculate comprehensive power requirements for a Data Center
  * Uses equipment specifications from industry standards
- * 
+ *
  * @param input - Data center configuration
  * @returns Complete power analysis with BESS recommendations
  */
 export function calculateDataCenterPowerFromEquipment(
   input: DataCenterPowerFromEquipmentInput
 ): DataCenterPowerFromEquipmentResult {
-  
   // Step 1: Calculate IT Load
   let itLoadKW: number;
   let rackBreakdown = { compute: 0, storage: 0, network: 0, gpu: 0 };
-  
+
   if (input.itLoadKW && input.itLoadKW > 0) {
     // Direct IT load specified
     itLoadKW = input.itLoadKW;
   } else if (input.rackCount && input.rackCount > 0) {
     // Calculate from rack count
-    const density = input.rackDensity || 'mediumDensity';
+    const density = input.rackDensity || "mediumDensity";
     const densitySpec = DATA_CENTER_RACK_DENSITY[density];
-    const kWPerRack = input.customRackPowerKW || 
-      (densitySpec.powerPerRack.min + densitySpec.powerPerRack.max) / 2;
-    
+    const kWPerRack =
+      input.customRackPowerKW || (densitySpec.powerPerRack.min + densitySpec.powerPerRack.max) / 2;
+
     // If detailed rack breakdown provided
     if (input.computeRacks || input.storageRacks || input.networkRacks || input.gpuRacks) {
       const computeRacks = input.computeRacks || 0;
       const storageRacks = input.storageRacks || 0;
       const networkRacks = input.networkRacks || 0;
       const gpuRacks = input.gpuRacks || 0;
-      
+
       // Different power per rack type
       const computePower = computeRacks * kWPerRack;
       const storagePower = storageRacks * 12; // ~12 kW for storage
-      const networkPower = networkRacks * 8;  // ~8 kW for network
-      const gpuPower = gpuRacks * 50;         // ~50 kW for GPU racks
-      
+      const networkPower = networkRacks * 8; // ~8 kW for network
+      const gpuPower = gpuRacks * 50; // ~50 kW for GPU racks
+
       itLoadKW = computePower + storagePower + networkPower + gpuPower;
-      rackBreakdown = { compute: computeRacks, storage: storageRacks, network: networkRacks, gpu: gpuRacks };
+      rackBreakdown = {
+        compute: computeRacks,
+        storage: storageRacks,
+        network: networkRacks,
+        gpu: gpuRacks,
+      };
     } else {
       itLoadKW = input.rackCount * kWPerRack;
     }
@@ -3745,12 +4063,12 @@ export function calculateDataCenterPowerFromEquipment(
     // Default: small data center (400 racks at 5 kW average)
     itLoadKW = 2000; // 2 MW default
   }
-  
+
   // Step 2: Classify the data center
   const classification = input.classification || classifyDataCenter(itLoadKW);
   const classificationDetails = DATA_CENTER_CLASSIFICATIONS[classification];
   const auxiliaryConfig = DATA_CENTER_AUXILIARY_LOADS[classification];
-  
+
   // Step 3: Determine PUE
   let pue: number;
   if (input.targetPUE) {
@@ -3758,7 +4076,7 @@ export function calculateDataCenterPowerFromEquipment(
   } else {
     // Base PUE from classification
     pue = classificationDetails.pue.typical;
-    
+
     // Adjustments for efficiency features
     if (input.hasEconomizer) {
       pue -= 0.1; // Economizers reduce PUE
@@ -3766,46 +4084,65 @@ export function calculateDataCenterPowerFromEquipment(
     if (input.hasLiquidCooling) {
       pue -= 0.15; // Liquid cooling is more efficient
     }
-    
+
     // Clamp to best-in-class minimum
     pue = Math.max(pue, classificationDetails.pue.bestInClass);
   }
-  
+
   // Step 4: Calculate auxiliary loads
-  const loadRatio = itLoadKW / ((classificationDetails.itLoad.min + classificationDetails.itLoad.max) / 2);
+  const loadRatio =
+    itLoadKW / ((classificationDetails.itLoad.min + classificationDetails.itLoad.max) / 2);
   const clampedRatio = Math.max(0.5, Math.min(1.5, loadRatio));
-  
+
   const auxiliaryBreakdown = {
-    coolingKW: Math.round((auxiliaryConfig.coolingTotalKW.min + auxiliaryConfig.coolingTotalKW.max) / 2 * clampedRatio),
-    powerDistributionLossesKW: Math.round((auxiliaryConfig.powerDistributionLossesKW.min + auxiliaryConfig.powerDistributionLossesKW.max) / 2 * clampedRatio),
-    upsLossesKW: Math.round((auxiliaryConfig.upsLossesKW.min + auxiliaryConfig.upsLossesKW.max) / 2 * clampedRatio),
-    lightingKW: Math.round((auxiliaryConfig.lightingKW.min + auxiliaryConfig.lightingKW.max) / 2 * clampedRatio),
-    securityFireKW: Math.round((auxiliaryConfig.securityFireKW.min + auxiliaryConfig.securityFireKW.max) / 2 * clampedRatio),
-    bmsDcimKW: Math.round((auxiliaryConfig.bmsDcimKW.min + auxiliaryConfig.bmsDcimKW.max) / 2 * clampedRatio),
-    officeSupportKW: Math.round((auxiliaryConfig.officeSupportKW.min + auxiliaryConfig.officeSupportKW.max) / 2 * clampedRatio),
+    coolingKW: Math.round(
+      ((auxiliaryConfig.coolingTotalKW.min + auxiliaryConfig.coolingTotalKW.max) / 2) * clampedRatio
+    ),
+    powerDistributionLossesKW: Math.round(
+      ((auxiliaryConfig.powerDistributionLossesKW.min +
+        auxiliaryConfig.powerDistributionLossesKW.max) /
+        2) *
+        clampedRatio
+    ),
+    upsLossesKW: Math.round(
+      ((auxiliaryConfig.upsLossesKW.min + auxiliaryConfig.upsLossesKW.max) / 2) * clampedRatio
+    ),
+    lightingKW: Math.round(
+      ((auxiliaryConfig.lightingKW.min + auxiliaryConfig.lightingKW.max) / 2) * clampedRatio
+    ),
+    securityFireKW: Math.round(
+      ((auxiliaryConfig.securityFireKW.min + auxiliaryConfig.securityFireKW.max) / 2) * clampedRatio
+    ),
+    bmsDcimKW: Math.round(
+      ((auxiliaryConfig.bmsDcimKW.min + auxiliaryConfig.bmsDcimKW.max) / 2) * clampedRatio
+    ),
+    officeSupportKW: Math.round(
+      ((auxiliaryConfig.officeSupportKW.min + auxiliaryConfig.officeSupportKW.max) / 2) *
+        clampedRatio
+    ),
     totalAuxiliaryKW: 0,
   };
-  auxiliaryBreakdown.totalAuxiliaryKW = 
-    auxiliaryBreakdown.coolingKW + 
-    auxiliaryBreakdown.powerDistributionLossesKW + 
+  auxiliaryBreakdown.totalAuxiliaryKW =
+    auxiliaryBreakdown.coolingKW +
+    auxiliaryBreakdown.powerDistributionLossesKW +
     auxiliaryBreakdown.upsLossesKW +
-    auxiliaryBreakdown.lightingKW + 
-    auxiliaryBreakdown.securityFireKW + 
-    auxiliaryBreakdown.bmsDcimKW + 
+    auxiliaryBreakdown.lightingKW +
+    auxiliaryBreakdown.securityFireKW +
+    auxiliaryBreakdown.bmsDcimKW +
     auxiliaryBreakdown.officeSupportKW;
-  
+
   // Step 5: Calculate total facility load
   const totalFacilityLoadKW = Math.round(itLoadKW * pue);
-  
+
   // Step 6: Get tier configuration
-  const tierKey = input.tier || 'tier3';
+  const tierKey = input.tier || "tier3";
   const tierConfig = DATACENTER_TIER_STANDARDS[tierKey] || DATACENTER_TIER_STANDARDS.tier3;
-  
+
   // Step 7: BESS recommendation
   const bessConfig = DATA_CENTER_BESS_SIZING[classification];
   const tierBasedBessKW = Math.round(itLoadKW * tierConfig.bessMultiplier);
   const tierBasedBessKWh = tierBasedBessKW * tierConfig.durationHours;
-  
+
   // Step 8: Equipment sizing estimates
   const equipmentSizing = {
     upsCapacityKW: Math.round(itLoadKW * 1.2), // 20% margin
@@ -3813,46 +4150,48 @@ export function calculateDataCenterPowerFromEquipment(
     chillerCapacityTons: Math.round(auxiliaryBreakdown.coolingKW / 3.517), // kW to tons
     transformerCapacityMVA: Math.round(totalFacilityLoadKW / 800) / 10, // Rough MVA sizing
   };
-  
+
   // Step 9: Validation
   const warnings: string[] = [];
-  const withinClassBounds = 
-    itLoadKW >= classificationDetails.itLoad.min &&
-    itLoadKW <= classificationDetails.itLoad.max;
-  
+  const withinClassBounds =
+    itLoadKW >= classificationDetails.itLoad.min && itLoadKW <= classificationDetails.itLoad.max;
+
   if (!withinClassBounds) {
-    warnings.push(`IT load ${itLoadKW} kW is outside typical ${classification} range (${classificationDetails.itLoad.min}-${classificationDetails.itLoad.max} kW)`);
+    warnings.push(
+      `IT load ${itLoadKW} kW is outside typical ${classification} range (${classificationDetails.itLoad.min}-${classificationDetails.itLoad.max} kW)`
+    );
   }
-  
+
   if (pue < 1.0 || pue > 3.0) {
     warnings.push(`PUE ${pue} is outside realistic range (1.0-3.0)`);
   }
-  
+
   if (input.gpuRacks && input.gpuRacks > 0 && !input.hasLiquidCooling) {
-    warnings.push('GPU/AI workloads typically require liquid cooling for optimal efficiency');
+    warnings.push("GPU/AI workloads typically require liquid cooling for optimal efficiency");
   }
-  
+
   // Build description
-  const totalRacks = input.rackCount || 
-    (rackBreakdown.compute + rackBreakdown.storage + rackBreakdown.network + rackBreakdown.gpu) ||
+  const totalRacks =
+    input.rackCount ||
+    rackBreakdown.compute + rackBreakdown.storage + rackBreakdown.network + rackBreakdown.gpu ||
     Math.round(itLoadKW / 10);
-  
+
   const description = `${classificationDetails.name} (${tierConfig.name}): ${totalRacks} racks, ${itLoadKW.toLocaleString()} kW IT load × ${pue} PUE = ${totalFacilityLoadKW.toLocaleString()} kW total facility load`;
-  
+
   return {
     itLoadKW,
     itLoadMW: itLoadKW / 1000,
-    
+
     totalFacilityLoadKW,
     totalFacilityLoadMW: totalFacilityLoadKW / 1000,
     pue,
-    
+
     classifiedAs: classification,
     classificationDetails,
     tier: tierConfig.name,
-    
+
     auxiliaryBreakdown,
-    
+
     bessRecommendation: {
       powerMW: bessConfig.recommendedMW,
       energyMWh: bessConfig.recommendedMWh,
@@ -3864,17 +4203,18 @@ export function calculateDataCenterPowerFromEquipment(
         bessKWh: tierBasedBessKWh,
       },
     },
-    
+
     equipmentSizing,
-    
+
     validation: {
       isValid: warnings.length === 0,
       warnings,
       withinClassBounds,
     },
-    
+
     description,
-    calculationMethod: 'Equipment-based calculation per Uptime Institute and ASHRAE TC 9.9 standards (Dec 2025)',
+    calculationMethod:
+      "Equipment-based calculation per Uptime Institute and ASHRAE TC 9.9 standards (Dec 2025)",
   };
 }
 
@@ -3885,8 +4225,8 @@ export function calculateDataCenterPowerFromEquipment(
 export interface DataCenterPowerSimpleInput {
   rackCount?: number;
   itLoadKW?: number;
-  rackDensity?: 'low' | 'medium' | 'high' | 'gpu';
-  tier?: 'tier1' | 'tier2' | 'tier3' | 'tier4';
+  rackDensity?: "low" | "medium" | "high" | "gpu";
+  tier?: "tier1" | "tier2" | "tier3" | "tier4";
   electricityRate?: number;
 }
 
@@ -3904,15 +4244,20 @@ export interface DataCenterPowerSimpleResult {
  * Simplified data center power calculation for landing pages
  * SSOT wrapper for DataCenterEnergy.tsx
  */
-export function calculateDataCenterPowerSimple(input: DataCenterPowerSimpleInput): DataCenterPowerSimpleResult {
+export function calculateDataCenterPowerSimple(
+  input: DataCenterPowerSimpleInput
+): DataCenterPowerSimpleResult {
   // Map simple density to full density type
-  const densityMap: Record<string, 'lowDensity' | 'mediumDensity' | 'highDensity' | 'ultraHighDensity'> = {
-    'low': 'lowDensity',
-    'medium': 'mediumDensity',
-    'high': 'highDensity',
-    'gpu': 'ultraHighDensity',
+  const densityMap: Record<
+    string,
+    "lowDensity" | "mediumDensity" | "highDensity" | "ultraHighDensity"
+  > = {
+    low: "lowDensity",
+    medium: "mediumDensity",
+    high: "highDensity",
+    gpu: "ultraHighDensity",
   };
-  
+
   const result = calculateDataCenterPowerFromEquipment({
     rackCount: input.rackCount,
     itLoadKW: input.itLoadKW,
@@ -3920,17 +4265,17 @@ export function calculateDataCenterPowerSimple(input: DataCenterPowerSimpleInput
     tier: input.tier,
     includeAuxiliaryLoads: true,
   });
-  
+
   // Calculate monthly cost
-  const rate = input.electricityRate || 0.10; // Default $0.10/kWh
+  const rate = input.electricityRate || 0.1; // Default $0.10/kWh
   const monthlyKWh = result.totalFacilityLoadKW * 24 * 30; // 24/7 operation
   const monthlyElectricityCost = Math.round(monthlyKWh * rate);
-  
+
   // BESS recommendation (midpoint of range)
   const bessKWh = Math.round(
     ((result.bessRecommendation.energyMWh.min + result.bessRecommendation.energyMWh.max) / 2) * 1000
   );
-  
+
   return {
     itLoadKW: result.itLoadKW,
     totalFacilityKW: result.totalFacilityLoadKW,
@@ -3944,15 +4289,15 @@ export function calculateDataCenterPowerSimple(input: DataCenterPowerSimpleInput
 
 /**
  * Calculate power requirement for EV Charging Station
- * 
+ *
  * @deprecated Use evChargingCalculations.ts for full EV hub calculations
  * This function is kept for backward compatibility with legacy code.
  * For new code, use calculateEVHubPower() from evChargingCalculations.ts
- * 
+ *
  * Source: SAE J1772, CCS/CHAdeMO standards
- * 
+ *
  * @param level1Count - Number of Level 1 chargers (1.9 kW each)
- * @param level2Count - Number of Level 2 chargers (19.2 kW each)  
+ * @param level2Count - Number of Level 2 chargers (19.2 kW each)
  * @param dcFastCount - Number of DC Fast chargers (150 kW each)
  * @returns Power in MW
  */
@@ -3963,40 +4308,41 @@ export function calculateEVChargingPower(
 ): PowerCalculationResult {
   // ⚠️ DEPRECATED: This uses simplified fixed power ratings
   // For accurate calculations with variable charger types, use evChargingCalculations.ts
-  
+
   // Delegate to evChargingCalculations.ts when possible
   // For now, keep legacy logic for backward compatibility
-  const level1Power = 1.9;   // kW (120V/16A)
-  const level2Power = 19.2;  // kW (240V/80A commercial)  
-  const dcFastPower = 150;   // kW (typical commercial DC fast)
-  
+  const level1Power = 1.9; // kW (120V/16A)
+  const level2Power = 19.2; // kW (240V/80A commercial)
+  const dcFastPower = 150; // kW (typical commercial DC fast)
+
   const level1TotalKW = level1Count * level1Power;
   const level2TotalKW = level2Count * level2Power;
   const dcFastTotalKW = dcFastCount * dcFastPower;
   const totalKW = level1TotalKW + level2TotalKW + dcFastTotalKW;
-  
+
   const powerMW = totalKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: 2, // Short duration for demand charge management
     description: `EV Charging: L1(${level1Count}×${level1Power}kW) + L2(${level2Count}×${level2Power}kW) + DC(${dcFastCount}×${dcFastPower}kW) = ${totalKW.toFixed(1)} kW`,
-    calculationMethod: 'SAE J1772/CCS standards (legacy - use evChargingCalculations.ts for new code)',
-    inputs: { level1Count, level2Count, dcFastCount, level1Power, level2Power, dcFastPower }
+    calculationMethod:
+      "SAE J1772/CCS standards (legacy - use evChargingCalculations.ts for new code)",
+    inputs: { level1Count, level2Count, dcFastCount, level1Power, level2Power, dcFastPower },
   };
 }
 
 /**
  * Calculate power requirement for Airport
  * Source: FAA, international airport energy benchmarks
- * 
+ *
  * Airport Classifications (Peak Demand):
  * - Small Regional (< 1M pax): 2–6 MW
- * - Medium Regional (1–5M pax): 6–18 MW  
+ * - Medium Regional (1–5M pax): 6–18 MW
  * - Large Regional (5–15M pax): 18–55 MW
  * - Major Hub (15–50M pax): 55–175 MW
  * - Mega Hub (50–100M+ pax): 175–500+ MW
- * 
+ *
  * @param annualPassengersMillions - Million passengers per year
  * @returns Power in MW
  */
@@ -4004,49 +4350,48 @@ export function calculateAirportPower(annualPassengersMillions: number): PowerCa
   // Updated formula based on industry data:
   // Base load + scaling factor that accounts for terminal infrastructure
   // Small airports have higher MW/passenger due to fixed infrastructure
-  
+
   let powerMW: number;
   let classification: string;
-  
+
   if (annualPassengersMillions < 1) {
     // Small Regional: 2-6 MW range
     // Linear interpolation: 0.1M → 2MW, 1M → 6MW
-    powerMW = 2 + (annualPassengersMillions * 4);
-    classification = 'Small Regional';
+    powerMW = 2 + annualPassengersMillions * 4;
+    classification = "Small Regional";
   } else if (annualPassengersMillions < 5) {
     // Medium Regional: 6-18 MW range
     // Linear: 1M → 6MW, 5M → 18MW
-    powerMW = 6 + ((annualPassengersMillions - 1) * 3);
-    classification = 'Medium Regional';
+    powerMW = 6 + (annualPassengersMillions - 1) * 3;
+    classification = "Medium Regional";
   } else if (annualPassengersMillions < 15) {
     // Large Regional: 18-55 MW range
     // Linear: 5M → 18MW, 15M → 55MW
-    powerMW = 18 + ((annualPassengersMillions - 5) * 3.7);
-    classification = 'Large Regional';
+    powerMW = 18 + (annualPassengersMillions - 5) * 3.7;
+    classification = "Large Regional";
   } else if (annualPassengersMillions < 50) {
     // Major Hub: 55-175 MW range
     // Linear: 15M → 55MW, 50M → 175MW
-    powerMW = 55 + ((annualPassengersMillions - 15) * 3.43);
-    classification = 'Major Hub';
+    powerMW = 55 + (annualPassengersMillions - 15) * 3.43;
+    classification = "Major Hub";
   } else {
     // Mega Hub: 175-500+ MW range
     // Linear: 50M → 175MW, 100M → 500MW
-    powerMW = 175 + ((annualPassengersMillions - 50) * 6.5);
-    classification = 'Mega Hub';
+    powerMW = 175 + (annualPassengersMillions - 50) * 6.5;
+    classification = "Mega Hub";
   }
-  
+
   // Round to 1 decimal
   powerMW = Math.round(powerMW * 10) / 10;
-  
+
   return {
     powerMW: Math.max(2, powerMW), // Min 2MW for smallest airports
     durationHrs: 4,
     description: `${classification} Airport: ${annualPassengersMillions}M passengers/year → ${powerMW.toFixed(1)} MW peak demand`,
     calculationMethod: `FAA/industry airport benchmarks (${classification}: ${annualPassengersMillions}M pax)`,
-    inputs: { annualPassengersMillions, classification, powerMW }
+    inputs: { annualPassengersMillions, classification, powerMW },
   };
 }
-
 
 // ============================================================================
 // AIRPORT - COMPREHENSIVE EQUIPMENT-BASED CALCULATIONS
@@ -4155,16 +4500,16 @@ function determineAirportClassification(
   gateCount?: number
 ): AirportClassification {
   // Primary classification by passengers, refined by gates if provided
-  if (annualPassengersMillions >= 50) return 'megaHub';
-  if (annualPassengersMillions >= 25) return 'majorHub';      // Major international hubs
-  if (annualPassengersMillions >= 10) return 'largeRegional'; // Large regional/small hub
-  if (annualPassengersMillions >= 3) return 'mediumRegional';
-  return 'smallRegional';
+  if (annualPassengersMillions >= 50) return "megaHub";
+  if (annualPassengersMillions >= 25) return "majorHub"; // Major international hubs
+  if (annualPassengersMillions >= 10) return "largeRegional"; // Large regional/small hub
+  if (annualPassengersMillions >= 3) return "mediumRegional";
+  return "smallRegional";
 }
 
 /**
  * Calculate Airport Power from Equipment - Comprehensive Detailed Calculation
- * 
+ *
  * Uses comprehensive equipment specifications from the Airport Classifications
  * & Equipment Specifications sheet. Calculates power by category:
  * - Airfield Operations (lighting, NAVAIDs, ATC)
@@ -4173,33 +4518,29 @@ function determineAirportClassification(
  * - Ground Support Equipment
  * - Support Facilities (cargo, maintenance, parking)
  * - Central Utility Plant
- * 
+ *
  * @param input - Airport parameters
  * @returns Detailed power breakdown with BESS recommendations
  */
 export function calculateAirportPowerFromEquipment(
   input: AirportPowerDetailedInput
 ): AirportPowerDetailedResult {
-  const {
-    annualPassengersMillions,
-    gateCount,
-    terminalSqFt,
-    electricityRate = 0.10,
-  } = input;
-  
+  const { annualPassengersMillions, gateCount, terminalSqFt, electricityRate = 0.1 } = input;
+
   // Determine classification
-  const classification = input.classification || 
-    determineAirportClassification(annualPassengersMillions, gateCount);
+  const classification =
+    input.classification || determineAirportClassification(annualPassengersMillions, gateCount);
   const classProfile = AIRPORT_CLASSIFICATIONS[classification];
-  
+
   // Get load from classification (simplified - uses profile totals)
   const loadRange = classProfile.totalFacilityLoad;
-  const totalPeakKW = (loadRange.min + loadRange.max) / 2 * 1000; // Convert MW to kW
-  
+  const totalPeakKW = ((loadRange.min + loadRange.max) / 2) * 1000; // Convert MW to kW
+
   // Use provided values or derive from classification (use midpoint of range)
-  const effectiveGateCount = gateCount || Math.round((classProfile.gates.min + classProfile.gates.max) / 2);
-  const effectiveTerminalSqFt = terminalSqFt || (effectiveGateCount * 50000);
-  
+  const effectiveGateCount =
+    gateCount || Math.round((classProfile.gates.min + classProfile.gates.max) / 2);
+  const effectiveTerminalSqFt = terminalSqFt || effectiveGateCount * 50000;
+
   // Estimate breakdown proportions (typical airport distribution)
   const airfieldLightingKW = totalPeakKW * 0.08;
   const navAidsKW = totalPeakKW * 0.02;
@@ -4222,18 +4563,18 @@ export function calculateAirportPowerFromEquipment(
   const centralUtilityPlantKW = totalPeakKW * 0.02;
   const waterWastewaterKW = totalPeakKW * 0.01;
   const sustainableEnergyKW = 0;
-  
+
   // Apply load factor for average demand (use midpoint of range)
   const loadFactor = (classProfile.loadFactor.min + classProfile.loadFactor.max) / 2;
   const avgDemandKW = totalPeakKW * loadFactor;
-  
+
   // Convert to MW
   const totalPeakMW = totalPeakKW / 1000;
   const avgDemandMW = avgDemandKW / 1000;
-  
+
   // Annual energy
   const annualEnergyMWh = avgDemandMW * 8760;
-  
+
   // BESS Recommendations from classification
   const bessProfile = AIRPORT_BESS_SIZING[classification];
   const bessSizeMWh = {
@@ -4246,17 +4587,17 @@ export function calculateAirportPowerFromEquipment(
     max: bessProfile.recommendedMW.max,
     typical: (bessProfile.recommendedMW.min + bessProfile.recommendedMW.max) / 2,
   };
-  
+
   // Grid Requirements from classification
   const gridReqs = AIRPORT_GRID_REQUIREMENTS[classification];
-  const feedCount = parseInt(gridReqs.dedicatedFeeders.split('-')[0]) || 2;
-  
+  const feedCount = parseInt(gridReqs.dedicatedFeeders.split("-")[0]) || 2;
+
   // Cost estimates
   const annualEnergyCost = annualEnergyMWh * 1000 * electricityRate;
   const demandCharge = 15; // $/kW average
   const demandChargeCost = totalPeakMW * 1000 * demandCharge * 12;
   const peakShavingSavings = demandChargeCost * 0.3;
-  
+
   return {
     totalPeakMW: Math.round(totalPeakMW * 100) / 100,
     avgDemandMW: Math.round(avgDemandMW * 100) / 100,
@@ -4304,13 +4645,12 @@ export function calculateAirportPowerFromEquipment(
   };
 }
 
-
 /**
  * Calculate Airport Power - Simple Interface for Landing Pages
- * 
+ *
  * SSOT wrapper function that provides a simplified interface for landing
  * pages while using the comprehensive equipment-based calculation internally.
- * 
+ *
  * @param input - Simple airport parameters
  * @returns Simple result with key metrics
  */
@@ -4318,7 +4658,7 @@ export function calculateAirportPowerSimple(
   input: AirportPowerSimpleInput
 ): AirportPowerSimpleResult {
   const detailedResult = calculateAirportPowerFromEquipment(input);
-  
+
   return {
     peakMW: detailedResult.totalPeakMW,
     avgMW: detailedResult.avgDemandMW,
@@ -4327,7 +4667,6 @@ export function calculateAirportPowerSimple(
     annualEnergyCostEstimate: detailedResult.costEstimates.annualEnergyCost,
   };
 }
-
 
 // ============================================================================
 // OFFICE BUILDING - Simple Calculation Functions
@@ -4349,11 +4688,11 @@ export interface OfficePowerSimpleResult {
 }
 
 function determineOfficeClassification(sqFt: number): OfficeClassification {
-  if (sqFt >= 1000000) return 'corporateCampus';
-  if (sqFt >= 500000) return 'highRiseTower';
-  if (sqFt >= 150000) return 'largeOffice';
-  if (sqFt >= 50000) return 'mediumOffice';
-  return 'smallOffice';
+  if (sqFt >= 1000000) return "corporateCampus";
+  if (sqFt >= 500000) return "highRiseTower";
+  if (sqFt >= 150000) return "largeOffice";
+  if (sqFt >= 50000) return "mediumOffice";
+  return "smallOffice";
 }
 
 /**
@@ -4362,22 +4701,22 @@ function determineOfficeClassification(sqFt: number): OfficeClassification {
  */
 export function calculateOfficePowerSimple(input: OfficePowerSimpleInput): OfficePowerSimpleResult {
   const { sqFt, electricityRate = 0.12 } = input;
-  
+
   const classification = input.classification || determineOfficeClassification(sqFt);
   const profile = OFFICE_BUILDING_CLASSIFICATIONS[classification];
   const bessProfile = OFFICE_BESS_SIZING[classification];
-  
+
   // Calculate peak using W/sq ft
   const peakKW = (sqFt * profile.wPerSqFt.typical) / 1000;
   const avgKW = peakKW * profile.loadFactor;
-  
+
   // Annual energy
   const annualKWh = avgKW * 8760;
   const annualEnergyCost = annualKWh * electricityRate;
-  
+
   // BESS recommendation (typical value in kWh)
   const bessKWh = ((bessProfile.sizeMWh.min + bessProfile.sizeMWh.max) / 2) * 1000;
-  
+
   return {
     peakKW: Math.round(peakKW),
     avgKW: Math.round(avgKW),
@@ -4386,7 +4725,6 @@ export function calculateOfficePowerSimple(input: OfficePowerSimpleInput): Offic
     annualEnergyCostEstimate: Math.round(annualEnergyCost),
   };
 }
-
 
 // ============================================================================
 // UNIVERSITY/CAMPUS - Simple Calculation Functions
@@ -4408,35 +4746,37 @@ export interface UniversityPowerSimpleResult {
 }
 
 function determineUniversityClassification(enrollment: number): UniversityClassification {
-  if (enrollment >= 60000) return 'megaUniversity';
-  if (enrollment >= 35000) return 'majorResearch';
-  if (enrollment >= 15000) return 'largeUniversity';
-  if (enrollment >= 5000) return 'mediumUniversity';
-  return 'smallCollege';
+  if (enrollment >= 60000) return "megaUniversity";
+  if (enrollment >= 35000) return "majorResearch";
+  if (enrollment >= 15000) return "largeUniversity";
+  if (enrollment >= 5000) return "mediumUniversity";
+  return "smallCollege";
 }
 
 /**
  * Calculate University/Campus Power - Simple Interface
  * Uses kW/student benchmarks from APPA and EPA ENERGY STAR
  */
-export function calculateUniversityPowerSimple(input: UniversityPowerSimpleInput): UniversityPowerSimpleResult {
-  const { enrollment, electricityRate = 0.10 } = input;
-  
+export function calculateUniversityPowerSimple(
+  input: UniversityPowerSimpleInput
+): UniversityPowerSimpleResult {
+  const { enrollment, electricityRate = 0.1 } = input;
+
   const classification = input.classification || determineUniversityClassification(enrollment);
   const profile = UNIVERSITY_CLASSIFICATIONS[classification];
   const bessProfile = UNIVERSITY_BESS_SIZING[classification];
-  
+
   // Calculate peak using kW/student
   const peakMW = (enrollment * profile.kWPerStudent.typical) / 1000;
   const avgMW = peakMW * profile.loadFactor;
-  
+
   // Annual energy
   const annualMWh = avgMW * 8760;
   const annualEnergyCost = annualMWh * 1000 * electricityRate;
-  
+
   // BESS recommendation (typical value)
   const bessMWh = (bessProfile.sizeMWh.min + bessProfile.sizeMWh.max) / 2;
-  
+
   return {
     peakMW: Math.round(peakMW * 100) / 100,
     avgMW: Math.round(avgMW * 100) / 100,
@@ -4446,11 +4786,10 @@ export function calculateUniversityPowerSimple(input: UniversityPowerSimpleInput
   };
 }
 
-
 /**
  * Calculate power requirement for Manufacturing Facility
  * Source: CBECS 2018, industrial energy benchmarks
- * 
+ *
  * @param sqFt - Facility square footage
  * @param industryType - Type of manufacturing (optional)
  * @returns Power in MW
@@ -4462,33 +4801,41 @@ export function calculateManufacturingPower(
   // Peak demand varies widely: 10-25 W/sq ft
   // Default to 15 W/sq ft (moderate manufacturing at peak)
   let wattsPerSqFt = POWER_DENSITY_STANDARDS.manufacturing; // 15 W/sq ft
-  
+
   // Adjust by industry type if provided
   if (industryType) {
     switch (industryType.toLowerCase()) {
-      case 'light': wattsPerSqFt = 10.0; break;      // Assembly, packaging
-      case 'heavy': wattsPerSqFt = 25.0; break;      // Foundry, heavy machinery
-      case 'electronics': wattsPerSqFt = 18.0; break; // Clean rooms, precision
-      case 'food': wattsPerSqFt = 15.0; break;        // Processing, refrigeration
+      case "light":
+        wattsPerSqFt = 10.0;
+        break; // Assembly, packaging
+      case "heavy":
+        wattsPerSqFt = 25.0;
+        break; // Foundry, heavy machinery
+      case "electronics":
+        wattsPerSqFt = 18.0;
+        break; // Clean rooms, precision
+      case "food":
+        wattsPerSqFt = 15.0;
+        break; // Processing, refrigeration
     }
   }
-  
+
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100), // Min 100kW
     durationHrs: 4,
     description: `Manufacturing: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CBECS industrial peak demand',
-    inputs: { sqFt, wattsPerSqFt, industryType }
+    calculationMethod: "CBECS industrial peak demand",
+    inputs: { sqFt, wattsPerSqFt, industryType },
   };
 }
 
 /**
  * Calculate power requirement for Warehouse/Logistics
  * Source: CBECS 2018
- * 
+ *
  * @param sqFt - Warehouse square footage
  * @param isColdStorage - Whether it's refrigerated
  * @returns Power in MW
@@ -4500,25 +4847,27 @@ export function calculateWarehousePower(
   // Peak demand:
   // Standard warehouse: 2 W/sq ft (forklifts charging, dock doors, lighting, HVAC peak)
   // Cold storage: 8 W/sq ft (all compressors running at peak load)
-  const wattsPerSqFt = isColdStorage ? POWER_DENSITY_STANDARDS.coldStorage : POWER_DENSITY_STANDARDS.warehouse;
+  const wattsPerSqFt = isColdStorage
+    ? POWER_DENSITY_STANDARDS.coldStorage
+    : POWER_DENSITY_STANDARDS.warehouse;
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
-  const type = isColdStorage ? 'Cold Storage' : 'Warehouse';
-  
+
+  const type = isColdStorage ? "Cold Storage" : "Warehouse";
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: isColdStorage ? 8 : 4, // Cold storage needs longer backup
     description: `${type}: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CBECS warehouse/storage benchmark',
-    inputs: { sqFt, wattsPerSqFt, isColdStorage }
+    calculationMethod: "CBECS warehouse/storage benchmark",
+    inputs: { sqFt, wattsPerSqFt, isColdStorage },
   };
 }
 
 /**
  * Calculate power requirement for Retail
  * Source: Energy Star, CBECS 2018
- * 
+ *
  * @param sqFt - Retail square footage
  * @returns Power in MW
  */
@@ -4527,20 +4876,20 @@ export function calculateRetailPower(sqFt: number): PowerCalculationResult {
   const wattsPerSqFt = POWER_DENSITY_STANDARDS.retail; // 8.0 W/sq ft
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.02, Math.round(powerMW * 100) / 100), // Min 20kW
     durationHrs: 4,
     description: `Retail: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CBECS retail peak demand (8 W/sq ft)',
-    inputs: { sqFt, wattsPerSqFt }
+    calculationMethod: "CBECS retail peak demand (8 W/sq ft)",
+    inputs: { sqFt, wattsPerSqFt },
   };
 }
 
 /**
  * Calculate power requirement for Shopping Center/Mall
  * Source: CBECS 2018
- * 
+ *
  * @param sqFt - Total retail square footage
  * @returns Power in MW
  */
@@ -4549,20 +4898,20 @@ export function calculateShoppingCenterPower(sqFt: number): PowerCalculationResu
   const wattsPerSqFt = POWER_DENSITY_STANDARDS.shoppingCenter; // 10.0 W/sq ft
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100), // Min 100kW
     durationHrs: 4,
     description: `Shopping Center: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CBECS mall peak demand (10 W/sq ft)',
-    inputs: { sqFt, wattsPerSqFt }
+    calculationMethod: "CBECS mall peak demand (10 W/sq ft)",
+    inputs: { sqFt, wattsPerSqFt },
   };
 }
 
 /**
  * Calculate power requirement for Agriculture
  * Source: USDA, agricultural extension services
- * 
+ *
  * @param acres - Farm acreage
  * @param irrigationKW - Irrigation pump load (optional)
  * @param farmType - Type of farming operation
@@ -4575,41 +4924,55 @@ export function calculateAgriculturePower(
 ): PowerCalculationResult {
   // Peak power by farm type (kW per acre) - when all pumps running
   let kWPerAcre = POWER_DENSITY_STANDARDS.agriculturePerAcre; // 0.6 kW/acre default
-  
+
   if (farmType) {
     switch (farmType.toLowerCase()) {
-      case 'row-crop': kWPerAcre = 0.4; break;       // Seasonal irrigation peak
-      case 'dairy': kWPerAcre = 1.2; break;          // Milk cooling, ventilation at peak
-      case 'greenhouse': kWPerAcre = 8.0; break;     // Climate control at full
-      case 'orchard': kWPerAcre = 0.5; break;        // Irrigation + processing peak
-      case 'vineyard': kWPerAcre = 0.4; break;       // Irrigation + winery peak
-      case 'processing': kWPerAcre = 1.5; break;     // All processing equipment running
-      case 'mixed': kWPerAcre = 0.8; break;          // Combined operations peak
+      case "row-crop":
+        kWPerAcre = 0.4;
+        break; // Seasonal irrigation peak
+      case "dairy":
+        kWPerAcre = 1.2;
+        break; // Milk cooling, ventilation at peak
+      case "greenhouse":
+        kWPerAcre = 8.0;
+        break; // Climate control at full
+      case "orchard":
+        kWPerAcre = 0.5;
+        break; // Irrigation + processing peak
+      case "vineyard":
+        kWPerAcre = 0.4;
+        break; // Irrigation + winery peak
+      case "processing":
+        kWPerAcre = 1.5;
+        break; // All processing equipment running
+      case "mixed":
+        kWPerAcre = 0.8;
+        break; // Combined operations peak
     }
   }
-  
+
   let powerKW = acres * kWPerAcre;
-  
+
   // Add irrigation load if specified (this is the big one for farms)
   if (irrigationKW && irrigationKW > 0) {
     powerKW += irrigationKW;
   }
-  
+
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: 4,
-    description: `Agriculture: ${acres.toLocaleString()} acres × ${kWPerAcre} kW/acre${irrigationKW ? ` + ${irrigationKW}kW irrigation` : ''} = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'USDA agricultural peak demand',
-    inputs: { acres, kWPerAcre, irrigationKW, farmType }
+    description: `Agriculture: ${acres.toLocaleString()} acres × ${kWPerAcre} kW/acre${irrigationKW ? ` + ${irrigationKW}kW irrigation` : ""} = ${powerKW.toFixed(1)} kW`,
+    calculationMethod: "USDA agricultural peak demand",
+    inputs: { acres, kWPerAcre, irrigationKW, farmType },
   };
 }
 
 /**
  * Calculate power requirement for Casino/Gaming
  * Source: Gaming industry benchmarks
- * 
+ *
  * @param gamingFloorSqFt - Gaming floor square footage
  * @returns Power in MW
  */
@@ -4618,20 +4981,20 @@ export function calculateCasinoPower(gamingFloorSqFt: number): PowerCalculationR
   const wattsPerSqFt = POWER_DENSITY_STANDARDS.casino; // 18 W/sq ft
   const powerKW = (gamingFloorSqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100), // Min 200kW
     durationHrs: 4,
     description: `Casino: ${gamingFloorSqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'Gaming industry peak demand (18 W/sq ft)',
-    inputs: { gamingFloorSqFt, wattsPerSqFt }
+    calculationMethod: "Gaming industry peak demand (18 W/sq ft)",
+    inputs: { gamingFloorSqFt, wattsPerSqFt },
   };
 }
 
 /**
  * Calculate power requirement for Indoor Farm/Vertical Farm
  * Source: Controlled environment agriculture benchmarks
- * 
+ *
  * @param growingAreaSqFt - Growing area square footage
  * @param ledWattagePerSqFt - LED lighting density (default 40 W/sq ft)
  * @returns Power in MW
@@ -4643,23 +5006,23 @@ export function calculateIndoorFarmPower(
   // Peak demand: LED lights at full + HVAC/dehumidification peak
   // Base LED: 40-60 W/sq ft (use 50 default)
   // Add 30% for HVAC/dehumidification at peak
-  const totalWattsPerSqFt = ledWattagePerSqFt * 1.30;
+  const totalWattsPerSqFt = ledWattagePerSqFt * 1.3;
   const powerKW = (growingAreaSqFt * totalWattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.1, Math.round(powerMW * 100) / 100), // Min 100kW
     durationHrs: 6, // Longer for plant growth cycles
     description: `Indoor Farm: ${growingAreaSqFt.toLocaleString()} sq ft × ${totalWattsPerSqFt.toFixed(1)} W/sqft peak = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'CEA industry peak demand (LED + 30% HVAC)',
-    inputs: { growingAreaSqFt, ledWattagePerSqFt, totalWattsPerSqFt }
+    calculationMethod: "CEA industry peak demand (LED + 30% HVAC)",
+    inputs: { growingAreaSqFt, ledWattagePerSqFt, totalWattsPerSqFt },
   };
 }
 
 /**
  * Calculate power requirement for Apartment Complex
  * Source: RECS (Residential Energy Consumption Survey)
- * 
+ *
  * @param unitCount - Number of apartment units
  * @param avgUnitSqFt - Average unit size (default 900 sq ft)
  * @returns Power in MW
@@ -4673,20 +5036,20 @@ export function calculateApartmentPower(
   const kWPerUnit = 1.8;
   const powerKW = unitCount * kWPerUnit;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.05, Math.round(powerMW * 100) / 100), // Min 50kW
     durationHrs: 4,
     description: `Apartments: ${unitCount} units × ${kWPerUnit} kW/unit = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'RECS multifamily benchmark (1.8 kW/unit)',
-    inputs: { unitCount, kWPerUnit, avgUnitSqFt }
+    calculationMethod: "RECS multifamily benchmark (1.8 kW/unit)",
+    inputs: { unitCount, kWPerUnit, avgUnitSqFt },
   };
 }
 
 /**
  * Calculate power requirement for College/University
  * Source: AASHE (Association for the Advancement of Sustainability in Higher Education)
- * 
+ *
  * @param studentCount - Student enrollment
  * @returns Power in MW
  */
@@ -4696,13 +5059,13 @@ export function calculateCollegePower(studentCount: number): PowerCalculationRes
   const kWPerStudent = 0.5;
   const powerKW = studentCount * kWPerStudent;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.2, Math.round(powerMW * 100) / 100), // Min 200kW
     durationHrs: 4,
     description: `College: ${studentCount.toLocaleString()} students × ${kWPerStudent} kW/student = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'AASHE higher education benchmark (0.5 kW/student)',
-    inputs: { studentCount, kWPerStudent }
+    calculationMethod: "AASHE higher education benchmark (0.5 kW/student)",
+    inputs: { studentCount, kWPerStudent },
   };
 }
 
@@ -4722,29 +5085,34 @@ export function calculateCollegePower(studentCount: number): PowerCalculationRes
 
 export interface CollegePowerInput {
   // Campus Size & Scale
-  campusType?: 'community_college' | 'liberal_arts' | 'research_university' | 'medical_school';
+  campusType?: "community_college" | "liberal_arts" | "research_university" | "medical_school";
   totalBuildingSqFt?: number | string; // Can be number or select option value
   buildingCount?: number;
   studentEnrollment?: number | string;
-  
+
   // High-Energy Facilities
-  researchFacilities?: 'none' | 'dry_labs' | 'wet_labs' | 'clean_rooms' | 'supercomputing';
+  researchFacilities?: "none" | "dry_labs" | "wet_labs" | "clean_rooms" | "supercomputing";
   dormitoryBeds?: number;
-  dataCenterSize?: 'minimal' | 'small' | 'medium' | 'large';
-  medicalFacilities?: 'none' | 'health_center' | 'urgent_care' | 'teaching_hospital';
-  athleticFacilities?: 'gym_only' | 'pool_aquatics' | 'indoor_arena' | 'football_stadium' | 'multiple_venues';
-  
+  dataCenterSize?: "minimal" | "small" | "medium" | "large";
+  medicalFacilities?: "none" | "health_center" | "urgent_care" | "teaching_hospital";
+  athleticFacilities?:
+    | "gym_only"
+    | "pool_aquatics"
+    | "indoor_arena"
+    | "football_stadium"
+    | "multiple_venues";
+
   // Infrastructure
-  centralPlant?: 'distributed' | 'central_chiller' | 'central_steam' | 'cogeneration';
-  diningOperations?: 'minimal' | '1_2_halls' | '3_5_halls' | '5_plus_halls';
-  
+  centralPlant?: "distributed" | "central_chiller" | "central_steam" | "cogeneration";
+  diningOperations?: "minimal" | "1_2_halls" | "3_5_halls" | "5_plus_halls";
+
   // Goals
-  backupPowerNeeds?: 'it_data_only' | 'research_labs' | 'medical_research' | 'full_campus';
-  
+  backupPowerNeeds?: "it_data_only" | "research_labs" | "medical_research" | "full_campus";
+
   // Optional: Known peak demand
-  peakDemandKnown?: 'yes' | 'approximately' | 'no';
+  peakDemandKnown?: "yes" | "approximately" | "no";
   peakDemandValue?: number;
-  
+
   electricityRate?: number;
 }
 
@@ -4778,20 +5146,20 @@ const CAMPUS_TYPE_MULTIPLIERS: Record<string, number> = {
 // Square footage lookup from select options
 const SQ_FT_LOOKUP: Record<string, number> = {
   under_500k: 350000,
-  '500k_1m': 750000,
-  '1_3_million': 2000000,
-  '3_5_million': 4000000,
-  '5_10_million': 7500000,
+  "500k_1m": 750000,
+  "1_3_million": 2000000,
+  "3_5_million": 4000000,
+  "5_10_million": 7500000,
   over_10_million: 12000000,
 };
 
 // Student enrollment lookup
 const ENROLLMENT_LOOKUP: Record<string, number> = {
   under_2k: 1500,
-  '2k_5k': 3500,
-  '5k_15k': 10000,
-  '15k_30k': 22500,
-  '30k_50k': 40000,
+  "2k_5k": 3500,
+  "5k_15k": 10000,
+  "15k_30k": 22500,
+  "30k_50k": 40000,
   over_50k: 60000,
 };
 
@@ -4828,22 +5196,22 @@ const ATHLETIC_FACILITIES_KW: Record<string, number> = {
 
 const DINING_OPERATIONS_KW: Record<string, number> = {
   minimal: 50,
-  '1_2_halls': 150,
-  '3_5_halls': 350,
-  '5_plus_halls': 600,
+  "1_2_halls": 150,
+  "3_5_halls": 350,
+  "5_plus_halls": 600,
 };
 
 const CRITICAL_LOAD_PERCENT: Record<string, number> = {
   it_data_only: 0.15,
-  research_labs: 0.30,
-  medical_research: 0.50,
+  research_labs: 0.3,
+  medical_research: 0.5,
   full_campus: 0.85,
 };
 
 /**
  * Calculate comprehensive power requirement for College/University
  * Uses all 16 question inputs for accurate sizing
- * 
+ *
  * Base: 8 W/sqft × campusTypeMultiplier
  * + Dorms: 0.8 kW/bed
  * + Facilities: lookup tables
@@ -4851,44 +5219,44 @@ const CRITICAL_LOAD_PERCENT: Record<string, number> = {
  */
 export function calculateCollegePowerComprehensive(input: CollegePowerInput): CollegePowerResult {
   const {
-    campusType = 'research_university',
+    campusType = "research_university",
     totalBuildingSqFt,
     buildingCount = 25,
     studentEnrollment,
-    researchFacilities = 'dry_labs',
+    researchFacilities = "dry_labs",
     dormitoryBeds = 2000,
-    dataCenterSize = 'small',
-    medicalFacilities = 'none',
-    athleticFacilities = 'pool_aquatics',
-    diningOperations = '1_2_halls',
-    backupPowerNeeds = 'research_labs',
+    dataCenterSize = "small",
+    medicalFacilities = "none",
+    athleticFacilities = "pool_aquatics",
+    diningOperations = "1_2_halls",
+    backupPowerNeeds = "research_labs",
     peakDemandKnown,
     peakDemandValue,
-    electricityRate = 0.10,
+    electricityRate = 0.1,
   } = input;
-  
+
   // Resolve square footage
   let sqFt = 2000000; // Default
-  if (typeof totalBuildingSqFt === 'number') {
+  if (typeof totalBuildingSqFt === "number") {
     sqFt = totalBuildingSqFt;
-  } else if (typeof totalBuildingSqFt === 'string') {
+  } else if (typeof totalBuildingSqFt === "string") {
     sqFt = SQ_FT_LOOKUP[totalBuildingSqFt] || 2000000;
   }
-  
+
   // Resolve enrollment
   let enrollment = 15000; // Default
-  if (typeof studentEnrollment === 'number') {
+  if (typeof studentEnrollment === "number") {
     enrollment = studentEnrollment;
-  } else if (typeof studentEnrollment === 'string') {
+  } else if (typeof studentEnrollment === "string") {
     enrollment = ENROLLMENT_LOOKUP[studentEnrollment] || 15000;
   }
-  
+
   // Campus type multiplier
   const typeMultiplier = CAMPUS_TYPE_MULTIPLIERS[campusType] || 1.0;
-  
+
   // Base calculation: 8 W/sqft × multiplier
-  const baseKW = (sqFt * 0.008) * typeMultiplier;
-  
+  const baseKW = sqFt * 0.008 * typeMultiplier;
+
   // Add-ons
   const dormitoryKW = (dormitoryBeds || 0) * 0.8;
   const researchKW = RESEARCH_FACILITIES_KW[researchFacilities] || 0;
@@ -4896,43 +5264,44 @@ export function calculateCollegePowerComprehensive(input: CollegePowerInput): Co
   const medicalKW = MEDICAL_FACILITIES_KW[medicalFacilities] || 0;
   const athleticKW = ATHLETIC_FACILITIES_KW[athleticFacilities] || 0;
   const diningKW = DINING_OPERATIONS_KW[diningOperations] || 0;
-  
+
   // Total base load (before peak factor)
-  const totalBaseKW = baseKW + dormitoryKW + researchKW + dataCenterKW + medicalKW + athleticKW + diningKW;
-  
+  const totalBaseKW =
+    baseKW + dormitoryKW + researchKW + dataCenterKW + medicalKW + athleticKW + diningKW;
+
   // Peak demand: 30% factor for higher ed
   const PEAK_FACTOR = 1.3;
   let peakKW: number;
-  
+
   // Use known peak if provided
-  if (peakDemandKnown === 'yes' && peakDemandValue && peakDemandValue > 0) {
+  if (peakDemandKnown === "yes" && peakDemandValue && peakDemandValue > 0) {
     peakKW = peakDemandValue;
-  } else if (peakDemandKnown === 'approximately' && peakDemandValue) {
+  } else if (peakDemandKnown === "approximately" && peakDemandValue) {
     // Blend known value with calculation
     peakKW = (peakDemandValue + totalBaseKW * PEAK_FACTOR) / 2;
   } else {
     peakKW = totalBaseKW * PEAK_FACTOR;
   }
-  
+
   // Critical load for backup
-  const criticalPercent = CRITICAL_LOAD_PERCENT[backupPowerNeeds] || 0.30;
+  const criticalPercent = CRITICAL_LOAD_PERCENT[backupPowerNeeds] || 0.3;
   const criticalLoadKW = peakKW * criticalPercent;
-  
+
   // BESS recommendation: 4 hours of critical load
   const bessKWh = criticalLoadKW * 4;
-  
+
   // Annual energy estimate: base load × 8760 hours × 0.65 load factor
   const annualKWh = totalBaseKW * 8760 * 0.65;
   const annualEnergyCost = annualKWh * electricityRate;
-  
+
   // Classification based on size
-  let classification = 'Small College';
-  if (peakKW >= 30000) classification = 'Mega Campus';
-  else if (peakKW >= 15000) classification = 'Major Research University';
-  else if (peakKW >= 7500) classification = 'Large University';
-  else if (peakKW >= 3000) classification = 'Medium University';
-  else if (peakKW >= 1000) classification = 'Small University';
-  
+  let classification = "Small College";
+  if (peakKW >= 30000) classification = "Mega Campus";
+  else if (peakKW >= 15000) classification = "Major Research University";
+  else if (peakKW >= 7500) classification = "Large University";
+  else if (peakKW >= 3000) classification = "Medium University";
+  else if (peakKW >= 1000) classification = "Small University";
+
   return {
     peakKW: Math.round(peakKW),
     baseLoadKW: Math.round(totalBaseKW),
@@ -4949,7 +5318,7 @@ export function calculateCollegePowerComprehensive(input: CollegePowerInput): Co
       diningKW: Math.round(diningKW),
     },
     campusClassification: classification,
-    description: `${classification}: ${(sqFt/1000000).toFixed(1)}M sqft, ${enrollment.toLocaleString()} students, ${dormitoryBeds.toLocaleString()} beds → ${Math.round(peakKW).toLocaleString()} kW peak`,
+    description: `${classification}: ${(sqFt / 1000000).toFixed(1)}M sqft, ${enrollment.toLocaleString()} students, ${dormitoryBeds.toLocaleString()} beds → ${Math.round(peakKW).toLocaleString()} kW peak`,
   };
 }
 
@@ -4957,22 +5326,24 @@ export function calculateCollegePowerComprehensive(input: CollegePowerInput): Co
  * Simple wrapper for backward compatibility
  * Converts comprehensive result to standard PowerCalculationResult
  */
-export function calculateCollegePowerFromQuestions(input: CollegePowerInput): PowerCalculationResult {
+export function calculateCollegePowerFromQuestions(
+  input: CollegePowerInput
+): PowerCalculationResult {
   const result = calculateCollegePowerComprehensive(input);
-  
+
   return {
     powerMW: Math.max(0.2, Math.round(result.peakKW / 10) / 100), // Round to 2 decimal places
     durationHrs: 4,
     description: result.description,
-    calculationMethod: 'Comprehensive college calculation (Dec 2025)',
-    inputs: input
+    calculationMethod: "Comprehensive college calculation (Dec 2025)",
+    inputs: input,
   };
 }
 
 /**
  * Calculate power requirement for Car Wash
  * Source: International Carwash Association
- * 
+ *
  * @param bayCount - Number of wash bays
  * @param washType - Type of car wash
  * @returns Power in MW
@@ -4988,31 +5359,31 @@ export function calculateCollegePowerFromQuestions(input: CollegePowerInput): Po
 // Facility Type benchmarks (from spec sheet Section 1)
 export const CAR_WASH_FACILITY_TYPES = {
   singleBayAutomatic: {
-    name: 'Single-Bay Automatic',
-    connected: { min: 75, max: 150 },   // kW
-    peak: { min: 50, max: 100 },        // kW
+    name: "Single-Bay Automatic",
+    connected: { min: 75, max: 150 }, // kW
+    peak: { min: 50, max: 100 }, // kW
     avgOperating: { min: 30, max: 60 }, // kW
   },
   expressTunnelStandard: {
-    name: 'Express Tunnel (Standard)',
+    name: "Express Tunnel (Standard)",
     connected: { min: 200, max: 400 },
     peak: { min: 150, max: 300 },
     avgOperating: { min: 80, max: 150 },
   },
   expressTunnelAdvanced: {
-    name: 'Express Tunnel (Advanced/Robotic)',
+    name: "Express Tunnel (Advanced/Robotic)",
     connected: { min: 350, max: 600 },
     peak: { min: 250, max: 450 },
     avgOperating: { min: 120, max: 250 },
   },
   fullServiceTunnel: {
-    name: 'Full-Service Tunnel',
+    name: "Full-Service Tunnel",
     connected: { min: 400, max: 700 },
     peak: { min: 300, max: 500 },
     avgOperating: { min: 150, max: 300 },
   },
   multiBaySelfService: {
-    name: 'Multi-Bay Self-Service (4-6 bays)',
+    name: "Multi-Bay Self-Service (4-6 bays)",
     connected: { min: 100, max: 200 },
     peak: { min: 60, max: 120 },
     avgOperating: { min: 40, max: 80 },
@@ -5022,49 +5393,49 @@ export const CAR_WASH_FACILITY_TYPES = {
 // Equipment power specs (from spec sheet Sections 2-4)
 export const CAR_WASH_EQUIPMENT_POWER_DB = {
   // Section 2.1: Conveyor & Drive Systems
-  chainConveyorMotor: { min: 3.7, max: 7.5, typical: 5.5 },      // 5-10 HP
-  beltConveyorSystem: { min: 2.2, max: 5.6, typical: 3.7 },      // 3-7.5 HP
-  entranceExitRollers: { min: 0.75, max: 2.2, typical: 1.5 },    // 1-3 HP
-  
+  chainConveyorMotor: { min: 3.7, max: 7.5, typical: 5.5 }, // 5-10 HP
+  beltConveyorSystem: { min: 2.2, max: 5.6, typical: 3.7 }, // 3-7.5 HP
+  entranceExitRollers: { min: 0.75, max: 2.2, typical: 1.5 }, // 1-3 HP
+
   // Section 2.2: Water Systems
-  highPressurePump: { min: 7.5, max: 18.6, typical: 11 },        // 10-25 HP, 1000-1500 PSI
-  boosterPump: { min: 3.7, max: 11, typical: 7.5 },              // 5-15 HP
-  waterHeaterElectric: { min: 50, max: 150, typical: 75 },       // Major load!
-  reclaimRecyclingSystem: { min: 2.2, max: 3.7, typical: 3 },    // 3-5 HP
-  spotFreeRinseRO: { min: 2, max: 5, typical: 3 },               // Reverse osmosis
-  
+  highPressurePump: { min: 7.5, max: 18.6, typical: 11 }, // 10-25 HP, 1000-1500 PSI
+  boosterPump: { min: 3.7, max: 11, typical: 7.5 }, // 5-15 HP
+  waterHeaterElectric: { min: 50, max: 150, typical: 75 }, // Major load!
+  reclaimRecyclingSystem: { min: 2.2, max: 3.7, typical: 3 }, // 3-5 HP
+  spotFreeRinseRO: { min: 2, max: 5, typical: 3 }, // Reverse osmosis
+
   // Section 2.3: Wash Equipment
-  rotatingBrushMitter: { min: 1.5, max: 3.7, typical: 2.5 },     // 2-5 HP each
-  highPressureArch: { min: 3.7, max: 7.5, typical: 5.5 },        // 5-10 HP
-  foamApplicator: { min: 0.75, max: 2.2, typical: 1.5 },         // 1-3 HP
-  triplefoamSystem: { min: 0.75, max: 1.5, typical: 1 },         // 1-2 HP
+  rotatingBrushMitter: { min: 1.5, max: 3.7, typical: 2.5 }, // 2-5 HP each
+  highPressureArch: { min: 3.7, max: 7.5, typical: 5.5 }, // 5-10 HP
+  foamApplicator: { min: 0.75, max: 2.2, typical: 1.5 }, // 1-3 HP
+  triplefoamSystem: { min: 0.75, max: 1.5, typical: 1 }, // 1-2 HP
   wheelBlasterTireCleaner: { min: 1.5, max: 3.7, typical: 2.5 }, // 2-5 HP
-  
+
   // Section 2.4: Drying Systems
-  blowerDryerMotor: { min: 11, max: 22, typical: 15 },           // 15-30 HP each, 2-6 per tunnel
-  heatedDryerElement: { min: 20, max: 50, typical: 30 },         // Supplemental heat
-  sideDryers: { min: 7.5, max: 15, typical: 11 },                // 10-20 HP each
-  
+  blowerDryerMotor: { min: 11, max: 22, typical: 15 }, // 15-30 HP each, 2-6 per tunnel
+  heatedDryerElement: { min: 20, max: 50, typical: 30 }, // Supplemental heat
+  sideDryers: { min: 7.5, max: 15, typical: 11 }, // 10-20 HP each
+
   // Section 3.1: Robotic Wash Systems
-  roboticWashArm: { min: 2.2, max: 3.7, typical: 3 },            // 3-5 HP/axis
-  positioningSystem: { min: 5, max: 10, typical: 7 },            // Multi-axis control
-  ultrasonicSensorArray: { min: 0.5, max: 1, typical: 0.75 },    // Vehicle profiling
-  laserProfilingSystem: { min: 0.3, max: 0.5, typical: 0.4 },    // Precision mapping
-  
+  roboticWashArm: { min: 2.2, max: 3.7, typical: 3 }, // 3-5 HP/axis
+  positioningSystem: { min: 5, max: 10, typical: 7 }, // Multi-axis control
+  ultrasonicSensorArray: { min: 0.5, max: 1, typical: 0.75 }, // Vehicle profiling
+  laserProfilingSystem: { min: 0.3, max: 0.5, typical: 0.4 }, // Precision mapping
+
   // Section 3.2: Smart Controls & Automation
-  plcAutomationController: { min: 0.5, max: 2, typical: 1 },     // Main control
-  vehicleDetectionSystem: { min: 0.3, max: 1, typical: 0.5 },    // Entry/exit sensing
+  plcAutomationController: { min: 0.5, max: 2, typical: 1 }, // Main control
+  vehicleDetectionSystem: { min: 0.3, max: 1, typical: 0.5 }, // Entry/exit sensing
   licensePlateRecognition: { min: 0.2, max: 0.5, typical: 0.3 }, // Customer ID
-  paymentKiosk: { min: 0.3, max: 0.5, typical: 0.4 },            // Self-service
-  precisionChemicalMetering: { min: 1, max: 2, typical: 1.5 },   // Automated delivery
-  heatedChemicalTanks: { min: 5, max: 10, typical: 7 },          // Temp-controlled
-  
+  paymentKiosk: { min: 0.3, max: 0.5, typical: 0.4 }, // Self-service
+  precisionChemicalMetering: { min: 1, max: 2, typical: 1.5 }, // Automated delivery
+  heatedChemicalTanks: { min: 5, max: 10, typical: 7 }, // Temp-controlled
+
   // Section 4: Facility Support Systems
-  ledTunnelLighting: { min: 5, max: 15, typical: 10 },           // Interior illumination
-  hvacClimateControl: { min: 10, max: 30, typical: 15 },         // Building conditioning
-  vacuumIsland: { min: 2.2, max: 3.7, typical: 3 },              // 3-5 HP per station
-  airCompressor: { min: 3.7, max: 11, typical: 7.5 },            // 5-15 HP
-  securitySurveillance: { min: 0.5, max: 1, typical: 0.75 },     // Cameras & monitoring
+  ledTunnelLighting: { min: 5, max: 15, typical: 10 }, // Interior illumination
+  hvacClimateControl: { min: 10, max: 30, typical: 15 }, // Building conditioning
+  vacuumIsland: { min: 2.2, max: 3.7, typical: 3 }, // 3-5 HP per station
+  airCompressor: { min: 3.7, max: 11, typical: 7.5 }, // 5-15 HP
+  securitySurveillance: { min: 0.5, max: 1, typical: 0.75 }, // Cameras & monitoring
 } as const;
 
 /**
@@ -5078,10 +5449,10 @@ export const CAR_WASH_EQUIPMENT_DEFAULTS = {
     entranceExitRollers: 1,
     highPressurePump: 1,
     boosterPump: 0,
-    waterHeaterElectric: 0,  // Often gas or none
+    waterHeaterElectric: 0, // Often gas or none
     reclaimRecyclingSystem: 1,
     spotFreeRinseRO: 1,
-    rotatingBrushMitter: 4,  // Top, sides
+    rotatingBrushMitter: 4, // Top, sides
     highPressureArch: 1,
     foamApplicator: 1,
     triplefoamSystem: 1,
@@ -5112,7 +5483,7 @@ export const CAR_WASH_EQUIPMENT_DEFAULTS = {
     foamApplicator: 2,
     triplefoamSystem: 1,
     wheelBlasterTireCleaner: 2,
-    blowerDryerMotor: 4,  // 2-6 units typical
+    blowerDryerMotor: 4, // 2-6 units typical
     heatedDryerElement: 1,
     sideDryers: 2,
     plcAutomationController: 1,
@@ -5191,22 +5562,27 @@ export const CAR_WASH_EQUIPMENT_DEFAULTS = {
   multiBaySelfService: {
     // Per bay values - will be multiplied by bay count
     entranceExitRollers: 0,
-    highPressurePump: 1,  // 1 per 2 bays typically
+    highPressurePump: 1, // 1 per 2 bays typically
     boosterPump: 0,
     waterHeaterElectric: 0,
-    reclaimRecyclingSystem: 1,  // Shared
-    spotFreeRinseRO: 1,         // Shared
-    foamApplicator: 1,          // Per bay
-    ledTunnelLighting: 1,       // Shared
-    vacuumIsland: 1,            // Per bay
-    airCompressor: 1,           // Shared
-    securitySurveillance: 1,    // Shared
+    reclaimRecyclingSystem: 1, // Shared
+    spotFreeRinseRO: 1, // Shared
+    foamApplicator: 1, // Per bay
+    ledTunnelLighting: 1, // Shared
+    vacuumIsland: 1, // Per bay
+    airCompressor: 1, // Shared
+    securitySurveillance: 1, // Shared
   },
 } as const;
 
 export interface CarWashEquipmentInput {
   bayCount: number;
-  washType: 'singleBayAutomatic' | 'expressTunnelStandard' | 'expressTunnelAdvanced' | 'fullServiceTunnel' | 'multiBaySelfService';
+  washType:
+    | "singleBayAutomatic"
+    | "expressTunnelStandard"
+    | "expressTunnelAdvanced"
+    | "fullServiceTunnel"
+    | "multiBaySelfService";
   // Optional equipment overrides (if user specifies exact counts)
   equipment?: Partial<Record<keyof typeof CAR_WASH_EQUIPMENT_POWER_DB, number>>;
   hasVacuums?: boolean;
@@ -5219,125 +5595,137 @@ export interface CarWashEquipmentInput {
  * Calculate car wash power using REAL equipment specs from BESS Sizing Questionnaire
  * This is the SSOT calculation based on actual car wash equipment
  */
-export function calculateCarWashPowerFromEquipment(input: CarWashEquipmentInput): PowerCalculationResult {
-  const { 
-    bayCount, 
-    washType, 
+export function calculateCarWashPowerFromEquipment(
+  input: CarWashEquipmentInput
+): PowerCalculationResult {
+  const {
+    bayCount,
+    washType,
     equipment: overrides,
-    hasVacuums = true, 
+    hasVacuums = true,
     hasDryers = true,
     hasWaterHeater = true,
     hasRobotics = false,
   } = input;
-  
+
   const power = CAR_WASH_EQUIPMENT_POWER_DB;
   const facilityType = CAR_WASH_FACILITY_TYPES[washType];
-  const defaults = CAR_WASH_EQUIPMENT_DEFAULTS[washType] || CAR_WASH_EQUIPMENT_DEFAULTS.expressTunnelStandard;
-  
+  const defaults =
+    CAR_WASH_EQUIPMENT_DEFAULTS[washType] || CAR_WASH_EQUIPMENT_DEFAULTS.expressTunnelStandard;
+
   // Calculate total connected load from equipment
   let totalConnectedKW = 0;
   const breakdown: Record<string, number> = {};
-  
+
   // Helper to get equipment count (override or default)
   const getCount = (key: string): number => {
     if (overrides && key in overrides) return overrides[key as keyof typeof overrides] || 0;
     return (defaults as any)[key] || 0;
   };
-  
+
   // Conveyor & Drive Systems
-  breakdown['conveyors'] = 
-    getCount('chainConveyorMotor') * power.chainConveyorMotor.typical +
-    getCount('beltConveyorSystem') * power.beltConveyorSystem.typical +
-    getCount('entranceExitRollers') * power.entranceExitRollers.typical;
-  
+  breakdown["conveyors"] =
+    getCount("chainConveyorMotor") * power.chainConveyorMotor.typical +
+    getCount("beltConveyorSystem") * power.beltConveyorSystem.typical +
+    getCount("entranceExitRollers") * power.entranceExitRollers.typical;
+
   // Water Systems
-  breakdown['waterPumps'] = 
-    getCount('highPressurePump') * power.highPressurePump.typical +
-    getCount('boosterPump') * power.boosterPump.typical +
-    getCount('reclaimRecyclingSystem') * power.reclaimRecyclingSystem.typical +
-    getCount('spotFreeRinseRO') * power.spotFreeRinseRO.typical;
-  
+  breakdown["waterPumps"] =
+    getCount("highPressurePump") * power.highPressurePump.typical +
+    getCount("boosterPump") * power.boosterPump.typical +
+    getCount("reclaimRecyclingSystem") * power.reclaimRecyclingSystem.typical +
+    getCount("spotFreeRinseRO") * power.spotFreeRinseRO.typical;
+
   if (hasWaterHeater) {
-    breakdown['waterHeater'] = getCount('waterHeaterElectric') * power.waterHeaterElectric.typical;
+    breakdown["waterHeater"] = getCount("waterHeaterElectric") * power.waterHeaterElectric.typical;
   }
-  
+
   // Wash Equipment
-  breakdown['washEquipment'] = 
-    getCount('rotatingBrushMitter') * power.rotatingBrushMitter.typical +
-    getCount('highPressureArch') * power.highPressureArch.typical +
-    getCount('foamApplicator') * power.foamApplicator.typical +
-    getCount('triplefoamSystem') * power.triplefoamSystem.typical +
-    getCount('wheelBlasterTireCleaner') * power.wheelBlasterTireCleaner.typical;
-  
+  breakdown["washEquipment"] =
+    getCount("rotatingBrushMitter") * power.rotatingBrushMitter.typical +
+    getCount("highPressureArch") * power.highPressureArch.typical +
+    getCount("foamApplicator") * power.foamApplicator.typical +
+    getCount("triplefoamSystem") * power.triplefoamSystem.typical +
+    getCount("wheelBlasterTireCleaner") * power.wheelBlasterTireCleaner.typical;
+
   // Drying Systems
   if (hasDryers) {
-    breakdown['drying'] = 
-      getCount('blowerDryerMotor') * power.blowerDryerMotor.typical +
-      getCount('heatedDryerElement') * power.heatedDryerElement.typical +
-      getCount('sideDryers') * power.sideDryers.typical;
+    breakdown["drying"] =
+      getCount("blowerDryerMotor") * power.blowerDryerMotor.typical +
+      getCount("heatedDryerElement") * power.heatedDryerElement.typical +
+      getCount("sideDryers") * power.sideDryers.typical;
   }
-  
+
   // Robotic Systems (if advanced)
-  if (hasRobotics || washType === 'expressTunnelAdvanced') {
-    breakdown['robotics'] = 
-      getCount('roboticWashArm') * power.roboticWashArm.typical +
-      getCount('positioningSystem') * power.positioningSystem.typical +
-      (getCount('ultrasonicSensorArray') || 0) * power.ultrasonicSensorArray.typical +
-      (getCount('laserProfilingSystem') || 0) * power.laserProfilingSystem.typical;
+  if (hasRobotics || washType === "expressTunnelAdvanced") {
+    breakdown["robotics"] =
+      getCount("roboticWashArm") * power.roboticWashArm.typical +
+      getCount("positioningSystem") * power.positioningSystem.typical +
+      (getCount("ultrasonicSensorArray") || 0) * power.ultrasonicSensorArray.typical +
+      (getCount("laserProfilingSystem") || 0) * power.laserProfilingSystem.typical;
   }
-  
+
   // Controls & Automation
-  breakdown['controls'] = 
-    getCount('plcAutomationController') * power.plcAutomationController.typical +
-    getCount('vehicleDetectionSystem') * power.vehicleDetectionSystem.typical +
-    (getCount('licensePlateRecognition') || 0) * power.licensePlateRecognition.typical +
-    getCount('paymentKiosk') * power.paymentKiosk.typical +
-    (getCount('precisionChemicalMetering') || 0) * power.precisionChemicalMetering.typical +
-    (getCount('heatedChemicalTanks') || 0) * power.heatedChemicalTanks.typical;
-  
+  breakdown["controls"] =
+    getCount("plcAutomationController") * power.plcAutomationController.typical +
+    getCount("vehicleDetectionSystem") * power.vehicleDetectionSystem.typical +
+    (getCount("licensePlateRecognition") || 0) * power.licensePlateRecognition.typical +
+    getCount("paymentKiosk") * power.paymentKiosk.typical +
+    (getCount("precisionChemicalMetering") || 0) * power.precisionChemicalMetering.typical +
+    (getCount("heatedChemicalTanks") || 0) * power.heatedChemicalTanks.typical;
+
   // Facility Support
-  breakdown['lighting'] = getCount('ledTunnelLighting') * power.ledTunnelLighting.typical;
-  breakdown['hvac'] = getCount('hvacClimateControl') * power.hvacClimateControl.typical;
-  breakdown['airCompressor'] = getCount('airCompressor') * power.airCompressor.typical;
-  breakdown['security'] = getCount('securitySurveillance') * power.securitySurveillance.typical;
-  
+  breakdown["lighting"] = getCount("ledTunnelLighting") * power.ledTunnelLighting.typical;
+  breakdown["hvac"] = getCount("hvacClimateControl") * power.hvacClimateControl.typical;
+  breakdown["airCompressor"] = getCount("airCompressor") * power.airCompressor.typical;
+  breakdown["security"] = getCount("securitySurveillance") * power.securitySurveillance.typical;
+
   // Vacuum Islands
   if (hasVacuums) {
-    const vacuumCount = washType === 'multiBaySelfService' ? bayCount : getCount('vacuumIsland');
-    breakdown['vacuums'] = vacuumCount * power.vacuumIsland.typical;
+    const vacuumCount = washType === "multiBaySelfService" ? bayCount : getCount("vacuumIsland");
+    breakdown["vacuums"] = vacuumCount * power.vacuumIsland.typical;
   }
-  
+
   // Sum all categories
   totalConnectedKW = Object.values(breakdown).reduce((sum, kw) => sum + (kw || 0), 0);
-  
+
   // For multi-bay self-service, scale certain equipment by bay count
-  if (washType === 'multiBaySelfService') {
+  if (washType === "multiBaySelfService") {
     // Pumps shared (1 per 2 bays), foam per bay
     const scaledPumps = Math.ceil(bayCount / 2) * power.highPressurePump.typical;
     const scaledFoam = bayCount * power.foamApplicator.typical;
-    totalConnectedKW = scaledPumps + scaledFoam + breakdown['vacuums'] + 
-      power.reclaimRecyclingSystem.typical + power.spotFreeRinseRO.typical +
-      power.ledTunnelLighting.typical + power.airCompressor.typical + power.securitySurveillance.typical;
+    totalConnectedKW =
+      scaledPumps +
+      scaledFoam +
+      breakdown["vacuums"] +
+      power.reclaimRecyclingSystem.typical +
+      power.spotFreeRinseRO.typical +
+      power.ledTunnelLighting.typical +
+      power.airCompressor.typical +
+      power.securitySurveillance.typical;
   }
-  
+
   // Peak demand is typically 70-80% of connected load
   const peakDemandKW = Math.round(totalConnectedKW * 0.75);
   const powerMW = peakDemandKW / 1000;
-  
+
   // Validate against facility type benchmarks
   const facilityPeak = facilityType.peak;
   const validatedPeakKW = Math.max(facilityPeak.min, Math.min(facilityPeak.max, peakDemandKW));
-  
+
   // Build description with top power consumers
   const sortedBreakdown = Object.entries(breakdown)
     .filter(([_, kw]) => kw > 5)
     .sort((a, b) => b[1] - a[1]);
-  
-  const topConsumers = sortedBreakdown.slice(0, 3).map(([name, kw]) => `${name}: ${kw.toFixed(0)}kW`).join(', ');
-  
+
+  const topConsumers = sortedBreakdown
+    .slice(0, 3)
+    .map(([name, kw]) => `${name}: ${kw.toFixed(0)}kW`)
+    .join(", ");
+
   const description = `${facilityType.name}: ${topConsumers} → ${validatedPeakKW} kW peak (${totalConnectedKW.toFixed(0)} kW connected)`;
-  
-  console.log('🚗 [calculateCarWashPowerFromEquipment] Detailed breakdown:', {
+
+  console.log("🚗 [calculateCarWashPowerFromEquipment] Detailed breakdown:", {
     washType,
     bayCount,
     facilityType: facilityType.name,
@@ -5347,12 +5735,12 @@ export function calculateCarWashPowerFromEquipment(input: CarWashEquipmentInput)
     validatedPeakKW,
     facilityBenchmark: facilityPeak,
   });
-  
+
   return {
     powerMW: Math.max(0.05, Math.round((validatedPeakKW / 1000) * 100) / 100),
     durationHrs: 2, // Peak shaving focus - car washes have short, intense peaks
     description,
-    calculationMethod: 'BESS Sizing Questionnaire equipment specs',
+    calculationMethod: "BESS Sizing Questionnaire equipment specs",
     inputs: { bayCount, washType, breakdown, totalConnectedKW, peakDemandKW: validatedPeakKW },
   };
 }
@@ -5366,13 +5754,13 @@ export function calculateCarWashPower(
     hasWaterHeater?: boolean;
     hasRobotics?: boolean;
     dailyVehicles?: number;
-    equipment?: CarWashEquipmentInput['equipment'];
+    equipment?: CarWashEquipmentInput["equipment"];
   }
 ): PowerCalculationResult {
   // ═══════════════════════════════════════════════════════════════════════════
   // CAR WASH POWER CALCULATION - Using BESS Sizing Questionnaire Equipment Specs
   // Source: Car Wash Equipment Specification Sheet
-  // 
+  //
   // Facility Type Benchmarks:
   // - Single-Bay Automatic:        50-100 kW peak
   // - Express Tunnel (Standard):   150-300 kW peak
@@ -5380,42 +5768,42 @@ export function calculateCarWashPower(
   // - Full-Service Tunnel:         300-500 kW peak
   // - Multi-Bay Self-Service:      60-120 kW peak
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   // Map string wash type to facility type
-  const effectiveType = washType?.toLowerCase() || 'tunnel';
-  let mappedType: CarWashEquipmentInput['washType'];
-  
+  const effectiveType = washType?.toLowerCase() || "tunnel";
+  let mappedType: CarWashEquipmentInput["washType"];
+
   switch (effectiveType) {
-    case 'self-service':
-    case 'selfservice':
-    case 'multi-bay':
-      mappedType = 'multiBaySelfService';
+    case "self-service":
+    case "selfservice":
+    case "multi-bay":
+      mappedType = "multiBaySelfService";
       break;
-    case 'automatic':
-    case 'in-bay':
-    case 'inbay':
-    case 'single-bay':
-      mappedType = 'singleBayAutomatic';
+    case "automatic":
+    case "in-bay":
+    case "inbay":
+    case "single-bay":
+      mappedType = "singleBayAutomatic";
       break;
-    case 'tunnel':
-    case 'express':
-    case 'express-tunnel':
-      mappedType = 'expressTunnelStandard';
+    case "tunnel":
+    case "express":
+    case "express-tunnel":
+      mappedType = "expressTunnelStandard";
       break;
-    case 'advanced':
-    case 'robotic':
-    case 'express-advanced':
-      mappedType = 'expressTunnelAdvanced';
+    case "advanced":
+    case "robotic":
+    case "express-advanced":
+      mappedType = "expressTunnelAdvanced";
       break;
-    case 'full-service':
-    case 'fullservice':
-      mappedType = 'fullServiceTunnel';
+    case "full-service":
+    case "fullservice":
+      mappedType = "fullServiceTunnel";
       break;
     default:
       // Default to express tunnel for commercial BESS customers
-      mappedType = 'expressTunnelStandard';
+      mappedType = "expressTunnelStandard";
   }
-  
+
   return calculateCarWashPowerFromEquipment({
     bayCount,
     washType: mappedType,
@@ -5430,7 +5818,7 @@ export function calculateCarWashPower(
 /**
  * Calculate power requirement for Gas Station
  * Source: NACS (National Association of Convenience Stores)
- * 
+ *
  * @param dispenserCount - Number of fuel dispensers/pumps
  * @param hasConvenienceStore - Whether attached store exists
  * @param stationType - 'gas-only' | 'with-cstore' | 'truck-stop'
@@ -5439,20 +5827,20 @@ export function calculateCarWashPower(
 export function calculateGasStationPower(
   dispenserCount: number,
   hasConvenienceStore: boolean = true,
-  stationType: string = 'with-cstore'
+  stationType: string = "with-cstore"
 ): PowerCalculationResult {
   // Base pump power: 1.5-2 kW per dispenser
   // Truck stop diesel pumps: 2.5 kW (larger pumps, DEF dispensers)
-  const isTrackStop = stationType === 'truck-stop';
+  const isTrackStop = stationType === "truck-stop";
   const kWPerDispenser = isTrackStop ? 2.5 : 1.5;
   const pumpPowerKW = dispenserCount * kWPerDispenser;
-  
+
   // Convenience store power based on type:
   // - Gas only: 0 kW
   // - Small C-store: 10-15 kW (2,500 sq ft × 4-6 W/sq ft)
   // - Truck stop: 40-80 kW (8,000-15,000 sq ft + kitchen + showers + gaming)
   let storePowerKW = 0;
-  if (hasConvenienceStore && stationType !== 'gas-only') {
+  if (hasConvenienceStore && stationType !== "gas-only") {
     if (isTrackStop) {
       // Truck stops have large stores, restaurants, showers, laundry
       storePowerKW = 60 + (dispenserCount > 20 ? 40 : 0); // 60-100 kW
@@ -5461,26 +5849,29 @@ export function calculateGasStationPower(
       storePowerKW = 15; // ~3,000 sq ft × 5 W/sq ft
     }
   }
-  
+
   const powerKW = pumpPowerKW + storePowerKW;
   const powerMW = powerKW / 1000;
-  
-  const stationLabel = isTrackStop ? 'Truck Stop' : 
-                       hasConvenienceStore ? 'Gas Station + C-Store' : 'Gas Station';
-  
+
+  const stationLabel = isTrackStop
+    ? "Truck Stop"
+    : hasConvenienceStore
+      ? "Gas Station + C-Store"
+      : "Gas Station";
+
   return {
     powerMW: Math.max(0.01, Math.round(powerMW * 100) / 100), // Min 10kW
     durationHrs: isTrackStop ? 6 : 4, // Truck stops need longer backup
     description: `${stationLabel}: ${dispenserCount} dispensers × ${kWPerDispenser} kW + ${storePowerKW} kW store = ${powerKW.toFixed(0)} kW`,
-    calculationMethod: 'NACS fuel retail benchmark',
-    inputs: { dispenserCount, hasConvenienceStore, stationType, pumpPowerKW, storePowerKW }
+    calculationMethod: "NACS fuel retail benchmark",
+    inputs: { dispenserCount, hasConvenienceStore, stationType, pumpPowerKW, storePowerKW },
   };
 }
 
 /**
  * Calculate power requirement for Government/Public Building
  * Source: Federal Energy Management Program (FEMP)
- * 
+ *
  * @param sqFt - Building square footage
  * @returns Power in MW
  */
@@ -5490,13 +5881,13 @@ export function calculateGovernmentPower(sqFt: number): PowerCalculationResult {
   const wattsPerSqFt = 1.5;
   const powerKW = (sqFt * wattsPerSqFt) / 1000;
   const powerMW = powerKW / 1000;
-  
+
   return {
     powerMW: Math.max(0.02, Math.round(powerMW * 100) / 100), // Min 20kW
     durationHrs: 4,
     description: `Government: ${sqFt.toLocaleString()} sq ft × ${wattsPerSqFt} W/sqft = ${powerKW.toFixed(1)} kW`,
-    calculationMethod: 'FEMP public building benchmark (1.5 W/sq ft)',
-    inputs: { sqFt, wattsPerSqFt }
+    calculationMethod: "FEMP public building benchmark (1.5 W/sq ft)",
+    inputs: { sqFt, wattsPerSqFt },
   };
 }
 
@@ -5509,63 +5900,74 @@ export function calculateUseCasePower(
   useCaseData: Record<string, any>
 ): PowerCalculationResult {
   switch (slug) {
-    case 'office':
-    case 'office-building':
+    case "office":
+    case "office-building":
       // Database uses 'officeSqFt', code accepts multiple variants
       // DB default: 50,000 sqft
       return calculateOfficePower(
-        parseInt(useCaseData.officeSqFt || useCaseData.squareFeet || useCaseData.buildingSqFt || useCaseData.sqFt) || 50000
+        parseInt(
+          useCaseData.officeSqFt ||
+            useCaseData.squareFeet ||
+            useCaseData.buildingSqFt ||
+            useCaseData.sqFt
+        ) || 50000
       );
-      
-    case 'hotel':
-    case 'hotel-hospitality':
+
+    case "hotel":
+    case "hotel-hospitality":
       // Support multiple field names: roomCount, numberOfRooms, facilitySize (from wizard)
       // BUG FIX: wizard passes facilitySize for all industries, so accept it for hotels too
-      const hotelRooms = parseInt(
-        useCaseData.roomCount || 
-        useCaseData.numberOfRooms || 
-        useCaseData.facilitySize ||  // Wizard uses facilitySize generically
-        useCaseData.rooms
-      ) || 150;  // DB default: 150 rooms
+      const hotelRooms =
+        parseInt(
+          useCaseData.roomCount ||
+            useCaseData.numberOfRooms ||
+            useCaseData.facilitySize || // Wizard uses facilitySize generically
+            useCaseData.rooms
+        ) || 150; // DB default: 150 rooms
       return calculateHotelPower(hotelRooms);
-      
-    case 'hospital': {
+
+    case "hospital": {
       // Base calculation from bed count
       const bedCount = parseInt(useCaseData.bedCount) || parseInt(useCaseData.beds) || 250;
       const baseResult = calculateHospitalPower(bedCount);
-      
+
       // Add equipment-specific power loads
       // Equipment power values from ASHRAE healthcare standards
       let equipmentLoadKW = 0;
-      let equipmentDetails: string[] = [];
-      
+      const equipmentDetails: string[] = [];
+
       // Surgical suites: 30-50 kW each (lighting, equipment, HVAC)
-      const surgicalSuites = parseInt(useCaseData.surgicalSuites) || parseInt(useCaseData.operatingRooms) || 0;
+      const surgicalSuites =
+        parseInt(useCaseData.surgicalSuites) || parseInt(useCaseData.operatingRooms) || 0;
       if (surgicalSuites > 0) {
         const surgicalPower = surgicalSuites * 40; // 40 kW average per suite
         equipmentLoadKW += surgicalPower;
         equipmentDetails.push(`${surgicalSuites} surgical suites @ 40kW = ${surgicalPower}kW`);
       }
-      
+
       // MRI machines: 50-150 kW each
-      const hasMRI = useCaseData.hasMRI === true || useCaseData.hasMRI === 'true';
+      const hasMRI = useCaseData.hasMRI === true || useCaseData.hasMRI === "true";
       const mriCount = parseInt(useCaseData.mriCount) || (hasMRI ? 1 : 0);
       if (mriCount > 0) {
         const mriPower = mriCount * 100; // 100 kW average per MRI
         equipmentLoadKW += mriPower;
         equipmentDetails.push(`${mriCount} MRI @ 100kW = ${mriPower}kW`);
       }
-      
+
       // CT scanners: 80-120 kW each
-      const hasCT = useCaseData.hasCT === true || useCaseData.hasCT === 'true' || 
-                    useCaseData.hasCTScanners === true || useCaseData.hasCTScanners === 'true';
-      const ctCount = parseInt(useCaseData.ctCount) || parseInt(useCaseData.ctScanners) || (hasCT ? 1 : 0);
+      const hasCT =
+        useCaseData.hasCT === true ||
+        useCaseData.hasCT === "true" ||
+        useCaseData.hasCTScanners === true ||
+        useCaseData.hasCTScanners === "true";
+      const ctCount =
+        parseInt(useCaseData.ctCount) || parseInt(useCaseData.ctScanners) || (hasCT ? 1 : 0);
       if (ctCount > 0) {
         const ctPower = ctCount * 100; // 100 kW average per CT
         equipmentLoadKW += ctPower;
         equipmentDetails.push(`${ctCount} CT scanners @ 100kW = ${ctPower}kW`);
       }
-      
+
       // ICU beds: Higher power requirement (monitoring, life support)
       const icuBeds = parseInt(useCaseData.icuBeds) || 0;
       if (icuBeds > 0) {
@@ -5573,59 +5975,60 @@ export function calculateUseCasePower(
         equipmentLoadKW += icuPower;
         equipmentDetails.push(`${icuBeds} ICU beds @ 2kW = ${icuPower}kW`);
       }
-      
+
       // Calculate total
       const basePowerKW = baseResult.powerMW * 1000;
       const totalPowerKW = basePowerKW + equipmentLoadKW;
       const totalPowerMW = totalPowerKW / 1000;
-      
+
       // Build description
       let description = baseResult.description;
       if (equipmentDetails.length > 0) {
-        description += ` + Equipment: ${equipmentDetails.join(', ')}`;
+        description += ` + Equipment: ${equipmentDetails.join(", ")}`;
       }
-      
-      console.log('🏥 [Hospital Power] Calculation:', {
+
+      console.log("🏥 [Hospital Power] Calculation:", {
         bedCount,
         basePowerKW,
         equipmentLoadKW,
         totalPowerKW,
-        equipmentDetails
+        equipmentDetails,
       });
-      
+
       return {
         powerMW: Math.round(totalPowerMW * 100) / 100,
         durationHrs: baseResult.durationHrs,
         description,
-        calculationMethod: baseResult.calculationMethod + (equipmentLoadKW > 0 ? ' + equipment loads' : ''),
-        inputs: { bedCount, surgicalSuites, mriCount, ctCount, icuBeds, equipmentLoadKW }
+        calculationMethod:
+          baseResult.calculationMethod + (equipmentLoadKW > 0 ? " + equipment loads" : ""),
+        inputs: { bedCount, surgicalSuites, mriCount, ctCount, icuBeds, equipmentLoadKW },
       };
     }
-      
-    case 'datacenter':
-    case 'data-center':
+
+    case "datacenter":
+    case "data-center":
       // Database uses 'averageRackDensity' (Dec 2025), legacy: rackDensityKW
-      console.log('🏢🏢🏢 [calculateUseCasePower] DATA CENTER CASE - useCaseData:', {
+      console.log("🏢🏢🏢 [calculateUseCasePower] DATA CENTER CASE - useCaseData:", {
         itLoadKW: useCaseData.itLoadKW,
         rackCount: useCaseData.rackCount,
         averageRackDensity: useCaseData.averageRackDensity,
         rackDensityKW: useCaseData.rackDensityKW,
-        allKeys: Object.keys(useCaseData)
+        allKeys: Object.keys(useCaseData),
       });
       return calculateDatacenterPower(
         parseInt(useCaseData.itLoadKW) || undefined,
         parseInt(useCaseData.rackCount) || undefined,
         parseFloat(useCaseData.averageRackDensity || useCaseData.rackDensityKW) || 8
       );
-      
-    case 'ev-charging':
-    case 'ev-charging-station':
-    case 'ev-charging-hub':
+
+    case "ev-charging":
+    case "ev-charging-station":
+    case "ev-charging-hub":
       // =========================================================================
       // EV CHARGING - Uses evChargingCalculations.ts for full power tiers
       // Supports: Level 2 (7kW/11kW/19kW/22kW), DCFC (50kW/150kW), HPC (250kW/350kW)
       // =========================================================================
-      
+
       // Support both new granular config and legacy field names
       const evConfig = {
         // New granular fields (from advanced UI)
@@ -5639,106 +6042,133 @@ export function calculateUseCasePower(
         hpc_350kw: parseInt(useCaseData.hpc_350kw) || 0,
         // Legacy fields for backward compatibility - support ALL field name variants
         // Database uses: numberOfLevel1Chargers, numberOfLevel2Chargers, numberOfDCFastChargers
-        level1Count: parseInt(useCaseData.numberOfLevel1Chargers || useCaseData.level1Count || useCaseData.level1Chargers || useCaseData.l1Count) || 0,
-        level2Count: parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Count || useCaseData.level2Chargers || useCaseData.l2Count) || 0,
-        dcFastCount: parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastCount || useCaseData.dcfastCount || useCaseData.dcFastChargers || useCaseData.dcfc) || 0,
+        level1Count:
+          parseInt(
+            useCaseData.numberOfLevel1Chargers ||
+              useCaseData.level1Count ||
+              useCaseData.level1Chargers ||
+              useCaseData.l1Count
+          ) || 0,
+        level2Count:
+          parseInt(
+            useCaseData.numberOfLevel2Chargers ||
+              useCaseData.level2Count ||
+              useCaseData.level2Chargers ||
+              useCaseData.l2Count
+          ) || 0,
+        dcFastCount:
+          parseInt(
+            useCaseData.numberOfDCFastChargers ||
+              useCaseData.dcFastCount ||
+              useCaseData.dcfastCount ||
+              useCaseData.dcFastChargers ||
+              useCaseData.dcfc
+          ) || 0,
       };
-      
+
       // Check if using new granular config or legacy
-      const hasGranularConfig = evConfig.level2_7kw > 0 || evConfig.level2_11kw > 0 || 
-                                evConfig.dcfc_50kw > 0 || evConfig.hpc_250kw > 0 || evConfig.hpc_350kw > 0;
-      
+      const hasGranularConfig =
+        evConfig.level2_7kw > 0 ||
+        evConfig.level2_11kw > 0 ||
+        evConfig.dcfc_50kw > 0 ||
+        evConfig.hpc_250kw > 0 ||
+        evConfig.hpc_350kw > 0;
+
       if (hasGranularConfig) {
         // Use new comprehensive EV charging calculation
         // Import dynamically to avoid circular dependencies
-        const { calculateEVHubPower } = require('./evChargingCalculations');
+        const { calculateEVHubPower } = require("./evChargingCalculations");
         const concurrency = parseInt(useCaseData.peakConcurrency) || 70;
         const evResult = calculateEVHubPower(evConfig, concurrency);
-        
+
         if (import.meta.env.DEV) {
-          console.log('🔌 [EV Hub Power] Using granular config:', {
+          console.log("🔌 [EV Hub Power] Using granular config:", {
             config: evConfig,
-            result: evResult
+            result: evResult,
           });
         }
-        
+
         return {
           powerMW: evResult.peakDemandMW,
           durationHrs: 2,
           description: evResult.description,
           calculationMethod: evResult.calculationMethod,
-          inputs: evConfig
+          inputs: evConfig,
         };
       }
-      
+
       // Fall back to legacy calculation for simple configs
       // If ALL values are 0 (no user input), apply database defaults
       // DB defaults: numberOfDCFastChargers=8, numberOfLevel2Chargers=12
-      const hasAnyChargerInput = evConfig.level1Count > 0 || evConfig.level2Count > 0 || evConfig.dcFastCount > 0;
-      
+      const hasAnyChargerInput =
+        evConfig.level1Count > 0 || evConfig.level2Count > 0 || evConfig.dcFastCount > 0;
+
       const evLevel1 = evConfig.level1Count;
-      const evLevel2 = hasAnyChargerInput ? evConfig.level2Count : 12;  // DB default: 12
-      const evDcFast = hasAnyChargerInput ? evConfig.dcFastCount : 8;   // DB default: 8
-      
+      const evLevel2 = hasAnyChargerInput ? evConfig.level2Count : 12; // DB default: 12
+      const evDcFast = hasAnyChargerInput ? evConfig.dcFastCount : 8; // DB default: 8
+
       // 🔌 DEBUG: Log all EV charging field lookups
       if (import.meta.env.DEV) {
-        console.log('🔌 [EV Charging Power] Legacy field resolution:', {
+        console.log("🔌 [EV Charging Power] Legacy field resolution:", {
           useCaseDataKeys: Object.keys(useCaseData || {}),
           resolved_level1: evLevel1,
           resolved_level2: evLevel2,
           resolved_dcFast: evDcFast,
-          appliedDefaults: !hasAnyChargerInput
+          appliedDefaults: !hasAnyChargerInput,
         });
       }
-      
+
       return calculateEVChargingPower(evLevel1, evLevel2, evDcFast);
-      
-    case 'airport':
+
+    case "airport":
       // Convert raw passenger count to millions (user enters 1000000, we need 1.0)
       // DB default: 1 million passengers (small regional airport) - was 5M but too high for initial estimate
-      const rawPassengers = parseFloat(useCaseData.annualPassengers || useCaseData.annual_passengers) || 1000000;
+      const rawPassengers =
+        parseFloat(useCaseData.annualPassengers || useCaseData.annual_passengers) || 1000000;
       const passengersInMillions = rawPassengers / 1000000;
       return calculateAirportPower(passengersInMillions);
-      
-    case 'manufacturing':
+
+    case "manufacturing":
       // Database uses 'facilitySqFt', 'manufacturingType' (Dec 2025), legacy: squareFeet, industryType
       // DB default: 100,000 sqft
       return calculateManufacturingPower(
         parseInt(useCaseData.facilitySqFt || useCaseData.squareFeet || useCaseData.sqFt) || 100000,
         useCaseData.manufacturingType || useCaseData.industryType
       );
-      
-    case 'warehouse':
-    case 'logistics':
-    case 'logistics-center':
+
+    case "warehouse":
+    case "logistics":
+    case "logistics-center":
       // Database uses 'warehouseSqFt', code accepts multiple variants
       // DB default: 250,000 sqft
       return calculateWarehousePower(
         parseInt(useCaseData.warehouseSqFt || useCaseData.squareFeet || useCaseData.sqFt) || 250000,
-        useCaseData.isColdStorage === true || useCaseData.warehouseType === 'cold-storage'
+        useCaseData.isColdStorage === true || useCaseData.warehouseType === "cold-storage"
       );
-      
-    case 'cold-storage':
+
+    case "cold-storage":
       // Cold storage has multiple inputs:
       // 1. Direct peak demand (kW) - most accurate if user knows it
       // 2. Refrigeration load (kW) - compressor capacity
       // 3. Square feet OR cubic feet (storageVolume)
-      
+
       // If user provides refrigeration load directly, use it + 20% for other loads
-      const refrigLoadKW = parseInt(useCaseData.refrigerationLoadKW || useCaseData.refrigerationLoad) || 0;
-      const peakDemandKW = parseInt(useCaseData.peakDemandKW || useCaseData.peakElectricalDemand) || 0;
-      
+      const refrigLoadKW =
+        parseInt(useCaseData.refrigerationLoadKW || useCaseData.refrigerationLoad) || 0;
+      const peakDemandKW =
+        parseInt(useCaseData.peakDemandKW || useCaseData.peakElectricalDemand) || 0;
+
       if (peakDemandKW > 0) {
         // Direct peak demand provided - use it
         return {
           powerMW: Math.max(0.1, peakDemandKW / 1000),
           durationHrs: 8,
           description: `Cold Storage: User-specified peak ${peakDemandKW} kW`,
-          calculationMethod: 'Direct user input',
-          inputs: { peakDemandKW }
+          calculationMethod: "Direct user input",
+          inputs: { peakDemandKW },
         };
       }
-      
+
       if (refrigLoadKW > 0) {
         // Refrigeration load + 20% for lighting, dock doors, forklifts
         const totalKW = refrigLoadKW * 1.2;
@@ -5746,11 +6176,11 @@ export function calculateUseCasePower(
           powerMW: Math.max(0.1, totalKW / 1000),
           durationHrs: 8,
           description: `Cold Storage: ${refrigLoadKW} kW refrigeration × 1.2 = ${totalKW.toFixed(0)} kW`,
-          calculationMethod: 'Refrigeration load + 20% auxiliary',
-          inputs: { refrigLoadKW }
+          calculationMethod: "Refrigeration load + 20% auxiliary",
+          inputs: { refrigLoadKW },
         };
       }
-      
+
       // Fall back to area-based calculation
       // storageVolume is in CUBIC FEET - convert to sqft (assume 30ft ceiling)
       const volumeCuFt = parseInt(useCaseData.storageVolume || useCaseData.coldStorageVolume) || 0;
@@ -5760,177 +6190,197 @@ export function calculateUseCasePower(
       } else {
         effectiveSqFt = parseInt(useCaseData.squareFeet || useCaseData.sqFt) || 20000;
       }
-      
+
       return calculateWarehousePower(effectiveSqFt, true);
-      
-    case 'retail':
-    case 'retail-commercial':
+
+    case "retail":
+    case "retail-commercial":
       // Database uses 'squareFeet', UI variants: 'retailSqFt', 'sqFt'
       return calculateRetailPower(
         parseInt(useCaseData.squareFeet || useCaseData.retailSqFt || useCaseData.sqFt) || 5000
       );
-      
-    case 'shopping-center':
-    case 'shopping-mall':
+
+    case "shopping-center":
+    case "shopping-mall":
       // Database uses 'squareFeet', UI variants: 'retailSqFt', 'sqFt'
       return calculateShoppingCenterPower(
         parseInt(useCaseData.squareFeet || useCaseData.retailSqFt || useCaseData.sqFt) || 100000
       );
-      
-    case 'agriculture':
-    case 'agricultural':
+
+    case "agriculture":
+    case "agricultural":
       return calculateAgriculturePower(
         parseInt(useCaseData.acreage || useCaseData.farmSize) || 500,
         parseInt(useCaseData.irrigationLoad) || undefined,
         useCaseData.farmType
       );
-      
-    case 'casino':
-    case 'tribal-casino':
+
+    case "casino":
+    case "tribal-casino":
       // Support ALL field name variants for gaming floor size
       // DB default: 100,000 sqft gaming floor
       return calculateCasinoPower(
-        parseInt(useCaseData.gamingFloorSqFt || useCaseData.gamingFloorSize || useCaseData.gamingSpaceSqFt || useCaseData.sqFt) || 100000
+        parseInt(
+          useCaseData.gamingFloorSqFt ||
+            useCaseData.gamingFloorSize ||
+            useCaseData.gamingSpaceSqFt ||
+            useCaseData.sqFt
+        ) || 100000
       );
-      
-    case 'indoor-farm':
+
+    case "indoor-farm":
       return calculateIndoorFarmPower(
         parseInt(useCaseData.growingAreaSqFt || useCaseData.sqFt) || 50000,
         parseFloat(useCaseData.ledWattagePerSqFt) || 40
       );
-      
-    case 'apartment':
-    case 'apartments':
+
+    case "apartment":
+    case "apartments":
       return calculateApartmentPower(
-        parseInt(useCaseData.unitCount || useCaseData.numUnits) || 400  // DB default: 400 units
+        parseInt(useCaseData.unitCount || useCaseData.numUnits) || 400 // DB default: 400 units
       );
-      
-    case 'college':
-    case 'university':
-    case 'college-university':
+
+    case "college":
+    case "university":
+    case "college-university":
       return calculateCollegePower(
         parseInt(useCaseData.studentCount || useCaseData.enrollment) || 15000
       );
-      
-    case 'car-wash':
+
+    case "car-wash":
       // Database uses 'bayCount', 'carWashType' (Dec 2025), legacy: washBays, washType
       // DB default: 4 bays, default type: tunnel (most common for BESS customers)
       return calculateCarWashPower(
-        parseInt(useCaseData.bayCount || useCaseData.washBays || useCaseData.numBays || useCaseData.numberOfBays) || 4,
-        useCaseData.carWashType || useCaseData.washType || 'tunnel',
+        parseInt(
+          useCaseData.bayCount ||
+            useCaseData.washBays ||
+            useCaseData.numBays ||
+            useCaseData.numberOfBays
+        ) || 4,
+        useCaseData.carWashType || useCaseData.washType || "tunnel",
         {
           hasVacuums: useCaseData.hasVacuums !== false,
           hasDryers: useCaseData.hasDryers !== false,
           dailyVehicles: parseInt(useCaseData.dailyVehicles || useCaseData.carsPerDay) || 200,
         }
       );
-      
-    case 'gas-station':
-    case 'fuel-station':
+
+    case "gas-station":
+    case "fuel-station":
       // Database uses 'fuelDispensers' (Dec 2025), legacy: dispenserCount, pumpCount, numPumps
       return calculateGasStationPower(
-        parseInt(useCaseData.fuelDispensers || useCaseData.numPumps || useCaseData.pumpCount || useCaseData.dispenserCount) || 8,
-        useCaseData.hasConvenienceStore !== false && useCaseData.stationType !== 'gas-only',
-        useCaseData.stationType || 'with-cstore'
+        parseInt(
+          useCaseData.fuelDispensers ||
+            useCaseData.numPumps ||
+            useCaseData.pumpCount ||
+            useCaseData.dispenserCount
+        ) || 8,
+        useCaseData.hasConvenienceStore !== false && useCaseData.stationType !== "gas-only",
+        useCaseData.stationType || "with-cstore"
       );
-      
-    case 'government':
-    case 'public-building':
+
+    case "government":
+    case "public-building":
       // Database uses 'squareFeet', UI variants: 'buildingSqFt', 'sqFt'
       return calculateGovernmentPower(
         parseInt(useCaseData.squareFeet || useCaseData.buildingSqFt || useCaseData.sqFt) || 75000
       );
-      
-    case 'microgrid':
+
+    case "microgrid":
       // Microgrid: Calculate based on total connected loads
       // If EV chargers specified, use EV calculation
-      const mgLevel2 = parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
-      const mgDcFast = parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
-      
+      const mgLevel2 =
+        parseInt(useCaseData.numberOfLevel2Chargers || useCaseData.level2Chargers) || 0;
+      const mgDcFast =
+        parseInt(useCaseData.numberOfDCFastChargers || useCaseData.dcFastChargers) || 0;
+
       if (mgLevel2 > 0 || mgDcFast > 0) {
         // Has EV chargers - use EV calculation
         return calculateEVChargingPower(0, mgLevel2, mgDcFast);
       }
-      
+
       // Fall back to square footage calculation
       const mgSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 50000;
       const mgWattsPerSqFt = 8; // Higher density for microgrids (mixed loads)
       const mgPowerKW = (mgSqFt * mgWattsPerSqFt) / 1000;
       const mgPowerMW = mgPowerKW / 1000;
-      
+
       return {
         powerMW: Math.max(0.1, Math.round(mgPowerMW * 100) / 100),
         durationHrs: 4,
         description: `Microgrid: ${mgSqFt.toLocaleString()} sq ft × ${mgWattsPerSqFt} W/sqft = ${mgPowerKW.toFixed(1)} kW`,
-        calculationMethod: 'Microgrid mixed-load benchmark (8 W/sq ft)',
-        inputs: { mgSqFt, mgWattsPerSqFt, mgLevel2, mgDcFast }
+        calculationMethod: "Microgrid mixed-load benchmark (8 W/sq ft)",
+        inputs: { mgSqFt, mgWattsPerSqFt, mgLevel2, mgDcFast },
       };
-      
+
     // =====================================================
     // SLUG ALIASES: Database slugs that alias to existing handlers
     // Added Nov 28, 2025 to prevent falling to default case
     // =====================================================
-    
-    case 'edge-data-center':
+
+    case "edge-data-center":
       // Alias for datacenter (same calculation)
       return calculateDatacenterPower(
         parseInt(useCaseData.itLoadKW) || undefined,
         parseInt(useCaseData.rackCount) || undefined,
         parseFloat(useCaseData.rackDensityKW) || 8
       );
-      
-    case 'distribution-center':
+
+    case "distribution-center":
       // Alias for warehouse/logistics (same calculation)
       // Database uses 'warehouseSqFt', DB default: 250,000 sqft
       return calculateWarehousePower(
         parseInt(useCaseData.warehouseSqFt || useCaseData.squareFeet || useCaseData.sqFt) || 250000,
-        useCaseData.isColdStorage === true || useCaseData.warehouseType === 'cold-storage'
+        useCaseData.isColdStorage === true || useCaseData.warehouseType === "cold-storage"
       );
-      
-    case 'apartment-building':
+
+    case "apartment-building":
       // Alias for apartment/apartments
       // DB default: 400 units
       return calculateApartmentPower(
         parseInt(useCaseData.unitCount || useCaseData.units) || 400,
         parseInt(useCaseData.commonAreaSqFt || useCaseData.sqFt) || 10000
       );
-      
-    case 'residential':
+
+    case "residential":
       // Residential is different from commercial - use residential benchmark
       // Average US home: ~1.2 kW average, 5-10 kW peak
       // Database uses 'squareFeet', UI variants: 'sqFt', 'homeSize'
-      const homeSqFt = parseInt(useCaseData.squareFeet || useCaseData.sqFt || useCaseData.homeSize) || 2000;
+      const homeSqFt =
+        parseInt(useCaseData.squareFeet || useCaseData.sqFt || useCaseData.homeSize) || 2000;
       const homes = parseInt(useCaseData.homeCount || useCaseData.units) || 1;
       const resWattsPerSqFt = 5; // Residential benchmark (lower than commercial)
       const resPowerKW = (homeSqFt * resWattsPerSqFt * homes) / 1000;
       const resPowerMW = resPowerKW / 1000;
-      
+
       return {
         powerMW: Math.max(0.01, Math.round(resPowerMW * 100) / 100),
         durationHrs: 4,
         description: `Residential: ${homes} home(s) × ${homeSqFt.toLocaleString()} sq ft × ${resWattsPerSqFt} W/sqft = ${resPowerKW.toFixed(1)} kW`,
-        calculationMethod: 'Residential benchmark (5 W/sq ft peak)',
-        inputs: { homes, homeSqFt, resWattsPerSqFt }
+        calculationMethod: "Residential benchmark (5 W/sq ft peak)",
+        inputs: { homes, homeSqFt, resWattsPerSqFt },
       };
-      
+
     default:
       // Generic fallback - use square footage if available
       const genericSqFt = parseInt(useCaseData.sqFt || useCaseData.facilitySize) || 10000;
       const genericWattsPerSqFt = 5; // Conservative default
       const genericPowerKW = (genericSqFt * genericWattsPerSqFt) / 1000;
       const genericPowerMW = genericPowerKW / 1000; // FIX: Correct conversion to MW
-      
+
       // Log warning for unrecognized slug
       if (import.meta.env.DEV) {
-        console.warn(`⚠️ [useCasePowerCalculations] Unrecognized slug: "${slug}" - using generic fallback`);
+        console.warn(
+          `⚠️ [useCasePowerCalculations] Unrecognized slug: "${slug}" - using generic fallback`
+        );
       }
-      
+
       return {
         powerMW: Math.max(0.05, Math.round(genericPowerMW * 100) / 100), // FIX: Correct math
         durationHrs: 4,
         description: `Generic: ${genericSqFt.toLocaleString()} sq ft × ${genericWattsPerSqFt} W/sqft = ${genericPowerKW.toFixed(1)} kW`,
-        calculationMethod: 'Generic commercial benchmark (5 W/sq ft)',
-        inputs: { genericSqFt, genericWattsPerSqFt }
+        calculationMethod: "Generic commercial benchmark (5 W/sq ft)",
+        inputs: { genericSqFt, genericWattsPerSqFt },
       };
   }
 }
@@ -5945,38 +6395,38 @@ export function calculateUseCasePower(
  * Based on real-world case studies including:
  * - Courtyard by Marriott Lancaster, PA (first fully solar-powered Marriott in US)
  *   133 rooms, 2,700 panels, 1,239 MWh/year generation, 1,177 MWh/year consumption
- * 
+ *
  * Key derived metrics:
  * - Energy consumption: 8,850 kWh/room/year (~24.2 kWh/room/day)
  * - Solar panels needed: ~20 panels per room for 100% offset
  * - Panel yield: ~459 kWh/panel/year (Pennsylvania climate, ~4.0 sun-hours/day)
  * - LED conversion reduces demand by 15% (verified)
- * 
+ *
  * Source: Marriott International sustainability report, December 2025
  */
 export const HOTEL_SOLAR_SIZING_BENCHMARKS = {
   // kWh per room per year by hotel class (verified against Marriott data)
   annualKWhPerRoom: {
-    economy: 7500,    // ~20.5 kWh/room/day - minimal amenities
-    midscale: 8850,   // ~24.2 kWh/room/day - Marriott Courtyard benchmark
-    upscale: 12000,   // ~32.9 kWh/room/day - full-service with restaurant
-    luxury: 18000,    // ~49.3 kWh/room/day - resort with spa, multiple restaurants
+    economy: 7500, // ~20.5 kWh/room/day - minimal amenities
+    midscale: 8850, // ~24.2 kWh/room/day - Marriott Courtyard benchmark
+    upscale: 12000, // ~32.9 kWh/room/day - full-service with restaurant
+    luxury: 18000, // ~49.3 kWh/room/day - resort with spa, multiple restaurants
   },
   // Panels per room for 100% solar offset (assumes 400W panels, regional average yield)
   panelsPerRoomFor100Percent: {
-    economy: 15,      // 15 × 400W × 1250 hrs = 7,500 kWh
-    midscale: 20,     // 20 × 400W × 1100 hrs = 8,800 kWh (matches Marriott 2700/133)
-    upscale: 27,      // 27 × 400W × 1100 hrs = 11,880 kWh
-    luxury: 40,       // 40 × 400W × 1100 hrs = 17,600 kWh
+    economy: 15, // 15 × 400W × 1250 hrs = 7,500 kWh
+    midscale: 20, // 20 × 400W × 1100 hrs = 8,800 kWh (matches Marriott 2700/133)
+    upscale: 27, // 27 × 400W × 1100 hrs = 11,880 kWh
+    luxury: 40, // 40 × 400W × 1100 hrs = 17,600 kWh
   },
   // Regional solar yield factors (multiply panels needed)
   regionalYieldMultiplier: {
-    southwest: 0.75,  // AZ, NM, NV - excellent solar
-    california: 0.80, // CA - very good solar
-    southeast: 0.90,  // FL, GA, TX - good solar
-    midwest: 1.00,    // PA, OH, IL - baseline (Marriott reference)
-    northeast: 1.05,  // NY, MA, CT - slightly less solar
-    northwest: 1.15,  // WA, OR - more cloudy
+    southwest: 0.75, // AZ, NM, NV - excellent solar
+    california: 0.8, // CA - very good solar
+    southeast: 0.9, // FL, GA, TX - good solar
+    midwest: 1.0, // PA, OH, IL - baseline (Marriott reference)
+    northeast: 1.05, // NY, MA, CT - slightly less solar
+    northwest: 1.15, // WA, OR - more cloudy
   },
   // LED lighting impact (verified 15% reduction from Marriott case study)
   ledConversionSavings: 0.15,
@@ -5994,7 +6444,7 @@ export const HOTEL_SOLAR_SIZING_BENCHMARKS = {
 export function calculateHotelSolarSizing(
   rooms: number,
   hotelClass: HotelClassSimple,
-  region: keyof typeof HOTEL_SOLAR_SIZING_BENCHMARKS.regionalYieldMultiplier = 'midwest',
+  region: keyof typeof HOTEL_SOLAR_SIZING_BENCHMARKS.regionalYieldMultiplier = "midwest",
   targetOffset: number = 1.0,
   hasLED: boolean = false
 ): {
@@ -6005,33 +6455,33 @@ export function calculateHotelSolarSizing(
   co2AvoidedTonsPerYear: number;
 } {
   const benchmarks = HOTEL_SOLAR_SIZING_BENCHMARKS;
-  
+
   // Calculate annual energy need
   let annualKWhNeeded = rooms * benchmarks.annualKWhPerRoom[hotelClass];
-  
+
   // Apply LED savings if applicable
   if (hasLED) {
-    annualKWhNeeded *= (1 - benchmarks.ledConversionSavings);
+    annualKWhNeeded *= 1 - benchmarks.ledConversionSavings;
   }
-  
+
   // Calculate panels needed with regional adjustment
   const basePanelsPerRoom = benchmarks.panelsPerRoomFor100Percent[hotelClass];
   const regionalMultiplier = benchmarks.regionalYieldMultiplier[region];
   const panelsNeeded = Math.ceil(rooms * basePanelsPerRoom * regionalMultiplier * targetOffset);
-  
+
   // Assume 400W panels (modern standard)
   const systemSizeKW = panelsNeeded * 0.4;
-  
+
   // Calculate expected generation (varies by region)
   // Base: 1100 sun-hours/year for midwest, adjusted by regional multiplier
   const baseSunHours = 1100;
   const adjustedSunHours = baseSunHours / regionalMultiplier; // Higher multiplier = fewer sun hours
   const annualGenerationKWh = systemSizeKW * adjustedSunHours;
-  
+
   // CO2 avoided: 0.92 lbs CO2 per kWh (EPA eGRID average)
   // Convert to metric tons: lbs / 2204.6
   const co2AvoidedTonsPerYear = (annualGenerationKWh * 0.92) / 2204.6;
-  
+
   return {
     annualKWhNeeded: Math.round(annualKWhNeeded),
     panelsNeeded,
@@ -6044,20 +6494,20 @@ export function calculateHotelSolarSizing(
 /**
  * Hotel class profiles for simplified landing page calculator
  * SSOT for HotelEnergy.tsx landing page
- * 
+ *
  * IMPORTANT: peakKWPerRoom is CONNECTED LOAD (before diversity)
  * The calculateHotelPowerSimple() function applies 0.75 diversity
- * 
+ *
  * Validated Dec 2025 against Marriott Lancaster:
  * - 133 rooms midscale = 384 kW actual peak
  * - 384 ÷ 133 ÷ 0.75 = 3.85 kW/room connected
  * - Using 4.0 for midscale gives 133 × 4.0 × 0.75 = 399 kW ✓
  */
 export const HOTEL_CLASS_PROFILES_SIMPLE = {
-  economy: { peakKWPerRoom: 2.5, name: 'Economy/Budget' },
-  midscale: { peakKWPerRoom: 4.0, name: 'Midscale/Select Service' },
-  upscale: { peakKWPerRoom: 5.0, name: 'Upscale/Full Service' },
-  luxury: { peakKWPerRoom: 7.0, name: 'Luxury/Resort' },
+  economy: { peakKWPerRoom: 2.5, name: "Economy/Budget" },
+  midscale: { peakKWPerRoom: 4.0, name: "Midscale/Select Service" },
+  upscale: { peakKWPerRoom: 5.0, name: "Upscale/Full Service" },
+  luxury: { peakKWPerRoom: 7.0, name: "Luxury/Resort" },
 } as const;
 
 /**
@@ -6096,35 +6546,33 @@ export interface HotelPowerSimpleResult {
  */
 export function calculateHotelPowerSimple(input: HotelPowerSimpleInput): HotelPowerSimpleResult {
   const { rooms, hotelClass, amenities, electricityRate } = input;
-  
+
   const classProfile = HOTEL_CLASS_PROFILES_SIMPLE[hotelClass];
   const basePeakKW = rooms * classProfile.peakKWPerRoom;
-  
+
   // Add amenity power
   const amenityKW = amenities.reduce((total, amenity) => {
     return total + (HOTEL_AMENITY_POWER_SIMPLE[amenity] || 0);
   }, 0);
-  
+
   // Apply diversity factor (0.75) - not all loads peak simultaneously
   const peakKW = Math.round((basePeakKW + amenityKW) * 0.75);
-  
+
   // Demand charge calculation (assume $15/kW typical)
   const demandCharge = 15;
   const monthlyDemandCost = peakKW * demandCharge;
-  
+
   // Annual energy (assume 40% capacity factor for hotels, 8760 hours/year)
   const annualKWh = peakKW * 8760 * 0.4;
   const annualEnergyCost = annualKWh * electricityRate;
-  
+
   // BESS sizing: 50% peak shaving capability, 4-hour duration
   const bessRecommendedKW = Math.round(peakKW * 0.5);
   const bessRecommendedKWh = bessRecommendedKW * 4;
-  
+
   // Potential savings: 30% demand charge reduction + 10% energy arbitrage
-  const potentialSavings = Math.round(
-    (monthlyDemandCost * 12 * 0.3) + (annualEnergyCost * 0.1)
-  );
-  
+  const potentialSavings = Math.round(monthlyDemandCost * 12 * 0.3 + annualEnergyCost * 0.1);
+
   return {
     peakKW,
     monthlyDemandCost,
@@ -6140,10 +6588,10 @@ export function calculateHotelPowerSimple(input: HotelPowerSimpleInput): HotelPo
  * SSOT for CarWashEnergy.tsx landing page
  */
 export const CAR_WASH_POWER_PROFILES_SIMPLE = {
-  selfService: { bayPower: 5, name: 'Self-Service Bay' },
-  automatic: { bayPower: 25, name: 'Automatic/In-Bay' },
-  tunnel: { bayPower: 75, name: 'Express Tunnel' },
-  fullService: { bayPower: 100, name: 'Full-Service Tunnel' },
+  selfService: { bayPower: 5, name: "Self-Service Bay" },
+  automatic: { bayPower: 25, name: "Automatic/In-Bay" },
+  tunnel: { bayPower: 75, name: "Express Tunnel" },
+  fullService: { bayPower: 100, name: "Full-Service Tunnel" },
 } as const;
 
 export type CarWashTypeSimple = keyof typeof CAR_WASH_POWER_PROFILES_SIMPLE;
@@ -6170,48 +6618,48 @@ export interface CarWashPowerSimpleResult {
  * Simple car wash power calculator for landing page
  * Matches CarWashEnergy.tsx embedded logic - now SSOT
  */
-export function calculateCarWashPowerSimple(input: CarWashPowerSimpleInput): CarWashPowerSimpleResult {
+export function calculateCarWashPowerSimple(
+  input: CarWashPowerSimpleInput
+): CarWashPowerSimpleResult {
   const { bays, washType, hasVacuums, hasDryers, carsPerDay, electricityRate } = input;
-  
+
   const profile = CAR_WASH_POWER_PROFILES_SIMPLE[washType];
   let peakKW = bays * profile.bayPower;
-  
+
   // Add vacuum islands (6 kW each, assume 1 per 2 bays)
   if (hasVacuums) {
     peakKW += Math.ceil(bays / 2) * 6;
   }
-  
+
   // Add dryer systems (15 kW per bay for tunnel types)
-  if (hasDryers && (washType === 'tunnel' || washType === 'fullService')) {
+  if (hasDryers && (washType === "tunnel" || washType === "fullService")) {
     peakKW += bays * 15;
   }
-  
+
   // Apply utilization factor based on cars/day
   // Higher volume = higher peak utilization
   const peakHours = 5; // Typical peak operating hours
   const utilizationFactor = Math.min(0.9, 0.5 + (carsPerDay / 500) * 0.4);
   peakKW = Math.round(peakKW * utilizationFactor);
-  
+
   // Demand charge calculation (assume $15/kW typical)
   const demandCharge = 15;
   const monthlyDemandCost = peakKW * demandCharge;
-  
+
   // Annual energy calculation
   // kWh per car based on real-world data (Tommy Express, Mister Car Wash, Zips benchmarks)
   // Express tunnels are highly efficient: ~2-3 kWh/car despite high peak power
   const kWhPerCar = { selfService: 2, automatic: 4, tunnel: 2.5, fullService: 6 }[washType];
   const annualKWh = carsPerDay * 365 * kWhPerCar;
   const annualEnergyCost = annualKWh * electricityRate;
-  
+
   // BESS sizing: 60% peak shaving (car washes have spiky loads), 2-hour duration
   const bessRecommendedKW = Math.round(peakKW * 0.6);
   const bessRecommendedKWh = bessRecommendedKW * 2;
-  
+
   // Potential savings: 40% demand charge reduction (high spikes), 5% energy
-  const potentialSavings = Math.round(
-    (monthlyDemandCost * 12 * 0.4) + (annualEnergyCost * 0.05)
-  );
-  
+  const potentialSavings = Math.round(monthlyDemandCost * 12 * 0.4 + annualEnergyCost * 0.05);
+
   return {
     peakKW,
     monthlyDemandCost,
@@ -6225,28 +6673,28 @@ export function calculateCarWashPowerSimple(input: CarWashPowerSimpleInput): Car
 /**
  * CAR WASH FACILITY CONSTRAINTS - Industry Standards
  * Source: International Carwash Association (ICA), ICWG (International Carwash Group)
- * 
+ *
  * TrueQuote™ Sources:
  * - ICA 2024 Industry Study: Typical site size and building footprints
  * - Professional Carwash & Detailing Magazine: Construction standards
  * - ICWG Market Intelligence: Express tunnel facility specs
  */
 export const CAR_WASH_FACILITY_CONSTRAINTS = {
-  MAX_SITE_AREA_SQFT: 43560,        // 1 acre typical max site
-  BUILDING_FOOTPRINT_MIN: 4000,     // Minimum enclosed building
-  BUILDING_FOOTPRINT_MAX: 7000,     // Maximum typical building
+  MAX_SITE_AREA_SQFT: 43560, // 1 acre typical max site
+  BUILDING_FOOTPRINT_MIN: 4000, // Minimum enclosed building
+  BUILDING_FOOTPRINT_MAX: 7000, // Maximum typical building
   BUILDING_FOOTPRINT_TYPICAL: 5500, // Average express tunnel
-  USABLE_ROOF_PERCENT: 0.75,        // 75% of roof usable for solar (accounting for vents, setbacks, shading)
-  SOLAR_PANEL_EFFICIENCY_W: 400,    // Modern panel wattage
-  SOLAR_PANEL_AREA_SQFT: 20,        // ~20 sq ft per 400W panel (includes spacing)
-  SOLAR_WATTS_PER_SQFT: 15,         // Industry standard: ~15W/sq ft usable roof
+  USABLE_ROOF_PERCENT: 0.75, // 75% of roof usable for solar (accounting for vents, setbacks, shading)
+  SOLAR_PANEL_EFFICIENCY_W: 400, // Modern panel wattage
+  SOLAR_PANEL_AREA_SQFT: 20, // ~20 sq ft per 400W panel (includes spacing)
+  SOLAR_WATTS_PER_SQFT: 15, // Industry standard: ~15W/sq ft usable roof
 };
 
 /**
  * Validate solar capacity against car wash roof constraints
- * 
+ *
  * TrueQuote™ compliant: Uses ICA/ICWG industry standards for facility sizing
- * 
+ *
  * @param solarKW - Requested solar capacity in kW
  * @param buildingSqFt - Total building footprint in sq ft (default: 5500 typical)
  * @returns Validation result with max capacity and warnings
@@ -6263,14 +6711,20 @@ export function validateCarWashSolarCapacity(
   warning?: string;
 } {
   // Calculate usable roof area (75% of building footprint)
-  const usableRoofSqFt = Math.round(buildingSqFt * CAR_WASH_FACILITY_CONSTRAINTS.USABLE_ROOF_PERCENT);
-  
+  const usableRoofSqFt = Math.round(
+    buildingSqFt * CAR_WASH_FACILITY_CONSTRAINTS.USABLE_ROOF_PERCENT
+  );
+
   // Calculate max solar capacity for available roof
-  const maxSolarKW = Math.floor(usableRoofSqFt * CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT / 1000);
-  
+  const maxSolarKW = Math.floor(
+    (usableRoofSqFt * CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT) / 1000
+  );
+
   // Calculate required roof space for requested solar
-  const requiredRoofSqFt = Math.round(solarKW * 1000 / CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT);
-  
+  const requiredRoofSqFt = Math.round(
+    (solarKW * 1000) / CAR_WASH_FACILITY_CONSTRAINTS.SOLAR_WATTS_PER_SQFT
+  );
+
   if (solarKW > maxSolarKW) {
     const exceedsBy = Math.round(solarKW - maxSolarKW);
     return {
@@ -6279,22 +6733,22 @@ export function validateCarWashSolarCapacity(
       usableRoofSqFt,
       requiredRoofSqFt,
       exceedsBy,
-      warning: `⚠️ Solar array requires ${requiredRoofSqFt.toLocaleString()} sq ft but only ${usableRoofSqFt.toLocaleString()} sq ft available on typical car wash roof. Maximum realistic solar: ${maxSolarKW} kW.`
+      warning: `⚠️ Solar array requires ${requiredRoofSqFt.toLocaleString()} sq ft but only ${usableRoofSqFt.toLocaleString()} sq ft available on typical car wash roof. Maximum realistic solar: ${maxSolarKW} kW.`,
     };
   }
-  
+
   return {
     isValid: true,
     maxSolarKW,
     usableRoofSqFt,
-    requiredRoofSqFt
+    requiredRoofSqFt,
   };
 }
 
 /**
  * GROUND-MOUNT SOLAR CONSTRAINTS - Industry Standards
  * Source: NREL Solar Land Use Requirements, SEIA Ground-Mount Best Practices
- * 
+ *
  * TrueQuote™ Sources:
  * - NREL/TP-6A20-56290 (2013): "Land-Use Requirements for Solar"
  * - SEIA Ground-Mount Solar Guide (2024)
@@ -6302,32 +6756,32 @@ export function validateCarWashSolarCapacity(
  */
 export const GROUND_MOUNT_SOLAR_CONSTRAINTS = {
   // Land area required per MW (fixed-tilt, standard spacing)
-  ACRES_PER_MW_FIXED_TILT: 5.5,        // 5-6 acres/MW typical
-  ACRES_PER_MW_SINGLE_AXIS: 7.5,       // 7-8 acres/MW (needs wider spacing)
-  SQFT_PER_ACRE: 43560,                 // Conversion factor
-  
+  ACRES_PER_MW_FIXED_TILT: 5.5, // 5-6 acres/MW typical
+  ACRES_PER_MW_SINGLE_AXIS: 7.5, // 7-8 acres/MW (needs wider spacing)
+  SQFT_PER_ACRE: 43560, // Conversion factor
+
   // Ground coverage ratio (GCR) - panel area / ground area
-  GCR_FIXED_TILT: 0.40,                 // 40% coverage typical
-  GCR_SINGLE_AXIS: 0.30,                // 30% coverage (wider row spacing)
-  
+  GCR_FIXED_TILT: 0.4, // 40% coverage typical
+  GCR_SINGLE_AXIS: 0.3, // 30% coverage (wider row spacing)
+
   // Production boost from tracking (vs fixed)
-  TRACKING_PRODUCTION_BOOST: 1.25,      // 25% more energy
-  
+  TRACKING_PRODUCTION_BOOST: 1.25, // 25% more energy
+
   // Cost premium
-  COST_PER_WATT_FIXED: 0.85,           // $0.85/W installed (ground-mount)
-  COST_PER_WATT_TRACKING: 1.10,        // $1.10/W (single-axis tracking)
-  
+  COST_PER_WATT_FIXED: 0.85, // $0.85/W installed (ground-mount)
+  COST_PER_WATT_TRACKING: 1.1, // $1.10/W (single-axis tracking)
+
   // Minimum land area for economic viability
-  MIN_ACRES_ECONOMICAL: 1.0,            // Below 1 acre rarely cost-effective
-  
+  MIN_ACRES_ECONOMICAL: 1.0, // Below 1 acre rarely cost-effective
+
   // Maximum practical size for commercial/industrial
-  MAX_MW_COMMERCIAL: 5.0,               // 5 MW typical max for C&I
+  MAX_MW_COMMERCIAL: 5.0, // 5 MW typical max for C&I
 };
 
 /**
  * CARPORT SOLAR CONSTRAINTS - Industry Standards
  * Source: EV Charging + Solar Carport Integrated Systems
- * 
+ *
  * TrueQuote™ Sources:
  * - NREL: "Solar Photovoltaic Carport Structures" (2022)
  * - US DOE: Vehicle-to-Grid and Solar Integration
@@ -6335,42 +6789,42 @@ export const GROUND_MOUNT_SOLAR_CONSTRAINTS = {
  */
 export const CARPORT_SOLAR_CONSTRAINTS = {
   // Parking space dimensions
-  PARKING_SPACE_WIDTH_FT: 9,            // Standard width
-  PARKING_SPACE_LENGTH_FT: 18,          // Standard length
-  PARKING_SPACE_SQFT: 162,              // 9' × 18'
-  
+  PARKING_SPACE_WIDTH_FT: 9, // Standard width
+  PARKING_SPACE_LENGTH_FT: 18, // Standard length
+  PARKING_SPACE_SQFT: 162, // 9' × 18'
+
   // Solar coverage per parking space (single space)
-  SOLAR_COVERAGE_PERCENT: 0.90,         // 90% of space covered (allow for posts)
-  USABLE_SOLAR_SQFT_PER_SPACE: 145,    // ~145 sq ft per space
-  
+  SOLAR_COVERAGE_PERCENT: 0.9, // 90% of space covered (allow for posts)
+  USABLE_SOLAR_SQFT_PER_SPACE: 145, // ~145 sq ft per space
+
   // Solar production per sq ft (carports are elevated, less efficient than roof)
-  WATTS_PER_SQFT_CARPORT: 12,          // 10-12W/sq ft (vs 15W for roof)
-  
+  WATTS_PER_SQFT_CARPORT: 12, // 10-12W/sq ft (vs 15W for roof)
+
   // Typical carport configurations
-  SPACES_PER_CARPORT_UNIT: 10,         // Typical carport covers 10 spaces
-  CARPORT_KW_PER_10_SPACES: 17.4,      // ~17.4 kW per 10-space unit
-  
+  SPACES_PER_CARPORT_UNIT: 10, // Typical carport covers 10 spaces
+  CARPORT_KW_PER_10_SPACES: 17.4, // ~17.4 kW per 10-space unit
+
   // Cost
-  COST_PER_WATT_CARPORT: 2.50,         // $2.50/W (higher than roof due to structure)
-  COST_PER_SPACE_STRUCTURE: 8000,      // $8k per space for carport structure
-  
+  COST_PER_WATT_CARPORT: 2.5, // $2.50/W (higher than roof due to structure)
+  COST_PER_SPACE_STRUCTURE: 8000, // $8k per space for carport structure
+
   // EV Charging Integration
-  EV_CHARGER_SPACES_PERCENT: 0.20,     // Typically 20% of carport spaces have chargers
-  CARPORT_WITH_DCFC_PREMIUM: 1.30,     // 30% cost premium if including DCFC
+  EV_CHARGER_SPACES_PERCENT: 0.2, // Typically 20% of carport spaces have chargers
+  CARPORT_WITH_DCFC_PREMIUM: 1.3, // 30% cost premium if including DCFC
 };
 
 /**
  * Calculate ground-mount solar capacity based on available land
- * 
+ *
  * TrueQuote™ compliant: Uses NREL/SEIA land-use standards
- * 
+ *
  * @param availableAcres - Available land area in acres
  * @param trackingType - 'fixed-tilt' or 'single-axis-tracking'
  * @returns Solar capacity analysis with land requirements
  */
 export function calculateGroundMountSolarCapacity(
   availableAcres: number,
-  trackingType: 'fixed-tilt' | 'single-axis-tracking' = 'fixed-tilt'
+  trackingType: "fixed-tilt" | "single-axis-tracking" = "fixed-tilt"
 ): {
   isEconomical: boolean;
   maxSolarMW: number;
@@ -6381,26 +6835,29 @@ export function calculateGroundMountSolarCapacity(
   costPerWatt: number;
   warning?: string;
 } {
-  const acresPerMW = trackingType === 'single-axis-tracking' 
-    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_SINGLE_AXIS
-    : GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_FIXED_TILT;
-  
-  const costPerWatt = trackingType === 'single-axis-tracking'
-    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_TRACKING
-    : GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_FIXED;
-  
+  const acresPerMW =
+    trackingType === "single-axis-tracking"
+      ? GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_SINGLE_AXIS
+      : GROUND_MOUNT_SOLAR_CONSTRAINTS.ACRES_PER_MW_FIXED_TILT;
+
+  const costPerWatt =
+    trackingType === "single-axis-tracking"
+      ? GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_TRACKING
+      : GROUND_MOUNT_SOLAR_CONSTRAINTS.COST_PER_WATT_FIXED;
+
   const maxSolarMW = Math.min(
     availableAcres / acresPerMW,
     GROUND_MOUNT_SOLAR_CONSTRAINTS.MAX_MW_COMMERCIAL
   );
-  
+
   const maxSolarKW = Math.floor(maxSolarMW * 1000);
   const estimatedCost = maxSolarKW * costPerWatt * 1000;
-  
-  const trackingBoost = trackingType === 'single-axis-tracking' 
-    ? GROUND_MOUNT_SOLAR_CONSTRAINTS.TRACKING_PRODUCTION_BOOST 
-    : 1.0;
-  
+
+  const trackingBoost =
+    trackingType === "single-axis-tracking"
+      ? GROUND_MOUNT_SOLAR_CONSTRAINTS.TRACKING_PRODUCTION_BOOST
+      : 1.0;
+
   if (availableAcres < GROUND_MOUNT_SOLAR_CONSTRAINTS.MIN_ACRES_ECONOMICAL) {
     return {
       isEconomical: false,
@@ -6410,10 +6867,10 @@ export function calculateGroundMountSolarCapacity(
       trackingBoost,
       estimatedCost,
       costPerWatt,
-      warning: `⚠️ Ground-mount solar requires minimum ${GROUND_MOUNT_SOLAR_CONSTRAINTS.MIN_ACRES_ECONOMICAL} acre for economic viability. Consider rooftop or carport solar instead.`
+      warning: `⚠️ Ground-mount solar requires minimum ${GROUND_MOUNT_SOLAR_CONSTRAINTS.MIN_ACRES_ECONOMICAL} acre for economic viability. Consider rooftop or carport solar instead.`,
     };
   }
-  
+
   return {
     isEconomical: true,
     maxSolarMW,
@@ -6421,15 +6878,15 @@ export function calculateGroundMountSolarCapacity(
     requiredAcres: maxSolarMW * acresPerMW,
     trackingBoost,
     estimatedCost,
-    costPerWatt
+    costPerWatt,
   };
 }
 
 /**
  * Calculate carport solar capacity based on parking spaces
- * 
+ *
  * TrueQuote™ compliant: Uses NREL carport solar integration standards
- * 
+ *
  * @param parkingSpaces - Number of parking spaces to cover
  * @param includeEVChargers - Whether to include EV charging integration
  * @returns Carport solar capacity and cost analysis
@@ -6449,28 +6906,34 @@ export function calculateCarportSolarCapacity(
   evChargerCost?: number;
 } {
   const usableSolarSqFt = parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.USABLE_SOLAR_SQFT_PER_SPACE;
-  const maxSolarKW = Math.floor(usableSolarSqFt * CARPORT_SOLAR_CONSTRAINTS.WATTS_PER_SQFT_CARPORT / 1000);
-  
-  const numberOfCarportUnits = Math.ceil(parkingSpaces / CARPORT_SOLAR_CONSTRAINTS.SPACES_PER_CARPORT_UNIT);
-  
+  const maxSolarKW = Math.floor(
+    (usableSolarSqFt * CARPORT_SOLAR_CONSTRAINTS.WATTS_PER_SQFT_CARPORT) / 1000
+  );
+
+  const numberOfCarportUnits = Math.ceil(
+    parkingSpaces / CARPORT_SOLAR_CONSTRAINTS.SPACES_PER_CARPORT_UNIT
+  );
+
   // Solar equipment cost
   let estimatedSolarCost = maxSolarKW * CARPORT_SOLAR_CONSTRAINTS.COST_PER_WATT_CARPORT * 1000;
-  
+
   // Carport structure cost
   const estimatedStructureCost = parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.COST_PER_SPACE_STRUCTURE;
-  
+
   // EV charger integration premium
   let evChargerSpaces = 0;
   let evChargerCost = 0;
   if (includeEVChargers) {
-    evChargerSpaces = Math.ceil(parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.EV_CHARGER_SPACES_PERCENT);
+    evChargerSpaces = Math.ceil(
+      parkingSpaces * CARPORT_SOLAR_CONSTRAINTS.EV_CHARGER_SPACES_PERCENT
+    );
     estimatedSolarCost *= CARPORT_SOLAR_CONSTRAINTS.CARPORT_WITH_DCFC_PREMIUM; // Premium for EV integration
     evChargerCost = evChargerSpaces * 50000; // Rough estimate for Level 2 chargers
   }
-  
+
   const totalCost = estimatedSolarCost + estimatedStructureCost + evChargerCost;
   const costPerSpace = totalCost / parkingSpaces;
-  
+
   return {
     maxSolarKW,
     usableSolarSqFt,
@@ -6479,6 +6942,6 @@ export function calculateCarportSolarCapacity(
     estimatedStructureCost,
     totalCost,
     costPerSpace,
-    ...(includeEVChargers && { evChargerSpaces, evChargerCost })
+    ...(includeEVChargers && { evChargerSpaces, evChargerCost }),
   };
 }

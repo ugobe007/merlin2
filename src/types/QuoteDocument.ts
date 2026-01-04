@@ -3,7 +3,7 @@
  * =====================
  * SINGLE SOURCE OF TRUTH for all quote data throughout the application.
  * This interface captures the complete state of a quote from start to finish.
- * 
+ *
  * Design Principles:
  * - All calculations derive from this document
  * - No component should maintain duplicate state
@@ -13,13 +13,13 @@
 
 export interface QuoteDocument {
   // ==================== METADATA ====================
-  id: string;                          // Unique quote identifier
-  version: number;                     // Version for optimistic updates
+  id: string; // Unique quote identifier
+  version: number; // Version for optimistic updates
   createdAt: Date;
   updatedAt: Date;
-  status: 'draft' | 'in-progress' | 'review' | 'completed' | 'approved';
-  completionPercentage: number;        // 0-100, auto-calculated
-  
+  status: "draft" | "in-progress" | "review" | "completed" | "approved";
+  completionPercentage: number; // 0-100, auto-calculated
+
   // ==================== CUSTOMER INFO ====================
   customer?: {
     name?: string;
@@ -30,18 +30,18 @@ export interface QuoteDocument {
 
   // ==================== USE CASE (Step 1 & 2) ====================
   useCase: {
-    industry: string;                  // e.g., 'hotel', 'hospital', 'datacenter'
-    industryName: string;              // Display name
-    template?: string;                 // Selected template ID
-    usedTemplate: boolean;             // Whether they used a template or custom
-    
+    industry: string; // e.g., 'hotel', 'hospital', 'datacenter'
+    industryName: string; // Display name
+    template?: string; // Selected template ID
+    usedTemplate: boolean; // Whether they used a template or custom
+
     // User-provided data (Step 2)
-    inputs: Record<string, any>;       // e.g., { rooms: 150, evChargers: 10 }
-    
+    inputs: Record<string, any>; // e.g., { rooms: 150, evChargers: 10 }
+
     // Calculated baseline from database
     baseline: {
-      powerMW: number;                 // Calculated baseline power requirement
-      calculatedFrom: string;          // e.g., "150 rooms × 2.93 kW/room = 440 kW"
+      powerMW: number; // Calculated baseline power requirement
+      calculatedFrom: string; // e.g., "150 rooms × 2.93 kW/room = 440 kW"
       databaseConfig: {
         typicalLoadKw: number;
         peakLoadKw: number;
@@ -57,13 +57,13 @@ export interface QuoteDocument {
   configuration: {
     // Battery Storage
     battery: {
-      powerMW: number;                 // Storage size in MW
-      durationHours: number;           // Duration hours
-      capacityMWh: number;             // Total capacity (powerMW × durationHours)
-      chemistry: string;               // 'LFP', 'NMC', etc.
-      efficiency: number;              // Round-trip efficiency %
-      depthOfDischarge: number;        // Usable DoD %
-      cycleLife: number;               // Expected cycles
+      powerMW: number; // Storage size in MW
+      durationHours: number; // Duration hours
+      capacityMWh: number; // Total capacity (powerMW × durationHours)
+      chemistry: string; // 'LFP', 'NMC', etc.
+      efficiency: number; // Round-trip efficiency %
+      depthOfDischarge: number; // Usable DoD %
+      cycleLife: number; // Expected cycles
     };
 
     // Renewable Energy Sources
@@ -88,8 +88,8 @@ export interface QuoteDocument {
     };
 
     // Total System Power
-    totalSystemPowerMW: number;        // battery + solar + wind + generator
-    
+    totalSystemPowerMW: number; // battery + solar + wind + generator
+
     // Advanced Settings
     advanced?: {
       controlStrategy?: string;
@@ -104,14 +104,14 @@ export interface QuoteDocument {
     state?: string;
     utility?: string;
     electricityRate: {
-      energyChargePerKWh: number;      // $/kWh
-      demandChargePerKW: number;       // $/kW-month
-      utilityRateSource: string;       // e.g., "California PG&E Commercial"
+      energyChargePerKWh: number; // $/kWh
+      demandChargePerKW: number; // $/kW-month
+      utilityRateSource: string; // e.g., "California PG&E Commercial"
     };
     incentives: {
       federal: {
-        itc: number;                   // Investment Tax Credit %
-        itcAmount?: number;            // Calculated ITC value
+        itc: number; // Investment Tax Credit %
+        itcAmount?: number; // Calculated ITC value
       };
       state: {
         rebate?: number;
@@ -128,31 +128,31 @@ export interface QuoteDocument {
   financials: {
     // Costs
     costs: {
-      batterySystem: number;           // Total battery system cost
-      solar: number;                   // Solar installation cost
-      wind: number;                    // Wind installation cost
-      generator: number;               // Generator cost
-      installation: number;            // Installation labor
-      softCosts: number;               // Permits, engineering, etc.
-      totalProjectCost: number;        // Sum of all costs
-      netCostAfterIncentives: number;  // After ITC and rebates
+      batterySystem: number; // Total battery system cost
+      solar: number; // Solar installation cost
+      wind: number; // Wind installation cost
+      generator: number; // Generator cost
+      installation: number; // Installation labor
+      softCosts: number; // Permits, engineering, etc.
+      totalProjectCost: number; // Sum of all costs
+      netCostAfterIncentives: number; // After ITC and rebates
     };
 
     // Savings
     savings: {
-      annualEnergySavings: number;     // $/year from energy arbitrage
-      annualDemandSavings: number;     // $/year from demand reduction
-      annualRenewableSavings: number;  // $/year from solar/wind
-      totalAnnualSavings: number;      // Sum of all savings
-      lifetimeSavings: number;         // 25-year savings
+      annualEnergySavings: number; // $/year from energy arbitrage
+      annualDemandSavings: number; // $/year from demand reduction
+      annualRenewableSavings: number; // $/year from solar/wind
+      totalAnnualSavings: number; // Sum of all savings
+      lifetimeSavings: number; // 25-year savings
     };
 
     // ROI Metrics
     roi: {
-      paybackPeriod: number;           // Years to break even
-      simpleROI: number;               // % return on investment
-      irr: number;                     // Internal rate of return %
-      npv: number;                     // Net present value
+      paybackPeriod: number; // Years to break even
+      simpleROI: number; // % return on investment
+      irr: number; // Internal rate of return %
+      npv: number; // Net present value
     };
 
     // Cash Flow
@@ -166,22 +166,22 @@ export interface QuoteDocument {
   // ==================== AI RECOMMENDATIONS ====================
   aiAnalysis?: {
     recommendations: {
-      type: 'optimization' | 'cost-saving' | 'performance' | 'warning';
+      type: "optimization" | "cost-saving" | "performance" | "warning";
       title: string;
       description: string;
       currentValue: string;
       suggestedValue: string;
       impact: string;
       savings?: string;
-      priority: 'high' | 'medium' | 'low';
+      priority: "high" | "medium" | "low";
     }[];
-    
-    optimizationScore: number;         // 0-100, how optimal is current config
-    confidenceLevel: number;           // 0-100, AI confidence in recommendations
-    
+
+    optimizationScore: number; // 0-100, how optimal is current config
+    confidenceLevel: number; // 0-100, AI confidence in recommendations
+
     alternativeConfigs?: {
       description: string;
-              powerMW: number;
+      powerMW: number;
       durationHours: number;
       estimatedSavings: number;
       tradeoffs: string;
@@ -191,10 +191,10 @@ export interface QuoteDocument {
   // ==================== AUDIT TRAIL ====================
   changeLog: {
     timestamp: Date;
-    field: string;                     // What changed
+    field: string; // What changed
     oldValue: any;
     newValue: any;
-    source: 'user' | 'ai' | 'system';  // Who made the change
+    source: "user" | "ai" | "system"; // Who made the change
   }[];
 
   // ==================== VALIDATION ====================
@@ -231,9 +231,11 @@ export function calculateQuoteCompleteness(quote: QuoteDocument): number {
   }
 
   // 3. Renewables (Step 4)
-  if (quote.configuration.renewables.solar.enabled || 
-      quote.configuration.renewables.wind.enabled || 
-      quote.configuration.renewables.generator.enabled) {
+  if (
+    quote.configuration.renewables.solar.enabled ||
+    quote.configuration.renewables.wind.enabled ||
+    quote.configuration.renewables.generator.enabled
+  ) {
     completedSections++;
   }
 
@@ -248,7 +250,7 @@ export function calculateQuoteCompleteness(quote: QuoteDocument): number {
   }
 
   // 6. Review (final step)
-  if (quote.status === 'review' || quote.status === 'completed') {
+  if (quote.status === "review" || quote.status === "completed") {
     completedSections++;
   }
 
@@ -268,42 +270,44 @@ export function validateQuote(quote: QuoteDocument): {
 
   // Required fields
   if (!quote.useCase.industry) {
-    errors.push('Industry/use case is required');
+    errors.push("Industry/use case is required");
   }
 
   if (quote.configuration.battery.powerMW <= 0) {
-    errors.push('Battery power must be greater than 0');
+    errors.push("Battery power must be greater than 0");
   }
 
   if (quote.configuration.battery.durationHours <= 0) {
-    errors.push('Battery duration must be greater than 0');
+    errors.push("Battery duration must be greater than 0");
   }
 
   if (quote.location.electricityRate.energyChargePerKWh <= 0) {
-    errors.push('Electricity rate is required');
+    errors.push("Electricity rate is required");
   }
 
   // Warnings
   if (quote.configuration.battery.powerMW > 10) {
-    warnings.push('Large system (>10MW) - consider equipment availability');
+    warnings.push("Large system (>10MW) - consider equipment availability");
   }
 
   if (quote.financials.roi.paybackPeriod > 10) {
-    warnings.push('Payback period exceeds 10 years - review economics');
+    warnings.push("Payback period exceeds 10 years - review economics");
   }
 
-  if (quote.configuration.totalSystemPowerMW !== 
-      (quote.configuration.battery.powerMW + 
-       quote.configuration.renewables.solar.capacityMW +
-       quote.configuration.renewables.wind.capacityMW +
-       quote.configuration.renewables.generator.capacityMW)) {
-    errors.push('Total system power calculation mismatch');
+  if (
+    quote.configuration.totalSystemPowerMW !==
+    quote.configuration.battery.powerMW +
+      quote.configuration.renewables.solar.capacityMW +
+      quote.configuration.renewables.wind.capacityMW +
+      quote.configuration.renewables.generator.capacityMW
+  ) {
+    errors.push("Total system power calculation mismatch");
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }
 
@@ -312,65 +316,65 @@ export function validateQuote(quote: QuoteDocument): {
  */
 export function createEmptyQuote(): QuoteDocument {
   const now = new Date();
-  
+
   return {
     id: `quote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     version: 1,
     createdAt: now,
     updatedAt: now,
-    status: 'draft',
+    status: "draft",
     completionPercentage: 0,
-    
+
     useCase: {
-      industry: '',
-      industryName: '',
+      industry: "",
+      industryName: "",
       usedTemplate: false,
       inputs: {},
       baseline: {
         powerMW: 0,
-        calculatedFrom: '',
+        calculatedFrom: "",
         databaseConfig: {
           typicalLoadKw: 0,
           peakLoadKw: 0,
           baseLoadKw: 0,
           loadFactor: 0,
-          profileType: '',
-          recommendedDurationHours: 4
-        }
-      }
+          profileType: "",
+          recommendedDurationHours: 4,
+        },
+      },
     },
-    
+
     configuration: {
       battery: {
         powerMW: 0,
         durationHours: 4,
         capacityMWh: 0,
-        chemistry: 'LFP',
+        chemistry: "LFP",
         efficiency: 90,
         depthOfDischarge: 90,
-        cycleLife: 6000
+        cycleLife: 6000,
       },
       renewables: {
         solar: { enabled: false, capacityMW: 0 },
         wind: { enabled: false, capacityMW: 0 },
-        generator: { enabled: false, capacityMW: 0 }
+        generator: { enabled: false, capacityMW: 0 },
       },
-      totalSystemPowerMW: 0
+      totalSystemPowerMW: 0,
     },
-    
+
     location: {
       electricityRate: {
         energyChargePerKWh: 0.12,
         demandChargePerKW: 15,
-        utilityRateSource: 'Default Commercial Rate'
+        utilityRateSource: "Default Commercial Rate",
       },
       incentives: {
         federal: { itc: 30 },
         state: {},
-        utility: {}
-      }
+        utility: {},
+      },
     },
-    
+
     financials: {
       costs: {
         batterySystem: 0,
@@ -380,30 +384,30 @@ export function createEmptyQuote(): QuoteDocument {
         installation: 0,
         softCosts: 0,
         totalProjectCost: 0,
-        netCostAfterIncentives: 0
+        netCostAfterIncentives: 0,
       },
       savings: {
         annualEnergySavings: 0,
         annualDemandSavings: 0,
         annualRenewableSavings: 0,
         totalAnnualSavings: 0,
-        lifetimeSavings: 0
+        lifetimeSavings: 0,
       },
       roi: {
         paybackPeriod: 0,
         simpleROI: 0,
         irr: 0,
-        npv: 0
-      }
+        npv: 0,
+      },
     },
-    
+
     changeLog: [],
-    
+
     validation: {
       isValid: false,
       errors: [],
       warnings: [],
-      missingFields: ['industry', 'battery configuration', 'location']
-    }
+      missingFields: ["industry", "battery configuration", "location"],
+    },
   };
 }

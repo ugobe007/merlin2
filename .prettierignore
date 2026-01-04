@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+dist/
+build/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Logs
+*.log
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Config files
+tsconfig*.json
+vite.config.ts
+tailwind.config.cjs
+postcss.config.cjs
+
+# Test files
+coverage/
+.nyc_output/
+
+# Misc
+.DS_Store
+*.swp
+*.swo
+*~

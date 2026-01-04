@@ -1,15 +1,15 @@
 /**
  * Template Migration Service
- * 
+ *
  * Purpose: One-time migration of useCaseTemplates.ts data to Supabase database
- * 
+ *
  * What it does:
  * 1. Reads all 9 templates from useCaseTemplates.ts
  * 2. Inserts each template into use_case_templates table
  * 3. Inserts 100+ equipment items into equipment_database table
  * 4. Validates migration success
  * 5. Provides rollback capability
- * 
+ *
  * Usage:
  * - Import in AdminDashboard.tsx
  * - Add "Migrate Templates" button
@@ -17,8 +17,8 @@
  * - Keep useCaseTemplates.ts as fallback
  */
 
-import { USE_CASE_TEMPLATES } from '../data/useCaseTemplates';
-import { supabase } from './supabaseClient';
+import { USE_CASE_TEMPLATES } from "../data/useCaseTemplates";
+import { supabase } from "./supabaseClient";
 
 export interface MigrationResult {
   success: boolean;
@@ -36,22 +36,22 @@ export interface MigrationResult {
  * Main migration function - migrates all templates to database
  */
 export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
-  console.log('🔄 Starting template migration to database...');
+  console.log("🔄 Starting template migration to database...");
   console.log(`📊 Found ${USE_CASE_TEMPLATES.length} templates to migrate`);
-  
+
   const result: MigrationResult = {
     success: true,
     templatesCreated: 0,
     equipmentCreated: 0,
     errors: [],
-    details: []
+    details: [],
   };
 
   // Check if tables exist first
   const tablesExist = await checkTablesExist();
   if (!tablesExist) {
     result.success = false;
-    result.errors.push('❌ Database tables not found. Please run 03_USE_CASE_TABLES.sql first.');
+    result.errors.push("❌ Database tables not found. Please run 03_USE_CASE_TABLES.sql first.");
     return result;
   }
 
@@ -59,23 +59,25 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
   for (const template of USE_CASE_TEMPLATES) {
     try {
       console.log(`\n📝 Migrating: ${template.name} (${template.slug})`);
-      
+
       // Check if template already exists
       const { data: existing } = await supabase
-        .from('use_case_templates')
-        .select('id, slug, version')
-        .eq('slug', template.slug)
+        .from("use_case_templates")
+        .select("id, slug, version")
+        .eq("slug", template.slug)
         .single();
-      
+
       if (existing) {
-        console.log(`⚠️  Template ${template.slug} already exists (version ${existing.version}). Skipping...`);
+        console.log(
+          `⚠️  Template ${template.slug} already exists (version ${existing.version}). Skipping...`
+        );
         result.errors.push(`Template ${template.slug} already exists`);
         continue;
       }
 
       // 1. Insert template
       const { data: templateData, error: templateError } = await supabase
-        .from('use_case_templates')
+        .from("use_case_templates")
         .insert({
           slug: template.slug,
           name: template.name,
@@ -86,26 +88,26 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
           required_tier: template.requiredTier,
           is_active: template.isActive,
           display_order: template.displayOrder,
-          
+
           // JSONB fields - direct mapping
           power_profile: template.powerProfile,
           financial_params: template.financialParams,
           custom_questions: template.customQuestions || [],
           recommended_applications: template.recommendedApplications || [],
-          
+
           // Solar compatibility - NEW field (will add later)
           solar_compatibility: null,
-          
+
           // Industry standards - Extract from template if available
           industry_standards: {
-            nrel: 'NREL Commercial Reference Buildings',
-            ashrae: 'ASHRAE 90.1 Standard',
-            ieee: 'IEEE 2450 Battery Standards',
-            epri: 'EPRI Energy Storage Database',
-            cbecs: 'DOE/EIA CBECS Survey'
+            nrel: "NREL Commercial Reference Buildings",
+            ashrae: "ASHRAE 90.1 Standard",
+            ieee: "IEEE 2450 Battery Standards",
+            epri: "EPRI Energy Storage Database",
+            cbecs: "DOE/EIA CBECS Survey",
           },
-          
-          version: '1.0.0'
+
+          version: "1.0.0",
         })
         .select()
         .single();
@@ -124,7 +126,7 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
       let equipmentCount = 0;
       if (template.equipment && template.equipment.length > 0) {
         console.log(`   📦 Migrating ${template.equipment.length} equipment items...`);
-        
+
         const equipmentRecords = template.equipment.map((eq, index) => ({
           use_case_template_id: templateData.id,
           name: eq.name,
@@ -135,11 +137,11 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
           data_source: eq.description || null, // Use description as data source
           display_order: index,
           is_active: true,
-          show_in_ui: true
+          show_in_ui: true,
         }));
 
         const { data: equipmentData, error: equipmentError } = await supabase
-          .from('equipment_database')
+          .from("equipment_database")
           .insert(equipmentRecords)
           .select();
 
@@ -158,9 +160,8 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
       result.details.push({
         templateId: templateData.id,
         name: template.name,
-        equipmentCount
+        equipmentCount,
       });
-
     } catch (error) {
       console.error(`❌ Unexpected error migrating ${template.slug}:`, error);
       result.success = false;
@@ -169,19 +170,19 @@ export async function migrateTemplatesToDatabase(): Promise<MigrationResult> {
   }
 
   // Print summary
-  console.log('\n' + '='.repeat(60));
-  console.log('📊 MIGRATION SUMMARY');
-  console.log('='.repeat(60));
+  console.log("\n" + "=".repeat(60));
+  console.log("📊 MIGRATION SUMMARY");
+  console.log("=".repeat(60));
   console.log(`✅ Templates created: ${result.templatesCreated}/${USE_CASE_TEMPLATES.length}`);
   console.log(`✅ Equipment created: ${result.equipmentCreated}`);
   console.log(`❌ Errors: ${result.errors.length}`);
-  
+
   if (result.errors.length > 0) {
-    console.log('\n⚠️  ERRORS:');
-    result.errors.forEach(err => console.log(`   - ${err}`));
+    console.log("\n⚠️  ERRORS:");
+    result.errors.forEach((err) => console.log(`   - ${err}`));
   }
-  
-  console.log('='.repeat(60) + '\n');
+
+  console.log("=".repeat(60) + "\n");
 
   return result;
 }
@@ -193,24 +194,24 @@ async function checkTablesExist(): Promise<boolean> {
   try {
     // Try to query use_case_templates table
     const { error: templateError } = await supabase
-      .from('use_case_templates')
-      .select('id')
+      .from("use_case_templates")
+      .select("id")
       .limit(1);
 
     // Try to query equipment_database table
     const { error: equipmentError } = await supabase
-      .from('equipment_database')
-      .select('id')
+      .from("equipment_database")
+      .select("id")
       .limit(1);
 
     if (templateError || equipmentError) {
-      console.error('❌ Tables not found:', { templateError, equipmentError });
+      console.error("❌ Tables not found:", { templateError, equipmentError });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('❌ Error checking tables:', error);
+    console.error("❌ Error checking tables:", error);
     return false;
   }
 }
@@ -220,36 +221,40 @@ async function checkTablesExist(): Promise<boolean> {
  */
 function extractEquipmentCategory(name: string): string {
   const nameLower = name.toLowerCase();
-  
-  if (nameLower.includes('hvac') || nameLower.includes('air') || nameLower.includes('climate')) {
-    return 'HVAC';
+
+  if (nameLower.includes("hvac") || nameLower.includes("air") || nameLower.includes("climate")) {
+    return "HVAC";
   }
-  if (nameLower.includes('light')) {
-    return 'Lighting';
+  if (nameLower.includes("light")) {
+    return "Lighting";
   }
-  if (nameLower.includes('kitchen') || nameLower.includes('food') || nameLower.includes('laundry')) {
-    return 'Kitchen & Laundry';
+  if (
+    nameLower.includes("kitchen") ||
+    nameLower.includes("food") ||
+    nameLower.includes("laundry")
+  ) {
+    return "Kitchen & Laundry";
   }
-  if (nameLower.includes('medical') || nameLower.includes('equipment')) {
-    return 'Medical Equipment';
+  if (nameLower.includes("medical") || nameLower.includes("equipment")) {
+    return "Medical Equipment";
   }
-  if (nameLower.includes('it') || nameLower.includes('server') || nameLower.includes('data')) {
-    return 'IT & Communications';
+  if (nameLower.includes("it") || nameLower.includes("server") || nameLower.includes("data")) {
+    return "IT & Communications";
   }
-  if (nameLower.includes('elevator') || nameLower.includes('transport')) {
-    return 'Transport';
+  if (nameLower.includes("elevator") || nameLower.includes("transport")) {
+    return "Transport";
   }
-  if (nameLower.includes('emergency') || nameLower.includes('backup')) {
-    return 'Emergency Systems';
+  if (nameLower.includes("emergency") || nameLower.includes("backup")) {
+    return "Emergency Systems";
   }
-  if (nameLower.includes('water') || nameLower.includes('pump')) {
-    return 'Water Systems';
+  if (nameLower.includes("water") || nameLower.includes("pump")) {
+    return "Water Systems";
   }
-  if (nameLower.includes('security') || nameLower.includes('surveillance')) {
-    return 'Security';
+  if (nameLower.includes("security") || nameLower.includes("surveillance")) {
+    return "Security";
   }
-  
-  return 'Other';
+
+  return "Other";
 }
 
 /**
@@ -259,15 +264,15 @@ export async function validateMigration(): Promise<{
   valid: boolean;
   issues: string[];
 }> {
-  console.log('🔍 Validating migration...');
-  
+  console.log("🔍 Validating migration...");
+
   const issues: string[] = [];
 
   try {
     // Check template count
     const { data: templates, error: templateError } = await supabase
-      .from('use_case_templates')
-      .select('*');
+      .from("use_case_templates")
+      .select("*");
 
     if (templateError) {
       issues.push(`Error fetching templates: ${templateError.message}`);
@@ -282,8 +287,8 @@ export async function validateMigration(): Promise<{
 
     // Check each template has equipment
     for (const template of USE_CASE_TEMPLATES) {
-      const dbTemplate = templates?.find(t => t.slug === template.slug);
-      
+      const dbTemplate = templates?.find((t) => t.slug === template.slug);
+
       if (!dbTemplate) {
         issues.push(`Template missing: ${template.slug}`);
         continue;
@@ -291,9 +296,9 @@ export async function validateMigration(): Promise<{
 
       // Check equipment count
       const { data: equipment, error: eqError } = await supabase
-        .from('equipment_database')
-        .select('*')
-        .eq('use_case_template_id', dbTemplate.id);
+        .from("equipment_database")
+        .select("*")
+        .eq("use_case_template_id", dbTemplate.id);
 
       if (eqError) {
         issues.push(`Error fetching equipment for ${template.slug}: ${eqError.message}`);
@@ -313,9 +318,8 @@ export async function validateMigration(): Promise<{
     console.log(`✅ Validation complete: ${issues.length} issues found`);
     return {
       valid: issues.length === 0,
-      issues
+      issues,
     };
-
   } catch (error) {
     issues.push(`Validation error: ${error}`);
     return { valid: false, issues };
@@ -332,20 +336,20 @@ export async function rollbackMigration(): Promise<{
   equipmentDeleted: number;
   errors: string[];
 }> {
-  console.log('⚠️  ROLLBACK: Deleting all migrated templates...');
-  
+  console.log("⚠️  ROLLBACK: Deleting all migrated templates...");
+
   const result = {
     success: true,
     templatesDeleted: 0,
     equipmentDeleted: 0,
-    errors: [] as string[]
+    errors: [] as string[],
   };
 
   try {
     // Get all template IDs
     const { data: templates, error: fetchError } = await supabase
-      .from('use_case_templates')
-      .select('id, slug');
+      .from("use_case_templates")
+      .select("id, slug");
 
     if (fetchError) {
       result.errors.push(`Error fetching templates: ${fetchError.message}`);
@@ -353,15 +357,18 @@ export async function rollbackMigration(): Promise<{
     }
 
     if (!templates || templates.length === 0) {
-      console.log('ℹ️  No templates to delete');
+      console.log("ℹ️  No templates to delete");
       return result;
     }
 
     // Equipment will be deleted automatically via CASCADE
     const { error: deleteError } = await supabase
-      .from('use_case_templates')
+      .from("use_case_templates")
       .delete()
-      .in('id', templates.map(t => t.id));
+      .in(
+        "id",
+        templates.map((t) => t.id)
+      );
 
     if (deleteError) {
       result.success = false;
@@ -370,7 +377,6 @@ export async function rollbackMigration(): Promise<{
       result.templatesDeleted = templates.length;
       console.log(`✅ Deleted ${templates.length} templates (equipment auto-deleted via CASCADE)`);
     }
-
   } catch (error) {
     result.success = false;
     result.errors.push(`Rollback error: ${error}`);
@@ -402,22 +408,22 @@ export async function getMigrationStatus(): Promise<{
     equipmentInCode: 0,
     equipmentInDatabase: 0,
     needsMigration: false,
-    details: [] as any[]
+    details: [] as any[],
   };
 
   // Count equipment in code
-  USE_CASE_TEMPLATES.forEach(t => {
+  USE_CASE_TEMPLATES.forEach((t) => {
     status.equipmentInCode += t.equipment?.length || 0;
   });
 
   try {
     // Check database
     const { data: templates, error: templateError } = await supabase
-      .from('use_case_templates')
-      .select('*');
+      .from("use_case_templates")
+      .select("*");
 
     if (templateError) {
-      console.error('Error fetching templates:', templateError);
+      console.error("Error fetching templates:", templateError);
       status.needsMigration = true;
       return status;
     }
@@ -426,15 +432,15 @@ export async function getMigrationStatus(): Promise<{
 
     // Check each template
     for (const codeTemplate of USE_CASE_TEMPLATES) {
-      const dbTemplate = templates?.find(t => t.slug === codeTemplate.slug);
-      
+      const dbTemplate = templates?.find((t) => t.slug === codeTemplate.slug);
+
       let equipmentInDb = 0;
       if (dbTemplate) {
         const { data: equipment } = await supabase
-          .from('equipment_database')
-          .select('id')
-          .eq('use_case_template_id', dbTemplate.id);
-        
+          .from("equipment_database")
+          .select("id")
+          .eq("use_case_template_id", dbTemplate.id);
+
         equipmentInDb = equipment?.length || 0;
         status.equipmentInDatabase += equipmentInDb;
       }
@@ -444,16 +450,15 @@ export async function getMigrationStatus(): Promise<{
         name: codeTemplate.name,
         inDatabase: !!dbTemplate,
         equipmentInCode: codeTemplate.equipment?.length || 0,
-        equipmentInDatabase: equipmentInDb
+        equipmentInDatabase: equipmentInDb,
       });
     }
 
-    status.needsMigration = 
+    status.needsMigration =
       status.templatesInDatabase < status.templatesInCode ||
       status.equipmentInDatabase < status.equipmentInCode;
-
   } catch (error) {
-    console.error('Error getting migration status:', error);
+    console.error("Error getting migration status:", error);
     status.needsMigration = true;
   }
 

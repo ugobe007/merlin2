@@ -1,16 +1,16 @@
 /**
  * Industry Power Profiles Service
  * =================================
- * 
+ *
  * Fetches industry-specific power defaults from the database.
  * Used by SMB vertical sites (carwashenergy.com, etc.) for accurate sizing.
- * 
+ *
  * @module industryPowerProfilesService
  * @version 1.0.0
  * @date November 30, 2025
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 // ============================================
 // TYPES
@@ -38,85 +38,85 @@ export interface IndustryPowerProfile {
 // ============================================
 
 const FALLBACK_PROFILES: Record<string, IndustryPowerProfile> = {
-  'car-wash': {
-    industry_slug: 'car-wash',
+  "car-wash": {
+    industry_slug: "car-wash",
     typical_peak_demand_kw: 150,
     typical_monthly_kwh: 25000,
-    peak_demand_timing: 'Weekends 10am-4pm, Weekdays 4-7pm',
-    load_profile_type: 'daytime_heavy',
+    peak_demand_timing: "Weekends 10am-4pm, Weekdays 4-7pm",
+    load_profile_type: "daytime_heavy",
     recommended_battery_kwh_per_unit: 50,
     recommended_backup_hours: 4,
     recommended_solar_kw_per_unit: 25,
-    unit_name: 'bay',
-    unit_plural: 'bays',
+    unit_name: "bay",
+    unit_plural: "bays",
     avg_electricity_rate: 0.14,
-    avg_demand_charge: 15.00,
+    avg_demand_charge: 15.0,
     typical_payback_years: 5.5,
-    data_source: 'Merlin Energy Industry Analysis 2024',
+    data_source: "Merlin Energy Industry Analysis 2024",
   },
-  'ev-charging-hub': {
-    industry_slug: 'ev-charging-hub',
+  "ev-charging-hub": {
+    industry_slug: "ev-charging-hub",
     typical_peak_demand_kw: 500,
     typical_monthly_kwh: 75000,
-    peak_demand_timing: 'Commute hours 7-9am, 4-7pm; Weekend afternoons',
-    load_profile_type: 'commute_peaks',
+    peak_demand_timing: "Commute hours 7-9am, 4-7pm; Weekend afternoons",
+    load_profile_type: "commute_peaks",
     recommended_battery_kwh_per_unit: 100,
     recommended_backup_hours: 2,
     recommended_solar_kw_per_unit: 30,
-    unit_name: 'port',
-    unit_plural: 'ports',
+    unit_name: "port",
+    unit_plural: "ports",
     avg_electricity_rate: 0.15,
-    avg_demand_charge: 25.00,
+    avg_demand_charge: 25.0,
     typical_payback_years: 4.5,
-    data_source: 'Merlin Energy EV Analysis 2024 + SAE J1772',
+    data_source: "Merlin Energy EV Analysis 2024 + SAE J1772",
   },
-  'hotel': {
-    industry_slug: 'hotel',
+  hotel: {
+    industry_slug: "hotel",
     typical_peak_demand_kw: 300,
     typical_monthly_kwh: 120000,
-    peak_demand_timing: 'Check-in 3-6pm, Morning 6-9am HVAC surge',
-    load_profile_type: 'hospitality_24_7',
+    peak_demand_timing: "Check-in 3-6pm, Morning 6-9am HVAC surge",
+    load_profile_type: "hospitality_24_7",
     recommended_battery_kwh_per_unit: 3,
     recommended_backup_hours: 4,
     recommended_solar_kw_per_unit: 1.5,
-    unit_name: 'room',
-    unit_plural: 'rooms',
+    unit_name: "room",
+    unit_plural: "rooms",
     avg_electricity_rate: 0.13,
-    avg_demand_charge: 18.00,
+    avg_demand_charge: 18.0,
     typical_payback_years: 6.0,
-    data_source: 'Merlin Energy Hospitality Analysis 2024 + ASHRAE 90.1',
+    data_source: "Merlin Energy Hospitality Analysis 2024 + ASHRAE 90.1",
   },
-  'laundromat': {
-    industry_slug: 'laundromat',
+  laundromat: {
+    industry_slug: "laundromat",
     typical_peak_demand_kw: 100,
     typical_monthly_kwh: 18000,
-    peak_demand_timing: 'Evenings 5-9pm, Weekends all day',
-    load_profile_type: 'evening_heavy',
+    peak_demand_timing: "Evenings 5-9pm, Weekends all day",
+    load_profile_type: "evening_heavy",
     recommended_battery_kwh_per_unit: 15,
     recommended_backup_hours: 4,
     recommended_solar_kw_per_unit: 10,
-    unit_name: 'machine',
-    unit_plural: 'machines',
+    unit_name: "machine",
+    unit_plural: "machines",
     avg_electricity_rate: 0.14,
-    avg_demand_charge: 12.00,
+    avg_demand_charge: 12.0,
     typical_payback_years: 6.0,
-    data_source: 'Merlin Energy Industry Analysis 2024',
+    data_source: "Merlin Energy Industry Analysis 2024",
   },
-  'restaurant': {
-    industry_slug: 'restaurant',
+  restaurant: {
+    industry_slug: "restaurant",
     typical_peak_demand_kw: 80,
     typical_monthly_kwh: 15000,
-    peak_demand_timing: 'Lunch 11am-2pm, Dinner 5-9pm',
-    load_profile_type: 'meal_peaks',
+    peak_demand_timing: "Lunch 11am-2pm, Dinner 5-9pm",
+    load_profile_type: "meal_peaks",
     recommended_battery_kwh_per_unit: 25,
     recommended_backup_hours: 4,
     recommended_solar_kw_per_unit: 15,
-    unit_name: 'seat',
-    unit_plural: 'seats',
+    unit_name: "seat",
+    unit_plural: "seats",
     avg_electricity_rate: 0.15,
-    avg_demand_charge: 14.00,
+    avg_demand_charge: 14.0,
     typical_payback_years: 5.0,
-    data_source: 'Merlin Energy Industry Analysis 2024',
+    data_source: "Merlin Energy Industry Analysis 2024",
   },
 };
 
@@ -124,7 +124,7 @@ const FALLBACK_PROFILES: Record<string, IndustryPowerProfile> = {
 // CACHE
 // ============================================
 
-let profilesCache: Map<string, IndustryPowerProfile> = new Map();
+const profilesCache: Map<string, IndustryPowerProfile> = new Map();
 let cacheLastUpdated = new Date(0);
 const CACHE_EXPIRY_MINUTES = 30;
 
@@ -139,13 +139,11 @@ function isCacheValid(): boolean {
 
 async function loadProfilesFromDB(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('industry_power_profiles')
-      .select('*');
+    const { data, error } = await supabase.from("industry_power_profiles").select("*");
 
     if (error) {
-      if (!error.message?.includes('does not exist')) {
-        console.warn('⚠️ Failed to load industry_power_profiles:', error.message);
+      if (!error.message?.includes("does not exist")) {
+        console.warn("⚠️ Failed to load industry_power_profiles:", error.message);
       }
       return false;
     }
@@ -156,7 +154,7 @@ async function loadProfilesFromDB(): Promise<boolean> {
         profilesCache.set(row.industry_slug, row);
       });
       cacheLastUpdated = new Date();
-      
+
       if (import.meta.env.DEV) {
         console.log(`✅ Loaded ${data.length} industry power profiles from database`);
       }
@@ -165,7 +163,7 @@ async function loadProfilesFromDB(): Promise<boolean> {
 
     return false;
   } catch (err) {
-    console.warn('⚠️ Database connection error for industry profiles:', err);
+    console.warn("⚠️ Database connection error for industry profiles:", err);
     return false;
   }
 }
@@ -176,7 +174,7 @@ async function loadProfilesFromDB(): Promise<boolean> {
 
 /**
  * Get power profile for a specific industry
- * 
+ *
  * @param industrySlug - Industry identifier (e.g., 'car-wash', 'laundromat')
  * @returns Industry power profile or null
  */
@@ -207,12 +205,12 @@ export async function getAllIndustryProfiles(): Promise<IndustryPowerProfile[]> 
 
   // Merge database and fallback profiles
   const allProfiles = new Map<string, IndustryPowerProfile>();
-  
+
   // Add fallbacks first
-  Object.values(FALLBACK_PROFILES).forEach(profile => {
+  Object.values(FALLBACK_PROFILES).forEach((profile) => {
     allProfiles.set(profile.industry_slug, profile);
   });
-  
+
   // Override with database values
   profilesCache.forEach((profile, slug) => {
     allProfiles.set(slug, profile);
@@ -223,7 +221,7 @@ export async function getAllIndustryProfiles(): Promise<IndustryPowerProfile[]> 
 
 /**
  * Calculate recommended BESS size for an industry
- * 
+ *
  * @param industrySlug - Industry identifier
  * @param unitCount - Number of units (bays, machines, seats, etc.)
  * @returns Recommended battery size in kWh
@@ -241,7 +239,7 @@ export async function getRecommendedBatterySize(
 
 /**
  * Calculate recommended solar size for an industry
- * 
+ *
  * @param industrySlug - Industry identifier
  * @param unitCount - Number of units
  * @returns Recommended solar size in kW
@@ -259,7 +257,7 @@ export async function getRecommendedSolarSize(
 
 /**
  * Get the unit terminology for an industry
- * 
+ *
  * @param industrySlug - Industry identifier
  * @returns Object with singular and plural unit names
  */
@@ -268,7 +266,7 @@ export async function getIndustryUnits(
 ): Promise<{ singular: string; plural: string }> {
   const profile = await getIndustryProfile(industrySlug);
   if (!profile) {
-    return { singular: 'unit', plural: 'units' };
+    return { singular: "unit", plural: "units" };
   }
   return { singular: profile.unit_name, plural: profile.unit_plural };
 }
@@ -279,5 +277,7 @@ export async function getIndustryUnits(
 export function clearProfilesCache(): void {
   profilesCache.clear();
   cacheLastUpdated = new Date(0);
-  if (import.meta.env.DEV) { console.log('🔄 Industry profiles cache cleared'); }
+  if (import.meta.env.DEV) {
+    console.log("🔄 Industry profiles cache cleared");
+  }
 }

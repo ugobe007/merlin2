@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Shield, Lock, Eye, EyeOff, Download, Trash2, CheckCircle, AlertCircle, History } from 'lucide-react';
+import { X, Shield, Lock, Eye, EyeOff, Download, Trash2, CheckCircle, History } from 'lucide-react';
 
 interface SecurityPrivacySettingsProps {
   onClose: () => void;

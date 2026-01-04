@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase credentials not found. Please add them to your .env file.');
+  console.warn("⚠️ Supabase credentials not found. Please add them to your .env file.");
 }
 
 // Create Supabase client
@@ -13,8 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
-  }
+    detectSessionInUrl: true,
+  },
 });
 
 // ====================================================================
@@ -28,7 +28,7 @@ export interface PricingConfiguration {
   is_active: boolean;
   is_default: boolean;
   version: string;
-  
+
   // BESS Pricing (Size-weighted)
   bess_small_system_per_kwh: number;
   bess_large_system_per_kwh: number;
@@ -37,21 +37,21 @@ export interface PricingConfiguration {
   bess_degradation_rate: number;
   bess_warranty_years: number;
   bess_vendor_notes?: string;
-  
+
   // Solar Pricing
   solar_utility_scale_per_watt: number;
   solar_commercial_per_watt: number;
   solar_small_scale_per_watt: number;
   solar_tracking_upcharge: number;
   solar_vendor_notes?: string;
-  
+
   // Wind Pricing
   wind_utility_scale_per_kw: number;
   wind_commercial_per_kw: number;
   wind_small_scale_per_kw: number;
   wind_foundation_cost_per_mw: number;
   wind_vendor_notes?: string;
-  
+
   // Generator Pricing
   gen_natural_gas_per_kw: number;
   gen_diesel_per_kw: number;
@@ -59,14 +59,14 @@ export interface PricingConfiguration {
   gen_bio_gas_per_kw: number;
   gen_base_installation_cost: number;
   gen_vendor_notes?: string;
-  
+
   // Power Electronics
   pe_inverter_per_kw: number;
   pe_transformer_per_kva: number;
   pe_switchgear_per_kw: number;
   pe_protection_relays_per_unit: number;
   pe_vendor_notes?: string;
-  
+
   // EV Charging
   ev_level1_ac_per_unit: number;
   ev_level2_ac_per_unit: number;
@@ -75,7 +75,7 @@ export interface PricingConfiguration {
   ev_pantograph_charger_per_unit: number;
   ev_networking_cost_per_unit: number;
   ev_vendor_notes?: string;
-  
+
   // Balance of Plant
   bop_percentage: number;
   bop_labor_cost_per_hour: number;
@@ -84,14 +84,14 @@ export interface PricingConfiguration {
   bop_international_tariff_rate: number;
   bop_contingency_percentage: number;
   bop_vendor_notes?: string;
-  
+
   // System Controls
   sc_scada_system_base_cost: number;
   sc_cybersecurity_compliance_cost: number;
   sc_cloud_connectivity_per_year: number;
   sc_hmi_touchscreen_cost: number;
   sc_vendor_notes?: string;
-  
+
   // Audit fields
   created_at: string;
   updated_at: string;
@@ -104,66 +104,66 @@ export interface DailyPriceData {
   price_date: string;
   data_source: string;
   source_url?: string;
-  validation_status: 'pending' | 'validated' | 'flagged' | 'error';
-  
+  validation_status: "pending" | "validated" | "flagged" | "error";
+
   // BESS Pricing Data
   bess_utility_scale_per_kwh?: number;
   bess_commercial_per_kwh?: number;
   bess_small_scale_per_kwh?: number;
-  bess_market_trend?: 'increasing' | 'decreasing' | 'stable';
-  
+  bess_market_trend?: "increasing" | "decreasing" | "stable";
+
   // Solar Pricing Data
   solar_utility_scale_per_watt?: number;
   solar_commercial_per_watt?: number;
   solar_residential_per_watt?: number;
-  
+
   // Wind Pricing Data
   wind_utility_scale_per_kw?: number;
   wind_commercial_per_kw?: number;
-  
+
   // Generator Pricing Data
   generator_natural_gas_per_kw?: number;
   generator_diesel_per_kw?: number;
-  
+
   // Market Intelligence
   market_volatility_index?: number;
-  supply_chain_status?: 'normal' | 'constrained' | 'disrupted';
-  demand_forecast?: 'low' | 'moderate' | 'high' | 'very_high';
-  technology_maturity?: 'emerging' | 'mature' | 'commodity';
-  
+  supply_chain_status?: "normal" | "constrained" | "disrupted";
+  demand_forecast?: "low" | "moderate" | "high" | "very_high";
+  technology_maturity?: "emerging" | "mature" | "commodity";
+
   // Alert flags
   price_deviation_percent?: number;
   alert_threshold_exceeded: boolean;
   alert_message?: string;
-  
+
   // Vendor-specific data
   vendor_data?: Record<string, any>;
   raw_data?: Record<string, any>;
-  
+
   // Processing metadata
   processed_at: string;
   processing_duration_ms?: number;
   data_quality_score?: number;
-  
+
   created_at: string;
 }
 
 export interface PricingAlert {
   id: string;
   alert_type: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   title: string;
   message: string;
-  
+
   price_data_id?: string;
   configuration_id?: string;
-  
+
   triggered_at: string;
   acknowledged_at?: string;
   acknowledged_by?: string;
   resolved_at?: string;
   resolved_by?: string;
-  
+
   alert_data?: Record<string, any>;
   created_at: string;
 }
@@ -184,217 +184,227 @@ export interface SystemConfiguration {
 // ====================================================================
 // ⚠️ DEPRECATED: This PricingClient uses the OLD flat-column pricing_configurations schema
 // The new system uses JSONB config_data column (see MASTER_SCHEMA.sql)
-// 
+//
 // MIGRATION PATH:
 // - Use useCaseService.getPricingConfig(key) instead
 // - Use useCaseService.updatePricingConfig(key, data, userId) instead
 // - Old schema had: bess_small_system_per_kwh, solar_utility_scale_per_watt, etc.
 // - New schema has: config_data (JSONB) with flexible structure
-// 
+//
 // This class is kept for backward compatibility only.
 // Will be removed in version 3.0.0
 // ====================================================================
 
 export class PricingClient {
-  
   // Get the active (default) pricing configuration
   // ⚠️ DEPRECATED: Use useCaseService.getPricingConfig('bess_pricing_2025') instead
   async getActivePricingConfig(): Promise<PricingConfiguration | null> {
-    console.warn('⚠️ DEPRECATED: PricingClient.getActivePricingConfig() uses OLD schema. Use useCaseService.getPricingConfig() instead.');
+    console.warn(
+      "⚠️ DEPRECATED: PricingClient.getActivePricingConfig() uses OLD schema. Use useCaseService.getPricingConfig() instead."
+    );
     const { data, error } = await supabase
-      .from('pricing_configurations')
-      .select('*')
-      .eq('is_active', true)
-      .eq('is_default', true)
+      .from("pricing_configurations")
+      .select("*")
+      .eq("is_active", true)
+      .eq("is_default", true)
       .single();
-    
+
     if (error) {
-      console.error('Error fetching active pricing config:', error);
+      console.error("Error fetching active pricing config:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Get all pricing configurations
   // ⚠️ DEPRECATED: Use useCaseService.getPricingConfigsByCategory(category) instead
   async getAllPricingConfigs(): Promise<PricingConfiguration[]> {
-    console.warn('⚠️ DEPRECATED: PricingClient.getAllPricingConfigs() uses OLD schema. Use useCaseService methods instead.');
+    console.warn(
+      "⚠️ DEPRECATED: PricingClient.getAllPricingConfigs() uses OLD schema. Use useCaseService methods instead."
+    );
     const { data, error } = await supabase
-      .from('pricing_configurations')
-      .select('*')
-      .order('updated_at', { ascending: false });
-    
+      .from("pricing_configurations")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
     if (error) {
-      console.error('Error fetching pricing configs:', error);
+      console.error("Error fetching pricing configs:", error);
       return [];
     }
-    
+
     return data || [];
   }
-  
+
   // Update pricing configuration
   // ⚠️ DEPRECATED: Use useCaseService.updatePricingConfig(key, data, userId) instead
-  async updatePricingConfig(id: string, updates: Partial<PricingConfiguration>): Promise<PricingConfiguration | null> {
-    console.warn('⚠️ DEPRECATED: PricingClient.updatePricingConfig() uses OLD schema. Use useCaseService.updatePricingConfig() instead.');
+  async updatePricingConfig(
+    id: string,
+    updates: Partial<PricingConfiguration>
+  ): Promise<PricingConfiguration | null> {
+    console.warn(
+      "⚠️ DEPRECATED: PricingClient.updatePricingConfig() uses OLD schema. Use useCaseService.updatePricingConfig() instead."
+    );
     const { data, error } = await supabase
-      .from('pricing_configurations')
+      .from("pricing_configurations")
       .update({
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error updating pricing config:', error);
+      console.error("Error updating pricing config:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Create new pricing configuration
   // ⚠️ DEPRECATED: Use useCaseService methods with JSONB structure instead
-  async createPricingConfig(config: Omit<PricingConfiguration, 'id' | 'created_at' | 'updated_at'>): Promise<PricingConfiguration | null> {
-    console.warn('⚠️ DEPRECATED: PricingClient.createPricingConfig() uses OLD schema. Use useCaseService methods instead.');
+  async createPricingConfig(
+    config: Omit<PricingConfiguration, "id" | "created_at" | "updated_at">
+  ): Promise<PricingConfiguration | null> {
+    console.warn(
+      "⚠️ DEPRECATED: PricingClient.createPricingConfig() uses OLD schema. Use useCaseService methods instead."
+    );
     const { data, error } = await supabase
-      .from('pricing_configurations')
+      .from("pricing_configurations")
       .insert(config)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error creating pricing config:', error);
+      console.error("Error creating pricing config:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Get daily price data for a date range
   async getDailyPriceData(
-    startDate: string, 
-    endDate: string, 
+    startDate: string,
+    endDate: string,
     dataSource?: string
   ): Promise<DailyPriceData[]> {
     let query = supabase
-      .from('daily_price_data')
-      .select('*')
-      .gte('price_date', startDate)
-      .lte('price_date', endDate)
-      .order('price_date', { ascending: false });
-    
+      .from("daily_price_data")
+      .select("*")
+      .gte("price_date", startDate)
+      .lte("price_date", endDate)
+      .order("price_date", { ascending: false });
+
     if (dataSource) {
-      query = query.eq('data_source', dataSource);
+      query = query.eq("data_source", dataSource);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) {
-      console.error('Error fetching daily price data:', error);
+      console.error("Error fetching daily price data:", error);
       return [];
     }
-    
+
     return data || [];
   }
-  
+
   // Insert daily price data
-  async insertDailyPriceData(priceData: Omit<DailyPriceData, 'id' | 'created_at'>): Promise<DailyPriceData | null> {
+  async insertDailyPriceData(
+    priceData: Omit<DailyPriceData, "id" | "created_at">
+  ): Promise<DailyPriceData | null> {
     const { data, error } = await supabase
-      .from('daily_price_data')
+      .from("daily_price_data")
       .insert(priceData)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error inserting daily price data:', error);
+      console.error("Error inserting daily price data:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Get unresolved pricing alerts
   async getUnresolvedAlerts(): Promise<PricingAlert[]> {
     const { data, error } = await supabase
-      .from('pricing_alerts')
-      .select('*')
-      .is('resolved_at', null)
-      .order('triggered_at', { ascending: false });
-    
+      .from("pricing_alerts")
+      .select("*")
+      .is("resolved_at", null)
+      .order("triggered_at", { ascending: false });
+
     if (error) {
-      console.error('Error fetching unresolved alerts:', error);
+      console.error("Error fetching unresolved alerts:", error);
       return [];
     }
-    
+
     return data || [];
   }
-  
+
   // Create pricing alert
-  async createPricingAlert(alert: Omit<PricingAlert, 'id' | 'created_at' | 'triggered_at'>): Promise<PricingAlert | null> {
-    const { data, error } = await supabase
-      .from('pricing_alerts')
-      .insert(alert)
-      .select()
-      .single();
-    
+  async createPricingAlert(
+    alert: Omit<PricingAlert, "id" | "created_at" | "triggered_at">
+  ): Promise<PricingAlert | null> {
+    const { data, error } = await supabase.from("pricing_alerts").insert(alert).select().single();
+
     if (error) {
-      console.error('Error creating pricing alert:', error);
+      console.error("Error creating pricing alert:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Calculate size-weighted BESS pricing using database function
   async calculateBESSPricing(energyCapacityMWh: number, configId?: string): Promise<number | null> {
-    const { data, error } = await supabase.rpc('calculate_bess_pricing', {
+    const { data, error } = await supabase.rpc("calculate_bess_pricing", {
       energy_capacity_mwh: energyCapacityMWh,
-      config_id: configId || null
+      config_id: configId || null,
     });
-    
+
     if (error) {
-      console.error('Error calculating BESS pricing:', error);
+      console.error("Error calculating BESS pricing:", error);
       return null;
     }
-    
+
     return data;
   }
-  
+
   // Get system configuration
   async getSystemConfig(key: string): Promise<any> {
     const { data, error } = await supabase
-      .from('system_configuration')
-      .select('config_value')
-      .eq('config_key', key)
+      .from("system_configuration")
+      .select("config_value")
+      .eq("config_key", key)
       .single();
-    
+
     if (error) {
       console.error(`Error fetching system config for ${key}:`, error);
       return null;
     }
-    
+
     return data?.config_value;
   }
-  
+
   // Update system configuration
   async updateSystemConfig(key: string, value: any, description?: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('system_configuration')
-      .upsert({
-        config_key: key,
-        config_value: value,
-        description,
-        updated_at: new Date().toISOString()
-      });
-    
+    const { error } = await supabase.from("system_configuration").upsert({
+      config_key: key,
+      config_value: value,
+      description,
+      updated_at: new Date().toISOString(),
+    });
+
     if (error) {
       console.error(`Error updating system config for ${key}:`, error);
       return false;
     }
-    
+
     return true;
   }
 }
@@ -413,9 +423,9 @@ export interface Vendor {
   phone?: string;
   website?: string;
   address?: string;
-  specialty: 'battery' | 'inverter' | 'ems' | 'bos' | 'epc' | 'integrator';
+  specialty: "battery" | "inverter" | "ems" | "bos" | "epc" | "integrator";
   description?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  status: "pending" | "approved" | "rejected" | "suspended";
   approved_by?: string;
   approved_at?: string;
   created_at: string;
@@ -429,7 +439,7 @@ export interface Vendor {
 export interface VendorProduct {
   id: string;
   vendor_id: string;
-  product_category: 'battery' | 'inverter' | 'ems' | 'bos' | 'container';
+  product_category: "battery" | "inverter" | "ems" | "bos" | "container";
   manufacturer: string;
   model: string;
   capacity_kwh?: number;
@@ -447,7 +457,7 @@ export interface VendorProduct {
   certification_docs?: Record<string, any>;
   datasheet_url?: string;
   datasheet_filename?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'discontinued';
+  status: "pending" | "approved" | "rejected" | "discontinued";
   approved_by?: string;
   approved_at?: string;
   rejection_reason?: string;
@@ -471,7 +481,7 @@ export interface RFQ {
   delivery_deadline?: string;
   due_date: string;
   project_start_date?: string;
-  status: 'draft' | 'open' | 'closed' | 'awarded' | 'cancelled';
+  status: "draft" | "open" | "closed" | "awarded" | "cancelled";
   target_specialties?: string[];
   invited_vendors?: string[];
   created_by: string;
@@ -495,7 +505,7 @@ export interface RFQResponse {
   proposal_document_url?: string;
   proposal_filename?: string;
   supporting_docs?: Record<string, any>;
-  status: 'draft' | 'submitted' | 'under_review' | 'shortlisted' | 'accepted' | 'rejected';
+  status: "draft" | "submitted" | "under_review" | "shortlisted" | "accepted" | "rejected";
   evaluation_score?: number;
   evaluation_notes?: string;
   evaluated_by?: string;

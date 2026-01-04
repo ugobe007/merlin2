@@ -9,7 +9,7 @@ class SoundEffects {
 
   constructor() {
     // Initialize Web Audio API if available
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+    if (typeof window !== "undefined" && "AudioContext" in window) {
       this.audioContext = new AudioContext();
     }
   }
@@ -28,7 +28,7 @@ class SoundEffects {
 
     // Subtle click: short high frequency
     oscillator.frequency.value = 1200;
-    oscillator.type = 'sine';
+    oscillator.type = "sine";
 
     // Volume envelope
     const now = this.audioContext.currentTime;
@@ -55,7 +55,7 @@ class SoundEffects {
     const now = this.audioContext.currentTime;
     oscillator.frequency.setValueAtTime(600, now);
     oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-    oscillator.type = 'sine';
+    oscillator.type = "sine";
 
     gainNode.gain.setValueAtTime(0.2, now);
     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);

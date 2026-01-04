@@ -1,14 +1,14 @@
 /**
  * BRAND PRESET SERVICE
  * ====================
- * 
+ *
  * Loads brand/chain-specific equipment defaults from database.
  * Used to pre-fill equipment values when user selects a brand in Step 3.
- * 
+ *
  * Phase 3: Universal structural changes for all use cases
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 export interface BrandPreset {
   id: string;
@@ -25,20 +25,22 @@ export interface BrandPreset {
 export async function getBrandsForUseCase(useCaseSlug: string): Promise<BrandPreset[]> {
   try {
     const { data, error } = await supabase
-      .from('use_case_brands')
-      .select(`
+      .from("use_case_brands")
+      .select(
+        `
         id,
         brand_name,
         brand_slug,
         description,
         logo_url,
         equipment_defaults
-      `)
-      .eq('is_active', true)
-      .order('brand_name', { ascending: true });
+      `
+      )
+      .eq("is_active", true)
+      .order("brand_name", { ascending: true });
 
     if (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
       return [];
     }
 
@@ -46,36 +48,38 @@ export async function getBrandsForUseCase(useCaseSlug: string): Promise<BrandPre
     // For now, we'll filter client-side after fetching
     // TODO: Add proper join in query for better performance
     const { data: useCase, error: useCaseError } = await supabase
-      .from('use_cases')
-      .select('id')
-      .eq('slug', useCaseSlug)
+      .from("use_cases")
+      .select("id")
+      .eq("slug", useCaseSlug)
       .single();
 
     if (useCaseError || !useCase) {
-      console.error('Error finding use case:', useCaseError);
+      console.error("Error finding use case:", useCaseError);
       return [];
     }
 
     const { data: brands, error: brandsError } = await supabase
-      .from('use_case_brands')
-      .select(`
+      .from("use_case_brands")
+      .select(
+        `
         id,
         brand_name,
         brand_slug,
         description,
         logo_url,
         equipment_defaults
-      `)
-      .eq('use_case_id', useCase.id)
-      .eq('is_active', true)
-      .order('brand_name', { ascending: true });
+      `
+      )
+      .eq("use_case_id", useCase.id)
+      .eq("is_active", true)
+      .order("brand_name", { ascending: true });
 
     if (brandsError) {
-      console.error('Error fetching brands:', brandsError);
+      console.error("Error fetching brands:", brandsError);
       return [];
     }
 
-    return (brands || []).map(brand => ({
+    return (brands || []).map((brand) => ({
       id: brand.id,
       brandName: brand.brand_name,
       brandSlug: brand.brand_slug,
@@ -84,7 +88,7 @@ export async function getBrandsForUseCase(useCaseSlug: string): Promise<BrandPre
       equipmentDefaults: brand.equipment_defaults || {},
     }));
   } catch (err) {
-    console.error('Error in getBrandsForUseCase:', err);
+    console.error("Error in getBrandsForUseCase:", err);
     return [];
   }
 }
@@ -98,33 +102,35 @@ export async function getBrandPreset(
 ): Promise<BrandPreset | null> {
   try {
     const { data: useCase, error: useCaseError } = await supabase
-      .from('use_cases')
-      .select('id')
-      .eq('slug', useCaseSlug)
+      .from("use_cases")
+      .select("id")
+      .eq("slug", useCaseSlug)
       .single();
 
     if (useCaseError || !useCase) {
-      console.error('Error finding use case:', useCaseError);
+      console.error("Error finding use case:", useCaseError);
       return null;
     }
 
     const { data: brand, error: brandError } = await supabase
-      .from('use_case_brands')
-      .select(`
+      .from("use_case_brands")
+      .select(
+        `
         id,
         brand_name,
         brand_slug,
         description,
         logo_url,
         equipment_defaults
-      `)
-      .eq('use_case_id', useCase.id)
-      .eq('brand_slug', brandSlug)
-      .eq('is_active', true)
+      `
+      )
+      .eq("use_case_id", useCase.id)
+      .eq("brand_slug", brandSlug)
+      .eq("is_active", true)
       .single();
 
     if (brandError || !brand) {
-      console.error('Error fetching brand preset:', brandError);
+      console.error("Error fetching brand preset:", brandError);
       return null;
     }
 
@@ -137,14 +143,14 @@ export async function getBrandPreset(
       equipmentDefaults: brand.equipment_defaults || {},
     };
   } catch (err) {
-    console.error('Error in getBrandPreset:', err);
+    console.error("Error in getBrandPreset:", err);
     return null;
   }
 }
 
 /**
  * Apply brand preset defaults to use case data
- * 
+ *
  * This function takes brand equipment defaults and applies them to
  * the use case data object, filling in values that aren't already set.
  */
@@ -209,4 +215,3 @@ export function applyBrandPresetDefaults(
 
   return updated;
 }
-

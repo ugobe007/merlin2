@@ -2,26 +2,26 @@
  * Pricing Configuration Service
  * Centralized management of all equipment pricing assumptions
  * Based on real-world vendor quotes and market intelligence
- * 
+ *
  * MIGRATED TO DATABASE (January 3, 2025)
  * - Now uses pricing_configurations table as single source of truth
  * - Maintains backward compatibility with localStorage during migration
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 export interface BESSPricingConfig {
   // 4-tier realistic pricing structure for 2025
-  smallSystemPerKWh: number;     // <1 MWh systems
-  mediumSystemPerKWh: number;    // 1-5 MWh systems
+  smallSystemPerKWh: number; // <1 MWh systems
+  mediumSystemPerKWh: number; // 1-5 MWh systems
   mediumLargeSystemPerKWh: number; // 5-15 MWh systems
-  largeSystemPerKWh: number;     // 15+ MWh systems
-  
+  largeSystemPerKWh: number; // 15+ MWh systems
+
   // Reference points for tier boundaries
-  smallSystemSizeMWh: number;    // 1 MWh threshold
-  mediumSystemSizeMWh: number;   // 5 MWh threshold
-  largeSystemSizeMWh: number;    // 15 MWh threshold
-  
+  smallSystemSizeMWh: number; // 1 MWh threshold
+  mediumSystemSizeMWh: number; // 5 MWh threshold
+  largeSystemSizeMWh: number; // 15 MWh threshold
+
   degradationRate: number;
   warrantyYears: number;
   vendorNotes: string;
@@ -44,23 +44,23 @@ export interface OfficeBuildingPricingConfig {
   rooftopInstallationPerKWh: number; // Additional cost for rooftop installation
   basementInstallationPerKWh: number; // Cost for basement/underground installation
   groundLevelInstallationPerKWh: number; // Ground level installation (parking lot)
-  
+
   // Building integration costs
   hvacIntegrationCost: number; // HVAC thermal management integration
   buildingAutomationCost: number; // BAS integration costs
   elevatorBackupCost: number; // Emergency elevator backup integration
   fireSuppressionPerSqFt: number; // Fire suppression system costs per sq ft
-  
+
   // Permitting and compliance
   cityPermittingBaseCost: number; // Base permitting cost for urban areas
   structuralAnalysisCost: number; // Structural engineering analysis
   electricalUpgradeCost: number; // Building electrical system upgrades
-  
+
   // Installation factors
   urbanAccessFactor: number; // Multiplier for urban access challenges
   highRiseInstallationFactor: number; // Additional factor for buildings >10 stories
   weekendWorkPremium: number; // Premium for after-hours/weekend work
-  
+
   vendorNotes: string;
 }
 
@@ -96,19 +96,19 @@ export interface EVChargingConfig {
   dcUltraFastPerUnit: number; // 150-350kW
   pantographChargerPerUnit: number; // Overhead charging
   networkingCostPerUnit: number; // OCPP compliance
-  
+
   // Installation and infrastructure costs (NEW)
   electricalInfrastructurePerUnit: number; // Electrical infrastructure per charging point
   pavementAndFoundationPerUnit: number; // Concrete work and foundations
   utilityConnectionCost: number; // Utility interconnection and service upgrades
   permittingPerSite: number; // Site permitting and approvals
   networkingInstallationPerUnit: number; // Network installation and configuration
-  
+
   // Operational costs (NEW)
   maintenancePerUnitPerYear: number; // Annual maintenance costs
   softwareLicensePerUnitPerYear: number; // Annual software licensing
   networkFeesPerUnitPerMonth: number; // Monthly network connectivity fees
-  
+
   vendorNotes: string;
 }
 
@@ -119,12 +119,12 @@ export interface BalanceOfPlantConfig {
   shippingCostPercentage: number;
   internationalTariffRate: number;
   contingencyPercentage: number;
-  
+
   // Regional labor variations (NEW)
   urbanLaborPremium: number; // % premium for urban areas
   skillLaborPremiumPercentage: number; // % premium for specialized skills
   unionLaborPremiumPercentage: number; // % premium for union labor areas
-  
+
   vendorNotes: string;
 }
 
@@ -162,7 +162,8 @@ const defaultBESSPricing: BESSPricingConfig = {
   largeSystemSizeMWh: 15,
   degradationRate: 2.4,
   warrantyYears: 11,
-  vendorNotes: "Q4 2025 realistic BESS pricing tiers: <1MWh=$145/kWh | 1-5MWh=$135/kWh | 5-15MWh=$120/kWh | 15+MWh=$105/kWh. Includes installation, BOS, commissioning, realistic profit margins. LFP technology, 6000+ cycles."
+  vendorNotes:
+    "Q4 2025 realistic BESS pricing tiers: <1MWh=$145/kWh | 1-5MWh=$135/kWh | 5-15MWh=$120/kWh | 15+MWh=$105/kWh. Includes installation, BOS, commissioning, realistic profit margins. LFP technology, 6000+ cycles.",
 };
 
 const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
@@ -174,7 +175,8 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     trackingSystemUpcharge: 12,
     rooftopInstallationFactor: 1.35,
     permittingCostPerWatt: 0.12,
-    vendorNotes: "NREL ATB Q4 2025 + market intelligence. Solar module prices down 18% YoY. Installation labor optimized with prefab systems."
+    vendorNotes:
+      "NREL ATB Q4 2025 + market intelligence. Solar module prices down 18% YoY. Installation labor optimized with prefab systems.",
   },
   officeBuilding: {
     rooftopInstallationPerKWh: 45,
@@ -188,16 +190,17 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     structuralAnalysisCost: 12000,
     electricalUpgradeCost: 35000,
     urbanAccessFactor: 1.25,
-    highRiseInstallationFactor: 1.40,
+    highRiseInstallationFactor: 1.4,
     weekendWorkPremium: 1.75,
-    vendorNotes: "Q4 2025 office building BESS integration costs. Includes fire code compliance (NFPA 855), building code integration, and urban installation challenges."
+    vendorNotes:
+      "Q4 2025 office building BESS integration costs. Includes fire code compliance (NFPA 855), building code integration, and urban installation challenges.",
   },
   wind: {
     utilityScalePerKW: 1150,
     commercialPerKW: 1350,
     smallScalePerKW: 2100,
     foundationCostPerMW: 48000,
-    vendorNotes: "2025 wind market with improved turbine efficiency and installation processes"
+    vendorNotes: "2025 wind market with improved turbine efficiency and installation processes",
   },
   generators: {
     naturalGasPerKW: 300,
@@ -205,14 +208,15 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     propanePerKW: 480,
     bioGasPerKW: 650,
     baseInstallationCost: 48000,
-    vendorNotes: "Generator pricing updated per Eaton/Cummins market intelligence Q4 2025"
+    vendorNotes: "Generator pricing updated per Eaton/Cummins market intelligence Q4 2025",
   },
   powerElectronics: {
     inverterPerKW: 140,
     transformerPerKVA: 72,
     switchgearPerKW: 185,
     protectionRelaysPerUnit: 23500,
-    vendorNotes: "Grid-forming and grid-following capable PCS with enhanced cybersecurity (IEC 62443 compliant)"
+    vendorNotes:
+      "Grid-forming and grid-following capable PCS with enhanced cybersecurity (IEC 62443 compliant)",
   },
   evCharging: {
     level1ACPerUnit: 950,
@@ -229,7 +233,8 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     maintenancePerUnitPerYear: 750,
     softwareLicensePerUnitPerYear: 480,
     networkFeesPerUnitPerMonth: 45,
-    vendorNotes: "Commercial EV charging Q4 2025: CCS standard, plug-and-charge, vehicle-to-grid ready infrastructure. Includes full installation and 5-year operational cost estimates."
+    vendorNotes:
+      "Commercial EV charging Q4 2025: CCS standard, plug-and-charge, vehicle-to-grid ready infrastructure. Includes full installation and 5-year operational cost estimates.",
   },
   balanceOfPlant: {
     bopPercentage: 11,
@@ -241,18 +246,20 @@ const DEFAULT_PRICING_CONFIG: PricingConfiguration = {
     urbanLaborPremium: 18,
     skillLaborPremiumPercentage: 25,
     unionLaborPremiumPercentage: 32,
-    vendorNotes: "Q4 2025 BOP costs: modular systems reducing field labor, increased material costs offset by efficiency gains. Regional labor variations reflect market reality."
+    vendorNotes:
+      "Q4 2025 BOP costs: modular systems reducing field labor, increased material costs offset by efficiency gains. Regional labor variations reflect market reality.",
   },
   systemControls: {
     scadaSystemBaseCost: 68000,
     cybersecurityComplianceCost: 32000,
     cloudConnectivityPerYear: 8500,
     hmiTouchscreenCost: 12500,
-    vendorNotes: "Industrial SCADA with AI-powered predictive maintenance, NERC CIP compliance, edge computing integration"
+    vendorNotes:
+      "Industrial SCADA with AI-powered predictive maintenance, NERC CIP compliance, edge computing integration",
   },
   lastUpdated: new Date().toISOString(),
   updatedBy: "Q4 2025 Market Update",
-  version: "2.0.0"
+  version: "2.0.0",
 };
 
 class PricingConfigService {
@@ -265,7 +272,7 @@ class PricingConfigService {
   constructor() {
     // Initialize with defaults (will be overridden by loadFromDatabase)
     this.config = DEFAULT_PRICING_CONFIG;
-    
+
     // Try to load from database first, fallback to localStorage, then defaults
     this.loadConfiguration();
   }
@@ -286,9 +293,9 @@ class PricingConfigService {
           return;
         }
       }
-      
+
       // Fallback to localStorage
-      const savedConfig = localStorage.getItem('pricingConfiguration');
+      const savedConfig = localStorage.getItem("pricingConfiguration");
       if (savedConfig) {
         try {
           const parsed = JSON.parse(savedConfig);
@@ -296,21 +303,21 @@ class PricingConfigService {
             this.config = parsed;
             // Try to save to database for future use
             if (this.useDatabase) {
-              await this.saveToDatabase(this.config, 'Migrated from localStorage');
+              await this.saveToDatabase(this.config, "Migrated from localStorage");
             }
             return;
           }
         } catch (e) {
-          console.warn('Failed to parse localStorage pricing config:', e);
+          console.warn("Failed to parse localStorage pricing config:", e);
         }
       }
-      
+
       // Use defaults
       this.config = DEFAULT_PRICING_CONFIG;
     } catch (error) {
-      console.error('Error loading pricing configuration:', error);
+      console.error("Error loading pricing configuration:", error);
       // Fallback to localStorage or defaults
-      const savedConfig = localStorage.getItem('pricingConfiguration');
+      const savedConfig = localStorage.getItem("pricingConfiguration");
       if (savedConfig) {
         try {
           this.config = JSON.parse(savedConfig);
@@ -331,19 +338,45 @@ class PricingConfigService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('pricing_configurations')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_default', true)
-        .order('updated_at', { ascending: false })
+      // Try new schema first (config_key based)
+      let { data, error } = await supabase
+        .from("pricing_configurations")
+        .select("*")
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
+
+      // If no data, try legacy schema (is_default based)
+      if (error || !data) {
+        const legacyQuery = await supabase
+          .from("pricing_configurations")
+          .select("*")
+          .eq("is_active", true)
+          .eq("is_default", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!legacyQuery.error && legacyQuery.data) {
+          data = legacyQuery.data;
+          error = null;
+        }
+      }
 
       if (error) {
         // Table might not exist yet - that's okay during migration
-        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
-          console.warn('pricing_configurations table not found - using fallback');
+        if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
+          console.warn("pricing_configurations table not found - using fallback");
+          return null;
+        }
+        // Column doesn't exist - table schema mismatch, use fallback
+        if (
+          error.code === "42703" ||
+          error.message?.includes("column") ||
+          error.message?.includes("does not exist")
+        ) {
+          console.warn("pricing_configurations table schema mismatch - using fallback");
           return null;
         }
         throw error;
@@ -357,13 +390,13 @@ class PricingConfigService {
       const config: PricingConfiguration = {
         ...(data.config_data as any),
         lastUpdated: data.last_updated || data.updated_at,
-        updatedBy: data.updated_by || 'System',
-        version: data.version || '1.0.0'
+        updatedBy: data.updated_by || "System",
+        version: data.version || "1.0.0",
       };
 
       // Validate the config
       if (!this.validateConfig(config)) {
-        console.warn('Invalid config from database, using defaults');
+        console.warn("Invalid config from database, using defaults");
         return null;
       }
 
@@ -373,7 +406,7 @@ class PricingConfigService {
 
       return config;
     } catch (error) {
-      console.error('Error loading from database:', error);
+      console.error("Error loading from database:", error);
       return null;
     }
   }
@@ -385,21 +418,21 @@ class PricingConfigService {
     try {
       // First, unset any existing default
       await supabase
-        .from('pricing_configurations')
+        .from("pricing_configurations")
         .update({ is_default: false })
-        .eq('is_default', true);
+        .eq("is_default", true);
 
       // Check if default config exists
       const { data: existing } = await supabase
-        .from('pricing_configurations')
-        .select('id')
-        .eq('is_default', true)
+        .from("pricing_configurations")
+        .select("id")
+        .eq("is_default", true)
         .limit(1)
         .single();
 
       const configData = {
-        name: 'Default Pricing Configuration',
-        description: 'Active pricing configuration for quote calculations',
+        name: "Default Pricing Configuration",
+        description: "Active pricing configuration for quote calculations",
         version: config.version,
         is_active: true,
         is_default: true,
@@ -412,32 +445,32 @@ class PricingConfigService {
           powerElectronics: config.powerElectronics,
           evCharging: config.evCharging,
           balanceOfPlant: config.balanceOfPlant,
-          systemControls: config.systemControls
+          systemControls: config.systemControls,
         },
-        updated_by: config.updatedBy || 'System',
-        notes: notes || `Updated via pricingConfigService`
+        updated_by: config.updatedBy || "System",
+        notes: notes || `Updated via pricingConfigService`,
       };
 
       let error;
       if (existing?.id) {
         // Update existing
         const { error: updateError } = await supabase
-          .from('pricing_configurations')
+          .from("pricing_configurations")
           .update(configData)
-          .eq('id', existing.id);
+          .eq("id", existing.id);
         error = updateError;
       } else {
         // Insert new
         const { error: insertError } = await supabase
-          .from('pricing_configurations')
+          .from("pricing_configurations")
           .insert(configData);
         error = insertError;
       }
 
       if (error) {
         // If table doesn't exist, that's okay - we'll use localStorage
-        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
-          console.warn('pricing_configurations table not found - saving to localStorage');
+        if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
+          console.warn("pricing_configurations table not found - saving to localStorage");
           return false;
         }
         throw error;
@@ -449,7 +482,7 @@ class PricingConfigService {
 
       return true;
     } catch (error) {
-      console.error('Error saving to database:', error);
+      console.error("Error saving to database:", error);
       return false;
     }
   }
@@ -459,7 +492,7 @@ class PricingConfigService {
    */
   private async migrateLocalStorageToDatabase(): Promise<void> {
     try {
-      const savedConfig = localStorage.getItem('pricingConfiguration');
+      const savedConfig = localStorage.getItem("pricingConfiguration");
       if (!savedConfig) return;
 
       const localConfig = JSON.parse(savedConfig);
@@ -471,15 +504,15 @@ class PricingConfigService {
 
       if (localDate > dbDate) {
         // localStorage is newer - migrate to database
-        console.log('Migrating newer localStorage config to database...');
-        await this.saveToDatabase(localConfig, 'Migrated from localStorage (newer version)');
+        console.log("Migrating newer localStorage config to database...");
+        await this.saveToDatabase(localConfig, "Migrated from localStorage (newer version)");
         // Keep localStorage as backup
       } else {
         // Database is newer or same - remove localStorage
-        localStorage.removeItem('pricingConfiguration');
+        localStorage.removeItem("pricingConfiguration");
       }
     } catch (error) {
-      console.error('Error during localStorage migration:', error);
+      console.error("Error during localStorage migration:", error);
     }
   }
 
@@ -492,59 +525,59 @@ class PricingConfigService {
       ...this.config,
       ...newConfig,
       lastUpdated: new Date().toISOString(),
-      version: this.incrementVersion(this.config.version)
+      version: this.incrementVersion(this.config.version),
     };
-    
+
     // Save to database
     const savedToDb = await this.saveToDatabase(this.config);
-    
+
     // Also save to localStorage as backup (during migration period)
     if (!savedToDb) {
-      localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+      localStorage.setItem("pricingConfiguration", JSON.stringify(this.config));
     } else {
       // Remove localStorage if database save succeeded
-      localStorage.removeItem('pricingConfiguration');
+      localStorage.removeItem("pricingConfiguration");
     }
-    
+
     // Trigger recalculation of all quotes
-    window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
+    window.dispatchEvent(new CustomEvent("pricingConfigUpdated", { detail: this.config }));
   }
 
   async updateSection<K extends keyof PricingConfiguration>(
-    section: K, 
+    section: K,
     updates: Partial<PricingConfiguration[K]>
   ): Promise<void> {
     this.config[section] = { ...(this.config[section] as any), ...(updates as any) };
     this.config.lastUpdated = new Date().toISOString();
     this.config.version = this.incrementVersion(this.config.version);
-    
+
     // Save to database
     const savedToDb = await this.saveToDatabase(this.config);
-    
+
     // Also save to localStorage as backup
     if (!savedToDb) {
-      localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+      localStorage.setItem("pricingConfiguration", JSON.stringify(this.config));
     } else {
-      localStorage.removeItem('pricingConfiguration');
+      localStorage.removeItem("pricingConfiguration");
     }
-    
-    window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
+
+    window.dispatchEvent(new CustomEvent("pricingConfigUpdated", { detail: this.config }));
   }
 
   async resetToDefaults(): Promise<void> {
-    this.config = { 
-      ...DEFAULT_PRICING_CONFIG, 
+    this.config = {
+      ...DEFAULT_PRICING_CONFIG,
       lastUpdated: new Date().toISOString(),
-      version: "1.0.0"
+      version: "1.0.0",
     };
-    
+
     // Save to database
-    await this.saveToDatabase(this.config, 'Reset to defaults');
-    
+    await this.saveToDatabase(this.config, "Reset to defaults");
+
     // Remove localStorage
-    localStorage.removeItem('pricingConfiguration');
-    
-    window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
+    localStorage.removeItem("pricingConfiguration");
+
+    window.dispatchEvent(new CustomEvent("pricingConfigUpdated", { detail: this.config }));
   }
 
   exportConfiguration(): string {
@@ -559,20 +592,20 @@ class PricingConfigService {
         this.config = {
           ...importedConfig,
           lastUpdated: new Date().toISOString(),
-          version: this.incrementVersion(this.config.version)
+          version: this.incrementVersion(this.config.version),
         };
-        
+
         // Save to database
-        const savedToDb = await this.saveToDatabase(this.config, 'Imported from JSON');
-        
+        const savedToDb = await this.saveToDatabase(this.config, "Imported from JSON");
+
         // Also save to localStorage as backup
         if (!savedToDb) {
-          localStorage.setItem('pricingConfiguration', JSON.stringify(this.config));
+          localStorage.setItem("pricingConfiguration", JSON.stringify(this.config));
         } else {
-          localStorage.removeItem('pricingConfiguration');
+          localStorage.removeItem("pricingConfiguration");
         }
-        
-        window.dispatchEvent(new CustomEvent('pricingConfigUpdated', { detail: this.config }));
+
+        window.dispatchEvent(new CustomEvent("pricingConfigUpdated", { detail: this.config }));
         return true;
       }
       return false;
@@ -583,13 +616,22 @@ class PricingConfigService {
 
   private validateConfig(config: any): boolean {
     // Basic validation to ensure required sections exist
-    const requiredSections = ['bess', 'solar', 'wind', 'generators', 'powerElectronics', 'evCharging', 'balanceOfPlant', 'systemControls'];
-    return requiredSections.every(section => section in config);
+    const requiredSections = [
+      "bess",
+      "solar",
+      "wind",
+      "generators",
+      "powerElectronics",
+      "evCharging",
+      "balanceOfPlant",
+      "systemControls",
+    ];
+    return requiredSections.every((section) => section in config);
   }
 
   private incrementVersion(version: string): string {
-    const parts = version.split('.');
-    const patch = parseInt(parts[2] || '0') + 1;
+    const parts = version.split(".");
+    const patch = parseInt(parts[2] || "0") + 1;
     return `${parts[0]}.${parts[1]}.${patch}`;
   }
 
@@ -619,14 +661,16 @@ class PricingConfigService {
     return this.config.wind.smallScalePerKW;
   }
 
-  getGeneratorCostPerKW(fuelType: 'naturalGas' | 'diesel' | 'propane' | 'bioGas' = 'naturalGas'): number {
+  getGeneratorCostPerKW(
+    fuelType: "naturalGas" | "diesel" | "propane" | "bioGas" = "naturalGas"
+  ): number {
     const fuelTypeMap = {
-      naturalGas: 'naturalGasPerKW',
-      diesel: 'dieselPerKW',
-      propane: 'propanePerKW',
-      bioGas: 'bioGasPerKW'
+      naturalGas: "naturalGasPerKW",
+      diesel: "dieselPerKW",
+      propane: "propanePerKW",
+      bioGas: "bioGasPerKW",
     } as const;
-    
+
     return this.config.generators[fuelTypeMap[fuelType]];
   }
 
@@ -643,8 +687,4 @@ class PricingConfigService {
 export const pricingConfigService = new PricingConfigService();
 
 // Main exports
-export {
-  PricingConfigService,
-  DEFAULT_PRICING_CONFIG,
-  defaultBESSPricing
-};
+export { PricingConfigService, DEFAULT_PRICING_CONFIG, defaultBESSPricing };

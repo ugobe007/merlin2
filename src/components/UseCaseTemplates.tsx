@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface UseCaseTemplatesProps {
   isOpen: boolean;
@@ -27,228 +27,229 @@ export interface UseCaseTemplate {
 
 const USE_CASE_TEMPLATES: UseCaseTemplate[] = [
   {
-    name: 'EV Charging Station',
-    icon: '🚗',
-    description: 'Optimized for fast-charging electric vehicle infrastructure with peak demand management',
+    name: "EV Charging Station",
+    icon: "🚗",
+    description:
+      "Optimized for fast-charging electric vehicle infrastructure with peak demand management",
     configuration: {
       powerMW: 2.5,
       durationHours: 2,
-      gridMode: 'Hybrid',
+      gridMode: "Hybrid",
       generatorMW: 0.5,
       solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.65,
-      warranty: '10 years',
+      warranty: "10 years",
     },
     benefits: [
-      'Reduces peak demand charges during rush hours',
-      'Provides backup power for charging stations',
-      'Enables lower electricity rates with solar integration',
-      'Supports fast-charging without grid upgrades',
+      "Reduces peak demand charges during rush hours",
+      "Provides backup power for charging stations",
+      "Enables lower electricity rates with solar integration",
+      "Supports fast-charging without grid upgrades",
     ],
     typicalApplications: [
-      'Highway rest stops',
-      'Shopping center charging hubs',
-      'Fleet charging depots',
-      'Urban fast-charging stations',
+      "Highway rest stops",
+      "Shopping center charging hubs",
+      "Fleet charging depots",
+      "Urban fast-charging stations",
     ],
-    estimatedPayback: '5-7 years',
+    estimatedPayback: "5-7 years",
   },
   {
-    name: 'Data Center Backup',
-    icon: '💾',
-    description: 'High-reliability power with extended runtime for mission-critical operations',
+    name: "Data Center Backup",
+    icon: "💾",
+    description: "High-reliability power with extended runtime for mission-critical operations",
     configuration: {
       powerMW: 5,
       durationHours: 4,
-      gridMode: 'On-grid',
+      gridMode: "On-grid",
       generatorMW: 2,
       solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.45,
-      warranty: '15 years',
+      warranty: "15 years",
     },
     benefits: [
-      'Eliminates diesel generator dependency',
-      'Provides clean, instant backup power',
-      'Reduces cooling costs with smart dispatch',
-      'Enables participation in demand response programs',
+      "Eliminates diesel generator dependency",
+      "Provides clean, instant backup power",
+      "Reduces cooling costs with smart dispatch",
+      "Enables participation in demand response programs",
     ],
     typicalApplications: [
-      'Tier 3 & Tier 4 data centers',
-      'Cloud computing facilities',
-      'Colocation centers',
-      'Edge computing sites',
+      "Tier 3 & Tier 4 data centers",
+      "Cloud computing facilities",
+      "Colocation centers",
+      "Edge computing sites",
     ],
-    estimatedPayback: '6-9 years',
+    estimatedPayback: "6-9 years",
   },
   {
-    name: 'Manufacturing Peak Shaving',
-    icon: '🏭',
-    description: 'Demand charge reduction for industrial facilities with high power requirements',
+    name: "Manufacturing Peak Shaving",
+    icon: "🏭",
+    description: "Demand charge reduction for industrial facilities with high power requirements",
     configuration: {
       powerMW: 10,
       durationHours: 3,
-      gridMode: 'On-grid',
+      gridMode: "On-grid",
       generatorMW: 0,
       solarMW: 0, // Optional - add if space permits
       windMW: 0,
       utilization: 0.55,
-      warranty: '10 years',
+      warranty: "10 years",
     },
     benefits: [
-      'Drastically reduces monthly demand charges',
-      'Smooths production load profiles',
-      'Integrates with renewable energy',
-      'Provides power quality improvements',
+      "Drastically reduces monthly demand charges",
+      "Smooths production load profiles",
+      "Integrates with renewable energy",
+      "Provides power quality improvements",
     ],
     typicalApplications: [
-      'Automotive manufacturing',
-      'Heavy machinery plants',
-      'Food processing facilities',
-      'Chemical production',
+      "Automotive manufacturing",
+      "Heavy machinery plants",
+      "Food processing facilities",
+      "Chemical production",
     ],
-    estimatedPayback: '4-6 years',
+    estimatedPayback: "4-6 years",
   },
   {
-    name: 'Commercial Building Optimization',
-    icon: '🏢',
-    description: 'Energy cost reduction and sustainability for office buildings and retail',
+    name: "Commercial Building Optimization",
+    icon: "🏢",
+    description: "Energy cost reduction and sustainability for office buildings and retail",
     configuration: {
       powerMW: 1.5,
       durationHours: 4,
-      gridMode: 'Hybrid',
+      gridMode: "Hybrid",
       generatorMW: 0.25,
       solarMW: 0, // Optional - add if roof space permits
       windMW: 0,
-      utilization: 0.40,
-      warranty: '10 years',
+      utilization: 0.4,
+      warranty: "10 years",
     },
     benefits: [
-      'Lowers electricity bills through time-shifting',
-      'Achieves green building certifications',
-      'Provides emergency backup power',
-      'Maximizes solar self-consumption',
+      "Lowers electricity bills through time-shifting",
+      "Achieves green building certifications",
+      "Provides emergency backup power",
+      "Maximizes solar self-consumption",
     ],
     typicalApplications: [
-      'Office towers',
-      'Shopping malls',
-      'Hotels and resorts',
-      'Mixed-use developments',
+      "Office towers",
+      "Shopping malls",
+      "Hotels and resorts",
+      "Mixed-use developments",
     ],
-    estimatedPayback: '7-10 years',
+    estimatedPayback: "7-10 years",
   },
   {
-    name: 'Utility-Scale Grid Services',
-    icon: '⚡',
-    description: 'Large-scale storage for frequency regulation, capacity markets, and arbitrage',
+    name: "Utility-Scale Grid Services",
+    icon: "⚡",
+    description: "Large-scale storage for frequency regulation, capacity markets, and arbitrage",
     configuration: {
       powerMW: 50,
       durationHours: 4,
-      gridMode: 'On-grid',
+      gridMode: "On-grid",
       generatorMW: 0,
       solarMW: 0, // Optional - utility-scale solar typically off-site
       windMW: 0, // Optional - typically off-site wind farm
       utilization: 0.75,
-      warranty: '20 years',
+      warranty: "20 years",
     },
     benefits: [
-      'Generates revenue from multiple value streams',
-      'Provides grid stabilization services',
-      'Enables renewable energy integration',
-      'Participates in capacity and ancillary markets',
+      "Generates revenue from multiple value streams",
+      "Provides grid stabilization services",
+      "Enables renewable energy integration",
+      "Participates in capacity and ancillary markets",
     ],
     typicalApplications: [
-      'Wholesale energy arbitrage',
-      'Frequency regulation',
-      'Renewable energy firming',
-      'Transmission deferral',
+      "Wholesale energy arbitrage",
+      "Frequency regulation",
+      "Renewable energy firming",
+      "Transmission deferral",
     ],
-    estimatedPayback: '5-8 years',
+    estimatedPayback: "5-8 years",
   },
   {
-    name: 'Remote Microgrid',
-    icon: '🏝️',
-    description: 'Off-grid or islanded power systems for remote locations and communities',
+    name: "Remote Microgrid",
+    icon: "🏝️",
+    description: "Off-grid or islanded power systems for remote locations and communities",
     configuration: {
       powerMW: 3,
       durationHours: 6,
-      gridMode: 'Off-grid',
+      gridMode: "Off-grid",
       generatorMW: 2,
       solarMW: 0, // Optional - recommended for off-grid if space permits
       windMW: 0, // Optional - add if wind resource available
-      utilization: 0.50,
-      warranty: '15 years',
+      utilization: 0.5,
+      warranty: "15 years",
     },
     benefits: [
-      'Eliminates diesel fuel costs and logistics',
-      'Provides 24/7 reliable power',
-      'Reduces carbon emissions significantly',
-      'Enables renewable energy integration',
+      "Eliminates diesel fuel costs and logistics",
+      "Provides 24/7 reliable power",
+      "Reduces carbon emissions significantly",
+      "Enables renewable energy integration",
     ],
     typicalApplications: [
-      'Island communities',
-      'Mining operations',
-      'Military bases',
-      'Remote villages',
+      "Island communities",
+      "Mining operations",
+      "Military bases",
+      "Remote villages",
     ],
-    estimatedPayback: '4-7 years',
+    estimatedPayback: "4-7 years",
   },
   {
-    name: 'Agricultural Operations',
-    icon: '🚜',
-    description: 'Energy cost reduction for farms with irrigation, cold storage, and processing',
+    name: "Agricultural Operations",
+    icon: "🚜",
+    description: "Energy cost reduction for farms with irrigation, cold storage, and processing",
     configuration: {
       powerMW: 1,
       durationHours: 6,
-      gridMode: 'Hybrid',
+      gridMode: "Hybrid",
       generatorMW: 0.5,
       solarMW: 0, // Optional - farms often have good space for solar
       windMW: 0, // Optional - add if wind resource available
       utilization: 0.35,
-      warranty: '10 years',
+      warranty: "10 years",
     },
     benefits: [
-      'Reduces peak demand during irrigation',
-      'Powers cold storage facilities efficiently',
-      'Provides backup for critical operations',
-      'Maximizes farm solar generation value',
+      "Reduces peak demand during irrigation",
+      "Powers cold storage facilities efficiently",
+      "Provides backup for critical operations",
+      "Maximizes farm solar generation value",
     ],
     typicalApplications: [
-      'Irrigation systems',
-      'Cold storage warehouses',
-      'Dairy operations',
-      'Processing facilities',
+      "Irrigation systems",
+      "Cold storage warehouses",
+      "Dairy operations",
+      "Processing facilities",
     ],
-    estimatedPayback: '6-9 years',
+    estimatedPayback: "6-9 years",
   },
   {
-    name: 'Hospital & Healthcare',
-    icon: '🏥',
-    description: 'Critical power infrastructure with highest reliability standards',
+    name: "Hospital & Healthcare",
+    icon: "🏥",
+    description: "Critical power infrastructure with highest reliability standards",
     configuration: {
       powerMW: 4,
       durationHours: 8,
-      gridMode: 'On-grid',
+      gridMode: "On-grid",
       generatorMW: 3,
       solarMW: 0, // Optional - add if roof space available
       windMW: 0,
-      utilization: 0.60,
-      warranty: '15 years',
+      utilization: 0.6,
+      warranty: "15 years",
     },
     benefits: [
-      'Provides instantaneous backup power',
-      'Reduces reliance on diesel generators',
-      'Lowers energy costs without compromising reliability',
-      'Supports sustainability initiatives',
+      "Provides instantaneous backup power",
+      "Reduces reliance on diesel generators",
+      "Lowers energy costs without compromising reliability",
+      "Supports sustainability initiatives",
     ],
     typicalApplications: [
-      'Acute care hospitals',
-      'Surgical centers',
-      'Medical campuses',
-      'Long-term care facilities',
+      "Acute care hospitals",
+      "Surgical centers",
+      "Medical campuses",
+      "Long-term care facilities",
     ],
-    estimatedPayback: '8-12 years',
+    estimatedPayback: "8-12 years",
   },
 ];
 
@@ -270,7 +271,9 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
                 <span>🎯</span>
                 Use Case Templates
               </h2>
-              <p className="text-purple-100 mt-1">Pre-configured BESS solutions for common applications</p>
+              <p className="text-purple-100 mt-1">
+                Pre-configured BESS solutions for common applications
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -294,7 +297,9 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
                     <span className="text-5xl">{template.icon}</span>
                     <div>
                       <h3 className="text-2xl font-bold">{template.name}</h3>
-                      <p className="text-sm text-blue-100 mt-1">Est. Payback: {template.estimatedPayback}</p>
+                      <p className="text-sm text-blue-100 mt-1">
+                        Est. Payback: {template.estimatedPayback}
+                      </p>
                     </div>
                   </div>
                   <p className="text-sm text-white/90 mt-3">{template.description}</p>
@@ -309,38 +314,53 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Power:</span>
-                      <span className="font-semibold text-blue-700">{template.configuration.powerMW} MW</span>
+                      <span className="font-semibold text-blue-700">
+                        {template.configuration.powerMW} MW
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Duration:</span>
-                      <span className="font-semibold text-blue-700">{template.configuration.durationHours} hrs</span>
+                      <span className="font-semibold text-blue-700">
+                        {template.configuration.durationHours} hrs
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Capacity:</span>
                       <span className="font-semibold text-purple-700">
-                        {(template.configuration.powerMW * template.configuration.durationHours).toFixed(1)} MWh
+                        {(
+                          template.configuration.powerMW * template.configuration.durationHours
+                        ).toFixed(1)}{" "}
+                        MWh
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Mode:</span>
-                      <span className="font-semibold text-green-700">{template.configuration.gridMode}</span>
+                      <span className="font-semibold text-green-700">
+                        {template.configuration.gridMode}
+                      </span>
                     </div>
                     {template.configuration.solarMW > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Solar:</span>
-                        <span className="font-semibold text-yellow-600">{template.configuration.solarMW} MW</span>
+                        <span className="font-semibold text-yellow-600">
+                          {template.configuration.solarMW} MW
+                        </span>
                       </div>
                     )}
                     {template.configuration.windMW > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Wind:</span>
-                        <span className="font-semibold text-cyan-600">{template.configuration.windMW} MW</span>
+                        <span className="font-semibold text-cyan-600">
+                          {template.configuration.windMW} MW
+                        </span>
                       </div>
                     )}
                     {template.configuration.generatorMW > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Generator:</span>
-                        <span className="font-semibold text-orange-600">{template.configuration.generatorMW} MW</span>
+                        <span className="font-semibold text-orange-600">
+                          {template.configuration.generatorMW} MW
+                        </span>
                       </div>
                     )}
                   </div>
@@ -404,8 +424,8 @@ const UseCaseTemplates: React.FC<UseCaseTemplatesProps> = ({
               Need a Custom Configuration?
             </h3>
             <p className="text-gray-700">
-              These templates are starting points based on industry best practices. Apply any template and customize 
-              to match your specific requirements.
+              These templates are starting points based on industry best practices. Apply any
+              template and customize to match your specific requirements.
             </p>
           </div>
         </div>

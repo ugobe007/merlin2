@@ -13,11 +13,11 @@ import evChargingImg from '@/assets/images/ev_charging_station.jpg';
 import manufacturingImg from '@/assets/images/manufacturing_1.jpg';
 import dataCenterImg from '@/assets/images/data-centers/data-center-1.jpg';
 import hospitalImg from '@/assets/images/hospital_1.jpg';
-import retailImg from '@/assets/images/office_building2.jpg';
+import retailImg from '@/assets/images/retail_1.jpg';
 import officeImg from '@/assets/images/office_building1.jpg';
 import collegeImg from '@/assets/images/college_1.jpg';
 import warehouseImg from '@/assets/images/logistics_1.jpg';
-import restaurantImg from '@/assets/images/hotel_motel_holidayinn_4.jpg';
+import restaurantImg from '@/assets/images/restaurant_1.jpg';
 import agricultureImg from '@/assets/images/indoor_farm1.jpeg';
 
 const INDUSTRIES = [

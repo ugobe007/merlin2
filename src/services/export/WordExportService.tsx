@@ -1,6 +1,5 @@
-import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, HeadingLevel, PageBreak, Header } from "docx";
-import { saveAs } from 'file-saver';
-import { italicParagraph, boldParagraph, createHeaderRow, createDataRow, createHighlightRow, createCalculationTables } from '../../utils/wordHelpers';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, WidthType, HeadingLevel, Header } from "docx";
+import { createHeaderRow, createDataRow, createHighlightRow, createCalculationTables } from '../../utils/wordHelpers';
 
 interface WordExportParams {
   // Project data

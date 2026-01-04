@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface WelcomePageProps {
   onContinue: () => void;
@@ -10,17 +10,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onContinue, userEmail }) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to Merlin BESS
-          </h1>
-          <p className="text-xl text-gray-600 mb-2">
-            Battery Energy Storage System Quote Builder
-          </p>
-          {userEmail && (
-            <p className="text-sm text-gray-500">
-              Signed in as: {userEmail}
-            </p>
-          )}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Merlin BESS</h1>
+          <p className="text-xl text-gray-600 mb-2">Battery Energy Storage System Quote Builder</p>
+          {userEmail && <p className="text-sm text-gray-500">Signed in as: {userEmail}</p>}
         </div>
 
         <div className="space-y-6 mb-8">
@@ -50,7 +42,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onContinue, userEmail }) => {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Professional Quotes</h3>
-              <p className="text-gray-600">Generate detailed quotes with NPV, IRR, and ROI analysis</p>
+              <p className="text-gray-600">
+                Generate detailed quotes with NPV, IRR, and ROI analysis
+              </p>
             </div>
           </div>
         </div>

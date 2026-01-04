@@ -17,16 +17,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calculator, Zap, DollarSign, CheckCircle, ArrowRight, Phone, Mail, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, FileText, MapPin, Loader2, ChevronDown } from 'lucide-react';
+import { Calculator, DollarSign, CheckCircle, ArrowRight, Phone, Sun, TrendingDown, Shield, Sparkles, Droplets, Car, X, MapPin, Loader2, ChevronDown } from 'lucide-react';
 import { QuoteEngine } from '@/core/calculations';
 import type { QuoteResult } from '@/services/unifiedQuoteCalculator';
-import { 
-  calculateCarWashPowerSimple,
-  CAR_WASH_POWER_PROFILES_SIMPLE,
-  type CarWashTypeSimple 
-} from '@/services/useCasePowerCalculations';
+import { calculateCarWashPowerSimple, type CarWashTypeSimple } from '@/services/useCasePowerCalculations';
 import { supabase } from '@/services/supabaseClient';
-import { useCarWashLimits, type CarWashUILimits } from '@/services/uiConfigService';
+import { useCarWashLimits } from '@/services/uiConfigService';
 import { useUtilityRates } from '@/hooks/useUtilityRates';
 import merlinImage from '@/assets/images/new_profile_merlin.png';
 import carWashImage from '@/assets/images/car_wash_1.jpg';
@@ -41,7 +37,6 @@ import carWashPitStop5 from '@/assets/images/Car_Wash_PitStop5.jpg';
 import carWashPreen from '@/assets/images/Car_Wash_Preen.jpg';
 // V6 Wizard (Updated Dec 2025)
 import WizardV6 from '@/components/wizard/v6/WizardV6';
-import { MethodologyStatement } from '@/components/shared/IndustryComplianceBadges';
 import { TrueQuoteBadge } from '@/components/shared/TrueQuoteBadge';
 import { TrueQuoteModal } from '@/components/shared/TrueQuoteModal';
 

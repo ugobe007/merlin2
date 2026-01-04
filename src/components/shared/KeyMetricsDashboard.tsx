@@ -352,7 +352,7 @@ function generateMetric(
         tooltip: 'Actual output vs theoretical maximum',
       };
       
-    case 'systemSize':
+    case 'systemSize': {
       if (!input.systemSizeKW && !input.systemSizeKWh) return null;
       const size = input.systemSizeKW || (input.systemSizeKWh! / (input.durationHours || 4));
       return {
@@ -363,6 +363,7 @@ function generateMetric(
         color: 'blue',
         tooltip: 'Total power capacity',
       };
+    }
       
     case 'netCost':
       if (!input.netCost) return null;
@@ -374,7 +375,7 @@ function generateMetric(
         tooltip: 'Total cost after 30% federal tax credit',
       };
       
-    case 'annualProduction':
+    case 'annualProduction': {
       if (!input.systemSizeKW) return null;
       const annualKWh = input.systemSizeKW * (input.vertical === 'wind' ? 2500 : 1400);
       return {
@@ -385,6 +386,7 @@ function generateMetric(
         color: 'cyan',
         tooltip: 'Estimated annual energy production',
       };
+    }
       
     case 'renewablePercent':
       if (!co2Data || co2Data.renewablePercentage === 0) return null;

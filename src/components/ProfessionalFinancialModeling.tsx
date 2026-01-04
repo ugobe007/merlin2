@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
+import React, { useState, useEffect, useMemo } from "react";
+import {
   calculateAdvancedFinancialMetrics,
   type AdvancedFinancialMetrics,
-  type FinancialCalculationInput 
-} from '../services/centralizedCalculations';
+  type FinancialCalculationInput,
+} from "../services/centralizedCalculations";
 
 interface ProfessionalFinancialModelingProps {
   isOpen: boolean;
@@ -19,25 +19,25 @@ interface ProfessionalFinancialModelingProps {
     batteryLifeYears?: number;
     discountRate?: number;
   };
-  userTier?: 'free' | 'professional' | 'enterprise'; // For freemium gating
+  userTier?: "free" | "professional" | "enterprise"; // For freemium gating
   onUpgradeClick?: () => void; // Callback when user clicks upgrade
 }
 
-type TabType = 'basic' | 'sensitivity' | 'risk' | 'scenarios';
+type TabType = "basic" | "sensitivity" | "risk" | "scenarios";
 
 const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps> = ({
   isOpen,
   onClose,
   projectData,
-  userTier = 'free',
-  onUpgradeClick
+  userTier = "free",
+  onUpgradeClick,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('basic');
+  const [activeTab, setActiveTab] = useState<TabType>("basic");
   const [advancedMetrics, setAdvancedMetrics] = useState<AdvancedFinancialMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isPaidUser = userTier === 'professional' || userTier === 'enterprise';
+  const isPaidUser = userTier === "professional" || userTier === "enterprise";
 
   // Fetch advanced metrics when modal opens
   useEffect(() => {
@@ -49,18 +49,18 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
   const fetchAdvancedMetrics = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const input: FinancialCalculationInput = {
         storageSizeMW: projectData.powerMW,
         durationHours: projectData.durationHours,
-        location: projectData.location || 'United States',
+        location: projectData.location || "United States",
         electricityRate: projectData.electricityRate || 0.12,
         equipmentCost: projectData.totalCapEx,
         projectLifetimeYears: projectData.batteryLifeYears || 25,
         discountRate: projectData.discountRate || 0.08,
         priceEscalationRate: 0.02,
-        includeNPV: true
+        includeNPV: true,
       };
 
       const options = {
@@ -69,14 +69,19 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
         includeRiskAnalysis: isPaidUser,
         includeScenarios: true, // Always include for preview
         numMonteCarloSims: isPaidUser ? 1000 : 100, // Reduced for free users
-        sensitivityParameters: ['electricityRate', 'storageSizeMW', 'discountRate', 'projectLifetimeYears']
+        sensitivityParameters: [
+          "electricityRate",
+          "storageSizeMW",
+          "discountRate",
+          "projectLifetimeYears",
+        ],
       };
 
       const metrics = await calculateAdvancedFinancialMetrics(input, options);
       setAdvancedMetrics(metrics);
     } catch (err) {
-      console.error('Error calculating advanced metrics:', err);
-      setError('Failed to calculate advanced financial metrics');
+      console.error("Error calculating advanced metrics:", err);
+      setError("Failed to calculate advanced financial metrics");
     } finally {
       setIsLoading(false);
     }
@@ -88,25 +93,23 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
-        <div 
+        <div
           className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"
           onClick={onClose}
         />
 
         {/* Modal panel */}
         <div className="inline-block w-full max-w-6xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl">
-          
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <span className="text-4xl">🎓</span>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    Professional Financial Modeling
-                  </h2>
+                  <h2 className="text-2xl font-bold text-white">Professional Financial Modeling</h2>
                   <p className="text-purple-100 text-sm mt-1">
-                    {projectData.quoteName} • {projectData.powerMW}MW / {projectData.durationHours}hr
+                    {projectData.quoteName} • {projectData.powerMW}MW / {projectData.durationHours}
+                    hr
                   </p>
                 </div>
               </div>
@@ -115,7 +118,12 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
                 className="text-white hover:text-purple-200 transition-colors"
               >
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -142,29 +150,29 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
             <TabButton
               icon="📊"
               label="Basic Metrics"
-              active={activeTab === 'basic'}
-              onClick={() => setActiveTab('basic')}
+              active={activeTab === "basic"}
+              onClick={() => setActiveTab("basic")}
               locked={false}
             />
             <TabButton
               icon="📈"
               label="Sensitivity Analysis"
-              active={activeTab === 'sensitivity'}
-              onClick={() => setActiveTab('sensitivity')}
+              active={activeTab === "sensitivity"}
+              onClick={() => setActiveTab("sensitivity")}
               locked={!isPaidUser}
             />
             <TabButton
               icon="🎲"
               label="Risk Analysis"
-              active={activeTab === 'risk'}
-              onClick={() => setActiveTab('risk')}
+              active={activeTab === "risk"}
+              onClick={() => setActiveTab("risk")}
               locked={!isPaidUser}
             />
             <TabButton
               icon="🔮"
               label="Scenarios"
-              active={activeTab === 'scenarios'}
-              onClick={() => setActiveTab('scenarios')}
+              active={activeTab === "scenarios"}
+              onClick={() => setActiveTab("scenarios")}
               locked={false}
             />
           </div>
@@ -177,25 +185,23 @@ const ProfessionalFinancialModeling: React.FC<ProfessionalFinancialModelingProps
               <ErrorState message={error} />
             ) : advancedMetrics ? (
               <>
-                {activeTab === 'basic' && (
-                  <BasicMetricsTab metrics={advancedMetrics} />
-                )}
-                {activeTab === 'sensitivity' && (
-                  <SensitivityTab 
-                    analysis={advancedMetrics.sensitivityAnalysis} 
+                {activeTab === "basic" && <BasicMetricsTab metrics={advancedMetrics} />}
+                {activeTab === "sensitivity" && (
+                  <SensitivityTab
+                    analysis={advancedMetrics.sensitivityAnalysis}
                     isPaidUser={isPaidUser}
                     onUpgradeClick={onUpgradeClick}
                   />
                 )}
-                {activeTab === 'risk' && (
-                  <RiskAnalysisTab 
+                {activeTab === "risk" && (
+                  <RiskAnalysisTab
                     analysis={advancedMetrics.riskAnalysis}
                     isPaidUser={isPaidUser}
                     onUpgradeClick={onUpgradeClick}
                   />
                 )}
-                {activeTab === 'scenarios' && (
-                  <ScenariosTab 
+                {activeTab === "scenarios" && (
+                  <ScenariosTab
                     analysis={advancedMetrics.scenarioAnalysis}
                     isPaidUser={isPaidUser}
                     onUpgradeClick={onUpgradeClick}
@@ -248,11 +254,12 @@ const TabButton: React.FC<TabButtonProps> = ({ icon, label, active, onClick, loc
     disabled={locked}
     className={`
       relative px-6 py-4 font-medium transition-all border-b-2 flex items-center space-x-2
-      ${active 
-        ? 'border-purple-600 text-purple-600 bg-white' 
-        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+      ${
+        active
+          ? "border-purple-600 text-purple-600 bg-white"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
       }
-      ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+      ${locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
     `}
   >
     <span className="text-xl">{icon}</span>
@@ -289,11 +296,14 @@ interface BasicMetricsTabProps {
 }
 
 const BasicMetricsTab: React.FC<BasicMetricsTabProps> = ({ metrics }) => {
-  const formatCurrency = (value: number) => 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
-  
-  const formatPercent = (value: number) => 
-    `${(value * 100).toFixed(2)}%`;
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(value);
+
+  const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`;
 
   return (
     <div className="space-y-6">
@@ -302,7 +312,7 @@ const BasicMetricsTab: React.FC<BasicMetricsTabProps> = ({ metrics }) => {
           label="Net Present Value"
           value={formatCurrency(metrics.npv || 0)}
           icon="💰"
-          trend={metrics.npv && metrics.npv > 0 ? 'positive' : 'negative'}
+          trend={metrics.npv && metrics.npv > 0 ? "positive" : "negative"}
         />
         <MetricCard
           label="Internal Rate of Return"
@@ -328,11 +338,15 @@ const BasicMetricsTab: React.FC<BasicMetricsTabProps> = ({ metrics }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600">Total Project Cost</p>
-            <p className="text-xl font-bold text-gray-900">{formatCurrency(metrics.totalProjectCost)}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {formatCurrency(metrics.totalProjectCost)}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Annual Savings</p>
-            <p className="text-xl font-bold text-green-600">{formatCurrency(metrics.annualSavings)}</p>
+            <p className="text-xl font-bold text-green-600">
+              {formatCurrency(metrics.annualSavings)}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">25-Year ROI</p>
@@ -341,7 +355,9 @@ const BasicMetricsTab: React.FC<BasicMetricsTabProps> = ({ metrics }) => {
           <div>
             <p className="text-sm text-gray-600">Levelized Cost of Storage</p>
             <p className="text-xl font-bold text-indigo-600">
-              {metrics.levelizedCostOfStorage ? `$${metrics.levelizedCostOfStorage.toFixed(2)}/MWh` : 'N/A'}
+              {metrics.levelizedCostOfStorage
+                ? `$${metrics.levelizedCostOfStorage.toFixed(2)}/MWh`
+                : "N/A"}
             </p>
           </div>
         </div>
@@ -353,7 +369,9 @@ const BasicMetricsTab: React.FC<BasicMetricsTabProps> = ({ metrics }) => {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-600">Effective Life</p>
-              <p className="text-xl font-bold text-gray-900">{metrics.degradationProfile.effectiveLifeYears} years</p>
+              <p className="text-xl font-bold text-gray-900">
+                {metrics.degradationProfile.effectiveLifeYears} years
+              </p>
               <p className="text-xs text-gray-500 mt-1">Until 80% capacity</p>
             </div>
             <div>
@@ -385,17 +403,21 @@ interface SensitivityTabProps {
   onUpgradeClick?: () => void;
 }
 
-const SensitivityTab: React.FC<SensitivityTabProps> = ({ analysis, isPaidUser, onUpgradeClick }) => {
+const SensitivityTab: React.FC<SensitivityTabProps> = ({
+  analysis,
+  isPaidUser,
+  onUpgradeClick,
+}) => {
   if (!isPaidUser) {
     return (
       <FreemiumPreview
         title="Sensitivity Analysis Preview"
         description="See how changes in key parameters affect your project's NPV and IRR"
         features={[
-          'Interactive tornado chart showing parameter impacts',
-          'Test parameter variations with live updates',
-          'Identify which factors matter most for your project',
-          'Export sensitivity reports to PDF/Excel'
+          "Interactive tornado chart showing parameter impacts",
+          "Test parameter variations with live updates",
+          "Identify which factors matter most for your project",
+          "Export sensitivity reports to PDF/Excel",
         ]}
         previewImage="📈"
         onUpgradeClick={onUpgradeClick}
@@ -422,17 +444,17 @@ const SensitivityTab: React.FC<SensitivityTabProps> = ({ analysis, isPaidUser, o
                 <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
                   <div
                     className={`h-3 rounded-full ${
-                      item.direction === 'positive' ? 'bg-green-500' : 'bg-red-500'
+                      item.direction === "positive" ? "bg-green-500" : "bg-red-500"
                     }`}
-                    style={{ width: `${Math.min(100, (item.impact / analysis.tornadoChart[0].impact) * 100)}%` }}
+                    style={{
+                      width: `${Math.min(100, (item.impact / analysis.tornadoChart[0].impact) * 100)}%`,
+                    }}
                   />
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600">NPV Impact</p>
-                <p className="font-bold text-gray-900">
-                  ${(item.impact / 1000000).toFixed(1)}M
-                </p>
+                <p className="font-bold text-gray-900">${(item.impact / 1000000).toFixed(1)}M</p>
               </div>
             </div>
           ))}
@@ -472,18 +494,22 @@ interface RiskAnalysisTabProps {
   onUpgradeClick?: () => void;
 }
 
-const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({ analysis, isPaidUser, onUpgradeClick }) => {
+const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({
+  analysis,
+  isPaidUser,
+  onUpgradeClick,
+}) => {
   if (!isPaidUser) {
     return (
       <FreemiumPreview
         title="Risk Analysis Preview"
         description="Monte Carlo simulation with 1,000 scenarios to quantify project risk"
         features={[
-          'Probability distribution of NPV outcomes',
-          'Value at Risk (VaR) at 95% and 99% confidence',
-          'Probability of investment success',
-          'Best/worst case scenario analysis',
-          'Expected shortfall calculations'
+          "Probability distribution of NPV outcomes",
+          "Value at Risk (VaR) at 95% and 99% confidence",
+          "Probability of investment success",
+          "Best/worst case scenario analysis",
+          "Expected shortfall calculations",
         ]}
         previewImage="🎲"
         onUpgradeClick={onUpgradeClick}
@@ -495,8 +521,12 @@ const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({ analysis, isPaidUser,
     return <div className="text-center py-10 text-gray-500">No risk analysis available</div>;
   }
 
-  const formatCurrency = (value: number) => 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(value);
 
   return (
     <div className="space-y-6">
@@ -517,19 +547,27 @@ const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({ analysis, isPaidUser,
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-blue-50 rounded-lg p-4">
           <p className="text-sm text-gray-600 mb-1">Mean NPV</p>
-          <p className="text-2xl font-bold text-blue-900">{formatCurrency(analysis.statistics.meanNPV)}</p>
+          <p className="text-2xl font-bold text-blue-900">
+            {formatCurrency(analysis.statistics.meanNPV)}
+          </p>
         </div>
         <div className="bg-purple-50 rounded-lg p-4">
           <p className="text-sm text-gray-600 mb-1">Median NPV</p>
-          <p className="text-2xl font-bold text-purple-900">{formatCurrency(analysis.statistics.medianNPV)}</p>
+          <p className="text-2xl font-bold text-purple-900">
+            {formatCurrency(analysis.statistics.medianNPV)}
+          </p>
         </div>
         <div className="bg-amber-50 rounded-lg p-4">
           <p className="text-sm text-gray-600 mb-1">Standard Deviation</p>
-          <p className="text-2xl font-bold text-amber-900">{formatCurrency(analysis.statistics.stdDevNPV)}</p>
+          <p className="text-2xl font-bold text-amber-900">
+            {formatCurrency(analysis.statistics.stdDevNPV)}
+          </p>
         </div>
         <div className="bg-red-50 rounded-lg p-4">
           <p className="text-sm text-gray-600 mb-1">Coefficient of Variation</p>
-          <p className="text-2xl font-bold text-red-900">{(analysis.statistics.coefficientOfVariation * 100).toFixed(1)}%</p>
+          <p className="text-2xl font-bold text-red-900">
+            {(analysis.statistics.coefficientOfVariation * 100).toFixed(1)}%
+          </p>
         </div>
       </div>
 
@@ -539,17 +577,23 @@ const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({ analysis, isPaidUser,
         <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-600 mb-1">VaR (95%)</p>
-            <p className="text-xl font-bold text-red-700">{formatCurrency(analysis.valueAtRisk.var95)}</p>
+            <p className="text-xl font-bold text-red-700">
+              {formatCurrency(analysis.valueAtRisk.var95)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">5% chance of worse outcome</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">VaR (99%)</p>
-            <p className="text-xl font-bold text-red-800">{formatCurrency(analysis.valueAtRisk.var99)}</p>
+            <p className="text-xl font-bold text-red-800">
+              {formatCurrency(analysis.valueAtRisk.var99)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">1% chance of worse outcome</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Expected Shortfall</p>
-            <p className="text-xl font-bold text-red-900">{formatCurrency(analysis.valueAtRisk.expectedShortfall)}</p>
+            <p className="text-xl font-bold text-red-900">
+              {formatCurrency(analysis.valueAtRisk.expectedShortfall)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">Average of worst 5%</p>
           </div>
         </div>
@@ -561,18 +605,30 @@ const RiskAnalysisTab: React.FC<RiskAnalysisTabProps> = ({ analysis, isPaidUser,
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-2">Best Case</p>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(analysis.scenarios.best.npv)}</p>
-            <p className="text-sm text-gray-500 mt-1">IRR: {(analysis.scenarios.best.irr * 100).toFixed(1)}%</p>
+            <p className="text-2xl font-bold text-green-600">
+              {formatCurrency(analysis.scenarios.best.npv)}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              IRR: {(analysis.scenarios.best.irr * 100).toFixed(1)}%
+            </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-2">Median Case</p>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(analysis.scenarios.median.npv)}</p>
-            <p className="text-sm text-gray-500 mt-1">IRR: {(analysis.scenarios.median.irr * 100).toFixed(1)}%</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {formatCurrency(analysis.scenarios.median.npv)}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              IRR: {(analysis.scenarios.median.irr * 100).toFixed(1)}%
+            </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-2">Worst Case</p>
-            <p className="text-2xl font-bold text-red-600">{formatCurrency(analysis.scenarios.worst.npv)}</p>
-            <p className="text-sm text-gray-500 mt-1">IRR: {(analysis.scenarios.worst.irr * 100).toFixed(1)}%</p>
+            <p className="text-2xl font-bold text-red-600">
+              {formatCurrency(analysis.scenarios.worst.npv)}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              IRR: {(analysis.scenarios.worst.irr * 100).toFixed(1)}%
+            </p>
           </div>
         </div>
       </div>
@@ -595,8 +651,12 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
     return <div className="text-center py-10 text-gray-500">No scenario analysis available</div>;
   }
 
-  const formatCurrency = (value: number) => 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(value);
 
   const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`;
 
@@ -608,7 +668,9 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
             <span className="text-2xl">🔒</span>
             <div>
               <p className="font-medium text-gray-900">Preview Mode</p>
-              <p className="text-sm text-gray-600">Upgrade to edit assumptions and run custom scenarios</p>
+              <p className="text-sm text-gray-600">
+                Upgrade to edit assumptions and run custom scenarios
+              </p>
             </div>
           </div>
           <button
@@ -630,15 +692,21 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600">NPV</p>
-              <p className="text-2xl font-bold text-green-700">{formatCurrency(analysis.optimistic.npv)}</p>
+              <p className="text-2xl font-bold text-green-700">
+                {formatCurrency(analysis.optimistic.npv)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">IRR</p>
-              <p className="text-xl font-bold text-green-600">{formatPercent(analysis.optimistic.irr)}</p>
+              <p className="text-xl font-bold text-green-600">
+                {formatPercent(analysis.optimistic.irr)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Payback</p>
-              <p className="text-lg font-bold text-green-600">{analysis.optimistic.paybackYears.toFixed(1)} years</p>
+              <p className="text-lg font-bold text-green-600">
+                {analysis.optimistic.paybackYears.toFixed(1)} years
+              </p>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-green-200">
@@ -663,7 +731,9 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600">NPV</p>
-              <p className="text-2xl font-bold text-blue-700">{formatCurrency(analysis.base.npv)}</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {formatCurrency(analysis.base.npv)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">IRR</p>
@@ -671,7 +741,9 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
             </div>
             <div>
               <p className="text-sm text-gray-600">Payback</p>
-              <p className="text-lg font-bold text-blue-600">{analysis.base.paybackYears.toFixed(1)} years</p>
+              <p className="text-lg font-bold text-blue-600">
+                {analysis.base.paybackYears.toFixed(1)} years
+              </p>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-blue-200">
@@ -696,15 +768,21 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600">NPV</p>
-              <p className="text-2xl font-bold text-red-700">{formatCurrency(analysis.pessimistic.npv)}</p>
+              <p className="text-2xl font-bold text-red-700">
+                {formatCurrency(analysis.pessimistic.npv)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">IRR</p>
-              <p className="text-xl font-bold text-red-600">{formatPercent(analysis.pessimistic.irr)}</p>
+              <p className="text-xl font-bold text-red-600">
+                {formatPercent(analysis.pessimistic.irr)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Payback</p>
-              <p className="text-lg font-bold text-red-600">{analysis.pessimistic.paybackYears.toFixed(1)} years</p>
+              <p className="text-lg font-bold text-red-600">
+                {analysis.pessimistic.paybackYears.toFixed(1)} years
+              </p>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-red-200">
@@ -727,17 +805,23 @@ const ScenariosTab: React.FC<ScenariosTabProps> = ({ analysis, isPaidUser, onUpg
         <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-600 mb-1">NPV Range</p>
-            <p className="text-xl font-bold text-gray-900">{formatCurrency(analysis.comparisons.npvSpread)}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {formatCurrency(analysis.comparisons.npvSpread)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">Optimistic - Pessimistic</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">IRR Range</p>
-            <p className="text-xl font-bold text-gray-900">{formatPercent(analysis.comparisons.irrSpread)}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {formatPercent(analysis.comparisons.irrSpread)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">Optimistic - Pessimistic</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Payback Range</p>
-            <p className="text-xl font-bold text-gray-900">{analysis.comparisons.paybackSpread.toFixed(1)} years</p>
+            <p className="text-xl font-bold text-gray-900">
+              {analysis.comparisons.paybackSpread.toFixed(1)} years
+            </p>
             <p className="text-xs text-gray-500 mt-1">Pessimistic - Optimistic</p>
           </div>
         </div>
@@ -754,7 +838,7 @@ interface MetricCardProps {
   label: string;
   value: string;
   icon: string;
-  trend?: 'positive' | 'negative';
+  trend?: "positive" | "negative";
   subtitle?: string;
 }
 
@@ -764,9 +848,15 @@ const MetricCard: React.FC<MetricCardProps> = ({ label, value, icon, trend, subt
       <span className="text-2xl">{icon}</span>
       <p className="text-sm text-gray-600">{label}</p>
     </div>
-    <p className={`text-2xl font-bold ${
-      trend === 'positive' ? 'text-green-600' : trend === 'negative' ? 'text-red-600' : 'text-gray-900'
-    }`}>
+    <p
+      className={`text-2xl font-bold ${
+        trend === "positive"
+          ? "text-green-600"
+          : trend === "negative"
+            ? "text-red-600"
+            : "text-gray-900"
+      }`}
+    >
       {value}
     </p>
     {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
@@ -786,7 +876,7 @@ const FreemiumPreview: React.FC<FreemiumPreviewProps> = ({
   description,
   features,
   previewImage,
-  onUpgradeClick
+  onUpgradeClick,
 }) => (
   <div className="relative">
     {/* Blurred background */}
@@ -803,7 +893,7 @@ const FreemiumPreview: React.FC<FreemiumPreviewProps> = ({
           <span className="text-6xl mb-4 block">🎓</span>
           <h3 className="text-2xl font-bold text-gray-900 mb-2">{title}</h3>
           <p className="text-gray-600 mb-6">{description}</p>
-          
+
           <div className="bg-purple-50 rounded-lg p-4 mb-6 text-left">
             <p className="font-medium text-purple-900 mb-3">Unlock Professional Features:</p>
             <ul className="space-y-2">
@@ -822,10 +912,8 @@ const FreemiumPreview: React.FC<FreemiumPreviewProps> = ({
           >
             Upgrade to Professional
           </button>
-          
-          <p className="text-xs text-gray-500 mt-4">
-            Starting at $99/month • Cancel anytime
-          </p>
+
+          <p className="text-xs text-gray-500 mt-4">Starting at $99/month • Cancel anytime</p>
         </div>
       </div>
     </div>
@@ -835,11 +923,11 @@ const FreemiumPreview: React.FC<FreemiumPreviewProps> = ({
 // Helper function for parameter labels
 function formatParameterLabel(paramName: string): string {
   const labels: Record<string, string> = {
-    electricityRate: 'Electricity Rate',
-    storageSizeMW: 'Storage Size',
-    discountRate: 'Discount Rate',
-    projectLifetimeYears: 'Project Lifetime',
-    priceEscalationRate: 'Price Escalation'
+    electricityRate: "Electricity Rate",
+    storageSizeMW: "Storage Size",
+    discountRate: "Discount Rate",
+    projectLifetimeYears: "Project Lifetime",
+    priceEscalationRate: "Price Escalation",
   };
   return labels[paramName] || paramName;
 }

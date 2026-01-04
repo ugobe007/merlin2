@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface QuoteTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'commercial' | 'residential' | 'industrial' | 'custom';
+  category: "commercial" | "residential" | "industrial" | "custom";
   sections: {
     executiveSummary: boolean;
     technicalSpecs: boolean;
@@ -31,7 +31,7 @@ interface QuoteTemplate {
   formatting: {
     pageNumbers: boolean;
     tableOfContents: boolean;
-    colorScheme: 'professional' | 'modern' | 'minimal';
+    colorScheme: "professional" | "modern" | "minimal";
   };
   createdAt: string;
   updatedAt: string;
@@ -45,16 +45,16 @@ interface QuoteTemplatesProps {
 }
 
 const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTemplate, userId }) => {
-  const [activeTab, setActiveTab] = useState<'browse' | 'create' | 'manage'>('browse');
+  const [activeTab, setActiveTab] = useState<"browse" | "create" | "manage">("browse");
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<QuoteTemplate | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   // New template form state
   const [newTemplate, setNewTemplate] = useState<Partial<QuoteTemplate>>({
-    name: '',
-    description: '',
-    category: 'commercial',
+    name: "",
+    description: "",
+    category: "commercial",
     sections: {
       executiveSummary: true,
       technicalSpecs: true,
@@ -74,7 +74,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
     formatting: {
       pageNumbers: true,
       tableOfContents: true,
-      colorScheme: 'professional',
+      colorScheme: "professional",
     },
     isDefault: false,
   });
@@ -95,10 +95,10 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
   const getDefaultTemplates = (): QuoteTemplate[] => {
     return [
       {
-        id: 'default-commercial',
-        name: 'Commercial BESS Quote',
-        description: 'Comprehensive template for commercial battery energy storage projects',
-        category: 'commercial',
+        id: "default-commercial",
+        name: "Commercial BESS Quote",
+        description: "Comprehensive template for commercial battery energy storage projects",
+        category: "commercial",
         sections: {
           executiveSummary: true,
           technicalSpecs: true,
@@ -112,25 +112,25 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         },
         customSections: [],
         branding: {
-          headerText: 'Battery Energy Storage Solution Proposal',
-          footerText: 'Confidential - For Review Only',
+          headerText: "Battery Energy Storage Solution Proposal",
+          footerText: "Confidential - For Review Only",
           includeCompanyInfo: true,
           includeLogo: true,
         },
         formatting: {
           pageNumbers: true,
           tableOfContents: true,
-          colorScheme: 'professional',
+          colorScheme: "professional",
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isDefault: true,
       },
       {
-        id: 'default-residential',
-        name: 'Residential BESS Quote',
-        description: 'Simplified template for residential battery storage systems',
-        category: 'residential',
+        id: "default-residential",
+        name: "Residential BESS Quote",
+        description: "Simplified template for residential battery storage systems",
+        category: "residential",
         sections: {
           executiveSummary: true,
           technicalSpecs: true,
@@ -144,25 +144,25 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         },
         customSections: [],
         branding: {
-          headerText: 'Your Home Energy Storage Solution',
-          footerText: '',
+          headerText: "Your Home Energy Storage Solution",
+          footerText: "",
           includeCompanyInfo: true,
           includeLogo: true,
         },
         formatting: {
           pageNumbers: false,
           tableOfContents: false,
-          colorScheme: 'modern',
+          colorScheme: "modern",
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isDefault: true,
       },
       {
-        id: 'default-industrial',
-        name: 'Industrial/Utility Scale',
-        description: 'Detailed template for large-scale utility and industrial projects',
-        category: 'industrial',
+        id: "default-industrial",
+        name: "Industrial/Utility Scale",
+        description: "Detailed template for large-scale utility and industrial projects",
+        category: "industrial",
         sections: {
           executiveSummary: true,
           technicalSpecs: true,
@@ -176,38 +176,39 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         },
         customSections: [
           {
-            id: 'grid-services',
-            title: 'Grid Services & Ancillary Revenue',
-            content: 'Details on frequency regulation, capacity markets, and demand response programs',
+            id: "grid-services",
+            title: "Grid Services & Ancillary Revenue",
+            content:
+              "Details on frequency regulation, capacity markets, and demand response programs",
             order: 4,
           },
           {
-            id: 'interconnection',
-            title: 'Interconnection Requirements',
-            content: 'Utility interconnection process, studies, and timeline',
+            id: "interconnection",
+            title: "Interconnection Requirements",
+            content: "Utility interconnection process, studies, and timeline",
             order: 5,
           },
         ],
         branding: {
-          headerText: 'Utility-Scale Energy Storage Project Proposal',
-          footerText: 'Proprietary and Confidential',
+          headerText: "Utility-Scale Energy Storage Project Proposal",
+          footerText: "Proprietary and Confidential",
           includeCompanyInfo: true,
           includeLogo: true,
         },
         formatting: {
           pageNumbers: true,
           tableOfContents: true,
-          colorScheme: 'professional',
+          colorScheme: "professional",
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isDefault: true,
       },
       {
-        id: 'default-quick',
-        name: 'Quick Quote',
-        description: 'Fast, minimal template for preliminary pricing',
-        category: 'custom',
+        id: "default-quick",
+        name: "Quick Quote",
+        description: "Fast, minimal template for preliminary pricing",
+        category: "custom",
         sections: {
           executiveSummary: false,
           technicalSpecs: true,
@@ -227,7 +228,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         formatting: {
           pageNumbers: false,
           tableOfContents: false,
-          colorScheme: 'minimal',
+          colorScheme: "minimal",
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -238,15 +239,15 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
 
   const handleCreateTemplate = () => {
     if (!newTemplate.name) {
-      alert('Please enter a template name');
+      alert("Please enter a template name");
       return;
     }
 
     const template: QuoteTemplate = {
       id: `template-${Date.now()}`,
       name: newTemplate.name,
-      description: newTemplate.description || '',
-      category: newTemplate.category || 'custom',
+      description: newTemplate.description || "",
+      category: newTemplate.category || "custom",
       sections: newTemplate.sections!,
       customSections: newTemplate.customSections || [],
       branding: newTemplate.branding!,
@@ -259,22 +260,22 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
     const updatedTemplates = [...templates, template];
     setTemplates(updatedTemplates);
     localStorage.setItem(`quote_templates_${userId}`, JSON.stringify(updatedTemplates));
-    
+
     setIsCreating(false);
-    setActiveTab('manage');
-    alert('Template created successfully!');
+    setActiveTab("manage");
+    alert("Template created successfully!");
   };
 
   const handleDeleteTemplate = (templateId: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
-      const updatedTemplates = templates.filter(t => t.id !== templateId);
+    if (confirm("Are you sure you want to delete this template?")) {
+      const updatedTemplates = templates.filter((t) => t.id !== templateId);
       setTemplates(updatedTemplates);
       localStorage.setItem(`quote_templates_${userId}`, JSON.stringify(updatedTemplates));
     }
   };
 
   const handleSetDefaultTemplate = (templateId: string) => {
-    const updatedTemplates = templates.map(t => ({
+    const updatedTemplates = templates.map((t) => ({
       ...t,
       isDefault: t.id === templateId,
     }));
@@ -285,8 +286,8 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
   const addCustomSection = () => {
     const newSection = {
       id: `section-${Date.now()}`,
-      title: 'New Section',
-      content: '',
+      title: "New Section",
+      content: "",
       order: (newTemplate.customSections?.length || 0) + 1,
     };
     setNewTemplate({
@@ -298,7 +299,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
   const removeCustomSection = (sectionId: string) => {
     setNewTemplate({
       ...newTemplate,
-      customSections: newTemplate.customSections?.filter(s => s.id !== sectionId),
+      customSections: newTemplate.customSections?.filter((s) => s.id !== sectionId),
     });
   };
 
@@ -331,17 +332,17 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         <div className="border-b-4 border-purple-400/50 px-6 bg-gradient-to-r from-slate-800/80 to-slate-700/80">
           <div className="flex space-x-6">
             {[
-              { id: 'browse', label: '📋 Browse Templates', icon: '📋' },
-              { id: 'create', label: '✨ Create New', icon: '✨' },
-              { id: 'manage', label: '⚙️ Manage', icon: '⚙️' },
+              { id: "browse", label: "📋 Browse Templates", icon: "📋" },
+              { id: "create", label: "✨ Create New", icon: "✨" },
+              { id: "manage", label: "⚙️ Manage", icon: "⚙️" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-purple-400 text-purple-300'
-                    : 'border-transparent text-gray-400 hover:text-white'
+                    ? "border-purple-400 text-purple-300"
+                    : "border-transparent text-gray-400 hover:text-white"
                 }`}
               >
                 {tab.label}
@@ -353,15 +354,15 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
           {/* Browse Tab */}
-          {activeTab === 'browse' && (
+          {activeTab === "browse" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {templates.map((template) => (
                 <div
                   key={template.id}
                   className={`border-2 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer backdrop-blur-sm ${
-                    selectedTemplate?.id === template.id 
-                      ? 'border-purple-400/60 bg-gradient-to-br from-purple-500/30 to-violet-500/30' 
-                      : 'border-purple-400/30 bg-slate-700/50 hover:border-purple-400/50'
+                    selectedTemplate?.id === template.id
+                      ? "border-purple-400/60 bg-gradient-to-br from-purple-500/30 to-violet-500/30"
+                      : "border-purple-400/30 bg-slate-700/50 hover:border-purple-400/50"
                   }`}
                   onClick={() => setSelectedTemplate(template)}
                 >
@@ -378,9 +379,9 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                       {template.category}
                     </span>
                   </div>
-                  
+
                   <p className="text-sm text-gray-300 mb-3">{template.description}</p>
-                  
+
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{getSectionCount(template)} sections</span>
                     <span>{template.formatting.colorScheme} style</span>
@@ -390,17 +391,18 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                     <div className="mt-4 pt-4 border-t border-purple-400/30">
                       <h4 className="font-semibold text-sm mb-2">Included Sections:</h4>
                       <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(template.sections).map(([key, value]) => 
-                          value && (
-                            <div key={key} className="flex items-center text-xs">
-                              <span className="text-green-600 mr-1">✓</span>
-                              <span className="text-gray-700">
-                                {key.replace(/([A-Z])/g, ' $1').trim()}
-                              </span>
-                            </div>
-                          )
+                        {Object.entries(template.sections).map(
+                          ([key, value]) =>
+                            value && (
+                              <div key={key} className="flex items-center text-xs">
+                                <span className="text-green-600 mr-1">✓</span>
+                                <span className="text-gray-700">
+                                  {key.replace(/([A-Z])/g, " $1").trim()}
+                                </span>
+                              </div>
+                            )
                         )}
-                        {template.customSections.map(section => (
+                        {template.customSections.map((section) => (
                           <div key={section.id} className="flex items-center text-xs">
                             <span className="text-blue-600 mr-1">✓</span>
                             <span className="text-gray-700">{section.title}</span>
@@ -415,7 +417,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
           )}
 
           {/* Create Tab */}
-          {activeTab === 'create' && (
+          {activeTab === "create" && (
             <div className="max-w-3xl mx-auto space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -423,7 +425,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                 </label>
                 <input
                   type="text"
-                  value={newTemplate.name || ''}
+                  value={newTemplate.name || ""}
                   onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
                   placeholder="e.g., Commercial Solar + Storage Quote"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
@@ -431,11 +433,9 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
-                  value={newTemplate.description || ''}
+                  value={newTemplate.description || ""}
                   onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
                   placeholder="Brief description of when to use this template"
                   rows={2}
@@ -444,12 +444,12 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
                   value={newTemplate.category}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value as any })}
+                  onChange={(e) =>
+                    setNewTemplate({ ...newTemplate, category: e.target.value as any })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="commercial">Commercial</option>
@@ -465,22 +465,25 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(newTemplate.sections || {}).map(([key, value]) => (
-                    <label key={key} className="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50">
+                    <label
+                      key={key}
+                      className="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50"
+                    >
                       <input
                         type="checkbox"
                         checked={value}
-                        onChange={(e) => setNewTemplate({
-                          ...newTemplate,
-                          sections: {
-                            ...newTemplate.sections!,
-                            [key]: e.target.checked,
-                          },
-                        })}
+                        onChange={(e) =>
+                          setNewTemplate({
+                            ...newTemplate,
+                            sections: {
+                              ...newTemplate.sections!,
+                              [key]: e.target.checked,
+                            },
+                          })
+                        }
                         className="mr-2"
                       />
-                      <span className="text-sm">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
+                      <span className="text-sm">{key.replace(/([A-Z])/g, " $1").trim()}</span>
                     </label>
                   ))}
                 </div>
@@ -488,9 +491,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Custom Sections
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Custom Sections</label>
                   <button
                     onClick={addCustomSection}
                     className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
@@ -501,16 +502,21 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                 {newTemplate.customSections && newTemplate.customSections.length > 0 ? (
                   <div className="space-y-2">
                     {newTemplate.customSections.map((section) => (
-                      <div key={section.id} className="flex items-center gap-2 p-2 border border-gray-200 rounded">
+                      <div
+                        key={section.id}
+                        className="flex items-center gap-2 p-2 border border-gray-200 rounded"
+                      >
                         <input
                           type="text"
                           value={section.title}
-                          onChange={(e) => setNewTemplate({
-                            ...newTemplate,
-                            customSections: newTemplate.customSections?.map(s =>
-                              s.id === section.id ? { ...s, title: e.target.value } : s
-                            ),
-                          })}
+                          onChange={(e) =>
+                            setNewTemplate({
+                              ...newTemplate,
+                              customSections: newTemplate.customSections?.map((s) =>
+                                s.id === section.id ? { ...s, title: e.target.value } : s
+                              ),
+                            })
+                          }
                           placeholder="Section title"
                           className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
                         />
@@ -533,18 +539,20 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                   Formatting Style
                 </label>
                 <div className="flex gap-3">
-                  {['professional', 'modern', 'minimal'].map((style) => (
+                  {["professional", "modern", "minimal"].map((style) => (
                     <label key={style} className="flex-1">
                       <input
                         type="radio"
                         checked={newTemplate.formatting?.colorScheme === style}
-                        onChange={() => setNewTemplate({
-                          ...newTemplate,
-                          formatting: {
-                            ...newTemplate.formatting!,
-                            colorScheme: style as any,
-                          },
-                        })}
+                        onChange={() =>
+                          setNewTemplate({
+                            ...newTemplate,
+                            formatting: {
+                              ...newTemplate.formatting!,
+                              colorScheme: style as any,
+                            },
+                          })
+                        }
                         className="mr-2"
                       />
                       <span className="text-sm capitalize">{style}</span>
@@ -558,13 +566,15 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                   <input
                     type="checkbox"
                     checked={newTemplate.formatting?.pageNumbers}
-                    onChange={(e) => setNewTemplate({
-                      ...newTemplate,
-                      formatting: {
-                        ...newTemplate.formatting!,
-                        pageNumbers: e.target.checked,
-                      },
-                    })}
+                    onChange={(e) =>
+                      setNewTemplate({
+                        ...newTemplate,
+                        formatting: {
+                          ...newTemplate.formatting!,
+                          pageNumbers: e.target.checked,
+                        },
+                      })
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm">Page Numbers</span>
@@ -573,13 +583,15 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                   <input
                     type="checkbox"
                     checked={newTemplate.formatting?.tableOfContents}
-                    onChange={(e) => setNewTemplate({
-                      ...newTemplate,
-                      formatting: {
-                        ...newTemplate.formatting!,
-                        tableOfContents: e.target.checked,
-                      },
-                    })}
+                    onChange={(e) =>
+                      setNewTemplate({
+                        ...newTemplate,
+                        formatting: {
+                          ...newTemplate.formatting!,
+                          tableOfContents: e.target.checked,
+                        },
+                      })
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm">Table of Contents</span>
@@ -596,10 +608,13 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
           )}
 
           {/* Manage Tab */}
-          {activeTab === 'manage' && (
+          {activeTab === "manage" && (
             <div className="space-y-3">
               {templates.map((template) => (
-                <div key={template.id} className="border border-gray-200 rounded-lg p-4 flex justify-between items-center">
+                <div
+                  key={template.id}
+                  className="border border-gray-200 rounded-lg p-4 flex justify-between items-center"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-gray-900">{template.name}</h3>
@@ -614,7 +629,8 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{template.description}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {getSectionCount(template)} sections • Created {new Date(template.createdAt).toLocaleDateString()}
+                      {getSectionCount(template)} sections • Created{" "}
+                      {new Date(template.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -648,7 +664,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
           >
             Cancel
           </button>
-          {activeTab === 'browse' && selectedTemplate && (
+          {activeTab === "browse" && selectedTemplate && (
             <button
               onClick={() => {
                 onSelectTemplate(selectedTemplate);

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Activity, AlertTriangle, CheckCircle, Clock, Database, Zap, TrendingUp, Server, Wifi, HardDrive, Cpu } from 'lucide-react';
+import { useState } from 'react';
+import { X, Activity, AlertTriangle, CheckCircle, Clock, Zap, TrendingUp, Server, Wifi } from 'lucide-react';
 
 interface SystemHealthProps {
   onClose: () => void;

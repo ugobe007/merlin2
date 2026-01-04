@@ -1,21 +1,21 @@
 /**
  * GRID-SYNK BESS CALCULATOR
  * =========================
- * 
+ *
  * Industry-standard BESS sizing calculations based on Grid-Synk methodology.
  * BESS is auto-calculated based on peak demand and duration - NOT user-adjustable.
- * 
+ *
  * Key Principles:
  * - BESS power is calculated from peak demand × application ratio
  * - BESS capacity is calculated from power × duration ÷ efficiency factors
  * - Users can adjust duration, but not directly edit kW/kWh
- * 
+ *
  * Source: Grid-Synk BESS Calculator (https://grid-synk.com)
- * 
+ *
  * @created December 2025
  */
 
-import type { BESSApplication } from '@/types/compareConfig';
+import type { BESSApplication } from "@/types/compareConfig";
 
 // ============================================================================
 // TYPES
@@ -52,14 +52,14 @@ export interface BESSCalculationResult {
  */
 export const GRID_SYNK_FACTORS = {
   /** Depth of Discharge - typical safe operating range */
-  DoD: 0.90,
-  
+  DoD: 0.9,
+
   /** Static efficiency - self-discharge, BMS standby losses */
-  staticEfficiency: 0.90,
-  
+  staticEfficiency: 0.9,
+
   /** Cycle efficiency - PCS conversion, internal resistance */
   cycleEfficiency: 0.95,
-  
+
   /** Combined efficiency = DoD × Static × Cycle */
   get combinedEfficiency() {
     return this.DoD * this.staticEfficiency * this.cycleEfficiency;
@@ -73,7 +73,7 @@ export const GRID_SYNK_FACTORS = {
 /**
  * BESS power sizing ratios by application type.
  * These determine what percentage of peak demand the BESS should cover.
- * 
+ *
  * Sources:
  * - Peak Shaving: IEEE 4538388, MDPI Energies 11(8):2048
  * - Backup: IEEE 446-1995 (Orange Book)
@@ -83,24 +83,24 @@ export const GRID_SYNK_FACTORS = {
  * - Grid Independence: NREL microgrid standards
  */
 export const BESS_RATIOS: Record<string, number> = {
-  'peak-shaving': 0.40,
-  'peak_shaving': 0.40,
-  'backup': 0.70,
-  'backup_power': 0.70,
-  'tou-optimization': 0.50,
-  'energy_arbitrage': 0.50,
-  'solar-consumption': 0.60,
-  'renewable_integration': 0.60,
-  'ev-charging': 0.50,
-  'grid-independence': 1.00,
-  'demand-response': 0.50,
-  'demand_response': 0.50,
-  'frequency-regulation': 0.30,
-  'frequency_regulation': 0.30,
-  'load_shifting': 0.50,
-  'stacked': 0.60,
+  "peak-shaving": 0.4,
+  peak_shaving: 0.4,
+  backup: 0.7,
+  backup_power: 0.7,
+  "tou-optimization": 0.5,
+  energy_arbitrage: 0.5,
+  "solar-consumption": 0.6,
+  renewable_integration: 0.6,
+  "ev-charging": 0.5,
+  "grid-independence": 1.0,
+  "demand-response": 0.5,
+  demand_response: 0.5,
+  "frequency-regulation": 0.3,
+  frequency_regulation: 0.3,
+  load_shifting: 0.5,
+  stacked: 0.6,
   // Default
-  'default': 0.50,
+  default: 0.5,
 };
 
 // ============================================================================
@@ -109,10 +109,10 @@ export const BESS_RATIOS: Record<string, number> = {
 
 /**
  * Calculate BESS sizing using Grid-Synk methodology.
- * 
+ *
  * @param inputs - Peak demand, duration, and application type
  * @returns Calculated BESS power, capacity, and formula explanation
- * 
+ *
  * @example
  * ```typescript
  * const result = calculateBESS({
@@ -125,31 +125,32 @@ export const BESS_RATIOS: Record<string, number> = {
  */
 export function calculateBESS(inputs: BESSCalculationInputs): BESSCalculationResult {
   const { peakDemandKW, durationHours, application } = inputs;
-  
+
   // Normalize application string
-  const normalizedApp = application.toLowerCase().replace(/[_\s]/g, '-');
-  
+  const normalizedApp = application.toLowerCase().replace(/[_\s]/g, "-");
+
   // Step 1: Determine BESS power based on application
-  const ratio = BESS_RATIOS[normalizedApp] || BESS_RATIOS[application] || BESS_RATIOS['default'];
+  const ratio = BESS_RATIOS[normalizedApp] || BESS_RATIOS[application] || BESS_RATIOS["default"];
   const batteryKW = Math.round(peakDemandKW * ratio);
-  
+
   // Step 2: Calculate usable capacity (what the battery needs to deliver)
   const usableKWh = batteryKW * durationHours;
-  
+
   // Step 3: Apply Grid-Synk efficiency factors to get required capacity
   // Required = Usable / (DoD × Static × Cycle)
-  const combinedEfficiency = GRID_SYNK_FACTORS.DoD * GRID_SYNK_FACTORS.staticEfficiency * GRID_SYNK_FACTORS.cycleEfficiency;
+  const combinedEfficiency =
+    GRID_SYNK_FACTORS.DoD * GRID_SYNK_FACTORS.staticEfficiency * GRID_SYNK_FACTORS.cycleEfficiency;
   const batteryKWh = Math.round(usableKWh / combinedEfficiency);
-  
+
   // Build formula string for transparency
   const formula = `${batteryKW} kW × ${durationHours} hr ÷ ${(combinedEfficiency * 100).toFixed(1)}% = ${batteryKWh.toLocaleString()} kWh`;
-  
+
   return {
     batteryKW,
     batteryKWh,
     usableKWh,
     formula,
-    source: 'Grid-Synk BESS Calculator (https://grid-synk.com)',
+    source: "Grid-Synk BESS Calculator (https://grid-synk.com)",
     factors: {
       ratio,
       dod: GRID_SYNK_FACTORS.DoD,
@@ -184,8 +185,8 @@ export function recalculateBESSForDuration(
  * Get the BESS ratio for a given application.
  */
 export function getBESSRatio(application: string): number {
-  const normalizedApp = application.toLowerCase().replace(/[_\s]/g, '-');
-  return BESS_RATIOS[normalizedApp] || BESS_RATIOS[application] || BESS_RATIOS['default'];
+  const normalizedApp = application.toLowerCase().replace(/[_\s]/g, "-");
+  return BESS_RATIOS[normalizedApp] || BESS_RATIOS[application] || BESS_RATIOS["default"];
 }
 
 /**
@@ -194,7 +195,7 @@ export function getBESSRatio(application: string): number {
 export function getBESSExplanation(inputs: BESSCalculationInputs): string {
   const result = calculateBESS(inputs);
   const ratio = result.factors.ratio;
-  
+
   return `
     Based on your peak demand of ${inputs.peakDemandKW} kW and ${inputs.application} application:
     

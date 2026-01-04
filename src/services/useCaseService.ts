@@ -4,21 +4,24 @@
  * Replaces static useCaseTemplates.ts with dynamic database-driven approach
  */
 
-import { supabase } from './supabaseClient';
-import { baselineCache, useCaseCache } from './cacheService';
-import { getBatteryPricing } from './unifiedPricingService';
-import { calculateFinancialMetrics } from './centralizedCalculations';
-import type { Database } from '../types/database.types';
+import { supabase } from "./supabaseClient";
+import { baselineCache, useCaseCache } from "./cacheService";
+import { getBatteryPricing } from "./unifiedPricingService";
+import { calculateFinancialMetrics } from "./centralizedCalculations";
+import type { Database } from "../types/database.types";
 
 // Database types
-export type UseCaseRow = Database['public']['Tables']['use_cases']['Row'];
-export type UseCaseConfigurationRow = Database['public']['Tables']['use_case_configurations']['Row'];
-export type EquipmentTemplateRow = Database['public']['Tables']['equipment_templates']['Row'];
-export type ConfigurationEquipmentRow = Database['public']['Tables']['configuration_equipment']['Row'];
-export type PricingScenarioRow = Database['public']['Tables']['pricing_scenarios']['Row'];
-export type CustomQuestionRow = Database['public']['Tables']['custom_questions']['Row'];
-export type RecommendedApplicationRow = Database['public']['Tables']['recommended_applications']['Row'];
-export type UseCaseAnalyticsRow = Database['public']['Tables']['use_case_analytics']['Row'];
+export type UseCaseRow = Database["public"]["Tables"]["use_cases"]["Row"];
+export type UseCaseConfigurationRow =
+  Database["public"]["Tables"]["use_case_configurations"]["Row"];
+export type EquipmentTemplateRow = Database["public"]["Tables"]["equipment_templates"]["Row"];
+export type ConfigurationEquipmentRow =
+  Database["public"]["Tables"]["configuration_equipment"]["Row"];
+export type PricingScenarioRow = Database["public"]["Tables"]["pricing_scenarios"]["Row"];
+export type CustomQuestionRow = Database["public"]["Tables"]["custom_questions"]["Row"];
+export type RecommendedApplicationRow =
+  Database["public"]["Tables"]["recommended_applications"]["Row"];
+export type UseCaseAnalyticsRow = Database["public"]["Tables"]["use_case_analytics"]["Row"];
 
 // Enhanced types for frontend use
 export interface UseCaseWithConfiguration extends UseCaseRow {
@@ -40,9 +43,11 @@ export interface DetailedUseCase extends UseCaseRow {
 }
 
 export interface UseCaseConfiguration extends UseCaseConfigurationRow {
-  equipment: Array<ConfigurationEquipmentRow & {
-    equipment_template: EquipmentTemplateRow;
-  }>;
+  equipment: Array<
+    ConfigurationEquipmentRow & {
+      equipment_template: EquipmentTemplateRow;
+    }
+  >;
   pricing_scenarios: PricingScenarioRow[];
 }
 
@@ -63,11 +68,10 @@ export interface CalculationResponse {
  * USE CASE DATABASE SERVICE CLASS
  */
 export class UseCaseService {
-  
   // =============================================================================
   // CORE USE CASE RETRIEVAL
   // =============================================================================
-  
+
   /**
    * Get all active use cases with their default configurations
    */
@@ -75,31 +79,32 @@ export class UseCaseService {
     try {
       // Simplified query - just get the use cases without complex joins
       let query = supabase
-        .from('use_cases')
-        .select('*')
-        .order('display_order', { ascending: true });
+        .from("use_cases")
+        .select("*")
+        .order("display_order", { ascending: true });
 
       if (!includeInactive) {
-        query = query.eq('is_active', true);
+        query = query.eq("is_active", true);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error('Supabase error fetching use cases:', error);
+        console.error("Supabase error fetching use cases:", error);
         throw error;
       }
 
       // Return basic use case data
-      return data?.map(useCase => ({
-        ...useCase,
-        question_count: 0,
-        equipment_count: 0,
-        default_configuration: null
-      })) || [];
-
+      return (
+        data?.map((useCase) => ({
+          ...useCase,
+          question_count: 0,
+          equipment_count: 0,
+          default_configuration: null,
+        })) || []
+      );
     } catch (error) {
-      console.error('Error fetching use cases:', error);
+      console.error("Error fetching use cases:", error);
       // Return empty array instead of throwing to prevent UI crash
       return [];
     }
@@ -111,20 +116,21 @@ export class UseCaseService {
   async getUseCasesByCategory(category: string): Promise<UseCaseWithConfiguration[]> {
     try {
       const { data, error } = await supabase
-        .from('use_cases')
-        .select(`
+        .from("use_cases")
+        .select(
+          `
           *,
           default_configuration:use_case_configurations!inner(*)
-        `)
-        .eq('category', category)
-        .eq('is_active', true)
-        .order('display_order');
+        `
+        )
+        .eq("category", category)
+        .eq("is_active", true)
+        .order("display_order");
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching use cases by category:', error);
+      console.error("Error fetching use cases by category:", error);
       throw error;
     }
   }
@@ -135,20 +141,21 @@ export class UseCaseService {
   async getUseCasesByTier(tier: string): Promise<UseCaseWithConfiguration[]> {
     try {
       const { data, error } = await supabase
-        .from('use_cases')
-        .select(`
+        .from("use_cases")
+        .select(
+          `
           *,
           default_configuration:use_case_configurations!inner(*)
-        `)
-        .eq('required_tier', tier)
-        .eq('is_active', true)
-        .order('display_order');
+        `
+        )
+        .eq("required_tier", tier)
+        .eq("is_active", true)
+        .order("display_order");
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching use cases by tier:', error);
+      console.error("Error fetching use cases by tier:", error);
       throw error;
     }
   }
@@ -159,10 +166,10 @@ export class UseCaseService {
   async getUseCaseBySlug(slug: string): Promise<DetailedUseCase | null> {
     try {
       const { data: useCase, error: useCaseError } = await supabase
-        .from('use_cases')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_active', true)
+        .from("use_cases")
+        .select("*")
+        .eq("slug", slug)
+        .eq("is_active", true)
         .single();
 
       if (useCaseError) throw useCaseError;
@@ -172,12 +179,12 @@ export class UseCaseService {
       const [configurationsResult, questionsResult, applicationsResult] = await Promise.allSettled([
         this.getConfigurationsByUseCaseId(useCase.id),
         this.getCustomQuestionsByUseCaseId(useCase.id),
-        this.getRecommendedApplicationsByUseCaseId(useCase.id)
+        this.getRecommendedApplicationsByUseCaseId(useCase.id),
       ]);
 
       // Transform custom_questions from database format to frontend format
-      const rawQuestions = questionsResult.status === 'fulfilled' ? questionsResult.value : [];
-      const transformedQuestions = rawQuestions.map(q => ({
+      const rawQuestions = questionsResult.status === "fulfilled" ? questionsResult.value : [];
+      const transformedQuestions = rawQuestions.map((q) => ({
         id: (q as any).field_name || q.id,
         question: q.question_text,
         type: q.question_type,
@@ -193,14 +200,15 @@ export class UseCaseService {
 
       return {
         ...useCase,
-        configurations: configurationsResult.status === 'fulfilled' ? configurationsResult.value : [],
+        configurations:
+          configurationsResult.status === "fulfilled" ? configurationsResult.value : [],
         custom_questions: transformedQuestions,
-        customQuestions: transformedQuestions,  // Add both formats for compatibility
-        recommended_applications: applicationsResult.status === 'fulfilled' ? applicationsResult.value : []
+        customQuestions: transformedQuestions, // Add both formats for compatibility
+        recommended_applications:
+          applicationsResult.status === "fulfilled" ? applicationsResult.value : [],
       };
-
     } catch (error) {
-      console.error('Error fetching detailed use case:', error);
+      console.error("Error fetching detailed use case:", error);
       throw error;
     }
   }
@@ -210,13 +218,10 @@ export class UseCaseService {
    */
   async getAllUseCasesWithConfigurations(includeInactive = false): Promise<DetailedUseCase[]> {
     try {
-      const query = supabase
-        .from('use_cases')
-        .select('*')
-        .order('name');
+      const query = supabase.from("use_cases").select("*").order("name");
 
       if (!includeInactive) {
-        query.eq('is_active', true);
+        query.eq("is_active", true);
       }
 
       const { data: useCases, error } = await query;
@@ -231,14 +236,14 @@ export class UseCaseService {
             ...useCase,
             configurations,
             custom_questions: [],
-            recommended_applications: []
+            recommended_applications: [],
           } as DetailedUseCase;
         })
       );
 
       return detailed;
     } catch (error) {
-      console.error('Error fetching all use cases with configurations:', error);
+      console.error("Error fetching all use cases with configurations:", error);
       throw error;
     }
   }
@@ -253,17 +258,16 @@ export class UseCaseService {
   async getConfigurationsByUseCaseId(useCaseId: string): Promise<UseCaseConfigurationRow[]> {
     try {
       const { data, error } = await supabase
-        .from('use_case_configurations')
-        .select('*')
-        .eq('use_case_id', useCaseId)
-        .order('is_default', { ascending: false })
-        .order('config_name');
+        .from("use_case_configurations")
+        .select("*")
+        .eq("use_case_id", useCaseId)
+        .order("is_default", { ascending: false })
+        .order("config_name");
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching configurations:', error);
+      console.error("Error fetching configurations:", error);
       throw error;
     }
   }
@@ -274,9 +278,9 @@ export class UseCaseService {
   async getDetailedConfiguration(configurationId: string): Promise<UseCaseConfiguration | null> {
     try {
       const { data: config, error: configError } = await supabase
-        .from('use_case_configurations')
-        .select('*')
-        .eq('id', configurationId)
+        .from("use_case_configurations")
+        .select("*")
+        .eq("id", configurationId)
         .single();
 
       if (configError) throw configError;
@@ -285,17 +289,16 @@ export class UseCaseService {
       // Fetch equipment and pricing scenarios
       const [equipmentResult, pricingResult] = await Promise.all([
         this.getConfigurationEquipment(configurationId),
-        this.getPricingScenarios(configurationId)
+        this.getPricingScenarios(configurationId),
       ]);
 
       return {
         ...config,
         equipment: equipmentResult,
-        pricing_scenarios: pricingResult
+        pricing_scenarios: pricingResult,
       };
-
     } catch (error) {
-      console.error('Error fetching detailed configuration:', error);
+      console.error("Error fetching detailed configuration:", error);
       throw error;
     }
   }
@@ -306,17 +309,16 @@ export class UseCaseService {
   async getDefaultConfiguration(useCaseId: string): Promise<UseCaseConfigurationRow | null> {
     try {
       const { data, error } = await supabase
-        .from('use_case_configurations')
-        .select('*')
-        .eq('use_case_id', useCaseId)
-        .eq('is_default', true)
+        .from("use_case_configurations")
+        .select("*")
+        .eq("use_case_id", useCaseId)
+        .eq("is_default", true)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+      if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows found
       return data || null;
-
     } catch (error) {
-      console.error('Error fetching default configuration:', error);
+      console.error("Error fetching default configuration:", error);
       throw error;
     }
   }
@@ -328,22 +330,25 @@ export class UseCaseService {
   /**
    * Get equipment for a configuration with template details
    */
-  async getConfigurationEquipment(configurationId: string): Promise<Array<ConfigurationEquipmentRow & { equipment_template: EquipmentTemplateRow }>> {
+  async getConfigurationEquipment(
+    configurationId: string
+  ): Promise<Array<ConfigurationEquipmentRow & { equipment_template: EquipmentTemplateRow }>> {
     try {
       const { data, error } = await supabase
-        .from('configuration_equipment')
-        .select(`
+        .from("configuration_equipment")
+        .select(
+          `
           *,
           equipment_template:equipment_templates(*)
-        `)
-        .eq('configuration_id', configurationId)
-        .order('load_priority', { ascending: false });
+        `
+        )
+        .eq("configuration_id", configurationId)
+        .order("load_priority", { ascending: false });
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching configuration equipment:', error);
+      console.error("Error fetching configuration equipment:", error);
       throw error;
     }
   }
@@ -354,17 +359,16 @@ export class UseCaseService {
   async getAllEquipmentTemplates(): Promise<EquipmentTemplateRow[]> {
     try {
       const { data, error } = await supabase
-        .from('equipment_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('category', { ascending: true })
-        .order('name', { ascending: true });
+        .from("equipment_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("category", { ascending: true })
+        .order("name", { ascending: true });
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching equipment templates:', error);
+      console.error("Error fetching equipment templates:", error);
       throw error;
     }
   }
@@ -375,17 +379,16 @@ export class UseCaseService {
   async getEquipmentTemplatesByCategory(category: string): Promise<EquipmentTemplateRow[]> {
     try {
       const { data, error } = await supabase
-        .from('equipment_templates')
-        .select('*')
-        .eq('category', category)
-        .eq('is_active', true)
-        .order('nameplate_power_kw', { ascending: true });
+        .from("equipment_templates")
+        .select("*")
+        .eq("category", category)
+        .eq("is_active", true)
+        .order("nameplate_power_kw", { ascending: true });
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching equipment templates by category:', error);
+      console.error("Error fetching equipment templates by category:", error);
       throw error;
     }
   }
@@ -400,63 +403,78 @@ export class UseCaseService {
   async getCustomQuestionsByUseCaseId(useCaseId: string): Promise<CustomQuestionRow[]> {
     try {
       if (!useCaseId) {
-        console.warn('⚠️ [useCaseService] getCustomQuestionsByUseCaseId called with empty useCaseId');
+        console.warn(
+          "⚠️ [useCaseService] getCustomQuestionsByUseCaseId called with empty useCaseId"
+        );
         return [];
       }
-      
+
       // Fetch ALL questions (including inactive) - let the frontend decide what to display
       // This ensures we don't accidentally hide questions that should be visible
       const { data, error } = await supabase
-        .from('custom_questions')
-        .select('*')
-        .eq('use_case_id', useCaseId)
-        .order('display_order', { ascending: true });
+        .from("custom_questions")
+        .select("*")
+        .eq("use_case_id", useCaseId)
+        .order("display_order", { ascending: true });
 
       if (error) {
-        console.error('❌ [useCaseService] Supabase error fetching custom questions:', {
+        console.error("❌ [useCaseService] Supabase error fetching custom questions:", {
           useCaseId,
           error: error.message,
           code: error.code,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         });
         throw error;
       }
-      
+
       const allQuestions = data || [];
-      
+
       // Filter out inactive questions unless we're debugging
       // TODO: Consider showing inactive questions in dev mode to help identify missing ones
       const activeQuestions = allQuestions.filter((q: any) => q.is_active !== false);
-      
+
       if (activeQuestions.length !== allQuestions.length) {
-        console.warn(`⚠️ [useCaseService] Found ${allQuestions.length - activeQuestions.length} inactive questions for useCaseId: ${useCaseId}`);
+        console.warn(
+          `⚠️ [useCaseService] Found ${allQuestions.length - activeQuestions.length} inactive questions for useCaseId: ${useCaseId}`
+        );
       }
-      
+
       // DEBUG: Log what we're returning
       if (import.meta.env.DEV) {
-        console.log(`📋 [useCaseService] Fetched ${activeQuestions.length} active custom questions (out of ${allQuestions.length} total) for useCaseId: ${useCaseId}`, {
-          activeCount: activeQuestions.length,
-          totalCount: allQuestions.length,
-          inactiveCount: allQuestions.length - activeQuestions.length,
-          questionFields: activeQuestions.map((q: any) => q.field_name || q.id || q.question_text?.substring(0, 30)),
-          inactiveFields: allQuestions.filter((q: any) => q.is_active === false).map((q: any) => q.field_name || q.id)
-        });
+        console.log(
+          `📋 [useCaseService] Fetched ${activeQuestions.length} active custom questions (out of ${allQuestions.length} total) for useCaseId: ${useCaseId}`,
+          {
+            activeCount: activeQuestions.length,
+            totalCount: allQuestions.length,
+            inactiveCount: allQuestions.length - activeQuestions.length,
+            questionFields: activeQuestions.map(
+              (q: any) => q.field_name || q.id || q.question_text?.substring(0, 30)
+            ),
+            inactiveFields: allQuestions
+              .filter((q: any) => q.is_active === false)
+              .map((q: any) => q.field_name || q.id),
+          }
+        );
       }
-      
-      return activeQuestions;
 
+      return activeQuestions;
     } catch (error: any) {
       // Network errors (connection lost, CORS, etc.) should be handled gracefully
-      if (error?.message?.includes('Load failed') || 
-          error?.message?.includes('network') || 
-          error?.message?.includes('connection') ||
-          error?.code === 'NETWORK_ERROR' ||
-          error?.name === 'TypeError') {
-        console.warn('⚠️ [useCaseService] Network error fetching custom questions, returning empty array:', error.message);
+      if (
+        error?.message?.includes("Load failed") ||
+        error?.message?.includes("network") ||
+        error?.message?.includes("connection") ||
+        error?.code === "NETWORK_ERROR" ||
+        error?.name === "TypeError"
+      ) {
+        console.warn(
+          "⚠️ [useCaseService] Network error fetching custom questions, returning empty array:",
+          error.message
+        );
         return []; // Return empty array instead of throwing
       }
-      console.error('❌ [useCaseService] Error fetching custom questions:', error);
+      console.error("❌ [useCaseService] Error fetching custom questions:", error);
       throw error;
     }
   }
@@ -471,18 +489,17 @@ export class UseCaseService {
   async getPricingScenarios(configurationId: string): Promise<PricingScenarioRow[]> {
     try {
       const { data, error } = await supabase
-        .from('pricing_scenarios')
-        .select('*')
-        .eq('configuration_id', configurationId)
-        .eq('is_active', true)
-        .order('scenario_type')
-        .order('scenario_name');
+        .from("pricing_scenarios")
+        .select("*")
+        .eq("configuration_id", configurationId)
+        .eq("is_active", true)
+        .order("scenario_type")
+        .order("scenario_name");
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching pricing scenarios:', error);
+      console.error("Error fetching pricing scenarios:", error);
       throw error;
     }
   }
@@ -490,27 +507,27 @@ export class UseCaseService {
   /**
    * Get pricing scenarios by location
    */
-  async getPricingScenariosByLocation(country: string, stateProvince?: string): Promise<PricingScenarioRow[]> {
+  async getPricingScenariosByLocation(
+    country: string,
+    stateProvince?: string
+  ): Promise<PricingScenarioRow[]> {
     try {
       let query = supabase
-        .from('pricing_scenarios')
-        .select('*')
-        .eq('country', country)
-        .eq('is_active', true);
+        .from("pricing_scenarios")
+        .select("*")
+        .eq("country", country)
+        .eq("is_active", true);
 
       if (stateProvince) {
-        query = query.eq('state_province', stateProvince);
+        query = query.eq("state_province", stateProvince);
       }
 
-      const { data, error } = await query
-        .order('utility_name')
-        .order('rate_schedule_name');
+      const { data, error } = await query.order("utility_name").order("rate_schedule_name");
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching pricing scenarios by location:', error);
+      console.error("Error fetching pricing scenarios by location:", error);
       throw error;
     }
   }
@@ -522,24 +539,25 @@ export class UseCaseService {
   /**
    * Get recommended applications for a use case
    */
-  async getRecommendedApplicationsByUseCaseId(useCaseId: string): Promise<RecommendedApplicationRow[]> {
+  async getRecommendedApplicationsByUseCaseId(
+    useCaseId: string
+  ): Promise<RecommendedApplicationRow[]> {
     try {
       const { data, error } = await supabase
-        .from('recommended_applications')
-        .select('*')
-        .eq('use_case_id', useCaseId)
-        .order('priority', { ascending: false })
-        .order('effectiveness_rating', { ascending: false });
+        .from("recommended_applications")
+        .select("*")
+        .eq("use_case_id", useCaseId)
+        .order("priority", { ascending: false })
+        .order("effectiveness_rating", { ascending: false });
 
       if (error) {
         // Gracefully handle table not existing or RLS issues
-        console.warn('⚠️ Recommended applications table not available:', error.message);
+        console.warn("⚠️ Recommended applications table not available:", error.message);
         return [];
       }
       return data || [];
-
     } catch (error) {
-      console.warn('⚠️ Error fetching recommended applications (non-critical):', error);
+      console.warn("⚠️ Error fetching recommended applications (non-critical):", error);
       return []; // Return empty array instead of throwing
     }
   }
@@ -562,13 +580,13 @@ export class UseCaseService {
       const [configuration, questions, pricingScenarios] = await Promise.all([
         this.getDetailedConfiguration(configurationId),
         this.getCustomQuestionsByUseCaseId(useCaseId),
-        this.getPricingScenarios(configurationId)
+        this.getPricingScenarios(configurationId),
       ]);
 
-      if (!configuration) throw new Error('Configuration not found');
+      if (!configuration) throw new Error("Configuration not found");
 
       // Apply custom question impacts to configuration
-      let modifiedConfig = { ...configuration };
+      const modifiedConfig = { ...configuration };
       let totalLoadKw = configuration.typical_load_kw;
       let totalPeakKw = configuration.peak_load_kw;
 
@@ -578,29 +596,34 @@ export class UseCaseService {
         if (response === undefined || response === null) continue;
 
         switch (question.impact_type) {
-          case 'multiplier':
-            if (question.impacts_field === 'equipmentPower') {
-              const multiplier = Number(response) * (question.impact_calculation as any)?.multiplierValue || 1;
+          case "multiplier":
+            if (question.impacts_field === "equipmentPower") {
+              const multiplier =
+                Number(response) * (question.impact_calculation as any)?.multiplierValue || 1;
               totalLoadKw *= multiplier;
               totalPeakKw *= multiplier;
             }
             break;
-            
-          case 'additionalLoad':
-            if (question.impact_calculation && (question.impact_calculation as any).additionalLoadKw && response === true) {
+
+          case "additionalLoad":
+            if (
+              question.impact_calculation &&
+              (question.impact_calculation as any).additionalLoadKw &&
+              response === true
+            ) {
               const additionalLoad = (question.impact_calculation as any).additionalLoadKw;
               totalLoadKw += additionalLoad;
               totalPeakKw += additionalLoad;
             }
             break;
-            
-          case 'factor':
-            if (question.impacts_field === 'energyCostMultiplier') {
+
+          case "factor":
+            if (question.impacts_field === "energyCostMultiplier") {
               modifiedConfig.energy_cost_multiplier *= Number(response) / 100 || 1;
             }
             break;
-            
-          case 'override':
+
+          case "override":
             if (question.impacts_field) {
               (modifiedConfig as any)[question.impacts_field] = response;
             }
@@ -609,34 +632,38 @@ export class UseCaseService {
       }
 
       // Determine recommended system size (simple heuristic)
-      const recommendedSizeMw = Math.max(0.05, totalPeakKw * 0.7 / 1000); // 70% of peak load, min 50kW
+      const recommendedSizeMw = Math.max(0.05, (totalPeakKw * 0.7) / 1000); // 70% of peak load, min 50kW
       const preferredDurationHours = modifiedConfig.preferred_duration_hours || 2.0;
-      
+
       // Select best pricing scenario (highest savings)
-      const bestPricingScenario = pricingScenarios.reduce((best, current) => 
-        !best || (current.annual_savings || 0) > (best.annual_savings || 0) ? current : best
-      , pricingScenarios[0]);
+      const bestPricingScenario = pricingScenarios.reduce(
+        (best, current) =>
+          !best || (current.annual_savings || 0) > (best.annual_savings || 0) ? current : best,
+        pricingScenarios[0]
+      );
 
       // ✅ FIX: Use centralized pricing service (NREL ATB 2024 ~$155/kWh) instead of hardcoded $600/kWh
       const batteryPricing = await getBatteryPricing(recommendedSizeMw, preferredDurationHours);
       const systemCostPerKwh = batteryPricing.pricePerKWh || 155; // Fallback to NREL if fetch fails
       const estimatedCost = recommendedSizeMw * 1000 * preferredDurationHours * systemCostPerKwh;
-      
+
       // ✅ FIX: Use centralized financial calculations for consistent payback/ROI
       const financials = await calculateFinancialMetrics({
         storageSizeMW: recommendedSizeMw,
         durationHours: preferredDurationHours,
         electricityRate: 0.12, // Default rate
-        location: 'North America',
+        location: "North America",
         equipmentCost: estimatedCost,
         installationCost: estimatedCost * 0.15,
-        includeNPV: false
+        includeNPV: false,
       });
-      
+
       // Use centralized results or fallback to scenario savings
-      const projectedSavings = financials.annualSavings || bestPricingScenario?.annual_savings || 
-        (estimatedCost * (modifiedConfig.typical_savings_percent / 100) * 0.4);
-      
+      const projectedSavings =
+        financials.annualSavings ||
+        bestPricingScenario?.annual_savings ||
+        estimatedCost * (modifiedConfig.typical_savings_percent / 100) * 0.4;
+
       // ✅ Use centralized payback/ROI instead of manual calculation
       const paybackYears = financials.paybackYears;
       const roiPercentage = financials.roi25Year;
@@ -651,7 +678,7 @@ export class UseCaseService {
         projected_savings: projectedSavings,
         payback_years: Math.round(paybackYears * 100) / 100,
         roi_percentage: Math.round(roiPercentage * 100) / 100,
-        selected_pricing_scenario: bestPricingScenario
+        selected_pricing_scenario: bestPricingScenario,
       };
 
       // Log analytics event
@@ -659,19 +686,18 @@ export class UseCaseService {
         use_case_id: useCaseId,
         configuration_id: configurationId,
         user_id: userId,
-        event_type: 'configured',
+        event_type: "configured",
         answers: userResponses,
         calculated_load_kw: totalLoadKw,
         recommended_size_mw: recommendedSizeMw,
         estimated_cost: estimatedCost,
         projected_savings: projectedSavings,
-        calculated_roi: roiPercentage
+        calculated_roi: roiPercentage,
       });
 
       return result;
-
     } catch (error) {
-      console.error('Error calculating configuration:', error);
+      console.error("Error calculating configuration:", error);
       throw error;
     }
   }
@@ -681,17 +707,16 @@ export class UseCaseService {
    */
   async logAnalyticsEvent(eventData: Partial<UseCaseAnalyticsRow>): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('use_case_analytics')
-        .insert([{
+      const { error } = await supabase.from("use_case_analytics").insert([
+        {
           ...eventData,
-          created_at: new Date().toISOString()
-        }]);
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
       if (error) throw error;
-
     } catch (error) {
-      console.error('Error logging analytics event:', error);
+      console.error("Error logging analytics event:", error);
       // Don't throw - analytics failures shouldn't break the main flow
     }
   }
@@ -703,47 +728,51 @@ export class UseCaseService {
   /**
    * Search use cases by keyword
    */
-  async searchUseCases(keyword: string, filters?: {
-    category?: string;
-    tier?: string;
-    minLoad?: number;
-    maxLoad?: number;
-  }): Promise<UseCaseWithConfiguration[]> {
+  async searchUseCases(
+    keyword: string,
+    filters?: {
+      category?: string;
+      tier?: string;
+      minLoad?: number;
+      maxLoad?: number;
+    }
+  ): Promise<UseCaseWithConfiguration[]> {
     try {
       let query = supabase
-        .from('use_cases')
-        .select(`
+        .from("use_cases")
+        .select(
+          `
           *,
           default_configuration:use_case_configurations!inner(*)
-        `)
-        .eq('is_active', true)
+        `
+        )
+        .eq("is_active", true)
         .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%`);
 
       if (filters?.category) {
-        query = query.eq('category', filters.category);
+        query = query.eq("category", filters.category);
       }
 
       if (filters?.tier) {
-        query = query.eq('required_tier', filters.tier);
+        query = query.eq("required_tier", filters.tier);
       }
 
       if (filters?.minLoad || filters?.maxLoad) {
         // Filter by configuration load ranges
         if (filters.minLoad) {
-          query = query.gte('default_configuration.typical_load_kw', filters.minLoad);
+          query = query.gte("default_configuration.typical_load_kw", filters.minLoad);
         }
         if (filters.maxLoad) {
-          query = query.lte('default_configuration.typical_load_kw', filters.maxLoad);
+          query = query.lte("default_configuration.typical_load_kw", filters.maxLoad);
         }
       }
 
-      const { data, error } = await query.order('usage_count', { ascending: false });
+      const { data, error } = await query.order("usage_count", { ascending: false });
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error searching use cases:', error);
+      console.error("Error searching use cases:", error);
       throw error;
     }
   }
@@ -754,21 +783,22 @@ export class UseCaseService {
   async getPopularUseCases(limit = 10): Promise<UseCaseWithConfiguration[]> {
     try {
       const { data, error } = await supabase
-        .from('use_cases')
-        .select(`
+        .from("use_cases")
+        .select(
+          `
           *,
           default_configuration:use_case_configurations!inner(*)
-        `)
-        .eq('is_active', true)
-        .order('usage_count', { ascending: false })
-        .order('average_roi', { ascending: false })
+        `
+        )
+        .eq("is_active", true)
+        .order("usage_count", { ascending: false })
+        .order("average_roi", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
-      console.error('Error fetching popular use cases:', error);
+      console.error("Error fetching popular use cases:", error);
       throw error;
     }
   }
@@ -783,16 +813,15 @@ export class UseCaseService {
   async createUseCase(useCaseData: Partial<UseCaseRow>): Promise<UseCaseRow> {
     try {
       const { data, error } = await supabase
-        .from('use_cases')
+        .from("use_cases")
         .insert([useCaseData])
         .select()
         .single();
 
       if (error) throw error;
       return data;
-
     } catch (error) {
-      console.error('Error creating use case:', error);
+      console.error("Error creating use case:", error);
       throw error;
     }
   }
@@ -803,17 +832,16 @@ export class UseCaseService {
   async updateUseCase(id: string, updates: Partial<UseCaseRow>): Promise<UseCaseRow> {
     try {
       const { data, error } = await supabase
-        .from('use_cases')
+        .from("use_cases")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
       if (error) throw error;
       return data;
-
     } catch (error) {
-      console.error('Error updating use case:', error);
+      console.error("Error updating use case:", error);
       throw error;
     }
   }
@@ -821,19 +849,20 @@ export class UseCaseService {
   /**
    * Create new configuration (admin function)
    */
-  async createConfiguration(configData: Partial<UseCaseConfigurationRow>): Promise<UseCaseConfigurationRow> {
+  async createConfiguration(
+    configData: Partial<UseCaseConfigurationRow>
+  ): Promise<UseCaseConfigurationRow> {
     try {
       const { data, error } = await supabase
-        .from('use_case_configurations')
+        .from("use_case_configurations")
         .insert([configData])
         .select()
         .single();
 
       if (error) throw error;
       return data;
-
     } catch (error) {
-      console.error('Error creating configuration:', error);
+      console.error("Error creating configuration:", error);
       throw error;
     }
   }
@@ -857,21 +886,25 @@ export class UseCaseService {
     try {
       // This would typically be a database function or view for performance
       const [useCases, configurations, equipment] = await Promise.all([
-        supabase.from('use_cases').select('id, usage_count, average_roi, name', { count: 'exact' }),
-        supabase.from('use_case_configurations').select('id', { count: 'exact' }),
-        supabase.from('equipment_templates').select('id', { count: 'exact' })
+        supabase.from("use_cases").select("id, usage_count, average_roi, name", { count: "exact" }),
+        supabase.from("use_case_configurations").select("id", { count: "exact" }),
+        supabase.from("equipment_templates").select("id", { count: "exact" }),
       ]);
 
-      const activeUseCases = useCases.data?.filter(uc => uc.usage_count > 0) || [];
-      const totalUsageCount = useCases.data?.reduce((sum, uc) => sum + (uc.usage_count || 0), 0) || 0;
-      const averageRoi = useCases.data && useCases.data.length > 0 
-        ? useCases.data.reduce((sum, uc) => sum + (uc.average_roi || 0), 0) / useCases.data.length 
-        : 0;
-      const mostPopular = useCases.data && useCases.data.length > 0
-        ? useCases.data.reduce((max, uc) => 
-            (uc.usage_count || 0) > (max.usage_count || 0) ? uc : max
-          , useCases.data[0])?.name || 'Unknown'
-        : 'Unknown';
+      const activeUseCases = useCases.data?.filter((uc) => uc.usage_count > 0) || [];
+      const totalUsageCount =
+        useCases.data?.reduce((sum, uc) => sum + (uc.usage_count || 0), 0) || 0;
+      const averageRoi =
+        useCases.data && useCases.data.length > 0
+          ? useCases.data.reduce((sum, uc) => sum + (uc.average_roi || 0), 0) / useCases.data.length
+          : 0;
+      const mostPopular =
+        useCases.data && useCases.data.length > 0
+          ? useCases.data.reduce(
+              (max, uc) => ((uc.usage_count || 0) > (max.usage_count || 0) ? uc : max),
+              useCases.data[0]
+            )?.name || "Unknown"
+          : "Unknown";
 
       return {
         total_use_cases: useCases.count || 0,
@@ -880,11 +913,10 @@ export class UseCaseService {
         total_equipment_templates: equipment.count || 0,
         total_usage_count: totalUsageCount,
         average_roi: Math.round(averageRoi * 100) / 100,
-        most_popular_use_case: mostPopular
+        most_popular_use_case: mostPopular,
       };
-
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      console.error("Error fetching statistics:", error);
       throw error;
     }
   }
@@ -899,10 +931,10 @@ export class UseCaseService {
   async getPricingConfig(configKey: string): Promise<any> {
     try {
       const { data, error } = await supabase
-        .from('pricing_configurations')
-        .select('*')
-        .eq('config_key', configKey)
-        .eq('is_active', true)
+        .from("pricing_configurations")
+        .select("*")
+        .eq("config_key", configKey)
+        .eq("is_active", true)
         .single();
 
       if (error) {
@@ -912,7 +944,7 @@ export class UseCaseService {
 
       return data?.config_data;
     } catch (error) {
-      console.error('Error fetching pricing config:', error);
+      console.error("Error fetching pricing config:", error);
       return null;
     }
   }
@@ -923,16 +955,16 @@ export class UseCaseService {
   async getPricingConfigsByCategory(category: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
-        .from('pricing_configurations')
-        .select('*')
-        .eq('config_category', category)
-        .eq('is_active', true)
-        .order('effective_date', { ascending: false });
+        .from("pricing_configurations")
+        .select("*")
+        .eq("config_category", category)
+        .eq("is_active", true)
+        .order("effective_date", { ascending: false });
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching pricing configs by category:', error);
+      console.error("Error fetching pricing configs by category:", error);
       return [];
     }
   }
@@ -943,10 +975,10 @@ export class UseCaseService {
   async getCalculationFormula(formulaKey: string): Promise<any> {
     try {
       const { data, error } = await supabase
-        .from('calculation_formulas')
-        .select('*')
-        .eq('formula_key', formulaKey)
-        .eq('is_active', true)
+        .from("calculation_formulas")
+        .select("*")
+        .eq("formula_key", formulaKey)
+        .eq("is_active", true)
         .single();
 
       if (error) {
@@ -956,7 +988,7 @@ export class UseCaseService {
 
       return data;
     } catch (error) {
-      console.error('Error fetching calculation formula:', error);
+      console.error("Error fetching calculation formula:", error);
       return null;
     }
   }
@@ -966,21 +998,18 @@ export class UseCaseService {
    */
   async getCalculationFormulas(category?: string): Promise<any[]> {
     try {
-      let query = supabase
-        .from('calculation_formulas')
-        .select('*')
-        .eq('is_active', true);
+      let query = supabase.from("calculation_formulas").select("*").eq("is_active", true);
 
       if (category) {
-        query = query.eq('formula_category', category);
+        query = query.eq("formula_category", category);
       }
 
-      const { data, error } = await query.order('formula_name', { ascending: true });
+      const { data, error } = await query.order("formula_name", { ascending: true });
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching calculation formulas:', error);
+      console.error("Error fetching calculation formulas:", error);
       return [];
     }
   }
@@ -991,17 +1020,17 @@ export class UseCaseService {
   async getMarketPricingData(equipmentType: string, region: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
-        .from('market_pricing_data')
-        .select('*')
-        .eq('equipment_type', equipmentType)
-        .eq('region', region)
-        .order('data_date', { ascending: false })
+        .from("market_pricing_data")
+        .select("*")
+        .eq("equipment_type", equipmentType)
+        .eq("region", region)
+        .order("data_date", { ascending: false })
         .limit(10);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching market pricing data:', error);
+      console.error("Error fetching market pricing data:", error);
       return [];
     }
   }
@@ -1010,26 +1039,26 @@ export class UseCaseService {
    * Update pricing configuration (admin only)
    */
   async updatePricingConfig(
-    configKey: string, 
-    configData: any, 
+    configKey: string,
+    configData: any,
     userId: string,
     vendorNotes?: string
   ): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('pricing_configurations')
+        .from("pricing_configurations")
         .update({
           config_data: configData,
           vendor_notes: vendorNotes,
           updated_by: userId,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('config_key', configKey);
+        .eq("config_key", configKey);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating pricing config:', error);
+      console.error("Error updating pricing config:", error);
       return false;
     }
   }
@@ -1050,18 +1079,18 @@ export class UseCaseService {
   ): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('calculation_formulas')
+        .from("calculation_formulas")
         .update({
           ...formulaData,
           updated_by: userId,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('formula_key', formulaKey);
+        .eq("formula_key", formulaKey);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating calculation formula:', error);
+      console.error("Error updating calculation formula:", error);
       return false;
     }
   }
@@ -1084,50 +1113,54 @@ export class UseCaseService {
     try {
       // First, get the configuration to find the related use case slug
       const { data: config, error: fetchError } = await supabase
-        .from('use_case_configurations')
-        .select('use_case_id')
-        .eq('id', configId)
+        .from("use_case_configurations")
+        .select("use_case_id")
+        .eq("id", configId)
         .single();
-      
+
       if (fetchError) throw fetchError;
-      
+
       // Get use case slug for cache invalidation
       const { data: useCase, error: useCaseError } = await supabase
-        .from('use_cases')
-        .select('slug')
-        .eq('id', config.use_case_id)
+        .from("use_cases")
+        .select("slug")
+        .eq("id", config.use_case_id)
         .single();
-      
+
       if (useCaseError) throw useCaseError;
-      
+
       // Update the configuration
       const { error } = await supabase
-        .from('use_case_configurations')
+        .from("use_case_configurations")
         .update({
           ...updates,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', configId);
+        .eq("id", configId);
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error("Supabase error:", error);
         throw error;
       }
-      
+
       // Invalidate related caches
       const slug = useCase.slug;
-      if (import.meta.env.DEV) { console.log(`🔄 Invalidating caches for use case: ${slug}`); }
-      
+      if (import.meta.env.DEV) {
+        console.log(`🔄 Invalidating caches for use case: ${slug}`);
+      }
+
       // Clear all baseline calculations for this use case (all scales and variations)
       baselineCache.clearPattern(`baseline:${slug}:`);
-      
+
       // Clear use case data cache
       useCaseCache.delete(`useCase:${slug}`);
-      
-      if (import.meta.env.DEV) { console.log(`✅ Updated configuration ${configId} and invalidated caches`); }
+
+      if (import.meta.env.DEV) {
+        console.log(`✅ Updated configuration ${configId} and invalidated caches`);
+      }
       return true;
     } catch (error) {
-      console.error('Error updating use case configuration:', error);
+      console.error("Error updating use case configuration:", error);
       throw error;
     }
   }
@@ -1140,8 +1173,8 @@ export const useCaseService = new UseCaseService();
 export const getUseCaseTemplates = () => useCaseService.getAllUseCases();
 export const getUseCaseBySlug = (slug: string) => useCaseService.getUseCaseBySlug(slug);
 export const calculateUseCaseConfiguration = (
-  useCaseId: string, 
-  configurationId: string, 
-  responses: Record<string, any>, 
+  useCaseId: string,
+  configurationId: string,
+  responses: Record<string, any>,
   userId?: string
 ) => useCaseService.calculateConfiguration(useCaseId, configurationId, responses, userId);

@@ -1,20 +1,20 @@
 /**
  * Savings Scout™ Types
  * ====================
- * 
+ *
  * Type definitions for the Savings Scout opportunity detection widget.
- * 
+ *
  * @version 1.0
  * @created December 2025
  */
 
-export type OpportunityStatus = 
-  | 'high' 
-  | 'moderate' 
-  | 'low' 
-  | 'critical' 
-  | 'useful' 
-  | 'not-recommended';
+export type OpportunityStatus =
+  | "high"
+  | "moderate"
+  | "low"
+  | "critical"
+  | "useful"
+  | "not-recommended";
 
 export interface Opportunity {
   id: string;
@@ -37,7 +37,7 @@ export interface SavingsScoutProps {
     evChargerCount?: number;
     evChargersL2?: number;
     evChargersDCFC?: number;
-    gridConnection?: 'on-grid' | 'unreliable' | 'limited' | 'off-grid';
+    gridConnection?: "on-grid" | "unreliable" | "limited" | "off-grid";
   };
   /** Callback when user clicks Get Quote */
   onGetQuote?: () => void;
@@ -48,16 +48,16 @@ export interface SavingsScoutProps {
 export interface StateUtilityData {
   state: string;
   utilityName: string;
-  electricityRate: number;      // $/kWh
-  demandChargePerKW: number;    // $/kW
-  peakRate?: number;            // $/kWh (TOU peak)
-  offPeakRate?: number;         // $/kWh (TOU off-peak)
+  electricityRate: number; // $/kWh
+  demandChargePerKW: number; // $/kW
+  peakRate?: number; // $/kWh (TOU peak)
+  offPeakRate?: number; // $/kWh (TOU off-peak)
 }
 
 export interface SolarResourceData {
   state: string;
-  peakSunHours: number;         // hours/day
-  annualGHI: number;            // kWh/m²/year (Global Horizontal Irradiance)
+  peakSunHours: number; // hours/day
+  annualGHI: number; // kWh/m²/year (Global Horizontal Irradiance)
 }
 
 export interface SavingsScoutResult {

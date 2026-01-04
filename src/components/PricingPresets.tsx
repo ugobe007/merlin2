@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface PricingPreset {
   id: string;
@@ -26,13 +26,13 @@ interface PricingPreset {
   epc: {
     enabled: boolean;
     engineeringFee: number;
-    engineeringFeeType: 'fixed' | 'percentage';
+    engineeringFeeType: "fixed" | "percentage";
     procurementFee: number;
-    procurementFeeType: 'fixed' | 'percentage';
+    procurementFeeType: "fixed" | "percentage";
     constructionFee: number;
-    constructionFeeType: 'fixed' | 'percentage';
+    constructionFeeType: "fixed" | "percentage";
     projectManagementFee: number;
-    projectManagementFeeType: 'fixed' | 'percentage';
+    projectManagementFeeType: "fixed" | "percentage";
     contractor?: string;
     notes?: string;
   };
@@ -40,12 +40,12 @@ interface PricingPreset {
     id: string;
     name: string;
     amount: number;
-    type: 'fixed' | 'percentage';
+    type: "fixed" | "percentage";
     notes?: string;
   }>;
   margins: {
     overallMargin: number;
-    applyTo: 'total' | 'hardware' | 'labor';
+    applyTo: "total" | "hardware" | "labor";
   };
   createdAt: string;
   updatedAt: string;
@@ -58,51 +58,51 @@ interface PricingPresetsProps {
 }
 
 const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset, userId }) => {
-  const [activeTab, setActiveTab] = useState<'presets' | 'create' | 'manage'>('presets');
+  const [activeTab, setActiveTab] = useState<"presets" | "create" | "manage">("presets");
   const [presets, setPresets] = useState<PricingPreset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<PricingPreset | null>(null);
   const [editingPreset, setEditingPreset] = useState<Partial<PricingPreset> | null>(null);
 
   // Initialize empty preset for creation
   const getEmptyPreset = (): Partial<PricingPreset> => ({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     isDefault: false,
     battery: {
       pricePerKWh: 0,
-      manufacturer: '',
-      model: '',
-      notes: '',
+      manufacturer: "",
+      model: "",
+      notes: "",
     },
     inverter: {
       pricePerKW: 0,
-      manufacturer: '',
-      model: '',
-      notes: '',
+      manufacturer: "",
+      model: "",
+      notes: "",
     },
     installation: {
       laborRate: 0,
       hoursEstimate: 0,
       materialsCost: 0,
-      notes: '',
+      notes: "",
     },
     epc: {
       enabled: false,
       engineeringFee: 0,
-      engineeringFeeType: 'percentage',
+      engineeringFeeType: "percentage",
       procurementFee: 0,
-      procurementFeeType: 'percentage',
+      procurementFeeType: "percentage",
       constructionFee: 0,
-      constructionFeeType: 'percentage',
+      constructionFeeType: "percentage",
       projectManagementFee: 0,
-      projectManagementFeeType: 'percentage',
-      contractor: '',
-      notes: '',
+      projectManagementFeeType: "percentage",
+      contractor: "",
+      notes: "",
     },
     additionalCosts: [],
     margins: {
       overallMargin: 0,
-      applyTo: 'total',
+      applyTo: "total",
     },
   });
 
@@ -121,43 +121,43 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
   const getDefaultPresets = (): PricingPreset[] => {
     return [
       {
-        id: 'default-market',
-        name: 'Market Rate Pricing',
-        description: 'Industry average pricing for BESS components',
+        id: "default-market",
+        name: "Market Rate Pricing",
+        description: "Industry average pricing for BESS components",
         isDefault: true,
         battery: {
           pricePerKWh: 350,
-          manufacturer: 'Various',
-          model: 'Market Average',
-          notes: 'Based on current market rates for LFP batteries',
+          manufacturer: "Various",
+          model: "Market Average",
+          notes: "Based on current market rates for LFP batteries",
         },
         inverter: {
           pricePerKW: 150,
-          manufacturer: 'Various',
-          model: 'Market Average',
-          notes: 'Industry standard inverter pricing',
+          manufacturer: "Various",
+          model: "Market Average",
+          notes: "Industry standard inverter pricing",
         },
         installation: {
           laborRate: 85,
           hoursEstimate: 40,
           materialsCost: 5000,
-          notes: 'Typical commercial installation',
+          notes: "Typical commercial installation",
         },
         epc: {
           enabled: false,
           engineeringFee: 5,
-          engineeringFeeType: 'percentage',
+          engineeringFeeType: "percentage",
           procurementFee: 3,
-          procurementFeeType: 'percentage',
+          procurementFeeType: "percentage",
           constructionFee: 10,
-          constructionFeeType: 'percentage',
+          constructionFeeType: "percentage",
           projectManagementFee: 7,
-          projectManagementFeeType: 'percentage',
+          projectManagementFeeType: "percentage",
         },
         additionalCosts: [],
         margins: {
           overallMargin: 15,
-          applyTo: 'total',
+          applyTo: "total",
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -167,14 +167,14 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
 
   const handleSavePreset = () => {
     if (!editingPreset?.name) {
-      alert('Please enter a preset name');
+      alert("Please enter a preset name");
       return;
     }
 
     const preset: PricingPreset = {
       id: editingPreset.id || `preset-${Date.now()}`,
       name: editingPreset.name,
-      description: editingPreset.description || '',
+      description: editingPreset.description || "",
       isDefault: editingPreset.isDefault || false,
       battery: editingPreset.battery!,
       inverter: editingPreset.inverter!,
@@ -189,7 +189,7 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     let updatedPresets;
     if (editingPreset.id) {
       // Update existing
-      updatedPresets = presets.map(p => p.id === preset.id ? preset : p);
+      updatedPresets = presets.map((p) => (p.id === preset.id ? preset : p));
     } else {
       // Create new
       updatedPresets = [...presets, preset];
@@ -198,20 +198,20 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     setPresets(updatedPresets);
     localStorage.setItem(`pricing_presets_${userId}`, JSON.stringify(updatedPresets));
     setEditingPreset(null);
-    setActiveTab('presets');
-    alert('Preset saved successfully!');
+    setActiveTab("presets");
+    alert("Preset saved successfully!");
   };
 
   const handleDeletePreset = (presetId: string) => {
-    if (confirm('Are you sure you want to delete this preset?')) {
-      const updatedPresets = presets.filter(p => p.id !== presetId);
+    if (confirm("Are you sure you want to delete this preset?")) {
+      const updatedPresets = presets.filter((p) => p.id !== presetId);
       setPresets(updatedPresets);
       localStorage.setItem(`pricing_presets_${userId}`, JSON.stringify(updatedPresets));
     }
   };
 
   const handleSetDefault = (presetId: string) => {
-    const updatedPresets = presets.map(p => ({
+    const updatedPresets = presets.map((p) => ({
       ...p,
       isDefault: p.id === presetId,
     }));
@@ -223,10 +223,10 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     if (!editingPreset) return;
     const newCost = {
       id: `cost-${Date.now()}`,
-      name: '',
+      name: "",
       amount: 0,
-      type: 'fixed' as const,
-      notes: '',
+      type: "fixed" as const,
+      notes: "",
     };
     setEditingPreset({
       ...editingPreset,
@@ -238,46 +238,48 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
     if (!editingPreset) return;
     setEditingPreset({
       ...editingPreset,
-      additionalCosts: editingPreset.additionalCosts?.filter(c => c.id !== costId),
+      additionalCosts: editingPreset.additionalCosts?.filter((c) => c.id !== costId),
     });
   };
 
   const calculateEstimatedTotal = (preset: PricingPreset, kwh: number = 100, kw: number = 50) => {
     const batteryCost = kwh * preset.battery.pricePerKWh;
     const inverterCost = kw * preset.inverter.pricePerKW;
-    const installationCost = (preset.installation.laborRate * preset.installation.hoursEstimate) + preset.installation.materialsCost;
-    
+    const installationCost =
+      preset.installation.laborRate * preset.installation.hoursEstimate +
+      preset.installation.materialsCost;
+
     let total = batteryCost + inverterCost + installationCost;
 
     // Add additional costs
-    preset.additionalCosts.forEach(cost => {
-      if (cost.type === 'fixed') {
+    preset.additionalCosts.forEach((cost) => {
+      if (cost.type === "fixed") {
         total += cost.amount;
       } else {
-        total += (total * cost.amount / 100);
+        total += (total * cost.amount) / 100;
       }
     });
 
     // Add EPC fees if enabled
     if (preset.epc.enabled) {
       const subtotal = total;
-      if (preset.epc.engineeringFeeType === 'percentage') {
-        total += (subtotal * preset.epc.engineeringFee / 100);
+      if (preset.epc.engineeringFeeType === "percentage") {
+        total += (subtotal * preset.epc.engineeringFee) / 100;
       } else {
         total += preset.epc.engineeringFee;
       }
-      if (preset.epc.procurementFeeType === 'percentage') {
-        total += (subtotal * preset.epc.procurementFee / 100);
+      if (preset.epc.procurementFeeType === "percentage") {
+        total += (subtotal * preset.epc.procurementFee) / 100;
       } else {
         total += preset.epc.procurementFee;
       }
-      if (preset.epc.constructionFeeType === 'percentage') {
-        total += (subtotal * preset.epc.constructionFee / 100);
+      if (preset.epc.constructionFeeType === "percentage") {
+        total += (subtotal * preset.epc.constructionFee) / 100;
       } else {
         total += preset.epc.constructionFee;
       }
-      if (preset.epc.projectManagementFeeType === 'percentage') {
-        total += (subtotal * preset.epc.projectManagementFee / 100);
+      if (preset.epc.projectManagementFeeType === "percentage") {
+        total += (subtotal * preset.epc.projectManagementFee) / 100;
       } else {
         total += preset.epc.projectManagementFee;
       }
@@ -285,7 +287,7 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
 
     // Apply margins
     if (preset.margins.overallMargin > 0) {
-      total += (total * preset.margins.overallMargin / 100);
+      total += (total * preset.margins.overallMargin) / 100;
     }
 
     return total;
@@ -314,17 +316,17 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
         <div className="border-b border-gray-200 px-6">
           <div className="flex space-x-6">
             {[
-              { id: 'presets', label: '💰 My Presets' },
-              { id: 'create', label: '✨ Create/Edit' },
-              { id: 'manage', label: '⚙️ Manage' },
+              { id: "presets", label: "💰 My Presets" },
+              { id: "create", label: "✨ Create/Edit" },
+              { id: "manage", label: "⚙️ Manage" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? "border-purple-600 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {tab.label}
@@ -336,13 +338,15 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Presets Tab */}
-          {activeTab === 'presets' && (
+          {activeTab === "presets" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {presets.map((preset) => (
                 <div
                   key={preset.id}
                   className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
-                    selectedPreset?.id === preset.id ? 'border-purple-600 bg-purple-50' : 'border-gray-200'
+                    selectedPreset?.id === preset.id
+                      ? "border-purple-600 bg-purple-50"
+                      : "border-gray-200"
                   }`}
                   onClick={() => setSelectedPreset(preset)}
                 >
@@ -380,7 +384,9 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                     {preset.margins.overallMargin > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Margin:</span>
-                        <span className="font-semibold text-green-600">{preset.margins.overallMargin}%</span>
+                        <span className="font-semibold text-green-600">
+                          {preset.margins.overallMargin}%
+                        </span>
                       </div>
                     )}
                   </div>
@@ -388,7 +394,9 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                   {selectedPreset?.id === preset.id && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <div className="p-3 bg-purple-50 rounded">
-                        <div className="text-xs text-purple-700 mb-1">Estimated Total (100kWh / 50kW)</div>
+                        <div className="text-xs text-purple-700 mb-1">
+                          Estimated Total (100kWh / 50kW)
+                        </div>
                         <div className="text-2xl font-bold text-purple-600">
                           ${calculateEstimatedTotal(preset).toLocaleString()}
                         </div>
@@ -401,15 +409,15 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
           )}
 
           {/* Create/Edit Tab */}
-          {activeTab === 'create' && (
+          {activeTab === "create" && (
             <div className="max-w-4xl mx-auto space-y-6">
               {!editingPreset ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">💰</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Create New Pricing Preset</h3>
-                  <p className="text-gray-600 mb-6">
-                    Save your pricing for quick quote generation
-                  </p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Create New Pricing Preset
+                  </h3>
+                  <p className="text-gray-600 mb-6">Save your pricing for quick quote generation</p>
                   <button
                     onClick={() => setEditingPreset(getEmptyPreset())}
                     className="px-6 py-3 bg-purple-600 text-white rounded-md font-semibold hover:bg-purple-700"
@@ -429,8 +437,10 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.name || ''}
-                          onChange={(e) => setEditingPreset({ ...editingPreset, name: e.target.value })}
+                          value={editingPreset.name || ""}
+                          onChange={(e) =>
+                            setEditingPreset({ ...editingPreset, name: e.target.value })
+                          }
                           placeholder="e.g., My Company Standard Pricing"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -441,8 +451,10 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.description || ''}
-                          onChange={(e) => setEditingPreset({ ...editingPreset, description: e.target.value })}
+                          value={editingPreset.description || ""}
+                          onChange={(e) =>
+                            setEditingPreset({ ...editingPreset, description: e.target.value })
+                          }
                           placeholder="Brief description"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -460,11 +472,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.battery?.pricePerKWh || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            battery: { ...editingPreset.battery!, pricePerKWh: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.battery?.pricePerKWh || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              battery: {
+                                ...editingPreset.battery!,
+                                pricePerKWh: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -474,11 +491,13 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.battery?.manufacturer || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            battery: { ...editingPreset.battery!, manufacturer: e.target.value }
-                          })}
+                          value={editingPreset.battery?.manufacturer || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              battery: { ...editingPreset.battery!, manufacturer: e.target.value },
+                            })
+                          }
                           placeholder="e.g., Tesla, LG, CATL"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -489,11 +508,13 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.battery?.model || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            battery: { ...editingPreset.battery!, model: e.target.value }
-                          })}
+                          value={editingPreset.battery?.model || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              battery: { ...editingPreset.battery!, model: e.target.value },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -503,11 +524,13 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.battery?.notes || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            battery: { ...editingPreset.battery!, notes: e.target.value }
-                          })}
+                          value={editingPreset.battery?.notes || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              battery: { ...editingPreset.battery!, notes: e.target.value },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -524,11 +547,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.inverter?.pricePerKW || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            inverter: { ...editingPreset.inverter!, pricePerKW: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.inverter?.pricePerKW || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              inverter: {
+                                ...editingPreset.inverter!,
+                                pricePerKW: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -538,11 +566,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="text"
-                          value={editingPreset.inverter?.manufacturer || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            inverter: { ...editingPreset.inverter!, manufacturer: e.target.value }
-                          })}
+                          value={editingPreset.inverter?.manufacturer || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              inverter: {
+                                ...editingPreset.inverter!,
+                                manufacturer: e.target.value,
+                              },
+                            })
+                          }
                           placeholder="e.g., SMA, Fronius, SolarEdge"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -560,11 +593,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.installation?.laborRate || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            installation: { ...editingPreset.installation!, laborRate: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.installation?.laborRate || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              installation: {
+                                ...editingPreset.installation!,
+                                laborRate: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -574,11 +612,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.installation?.hoursEstimate || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            installation: { ...editingPreset.installation!, hoursEstimate: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.installation?.hoursEstimate || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              installation: {
+                                ...editingPreset.installation!,
+                                hoursEstimate: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -588,11 +631,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.installation?.materialsCost || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            installation: { ...editingPreset.installation!, materialsCost: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.installation?.materialsCost || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              installation: {
+                                ...editingPreset.installation!,
+                                materialsCost: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -607,10 +655,12 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         <input
                           type="checkbox"
                           checked={editingPreset.epc?.enabled || false}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            epc: { ...editingPreset.epc!, enabled: e.target.checked }
-                          })}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              epc: { ...editingPreset.epc!, enabled: e.target.checked },
+                            })
+                          }
                           className="mr-2"
                         />
                         <span className="text-sm">Enable EPC Fees</span>
@@ -625,11 +675,13 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                           </label>
                           <input
                             type="text"
-                            value={editingPreset.epc?.contractor || ''}
-                            onChange={(e) => setEditingPreset({
-                              ...editingPreset,
-                              epc: { ...editingPreset.epc!, contractor: e.target.value }
-                            })}
+                            value={editingPreset.epc?.contractor || ""}
+                            onChange={(e) =>
+                              setEditingPreset({
+                                ...editingPreset,
+                                epc: { ...editingPreset.epc!, contractor: e.target.value },
+                              })
+                            }
                             placeholder="EPC Contractor name"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                           />
@@ -637,10 +689,10 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
 
                         <div className="grid grid-cols-2 gap-4">
                           {[
-                            { key: 'engineeringFee', label: 'Engineering Fee' },
-                            { key: 'procurementFee', label: 'Procurement Fee' },
-                            { key: 'constructionFee', label: 'Construction Fee' },
-                            { key: 'projectManagementFee', label: 'Project Management Fee' },
+                            { key: "engineeringFee", label: "Engineering Fee" },
+                            { key: "procurementFee", label: "Procurement Fee" },
+                            { key: "constructionFee", label: "Construction Fee" },
+                            { key: "projectManagementFee", label: "Project Management Fee" },
                           ].map((fee) => (
                             <div key={fee.key} className="flex gap-2">
                               <div className="flex-1">
@@ -649,11 +701,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                                 </label>
                                 <input
                                   type="number"
-                                  value={(editingPreset.epc as any)?.[fee.key] || ''}
-                                  onChange={(e) => setEditingPreset({
-                                    ...editingPreset,
-                                    epc: { ...editingPreset.epc!, [fee.key]: parseFloat(e.target.value) || 0 }
-                                  })}
+                                  value={(editingPreset.epc as any)?.[fee.key] || ""}
+                                  onChange={(e) =>
+                                    setEditingPreset({
+                                      ...editingPreset,
+                                      epc: {
+                                        ...editingPreset.epc!,
+                                        [fee.key]: parseFloat(e.target.value) || 0,
+                                      },
+                                    })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                 />
                               </div>
@@ -662,11 +719,18 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                                   Type
                                 </label>
                                 <select
-                                  value={(editingPreset.epc as any)?.[`${fee.key}Type`] || 'percentage'}
-                                  onChange={(e) => setEditingPreset({
-                                    ...editingPreset,
-                                    epc: { ...editingPreset.epc!, [`${fee.key}Type`]: e.target.value }
-                                  })}
+                                  value={
+                                    (editingPreset.epc as any)?.[`${fee.key}Type`] || "percentage"
+                                  }
+                                  onChange={(e) =>
+                                    setEditingPreset({
+                                      ...editingPreset,
+                                      epc: {
+                                        ...editingPreset.epc!,
+                                        [`${fee.key}Type`]: e.target.value,
+                                      },
+                                    })
+                                  }
                                   className="w-full px-2 py-2 border border-gray-300 rounded-md"
                                 >
                                   <option value="percentage">%</option>
@@ -690,11 +754,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                         </label>
                         <input
                           type="number"
-                          value={editingPreset.margins?.overallMargin || ''}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            margins: { ...editingPreset.margins!, overallMargin: parseFloat(e.target.value) || 0 }
-                          })}
+                          value={editingPreset.margins?.overallMargin || ""}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              margins: {
+                                ...editingPreset.margins!,
+                                overallMargin: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
                       </div>
@@ -703,11 +772,16 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                           Apply To
                         </label>
                         <select
-                          value={editingPreset.margins?.applyTo || 'total'}
-                          onChange={(e) => setEditingPreset({
-                            ...editingPreset,
-                            margins: { ...editingPreset.margins!, applyTo: e.target.value as any }
-                          })}
+                          value={editingPreset.margins?.applyTo || "total"}
+                          onChange={(e) =>
+                            setEditingPreset({
+                              ...editingPreset,
+                              margins: {
+                                ...editingPreset.margins!,
+                                applyTo: e.target.value as any,
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         >
                           <option value="total">Total Project Cost</option>
@@ -738,10 +812,13 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
           )}
 
           {/* Manage Tab */}
-          {activeTab === 'manage' && (
+          {activeTab === "manage" && (
             <div className="space-y-3">
               {presets.map((preset) => (
-                <div key={preset.id} className="border border-gray-200 rounded-lg p-4 flex justify-between items-center">
+                <div
+                  key={preset.id}
+                  className="border border-gray-200 rounded-lg p-4 flex justify-between items-center"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-gray-900">{preset.name}</h3>
@@ -758,15 +835,15 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{preset.description}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Battery: ${preset.battery.pricePerKWh}/kWh • Inverter: ${preset.inverter.pricePerKW}/kW • 
-                      Margin: {preset.margins.overallMargin}%
+                      Battery: ${preset.battery.pricePerKWh}/kWh • Inverter: $
+                      {preset.inverter.pricePerKW}/kW • Margin: {preset.margins.overallMargin}%
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setEditingPreset(preset);
-                        setActiveTab('create');
+                        setActiveTab("create");
                       }}
                       className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
                     >
@@ -801,7 +878,7 @@ const PricingPresets: React.FC<PricingPresetsProps> = ({ onClose, onSelectPreset
           >
             Close
           </button>
-          {activeTab === 'presets' && selectedPreset && (
+          {activeTab === "presets" && selectedPreset && (
             <button
               onClick={() => {
                 onSelectPreset(selectedPreset);

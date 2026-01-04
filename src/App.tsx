@@ -7,7 +7,7 @@ import EVChargingEnergy from './components/verticals/EVChargingEnergy';
 import HotelEnergy from './components/verticals/HotelEnergy';
 // DEPRECATED: import { WizardV5 } from './components/wizard/_deprecated/v5';
 import WizardV6 from "./components/wizard/v6/WizardV6";
-import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder';
+// import AdvancedQuoteBuilder from './components/AdvancedQuoteBuilder'; // Unused
 import { QuoteProvider } from './contexts/QuoteContext';
 
 // Test calculations temporarily disabled for production build
@@ -31,17 +31,17 @@ function App() {
   const isVendorPortalRoute = pathname === '/vendor-portal' || pathname === '/vendor';
   
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
-  const [showVendorPortal, setShowVendorPortal] = useState(isVendorPortalRoute);
-  const [showWizard, setShowWizard] = useState(pathname === '/wizard');
+  const [showVendorPortal] = useState(isVendorPortalRoute);
+  // const [showWizard, setShowWizard] = useState(pathname === '/wizard'); // Unused
   
   // NEW: Direct /quote-builder route support
   // This enables verticals to redirect to Advanced Quote Builder directly
-  const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState(
-    pathname === '/quote-builder' || advancedParam === 'true'
-  );
+  // const [showAdvancedQuoteBuilder, setShowAdvancedQuoteBuilder] = useState( // Unused
+  //   pathname === '/quote-builder' || advancedParam === 'true'
+  // );
   
   // If advanced=true is set, don't activate vertical (let BessQuoteBuilder handle it)
-  const [activeVertical, setActiveVertical] = useState<string | null>(
+  const [activeVertical] = useState<string | null>(
     advancedParam === 'true' ? null : (
       verticalParam || 
       (pathname === '/carwashenergy' || pathname === '/car-wash' ? 'carwash' : 

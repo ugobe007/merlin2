@@ -1,8 +1,8 @@
 /**
  * WIZARD STATE TYPES - CENTRALIZED STATE MANAGEMENT
- * 
+ *
  * ⚠️ CRITICAL: This is the SINGLE SOURCE OF TRUTH for wizard state structure.
- * 
+ *
  * All wizard components should import and use these types.
  * This ensures consistent state shape across:
  * - StreamlinedWizard
@@ -10,7 +10,7 @@
  * - CarWashWizard
  * - EVChargingWizard
  * - DataCenterQuestionnaire
- * 
+ *
  * DO NOT duplicate these types in individual components!
  */
 
@@ -24,10 +24,22 @@ export interface EVChargerConfig {
 
 // Standard EV charger levels with industry-standard power ratings
 export const EV_CHARGER_LEVELS = {
-  L1: { label: 'Level 1', defaultPowerKW: 1.4, description: '120V - Overnight charging (8-12+ hrs)' },
-  L2: { label: 'Level 2', defaultPowerKW: 11, description: '240V - Standard charging (4-8 hrs)' },
-  L3: { label: 'DC Fast (DCFC)', defaultPowerKW: 150, description: '480V - Rapid charging (20-45 min)' },
-  HPC: { label: 'High Power (HPC)', defaultPowerKW: 350, description: '800V+ - Ultra-fast (10-20 min)' },
+  L1: {
+    label: "Level 1",
+    defaultPowerKW: 1.4,
+    description: "120V - Overnight charging (8-12+ hrs)",
+  },
+  L2: { label: "Level 2", defaultPowerKW: 11, description: "240V - Standard charging (4-8 hrs)" },
+  L3: {
+    label: "DC Fast (DCFC)",
+    defaultPowerKW: 150,
+    description: "480V - Rapid charging (20-45 min)",
+  },
+  HPC: {
+    label: "High Power (HPC)",
+    defaultPowerKW: 350,
+    description: "800V+ - Ultra-fast (10-20 min)",
+  },
 } as const;
 
 // ============================================
@@ -51,20 +63,20 @@ export interface WizardState {
 
   // Section 2: Facility Details
   facility: {
-    squareFeet?: number;     // Offices, retail, manufacturing
-    roomCount?: number;      // Hotels, apartments
-    bedCount?: number;       // Hospitals
-    rackCount?: number;      // Data centers
-    bayCount?: number;       // Car washes
-    unitCount?: number;      // Apartments
-    bays?: number;           // Car washes (legacy)
+    squareFeet?: number; // Offices, retail, manufacturing
+    roomCount?: number; // Hotels, apartments
+    bedCount?: number; // Hospitals
+    rackCount?: number; // Data centers
+    bayCount?: number; // Car washes
+    unitCount?: number; // Apartments
+    bays?: number; // Car washes (legacy)
     occupancy?: number;
     operatingHours?: number;
     // Hospital-specific equipment (for accurate power calculations)
     surgicalSuites?: number; // Operating rooms - high power draw
-    mriCount?: number;       // MRI machines - ~100kW each
+    mriCount?: number; // MRI machines - ~100kW each
     ctScannerCount?: number; // CT scanners - ~100kW each
-    icuBeds?: number;        // ICU beds - higher power than regular beds
+    icuBeds?: number; // ICU beds - higher power than regular beds
   };
 
   // Custom question data from templates (industry-specific fields)
@@ -85,21 +97,21 @@ export interface WizardState {
     generator: {
       hasExisting: boolean;
       capacityKW: number;
-      fuelType: 'diesel' | 'natural-gas' | 'dual-fuel' | 'propane';
+      fuelType: "diesel" | "natural-gas" | "dual-fuel" | "propane";
     };
-    gridConnection: 'on-grid' | 'unreliable' | 'expensive' | 'limited' | 'off-grid';
+    gridConnection: "on-grid" | "unreliable" | "expensive" | "limited" | "off-grid";
   };
 
   // Section 4: Goals & Add-ons
   goals: {
-    primaryGoal: 'backup' | 'savings' | 'sustainability' | 'peak-shaving';
+    primaryGoal: "backup" | "savings" | "sustainability" | "peak-shaving";
     addSolar: boolean;
     solarKW: number;
     addWind: boolean;
     windKW: number;
     addGenerator: boolean;
     generatorKW: number;
-    generatorFuel: 'diesel' | 'natural-gas' | 'dual-fuel' | 'propane';
+    generatorFuel: "diesel" | "natural-gas" | "dual-fuel" | "propane";
     addEVChargers: boolean;
     newEVChargers: {
       L2: EVChargerConfig;
@@ -129,18 +141,18 @@ export interface WizardState {
 // ============================================
 export const INITIAL_WIZARD_STATE: WizardState = {
   location: {
-    zipCode: '',
-    state: '',
+    zipCode: "",
+    state: "",
     utilityRate: 0.12,
     solarHours: 5,
     gridReliabilityScore: 80,
   },
   industry: {
-    type: '',
-    subType: '',
+    type: "",
+    subType: "",
   },
   facility: {},
-  useCaseData: {},  // Custom question data (annualPassengers, gamingSpaceSqFt, etc.)
+  useCaseData: {}, // Custom question data (annualPassengers, gamingSpaceSqFt, etc.)
   existingInfrastructure: {
     evChargers: {
       L1: { count: 0, powerKW: 1.4 },
@@ -148,18 +160,18 @@ export const INITIAL_WIZARD_STATE: WizardState = {
       L3: { count: 0, powerKW: 150 },
     },
     solar: { hasExisting: false, capacityKW: 0 },
-    generator: { hasExisting: false, capacityKW: 0, fuelType: 'natural-gas' },
-    gridConnection: 'on-grid',
+    generator: { hasExisting: false, capacityKW: 0, fuelType: "natural-gas" },
+    gridConnection: "on-grid",
   },
   goals: {
-    primaryGoal: 'backup',
+    primaryGoal: "backup",
     addSolar: false,
     solarKW: 0,
     addWind: false,
     windKW: 0,
     addGenerator: false,
     generatorKW: 0,
-    generatorFuel: 'natural-gas',
+    generatorFuel: "natural-gas",
     addEVChargers: false,
     newEVChargers: {
       L2: { count: 0, powerKW: 11 },
@@ -204,19 +216,19 @@ export function calculateEVChargerLoad(chargers: {
  * Map grid connection type to SSOT-compatible format
  */
 export function mapGridConnectionForSSoT(
-  gridConnection: WizardState['existingInfrastructure']['gridConnection']
-): 'on-grid' | 'off-grid' | 'limited' {
+  gridConnection: WizardState["existingInfrastructure"]["gridConnection"]
+): "on-grid" | "off-grid" | "limited" {
   switch (gridConnection) {
-    case 'on-grid':
-      return 'on-grid';
-    case 'off-grid':
-      return 'off-grid';
-    case 'unreliable':
-    case 'expensive':
-    case 'limited':
-      return 'limited';
+    case "on-grid":
+      return "on-grid";
+    case "off-grid":
+      return "off-grid";
+    case "unreliable":
+    case "expensive":
+    case "limited":
+      return "limited";
     default:
-      return 'on-grid';
+      return "on-grid";
   }
 }
 

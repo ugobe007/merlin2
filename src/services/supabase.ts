@@ -3,11 +3,11 @@
  * Provides database connection for AI data collection and storage
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://your-project.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "your-anon-key";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -27,8 +27,8 @@ export interface Database {
           includes: string[];
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['battery_pricing']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['battery_pricing']['Insert']>;
+        Insert: Omit<Database["public"]["Tables"]["battery_pricing"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["battery_pricing"]["Insert"]>;
       };
       product_catalog: {
         Row: {
@@ -49,8 +49,8 @@ export interface Database {
           lastUpdated: string;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['product_catalog']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['product_catalog']['Insert']>;
+        Insert: Omit<Database["public"]["Tables"]["product_catalog"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["product_catalog"]["Insert"]>;
       };
       financing_options: {
         Row: {
@@ -68,8 +68,8 @@ export interface Database {
           lastUpdated: string;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['financing_options']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['financing_options']['Insert']>;
+        Insert: Omit<Database["public"]["Tables"]["financing_options"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["financing_options"]["Insert"]>;
       };
       industry_news: {
         Row: {
@@ -83,8 +83,8 @@ export interface Database {
           relevanceScore: number;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['industry_news']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['industry_news']['Insert']>;
+        Insert: Omit<Database["public"]["Tables"]["industry_news"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["industry_news"]["Insert"]>;
       };
       incentive_programs: {
         Row: {
@@ -101,8 +101,11 @@ export interface Database {
           lastUpdated: string;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['incentive_programs']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['incentive_programs']['Insert']>;
+        Insert: Omit<
+          Database["public"]["Tables"]["incentive_programs"]["Row"],
+          "id" | "created_at"
+        >;
+        Update: Partial<Database["public"]["Tables"]["incentive_programs"]["Insert"]>;
       };
       data_collection_log: {
         Row: {
@@ -114,8 +117,11 @@ export interface Database {
           error_message?: string;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['data_collection_log']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['data_collection_log']['Insert']>;
+        Insert: Omit<
+          Database["public"]["Tables"]["data_collection_log"]["Row"],
+          "id" | "created_at"
+        >;
+        Update: Partial<Database["public"]["Tables"]["data_collection_log"]["Insert"]>;
       };
     };
   };

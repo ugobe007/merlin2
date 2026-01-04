@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Activity, AlertTriangle, CheckCircle, Clock, Database, Zap, TrendingUp, Server, Wifi, HardDrive, Cpu } from 'lucide-react';
+import { useState } from "react";
+import { X, Activity, AlertTriangle, CheckCircle, Clock, Zap, TrendingUp, Server, Wifi } from "lucide-react";
 
 interface SystemHealthProps {
   onClose: () => void;
@@ -7,7 +7,7 @@ interface SystemHealthProps {
 
 interface HealthMetric {
   name: string;
-  status: 'healthy' | 'warning' | 'critical';
+  status: "healthy" | "warning" | "critical";
   value: string;
   description: string;
   lastChecked: Date;
@@ -16,7 +16,7 @@ interface HealthMetric {
 interface ErrorLog {
   id: string;
   timestamp: Date;
-  level: 'error' | 'warning' | 'info';
+  level: "error" | "warning" | "info";
   message: string;
   component?: string;
   userId?: string;
@@ -31,133 +31,143 @@ interface PerformanceMetric {
 }
 
 export default function SystemHealth({ onClose }: SystemHealthProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'errors' | 'maintenance'>('overview');
-  const [systemStatus, setSystemStatus] = useState<'operational' | 'degraded' | 'down'>('operational');
+  const [activeTab, setActiveTab] = useState<"overview" | "performance" | "errors" | "maintenance">(
+    "overview"
+  );
+  const [systemStatus, setSystemStatus] = useState<"operational" | "degraded" | "down">(
+    "operational"
+  );
   const [uptime, setUptime] = useState(99.98);
-  
+
   // Mock health metrics
   const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
     {
-      name: 'API Response Time',
-      status: 'healthy',
-      value: '145ms',
-      description: 'Average response time for API calls',
-      lastChecked: new Date()
+      name: "API Response Time",
+      status: "healthy",
+      value: "145ms",
+      description: "Average response time for API calls",
+      lastChecked: new Date(),
     },
     {
-      name: 'Database Connection',
-      status: 'healthy',
-      value: 'Connected',
-      description: 'PostgreSQL connection pool status',
-      lastChecked: new Date()
+      name: "Database Connection",
+      status: "healthy",
+      value: "Connected",
+      description: "PostgreSQL connection pool status",
+      lastChecked: new Date(),
     },
     {
-      name: 'Memory Usage',
-      status: 'warning',
-      value: '78%',
-      description: 'Application memory utilization',
-      lastChecked: new Date()
+      name: "Memory Usage",
+      status: "warning",
+      value: "78%",
+      description: "Application memory utilization",
+      lastChecked: new Date(),
     },
     {
-      name: 'CPU Usage',
-      status: 'healthy',
-      value: '34%',
-      description: 'Server CPU utilization',
-      lastChecked: new Date()
+      name: "CPU Usage",
+      status: "healthy",
+      value: "34%",
+      description: "Server CPU utilization",
+      lastChecked: new Date(),
     },
     {
-      name: 'Disk Space',
-      status: 'healthy',
-      value: '45% used',
-      description: 'Available disk space on server',
-      lastChecked: new Date()
+      name: "Disk Space",
+      status: "healthy",
+      value: "45% used",
+      description: "Available disk space on server",
+      lastChecked: new Date(),
     },
     {
-      name: 'Error Rate',
-      status: 'healthy',
-      value: '0.02%',
-      description: 'Percentage of requests resulting in errors',
-      lastChecked: new Date()
-    }
+      name: "Error Rate",
+      status: "healthy",
+      value: "0.02%",
+      description: "Percentage of requests resulting in errors",
+      lastChecked: new Date(),
+    },
   ]);
 
   // Mock performance metrics
   const performanceMetrics: PerformanceMetric[] = [
-    { name: 'Page Load Time', current: 1.2, average: 1.4, threshold: 3.0, unit: 's' },
-    { name: 'Time to Interactive', current: 2.1, average: 2.3, threshold: 5.0, unit: 's' },
-    { name: 'API Latency', current: 145, average: 160, threshold: 500, unit: 'ms' },
-    { name: 'Database Query Time', current: 23, average: 28, threshold: 100, unit: 'ms' }
+    { name: "Page Load Time", current: 1.2, average: 1.4, threshold: 3.0, unit: "s" },
+    { name: "Time to Interactive", current: 2.1, average: 2.3, threshold: 5.0, unit: "s" },
+    { name: "API Latency", current: 145, average: 160, threshold: 500, unit: "ms" },
+    { name: "Database Query Time", current: 23, average: 28, threshold: 100, unit: "ms" },
   ];
 
   // Mock error logs
   const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([
     {
-      id: '1',
+      id: "1",
       timestamp: new Date(Date.now() - 1000 * 60 * 15),
-      level: 'warning',
-      message: 'Slow API response detected (>300ms)',
-      component: 'MarketIntelligence'
+      level: "warning",
+      message: "Slow API response detected (>300ms)",
+      component: "MarketIntelligence",
     },
     {
-      id: '2',
+      id: "2",
       timestamp: new Date(Date.now() - 1000 * 60 * 45),
-      level: 'error',
-      message: 'Failed to load user profile data',
-      component: 'UserProfile',
-      userId: 'user_123'
+      level: "error",
+      message: "Failed to load user profile data",
+      component: "UserProfile",
+      userId: "user_123",
     },
     {
-      id: '3',
+      id: "3",
       timestamp: new Date(Date.now() - 1000 * 60 * 120),
-      level: 'info',
-      message: 'Database connection pool expanded to handle load',
-      component: 'Database'
-    }
+      level: "info",
+      message: "Database connection pool expanded to handle load",
+      component: "Database",
+    },
   ]);
 
   // Mock recent incidents
   const recentIncidents = [
     {
-      date: '2025-10-20',
-      title: 'API Performance Degradation',
-      duration: '15 minutes',
-      impact: 'Some users experienced slow quote generation',
-      resolved: true
+      date: "2025-10-20",
+      title: "API Performance Degradation",
+      duration: "15 minutes",
+      impact: "Some users experienced slow quote generation",
+      resolved: true,
     },
     {
-      date: '2025-10-18',
-      title: 'Scheduled Maintenance',
-      duration: '2 hours',
-      impact: 'Platform unavailable during database upgrade',
-      resolved: true
-    }
+      date: "2025-10-18",
+      title: "Scheduled Maintenance",
+      duration: "2 hours",
+      impact: "Platform unavailable during database upgrade",
+      resolved: true,
+    },
   ];
 
-  const getStatusColor = (status: 'healthy' | 'warning' | 'critical') => {
+  const getStatusColor = (status: "healthy" | "warning" | "critical") => {
     switch (status) {
-      case 'healthy': return 'text-green-600 bg-green-100';
-      case 'warning': return 'text-yellow-600 bg-yellow-100';
-      case 'critical': return 'text-red-600 bg-red-100';
+      case "healthy":
+        return "text-green-600 bg-green-100";
+      case "warning":
+        return "text-yellow-600 bg-yellow-100";
+      case "critical":
+        return "text-red-600 bg-red-100";
     }
   };
 
-  const getStatusIcon = (status: 'healthy' | 'warning' | 'critical') => {
+  const getStatusIcon = (status: "healthy" | "warning" | "critical") => {
     switch (status) {
-      case 'healthy': return <CheckCircle size={20} />;
-      case 'warning': return <AlertTriangle size={20} />;
-      case 'critical': return <AlertTriangle size={20} />;
+      case "healthy":
+        return <CheckCircle size={20} />;
+      case "warning":
+        return <AlertTriangle size={20} />;
+      case "critical":
+        return <AlertTriangle size={20} />;
     }
   };
 
   const runHealthCheck = () => {
-    alert('Running comprehensive health check...\n\nAll systems operational ✓');
+    alert("Running comprehensive health check...\n\nAll systems operational ✓");
     // In production, this would trigger actual health checks
   };
 
   const clearErrorLogs = () => {
-    if (confirm('Clear all error logs? This cannot be undone.')) {
+    if (confirm("Clear all error logs? This cannot be undone.")) {
       setErrorLogs([]);
-      alert('Error logs cleared successfully');
+      alert("Error logs cleared successfully");
     }
   };
 
@@ -173,8 +183,8 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
             </h2>
             <p className="text-blue-100 mt-1">Real-time platform health and performance metrics</p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-blue-200 hover:text-white transition-colors p-2 rounded-lg hover:bg-blue-700"
           >
             <X size={28} />
@@ -182,26 +192,34 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
         </div>
 
         {/* System Status Banner */}
-        <div className={`px-6 py-4 flex items-center justify-between flex-shrink-0 ${
-          systemStatus === 'operational' ? 'bg-green-50 border-b-4 border-green-500' :
-          systemStatus === 'degraded' ? 'bg-yellow-50 border-b-4 border-yellow-500' :
-          'bg-red-50 border-b-4 border-red-500'
-        }`}>
+        <div
+          className={`px-6 py-4 flex items-center justify-between flex-shrink-0 ${
+            systemStatus === "operational"
+              ? "bg-green-50 border-b-4 border-green-500"
+              : systemStatus === "degraded"
+                ? "bg-yellow-50 border-b-4 border-yellow-500"
+                : "bg-red-50 border-b-4 border-red-500"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${
-              systemStatus === 'operational' ? 'bg-green-500 animate-pulse' :
-              systemStatus === 'degraded' ? 'bg-yellow-500 animate-pulse' :
-              'bg-red-500 animate-pulse'
-            }`} />
+            <div
+              className={`w-3 h-3 rounded-full ${
+                systemStatus === "operational"
+                  ? "bg-green-500 animate-pulse"
+                  : systemStatus === "degraded"
+                    ? "bg-yellow-500 animate-pulse"
+                    : "bg-red-500 animate-pulse"
+              }`}
+            />
             <div>
               <div className="font-bold text-gray-900 text-lg">
-                {systemStatus === 'operational' ? '✓ All Systems Operational' :
-                 systemStatus === 'degraded' ? '⚠ Performance Degraded' :
-                 '✗ System Down'}
+                {systemStatus === "operational"
+                  ? "✓ All Systems Operational"
+                  : systemStatus === "degraded"
+                    ? "⚠ Performance Degraded"
+                    : "✗ System Down"}
               </div>
-              <div className="text-sm text-gray-600">
-                Uptime: {uptime}% | Last 30 days
-              </div>
+              <div className="text-sm text-gray-600">Uptime: {uptime}% | Last 30 days</div>
             </div>
           </div>
           <button
@@ -217,49 +235,49 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
         <div className="border-b border-gray-200 bg-gray-50 flex-shrink-0">
           <div className="flex">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => setActiveTab("overview")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'overview'
-                  ? 'border-b-4 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "overview"
+                  ? "border-b-4 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Server size={20} />
               Overview
             </button>
             <button
-              onClick={() => setActiveTab('performance')}
+              onClick={() => setActiveTab("performance")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'performance'
-                  ? 'border-b-4 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "performance"
+                  ? "border-b-4 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Zap size={20} />
               Performance
             </button>
             <button
-              onClick={() => setActiveTab('errors')}
+              onClick={() => setActiveTab("errors")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'errors'
-                  ? 'border-b-4 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "errors"
+                  ? "border-b-4 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <AlertTriangle size={20} />
               Error Logs
-              {errorLogs.filter(e => e.level === 'error').length > 0 && (
+              {errorLogs.filter((e) => e.level === "error").length > 0 && (
                 <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {errorLogs.filter(e => e.level === 'error').length}
+                  {errorLogs.filter((e) => e.level === "error").length}
                 </span>
               )}
             </button>
             <button
-              onClick={() => setActiveTab('maintenance')}
+              onClick={() => setActiveTab("maintenance")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'maintenance'
-                  ? 'border-b-4 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "maintenance"
+                  ? "border-b-4 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Clock size={20} />
@@ -271,16 +289,14 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Overview Tab */}
-          {activeTab === 'overview' && (
+          {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-4 border-2 border-green-300">
                   <div className="flex items-center justify-between mb-2">
                     <Wifi className="text-green-600" size={24} />
-                    <span className="text-2xl font-bold text-green-600">
-                      {uptime}%
-                    </span>
+                    <span className="text-2xl font-bold text-green-600">{uptime}%</span>
                   </div>
                   <div className="text-sm font-bold text-gray-700">Uptime</div>
                 </div>
@@ -319,10 +335,14 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="font-bold text-gray-900">{metric.name}</div>
-                          <div className="text-2xl font-bold text-gray-900 my-1">{metric.value}</div>
+                          <div className="text-2xl font-bold text-gray-900 my-1">
+                            {metric.value}
+                          </div>
                           <div className="text-xs text-gray-600">{metric.description}</div>
                         </div>
-                        <div className={`px-3 py-1 rounded-full ${getStatusColor(metric.status)} font-bold flex items-center gap-1`}>
+                        <div
+                          className={`px-3 py-1 rounded-full ${getStatusColor(metric.status)} font-bold flex items-center gap-1`}
+                        >
                           {getStatusIcon(metric.status)}
                         </div>
                       </div>
@@ -345,7 +365,10 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                 ) : (
                   <div className="space-y-3">
                     {recentIncidents.map((incident, index) => (
-                      <div key={index} className="border-l-4 border-blue-500 bg-blue-50 rounded-lg p-4">
+                      <div
+                        key={index}
+                        className="border-l-4 border-blue-500 bg-blue-50 rounded-lg p-4"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="font-bold text-gray-900">{incident.title}</div>
@@ -367,7 +390,7 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
           )}
 
           {/* Performance Tab */}
-          {activeTab === 'performance' && (
+          {activeTab === "performance" && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Performance Metrics</h3>
@@ -382,16 +405,21 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                     <div>
                       <h4 className="text-lg font-bold text-gray-900">{metric.name}</h4>
                       <div className="text-2xl font-bold text-blue-600 mt-1">
-                        {metric.current}{metric.unit}
+                        {metric.current}
+                        {metric.unit}
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full font-bold ${
-                      metric.current <= metric.average ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {metric.current <= metric.average ? '✓ Good' : '⚠ Above Avg'}
+                    <div
+                      className={`px-3 py-1 rounded-full font-bold ${
+                        metric.current <= metric.average
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {metric.current <= metric.average ? "✓ Good" : "⚠ Above Avg"}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Current</span>
@@ -401,9 +429,11 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                     <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className={`absolute h-full rounded-full transition-all ${
-                          metric.current <= metric.average ? 'bg-green-500' :
-                          metric.current <= metric.threshold ? 'bg-yellow-500' :
-                          'bg-red-500'
+                          metric.current <= metric.average
+                            ? "bg-green-500"
+                            : metric.current <= metric.threshold
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
                         }`}
                         style={{ width: `${(metric.current / metric.threshold) * 100}%` }}
                       />
@@ -413,9 +443,18 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                       />
                     </div>
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>{metric.current}{metric.unit}</span>
-                      <span>{metric.average}{metric.unit}</span>
-                      <span>{metric.threshold}{metric.unit}</span>
+                      <span>
+                        {metric.current}
+                        {metric.unit}
+                      </span>
+                      <span>
+                        {metric.average}
+                        {metric.unit}
+                      </span>
+                      <span>
+                        {metric.threshold}
+                        {metric.unit}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -423,7 +462,9 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
 
               {/* Optimization Tips */}
               <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-3">💡 Optimization Recommendations</h4>
+                <h4 className="text-lg font-bold text-gray-900 mb-3">
+                  💡 Optimization Recommendations
+                </h4>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 font-bold">•</span>
@@ -443,7 +484,7 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
           )}
 
           {/* Error Logs Tab */}
-          {activeTab === 'errors' && (
+          {activeTab === "errors" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -466,29 +507,33 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {errorLogs.map(log => (
+                  {errorLogs.map((log) => (
                     <div
                       key={log.id}
                       className={`border-l-4 rounded-lg p-4 ${
-                        log.level === 'error' ? 'border-red-500 bg-red-50' :
-                        log.level === 'warning' ? 'border-yellow-500 bg-yellow-50' :
-                        'border-blue-500 bg-blue-50'
+                        log.level === "error"
+                          ? "border-red-500 bg-red-50"
+                          : log.level === "warning"
+                            ? "border-yellow-500 bg-yellow-50"
+                            : "border-blue-500 bg-blue-50"
                       }`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                              log.level === 'error' ? 'bg-red-600 text-white' :
-                              log.level === 'warning' ? 'bg-yellow-600 text-white' :
-                              'bg-blue-600 text-white'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                                log.level === "error"
+                                  ? "bg-red-600 text-white"
+                                  : log.level === "warning"
+                                    ? "bg-yellow-600 text-white"
+                                    : "bg-blue-600 text-white"
+                              }`}
+                            >
                               {log.level}
                             </span>
                             {log.component && (
-                              <span className="text-xs text-gray-600">
-                                {log.component}
-                              </span>
+                              <span className="text-xs text-gray-600">{log.component}</span>
                             )}
                           </div>
                           <div className="text-gray-900 font-medium">{log.message}</div>
@@ -506,13 +551,11 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
           )}
 
           {/* Maintenance Tab */}
-          {activeTab === 'maintenance' && (
+          {activeTab === "maintenance" && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border-2 border-orange-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Maintenance Schedule</h3>
-                <p className="text-gray-600">
-                  Plan and communicate scheduled maintenance windows
-                </p>
+                <p className="text-gray-600">Plan and communicate scheduled maintenance windows</p>
               </div>
 
               {/* Upcoming Maintenance */}
@@ -526,9 +569,7 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
                       <div className="text-sm text-gray-600 mt-1">
                         Scheduled: October 28, 2025 at 2:00 AM UTC
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Expected duration: 1 hour
-                      </div>
+                      <div className="text-sm text-gray-600">Expected duration: 1 hour</div>
                       <div className="text-sm text-gray-600 mt-2">
                         Impact: Platform will be in read-only mode during maintenance
                       </div>
@@ -597,9 +638,7 @@ export default function SystemHealth({ onClose }: SystemHealthProps) {
         {/* Footer */}
         <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gray-50">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
-            </p>
+            <p className="text-sm text-gray-600">Last updated: {new Date().toLocaleTimeString()}</p>
             <button
               onClick={onClose}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-cyan-700 transition-all"

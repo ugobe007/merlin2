@@ -1,10 +1,10 @@
 /**
  * Marketing Constants
  * ====================
- * 
+ *
  * Static display values for marketing materials, landing pages, and demos.
  * These are NOT used for actual quote calculations - use QuoteEngine for that.
- * 
+ *
  * @module marketing
  * @version 1.0.0
  */
@@ -47,40 +47,40 @@ export const DISPLAY_PRICING = {
  */
 export const SHOWCASE_USE_CASES = [
   {
-    industry: 'Hotel & Hospitality',
+    industry: "Hotel & Hospitality",
     systemSizeMW: 0.5,
     duration: 4,
-    systemSize: '0.5 MW / 2 MWh',
+    systemSize: "0.5 MW / 2 MWh",
   },
   {
-    industry: 'Manufacturing',
+    industry: "Manufacturing",
     systemSizeMW: 2.0,
     duration: 4,
-    systemSize: '2.0 MW / 8 MWh',
+    systemSize: "2.0 MW / 8 MWh",
   },
   {
-    industry: 'Car Wash',
+    industry: "Car Wash",
     systemSizeMW: 1.5,
     duration: 4,
-    systemSize: '1.5 MW / 6 MWh',
+    systemSize: "1.5 MW / 6 MWh",
   },
   {
-    industry: 'Data Center',
+    industry: "Data Center",
     systemSizeMW: 5.0,
     duration: 4,
-    systemSize: '5.0 MW / 20 MWh',
+    systemSize: "5.0 MW / 20 MWh",
   },
   {
-    industry: 'EV Charging Hub',
+    industry: "EV Charging Hub",
     systemSizeMW: 4.0,
     duration: 4,
-    systemSize: '4.0 MW / 16 MWh',
+    systemSize: "4.0 MW / 16 MWh",
   },
   {
-    industry: 'Office Building',
+    industry: "Office Building",
     systemSizeMW: 1.2,
     duration: 4,
-    systemSize: '1.2 MW / 4.8 MWh',
+    systemSize: "1.2 MW / 4.8 MWh",
   },
 ] as const;
 

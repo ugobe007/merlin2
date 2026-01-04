@@ -12,11 +12,7 @@
 
 import { supabase } from '@/services/supabaseClient';
 import type { Database } from '@/types/database.types';
-import type { 
-  UseCaseRow,
-  UseCaseWithConfiguration,
-  DetailedUseCase
-} from '@/core/domain';
+import type { UseCaseRow, DetailedUseCase } from '@/core/domain';
 
 // Database row types
 type UseCaseConfigurationRow = Database['public']['Tables']['use_case_configurations']['Row'];

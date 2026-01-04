@@ -1,4 +1,4 @@
-import type { ProfileData } from '../components/modals/AccountSetup';
+import type { ProfileData } from "../components/modals/AccountSetup";
 
 export interface ModalManagerProps {
   // Modal state flags
@@ -115,8 +115,8 @@ export interface ModalManagerProps {
   annualSavings: number;
   valueKwh: number;
   warranty: string;
-  currentQuoteStatus: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared';
-  
+  currentQuoteStatus: "draft" | "in-review" | "approved" | "rejected" | "shared";
+
   // Setters for wizard data
   setPowerMW: (power: number) => void;
   setStandbyHours: (hours: number) => void;
@@ -126,7 +126,9 @@ export interface ModalManagerProps {
   setWindMW: (wind: number) => void;
   setGeneratorMW: (generator: number) => void;
   setValueKwh: (value: number) => void;
-  setCurrentQuoteStatus: (status: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared') => void;
+  setCurrentQuoteStatus: (
+    status: "draft" | "in-review" | "approved" | "rejected" | "shared"
+  ) => void;
 }
 
 export function buildModalManagerProps(
@@ -212,6 +214,6 @@ export function buildModalManagerProps(
 
     // Extract application data and handlers
     ...applicationData,
-    ...handlers
+    ...handlers,
   } as ModalManagerProps;
 }

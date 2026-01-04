@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 /* Smooth scrolling for the entire app */
 html {
@@ -7,7 +7,8 @@ html {
 }
 
 /* Ensure body and html can scroll */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -25,7 +26,7 @@ html, body {
   html {
     scroll-behavior: auto;
   }
-  
+
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -85,7 +86,8 @@ input[type="range"].slider::-moz-range-thumb:hover {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -95,7 +97,8 @@ input[type="range"].slider::-moz-range-thumb:hover {
 
 /* Float animation with opacity for background elements */
 @keyframes float-bg {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) translateX(0px);
     opacity: 0.3;
   }
@@ -106,7 +109,8 @@ input[type="range"].slider::-moz-range-thumb:hover {
 }
 
 @keyframes float-delayed {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) translateX(0px);
     opacity: 0.4;
   }
@@ -145,7 +149,8 @@ input[type="range"].slider::-moz-range-thumb:hover {
 
 /* Floating animation for cards */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -206,17 +211,19 @@ input[type="range"].slider::-moz-range-thumb:hover {
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 40px rgba(251,191,36,0.2);
+  0%,
+  100% {
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
   }
   50% {
-    box-shadow: 0 0 60px rgba(251,191,36,0.35);
+    box-shadow: 0 0 60px rgba(251, 191, 36, 0.35);
   }
 }
 
 /* Fire & Ice glow-pulse animation for GlowButton */
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     filter: brightness(1);
   }
   50% {
@@ -242,7 +249,9 @@ input[type="range"].slider::-moz-range-thumb:hover {
 }
 
 .shadow-purple-glow {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.2);
+  box-shadow:
+    0 0 20px rgba(168, 85, 247, 0.3),
+    0 0 40px rgba(168, 85, 247, 0.2);
 }
 
 /* Performance optimization for animations */
@@ -275,11 +284,11 @@ a,
 
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari, Opera */
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Hide legacy WizardBottomNav components only - allow WizardV5's own nav bar */
@@ -298,11 +307,11 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 
 /* Custom scrollbar styling for modals */
 .scrollbar-visible {
-  scrollbar-width: thin;  /* Firefox */
-  scrollbar-color: #9ca3af #f3f4f6;  /* Firefox: thumb and track */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #9ca3af #f3f4f6; /* Firefox: thumb and track */
 }
 .scrollbar-visible::-webkit-scrollbar {
-  width: 8px;  /* Chrome, Safari, Opera */
+  width: 8px; /* Chrome, Safari, Opera */
 }
 .scrollbar-visible::-webkit-scrollbar-track {
   background: #f3f4f6;
@@ -318,11 +327,12 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 
 /* Pulse animation for attention-drawing buttons */
 @keyframes subtlePulse {
-  0%, 100% { 
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
   }
-  50% { 
+  50% {
     transform: scale(1.03);
     box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
   }

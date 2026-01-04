@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useCaseService, type UseCaseRow, type UseCaseConfigurationRow } from '../../services/useCaseService';
+import { useCaseService } from '../../services/useCaseService';
 
 interface UseCaseAdminProps {
   isAdmin: boolean; // Would come from auth context

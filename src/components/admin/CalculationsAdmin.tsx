@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCaseService } from '../../services/useCaseService';
-import type { UseCaseConfigurationRow, EquipmentTemplateRow } from '../../services/useCaseService';
+import type { EquipmentTemplateRow } from '../../services/useCaseService';
 
 interface FormulaDefinition {
   id: string;

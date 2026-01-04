@@ -1,9 +1,9 @@
 /**
  * Simple In-Memory Cache Service
- * 
+ *
  * Provides caching for frequently accessed data like baseline configurations.
  * Reduces database queries and improves performance.
- * 
+ *
  * Features:
  * - TTL (Time-To-Live) expiration
  * - LRU (Least Recently Used) eviction
@@ -51,7 +51,7 @@ class CacheService {
     // Check if expired
     const now = Date.now();
     const age = now - entry.timestamp;
-    
+
     if (age > this.defaultTTL) {
       this.cache.delete(key);
       this.stats.misses++;
@@ -61,7 +61,7 @@ class CacheService {
     // Update hit count and move to end (LRU)
     entry.hits++;
     this.stats.hits++;
-    
+
     // Re-insert to update position
     this.cache.delete(key);
     this.cache.set(key, entry);
@@ -84,7 +84,7 @@ class CacheService {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      hits: 0
+      hits: 0,
     });
   }
 
@@ -101,14 +101,14 @@ class CacheService {
   clearPattern(pattern: string): number {
     let cleared = 0;
     const regex = new RegExp(pattern);
-    
+
     for (const key of this.cache.keys()) {
       if (regex.test(key)) {
         this.cache.delete(key);
         cleared++;
       }
     }
-    
+
     return cleared;
   }
 
@@ -129,7 +129,7 @@ class CacheService {
       hits: this.stats.hits,
       misses: this.stats.misses,
       size: this.cache.size,
-      hitRate: total > 0 ? (this.stats.hits / total) * 100 : 0
+      hitRate: total > 0 ? (this.stats.hits / total) * 100 : 0,
     };
   }
 
@@ -165,11 +165,14 @@ export const useCaseCache = new CacheService(100, 30 * 60 * 1000); // 30 min TTL
 export const calculationCache = new CacheService(200, 5 * 60 * 1000); // 5 min TTL, 200 entries
 
 // Auto-prune every 5 minutes
-setInterval(() => {
-  baselineCache.prune();
-  useCaseCache.prune();
-  calculationCache.prune();
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    baselineCache.prune();
+    useCaseCache.prune();
+    calculationCache.prune();
+  },
+  5 * 60 * 1000
+);
 
 // Export cache service class for custom instances
 export default CacheService;

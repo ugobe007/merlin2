@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 
 interface PricingDataCaptureProps {
   onClose: () => void;
@@ -9,7 +9,7 @@ interface ExtractedPricingData {
   id: string;
   fileName: string;
   uploadDate: Date;
-  status: 'pending' | 'extracted' | 'reviewed' | 'validated';
+  status: "pending" | "extracted" | "reviewed" | "validated";
   confidence: number;
   data: {
     // Equipment Costs
@@ -32,7 +32,7 @@ interface ExtractedPricingData {
       description?: string;
       price?: number;
     };
-    
+
     // Installation & Soft Costs
     installation?: {
       labor_cost?: number;
@@ -42,7 +42,7 @@ interface ExtractedPricingData {
     engineering?: number;
     permitting?: number;
     interconnection?: number;
-    
+
     // Project Details
     project?: {
       location?: string;
@@ -53,7 +53,7 @@ interface ExtractedPricingData {
       application?: string;
       quote_date?: string;
     };
-    
+
     // Pricing Summary
     summary?: {
       total_cost?: number;
@@ -61,17 +61,17 @@ interface ExtractedPricingData {
       cost_per_kw?: number;
       warranty_years?: number;
     };
-    
+
     // Vendor Info (anonymized)
     vendor?: {
-      type?: 'manufacturer' | 'distributor' | 'installer' | 'epc';
+      type?: "manufacturer" | "distributor" | "installer" | "epc";
       region?: string;
     };
   };
 }
 
 const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEmail }) => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'review' | 'history'>('upload');
+  const [activeTab, setActiveTab] = useState<"upload" | "review" | "history">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<ExtractedPricingData[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -110,7 +110,7 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
   // Process uploaded files
   const handleFiles = async (files: File[]) => {
     if (!consentGiven) {
-      alert('Please consent to data usage terms before uploading.');
+      alert("Please consent to data usage terms before uploading.");
       return;
     }
 
@@ -120,18 +120,18 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
     // In production, this would call your backend API
     for (const file of files) {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const mockExtractedData: ExtractedPricingData = {
         id: Math.random().toString(36).substr(2, 9),
         fileName: file.name,
         uploadDate: new Date(),
-        status: 'extracted',
+        status: "extracted",
         confidence: Math.random() * 0.3 + 0.7, // 70-100%
         data: {
           batterySystem: {
-            manufacturer: 'Tesla',
-            model: 'Megapack 2XL',
+            manufacturer: "Tesla",
+            model: "Megapack 2XL",
             capacity_kwh: 3916,
             power_kw: 1927,
             price_total: 1500000,
@@ -139,8 +139,8 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
             price_per_kw: 778,
           },
           inverter: {
-            manufacturer: 'Integrated',
-            model: 'Built-in',
+            manufacturer: "Integrated",
+            model: "Built-in",
             power_kw: 1927,
             price: 0,
           },
@@ -153,13 +153,13 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
           permitting: 25000,
           interconnection: 35000,
           project: {
-            location: 'California',
-            state: 'CA',
-            country: 'USA',
+            location: "California",
+            state: "CA",
+            country: "USA",
             system_size_kwh: 3916,
             system_size_kw: 1927,
-            application: 'Commercial C&I',
-            quote_date: new Date().toISOString().split('T')[0],
+            application: "Commercial C&I",
+            quote_date: new Date().toISOString().split("T")[0],
           },
           summary: {
             total_cost: 1735000,
@@ -168,29 +168,29 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
             warranty_years: 10,
           },
           vendor: {
-            type: 'manufacturer',
-            region: 'West Coast',
+            type: "manufacturer",
+            region: "West Coast",
           },
         },
       };
 
-      setUploadedFiles(prev => [mockExtractedData, ...prev]);
+      setUploadedFiles((prev) => [mockExtractedData, ...prev]);
     }
 
     setUploading(false);
-    setActiveTab('review');
+    setActiveTab("review");
   };
 
   // Validate and submit data
   const handleValidateData = (data: ExtractedPricingData) => {
-    const updatedData = { ...data, status: 'validated' as const };
-    setUploadedFiles(prev => 
-      prev.map(f => f.id === data.id ? updatedData : f)
-    );
+    const updatedData = { ...data, status: "validated" as const };
+    setUploadedFiles((prev) => prev.map((f) => (f.id === data.id ? updatedData : f)));
     setSelectedFile(null);
-    
+
     // In production, send to backend
-    alert('Thank you! Your pricing data has been validated and added to our database. You earn 10 data credits!');
+    alert(
+      "Thank you! Your pricing data has been validated and added to our database. You earn 10 data credits!"
+    );
   };
 
   return (
@@ -214,31 +214,31 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
         {/* Tabs */}
         <div className="flex border-b border-gray-200 px-6 bg-gray-50 flex-shrink-0">
           <button
-            onClick={() => setActiveTab('upload')}
+            onClick={() => setActiveTab("upload")}
             className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'upload'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "upload"
+                ? "border-b-2 border-purple-600 text-purple-600"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             📤 Upload
           </button>
           <button
-            onClick={() => setActiveTab('review')}
+            onClick={() => setActiveTab("review")}
             className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'review'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "review"
+                ? "border-b-2 border-purple-600 text-purple-600"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            ✏️ Review ({uploadedFiles.filter(f => f.status === 'extracted').length})
+            ✏️ Review ({uploadedFiles.filter((f) => f.status === "extracted").length})
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab("history")}
             className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'history'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "history"
+                ? "border-b-2 border-purple-600 text-purple-600"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             📜 History ({uploadedFiles.length})
@@ -248,7 +248,7 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Upload Tab */}
-          {activeTab === 'upload' && (
+          {activeTab === "upload" && (
             <div className="space-y-6">
               {/* Consent Checkbox */}
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
@@ -262,9 +262,10 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                   <div>
                     <p className="font-semibold text-gray-900 mb-1">Data Usage Consent</p>
                     <p className="text-sm text-gray-700">
-                      I agree to anonymously share pricing data extracted from uploaded documents. 
-                      All vendor and customer identifying information will be removed. This data will be 
-                      used to improve market pricing models and may be sold as aggregated market intelligence.
+                      I agree to anonymously share pricing data extracted from uploaded documents.
+                      All vendor and customer identifying information will be removed. This data
+                      will be used to improve market pricing models and may be sold as aggregated
+                      market intelligence.
                       <br />
                       <span className="font-semibold text-purple-600 mt-2 inline-block">
                         🎁 Earn 10 data credits per validated quote!
@@ -282,13 +283,13 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                 onDrop={handleDrop}
                 className={`border-3 border-dashed rounded-2xl p-12 text-center transition-all ${
                   dragActive
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-300 bg-gray-50 hover:border-purple-400'
-                } ${!consentGiven ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    ? "border-purple-500 bg-purple-50"
+                    : "border-gray-300 bg-gray-50 hover:border-purple-400"
+                } ${!consentGiven ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <div className="text-6xl mb-4">📄</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {uploading ? 'Processing Files...' : 'Drop files here or click to upload'}
+                  {uploading ? "Processing Files..." : "Drop files here or click to upload"}
                 </h3>
                 <p className="text-gray-600 mb-4">
                   Supported: PDF, Excel, Word, CSV, Images (JPG, PNG)
@@ -306,11 +307,11 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                   htmlFor="file-upload"
                   className={`inline-block px-8 py-3 rounded-xl font-bold transition-all ${
                     !consentGiven || uploading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 cursor-pointer shadow-lg'
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 cursor-pointer shadow-lg"
                   }`}
                 >
-                  {uploading ? 'Processing...' : 'Select Files'}
+                  {uploading ? "Processing..." : "Select Files"}
                 </label>
               </div>
 
@@ -319,41 +320,54 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <div className="text-3xl mb-2">🎯</div>
                   <h4 className="font-bold text-gray-900 mb-1">Earn Credits</h4>
-                  <p className="text-sm text-gray-700">Get 10 credits per validated quote to use for premium features</p>
+                  <p className="text-sm text-gray-700">
+                    Get 10 credits per validated quote to use for premium features
+                  </p>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <div className="text-3xl mb-2">📈</div>
                   <h4 className="font-bold text-gray-900 mb-1">Better Pricing</h4>
-                  <p className="text-sm text-gray-700">Help improve market pricing accuracy for everyone</p>
+                  <p className="text-sm text-gray-700">
+                    Help improve market pricing accuracy for everyone
+                  </p>
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
                   <div className="text-3xl mb-2">🔒</div>
                   <h4 className="font-bold text-gray-900 mb-1">Fully Anonymous</h4>
-                  <p className="text-sm text-gray-700">All identifying information is automatically removed</p>
+                  <p className="text-sm text-gray-700">
+                    All identifying information is automatically removed
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Review Tab */}
-          {activeTab === 'review' && (
+          {activeTab === "review" && (
             <div className="space-y-4">
-              {uploadedFiles.filter(f => f.status === 'extracted').length === 0 ? (
+              {uploadedFiles.filter((f) => f.status === "extracted").length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-600">No files to review. Upload some pricing documents to get started!</p>
+                  <p className="text-gray-600">
+                    No files to review. Upload some pricing documents to get started!
+                  </p>
                 </div>
               ) : (
                 uploadedFiles
-                  .filter(f => f.status === 'extracted')
-                  .map(file => (
-                    <div key={file.id} className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all">
+                  .filter((f) => f.status === "extracted")
+                  .map((file) => (
+                    <div
+                      key={file.id}
+                      className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-all"
+                    >
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="font-bold text-lg text-gray-900">{file.fileName}</h3>
                           <p className="text-sm text-gray-600">
-                            Uploaded: {file.uploadDate.toLocaleString()} • 
-                            <span className={`ml-2 ${file.confidence > 0.85 ? 'text-green-600' : 'text-yellow-600'}`}>
+                            Uploaded: {file.uploadDate.toLocaleString()} •
+                            <span
+                              className={`ml-2 ${file.confidence > 0.85 ? "text-green-600" : "text-yellow-600"}`}
+                            >
                               Confidence: {(file.confidence * 100).toFixed(0)}%
                             </span>
                           </p>
@@ -370,15 +384,21 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <p className="text-gray-600">Battery System</p>
-                          <p className="font-semibold">{file.data.batterySystem?.manufacturer} {file.data.batterySystem?.model}</p>
+                          <p className="font-semibold">
+                            {file.data.batterySystem?.manufacturer} {file.data.batterySystem?.model}
+                          </p>
                         </div>
                         <div>
                           <p className="text-gray-600">Capacity</p>
-                          <p className="font-semibold">{file.data.batterySystem?.capacity_kwh} kWh</p>
+                          <p className="font-semibold">
+                            {file.data.batterySystem?.capacity_kwh} kWh
+                          </p>
                         </div>
                         <div>
                           <p className="text-gray-600">Total Cost</p>
-                          <p className="font-semibold">${file.data.summary?.total_cost?.toLocaleString()}</p>
+                          <p className="font-semibold">
+                            ${file.data.summary?.total_cost?.toLocaleString()}
+                          </p>
                         </div>
                         <div>
                           <p className="text-gray-600">$/kWh</p>
@@ -392,12 +412,14 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
           )}
 
           {/* History Tab */}
-          {activeTab === 'history' && (
+          {activeTab === "history" && (
             <div className="space-y-4">
               {uploadedFiles.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📊</div>
-                  <p className="text-gray-600">No upload history yet. Start by uploading pricing documents!</p>
+                  <p className="text-gray-600">
+                    No upload history yet. Start by uploading pricing documents!
+                  </p>
                 </div>
               ) : (
                 <div>
@@ -406,7 +428,7 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                       <div>
                         <p className="text-sm text-gray-600">Total Credits Earned</p>
                         <p className="text-3xl font-bold text-purple-600">
-                          {uploadedFiles.filter(f => f.status === 'validated').length * 10}
+                          {uploadedFiles.filter((f) => f.status === "validated").length * 10}
                         </p>
                       </div>
                       <div>
@@ -416,29 +438,39 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                       <div>
                         <p className="text-sm text-gray-600">Validated</p>
                         <p className="text-3xl font-bold text-green-600">
-                          {uploadedFiles.filter(f => f.status === 'validated').length}
+                          {uploadedFiles.filter((f) => f.status === "validated").length}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {uploadedFiles.map(file => (
-                    <div key={file.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-2">
+                  {uploadedFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="bg-white border border-gray-200 rounded-lg p-4 mb-2"
+                    >
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="font-semibold text-gray-900">{file.fileName}</p>
-                          <p className="text-sm text-gray-600">{file.uploadDate.toLocaleString()}</p>
+                          <p className="text-sm text-gray-600">
+                            {file.uploadDate.toLocaleString()}
+                          </p>
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            file.status === 'validated' ? 'bg-green-100 text-green-700' :
-                            file.status === 'reviewed' ? 'bg-blue-100 text-blue-700' :
-                            file.status === 'extracted' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                              file.status === "validated"
+                                ? "bg-green-100 text-green-700"
+                                : file.status === "reviewed"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : file.status === "extracted"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
                             {file.status}
                           </span>
-                          {file.status === 'validated' && (
+                          {file.status === "validated" && (
                             <span className="text-green-600 font-bold">+10 credits</span>
                           )}
                         </div>
@@ -476,7 +508,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                 <h3 className="font-bold text-lg mb-4">Battery System</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Manufacturer</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Manufacturer
+                    </label>
                     <input
                       type="text"
                       defaultValue={selectedFile.data.batterySystem?.manufacturer}
@@ -492,7 +526,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Capacity (kWh)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Capacity (kWh)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.batterySystem?.capacity_kwh}
@@ -500,7 +536,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Power (kW)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Power (kW)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.batterySystem?.power_kw}
@@ -508,7 +546,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Total Price ($)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Total Price ($)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.batterySystem?.price_total}
@@ -516,7 +556,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Price per kWh ($)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Price per kWh ($)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.batterySystem?.price_per_kwh}
@@ -531,7 +573,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                 <h3 className="font-bold text-lg mb-4">Project Summary</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Location/State</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Location/State
+                    </label>
                     <input
                       type="text"
                       defaultValue={selectedFile.data.project?.state}
@@ -539,7 +583,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Application</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Application
+                    </label>
                     <input
                       type="text"
                       defaultValue={selectedFile.data.project?.application}
@@ -547,7 +593,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Total System Cost ($)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Total System Cost ($)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.summary?.total_cost}
@@ -555,7 +603,9 @@ const PricingDataCapture: React.FC<PricingDataCaptureProps> = ({ onClose, userEm
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Warranty (years)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Warranty (years)
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedFile.data.summary?.warranty_years}

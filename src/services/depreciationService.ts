@@ -2,13 +2,13 @@
  * Depreciation Schedule Service
  * =============================
  * Database-driven MACRS depreciation schedules and calculations
- * 
+ *
  * Table: depreciation_schedules
  * Update Frequency: Annual (when IRS updates tax code)
  * Source: IRS Publication 946, Tax code
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 // ============================================================================
 // TYPES
@@ -16,7 +16,7 @@ import { supabase } from './supabaseClient';
 
 export interface DepreciationSchedule {
   id: string;
-  asset_type: 'BESS' | 'Solar_PV' | 'EV_Chargers' | 'General_Equipment';
+  asset_type: "BESS" | "Solar_PV" | "EV_Chargers" | "General_Equipment";
   macrs_class: 5 | 7 | 15 | 20;
   half_year_convention: boolean;
   year_1: number;
@@ -101,7 +101,7 @@ function setCache(key: string, data: unknown): void {
  * Get depreciation schedule by asset type
  */
 export async function getDepreciationSchedule(
-  assetType: 'BESS' | 'Solar_PV' | 'EV_Chargers' | 'General_Equipment'
+  assetType: "BESS" | "Solar_PV" | "EV_Chargers" | "General_Equipment"
 ): Promise<DepreciationSchedule | null> {
   const cacheKey = `depreciation_${assetType}`;
   const cached = getCached<DepreciationSchedule>(cacheKey);
@@ -109,13 +109,13 @@ export async function getDepreciationSchedule(
 
   try {
     const { data, error } = await supabase
-      .from('depreciation_schedules')
-      .select('*')
-      .eq('asset_type', assetType)
+      .from("depreciation_schedules")
+      .select("*")
+      .eq("asset_type", assetType)
       .single();
 
     if (error) {
-      console.error('Error fetching depreciation schedule:', error);
+      console.error("Error fetching depreciation schedule:", error);
       return null;
     }
 
@@ -123,7 +123,7 @@ export async function getDepreciationSchedule(
     setCache(cacheKey, schedule);
     return schedule;
   } catch (err) {
-    console.error('Failed to fetch depreciation schedule:', err);
+    console.error("Failed to fetch depreciation schedule:", err);
     return null;
   }
 }
@@ -132,18 +132,18 @@ export async function getDepreciationSchedule(
  * Get all depreciation schedules
  */
 export async function getAllDepreciationSchedules(): Promise<DepreciationSchedule[]> {
-  const cacheKey = 'all_depreciation_schedules';
+  const cacheKey = "all_depreciation_schedules";
   const cached = getCached<DepreciationSchedule[]>(cacheKey);
   if (cached) return cached;
 
   try {
     const { data, error } = await supabase
-      .from('depreciation_schedules')
-      .select('*')
-      .order('macrs_class', { ascending: true });
+      .from("depreciation_schedules")
+      .select("*")
+      .order("macrs_class", { ascending: true });
 
     if (error) {
-      console.error('Error fetching depreciation schedules:', error);
+      console.error("Error fetching depreciation schedules:", error);
       return [];
     }
 
@@ -151,7 +151,7 @@ export async function getAllDepreciationSchedules(): Promise<DepreciationSchedul
     setCache(cacheKey, schedules);
     return schedules;
   } catch (err) {
-    console.error('Failed to fetch depreciation schedules:', err);
+    console.error("Failed to fetch depreciation schedules:", err);
     return [];
   }
 }
@@ -213,7 +213,7 @@ function getYearlyPercentages(schedule: DepreciationSchedule): number[] {
  * Calculate full depreciation schedule for an asset
  */
 export async function calculateDepreciation(params: {
-  assetType: 'BESS' | 'Solar_PV' | 'EV_Chargers' | 'General_Equipment';
+  assetType: "BESS" | "Solar_PV" | "EV_Chargers" | "General_Equipment";
   assetCost: number;
   placedInServiceYear: number;
   claimITC?: boolean;
@@ -231,7 +231,7 @@ export async function calculateDepreciation(params: {
 
   const schedule = await getDepreciationSchedule(assetType);
   if (!schedule) {
-    console.error('No depreciation schedule found for:', assetType);
+    console.error("No depreciation schedule found for:", assetType);
     return null;
   }
 
@@ -242,7 +242,7 @@ export async function calculateDepreciation(params: {
   if (claimITC && schedule.itc_eligible) {
     itcAmount = assetCost * schedule.itc_rate_2024;
     // ITC reduces depreciable basis by half the ITC amount (per IRC Section 50(c))
-    depreciableBasis = assetCost - (itcAmount * schedule.depreciation_basis_reduction);
+    depreciableBasis = assetCost - itcAmount * schedule.depreciation_basis_reduction;
   }
 
   // Calculate bonus depreciation
@@ -283,7 +283,7 @@ export async function calculateDepreciation(params: {
 
   // Calculate NPV of depreciation tax shields
   let npvOfDepreciation = 0;
-  
+
   // Add bonus depreciation benefit (year 0)
   npvOfDepreciation += bonusDepreciationAmount * marginalTaxRate;
 
@@ -316,7 +316,7 @@ export async function calculateDepreciation(params: {
  * Calculate simple first-year depreciation benefit
  */
 export async function calculateFirstYearBenefit(params: {
-  assetType: 'BESS' | 'Solar_PV' | 'EV_Chargers' | 'General_Equipment';
+  assetType: "BESS" | "Solar_PV" | "EV_Chargers" | "General_Equipment";
   assetCost: number;
   placedInServiceYear?: number;
   claimITC?: boolean;
@@ -337,7 +337,7 @@ export async function calculateFirstYearBenefit(params: {
   } = params;
 
   const schedule = await getDepreciationSchedule(assetType);
-  
+
   // Default values if no schedule found
   if (!schedule) {
     return {
@@ -350,17 +350,15 @@ export async function calculateFirstYearBenefit(params: {
   }
 
   // ITC
-  const itcAmount = (claimITC && schedule.itc_eligible) 
-    ? assetCost * schedule.itc_rate_2024 
-    : 0;
+  const itcAmount = claimITC && schedule.itc_eligible ? assetCost * schedule.itc_rate_2024 : 0;
 
   // Depreciable basis after ITC
-  const depreciableBasis = assetCost - (itcAmount * schedule.depreciation_basis_reduction);
+  const depreciableBasis = assetCost - itcAmount * schedule.depreciation_basis_reduction;
 
   // Bonus depreciation
   const bonusRate = getBonusDepreciationRate(placedInServiceYear);
-  const bonusDepreciationAmount = schedule.bonus_depreciation_eligible 
-    ? depreciableBasis * bonusRate 
+  const bonusDepreciationAmount = schedule.bonus_depreciation_eligible
+    ? depreciableBasis * bonusRate
     : 0;
 
   // First year MACRS on remaining basis
@@ -389,19 +387,21 @@ export async function calculateFirstYearBenefit(params: {
 export async function compareTaxBenefits(
   assetCost: number,
   placedInServiceYear: number = new Date().getFullYear()
-): Promise<Array<{
-  assetType: string;
-  itcAmount: number;
-  bonusDepreciation: number;
-  macrsBenefit: number;
-  totalBenefit: number;
-  effectiveRate: number;
-}>> {
-  const assetTypes: Array<'BESS' | 'Solar_PV' | 'EV_Chargers' | 'General_Equipment'> = [
-    'BESS',
-    'Solar_PV',
-    'EV_Chargers',
-    'General_Equipment',
+): Promise<
+  Array<{
+    assetType: string;
+    itcAmount: number;
+    bonusDepreciation: number;
+    macrsBenefit: number;
+    totalBenefit: number;
+    effectiveRate: number;
+  }>
+> {
+  const assetTypes: Array<"BESS" | "Solar_PV" | "EV_Chargers" | "General_Equipment"> = [
+    "BESS",
+    "Solar_PV",
+    "EV_Chargers",
+    "General_Equipment",
   ];
 
   const comparisons = await Promise.all(

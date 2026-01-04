@@ -7,11 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, Shield, CheckCircle2, XCircle, FileCheck, Search, ExternalLink,
-  Award, Sparkles, ArrowRight, Building2, Landmark, BadgeCheck,
-  AlertTriangle, Eye, EyeOff, Zap
-} from 'lucide-react';
+import { X, Shield, CheckCircle2, XCircle, FileCheck, Search, Award, Sparkles, ArrowRight, Building2, Landmark, BadgeCheck, AlertTriangle, Eye, EyeOff, Zap } from 'lucide-react';
 import { TrueQuoteBadge } from './TrueQuoteBadge';
 import { AUTHORITY_SOURCES } from './IndustryComplianceBadges';
 

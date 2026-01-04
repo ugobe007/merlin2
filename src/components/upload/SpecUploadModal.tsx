@@ -15,28 +15,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
-import {
-  X,
-  Upload,
-  FileText,
-  FileSpreadsheet,
-  File,
-  CheckCircle,
-  AlertTriangle,
-  Loader2,
-  Sparkles,
-  ArrowRight,
-  Edit3,
-  Zap,
-  MapPin,
-  Battery,
-  Sun,
-  Wind,
-  Building2,
-  DollarSign,
-  Clock,
-  RefreshCw,
-} from 'lucide-react';
+import { X, Upload, FileText, FileSpreadsheet, File, AlertTriangle, Loader2, Sparkles, ArrowRight, Zap, MapPin, Battery, Sun, Building2, RefreshCw } from 'lucide-react';
 import { parseDocument, type ParsedDocument } from '@/services/documentParsingService';
 import { extractSpecsFromText, specsToQuoteInput, type ExtractedSpecs, type ExtractionResult } from '@/services/specExtractionService';
 

@@ -7,7 +7,7 @@ export interface SolarPanel {
   id: string;
   manufacturer: string;
   model: string;
-  technology: 'monocrystalline' | 'polycrystalline' | 'thin_film' | 'bifacial';
+  technology: "monocrystalline" | "polycrystalline" | "thin_film" | "bifacial";
   powerRatingW: number;
   efficiency: number; // %
   voltage: number;
@@ -36,7 +36,7 @@ export interface SolarInverter {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'string' | 'power_optimizer' | 'microinverter' | 'central';
+  type: "string" | "power_optimizer" | "microinverter" | "central";
   powerRatingW: number;
   inputChannels: number;
   efficiency: number; // %
@@ -54,12 +54,12 @@ export interface MountingSystem {
   id: string;
   manufacturer: string;
   model: string;
-  type: 'roof_mounted' | 'ground_mounted' | 'carport' | 'tracker';
+  type: "roof_mounted" | "ground_mounted" | "carport" | "tracker";
   material: string;
   panelsPerStructure: number;
   warranty: number; // years
   pricePerPanel: number;
-  installationComplexity: 'low' | 'medium' | 'high';
+  installationComplexity: "low" | "medium" | "high";
   vendor: {
     company: string;
     contact: string;
@@ -104,10 +104,10 @@ class SolarPricingService {
     return {
       panels: [
         {
-          id: 'jinko-tiger-pro-540w',
-          manufacturer: 'Jinko Solar',
-          model: 'Tiger Pro JKM540M-7RL3',
-          technology: 'monocrystalline',
+          id: "jinko-tiger-pro-540w",
+          manufacturer: "Jinko Solar",
+          model: "Tiger Pro JKM540M-7RL3",
+          technology: "monocrystalline",
           powerRatingW: 540,
           efficiency: 20.9,
           voltage: 49.5,
@@ -115,27 +115,27 @@ class SolarPricingService {
           dimensions: {
             length: 2274,
             width: 1134,
-            thickness: 30
+            thickness: 30,
           },
           weight: 27.5,
           warranty: {
             product: 15,
             performance: 25,
-            degradation: 0.4
+            degradation: 0.4,
           },
           pricePerWatt: 0.65, // CORRECTED: Updated to 2025 pricing for tier-1 panels
-          pricePerPanel: 172.80,
+          pricePerPanel: 172.8,
           vendor: {
-            company: 'Jinko Solar Authorized Distributor',
-            contact: 'sales@jinkosolar.com',
-            location: 'Multiple Locations'
-          }
+            company: "Jinko Solar Authorized Distributor",
+            contact: "sales@jinkosolar.com",
+            location: "Multiple Locations",
+          },
         },
         {
-          id: 'canadian-solar-450w',
-          manufacturer: 'Canadian Solar',
-          model: 'CS3W-450P',
-          technology: 'polycrystalline',
+          id: "canadian-solar-450w",
+          manufacturer: "Canadian Solar",
+          model: "CS3W-450P",
+          technology: "polycrystalline",
           powerRatingW: 450,
           efficiency: 19.2,
           voltage: 41.4,
@@ -143,27 +143,27 @@ class SolarPricingService {
           dimensions: {
             length: 2108,
             width: 1048,
-            thickness: 40
+            thickness: 40,
           },
           weight: 23.5,
           warranty: {
             product: 12,
             performance: 25,
-            degradation: 0.5
+            degradation: 0.5,
           },
           pricePerWatt: 0.55, // CORRECTED: Updated to 2025 pricing for standard panels
-          pricePerPanel: 126.00,
+          pricePerPanel: 126.0,
           vendor: {
-            company: 'Canadian Solar',
-            contact: 'sales@canadiansolar.com',
-            location: 'Global Distribution'
-          }
+            company: "Canadian Solar",
+            contact: "sales@canadiansolar.com",
+            location: "Global Distribution",
+          },
         },
         {
-          id: 'first-solar-thin-film-420w',
-          manufacturer: 'First Solar',
-          model: 'Series 6 Plus',
-          technology: 'thin_film',
+          id: "first-solar-thin-film-420w",
+          manufacturer: "First Solar",
+          model: "Series 6 Plus",
+          technology: "thin_film",
           powerRatingW: 420,
           efficiency: 18.0,
           voltage: 88.9,
@@ -171,159 +171,159 @@ class SolarPricingService {
           dimensions: {
             length: 2384,
             width: 1303,
-            thickness: 4
+            thickness: 4,
           },
           weight: 31.8,
           warranty: {
             product: 10,
             performance: 25,
-            degradation: 0.25
+            degradation: 0.25,
           },
-          pricePerWatt: 0.70, // CORRECTED: Updated to 2025 pricing for bifacial panels
-          pricePerPanel: 294.00, // CORRECTED: Updated panel price
+          pricePerWatt: 0.7, // CORRECTED: Updated to 2025 pricing for bifacial panels
+          pricePerPanel: 294.0, // CORRECTED: Updated panel price
           vendor: {
-            company: 'First Solar',
-            contact: 'commercial@firstsolar.com',
-            location: 'Ohio, USA'
-          }
-        }
+            company: "First Solar",
+            contact: "commercial@firstsolar.com",
+            location: "Ohio, USA",
+          },
+        },
       ],
       inverters: [
         {
-          id: 'sma-sunny-tripower-25000',
-          manufacturer: 'SMA',
-          model: 'Sunny Tripower 25000TL',
-          type: 'string',
+          id: "sma-sunny-tripower-25000",
+          manufacturer: "SMA",
+          model: "Sunny Tripower 25000TL",
+          type: "string",
           powerRatingW: 25000,
           inputChannels: 6,
           efficiency: 98.1,
           features: [
-            'Integrated DC combiner',
-            'OptiTrac Global Peak',
-            'Grid management',
-            'Reactive power provision'
+            "Integrated DC combiner",
+            "OptiTrac Global Peak",
+            "Grid management",
+            "Reactive power provision",
           ],
           warranty: 10,
-          pricePerWatt: 0.30, // CORRECTED: Updated to 2025 pricing for string inverters
+          pricePerWatt: 0.3, // CORRECTED: Updated to 2025 pricing for string inverters
           pricePerUnit: 3750,
           vendor: {
-            company: 'SMA Solar Technology',
-            contact: 'sales@sma-america.com'
-          }
+            company: "SMA Solar Technology",
+            contact: "sales@sma-america.com",
+          },
         },
         {
-          id: 'fronius-primo-15kw',
-          manufacturer: 'Fronius',
-          model: 'Primo 15.0-1',
-          type: 'string',
+          id: "fronius-primo-15kw",
+          manufacturer: "Fronius",
+          model: "Primo 15.0-1",
+          type: "string",
           powerRatingW: 15000,
           inputChannels: 2,
           efficiency: 97.0,
           features: [
-            'Dynamic Peak Manager',
-            'Arc Fault Circuit Interrupter',
-            'Rapid Shutdown',
-            'WiFi monitoring'
+            "Dynamic Peak Manager",
+            "Arc Fault Circuit Interrupter",
+            "Rapid Shutdown",
+            "WiFi monitoring",
           ],
           warranty: 10,
           pricePerWatt: 0.35, // CORRECTED: Updated to 2025 pricing for power optimizers
           pricePerUnit: 2700,
           vendor: {
-            company: 'Fronius USA',
-            contact: 'sales@fronius.com'
-          }
+            company: "Fronius USA",
+            contact: "sales@fronius.com",
+          },
         },
         {
-          id: 'solaredge-power-optimizer',
-          manufacturer: 'SolarEdge',
-          model: 'SE7600H-US',
-          type: 'power_optimizer',
+          id: "solaredge-power-optimizer",
+          manufacturer: "SolarEdge",
+          model: "SE7600H-US",
+          type: "power_optimizer",
           powerRatingW: 7600,
           inputChannels: 1,
           efficiency: 97.5,
           features: [
-            'Module-level optimization',
-            'Panel-level monitoring',
-            'Safety features',
-            'Rapid shutdown'
+            "Module-level optimization",
+            "Panel-level monitoring",
+            "Safety features",
+            "Rapid shutdown",
           ],
           warranty: 12,
           pricePerWatt: 0.45, // CORRECTED: Updated to 2025 pricing for microinverters
           pricePerUnit: 1672,
           vendor: {
-            company: 'SolarEdge Technologies',
-            contact: 'sales@solaredge.com'
-          }
+            company: "SolarEdge Technologies",
+            contact: "sales@solaredge.com",
+          },
         },
         {
-          id: 'enphase-microinverter',
-          manufacturer: 'Enphase',
-          model: 'IQ7PLUS-72-M-US',
-          type: 'microinverter',
+          id: "enphase-microinverter",
+          manufacturer: "Enphase",
+          model: "IQ7PLUS-72-M-US",
+          type: "microinverter",
           powerRatingW: 290,
           inputChannels: 1,
           efficiency: 97.0,
           features: [
-            'Per-panel optimization',
-            'Individual panel monitoring',
-            'Rapid shutdown',
-            'Grid-tie capability'
+            "Per-panel optimization",
+            "Individual panel monitoring",
+            "Rapid shutdown",
+            "Grid-tie capability",
           ],
           warranty: 15,
           pricePerWatt: 0.35,
-          pricePerUnit: 101.50,
+          pricePerUnit: 101.5,
           vendor: {
-            company: 'Enphase Energy',
-            contact: 'sales@enphase.com'
-          }
-        }
+            company: "Enphase Energy",
+            contact: "sales@enphase.com",
+          },
+        },
       ],
       mountingSystems: [
         {
-          id: 'ironridge-xr-roof',
-          manufacturer: 'IronRidge',
-          model: 'XR Rail System',
-          type: 'roof_mounted',
-          material: 'Aluminum',
+          id: "ironridge-xr-roof",
+          manufacturer: "IronRidge",
+          model: "XR Rail System",
+          type: "roof_mounted",
+          material: "Aluminum",
           panelsPerStructure: 1,
           warranty: 25,
           pricePerPanel: 65,
-          installationComplexity: 'low',
+          installationComplexity: "low",
           vendor: {
-            company: 'IronRidge',
-            contact: 'sales@ironridge.com'
-          }
+            company: "IronRidge",
+            contact: "sales@ironridge.com",
+          },
         },
         {
-          id: 'unirac-ground-mount',
-          manufacturer: 'Unirac',
-          model: 'RM Ground Mount',
-          type: 'ground_mounted',
-          material: 'Aluminum/Steel',
+          id: "unirac-ground-mount",
+          manufacturer: "Unirac",
+          model: "RM Ground Mount",
+          type: "ground_mounted",
+          material: "Aluminum/Steel",
           panelsPerStructure: 10,
           warranty: 20,
           pricePerPanel: 85,
-          installationComplexity: 'medium',
+          installationComplexity: "medium",
           vendor: {
-            company: 'Unirac',
-            contact: 'sales@unirac.com'
-          }
+            company: "Unirac",
+            contact: "sales@unirac.com",
+          },
         },
         {
-          id: 'schletter-tracker',
-          manufacturer: 'Schletter',
-          model: 'FS Uno 2.0',
-          type: 'tracker',
-          material: 'Galvanized Steel',
+          id: "schletter-tracker",
+          manufacturer: "Schletter",
+          model: "FS Uno 2.0",
+          type: "tracker",
+          material: "Galvanized Steel",
           panelsPerStructure: 24,
           warranty: 20,
           pricePerPanel: 120,
-          installationComplexity: 'high',
+          installationComplexity: "high",
           vendor: {
-            company: 'Schletter Inc.',
-            contact: 'info@schletter.us'
-          }
-        }
+            company: "Schletter Inc.",
+            contact: "info@schletter.us",
+          },
+        },
       ],
       installationCosts: {
         // ⚠️ CRITICAL FIX: Updated to match EnergySage 2025 pricing ($2.50-4.00/W installed)
@@ -332,7 +332,7 @@ class SolarPricingService {
         laborPerKW: 800, // (increased from $300 to reflect real installation labor)
         electricalBOS: 600, // balance of system (increased from $200 to reflect real electrical costs)
         monitoring: 150, // (increased from $50 to reflect real monitoring systems)
-        commissioning: 200 // (increased from $75 to reflect real commissioning costs)
+        commissioning: 200, // (increased from $75 to reflect real commissioning costs)
         // Total installation costs: ~$2,150/kW + equipment costs = ~$2.50-3.00/W total
       },
       additionalComponents: {
@@ -341,14 +341,14 @@ class SolarPricingService {
         combinerBox: 45,
         disconnects: 35,
         grounding: 25,
-        conduit: 40
+        conduit: 40,
       },
       operationMaintenance: {
         annualPerKW: 15,
         inverterReplacementCycle: 12,
         cleaningPerKW: 8,
-        monitoringPerKW: 12
-      }
+        monitoringPerKW: 12,
+      },
     };
   }
 
@@ -366,9 +366,9 @@ class SolarPricingService {
     costPerWatt: number;
     breakdown: any;
   } {
-    const panel = this.configuration.panels.find(p => p.id === panelId);
-    const inverter = this.configuration.inverters.find(i => i.id === inverterId);
-    const mounting = this.configuration.mountingSystems.find(m => m.id === mountingId);
+    const panel = this.configuration.panels.find((p) => p.id === panelId);
+    const inverter = this.configuration.inverters.find((i) => i.id === inverterId);
+    const mounting = this.configuration.mountingSystems.find((m) => m.id === mountingId);
 
     if (!panel || !inverter || !mounting) {
       return {
@@ -377,7 +377,7 @@ class SolarPricingService {
         installationCost: 0,
         totalCost: 0,
         costPerWatt: 0,
-        breakdown: {}
+        breakdown: {},
       };
     }
 
@@ -387,9 +387,10 @@ class SolarPricingService {
     const actualSystemSizeKW = actualSystemSizeW / 1000;
 
     // Calculate inverter requirements
-    const numInverters = inverter.type === 'microinverter' 
-      ? numPanels 
-      : Math.ceil(actualSystemSizeW / inverter.powerRatingW);
+    const numInverters =
+      inverter.type === "microinverter"
+        ? numPanels
+        : Math.ceil(actualSystemSizeW / inverter.powerRatingW);
 
     // Equipment costs
     const panelCost = numPanels * panel.pricePerPanel;
@@ -397,16 +398,20 @@ class SolarPricingService {
     const mountingCost = numPanels * mounting.pricePerPanel;
 
     // Additional components
-    const additionalCost = Object.values(this.configuration.additionalComponents)
-      .reduce((sum, costPerKW) => sum + (costPerKW * actualSystemSizeKW), 0);
+    const additionalCost = Object.values(this.configuration.additionalComponents).reduce(
+      (sum, costPerKW) => sum + costPerKW * actualSystemSizeKW,
+      0
+    );
 
     const equipmentCost = panelCost + inverterCost + mountingCost + additionalCost;
 
     // Installation costs
     let installationCost = 0;
     if (includeInstallation) {
-      installationCost = Object.values(this.configuration.installationCosts)
-        .reduce((sum, costPerKW) => sum + (costPerKW * actualSystemSizeKW), 0);
+      installationCost = Object.values(this.configuration.installationCosts).reduce(
+        (sum, costPerKW) => sum + costPerKW * actualSystemSizeKW,
+        0
+      );
     }
 
     const totalCost = equipmentCost + installationCost;
@@ -421,7 +426,7 @@ class SolarPricingService {
         numInverters,
         panel: panel.model,
         inverter: inverter.model,
-        mounting: mounting.model
+        mounting: mounting.model,
       },
       equipmentCost,
       installationCost,
@@ -432,17 +437,17 @@ class SolarPricingService {
           panels: {
             quantity: numPanels,
             pricePerPanel: panel.pricePerPanel,
-            subtotal: panelCost
+            subtotal: panelCost,
           },
           inverters: {
             quantity: numInverters,
             pricePerUnit: inverter.pricePerUnit,
-            subtotal: inverterCost
+            subtotal: inverterCost,
           },
           mounting: {
             quantity: numPanels,
             pricePerPanel: mounting.pricePerPanel,
-            subtotal: mountingCost
+            subtotal: mountingCost,
           },
           additionalComponents: {
             dcCabling: this.configuration.additionalComponents.dcCabling * actualSystemSizeKW,
@@ -451,58 +456,66 @@ class SolarPricingService {
             disconnects: this.configuration.additionalComponents.disconnects * actualSystemSizeKW,
             grounding: this.configuration.additionalComponents.grounding * actualSystemSizeKW,
             conduit: this.configuration.additionalComponents.conduit * actualSystemSizeKW,
-            subtotal: additionalCost
-          }
+            subtotal: additionalCost,
+          },
         },
-        installation: includeInstallation ? {
-          designAndPermitting: this.configuration.installationCosts.designAndPermitting * actualSystemSizeKW,
-          labor: this.configuration.installationCosts.laborPerKW * actualSystemSizeKW,
-          electricalBOS: this.configuration.installationCosts.electricalBOS * actualSystemSizeKW,
-          monitoring: this.configuration.installationCosts.monitoring * actualSystemSizeKW,
-          commissioning: this.configuration.installationCosts.commissioning * actualSystemSizeKW,
-          subtotal: installationCost
-        } : null
-      }
+        installation: includeInstallation
+          ? {
+              designAndPermitting:
+                this.configuration.installationCosts.designAndPermitting * actualSystemSizeKW,
+              labor: this.configuration.installationCosts.laborPerKW * actualSystemSizeKW,
+              electricalBOS:
+                this.configuration.installationCosts.electricalBOS * actualSystemSizeKW,
+              monitoring: this.configuration.installationCosts.monitoring * actualSystemSizeKW,
+              commissioning:
+                this.configuration.installationCosts.commissioning * actualSystemSizeKW,
+              subtotal: installationCost,
+            }
+          : null,
+      },
     };
   }
 
-  calculateAnnualProduction(systemSizeKW: number, location: string = 'average'): {
+  calculateAnnualProduction(
+    systemSizeKW: number,
+    location: string = "average"
+  ): {
     annualKWh: number;
     monthlyAverage: number;
     peakSunHours: number;
   } {
     // Simplified solar irradiance data (actual implementation would use NREL data)
     const irradianceData: { [key: string]: number } = {
-      'arizona': 6.5,
-      'california': 5.8,
-      'florida': 5.2,
-      'texas': 5.0,
-      'nevada': 6.0,
-      'new_mexico': 6.2,
-      'average': 4.5
+      arizona: 6.5,
+      california: 5.8,
+      florida: 5.2,
+      texas: 5.0,
+      nevada: 6.0,
+      new_mexico: 6.2,
+      average: 4.5,
     };
 
-    const peakSunHours = irradianceData[location.toLowerCase()] || irradianceData['average'];
+    const peakSunHours = irradianceData[location.toLowerCase()] || irradianceData["average"];
     const annualKWh = systemSizeKW * peakSunHours * 365 * 0.85; // 85% system efficiency
     const monthlyAverage = annualKWh / 12;
 
     return {
       annualKWh: Math.round(annualKWh),
       monthlyAverage: Math.round(monthlyAverage),
-      peakSunHours
+      peakSunHours,
     };
   }
 
   getPanelsByTechnology(technology: string): SolarPanel[] {
-    return this.configuration.panels.filter(panel => panel.technology === technology);
+    return this.configuration.panels.filter((panel) => panel.technology === technology);
   }
 
   getInvertersByType(type: string): SolarInverter[] {
-    return this.configuration.inverters.filter(inverter => inverter.type === type);
+    return this.configuration.inverters.filter((inverter) => inverter.type === type);
   }
 
   getMountingSystemsByType(type: string): MountingSystem[] {
-    return this.configuration.mountingSystems.filter(mounting => mounting.type === type);
+    return this.configuration.mountingSystems.filter((mounting) => mounting.type === type);
   }
 
   getConfiguration(): SolarPricingConfiguration {
@@ -515,31 +528,31 @@ class SolarPricingService {
 
   getPricingSummary() {
     return {
-      panels: this.configuration.panels.map(panel => ({
+      panels: this.configuration.panels.map((panel) => ({
         id: panel.id,
         manufacturer: panel.manufacturer,
         model: panel.model,
         powerW: panel.powerRatingW,
         efficiency: panel.efficiency,
         pricePerWatt: panel.pricePerWatt,
-        technology: panel.technology
+        technology: panel.technology,
       })),
-      inverters: this.configuration.inverters.map(inverter => ({
+      inverters: this.configuration.inverters.map((inverter) => ({
         id: inverter.id,
         manufacturer: inverter.manufacturer,
         model: inverter.model,
         powerW: inverter.powerRatingW,
         type: inverter.type,
         pricePerWatt: inverter.pricePerWatt,
-        efficiency: inverter.efficiency
+        efficiency: inverter.efficiency,
       })),
-      mountingSystems: this.configuration.mountingSystems.map(mounting => ({
+      mountingSystems: this.configuration.mountingSystems.map((mounting) => ({
         id: mounting.id,
         manufacturer: mounting.manufacturer,
         model: mounting.model,
         type: mounting.type,
-        pricePerPanel: mounting.pricePerPanel
-      }))
+        pricePerPanel: mounting.pricePerPanel,
+      })),
     };
   }
 }

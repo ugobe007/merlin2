@@ -1,11 +1,11 @@
 /**
  * Daily BESS Market Intelligence Report Service
- * 
+ *
  * Aggregates industry news, pricing trends, deployments, and potential customers
  * Sends formatted email digest via Resend
  */
 
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 // Initialize Resend - add VITE_RESEND_API_KEY to your .env
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
@@ -20,20 +20,20 @@ export interface NewsItem {
   source: string;
   url: string;
   publishedAt: string;
-  category: 'deployment' | 'pricing' | 'policy' | 'technology' | 'customer';
+  category: "deployment" | "pricing" | "policy" | "technology" | "customer";
   relevanceScore: number;
 }
 
 export interface CompanyMention {
   name: string;
-  type: 'epc' | 'engineering' | 'construction' | 'developer' | 'customer' | 'manufacturer';
+  type: "epc" | "engineering" | "construction" | "developer" | "customer" | "manufacturer";
   context: string;
   projectSize?: string;
   location?: string;
 }
 
 export interface PricingUpdate {
-  batteryType: 'LFP' | 'NMC' | 'Sodium-Ion' | 'Flow';
+  batteryType: "LFP" | "NMC" | "Sodium-Ion" | "Flow";
   pricePerKwh: number;
   change: number; // percentage
   source: string;
@@ -62,20 +62,26 @@ export interface DailyReport {
 
 export const RSS_FEEDS = {
   energyStorage: [
-    { name: 'Energy Storage News', url: 'https://www.energy-storage.news/feed/' },
-    { name: 'Utility Dive - Storage', url: 'https://www.utilitydive.com/feeds/topic/energy-storage/' },
-    { name: 'PV Magazine', url: 'https://pv-magazine-usa.com/feed/' },
-    { name: 'Canary Media', url: 'https://www.canarymedia.com/feed' },
-    { name: 'CleanTechnica', url: 'https://cleantechnica.com/feed/' },
+    { name: "Energy Storage News", url: "https://www.energy-storage.news/feed/" },
+    {
+      name: "Utility Dive - Storage",
+      url: "https://www.utilitydive.com/feeds/topic/energy-storage/",
+    },
+    { name: "PV Magazine", url: "https://pv-magazine-usa.com/feed/" },
+    { name: "Canary Media", url: "https://www.canarymedia.com/feed" },
+    { name: "CleanTechnica", url: "https://cleantechnica.com/feed/" },
   ],
   industry: [
-    { name: 'GreenTech Media', url: 'https://www.greentechmedia.com/feed' },
-    { name: 'Solar Power World', url: 'https://www.solarpowerworldonline.com/feed/' },
+    { name: "GreenTech Media", url: "https://www.greentechmedia.com/feed" },
+    { name: "Solar Power World", url: "https://www.solarpowerworldonline.com/feed/" },
   ],
   business: [
-    { name: 'Business Wire - Energy', url: 'https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeGVtTWg==' },
-    { name: 'PR Newswire - Energy', url: 'https://www.prnewswire.com/rss/energy-latest-news.rss' },
-  ]
+    {
+      name: "Business Wire - Energy",
+      url: "https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeGVtTWg==",
+    },
+    { name: "PR Newswire - Energy", url: "https://www.prnewswire.com/rss/energy-latest-news.rss" },
+  ],
 };
 
 // ============================================================================
@@ -84,36 +90,87 @@ export const RSS_FEEDS = {
 
 export const TRACKED_COMPANIES = {
   epc: [
-    'Fluence', 'Sungrow', 'BYD', 'CATL', 'Tesla', 'Wärtsilä', 
-    'Powin', 'ESS Inc', 'Form Energy', 'Energy Vault'
+    "Fluence",
+    "Sungrow",
+    "BYD",
+    "CATL",
+    "Tesla",
+    "Wärtsilä",
+    "Powin",
+    "ESS Inc",
+    "Form Energy",
+    "Energy Vault",
   ],
   engineering: [
-    'Black & Veatch', 'Burns & McDonnell', 'Stantec', 'AECOM',
-    'Jacobs', 'HDR', 'Tetra Tech', 'WSP'
+    "Black & Veatch",
+    "Burns & McDonnell",
+    "Stantec",
+    "AECOM",
+    "Jacobs",
+    "HDR",
+    "Tetra Tech",
+    "WSP",
   ],
   construction: [
-    'Mortenson', 'McCarthy', 'Rosendin', 'Primoris', 
-    'Blattner', 'Swinerton', 'Moss Construction'
+    "Mortenson",
+    "McCarthy",
+    "Rosendin",
+    "Primoris",
+    "Blattner",
+    "Swinerton",
+    "Moss Construction",
   ],
   developers: [
-    'NextEra', 'Intersect Power', 'sPower', 'Recurrent Energy',
-    'EDF Renewables', 'Invenergy', 'Key Capture Energy',
-    'Jupiter Power', 'Plus Power', 'Broad Reach Power'
+    "NextEra",
+    "Intersect Power",
+    "sPower",
+    "Recurrent Energy",
+    "EDF Renewables",
+    "Invenergy",
+    "Key Capture Energy",
+    "Jupiter Power",
+    "Plus Power",
+    "Broad Reach Power",
   ],
   manufacturers: [
-    'LG Energy', 'Samsung SDI', 'Panasonic', 'CATL', 'BYD',
-    'EVE Energy', 'CALB', 'Gotion', 'Northvolt'
-  ]
+    "LG Energy",
+    "Samsung SDI",
+    "Panasonic",
+    "CATL",
+    "BYD",
+    "EVE Energy",
+    "CALB",
+    "Gotion",
+    "Northvolt",
+  ],
 };
 
 // Industries that are potential customers
 export const TARGET_INDUSTRIES = [
-  'data center', 'manufacturing', 'cold storage', 'warehouse',
-  'hospital', 'healthcare', 'university', 'college', 'campus',
-  'retail', 'shopping center', 'mall', 'hotel', 'resort',
-  'airport', 'ev charging', 'fleet', 'logistics',
-  'food processing', 'pharmaceutical', 'semiconductor',
-  'mining', 'water treatment', 'desalination'
+  "data center",
+  "manufacturing",
+  "cold storage",
+  "warehouse",
+  "hospital",
+  "healthcare",
+  "university",
+  "college",
+  "campus",
+  "retail",
+  "shopping center",
+  "mall",
+  "hotel",
+  "resort",
+  "airport",
+  "ev charging",
+  "fleet",
+  "logistics",
+  "food processing",
+  "pharmaceutical",
+  "semiconductor",
+  "mining",
+  "water treatment",
+  "desalination",
 ];
 
 // ============================================================================
@@ -124,29 +181,26 @@ export const TARGET_INDUSTRIES = [
  * Fetch and parse RSS feeds
  */
 export async function fetchRSSFeeds(): Promise<NewsItem[]> {
-  const Parser = (await import('rss-parser')).default;
+  const Parser = (await import("rss-parser")).default;
   const parser = new Parser();
   const allItems: NewsItem[] = [];
 
-  const allFeeds = [
-    ...RSS_FEEDS.energyStorage,
-    ...RSS_FEEDS.industry,
-    ...RSS_FEEDS.business
-  ];
+  const allFeeds = [...RSS_FEEDS.energyStorage, ...RSS_FEEDS.industry, ...RSS_FEEDS.business];
 
   for (const feed of allFeeds) {
     try {
       const result = await parser.parseURL(feed.url);
-      
-      for (const item of result.items.slice(0, 10)) { // Last 10 items per feed
+
+      for (const item of result.items.slice(0, 10)) {
+        // Last 10 items per feed
         const newsItem: NewsItem = {
-          title: item.title || '',
-          summary: item.contentSnippet || item.content?.slice(0, 300) || '',
+          title: item.title || "",
+          summary: item.contentSnippet || item.content?.slice(0, 300) || "",
           source: feed.name,
-          url: item.link || '',
+          url: item.link || "",
           publishedAt: item.pubDate || new Date().toISOString(),
-          category: categorizeNews(item.title || '', item.contentSnippet || ''),
-          relevanceScore: calculateRelevance(item.title || '', item.contentSnippet || '')
+          category: categorizeNews(item.title || "", item.contentSnippet || ""),
+          relevanceScore: calculateRelevance(item.title || "", item.contentSnippet || ""),
         };
         allItems.push(newsItem);
       }
@@ -157,7 +211,7 @@ export async function fetchRSSFeeds(): Promise<NewsItem[]> {
 
   // Sort by relevance and date
   return allItems
-    .filter(item => item.relevanceScore > 0.3)
+    .filter((item) => item.relevanceScore > 0.3)
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, 30); // Top 30 most relevant
 }
@@ -165,22 +219,36 @@ export async function fetchRSSFeeds(): Promise<NewsItem[]> {
 /**
  * Categorize news item based on content
  */
-function categorizeNews(title: string, content: string): NewsItem['category'] {
+function categorizeNews(title: string, content: string): NewsItem["category"] {
   const text = `${title} ${content}`.toLowerCase();
-  
-  if (text.includes('price') || text.includes('cost') || text.includes('$/kwh')) {
-    return 'pricing';
+
+  if (text.includes("price") || text.includes("cost") || text.includes("$/kwh")) {
+    return "pricing";
   }
-  if (text.includes('deploy') || text.includes('commission') || text.includes('install') || text.includes('mwh project')) {
-    return 'deployment';
+  if (
+    text.includes("deploy") ||
+    text.includes("commission") ||
+    text.includes("install") ||
+    text.includes("mwh project")
+  ) {
+    return "deployment";
   }
-  if (text.includes('policy') || text.includes('regulation') || text.includes('ira') || text.includes('incentive')) {
-    return 'policy';
+  if (
+    text.includes("policy") ||
+    text.includes("regulation") ||
+    text.includes("ira") ||
+    text.includes("incentive")
+  ) {
+    return "policy";
   }
-  if (text.includes('breakthrough') || text.includes('innovation') || text.includes('new technology')) {
-    return 'technology';
+  if (
+    text.includes("breakthrough") ||
+    text.includes("innovation") ||
+    text.includes("new technology")
+  ) {
+    return "technology";
   }
-  return 'customer';
+  return "customer";
 }
 
 /**
@@ -191,15 +259,23 @@ function calculateRelevance(title: string, content: string): number {
   let score = 0;
 
   // High-value keywords
-  const highValue = ['bess', 'battery storage', 'energy storage', 'mwh', 'grid-scale'];
-  const mediumValue = ['solar + storage', 'microgrid', 'peak shaving', 'demand charge'];
+  const highValue = ["bess", "battery storage", "energy storage", "mwh", "grid-scale"];
+  const mediumValue = ["solar + storage", "microgrid", "peak shaving", "demand charge"];
   const companyMentions = [...TRACKED_COMPANIES.epc, ...TRACKED_COMPANIES.developers];
   const customerKeywords = TARGET_INDUSTRIES;
 
-  highValue.forEach(kw => { if (text.includes(kw)) score += 0.3; });
-  mediumValue.forEach(kw => { if (text.includes(kw)) score += 0.2; });
-  companyMentions.forEach(co => { if (text.toLowerCase().includes(co.toLowerCase())) score += 0.15; });
-  customerKeywords.forEach(kw => { if (text.includes(kw)) score += 0.1; });
+  highValue.forEach((kw) => {
+    if (text.includes(kw)) score += 0.3;
+  });
+  mediumValue.forEach((kw) => {
+    if (text.includes(kw)) score += 0.2;
+  });
+  companyMentions.forEach((co) => {
+    if (text.toLowerCase().includes(co.toLowerCase())) score += 0.15;
+  });
+  customerKeywords.forEach((kw) => {
+    if (text.includes(kw)) score += 0.1;
+  });
 
   return Math.min(score, 1);
 }
@@ -210,21 +286,21 @@ function calculateRelevance(title: string, content: string): number {
 export function extractCompanyMentions(newsItems: NewsItem[]): CompanyMention[] {
   const mentions: CompanyMention[] = [];
   const allCompanies = {
-    ...TRACKED_COMPANIES
+    ...TRACKED_COMPANIES,
   };
 
   for (const item of newsItems) {
     const text = `${item.title} ${item.summary}`;
-    
+
     for (const [type, companies] of Object.entries(allCompanies)) {
       for (const company of companies) {
         if (text.toLowerCase().includes(company.toLowerCase())) {
           mentions.push({
             name: company,
-            type: type as CompanyMention['type'],
+            type: type as CompanyMention["type"],
             context: item.title,
             projectSize: extractProjectSize(text),
-            location: extractLocation(text)
+            location: extractLocation(text),
           });
         }
       }
@@ -264,9 +340,17 @@ function extractProjectSize(text: string): string | undefined {
  * Extract location from text
  */
 function extractLocation(text: string): string | undefined {
-  const states = ['California', 'Texas', 'Arizona', 'Nevada', 'Florida', 'New York', 'Massachusetts'];
-  const countries = ['Australia', 'UK', 'Germany', 'China', 'Japan', 'India'];
-  
+  const states = [
+    "California",
+    "Texas",
+    "Arizona",
+    "Nevada",
+    "Florida",
+    "New York",
+    "Massachusetts",
+  ];
+  const countries = ["Australia", "UK", "Germany", "China", "Japan", "India"];
+
   for (const loc of [...states, ...countries]) {
     if (text.includes(loc)) return loc;
   }
@@ -278,19 +362,26 @@ function extractLocation(text: string): string | undefined {
  */
 export function identifyPotentialCustomers(newsItems: NewsItem[]): CompanyMention[] {
   const customers: CompanyMention[] = [];
-  
+
   for (const item of newsItems) {
     const text = `${item.title} ${item.summary}`.toLowerCase();
-    
+
     // Look for companies announcing sustainability goals, high energy costs, etc.
     const customerSignals = [
-      'sustainability', 'carbon neutral', 'net zero', 'energy costs',
-      'renewable energy', 'clean energy transition', 'electricity bill',
-      'demand response', 'backup power', 'resilience'
+      "sustainability",
+      "carbon neutral",
+      "net zero",
+      "energy costs",
+      "renewable energy",
+      "clean energy transition",
+      "electricity bill",
+      "demand response",
+      "backup power",
+      "resilience",
     ];
 
-    const hasSignal = customerSignals.some(signal => text.includes(signal));
-    const hasIndustry = TARGET_INDUSTRIES.some(ind => text.includes(ind));
+    const hasSignal = customerSignals.some((signal) => text.includes(signal));
+    const hasIndustry = TARGET_INDUSTRIES.some((ind) => text.includes(ind));
 
     if (hasSignal && hasIndustry) {
       // Extract company name (simplified - would use NER in production)
@@ -298,9 +389,9 @@ export function identifyPotentialCustomers(newsItems: NewsItem[]): CompanyMentio
       if (companyMatch) {
         customers.push({
           name: companyMatch[1],
-          type: 'customer',
+          type: "customer",
           context: item.title,
-          location: extractLocation(item.summary)
+          location: extractLocation(item.summary),
         });
       }
     }
@@ -322,18 +413,23 @@ export async function generateExecutiveSummary(
 ): Promise<string> {
   // If no OpenAI key, generate a basic summary
   if (!import.meta.env.VITE_OPENAI_API_KEY) {
-    const deployments = newsItems.filter(n => n.category === 'deployment').length;
-    const pricing = newsItems.filter(n => n.category === 'pricing').length;
-    const topCompanies = companies.slice(0, 5).map(c => c.name).join(', ');
+    const deployments = newsItems.filter((n) => n.category === "deployment").length;
+    const pricing = newsItems.filter((n) => n.category === "pricing").length;
+    const topCompanies = companies
+      .slice(0, 5)
+      .map((c) => c.name)
+      .join(", ");
 
-    return `Today's BESS Market Update: ${newsItems.length} relevant articles tracked. ` +
+    return (
+      `Today's BESS Market Update: ${newsItems.length} relevant articles tracked. ` +
       `${deployments} new deployment announcements, ${pricing} pricing updates. ` +
-      `Key companies mentioned: ${topCompanies || 'Various'}. ` +
-      `See details below for actionable intelligence.`;
+      `Key companies mentioned: ${topCompanies || "Various"}. ` +
+      `See details below for actionable intelligence.`
+    );
   }
 
   // TODO: Add OpenAI integration for better summaries
-  return 'AI summary generation requires OpenAI API key.';
+  return "AI summary generation requires OpenAI API key.";
 }
 
 // ============================================================================
@@ -344,11 +440,12 @@ export async function generateExecutiveSummary(
  * Generate HTML email template
  */
 export function generateEmailHTML(report: DailyReport): string {
-  const { date, executiveSummary, newsItems, companyMentions, potentialCustomers, newDeployments } = report;
+  const { date, executiveSummary, newsItems, companyMentions, potentialCustomers, newDeployments } =
+    report;
 
-  const deploymentNews = newsItems.filter(n => n.category === 'deployment');
-  const pricingNews = newsItems.filter(n => n.category === 'pricing');
-  const policyNews = newsItems.filter(n => n.category === 'policy');
+  const deploymentNews = newsItems.filter((n) => n.category === "deployment");
+  const pricingNews = newsItems.filter((n) => n.category === "pricing");
+  const policyNews = newsItems.filter((n) => n.category === "policy");
 
   return `
 <!DOCTYPE html>
@@ -391,7 +488,7 @@ export function generateEmailHTML(report: DailyReport): string {
     <!-- Header -->
     <div class="header">
       <h1>⚡ Merlin BESS Intelligence</h1>
-      <div class="date">${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      <div class="date">${new Date(date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
     </div>
 
     <!-- Executive Summary -->
@@ -417,72 +514,117 @@ export function generateEmailHTML(report: DailyReport): string {
     </div>
 
     <!-- New Deployments -->
-    ${deploymentNews.length > 0 ? `
+    ${
+      deploymentNews.length > 0
+        ? `
     <div class="section">
       <h2><span class="emoji">🔋</span> New BESS Deployments</h2>
-      ${deploymentNews.slice(0, 5).map(item => `
+      ${deploymentNews
+        .slice(0, 5)
+        .map(
+          (item) => `
         <div class="news-item">
           <a href="${item.url}" class="news-title">${item.title}</a>
           <div class="news-meta">${item.source} • ${new Date(item.publishedAt).toLocaleDateString()}</div>
           <div class="news-summary">${item.summary.slice(0, 200)}...</div>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Pricing Updates -->
-    ${pricingNews.length > 0 ? `
+    ${
+      pricingNews.length > 0
+        ? `
     <div class="section">
       <h2><span class="emoji">💰</span> Pricing & Market Updates</h2>
-      ${pricingNews.slice(0, 3).map(item => `
+      ${pricingNews
+        .slice(0, 3)
+        .map(
+          (item) => `
         <div class="news-item">
           <a href="${item.url}" class="news-title">${item.title}</a>
           <div class="news-meta">${item.source} • ${new Date(item.publishedAt).toLocaleDateString()}</div>
           <div class="news-summary">${item.summary.slice(0, 200)}...</div>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Key Companies -->
-    ${companyMentions.length > 0 ? `
+    ${
+      companyMentions.length > 0
+        ? `
     <div class="section">
       <h2><span class="emoji">🏢</span> Key Companies in the News</h2>
       <div class="company-grid">
-        ${companyMentions.slice(0, 10).map(company => `
+        ${companyMentions
+          .slice(0, 10)
+          .map(
+            (company) => `
           <div class="company-tag ${company.type}">${company.name} <small>(${company.type})</small></div>
-        `).join('')}
+        `
+          )
+          .join("")}
       </div>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Potential Customers -->
-    ${potentialCustomers.length > 0 ? `
+    ${
+      potentialCustomers.length > 0
+        ? `
     <div class="section">
       <h2><span class="emoji">🎯</span> Potential Customer Leads</h2>
       <p style="color: #666; font-size: 14px;">Companies showing interest in energy storage or sustainability:</p>
-      ${potentialCustomers.slice(0, 5).map(customer => `
+      ${potentialCustomers
+        .slice(0, 5)
+        .map(
+          (customer) => `
         <div class="news-item">
           <strong>${customer.name}</strong>
-          ${customer.location ? `<span style="color: #666;"> • ${customer.location}</span>` : ''}
+          ${customer.location ? `<span style="color: #666;"> • ${customer.location}</span>` : ""}
           <div class="news-summary">${customer.context}</div>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Policy Updates -->
-    ${policyNews.length > 0 ? `
+    ${
+      policyNews.length > 0
+        ? `
     <div class="section">
       <h2><span class="emoji">📜</span> Policy & Regulatory</h2>
-      ${policyNews.slice(0, 3).map(item => `
+      ${policyNews
+        .slice(0, 3)
+        .map(
+          (item) => `
         <div class="news-item">
           <a href="${item.url}" class="news-title">${item.title}</a>
           <div class="news-meta">${item.source}</div>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- CTA -->
     <div class="section" style="text-align: center;">
@@ -511,19 +653,27 @@ export function generateEmailHTML(report: DailyReport): string {
  * Generate the full daily report
  */
 export async function generateDailyReport(): Promise<DailyReport> {
-  if (import.meta.env.DEV) { console.log('📊 Generating daily BESS intelligence report...'); }
+  if (import.meta.env.DEV) {
+    console.log("📊 Generating daily BESS intelligence report...");
+  }
 
   // Fetch news from RSS feeds
   const newsItems = await fetchRSSFeeds();
-  if (import.meta.env.DEV) { console.log(`  ✓ Fetched ${newsItems.length} relevant news items`); }
+  if (import.meta.env.DEV) {
+    console.log(`  ✓ Fetched ${newsItems.length} relevant news items`);
+  }
 
   // Extract company mentions
   const companyMentions = extractCompanyMentions(newsItems);
-  if (import.meta.env.DEV) { console.log(`  ✓ Found ${companyMentions.length} company mentions`); }
+  if (import.meta.env.DEV) {
+    console.log(`  ✓ Found ${companyMentions.length} company mentions`);
+  }
 
   // Identify potential customers
   const potentialCustomers = identifyPotentialCustomers(newsItems);
-  if (import.meta.env.DEV) { console.log(`  ✓ Identified ${potentialCustomers.length} potential customer leads`); }
+  if (import.meta.env.DEV) {
+    console.log(`  ✓ Identified ${potentialCustomers.length} potential customer leads`);
+  }
 
   // Generate executive summary
   const executiveSummary = await generateExecutiveSummary(newsItems, companyMentions);
@@ -535,7 +685,7 @@ export async function generateDailyReport(): Promise<DailyReport> {
     companyMentions,
     pricingUpdates: [], // TODO: Add dedicated pricing API
     potentialCustomers,
-    newDeployments: [] // Extracted from deployment news
+    newDeployments: [], // Extracted from deployment news
   };
 
   return report;
@@ -548,26 +698,30 @@ export async function sendDailyReport(
   report: DailyReport,
   recipients: string[]
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  
   if (!import.meta.env.VITE_RESEND_API_KEY) {
-    return { success: false, error: 'Resend API key not configured' };
+    return { success: false, error: "Resend API key not configured" };
   }
 
   const html = generateEmailHTML(report);
-  const date = new Date(report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const date = new Date(report.date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 
   try {
     const response = await resend.emails.send({
-      from: 'Merlin Intelligence <reports@merlinenergy.net>', // Update with your verified domain
+      from: "Merlin Intelligence <reports@merlinenergy.net>", // Update with your verified domain
       to: recipients,
       subject: `⚡ BESS Market Intelligence - ${date} | ${report.newsItems.length} Updates`,
-      html: html
+      html: html,
     });
 
-    if (import.meta.env.DEV) { console.log('✅ Daily report sent successfully:', response); }
+    if (import.meta.env.DEV) {
+      console.log("✅ Daily report sent successfully:", response);
+    }
     return { success: true, messageId: response.data?.id };
   } catch (error: any) {
-    console.error('❌ Failed to send daily report:', error);
+    console.error("❌ Failed to send daily report:", error);
     return { success: false, error: error.message };
   }
 }
@@ -577,9 +731,9 @@ export async function sendDailyReport(
  */
 export function previewReportHTML(report: DailyReport): void {
   const html = generateEmailHTML(report);
-  const blob = new Blob([html], { type: 'text/html' });
+  const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  window.open(url, "_blank");
 }
 
 // ============================================================================
@@ -601,9 +755,13 @@ export interface Subscriber {
 }
 
 // Store subscribers in Supabase (we'll add the table)
-export async function addSubscriber(subscriber: Omit<Subscriber, 'subscribedAt' | 'active'>): Promise<boolean> {
+export async function addSubscriber(
+  subscriber: Omit<Subscriber, "subscribedAt" | "active">
+): Promise<boolean> {
   // TODO: Implement Supabase storage
-  if (import.meta.env.DEV) { console.log('Adding subscriber:', subscriber.email); }
+  if (import.meta.env.DEV) {
+    console.log("Adding subscriber:", subscriber.email);
+  }
   return true;
 }
 
@@ -622,30 +780,36 @@ export async function getActiveSubscribers(): Promise<string[]> {
  * Call this from a cron job or Supabase Edge Function
  */
 export async function runDailyReportJob(): Promise<void> {
-  if (import.meta.env.DEV) { console.log('🚀 Starting daily BESS intelligence report job...'); }
-  
+  if (import.meta.env.DEV) {
+    console.log("🚀 Starting daily BESS intelligence report job...");
+  }
+
   try {
     // Generate the report
     const report = await generateDailyReport();
-    
+
     // Get subscribers
     const subscribers = await getActiveSubscribers();
-    
+
     if (subscribers.length === 0) {
-      if (import.meta.env.DEV) { console.log('⚠️ No subscribers to send to'); }
+      if (import.meta.env.DEV) {
+        console.log("⚠️ No subscribers to send to");
+      }
       return;
     }
 
     // Send the report
     const result = await sendDailyReport(report, subscribers);
-    
+
     if (result.success) {
-      if (import.meta.env.DEV) { console.log(`✅ Daily report sent to ${subscribers.length} subscribers`); }
+      if (import.meta.env.DEV) {
+        console.log(`✅ Daily report sent to ${subscribers.length} subscribers`);
+      }
     } else {
-      console.error('❌ Failed to send report:', result.error);
+      console.error("❌ Failed to send report:", result.error);
     }
   } catch (error) {
-    console.error('❌ Daily report job failed:', error);
+    console.error("❌ Daily report job failed:", error);
     throw error;
   }
 }

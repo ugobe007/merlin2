@@ -1,7 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, User, Settings, Users, Mail, Building2, Copy, Check, UserCog, Shield, Camera, Globe, Linkedin, Phone, Share2, Eye, EyeOff, ExternalLink, Save } from 'lucide-react';
-import { authService } from '../services/authService';
-import type { User as UserType, Company, TeamMember } from '@/types';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  X,
+  User,
+  Settings,
+  Users,
+  Mail,
+  Building2,
+  Copy,
+  Check,
+  UserCog,
+  Shield,
+  Camera,
+  Globe,
+  Linkedin,
+  Phone,
+  Share2,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Save,
+} from "lucide-react";
+import { authService } from "../services/authService";
+import type { User as UserType, Company, TeamMember } from "@/types";
 
 interface EditableUserProfileProps {
   isLoggedIn: boolean;
@@ -13,17 +33,25 @@ interface EditableUserProfileProps {
   onShowVendorLeads?: () => void;
 }
 
-type Tab = 'profile' | 'team' | 'invites';
+type Tab = "profile" | "team" | "invites";
 
-const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, onClose, onLoginSuccess, onLogout, onShowQuoteTemplates, onShowPricingPresets, onShowVendorLeads }) => {
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
+const EditableUserProfile: React.FC<EditableUserProfileProps> = ({
+  isLoggedIn,
+  onClose,
+  onLoginSuccess,
+  onLogout,
+  onShowQuoteTemplates,
+  onShowPricingPresets,
+  onShowVendorLeads,
+}) => {
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [user, setUser] = useState<UserType | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [inviteCode, setInviteCode] = useState<string>('');
+  const [inviteCode, setInviteCode] = useState<string>("");
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [copiedProfile, setCopiedProfile] = useState(false);
-  
+
   // Edit mode states
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<UserType>>({});
@@ -40,12 +68,12 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
     setEditedData({
-      bio: currentUser?.bio || '',
-      companyWebsite: currentUser?.companyWebsite || '',
-      linkedIn: currentUser?.linkedIn || '',
-      phone: currentUser?.phone || '',
-      profileVisibility: currentUser?.profileVisibility || 'private',
-      profilePhoto: currentUser?.profilePhoto || ''
+      bio: currentUser?.bio || "",
+      companyWebsite: currentUser?.companyWebsite || "",
+      linkedIn: currentUser?.linkedIn || "",
+      phone: currentUser?.phone || "",
+      profileVisibility: currentUser?.profileVisibility || "private",
+      profilePhoto: currentUser?.profilePhoto || "",
     });
 
     if (currentUser?.companyId) {
@@ -55,11 +83,13 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
       if (companyData) {
         const members = authService.getCompanyMembers(companyData.id);
         // Map User[] to TeamMember[] with required fields
-        setTeamMembers(members.map(m => ({
-          ...m,
-          role: (m as any).role || 'user',
-          status: 'active' as const
-        })));
+        setTeamMembers(
+          members.map((m) => ({
+            ...m,
+            role: (m as any).role || "user",
+            status: "active" as const,
+          }))
+        );
       }
     }
   };
@@ -69,7 +99,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
     if (file) {
       // Check file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        alert('Image size must be less than 2MB');
+        alert("Image size must be less than 2MB");
         return;
       }
 
@@ -85,9 +115,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
     if (!user) return;
 
     // Generate profile slug if making profile public and doesn't have one
-    let updates = { ...editedData };
-    if (editedData.profileVisibility === 'public' && !user.publicProfileSlug) {
-      const slug = authService.generateProfileSlug(user.firstName || '', user.lastName || '');
+    const updates = { ...editedData };
+    if (editedData.profileVisibility === "public" && !user.publicProfileSlug) {
+      const slug = authService.generateProfileSlug(user.firstName || "", user.lastName || "");
       updates.publicProfileSlug = slug;
     }
 
@@ -118,34 +148,47 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
 
   const handleShareProfile = () => {
     if (!user?.publicProfileSlug) {
-      alert('Please make your profile public first to enable sharing');
+      alert("Please make your profile public first to enable sharing");
       return;
     }
     const profileLink = `${window.location.origin}/profile/${user.publicProfileSlug}`;
     navigator.clipboard.writeText(profileLink);
     setCopiedProfile(true);
-    
+
     // Track share action
-    authService.trackVisitor(user.publicProfileSlug, 'profile_shared_by_owner');
-    
+    authService.trackVisitor(user.publicProfileSlug, "profile_shared_by_owner");
+
     setTimeout(() => setCopiedProfile(false), 2000);
   };
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
-      case 'owner':
-        return <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold flex items-center gap-1"><Shield size={12} /> Owner</span>;
-      case 'admin':
-        return <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold flex items-center gap-1"><UserCog size={12} /> Admin</span>;
-      case 'member':
-        return <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-bold">Member</span>;
+      case "owner":
+        return (
+          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">
+            <Shield size={12} /> Owner
+          </span>
+        );
+      case "admin":
+        return (
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">
+            <UserCog size={12} /> Admin
+          </span>
+        );
+      case "member":
+        return (
+          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-bold">
+            Member
+          </span>
+        );
       default:
         return null;
     }
   };
 
-  const isCompanyAccount = user?.accountType === 'company';
-  const canInvite = isCompanyAccount && (user?.companyRole === 'owner' || user?.companyRole === 'admin');
+  const isCompanyAccount = user?.accountType === "company";
+  const canInvite =
+    isCompanyAccount && (user?.companyRole === "owner" || user?.companyRole === "admin");
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
@@ -166,11 +209,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
           <div className="border-b border-gray-200 bg-gray-50">
             <div className="flex">
               <button
-                onClick={() => setActiveTab('profile')}
+                onClick={() => setActiveTab("profile")}
                 className={`flex items-center gap-2 px-6 py-3 font-bold transition-colors ${
-                  activeTab === 'profile'
-                    ? 'border-b-4 border-purple-600 text-purple-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                  activeTab === "profile"
+                    ? "border-b-4 border-purple-600 text-purple-600"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 <Settings size={20} />
@@ -179,11 +222,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
               {isCompanyAccount && (
                 <>
                   <button
-                    onClick={() => setActiveTab('team')}
+                    onClick={() => setActiveTab("team")}
                     className={`flex items-center gap-2 px-6 py-3 font-bold transition-colors ${
-                      activeTab === 'team'
-                        ? 'border-b-4 border-purple-600 text-purple-600'
-                        : 'text-gray-600 hover:text-gray-900'
+                      activeTab === "team"
+                        ? "border-b-4 border-purple-600 text-purple-600"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     <Users size={20} />
@@ -196,11 +239,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   </button>
                   {canInvite && (
                     <button
-                      onClick={() => setActiveTab('invites')}
+                      onClick={() => setActiveTab("invites")}
                       className={`flex items-center gap-2 px-6 py-3 font-bold transition-colors ${
-                        activeTab === 'invites'
-                          ? 'border-b-4 border-purple-600 text-purple-600'
-                          : 'text-gray-600 hover:text-gray-900'
+                        activeTab === "invites"
+                          ? "border-b-4 border-purple-600 text-purple-600"
+                          : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
                       <Mail size={20} />
@@ -215,7 +258,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
 
         {/* Content */}
         <div className="p-8 overflow-y-auto flex-1">
-          {isLoggedIn && activeTab === 'profile' && (
+          {isLoggedIn && activeTab === "profile" && (
             <div className="space-y-6">
               {/* Profile Photo & Basic Info */}
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6">
@@ -224,7 +267,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   <div className="relative">
                     <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                       {editedData.profilePhoto ? (
-                        <img src={editedData.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                        <img
+                          src={editedData.profilePhoto}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <User size={64} className="text-white" />
                       )}
@@ -253,7 +300,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                         <h3 className="text-2xl font-bold text-gray-900">
                           {user?.firstName} {user?.lastName}
                         </h3>
-                        <p className="text-gray-600">{user?.jobTitle || 'Energy Professional'}</p>
+                        <p className="text-gray-600">{user?.jobTitle || "Energy Professional"}</p>
                         {user?.company && (
                           <div className="flex items-center gap-2 mt-1 text-gray-700">
                             <Building2 size={16} />
@@ -286,7 +333,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                               className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
                             >
                               {saved ? <Check size={16} /> : <Save size={16} />}
-                              {saved ? 'Saved!' : 'Save'}
+                              {saved ? "Saved!" : "Save"}
                             </button>
                           </>
                         )}
@@ -296,7 +343,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     {/* Tier Badge */}
                     <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border-2 border-purple-300">
                       <span className="text-sm text-gray-600">Plan:</span>
-                      <span className="font-bold text-purple-600 uppercase">{user?.tier || 'Free'}</span>
+                      <span className="font-bold text-purple-600 uppercase">
+                        {user?.tier || "Free"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -343,7 +392,8 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-4 italic">
-                  💡 Once configured, your templates and pricing will auto-populate in all future quotes
+                  💡 Once configured, your templates and pricing will auto-populate in all future
+                  quotes
                 </p>
               </div>
 
@@ -354,7 +404,8 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   Vendor Marketplace
                 </h4>
                 <p className="text-sm text-gray-700 mb-4">
-                  <strong>Are you a vendor?</strong> Submit competitive pricing and win qualified project leads from Merlin2 users.
+                  <strong>Are you a vendor?</strong> Submit competitive pricing and win qualified
+                  project leads from Merlin2 users.
                 </p>
                 <div className="bg-white rounded-lg p-4 mb-4 border border-orange-200">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
@@ -386,7 +437,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     if (onShowVendorLeads) {
                       onShowVendorLeads();
                     } else {
-                      alert('🤝 Vendor Marketplace\n\nSubmit your pricing to win qualified project leads!\n\nFeatures:\n• Real project opportunities\n• Direct client connections\n• Win rate analytics\n• No middleman fees\n\nSign up as a vendor to access this feature.');
+                      alert(
+                        "🤝 Vendor Marketplace\n\nSubmit your pricing to win qualified project leads!\n\nFeatures:\n• Real project opportunities\n• Direct client connections\n• Win rate analytics\n• No middleman fees\n\nSign up as a vendor to access this feature."
+                      );
                     }
                   }}
                   className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white px-6 py-4 rounded-xl font-bold shadow-lg transition-all duration-200 border border-orange-300/30 flex items-center justify-center gap-3 transform hover:scale-105"
@@ -418,7 +471,8 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   />
                 ) : (
                   <p className="text-gray-700">
-                    {user?.bio || 'No bio added yet. Click "Edit Profile" to add information about yourself.'}
+                    {user?.bio ||
+                      'No bio added yet. Click "Edit Profile" to add information about yourself.'}
                   </p>
                 )}
                 {isEditing && (
@@ -454,7 +508,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     </label>
                     <input
                       type="tel"
-                      value={isEditing ? editedData.phone : user?.phone || ''}
+                      value={isEditing ? editedData.phone : user?.phone || ""}
                       onChange={(e) => setEditedData({ ...editedData, phone: e.target.value })}
                       disabled={!isEditing}
                       placeholder="Optional"
@@ -472,7 +526,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                       <input
                         type="url"
                         value={editedData.companyWebsite}
-                        onChange={(e) => setEditedData({ ...editedData, companyWebsite: e.target.value })}
+                        onChange={(e) =>
+                          setEditedData({ ...editedData, companyWebsite: e.target.value })
+                        }
                         placeholder="https://yourcompany.com"
                         className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-400 focus:outline-none text-gray-900"
                       />
@@ -528,32 +584,38 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                   <Share2 size={20} className="text-blue-600" />
                   Profile Sharing
                 </h4>
-                
+
                 {/* Visibility Toggle */}
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Profile Visibility</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Profile Visibility
+                  </label>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => isEditing && setEditedData({ ...editedData, profileVisibility: 'private' })}
+                      onClick={() =>
+                        isEditing && setEditedData({ ...editedData, profileVisibility: "private" })
+                      }
                       disabled={!isEditing}
                       className={`flex-1 p-3 rounded-xl border-2 transition-all ${
-                        editedData.profileVisibility === 'private'
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300 hover:border-purple-300'
-                      } ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                        editedData.profileVisibility === "private"
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300 hover:border-purple-300"
+                      } ${!isEditing && "opacity-60 cursor-not-allowed"}`}
                     >
                       <EyeOff className="mx-auto mb-1" size={24} />
                       <div className="font-bold text-sm">Private</div>
                       <div className="text-xs text-gray-600">Only you can see</div>
                     </button>
                     <button
-                      onClick={() => isEditing && setEditedData({ ...editedData, profileVisibility: 'public' })}
+                      onClick={() =>
+                        isEditing && setEditedData({ ...editedData, profileVisibility: "public" })
+                      }
                       disabled={!isEditing}
                       className={`flex-1 p-3 rounded-xl border-2 transition-all ${
-                        editedData.profileVisibility === 'public'
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-300 hover:border-purple-300'
-                      } ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                        editedData.profileVisibility === "public"
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-300 hover:border-purple-300"
+                      } ${!isEditing && "opacity-60 cursor-not-allowed"}`}
                     >
                       <Eye className="mx-auto mb-1" size={24} />
                       <div className="font-bold text-sm">Public</div>
@@ -563,9 +625,11 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 </div>
 
                 {/* Share Button */}
-                {user?.profileVisibility === 'public' && user?.publicProfileSlug && (
+                {user?.profileVisibility === "public" && user?.publicProfileSlug && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Share Your Profile</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Share Your Profile
+                    </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -578,18 +642,20 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                         className="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
                       >
                         {copiedProfile ? <Check size={20} /> : <Copy size={20} />}
-                        {copiedProfile ? 'Copied!' : 'Copy'}
+                        {copiedProfile ? "Copied!" : "Copy"}
                       </button>
                     </div>
                     <p className="text-xs text-gray-600 mt-2">
-                      📢 Share this link to attract visitors to Merlin. Non-users will see your profile and can explore the platform!
+                      📢 Share this link to attract visitors to Merlin. Non-users will see your
+                      profile and can explore the platform!
                     </p>
                   </div>
                 )}
 
-                {editedData.profileVisibility === 'private' && (
+                {editedData.profileVisibility === "private" && (
                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 text-sm text-yellow-800">
-                    💡 <strong>Tip:</strong> Make your profile public to share it with others and attract potential clients or collaborators!
+                    💡 <strong>Tip:</strong> Make your profile public to share it with others and
+                    attract potential clients or collaborators!
                   </div>
                 )}
               </div>
@@ -605,7 +671,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
           )}
 
           {/* Team Tab (keep existing) */}
-          {activeTab === 'team' && isCompanyAccount && (
+          {activeTab === "team" && isCompanyAccount && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -618,7 +684,8 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 {company && (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) && (
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-4">
                     <p className="text-sm text-yellow-800">
-                      <strong>Seat limit reached.</strong> Upgrade your plan to add more team members.
+                      <strong>Seat limit reached.</strong> Upgrade your plan to add more team
+                      members.
                     </p>
                   </div>
                 )}
@@ -626,27 +693,34 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
 
               <div className="space-y-3">
                 {teamMembers.map((member) => (
-                  <div key={member.id} className="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+                  <div
+                    key={member.id}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all"
+                  >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center overflow-hidden">
                           {member.profilePhoto ? (
-                            <img src={member.profilePhoto} alt={member.firstName || member.name} className="w-full h-full object-cover" />
+                            <img
+                              src={member.profilePhoto}
+                              alt={member.firstName || member.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <User size={24} className="text-white" />
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900">{member.firstName || member.name} {member.lastName || ''}</div>
+                          <div className="font-bold text-gray-900">
+                            {member.firstName || member.name} {member.lastName || ""}
+                          </div>
                           <div className="text-sm text-gray-600">{member.email}</div>
                           {member.jobTitle && (
                             <div className="text-xs text-gray-500 mt-1">{member.jobTitle}</div>
                           )}
                         </div>
                       </div>
-                      <div>
-                        {getRoleBadge(member.companyRole)}
-                      </div>
+                      <div>{getRoleBadge(member.companyRole)}</div>
                     </div>
                   </div>
                 ))}
@@ -654,7 +728,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
 
               {canInvite && (
                 <button
-                  onClick={() => setActiveTab('invites')}
+                  onClick={() => setActiveTab("invites")}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                 >
                   <Mail size={20} />
@@ -665,7 +739,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
           )}
 
           {/* Invites Tab (keep existing with minor updates) */}
-          {activeTab === 'invites' && canInvite && (
+          {activeTab === "invites" && canInvite && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Invite Team Members</h3>
@@ -676,7 +750,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 {!inviteCode ? (
                   <button
                     onClick={handleGenerateInvite}
-                    disabled={company ? (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) : false}
+                    disabled={
+                      company ? (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) : false
+                    }
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Mail size={20} />
@@ -685,7 +761,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 ) : (
                   <div className="space-y-4">
                     <div className="bg-white border-2 border-purple-300 rounded-xl p-4">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Invite Code</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Invite Code
+                      </label>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -698,13 +776,15 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                           className="px-4 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-colors flex items-center gap-2"
                         >
                           {copiedInvite ? <Check size={20} /> : <Copy size={20} />}
-                          {copiedInvite ? 'Copied!' : 'Copy'}
+                          {copiedInvite ? "Copied!" : "Copy"}
                         </button>
                       </div>
                     </div>
 
                     <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Shareable Link</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Shareable Link
+                      </label>
                       <div className="bg-gray-50 border border-gray-300 rounded-lg p-3">
                         <code className="text-sm text-purple-600 break-all">
                           {window.location.origin}?invite={inviteCode}
@@ -716,7 +796,7 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     </div>
 
                     <button
-                      onClick={() => setInviteCode('')}
+                      onClick={() => setInviteCode("")}
                       className="w-full border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold hover:border-gray-400 transition-colors"
                     >
                       Generate New Code
@@ -727,7 +807,8 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                 {company && (company.seatsUsed ?? 0) >= (company.seatLimit ?? 0) && (
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mt-4">
                     <p className="text-sm text-yellow-800">
-                      <strong>No seats available.</strong> You've reached your limit of {company.seatLimit ?? 0} users. Upgrade to add more team members.
+                      <strong>No seats available.</strong> You've reached your limit of{" "}
+                      {company.seatLimit ?? 0} users. Upgrade to add more team members.
                     </p>
                   </div>
                 )}
@@ -745,7 +826,9 @@ const EditableUserProfile: React.FC<EditableUserProfileProps> = ({ isLoggedIn, o
                     Want to update your profile?
                   </h3>
                   <p className="text-gray-700 mb-3">
-                    Click the <strong className="text-purple-600">"Edit Profile"</strong> button at the top of this page to customize your photo, bio, contact information, and more.
+                    Click the <strong className="text-purple-600">"Edit Profile"</strong> button at
+                    the top of this page to customize your photo, bio, contact information, and
+                    more.
                   </p>
                   <button
                     onClick={() => setIsEditing(true)}

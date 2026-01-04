@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Rss, Play, Pause, RefreshCw, CheckCircle, XCircle, Activity, Database } from 'lucide-react';
-import { 
-  RSS_SOURCES, 
-  runRSSFetchCycle, 
+import React, { useState, useEffect } from "react";
+import {
+  Rss,
+  Play,
+  Pause,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Activity,
+  Database,
+} from "lucide-react";
+import {
+  RSS_SOURCES,
+  runRSSFetchCycle,
   scheduleRSSFetching,
   checkRSSFeedHealth,
-  toggleRSSSource
-} from '../services/rssAutoFetchService';
-import { getAIDataStats } from '../services/rssToAIDatabase';
+  toggleRSSSource,
+} from "../services/rssAutoFetchService";
+import { getAIDataStats } from "../services/rssToAIDatabase";
 
 interface RSSControlPanelProps {
   onClose?: () => void;
@@ -23,12 +32,14 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
     alertsCreated: number;
     errors: number;
   } | null>(null);
-  const [feedHealth, setFeedHealth] = useState<Array<{
-    source: string;
-    status: 'ok' | 'error';
-    articlesFound?: number;
-    error?: string;
-  }>>([]);
+  const [feedHealth, setFeedHealth] = useState<
+    Array<{
+      source: string;
+      status: "ok" | "error";
+      articlesFound?: number;
+      error?: string;
+    }>
+  >([]);
   const [aiDataStats, setAIDataStats] = useState<{
     totalRecords: number;
     byType: { [key: string]: number };
@@ -57,7 +68,7 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
       // Refresh AI data stats after fetch
       await loadAIDataStats();
     } catch (error) {
-      console.error('Manual fetch failed:', error);
+      console.error("Manual fetch failed:", error);
     } finally {
       setIsFetching(false);
     }
@@ -98,7 +109,9 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
               <Rss className="w-8 h-8" />
               <div>
                 <h2 className="text-2xl font-bold">RSS Auto-Fetch Control</h2>
-                <p className="text-orange-100 text-sm">Automated industry news collection and price alert generation</p>
+                <p className="text-orange-100 text-sm">
+                  Automated industry news collection and price alert generation
+                </p>
               </div>
             </div>
             {onClose && (
@@ -129,8 +142,8 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
                 disabled={isFetching}
                 className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
                   isFetching
-                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
                 }`}
               >
                 {isFetching ? (
@@ -190,8 +203,8 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
                 onClick={isScheduled ? handleStopSchedule : handleStartSchedule}
                 className={`w-full px-4 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl ${
                   isScheduled
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-green-600 hover:bg-green-700 text-white"
                 }`}
               >
                 {isScheduled ? (
@@ -229,31 +242,40 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
             <p className="text-sm text-purple-800 mb-4">
               Extracted data from RSS feeds for AI training and pricing intelligence
             </p>
-            
+
             {aiDataStats ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-purple-200">
-                    <div className="text-2xl font-bold text-purple-900">{aiDataStats.totalRecords}</div>
+                    <div className="text-2xl font-bold text-purple-900">
+                      {aiDataStats.totalRecords}
+                    </div>
                     <div className="text-xs text-purple-600">Total Records</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-purple-200">
-                    <div className="text-2xl font-bold text-blue-900">{aiDataStats.byType.pricing || 0}</div>
+                    <div className="text-2xl font-bold text-blue-900">
+                      {aiDataStats.byType.pricing || 0}
+                    </div>
                     <div className="text-xs text-blue-600">💰 Pricing Data</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-purple-200">
-                    <div className="text-2xl font-bold text-green-900">{aiDataStats.byType.configuration || 0}</div>
+                    <div className="text-2xl font-bold text-green-900">
+                      {aiDataStats.byType.configuration || 0}
+                    </div>
                     <div className="text-xs text-green-600">⚙️ Configurations</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-purple-200">
-                    <div className="text-2xl font-bold text-orange-900">{aiDataStats.byType.market_trend || 0}</div>
+                    <div className="text-2xl font-bold text-orange-900">
+                      {aiDataStats.byType.market_trend || 0}
+                    </div>
                     <div className="text-xs text-orange-600">📈 Market Trends</div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-lg p-3 border border-purple-200">
                   <div className="text-xs text-gray-600 mb-2">
-                    <strong>Last Updated:</strong> {new Date(aiDataStats.lastUpdated).toLocaleString()}
+                    <strong>Last Updated:</strong>{" "}
+                    {new Date(aiDataStats.lastUpdated).toLocaleString()}
                   </div>
                   <div className="text-xs text-gray-600">
                     <strong>Data Types:</strong>
@@ -264,7 +286,7 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
                     </ul>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={loadAIDataStats}
                   className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
@@ -298,36 +320,40 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {RSS_SOURCES.map((source) => {
-                const health = feedHealth.find(h => h.source === source.name);
+                const health = feedHealth.find((h) => h.source === source.name);
                 return (
                   <div
                     key={source.name}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       source.enabled
-                        ? 'bg-white border-gray-200'
-                        : 'bg-gray-100 border-gray-300 opacity-60'
+                        ? "bg-white border-gray-200"
+                        : "bg-gray-100 border-gray-300 opacity-60"
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-semibold text-gray-900">{source.name}</h4>
-                          {health && (
-                            health.status === 'ok' ? (
+                          {health &&
+                            (health.status === "ok" ? (
                               <CheckCircle className="w-4 h-4 text-green-600" />
                             ) : (
                               <XCircle className="w-4 h-4 text-red-600" />
-                            )
-                          )}
+                            ))}
                         </div>
                         <p className="text-xs text-gray-600 mb-2">{source.url}</p>
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            source.category === 'market' ? 'bg-blue-100 text-blue-700' :
-                            source.category === 'technology' ? 'bg-purple-100 text-purple-700' :
-                            source.category === 'company' ? 'bg-orange-100 text-orange-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              source.category === "market"
+                                ? "bg-blue-100 text-blue-700"
+                                : source.category === "technology"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : source.category === "company"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
                             {source.category}
                           </span>
                           {health?.articlesFound !== undefined && (
@@ -355,9 +381,10 @@ const RSSControlPanel: React.FC<RSSControlPanelProps> = ({ onClose }) => {
           {/* Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-900">
-              <strong>💡 How it works:</strong> The RSS auto-fetch system monitors industry news sources, 
-              extracts pricing information, and automatically creates price alerts. Articles are processed 
-              in batches to avoid rate limiting, and only relevant content is forwarded to the AI service.
+              <strong>💡 How it works:</strong> The RSS auto-fetch system monitors industry news
+              sources, extracts pricing information, and automatically creates price alerts.
+              Articles are processed in batches to avoid rate limiting, and only relevant content is
+              forwarded to the AI service.
             </p>
           </div>
         </div>

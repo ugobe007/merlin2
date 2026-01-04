@@ -1,39 +1,39 @@
 /**
  * Market Data Integration Service
  * ================================
- * 
+ *
  * Integrates real-time market data from RSS feeds and data sources
  * into the unified pricing service.
- * 
+ *
  * Data Flow:
  * 1. RSS feeds → rssAutoFetchService → extracted pricing
  * 2. Extracted pricing → market_pricing_data table
  * 3. market_pricing_data → marketDataIntegrationService
  * 4. marketDataIntegrationService → unifiedPricingService
- * 
+ *
  * Pricing Priority (highest to lowest):
  * 1. Recent market data (< 30 days) with high confidence
  * 2. pricing_configurations database table
  * 3. NREL ATB 2024 fallbacks
- * 
+ *
  * Created: December 10, 2025
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 // ============================================
 // INTERFACES
 // ============================================
 
 export interface MarketPriceData {
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator' | 'inverter' | 'ev-charger';
+  equipmentType: "bess" | "solar" | "wind" | "generator" | "inverter" | "ev-charger";
   pricePerUnit: number;
-  unitType: '$/kWh' | '$/kW' | '$/W' | '$/unit';
+  unitType: "$/kWh" | "$/kW" | "$/W" | "$/unit";
   dataSource: string;
   dataDate: Date;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   region: string;
-  systemScale?: 'residential' | 'commercial' | 'utility';
+  systemScale?: "residential" | "commercial" | "utility";
   metadata?: Record<string, any>;
 }
 
@@ -54,7 +54,7 @@ export interface MarketDataSource {
   name: string;
   url: string;
   feedUrl?: string;
-  sourceType: 'rss_feed' | 'api' | 'web_scrape' | 'data_provider' | 'government' | 'manufacturer';
+  sourceType: "rss_feed" | "api" | "web_scrape" | "data_provider" | "government" | "manufacturer";
   equipmentCategories: string[];
   contentType: string;
   reliabilityScore: number;
@@ -77,7 +77,7 @@ let marketCache: MarketDataCache = {
   prices: new Map(),
   sources: [],
   lastCacheUpdate: new Date(0),
-  cacheExpiryMinutes: 30 // Refresh every 30 minutes
+  cacheExpiryMinutes: 30, // Refresh every 30 minutes
 };
 
 function isCacheValid(): boolean {
@@ -100,17 +100,17 @@ export async function getMarketDataSources(): Promise<MarketDataSource[]> {
 
   try {
     const { data, error } = await supabase
-      .from('market_data_sources')
-      .select('*')
-      .eq('is_active', true)
-      .order('reliability_score', { ascending: false });
+      .from("market_data_sources")
+      .select("*")
+      .eq("is_active", true)
+      .order("reliability_score", { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch market data sources:', error);
+      console.error("Failed to fetch market data sources:", error);
       return [];
     }
 
-    const sources: MarketDataSource[] = (data || []).map(row => ({
+    const sources: MarketDataSource[] = (data || []).map((row) => ({
       id: row.id,
       name: row.name,
       url: row.url,
@@ -120,7 +120,7 @@ export async function getMarketDataSources(): Promise<MarketDataSource[]> {
       contentType: row.content_type,
       reliabilityScore: row.reliability_score || 3,
       isActive: row.is_active,
-      lastFetchAt: row.last_fetch_at ? new Date(row.last_fetch_at) : undefined
+      lastFetchAt: row.last_fetch_at ? new Date(row.last_fetch_at) : undefined,
     }));
 
     marketCache.sources = sources;
@@ -128,7 +128,7 @@ export async function getMarketDataSources(): Promise<MarketDataSource[]> {
 
     return sources;
   } catch (error) {
-    console.error('Error fetching market data sources:', error);
+    console.error("Error fetching market data sources:", error);
     return [];
   }
 }
@@ -136,12 +136,16 @@ export async function getMarketDataSources(): Promise<MarketDataSource[]> {
 /**
  * Get RSS feed sources for a specific equipment type
  */
-export async function getRSSSourcesForEquipment(equipmentType: string): Promise<MarketDataSource[]> {
+export async function getRSSSourcesForEquipment(
+  equipmentType: string
+): Promise<MarketDataSource[]> {
   const allSources = await getMarketDataSources();
-  return allSources.filter(source => 
-    source.sourceType === 'rss_feed' &&
-    source.feedUrl &&
-    (source.equipmentCategories.includes(equipmentType) || source.equipmentCategories.includes('all'))
+  return allSources.filter(
+    (source) =>
+      source.sourceType === "rss_feed" &&
+      source.feedUrl &&
+      (source.equipmentCategories.includes(equipmentType) ||
+        source.equipmentCategories.includes("all"))
   );
 }
 
@@ -149,8 +153,8 @@ export async function getRSSSourcesForEquipment(equipmentType: string): Promise<
  * Get latest market prices for an equipment type
  */
 export async function getMarketPrices(
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator' | 'inverter' | 'ev-charger',
-  region: string = 'north-america',
+  equipmentType: "bess" | "solar" | "wind" | "generator" | "inverter" | "ev-charger",
+  region: string = "north-america",
   maxAgeDays: number = 90
 ): Promise<MarketPriceData[]> {
   try {
@@ -158,11 +162,11 @@ export async function getMarketPrices(
     cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
 
     const { data, error } = await supabase
-      .from('market_pricing_data')
-      .select('*')
-      .eq('equipment_type', equipmentType)
-      .gte('data_date', cutoffDate.toISOString().split('T')[0])
-      .order('data_date', { ascending: false })
+      .from("market_pricing_data")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .gte("data_date", cutoffDate.toISOString().split("T")[0])
+      .order("data_date", { ascending: false })
       .limit(100);
 
     if (error) {
@@ -170,16 +174,16 @@ export async function getMarketPrices(
       return [];
     }
 
-    return (data || []).map(row => ({
+    return (data || []).map((row) => ({
       equipmentType: row.equipment_type,
       pricePerUnit: row.price_per_unit,
-      unitType: `$/${row.unit_type}` as MarketPriceData['unitType'],
+      unitType: `$/${row.unit_type}` as MarketPriceData["unitType"],
       dataSource: row.data_source,
       dataDate: new Date(row.data_date),
-      confidence: row.confidence_level || 'medium',
+      confidence: row.confidence_level || "medium",
       region: row.region,
       systemScale: row.metadata?.scale,
-      metadata: row.metadata
+      metadata: row.metadata,
     }));
   } catch (error) {
     console.error(`Error fetching market prices for ${equipmentType}:`, error);
@@ -191,8 +195,8 @@ export async function getMarketPrices(
  * Get market price summary with statistics
  */
 export async function getMarketPriceSummary(
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator' | 'inverter' | 'ev-charger',
-  region: string = 'north-america'
+  equipmentType: "bess" | "solar" | "wind" | "generator" | "inverter" | "ev-charger",
+  region: string = "north-america"
 ): Promise<MarketPriceSummary | null> {
   // Check cache first
   const cacheKey = `${equipmentType}-${region}`;
@@ -201,49 +205,53 @@ export async function getMarketPriceSummary(
   }
 
   const prices = await getMarketPrices(equipmentType, region, 90);
-  
+
   if (prices.length === 0) {
     return null;
   }
 
   // Weight prices by confidence and recency
-  const weightedPrices = prices.map(p => {
-    const confidenceWeight = p.confidence === 'high' ? 1.0 : p.confidence === 'medium' ? 0.7 : 0.4;
+  const weightedPrices = prices.map((p) => {
+    const confidenceWeight = p.confidence === "high" ? 1.0 : p.confidence === "medium" ? 0.7 : 0.4;
     const daysSince = (Date.now() - p.dataDate.getTime()) / (1000 * 60 * 60 * 24);
-    const recencyWeight = Math.max(0.3, 1 - (daysSince / 90)); // Decay over 90 days
+    const recencyWeight = Math.max(0.3, 1 - daysSince / 90); // Decay over 90 days
     return {
       price: p.pricePerUnit,
       weight: confidenceWeight * recencyWeight,
-      source: p.dataSource
+      source: p.dataSource,
     };
   });
 
   // Calculate weighted average
   const totalWeight = weightedPrices.reduce((sum, p) => sum + p.weight, 0);
-  const weightedAverage = weightedPrices.reduce((sum, p) => sum + p.price * p.weight, 0) / totalWeight;
+  const weightedAverage =
+    weightedPrices.reduce((sum, p) => sum + p.price * p.weight, 0) / totalWeight;
 
   // Calculate other statistics
-  const priceValues = prices.map(p => p.pricePerUnit).sort((a, b) => a - b);
+  const priceValues = prices.map((p) => p.pricePerUnit).sort((a, b) => a - b);
   const medianIndex = Math.floor(priceValues.length / 2);
-  const medianPrice = priceValues.length % 2 === 0
-    ? (priceValues[medianIndex - 1] + priceValues[medianIndex]) / 2
-    : priceValues[medianIndex];
+  const medianPrice =
+    priceValues.length % 2 === 0
+      ? (priceValues[medianIndex - 1] + priceValues[medianIndex]) / 2
+      : priceValues[medianIndex];
 
   // Get unique sources
-  const sources = [...new Set(prices.map(p => p.dataSource))];
+  const sources = [...new Set(prices.map((p) => p.dataSource))];
 
   // Calculate 30-day price change
-  const recentPrices = prices.filter(p => 
-    (Date.now() - p.dataDate.getTime()) < 30 * 24 * 60 * 60 * 1000
+  const recentPrices = prices.filter(
+    (p) => Date.now() - p.dataDate.getTime() < 30 * 24 * 60 * 60 * 1000
   );
-  const olderPrices = prices.filter(p => 
-    (Date.now() - p.dataDate.getTime()) >= 30 * 24 * 60 * 60 * 1000 &&
-    (Date.now() - p.dataDate.getTime()) < 90 * 24 * 60 * 60 * 1000
+  const olderPrices = prices.filter(
+    (p) =>
+      Date.now() - p.dataDate.getTime() >= 30 * 24 * 60 * 60 * 1000 &&
+      Date.now() - p.dataDate.getTime() < 90 * 24 * 60 * 60 * 1000
   );
 
   let priceChange30d: number | undefined;
   if (recentPrices.length > 0 && olderPrices.length > 0) {
-    const recentAvg = recentPrices.reduce((sum, p) => sum + p.pricePerUnit, 0) / recentPrices.length;
+    const recentAvg =
+      recentPrices.reduce((sum, p) => sum + p.pricePerUnit, 0) / recentPrices.length;
     const olderAvg = olderPrices.reduce((sum, p) => sum + p.pricePerUnit, 0) / olderPrices.length;
     priceChange30d = ((recentAvg - olderAvg) / olderAvg) * 100;
   }
@@ -257,7 +265,7 @@ export async function getMarketPriceSummary(
     dataPointCount: prices.length,
     lastUpdated: prices[0]?.dataDate || new Date(),
     priceChange30d,
-    sources
+    sources,
   };
 
   // Update cache
@@ -271,21 +279,19 @@ export async function getMarketPriceSummary(
  */
 export async function saveMarketPrice(data: MarketPriceData): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('market_pricing_data')
-      .insert({
-        equipment_type: data.equipmentType,
-        price_per_unit: data.pricePerUnit,
-        unit_type: data.unitType.replace('$/', ''),
-        data_source: data.dataSource,
-        data_date: data.dataDate.toISOString().split('T')[0],
-        confidence_level: data.confidence,
-        region: data.region,
-        metadata: data.metadata || {}
-      });
+    const { error } = await supabase.from("market_pricing_data").insert({
+      equipment_type: data.equipmentType,
+      price_per_unit: data.pricePerUnit,
+      unit_type: data.unitType.replace("$/", ""),
+      data_source: data.dataSource,
+      data_date: data.dataDate.toISOString().split("T")[0],
+      confidence_level: data.confidence,
+      region: data.region,
+      metadata: data.metadata || {},
+    });
 
     if (error) {
-      console.error('Failed to save market price:', error);
+      console.error("Failed to save market price:", error);
       return false;
     }
 
@@ -295,7 +301,7 @@ export async function saveMarketPrice(data: MarketPriceData): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error saving market price:', error);
+    console.error("Error saving market price:", error);
     return false;
   }
 }
@@ -304,26 +310,25 @@ export async function saveMarketPrice(data: MarketPriceData): Promise<boolean> {
  * Update last fetch status for a data source
  */
 export async function updateSourceFetchStatus(
-  sourceId: string, 
-  status: 'success' | 'failed' | 'partial',
+  sourceId: string,
+  status: "success" | "failed" | "partial",
   dataPointCount?: number
 ): Promise<void> {
   try {
     await supabase
-      .from('market_data_sources')
+      .from("market_data_sources")
       .update({
         last_fetch_at: new Date().toISOString(),
         last_fetch_status: status,
-        fetch_error_count: status === 'failed' 
-          ? supabase.rpc('increment_error_count', { source_id: sourceId })
-          : 0,
-        total_data_points: dataPointCount 
-          ? supabase.rpc('add_data_points', { source_id: sourceId, count: dataPointCount })
-          : undefined
+        fetch_error_count:
+          status === "failed" ? supabase.rpc("increment_error_count", { source_id: sourceId }) : 0,
+        total_data_points: dataPointCount
+          ? supabase.rpc("add_data_points", { source_id: sourceId, count: dataPointCount })
+          : undefined,
       })
-      .eq('id', sourceId);
+      .eq("id", sourceId);
   } catch (error) {
-    console.error('Error updating source fetch status:', error);
+    console.error("Error updating source fetch status:", error);
   }
 }
 
@@ -336,13 +341,13 @@ export async function updateSourceFetchStatus(
  * Combines market data with SSOT defaults
  */
 export async function getMarketAdjustedPrice(
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator',
+  equipmentType: "bess" | "solar" | "wind" | "generator",
   defaultPrice: number,
-  region: string = 'north-america'
+  region: string = "north-america"
 ): Promise<{
   price: number;
-  source: 'market' | 'default';
-  confidence: 'high' | 'medium' | 'low';
+  source: "market" | "default";
+  confidence: "high" | "medium" | "low";
   marketTrend?: string;
   dataPoints?: number;
 }> {
@@ -352,43 +357,48 @@ export async function getMarketAdjustedPrice(
   if (!marketSummary || marketSummary.dataPointCount < 3) {
     return {
       price: defaultPrice,
-      source: 'default',
-      confidence: 'medium'
+      source: "default",
+      confidence: "medium",
     };
   }
 
   // If market data is significantly different (>30%), investigate
   const priceDiff = Math.abs(marketSummary.averagePrice - defaultPrice) / defaultPrice;
-  
+
   if (priceDiff > 0.3) {
     // Large discrepancy - log for review but use weighted average
-    console.warn(`[MarketData] Large price discrepancy for ${equipmentType}: market=$${marketSummary.averagePrice}, default=$${defaultPrice}`);
-    
+    console.warn(
+      `[MarketData] Large price discrepancy for ${equipmentType}: market=$${marketSummary.averagePrice}, default=$${defaultPrice}`
+    );
+
     // Use weighted average: 70% market, 30% default for high confidence data
-    const blendedPrice = marketSummary.dataPointCount >= 10
-      ? marketSummary.averagePrice * 0.7 + defaultPrice * 0.3
-      : marketSummary.averagePrice * 0.5 + defaultPrice * 0.5;
+    const blendedPrice =
+      marketSummary.dataPointCount >= 10
+        ? marketSummary.averagePrice * 0.7 + defaultPrice * 0.3
+        : marketSummary.averagePrice * 0.5 + defaultPrice * 0.5;
 
     return {
       price: Math.round(blendedPrice * 100) / 100,
-      source: 'market',
-      confidence: marketSummary.dataPointCount >= 10 ? 'high' : 'medium',
-      marketTrend: marketSummary.priceChange30d !== undefined
-        ? `${marketSummary.priceChange30d > 0 ? '+' : ''}${marketSummary.priceChange30d.toFixed(1)}% (30d)`
-        : undefined,
-      dataPoints: marketSummary.dataPointCount
+      source: "market",
+      confidence: marketSummary.dataPointCount >= 10 ? "high" : "medium",
+      marketTrend:
+        marketSummary.priceChange30d !== undefined
+          ? `${marketSummary.priceChange30d > 0 ? "+" : ""}${marketSummary.priceChange30d.toFixed(1)}% (30d)`
+          : undefined,
+      dataPoints: marketSummary.dataPointCount,
     };
   }
 
   // Market and default are aligned - use market data
   return {
     price: marketSummary.averagePrice,
-    source: 'market',
-    confidence: marketSummary.dataPointCount >= 10 ? 'high' : 'medium',
-    marketTrend: marketSummary.priceChange30d !== undefined
-      ? `${marketSummary.priceChange30d > 0 ? '+' : ''}${marketSummary.priceChange30d.toFixed(1)}% (30d)`
-      : undefined,
-    dataPoints: marketSummary.dataPointCount
+    source: "market",
+    confidence: marketSummary.dataPointCount >= 10 ? "high" : "medium",
+    marketTrend:
+      marketSummary.priceChange30d !== undefined
+        ? `${marketSummary.priceChange30d > 0 ? "+" : ""}${marketSummary.priceChange30d.toFixed(1)}% (30d)`
+        : undefined,
+    dataPoints: marketSummary.dataPointCount,
   };
 }
 
@@ -399,10 +409,12 @@ export async function getMarketAdjustedPrice(
 /**
  * Add a new market data source
  */
-export async function addMarketDataSource(source: Omit<MarketDataSource, 'id'>): Promise<string | null> {
+export async function addMarketDataSource(
+  source: Omit<MarketDataSource, "id">
+): Promise<string | null> {
   try {
     const { data, error } = await supabase
-      .from('market_data_sources')
+      .from("market_data_sources")
       .insert({
         name: source.name,
         url: source.url,
@@ -411,13 +423,13 @@ export async function addMarketDataSource(source: Omit<MarketDataSource, 'id'>):
         equipment_categories: source.equipmentCategories,
         content_type: source.contentType,
         reliability_score: source.reliabilityScore,
-        is_active: source.isActive
+        is_active: source.isActive,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (error) {
-      console.error('Failed to add market data source:', error);
+      console.error("Failed to add market data source:", error);
       return null;
     }
 
@@ -426,7 +438,7 @@ export async function addMarketDataSource(source: Omit<MarketDataSource, 'id'>):
 
     return data?.id || null;
   } catch (error) {
-    console.error('Error adding market data source:', error);
+    console.error("Error adding market data source:", error);
     return null;
   }
 }
@@ -435,8 +447,8 @@ export async function addMarketDataSource(source: Omit<MarketDataSource, 'id'>):
  * Update an existing market data source
  */
 export async function updateMarketDataSource(
-  id: string, 
-  updates: Partial<Omit<MarketDataSource, 'id'>>
+  id: string,
+  updates: Partial<Omit<MarketDataSource, "id">>
 ): Promise<boolean> {
   try {
     const updateData: Record<string, any> = {};
@@ -444,18 +456,17 @@ export async function updateMarketDataSource(
     if (updates.url !== undefined) updateData.url = updates.url;
     if (updates.feedUrl !== undefined) updateData.feed_url = updates.feedUrl;
     if (updates.sourceType !== undefined) updateData.source_type = updates.sourceType;
-    if (updates.equipmentCategories !== undefined) updateData.equipment_categories = updates.equipmentCategories;
+    if (updates.equipmentCategories !== undefined)
+      updateData.equipment_categories = updates.equipmentCategories;
     if (updates.contentType !== undefined) updateData.content_type = updates.contentType;
-    if (updates.reliabilityScore !== undefined) updateData.reliability_score = updates.reliabilityScore;
+    if (updates.reliabilityScore !== undefined)
+      updateData.reliability_score = updates.reliabilityScore;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
-    const { error } = await supabase
-      .from('market_data_sources')
-      .update(updateData)
-      .eq('id', id);
+    const { error } = await supabase.from("market_data_sources").update(updateData).eq("id", id);
 
     if (error) {
-      console.error('Failed to update market data source:', error);
+      console.error("Failed to update market data source:", error);
       return false;
     }
 
@@ -464,7 +475,7 @@ export async function updateMarketDataSource(
 
     return true;
   } catch (error) {
-    console.error('Error updating market data source:', error);
+    console.error("Error updating market data source:", error);
     return false;
   }
 }
@@ -474,13 +485,10 @@ export async function updateMarketDataSource(
  */
 export async function deleteMarketDataSource(id: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('market_data_sources')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("market_data_sources").delete().eq("id", id);
 
     if (error) {
-      console.error('Failed to delete market data source:', error);
+      console.error("Failed to delete market data source:", error);
       return false;
     }
 
@@ -489,7 +497,7 @@ export async function deleteMarketDataSource(id: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error deleting market data source:', error);
+    console.error("Error deleting market data source:", error);
     return false;
   }
 }
@@ -502,7 +510,7 @@ export function clearMarketDataCache(): void {
     prices: new Map(),
     sources: [],
     lastCacheUpdate: new Date(0),
-    cacheExpiryMinutes: 30
+    cacheExpiryMinutes: 30,
   };
 }
 
@@ -535,10 +543,10 @@ export interface PricingPolicy {
 export async function getPricingPolicies(equipmentType?: string): Promise<PricingPolicy[]> {
   try {
     let query = supabase
-      .from('pricing_policies')
-      .select('*')
-      .eq('is_active', true)
-      .order('priority', { ascending: false });
+      .from("pricing_policies")
+      .select("*")
+      .eq("is_active", true)
+      .order("priority", { ascending: false });
 
     if (equipmentType) {
       query = query.or(`equipment_type.eq.${equipmentType},equipment_type.eq.all`);
@@ -547,11 +555,11 @@ export async function getPricingPolicies(equipmentType?: string): Promise<Pricin
     const { data, error } = await query;
 
     if (error) {
-      console.error('Failed to fetch pricing policies:', error);
+      console.error("Failed to fetch pricing policies:", error);
       return [];
     }
 
-    return (data || []).map(row => ({
+    return (data || []).map((row) => ({
       id: row.id,
       name: row.name,
       description: row.description,
@@ -567,10 +575,10 @@ export async function getPricingPolicies(equipmentType?: string): Promise<Pricin
       minDataPoints: row.min_data_points || 3,
       regionalMultipliers: row.regional_multipliers || {},
       isActive: row.is_active,
-      priority: row.priority || 0
+      priority: row.priority || 0,
     }));
   } catch (error) {
-    console.error('Error fetching pricing policies:', error);
+    console.error("Error fetching pricing policies:", error);
     return [];
   }
 }
@@ -580,9 +588,11 @@ export async function getPricingPolicies(equipmentType?: string): Promise<Pricin
  */
 export async function getActivePricingPolicy(equipmentType: string): Promise<PricingPolicy | null> {
   const policies = await getPricingPolicies(equipmentType);
-  return policies.find(p => p.equipmentType === equipmentType) || 
-         policies.find(p => p.equipmentType === 'all') || 
-         null;
+  return (
+    policies.find((p) => p.equipmentType === equipmentType) ||
+    policies.find((p) => p.equipmentType === "all") ||
+    null
+  );
 }
 
 /**
@@ -590,8 +600,8 @@ export async function getActivePricingPolicy(equipmentType: string): Promise<Pri
  * This calls the database function calculate_weighted_price()
  */
 export async function calculateWeightedPrice(
-  equipmentType: 'bess' | 'solar' | 'wind' | 'generator' | 'inverter' | 'ev-charger',
-  region: string = 'north-america',
+  equipmentType: "bess" | "solar" | "wind" | "generator" | "inverter" | "ev-charger",
+  region: string = "north-america",
   capacityMW: number = 1.0,
   technology?: string
 ): Promise<{
@@ -604,15 +614,15 @@ export async function calculateWeightedPrice(
   priceRangeHigh: number;
 } | null> {
   try {
-    const { data, error } = await supabase.rpc('calculate_weighted_price', {
+    const { data, error } = await supabase.rpc("calculate_weighted_price", {
       p_equipment_type: equipmentType,
       p_region: region,
       p_capacity_mw: capacityMW,
-      p_technology: technology || null
+      p_technology: technology || null,
     });
 
     if (error) {
-      console.error('Failed to calculate weighted price:', error);
+      console.error("Failed to calculate weighted price:", error);
       return null;
     }
 
@@ -628,10 +638,10 @@ export async function calculateWeightedPrice(
       floorPrice: parseFloat(result.floor_price) || 0,
       ceilingPrice: parseFloat(result.ceiling_price) || 0,
       priceRangeLow: parseFloat(result.price_range_low) || 0,
-      priceRangeHigh: parseFloat(result.price_range_high) || 0
+      priceRangeHigh: parseFloat(result.price_range_high) || 0,
     };
   } catch (error) {
-    console.error('Error calculating weighted price:', error);
+    console.error("Error calculating weighted price:", error);
     return null;
   }
 }
@@ -656,27 +666,25 @@ export async function saveCollectedPrice(data: {
   extractionMethod?: string;
 }): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('collected_market_prices')
-      .insert({
-        source_id: data.sourceId,
-        equipment_type: data.equipmentType,
-        price_per_unit: data.pricePerUnit,
-        unit: data.unit,
-        currency: data.currency || 'USD',
-        region: data.region,
-        capacity_range_min: data.capacityRangeMin,
-        capacity_range_max: data.capacityRangeMax,
-        technology: data.technology,
-        product_name: data.productName,
-        confidence_score: data.confidenceScore || 0.5,
-        price_date: data.priceDate.toISOString().split('T')[0],
-        raw_text: data.rawText,
-        extraction_method: data.extractionMethod || 'manual'
-      });
+    const { error } = await supabase.from("collected_market_prices").insert({
+      source_id: data.sourceId,
+      equipment_type: data.equipmentType,
+      price_per_unit: data.pricePerUnit,
+      unit: data.unit,
+      currency: data.currency || "USD",
+      region: data.region,
+      capacity_range_min: data.capacityRangeMin,
+      capacity_range_max: data.capacityRangeMax,
+      technology: data.technology,
+      product_name: data.productName,
+      confidence_score: data.confidenceScore || 0.5,
+      price_date: data.priceDate.toISOString().split("T")[0],
+      raw_text: data.rawText,
+      extraction_method: data.extractionMethod || "manual",
+    });
 
     if (error) {
-      console.error('Failed to save collected price:', error);
+      console.error("Failed to save collected price:", error);
       return false;
     }
 
@@ -685,7 +693,7 @@ export async function saveCollectedPrice(data: {
 
     return true;
   } catch (error) {
-    console.error('Error saving collected price:', error);
+    console.error("Error saving collected price:", error);
     return false;
   }
 }
@@ -701,50 +709,52 @@ export async function getCollectedPrices(
     maxAgeDays?: number;
     verifiedOnly?: boolean;
   }
-): Promise<Array<{
-  id: string;
-  sourceId: string;
-  equipmentType: string;
-  pricePerUnit: number;
-  unit: string;
-  region?: string;
-  technology?: string;
-  productName?: string;
-  confidenceScore: number;
-  isVerified: boolean;
-  priceDate: Date;
-  extractedAt: Date;
-}>> {
+): Promise<
+  Array<{
+    id: string;
+    sourceId: string;
+    equipmentType: string;
+    pricePerUnit: number;
+    unit: string;
+    region?: string;
+    technology?: string;
+    productName?: string;
+    confidenceScore: number;
+    isVerified: boolean;
+    priceDate: Date;
+    extractedAt: Date;
+  }>
+> {
   try {
     let query = supabase
-      .from('collected_market_prices')
-      .select('*')
-      .eq('equipment_type', equipmentType)
-      .order('price_date', { ascending: false });
+      .from("collected_market_prices")
+      .select("*")
+      .eq("equipment_type", equipmentType)
+      .order("price_date", { ascending: false });
 
     if (options?.region) {
-      query = query.eq('region', options.region);
+      query = query.eq("region", options.region);
     }
     if (options?.technology) {
-      query = query.eq('technology', options.technology);
+      query = query.eq("technology", options.technology);
     }
     if (options?.verifiedOnly) {
-      query = query.eq('is_verified', true);
+      query = query.eq("is_verified", true);
     }
     if (options?.maxAgeDays) {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - options.maxAgeDays);
-      query = query.gte('price_date', cutoffDate.toISOString().split('T')[0]);
+      query = query.gte("price_date", cutoffDate.toISOString().split("T")[0]);
     }
 
     const { data, error } = await query.limit(200);
 
     if (error) {
-      console.error('Failed to fetch collected prices:', error);
+      console.error("Failed to fetch collected prices:", error);
       return [];
     }
 
-    return (data || []).map(row => ({
+    return (data || []).map((row) => ({
       id: row.id,
       sourceId: row.source_id,
       equipmentType: row.equipment_type,
@@ -756,10 +766,10 @@ export async function getCollectedPrices(
       confidenceScore: row.confidence_score || 0.5,
       isVerified: row.is_verified || false,
       priceDate: new Date(row.price_date),
-      extractedAt: new Date(row.extracted_at)
+      extractedAt: new Date(row.extracted_at),
     }));
   } catch (error) {
-    console.error('Error fetching collected prices:', error);
+    console.error("Error fetching collected prices:", error);
     return [];
   }
 }
@@ -770,21 +780,21 @@ export async function getCollectedPrices(
 export async function verifyCollectedPrice(id: string, notes?: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('collected_market_prices')
+      .from("collected_market_prices")
       .update({
         is_verified: true,
-        verification_notes: notes
+        verification_notes: notes,
       })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
-      console.error('Failed to verify collected price:', error);
+      console.error("Failed to verify collected price:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error verifying collected price:', error);
+    console.error("Error verifying collected price:", error);
     return false;
   }
 }
@@ -793,7 +803,4 @@ export async function verifyCollectedPrice(id: string, notes?: string): Promise<
 // EXPORTS
 // ============================================
 
-export {
-  isCacheValid,
-  marketCache
-};
+export { isCacheValid, marketCache };

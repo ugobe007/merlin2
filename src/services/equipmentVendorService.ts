@@ -2,13 +2,13 @@
  * Equipment Vendor Service
  * ========================
  * Database-driven equipment vendor and pricing lookups
- * 
+ *
  * Tables: equipment_vendors, ev_charger_catalog
  * Update Frequency: Quarterly
  * Source: NREL ATB, Vendor websites
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 // ============================================================================
 // TYPES
@@ -17,16 +17,16 @@ import { supabase } from './supabaseClient';
 export interface EquipmentVendor {
   id: string;
   vendor_name: string;
-  vendor_type: 'battery_cell' | 'battery_system' | 'inverter' | 'transformer' | 'bms';
+  vendor_type: "battery_cell" | "battery_system" | "inverter" | "transformer" | "bms";
   country_of_origin: string;
   product_name: string;
   product_model: string;
   capacity_kwh: number | null;
   capacity_kw: number | null;
   price_per_unit: number;
-  price_unit: '$/kWh' | '$/kW' | '$/unit' | '$/kVA';
+  price_unit: "$/kWh" | "$/kW" | "$/unit" | "$/kVA";
   min_order_quantity: number;
-  chemistry: 'LFP' | 'NMC' | 'NCA' | null;
+  chemistry: "LFP" | "NMC" | "NCA" | null;
   cycle_life: number | null;
   round_trip_efficiency: number | null;
   depth_of_discharge: number | null;
@@ -36,14 +36,14 @@ export interface EquipmentVendor {
   ul_certifications: string[];
   lead_time_weeks: number | null;
   region_availability: string[];
-  tier: 'Tier 1' | 'Tier 2' | 'Tier 3';
+  tier: "Tier 1" | "Tier 2" | "Tier 3";
   data_source: string;
   effective_date: string;
 }
 
 export interface EVCharger {
   id: string;
-  charger_class: 'Level2' | 'DCFC' | 'HPC';
+  charger_class: "Level2" | "DCFC" | "HPC";
   charger_type: string;
   power_kw: number;
   hardware_cost_min: number;
@@ -122,26 +122,28 @@ function setCache(key: string, data: unknown): void {
 /**
  * Get all battery system vendors
  */
-export async function getBatteryVendors(tier?: 'Tier 1' | 'Tier 2' | 'Tier 3'): Promise<EquipmentVendor[]> {
-  const cacheKey = `battery_vendors_${tier || 'all'}`;
+export async function getBatteryVendors(
+  tier?: "Tier 1" | "Tier 2" | "Tier 3"
+): Promise<EquipmentVendor[]> {
+  const cacheKey = `battery_vendors_${tier || "all"}`;
   const cached = getCached<EquipmentVendor[]>(cacheKey);
   if (cached) return cached;
 
   try {
     let query = supabase
-      .from('equipment_vendors')
-      .select('*')
-      .eq('vendor_type', 'battery_system')
-      .order('price_per_unit', { ascending: true });
+      .from("equipment_vendors")
+      .select("*")
+      .eq("vendor_type", "battery_system")
+      .order("price_per_unit", { ascending: true });
 
     if (tier) {
-      query = query.eq('tier', tier);
+      query = query.eq("tier", tier);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching battery vendors:', error);
+      console.error("Error fetching battery vendors:", error);
       return [];
     }
 
@@ -149,7 +151,7 @@ export async function getBatteryVendors(tier?: 'Tier 1' | 'Tier 2' | 'Tier 3'): 
     setCache(cacheKey, vendors);
     return vendors;
   } catch (err) {
-    console.error('Failed to fetch battery vendors:', err);
+    console.error("Failed to fetch battery vendors:", err);
     return [];
   }
 }
@@ -164,27 +166,27 @@ export async function getBatteryPricingBySize(systemSizeKWh: number): Promise<{
   recommendedVendors: EquipmentVendor[];
 }> {
   const vendors = await getBatteryVendors();
-  
+
   // Filter by availability for the size
-  const tier1 = vendors.filter(v => v.tier === 'Tier 1');
-  const tier2 = vendors.filter(v => v.tier === 'Tier 2');
+  const tier1 = vendors.filter((v) => v.tier === "Tier 1");
+  const tier2 = vendors.filter((v) => v.tier === "Tier 2");
 
-  const tier1Avg = tier1.length > 0 
-    ? tier1.reduce((sum, v) => sum + v.price_per_unit, 0) / tier1.length 
-    : 280;
-  
-  const tier2Avg = tier2.length > 0 
-    ? tier2.reduce((sum, v) => sum + v.price_per_unit, 0) / tier2.length 
-    : 230;
+  const tier1Avg =
+    tier1.length > 0 ? tier1.reduce((sum, v) => sum + v.price_per_unit, 0) / tier1.length : 280;
 
-  const overallAvg = vendors.length > 0
-    ? vendors.reduce((sum, v) => sum + v.price_per_unit, 0) / vendors.length
-    : 250;
+  const tier2Avg =
+    tier2.length > 0 ? tier2.reduce((sum, v) => sum + v.price_per_unit, 0) / tier2.length : 230;
+
+  const overallAvg =
+    vendors.length > 0
+      ? vendors.reduce((sum, v) => sum + v.price_per_unit, 0) / vendors.length
+      : 250;
 
   // Recommend based on size
-  const recommendedVendors = systemSizeKWh >= 5000 
-    ? tier1  // Large projects use Tier 1
-    : tier2; // Smaller projects can use Tier 2
+  const recommendedVendors =
+    systemSizeKWh >= 5000
+      ? tier1 // Large projects use Tier 1
+      : tier2; // Smaller projects can use Tier 2
 
   return {
     tier1Price: tier1Avg,
@@ -202,19 +204,19 @@ export async function getBatteryPricingBySize(systemSizeKWh: number): Promise<{
  * Get all inverter vendors
  */
 export async function getInverterVendors(): Promise<EquipmentVendor[]> {
-  const cacheKey = 'inverter_vendors';
+  const cacheKey = "inverter_vendors";
   const cached = getCached<EquipmentVendor[]>(cacheKey);
   if (cached) return cached;
 
   try {
     const { data, error } = await supabase
-      .from('equipment_vendors')
-      .select('*')
-      .eq('vendor_type', 'inverter')
-      .order('price_per_unit', { ascending: true });
+      .from("equipment_vendors")
+      .select("*")
+      .eq("vendor_type", "inverter")
+      .order("price_per_unit", { ascending: true });
 
     if (error) {
-      console.error('Error fetching inverter vendors:', error);
+      console.error("Error fetching inverter vendors:", error);
       return [];
     }
 
@@ -222,7 +224,7 @@ export async function getInverterVendors(): Promise<EquipmentVendor[]> {
     setCache(cacheKey, vendors);
     return vendors;
   } catch (err) {
-    console.error('Failed to fetch inverter vendors:', err);
+    console.error("Failed to fetch inverter vendors:", err);
     return [];
   }
 }
@@ -236,12 +238,12 @@ export async function getInverterPricing(): Promise<{
   maxPrice: number;
 }> {
   const vendors = await getInverterVendors();
-  
+
   if (vendors.length === 0) {
     return { averagePrice: 32, minPrice: 28, maxPrice: 35 };
   }
 
-  const prices = vendors.map(v => v.price_per_unit);
+  const prices = vendors.map((v) => v.price_per_unit);
   return {
     averagePrice: prices.reduce((a, b) => a + b, 0) / prices.length,
     minPrice: Math.min(...prices),
@@ -257,19 +259,19 @@ export async function getInverterPricing(): Promise<{
  * Get all transformer vendors
  */
 export async function getTransformerVendors(): Promise<EquipmentVendor[]> {
-  const cacheKey = 'transformer_vendors';
+  const cacheKey = "transformer_vendors";
   const cached = getCached<EquipmentVendor[]>(cacheKey);
   if (cached) return cached;
 
   try {
     const { data, error } = await supabase
-      .from('equipment_vendors')
-      .select('*')
-      .eq('vendor_type', 'transformer')
-      .order('price_per_unit', { ascending: true });
+      .from("equipment_vendors")
+      .select("*")
+      .eq("vendor_type", "transformer")
+      .order("price_per_unit", { ascending: true });
 
     if (error) {
-      console.error('Error fetching transformer vendors:', error);
+      console.error("Error fetching transformer vendors:", error);
       return [];
     }
 
@@ -277,7 +279,7 @@ export async function getTransformerVendors(): Promise<EquipmentVendor[]> {
     setCache(cacheKey, vendors);
     return vendors;
   } catch (err) {
-    console.error('Failed to fetch transformer vendors:', err);
+    console.error("Failed to fetch transformer vendors:", err);
     return [];
   }
 }
@@ -290,18 +292,18 @@ export async function getTransformerVendors(): Promise<EquipmentVendor[]> {
  * Get all EV chargers
  */
 export async function getEVChargers(): Promise<EVCharger[]> {
-  const cacheKey = 'ev_chargers';
+  const cacheKey = "ev_chargers";
   const cached = getCached<EVCharger[]>(cacheKey);
   if (cached) return cached;
 
   try {
     const { data, error } = await supabase
-      .from('ev_charger_catalog')
-      .select('*')
-      .order('power_kw', { ascending: true });
+      .from("ev_charger_catalog")
+      .select("*")
+      .order("power_kw", { ascending: true });
 
     if (error) {
-      console.error('Error fetching EV chargers:', error);
+      console.error("Error fetching EV chargers:", error);
       return [];
     }
 
@@ -309,7 +311,7 @@ export async function getEVChargers(): Promise<EVCharger[]> {
     setCache(cacheKey, chargers);
     return chargers;
   } catch (err) {
-    console.error('Failed to fetch EV chargers:', err);
+    console.error("Failed to fetch EV chargers:", err);
     return [];
   }
 }
@@ -320,19 +322,19 @@ export async function getEVChargers(): Promise<EVCharger[]> {
 export async function getEVChargerByType(chargerType: string): Promise<EVCharger | null> {
   try {
     const { data, error } = await supabase
-      .from('ev_charger_catalog')
-      .select('*')
-      .eq('charger_type', chargerType)
+      .from("ev_charger_catalog")
+      .select("*")
+      .eq("charger_type", chargerType)
       .single();
 
     if (error) {
-      console.error('Error fetching EV charger:', error);
+      console.error("Error fetching EV charger:", error);
       return null;
     }
 
     return data as EVCharger;
   } catch (err) {
-    console.error('Failed to fetch EV charger:', err);
+    console.error("Failed to fetch EV charger:", err);
     return null;
   }
 }
@@ -340,22 +342,24 @@ export async function getEVChargerByType(chargerType: string): Promise<EVCharger
 /**
  * Get EV chargers by class (Level2, DCFC, HPC)
  */
-export async function getEVChargersByClass(chargerClass: 'Level2' | 'DCFC' | 'HPC'): Promise<EVCharger[]> {
+export async function getEVChargersByClass(
+  chargerClass: "Level2" | "DCFC" | "HPC"
+): Promise<EVCharger[]> {
   try {
     const { data, error } = await supabase
-      .from('ev_charger_catalog')
-      .select('*')
-      .eq('charger_class', chargerClass)
-      .order('power_kw', { ascending: true });
+      .from("ev_charger_catalog")
+      .select("*")
+      .eq("charger_class", chargerClass)
+      .order("power_kw", { ascending: true });
 
     if (error) {
-      console.error('Error fetching EV chargers by class:', error);
+      console.error("Error fetching EV chargers by class:", error);
       return [];
     }
 
     return data as EVCharger[];
   } catch (err) {
-    console.error('Failed to fetch EV chargers:', err);
+    console.error("Failed to fetch EV chargers:", err);
     return [];
   }
 }
@@ -386,7 +390,7 @@ export async function calculateEVChargerCosts(config: {
   }>;
 }> {
   const chargers = await getEVChargers();
-  
+
   let level2Cost = 0;
   let dcfcCost = 0;
   let hpcCost = 0;
@@ -398,11 +402,15 @@ export async function calculateEVChargerCosts(config: {
   // Level 2 chargers
   if (config.level2Count && config.level2Count > 0) {
     const power = config.level2Power || 11;
-    const charger = chargers.find(c => c.charger_class === 'Level2' && c.power_kw >= power) 
-      || chargers.find(c => c.charger_class === 'Level2');
-    
+    const charger =
+      chargers.find((c) => c.charger_class === "Level2" && c.power_kw >= power) ||
+      chargers.find((c) => c.charger_class === "Level2");
+
     if (charger) {
-      const unitCost = charger.hardware_cost_typical + charger.install_cost_typical + charger.make_ready_cost_typical;
+      const unitCost =
+        charger.hardware_cost_typical +
+        charger.install_cost_typical +
+        charger.make_ready_cost_typical;
       level2Cost = unitCost * config.level2Count;
       totalHardware += charger.hardware_cost_typical * config.level2Count;
       totalInstall += charger.install_cost_typical * config.level2Count;
@@ -419,11 +427,15 @@ export async function calculateEVChargerCosts(config: {
   // DCFC chargers
   if (config.dcfcCount && config.dcfcCount > 0) {
     const power = config.dcfcPower || 150;
-    const charger = chargers.find(c => c.charger_class === 'DCFC' && c.power_kw >= power)
-      || chargers.find(c => c.charger_class === 'DCFC');
-    
+    const charger =
+      chargers.find((c) => c.charger_class === "DCFC" && c.power_kw >= power) ||
+      chargers.find((c) => c.charger_class === "DCFC");
+
     if (charger) {
-      const unitCost = charger.hardware_cost_typical + charger.install_cost_typical + charger.make_ready_cost_typical;
+      const unitCost =
+        charger.hardware_cost_typical +
+        charger.install_cost_typical +
+        charger.make_ready_cost_typical;
       dcfcCost = unitCost * config.dcfcCount;
       totalHardware += charger.hardware_cost_typical * config.dcfcCount;
       totalInstall += charger.install_cost_typical * config.dcfcCount;
@@ -440,11 +452,15 @@ export async function calculateEVChargerCosts(config: {
   // HPC chargers
   if (config.hpcCount && config.hpcCount > 0) {
     const power = config.hpcPower || 350;
-    const charger = chargers.find(c => c.charger_class === 'HPC' && c.power_kw >= power)
-      || chargers.find(c => c.charger_class === 'HPC');
-    
+    const charger =
+      chargers.find((c) => c.charger_class === "HPC" && c.power_kw >= power) ||
+      chargers.find((c) => c.charger_class === "HPC");
+
     if (charger) {
-      const unitCost = charger.hardware_cost_typical + charger.install_cost_typical + charger.make_ready_cost_typical;
+      const unitCost =
+        charger.hardware_cost_typical +
+        charger.install_cost_typical +
+        charger.make_ready_cost_typical;
       hpcCost = unitCost * config.hpcCount;
       totalHardware += charger.hardware_cost_typical * config.hpcCount;
       totalInstall += charger.install_cost_typical * config.hpcCount;
@@ -485,12 +501,12 @@ export async function getBESSEquipmentBreakdown(params: {
   const { systemSizeKWh, systemSizeKW, preferTier1 = true } = params;
 
   // Get all vendors
-  const batteryVendors = await getBatteryVendors(preferTier1 ? 'Tier 1' : undefined);
+  const batteryVendors = await getBatteryVendors(preferTier1 ? "Tier 1" : undefined);
   const inverterVendors = await getInverterVendors();
   const transformerVendors = await getTransformerVendors();
 
   // Calculate battery quotes
-  const batteryQuotes: EquipmentQuote[] = batteryVendors.slice(0, 3).map(v => ({
+  const batteryQuotes: EquipmentQuote[] = batteryVendors.slice(0, 3).map((v) => ({
     vendorName: v.vendor_name,
     productName: v.product_name,
     productModel: v.product_model,
@@ -506,7 +522,7 @@ export async function getBESSEquipmentBreakdown(params: {
   }));
 
   // Calculate inverter quotes
-  const inverterQuotes: EquipmentQuote[] = inverterVendors.slice(0, 2).map(v => ({
+  const inverterQuotes: EquipmentQuote[] = inverterVendors.slice(0, 2).map((v) => ({
     vendorName: v.vendor_name,
     productName: v.product_name,
     productModel: v.product_model,
@@ -522,7 +538,7 @@ export async function getBESSEquipmentBreakdown(params: {
   }));
 
   // Calculate transformer quotes
-  const transformerQuotes: EquipmentQuote[] = transformerVendors.slice(0, 2).map(v => ({
+  const transformerQuotes: EquipmentQuote[] = transformerVendors.slice(0, 2).map((v) => ({
     vendorName: v.vendor_name,
     productName: v.product_name,
     productModel: v.product_model,
@@ -538,25 +554,29 @@ export async function getBESSEquipmentBreakdown(params: {
   }));
 
   // Calculate totals using cheapest option for each
-  const totalBatteryCost = batteryQuotes.length > 0 
-    ? Math.min(...batteryQuotes.map(q => q.totalPrice))
-    : systemSizeKWh * 250;
+  const totalBatteryCost =
+    batteryQuotes.length > 0
+      ? Math.min(...batteryQuotes.map((q) => q.totalPrice))
+      : systemSizeKWh * 250;
 
-  const totalInverterCost = inverterQuotes.length > 0
-    ? Math.min(...inverterQuotes.map(q => q.totalPrice))
-    : systemSizeKW * 32;
+  const totalInverterCost =
+    inverterQuotes.length > 0
+      ? Math.min(...inverterQuotes.map((q) => q.totalPrice))
+      : systemSizeKW * 32;
 
-  const totalTransformerCost = transformerQuotes.length > 0
-    ? Math.min(...transformerQuotes.map(q => q.totalPrice))
-    : systemSizeKW * 20;
+  const totalTransformerCost =
+    transformerQuotes.length > 0
+      ? Math.min(...transformerQuotes.map((q) => q.totalPrice))
+      : systemSizeKW * 20;
 
   const grandTotal = totalBatteryCost + totalInverterCost + totalTransformerCost;
   const averagePrice = grandTotal / systemSizeKWh;
 
   // Get recommended vendor (best value Tier 1)
-  const recommendedVendor = batteryQuotes.find(q => q.tier === 'Tier 1')?.vendorName 
-    || batteryQuotes[0]?.vendorName 
-    || 'CATL';
+  const recommendedVendor =
+    batteryQuotes.find((q) => q.tier === "Tier 1")?.vendorName ||
+    batteryQuotes[0]?.vendorName ||
+    "CATL";
 
   return {
     batteries: batteryQuotes,

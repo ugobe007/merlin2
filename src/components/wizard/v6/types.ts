@@ -38,6 +38,7 @@ export interface WizardState {
   customSolarKw?: number;
   customEvL2?: number;
   customEvDcfc?: number;
+  customEvUltraFast?: number;  // Ultra-Fast chargers (250-350 kW)
   customGeneratorKw?: number;
   generatorFuel?: 'natural-gas' | 'diesel';
 
@@ -53,16 +54,22 @@ export interface WizardState {
 // ============================================================================
 
 export type EnergyGoal = 
-  | 'reduce_costs'      // "Reduce energy costs"
-  | 'backup_power'      // "Backup power protection"  
-  | 'sustainability'    // "Sustainability / Net Zero"
-  | 'ev_ready';         // "Prepare for EV charging"
+  | 'reduce_costs'
+  | 'backup_power'  
+  | 'sustainability'
+  | 'grid_independence'  // NEW
+  | 'peak_shaving'       // NEW
+  | 'generate_revenue';  // NEW (replaces ev_ready)
 
+// NOTE: ENERGY_GOALS array is now defined in Step1Location.tsx
+// This export is kept for backward compatibility but may be deprecated
 export const ENERGY_GOALS: { id: EnergyGoal; label: string; icon: string }[] = [
   { id: 'reduce_costs', label: 'Reduce Energy Costs', icon: '💰' },
   { id: 'backup_power', label: 'Backup Power Protection', icon: '🔋' },
   { id: 'sustainability', label: 'Sustainability / Net Zero', icon: '🌱' },
-  { id: 'ev_ready', label: 'Prepare for EV Charging', icon: '⚡' },
+  { id: 'grid_independence', label: 'Grid Independence', icon: '🏠' },
+  { id: 'peak_shaving', label: 'Peak Shaving', icon: '⚡' },
+  { id: 'generate_revenue', label: 'Generate Revenue', icon: '💵' },
 ];
 
 // ============================================================================

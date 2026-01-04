@@ -1,6 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { User, Building2, Globe, Linkedin, Phone, ExternalLink, Sparkles, ArrowRight } from 'lucide-react';
-import { authService } from '../services/authService';
+import React, { useEffect, useState } from "react";
+import {
+  User,
+  Building2,
+  Globe,
+  Linkedin,
+  Phone,
+  ExternalLink,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
+import { authService } from "../services/authService";
 
 interface PublicProfileViewerProps {
   profileSlug: string;
@@ -18,8 +27,8 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
   const loadPublicProfile = async () => {
     setLoading(true);
     // Track visitor
-    await authService.trackVisitor(profileSlug, 'profile_view');
-    
+    await authService.trackVisitor(profileSlug, "profile_view");
+
     // Load profile
     const publicProfile = await authService.getPublicProfile(profileSlug);
     setProfile(publicProfile);
@@ -40,9 +49,7 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
           <div className="text-6xl mb-4">🔍</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
-          <p className="text-gray-600 mb-6">
-            This profile doesn't exist or is set to private.
-          </p>
+          <p className="text-gray-600 mb-6">This profile doesn't exist or is set to private.</p>
           <button
             onClick={onSignUp}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
@@ -55,27 +62,27 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
   }
 
   const energyFocusLabels: { [key: string]: string } = {
-    batteries: '🔋 Battery Storage',
-    generators: '⚡ Generators',
-    solar: '☀️ Solar PV',
-    wind: '💨 Wind Power',
-    inverters: '🔌 Inverters',
-    pcs: '🔄 PCS',
-    hybrid: '🔗 Hybrid Systems',
-    microgrid: '🌐 Microgrids'
+    batteries: "🔋 Battery Storage",
+    generators: "⚡ Generators",
+    solar: "☀️ Solar PV",
+    wind: "💨 Wind Power",
+    inverters: "🔌 Inverters",
+    pcs: "🔄 PCS",
+    hybrid: "🔗 Hybrid Systems",
+    microgrid: "🌐 Microgrids",
   };
 
   const projectTypeLabels: { [key: string]: string } = {
-    data_center: '🖥️ Data Centers',
-    ev_charging: '🚗 EV Charging',
-    apartments: '🏢 Apartments',
-    hospitals: '🏥 Hospitals',
-    airports: '✈️ Airports',
-    industrial: '🏭 Industrial',
-    commercial: '🏪 Commercial',
-    agriculture: '🌾 Agriculture',
-    telecom: '📡 Telecom',
-    residential: '🏠 Residential'
+    data_center: "🖥️ Data Centers",
+    ev_charging: "🚗 EV Charging",
+    apartments: "🏢 Apartments",
+    hospitals: "🏥 Hospitals",
+    airports: "✈️ Airports",
+    industrial: "🏭 Industrial",
+    commercial: "🏪 Commercial",
+    agriculture: "🌾 Agriculture",
+    telecom: "📡 Telecom",
+    residential: "🏠 Residential",
   };
 
   return (
@@ -105,7 +112,11 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
               {/* Profile Photo */}
               <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
                 {profile.profilePhoto ? (
-                  <img src={profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  <img
+                    src={profile.profilePhoto}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <User size={64} className="text-white" />
                 )}
@@ -126,7 +137,9 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
                   </div>
                 )}
                 <div className="mt-4 inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-                  <span className="text-sm">Member since {new Date(profile.createdAt).getFullYear()}</span>
+                  <span className="text-sm">
+                    Member since {new Date(profile.createdAt).getFullYear()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -226,7 +239,8 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
                   Ready to Build Your Own Quotes?
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Join {profile.firstName} and thousands of energy professionals using Merlin to create accurate BESS quotes in minutes.
+                  Join {profile.firstName} and thousands of energy professionals using Merlin to
+                  create accurate BESS quotes in minutes.
                 </p>
                 <button
                   onClick={onSignUp}
@@ -236,15 +250,9 @@ const PublicProfileViewer: React.FC<PublicProfileViewerProps> = ({ profileSlug, 
                   <ArrowRight size={24} />
                 </button>
                 <div className="flex items-center justify-center gap-4 mt-6 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    ✓ No credit card required
-                  </span>
-                  <span className="flex items-center gap-1">
-                    ✓ Free forever
-                  </span>
-                  <span className="flex items-center gap-1">
-                    ✓ 5 team seats included
-                  </span>
+                  <span className="flex items-center gap-1">✓ No credit card required</span>
+                  <span className="flex items-center gap-1">✓ Free forever</span>
+                  <span className="flex items-center gap-1">✓ 5 team seats included</span>
                 </div>
               </div>
             </div>

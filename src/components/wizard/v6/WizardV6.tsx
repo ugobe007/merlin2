@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Home, Sparkles, RotateCcw, X } from 'lucide-react';
 
-import type { WizardState, PowerLevel } from './types';
+import type { WizardState } from './types';
 import { INITIAL_WIZARD_STATE, WIZARD_STEPS, POWER_LEVELS } from './types';
 import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 
@@ -12,7 +12,6 @@ import { Step3HotelEnergy } from './steps/Step3HotelEnergy';
 import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
 import { Step6Quote } from './steps/Step6Quote';
-import { MerlinGuide } from './components/MerlinGuide';
 import { ValueTicker } from './components/ValueTicker';
 
 // ============================================================================
@@ -89,23 +88,102 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
 // ============================================================================
 
 export default function WizardV6() {
-  const [state, setState] = useState<WizardState>(INITIAL_WIZARD_STATE);
-  const [currentStep, setCurrentStep] = useState(1);
+  // ✅ FIXED: Check URL parameter to force fresh start
+  // If ?fresh=true or wizard is accessed directly, clear all persisted state
+  const shouldStartFresh = (() => {
+    if (typeof window === 'undefined') return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('fresh') === 'true' || urlParams.get('new') === 'true';
+  })();
+  
+  // ✅ FIXED: Clear persisted state on mount if this is a fresh start
+  // This ensures "Get my free quote" always starts at Step 1
+  React.useEffect(() => {
+    if (shouldStartFresh && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('merlin-wizard-state');
+        sessionStorage.removeItem('merlin-wizard-step');
+        console.log('✅ Cleared persisted wizard state for fresh start');
+      } catch (e) {
+        console.error('Failed to clear persisted state:', e);
+      }
+    }
+  }, [shouldStartFresh]);
+  
+  // Load state from localStorage on mount
+  const [state, setState] = useState<WizardState>(() => {
+    // If starting fresh, always use initial state
+    if (shouldStartFresh) {
+      return INITIAL_WIZARD_STATE;
+    }
+    
+    try {
+      const saved = localStorage.getItem('merlin-wizard-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate that parsed state has required fields
+        if (parsed && typeof parsed === 'object') {
+          return { ...INITIAL_WIZARD_STATE, ...parsed };
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load saved wizard state:', e);
+    }
+    return INITIAL_WIZARD_STATE;
+  });
+  
+  const [currentStep, setCurrentStep] = useState(() => {
+    // ✅ FIXED: Always start at Step 1 for fresh starts
+    if (shouldStartFresh) {
+      return 1;
+    }
+    
+    // Only restore step if we have valid persisted state
+    try {
+      const hasValidState = localStorage.getItem('merlin-wizard-state');
+      if (hasValidState) {
+        const saved = sessionStorage.getItem('merlin-wizard-step');
+        if (saved) {
+          const step = parseInt(saved, 10);
+          if (step >= 1 && step <= 6) return step;
+        }
+      } else {
+        // Clear sessionStorage if no valid state (fresh start)
+        sessionStorage.removeItem('merlin-wizard-step');
+      }
+    } catch (e) {
+      console.error('Failed to load saved wizard step:', e);
+    }
+    return 1; // Always default to Step 1
+  });
+  
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showStartOverModal, setShowStartOverModal] = useState(false);
-  
-  // Step 4 state for MerlinGuide triggers
-  const [step4State, setStep4State] = useState({
-    solarDecision: 'undecided' as 'undecided' | 'yes' | 'no',
-    generatorDecision: 'undecided' as 'undecided' | 'yes' | 'no',
-    evDecision: 'undecided' as 'undecided' | 'yes' | 'no',
-    solarMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
-    generatorMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
-    evMode: 'undecided' as 'undecided' | 'recommended' | 'customize',
-  });
 
-  const updateState = useCallback((updates: Partial<WizardState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('merlin-wizard-state', JSON.stringify(state));
+    } catch (e) {
+      console.error('Failed to save wizard state:', e);
+    }
+  }, [state]);
+
+  // Save current step to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('merlin-wizard-step', currentStep.toString());
+    } catch (e) {
+      console.error('Failed to save wizard step:', e);
+    }
+  }, [currentStep]);
+
+  // FIXED: Use functional updates to prevent race conditions with nested objects
+  const updateState = useCallback((updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)) => {
+    setState(prev => {
+      const updatesObj = typeof updates === 'function' ? updates(prev) : updates;
+      return { ...prev, ...updatesObj };
+    });
   }, []);
 
   const goNext = () => setCurrentStep(prev => Math.min(prev + 1, 6));
@@ -119,6 +197,8 @@ export default function WizardV6() {
     const peakDemand = state.useCaseData?.peakDemandKw || 0;
     
     // Utility rates from calculations (Step 5) or defaults
+    // SSOT: Use rate from calculations (set by Step5MagicFit from utilityRateService)
+    // Fallback to EIA 2024 national average commercial rate
     const utilityRate = state.calculations?.utilityRate || 0.12;
     const demandRate = state.calculations?.demandCharge || 15; // $/kW typical commercial rate
     
@@ -160,11 +240,18 @@ export default function WizardV6() {
     setState(INITIAL_WIZARD_STATE);
     setCurrentStep(2); // Go to Industry Selection
     setShowStartOverModal(false);
+    // Clear persisted state
+    try {
+      localStorage.removeItem('merlin-wizard-state');
+      sessionStorage.removeItem('merlin-wizard-step');
+    } catch (e) {
+      console.error('Failed to clear persisted state:', e);
+    }
   };
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return state.zipCode.length >= 5 && state.goals.length > 0;
+      case 1: return (state.zipCode.length >= 5 || (state.city !== "" && state.state !== "")) && state.goals.length > 0;
       case 2: return state.industry !== '';
       case 3: return true; // Database-driven questions handle their own validation
       case 4: return true; // Step4Options handles its own validation with forced decisions
@@ -179,7 +266,7 @@ export default function WizardV6() {
       case 1: return <Step1Location state={state} updateState={updateState} />;
       case 2: return <Step2Industry state={state} updateState={updateState} />;
       case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} />;
-      case 4: return <Step4Options state={state} updateState={updateState} onStep4StateChange={setStep4State} />;
+      case 4: return <Step4Options state={state} updateState={updateState} />;
       case 5: return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
       case 6: return <Step6Quote state={state} />;
       default: return null;
@@ -246,16 +333,14 @@ export default function WizardV6() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          VALUE TICKER - Shows on Steps 3-6
+          VALUE TICKER - Shows on all steps
           ═══════════════════════════════════════════════════════════════════════ */}
-      {currentStep >= 3 && (
-        <div className="max-w-6xl mx-auto px-4">
-          <ValueTicker
-            currentStep={currentStep}
-            {...tickerValues}
-          />
-        </div>
-      )}
+      <div className="max-w-6xl mx-auto px-4">
+        <ValueTicker
+          currentStep={currentStep}
+          {...tickerValues}
+        />
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           MAIN CONTENT - Scrollable area with padding for fixed footer
@@ -315,19 +400,6 @@ export default function WizardV6() {
         </div>
       </footer>
       
-      {/* Merlin Guide (floating assistant) */}
-      <MerlinGuide 
-        currentStep={currentStep}
-        industrySelected={state.industry !== ''}
-        industryName={state.industryName}
-        stateName={state.state}
-        solarDecision={step4State.solarDecision}
-        generatorDecision={step4State.generatorDecision}
-        evDecision={step4State.evDecision}
-        solarMode={step4State.solarMode}
-        generatorMode={step4State.generatorMode}
-        evMode={step4State.evMode}
-      />
 
       {/* Start Over Confirmation Modal */}
       <StartOverModal

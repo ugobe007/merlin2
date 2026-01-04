@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { X, Shield, Lock, Eye, EyeOff, Download, Trash2, CheckCircle, AlertCircle, History } from 'lucide-react';
+import { useState } from "react";
+import { X, Shield, Lock, Eye, EyeOff, Download, Trash2, CheckCircle, History } from "lucide-react";
 
 interface SecurityPrivacySettingsProps {
   onClose: () => void;
 }
 
 export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySettingsProps) {
-  const [activeTab, setActiveTab] = useState<'privacy' | 'security' | 'data'>('privacy');
-  
+  const [activeTab, setActiveTab] = useState<"privacy" | "security" | "data">("privacy");
+
   // Privacy settings
   const [shareMarketData, setShareMarketData] = useState(true);
   const [shareAnonymousUsage, setShareAnonymousUsage] = useState(true);
   const [vendorMatching, setVendorMatching] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
-  
+
   // Security settings
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [sessionTimeout, setSessionTimeout] = useState('30');
+  const [sessionTimeout, setSessionTimeout] = useState("30");
   const [loginNotifications, setLoginNotifications] = useState(true);
-  
+
   // Data management
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -27,29 +27,29 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
     const userData = {
       exported_at: new Date().toISOString(),
       account: {
-        email: 'user@example.com',
-        name: 'John Doe',
-        created: '2025-01-15'
+        email: "user@example.com",
+        name: "John Doe",
+        created: "2025-01-15",
       },
       projects: 12,
       quotes_saved: 45,
-      pricing_contributions: 3
+      pricing_contributions: 3,
     };
-    
-    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `merlin-data-export-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
-    alert('Your data has been exported successfully!');
+
+    alert("Your data has been exported successfully!");
   };
 
   const handleDeleteAccount = () => {
     if (showDeleteConfirm) {
-      alert('Account deletion requested. You will receive a confirmation email.');
+      alert("Account deletion requested. You will receive a confirmation email.");
       setShowDeleteConfirm(false);
       onClose();
     } else {
@@ -69,8 +69,8 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
             </h2>
             <p className="text-green-100 mt-1">Control your data and security preferences</p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-green-200 hover:text-white transition-colors p-2 rounded-lg hover:bg-green-700"
           >
             <X size={28} />
@@ -81,33 +81,33 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
         <div className="border-b border-gray-200 bg-gray-50 flex-shrink-0">
           <div className="flex">
             <button
-              onClick={() => setActiveTab('privacy')}
+              onClick={() => setActiveTab("privacy")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'privacy'
-                  ? 'border-b-4 border-green-600 text-green-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "privacy"
+                  ? "border-b-4 border-green-600 text-green-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Eye size={20} />
               Privacy Controls
             </button>
             <button
-              onClick={() => setActiveTab('security')}
+              onClick={() => setActiveTab("security")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'security'
-                  ? 'border-b-4 border-green-600 text-green-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "security"
+                  ? "border-b-4 border-green-600 text-green-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Lock size={20} />
               Security
             </button>
             <button
-              onClick={() => setActiveTab('data')}
+              onClick={() => setActiveTab("data")}
               className={`flex items-center gap-2 px-6 py-3 font-bold transition-all ${
-                activeTab === 'data'
-                  ? 'border-b-4 border-green-600 text-green-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "data"
+                  ? "border-b-4 border-green-600 text-green-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Download size={20} />
@@ -119,7 +119,7 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Privacy Tab */}
-          {activeTab === 'privacy' && (
+          {activeTab === "privacy" && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Your Privacy Choices</h3>
@@ -131,27 +131,30 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
               {/* Data Sharing */}
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <h4 className="text-lg font-bold text-gray-900 mb-4">Data Sharing Preferences</h4>
-                
+
                 <div className="space-y-4">
                   {/* Market Data */}
                   <div className="flex items-start justify-between p-4 bg-blue-50 rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h5 className="font-bold text-gray-900">Market Intelligence Contribution</h5>
+                        <h5 className="font-bold text-gray-900">
+                          Market Intelligence Contribution
+                        </h5>
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">
                           +10 Credits/Quote
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
-                        Share anonymized pricing data to improve market intelligence. Your vendor information is never disclosed.
+                        Share anonymized pricing data to improve market intelligence. Your vendor
+                        information is never disclosed.
                       </p>
                     </div>
                     <button
                       onClick={() => setShareMarketData(!shareMarketData)}
                       className={`ml-4 px-6 py-2 rounded-lg font-bold transition-all flex-shrink-0 ${
                         shareMarketData
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       {shareMarketData ? <CheckCircle size={20} /> : <EyeOff size={20} />}
@@ -163,15 +166,16 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                     <div className="flex-1">
                       <h5 className="font-bold text-gray-900 mb-2">Anonymous Usage Analytics</h5>
                       <p className="text-sm text-gray-600">
-                        Help us improve the platform by sharing how you use features (no personal data collected).
+                        Help us improve the platform by sharing how you use features (no personal
+                        data collected).
                       </p>
                     </div>
                     <button
                       onClick={() => setShareAnonymousUsage(!shareAnonymousUsage)}
                       className={`ml-4 px-6 py-2 rounded-lg font-bold transition-all flex-shrink-0 ${
                         shareAnonymousUsage
-                          ? 'bg-purple-600 text-white hover:bg-purple-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-purple-600 text-white hover:bg-purple-700"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       {shareAnonymousUsage ? <CheckCircle size={20} /> : <EyeOff size={20} />}
@@ -183,15 +187,16 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                     <div className="flex-1">
                       <h5 className="font-bold text-gray-900 mb-2">Vendor Marketplace Matching</h5>
                       <p className="text-sm text-gray-600">
-                        Allow vendors to submit competitive quotes for your projects. You decide which leads to accept.
+                        Allow vendors to submit competitive quotes for your projects. You decide
+                        which leads to accept.
                       </p>
                     </div>
                     <button
                       onClick={() => setVendorMatching(!vendorMatching)}
                       className={`ml-4 px-6 py-2 rounded-lg font-bold transition-all flex-shrink-0 ${
                         vendorMatching
-                          ? 'bg-orange-600 text-white hover:bg-orange-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-orange-600 text-white hover:bg-orange-700"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       {vendorMatching ? <CheckCircle size={20} /> : <EyeOff size={20} />}
@@ -203,29 +208,31 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
               {/* Communications */}
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <h4 className="text-lg font-bold text-gray-900 mb-4">Communication Preferences</h4>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
                       <h5 className="font-bold text-gray-900">Marketing Emails</h5>
-                      <p className="text-sm text-gray-600">Feature updates, tips, and promotional content</p>
+                      <p className="text-sm text-gray-600">
+                        Feature updates, tips, and promotional content
+                      </p>
                     </div>
                     <button
                       onClick={() => setMarketingEmails(!marketingEmails)}
                       className={`px-6 py-2 rounded-lg font-bold transition-all ${
                         marketingEmails
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
-                      {marketingEmails ? 'Enabled' : 'Disabled'}
+                      {marketingEmails ? "Enabled" : "Disabled"}
                     </button>
                   </div>
-                  
+
                   <div className="p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
                     <p className="text-sm text-gray-700">
-                      <strong>Note:</strong> You will still receive essential emails (security alerts, billing, account changes) 
-                      regardless of this setting.
+                      <strong>Note:</strong> You will still receive essential emails (security
+                      alerts, billing, account changes) regardless of this setting.
                     </p>
                   </div>
                 </div>
@@ -234,13 +241,11 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
           )}
 
           {/* Security Tab */}
-          {activeTab === 'security' && (
+          {activeTab === "security" && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 border-2 border-red-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Security Settings</h3>
-                <p className="text-gray-600">
-                  Protect your account with these security features.
-                </p>
+                <p className="text-gray-600">Protect your account with these security features.</p>
               </div>
 
               {/* Two-Factor Authentication */}
@@ -252,26 +257,28 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                       Two-Factor Authentication (2FA)
                     </h4>
                     <p className="text-gray-600 mb-4">
-                      Add an extra layer of security to your account. Requires a verification code from your phone when logging in.
+                      Add an extra layer of security to your account. Requires a verification code
+                      from your phone when logging in.
                     </p>
                   </div>
                   <button
                     onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
                     className={`ml-4 px-6 py-3 rounded-lg font-bold transition-all flex-shrink-0 ${
                       twoFactorEnabled
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-red-600 text-white hover:bg-red-700'
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-red-600 text-white hover:bg-red-700"
                     }`}
                   >
-                    {twoFactorEnabled ? 'Enabled ✓' : 'Enable 2FA'}
+                    {twoFactorEnabled ? "Enabled ✓" : "Enable 2FA"}
                   </button>
                 </div>
-                
+
                 {twoFactorEnabled && (
                   <div className="bg-green-50 border border-green-300 rounded-lg p-4">
                     <p className="text-sm text-green-800 flex items-center gap-2">
                       <CheckCircle size={16} />
-                      <strong>2FA is active.</strong> Your account is protected with two-factor authentication.
+                      <strong>2FA is active.</strong> Your account is protected with two-factor
+                      authentication.
                     </p>
                   </div>
                 )}
@@ -280,7 +287,7 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
               {/* Session Management */}
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                 <h4 className="text-lg font-bold text-gray-900 mb-4">Session Management</h4>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -305,17 +312,19 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                   <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
                     <div>
                       <h5 className="font-bold text-gray-900">Login Notifications</h5>
-                      <p className="text-sm text-gray-600">Get email alerts when your account is accessed</p>
+                      <p className="text-sm text-gray-600">
+                        Get email alerts when your account is accessed
+                      </p>
                     </div>
                     <button
                       onClick={() => setLoginNotifications(!loginNotifications)}
                       className={`px-6 py-2 rounded-lg font-bold transition-all ${
                         loginNotifications
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
-                      {loginNotifications ? 'Enabled' : 'Disabled'}
+                      {loginNotifications ? "Enabled" : "Disabled"}
                     </button>
                   </div>
                 </div>
@@ -351,7 +360,7 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
                     <div className="flex justify-between items-center">
                       <div>
@@ -370,7 +379,7 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
           )}
 
           {/* Data Management Tab */}
-          {activeTab === 'data' && (
+          {activeTab === "data" && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Your Data Rights</h3>
@@ -386,7 +395,8 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                   Export Your Data
                 </h4>
                 <p className="text-gray-600 mb-4">
-                  Download a complete copy of all your data including account info, projects, quotes, and activity history.
+                  Download a complete copy of all your data including account info, projects,
+                  quotes, and activity history.
                 </p>
                 <button
                   onClick={handleExportData}
@@ -427,10 +437,18 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
               <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6">
                 <h4 className="text-lg font-bold text-gray-900 mb-4">Data Retention Policy</h4>
                 <div className="space-y-3 text-gray-700">
-                  <p>• <strong>Account data:</strong> Retained while account is active</p>
-                  <p>• <strong>Project data:</strong> Stored for 2 years after last access</p>
-                  <p>• <strong>Anonymized analytics:</strong> Retained indefinitely</p>
-                  <p>• <strong>After deletion:</strong> 30-day grace period, then permanently removed</p>
+                  <p>
+                    • <strong>Account data:</strong> Retained while account is active
+                  </p>
+                  <p>
+                    • <strong>Project data:</strong> Stored for 2 years after last access
+                  </p>
+                  <p>
+                    • <strong>Anonymized analytics:</strong> Retained indefinitely
+                  </p>
+                  <p>
+                    • <strong>After deletion:</strong> 30-day grace period, then permanently removed
+                  </p>
                 </div>
               </div>
 
@@ -445,11 +463,12 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
                     <strong className="text-red-600">Warning:</strong> This action cannot be undone.
                   </p>
                   <p className="text-sm text-gray-600">
-                    Deleting your account will permanently remove all your data including projects, quotes, and settings. 
-                    You will have a 30-day grace period to recover your account.
+                    Deleting your account will permanently remove all your data including projects,
+                    quotes, and settings. You will have a 30-day grace period to recover your
+                    account.
                   </p>
                 </div>
-                
+
                 {!showDeleteConfirm ? (
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
@@ -486,9 +505,7 @@ export default function SecurityPrivacySettings({ onClose }: SecurityPrivacySett
         {/* Footer */}
         <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gray-50">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600">
-              Changes are saved automatically
-            </p>
+            <p className="text-sm text-gray-600">Changes are saved automatically</p>
             <button
               onClick={onClose}
               className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all"
