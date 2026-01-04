@@ -162,12 +162,18 @@ async function calculateSystemAsync(
   const solarMW = solarKW / 1000;
   
   // ========================================
-  // STEP 4: Generator from TrueQuote
+  // STEP 4: Generator - User selection takes priority
   // ========================================
-  let generatorKW = trueQuoteResult.results.generator?.capacityKW || 0;
+  let generatorKW = 0;
   
-  // User opt-in override (if they want generator but TrueQuote didn't recommend)
-  if (!generatorKW && selectedOptions?.includes('generator')) {
+  // User's custom selection from Step 4 takes priority
+  if (state.customGeneratorKw && state.customGeneratorKw > 0) {
+    generatorKW = state.customGeneratorKw;
+  } else if (trueQuoteResult.results.generator?.capacityKW) {
+    // Fall back to TrueQuote recommendation
+    generatorKW = trueQuoteResult.results.generator.capacityKW;
+  } else if (selectedOptions?.includes('generator')) {
+    // User opted in but no size specified - default to 50% of BESS
     generatorKW = Math.round(bessKW * 0.5);
   }
   
