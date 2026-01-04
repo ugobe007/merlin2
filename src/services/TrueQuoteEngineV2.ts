@@ -240,10 +240,13 @@ export async function processQuote(
   console.log('🔐 Authenticating proposal...');
   const authResult = authenticateProposal(baseCalculation, magicFitProposal);
 
-  if (isRejected(authResult)) {
+  if ('rejected' in authResult && authResult.rejected) {
     console.error('❌ TrueQuote: Proposal REJECTED');
-    return authResult;
+    return authResult as TrueQuoteRejection;
   }
+
+  // Type guard passed - authResult is AuthenticationResult
+  const authenticatedOptions = (authResult as { authenticated: true; options: typeof authResult extends { options: infer O } ? O : never }).options;
 
   // ─────────────────────────────────────────────────────────────
   // STEP 10: Build Authenticated Result
@@ -261,7 +264,7 @@ export async function processQuote(
     quoteId,
     requestId: request.requestId,
     baseCalculation,
-    options: authResult.options,
+    options: authenticatedOptions,
     incentives: {
       federal: {
         itcAmount: financialResult.federalITC,
