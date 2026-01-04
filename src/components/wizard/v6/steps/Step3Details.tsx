@@ -1020,7 +1020,7 @@ export function Step3Details({ state, updateState }: Props) {
       {/* ================================================================== */}
       {/* MAIN CONTENT */}
       {/* ================================================================== */}
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           <div>
