@@ -88,10 +88,15 @@ export function Step6Quote({ state }: Props) {
         setStateIncentives(incentives);
         
         // Set the summary with the calculated values
+        // Use federalITC from calculations (TrueQuoteEngine) for consistency
+        // TrueQuoteEngine correctly calculates ITC on BESS+Solar only
+        const correctFederalITC = calculations.federalITC || result.federalITC;
+        const correctNetInvestment = calculations.totalInvestment - correctFederalITC - result.stateIncentives;
+        
         setIncentiveSummary({
           totalStateIncentive: result.stateIncentives,
-          federalITC: result.federalITC,
-          netInvestment: result.netInvestment,
+          federalITC: correctFederalITC,
+          netInvestment: Math.max(0, correctNetInvestment),
           statePrograms: result.statePrograms
         });
       } catch (err) {

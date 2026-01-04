@@ -1052,8 +1052,13 @@ export async function calculateIncentives(
   isEquityEligible: boolean = false // New parameter: exclude equity programs by default
 ): Promise<IncentiveCalculation> {
   // Federal ITC (30% for storage with solar, 30% standalone after IRA 2022)
+  // NOTE: ITC only applies to BESS + Solar equipment costs, NOT generators, EV chargers, or installation
+  // Since we receive systemCost (total investment), we estimate ITC-eligible portion at ~75% of equipment
+  // This approximates: (BESS + Solar) / (BESS + Solar + Generator + EV + Installation)
+  // For more accurate calculation, pass itcEligibleCost directly from TrueQuoteEngine
   const federalItcPercent = 0.3;
-  const federalItc = Math.round(systemCost * federalItcPercent);
+  const itcEligiblePortion = 0.75; // Approximate: BESS+Solar portion of total system cost
+  const federalItc = Math.round(systemCost * itcEligiblePortion * federalItcPercent);
 
   // Get state incentives
   const stateCode = getStateFromZip(zipCode);
