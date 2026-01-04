@@ -1,0 +1,2187 @@
+[
+  {
+    "file": "WizardV6.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "ArrowLeft",
+          "ArrowRight",
+          "Home",
+          "Sparkles",
+          "RotateCcw",
+          "X"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./types",
+        "items": [
+          "INITIAL_WIZARD_STATE",
+          "WIZARD_STEPS",
+          "POWER_LEVELS"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/components/modals/RequestQuoteModal",
+        "items": [
+          "RequestQuoteModal"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step1Location",
+        "items": [
+          "Step1Location"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step2Industry",
+        "items": [
+          "Step2Industry"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step3Details",
+        "items": [
+          "Step3Details"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step3HotelEnergy",
+        "items": [
+          "Step3HotelEnergy"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step4Options",
+        "items": [
+          "Step4Options"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step5MagicFit",
+        "items": [
+          "Step5MagicFit"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./steps/Step6Quote",
+        "items": [
+          "Step6Quote"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "./components/ValueTicker",
+        "items": [
+          "ValueTicker"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "useCaseData",
+      "calculations",
+      "customSolarKw",
+      "customGeneratorKw",
+      "customEvL2",
+      "customEvDcfc",
+      "selectedOptions",
+      "generatorFuel",
+      "industryName",
+      "zipCode",
+      "city",
+      "state",
+      "goals",
+      "industry",
+      "selectedPowerLevel"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "MerlinGuide.tsx",
+    "imports": [],
+    "exports": [],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "TrueQuoteVerifyBadge.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "Shield",
+          "CheckCircle2",
+          "X",
+          "ExternalLink",
+          "AlertTriangle",
+          "FileCheck",
+          "Search",
+          "Award",
+          "Sparkles",
+          "Zap",
+          "Star",
+          "BadgeCheck",
+          "ChevronRight",
+          "Info",
+          "TrendingUp",
+          "DollarSign"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/new_profile_merlin.png",
+        "items": [
+          "merlinImage"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/financialProjections",
+        "items": [
+          "calculateFinancialProjection",
+          "formatProjectionForDisplay",
+          "type FinancialInputs"
+        ],
+        "isService": true,
+        "isCalculation": true
+      }
+    ],
+    "exports": [
+      "TrueQuoteWorksheetData",
+      "CalculationStep",
+      "DeviationReport",
+      "SourceCitation",
+      "TrueQuoteVerifyBadge"
+    ],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "TrueQuoteVerifyDemo.tsx",
+    "imports": [
+      {
+        "source": "./TrueQuoteVerifyBadge",
+        "items": [
+          "TrueQuoteVerifyBadge"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [],
+    "calculations": [],
+    "hardcodedValues": [
+      {
+        "value": 0.0934,
+        "line": 24,
+        "context": "electricityRate: 0.0934,",
+        "category": "rate"
+      },
+      {
+        "value": 200,
+        "line": 77,
+        "context": "calculation: '3,200 kW × 50% = 1,600 kW',",
+        "category": "sizing"
+      },
+      {
+        "value": 200,
+        "line": 79,
+        "context": "{ name: 'Peak Demand', value: '3,200 kW', source: 'Step 2' },",
+        "category": "sizing"
+      },
+      {
+        "value": 600,
+        "line": 90,
+        "context": "calculation: '1,600 kW × 4 hrs = 6,400 kWh',",
+        "category": "sizing"
+      },
+      {
+        "value": 600,
+        "line": 92,
+        "context": "{ name: 'BESS Power', value: '1,600 kW', source: 'Step 3' },",
+        "category": "sizing"
+      },
+      {
+        "value": 200,
+        "line": 103,
+        "context": "calculation: '3,200 kW × 100% × 1.25 = 4,000 kW',",
+        "category": "sizing"
+      },
+      {
+        "value": 200,
+        "line": 105,
+        "context": "{ name: 'Peak Demand', value: '3,200 kW', source: 'Step 2' },",
+        "category": "sizing"
+      },
+      {
+        "value": 400,
+        "line": 120,
+        "context": "{ name: 'BESS', value: '$2,240,000', source: '6,400 kWh × $350/kWh (NREL ATB)' }",
+        "category": "sizing"
+      },
+      {
+        "value": 280,
+        "line": 121,
+        "context": "{ name: 'Solar', value: '$1,536,000', source: '1,280 kWp × $1,200/kWp' },",
+        "category": "sizing"
+      },
+      {
+        "value": 3210200,
+        "line": 162,
+        "context": "netCost: 3210200,",
+        "category": "cost"
+      },
+      {
+        "value": 100,
+        "line": 173,
+        "context": "explanation: 'Displayed BESS (100 kW) is 93% smaller than calculated (1,600 kW)'",
+        "category": "sizing"
+      },
+      {
+        "value": 600,
+        "line": 174,
+        "context": "recommendation: 'Update BESS sizing to 1,600 kW for Tier III data center'",
+        "category": "sizing"
+      },
+      {
+        "value": 70,
+        "line": 244,
+        "context": "<span>Power</span><span style={{ color: 'white' }}>70 kW</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 210,
+        "line": 247,
+        "context": "<span>Storage</span><span style={{ color: 'white' }}>210 kWh</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 100,
+        "line": 272,
+        "context": "<span>Power</span><span style={{ color: 'white' }}>100 kW</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 400,
+        "line": 275,
+        "context": "<span>Storage</span><span style={{ color: 'white' }}>400 kWh</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 150,
+        "line": 300,
+        "context": "<span>Power</span><span style={{ color: 'white' }}>150 kW</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 900,
+        "line": 303,
+        "context": "<span>Storage</span><span style={{ color: 'white' }}>900 kWh</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 100,
+        "line": 370,
+        "context": "<span style={{ color: 'white' }}>100 kW / 400 kWh</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 280,
+        "line": 374,
+        "context": "<span style={{ color: 'white' }}>280 kWp</span>",
+        "category": "sizing"
+      }
+    ],
+    "stateUsage": [],
+    "ssotViolations": [
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.0934",
+        "file": "TrueQuoteVerifyDemo.tsx",
+        "line": 24,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded cost: 3210200",
+        "file": "TrueQuoteVerifyDemo.tsx",
+        "line": 162,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      }
+    ]
+  },
+  {
+    "file": "ValueTicker.tsx",
+    "imports": [],
+    "exports": [],
+    "calculations": [
+      {
+        "name": "Inline financial calc",
+        "line": 60,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 63,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 72,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      }
+    ],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "constants.ts",
+    "imports": [],
+    "exports": [
+      "BESS_POWER_RATIOS",
+      "getBESSPowerRatio",
+      "SOLAR_TO_BESS_RATIO",
+      "INDUSTRY_BESS_RATIOS",
+      "getIndustryLoadProfile",
+      "getIndustryBESSRatio",
+      "getRegionalTOUSchedule",
+      "calculateArbitrageSavings"
+    ],
+    "calculations": [
+      {
+        "name": "Inline financial calc",
+        "line": 77,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      }
+    ],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "Step3Container.tsx",
+    "imports": [
+      {
+        "source": "@/services/supabaseClient",
+        "items": [
+          "supabase"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "./inputs",
+        "items": [
+          "SectionHeader",
+          "SmartQuestion",
+          "getColorScheme"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "lucide-react",
+        "items": [
+          "ChevronLeft",
+          "ChevronRight",
+          "Loader2"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step3Container"
+    ],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "index.tsx",
+    "imports": [
+      {
+        "source": "@/lib/utils",
+        "items": [
+          "cn"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "ColorScheme",
+      "getColorScheme",
+      "PanelButtonGroup",
+      "ToggleButtons",
+      "SliderWithButtons",
+      "CheckboxGrid",
+      "NumberInput",
+      "SectionHeader",
+      "SmartQuestion"
+    ],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "Step1Location.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "MapPin",
+          "Globe",
+          "Zap",
+          "Sun",
+          "Star",
+          "ChevronDown",
+          "Check"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step1Location"
+    ],
+    "calculations": [],
+    "hardcodedValues": [
+      {
+        "value": 0.04,
+        "line": 46,
+        "context": "{ name: 'Riyadh', electricityRate: 0.04, sunHours: 6.5, solarRating: 'A', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.04,
+        "line": 47,
+        "context": "{ name: 'Jeddah', electricityRate: 0.04, sunHours: 6.3, solarRating: 'A', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.04,
+        "line": 48,
+        "context": "{ name: 'Dammam', electricityRate: 0.04, sunHours: 6.4, solarRating: 'A', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.04,
+        "line": 49,
+        "context": "{ name: 'Mecca', electricityRate: 0.04, sunHours: 6.2, solarRating: 'A', solarLa",
+        "category": "rate"
+      },
+      {
+        "value": 0.04,
+        "line": 50,
+        "context": "{ name: 'Medina', electricityRate: 0.04, sunHours: 6.3, solarRating: 'A', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.08,
+        "line": 60,
+        "context": "{ name: 'Dubai', electricityRate: 0.08, sunHours: 6.2, solarRating: 'A', solarLa",
+        "category": "rate"
+      },
+      {
+        "value": 0.07,
+        "line": 61,
+        "context": "{ name: 'Abu Dhabi', electricityRate: 0.07, sunHours: 6.3, solarRating: 'A', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.08,
+        "line": 62,
+        "context": "{ name: 'Sharjah', electricityRate: 0.08, sunHours: 6.1, solarRating: 'A', solar",
+        "category": "rate"
+      },
+      {
+        "value": 0.28,
+        "line": 72,
+        "context": "{ name: 'London', electricityRate: 0.28, sunHours: 3.8, solarRating: 'C', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.27,
+        "line": 73,
+        "context": "{ name: 'Manchester', electricityRate: 0.27, sunHours: 3.5, solarRating: 'C', so",
+        "category": "rate"
+      },
+      {
+        "value": 0.27,
+        "line": 74,
+        "context": "{ name: 'Birmingham', electricityRate: 0.27, sunHours: 3.6, solarRating: 'C', so",
+        "category": "rate"
+      },
+      {
+        "value": 0.28,
+        "line": 75,
+        "context": "{ name: 'Edinburgh', electricityRate: 0.28, sunHours: 3.3, solarRating: 'C', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.35,
+        "line": 85,
+        "context": "{ name: 'Berlin', electricityRate: 0.35, sunHours: 3.5, solarRating: 'C', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.34,
+        "line": 86,
+        "context": "{ name: 'Munich', electricityRate: 0.34, sunHours: 3.8, solarRating: 'C', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.35,
+        "line": 87,
+        "context": "{ name: 'Frankfurt', electricityRate: 0.35, sunHours: 3.6, solarRating: 'C', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.35,
+        "line": 88,
+        "context": "{ name: 'Hamburg', electricityRate: 0.35, sunHours: 3.3, solarRating: 'C', solar",
+        "category": "rate"
+      },
+      {
+        "value": 0.25,
+        "line": 98,
+        "context": "{ name: 'Sydney', electricityRate: 0.25, sunHours: 5.5, solarRating: 'A', solarL",
+        "category": "rate"
+      },
+      {
+        "value": 0.26,
+        "line": 99,
+        "context": "{ name: 'Melbourne', electricityRate: 0.26, sunHours: 4.8, solarRating: 'B', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.24,
+        "line": 100,
+        "context": "{ name: 'Brisbane', electricityRate: 0.24, sunHours: 5.8, solarRating: 'A', sola",
+        "category": "rate"
+      },
+      {
+        "value": 0.28,
+        "line": 101,
+        "context": "{ name: 'Perth', electricityRate: 0.28, sunHours: 6.0, solarRating: 'A', solarLa",
+        "category": "rate"
+      },
+      {
+        "value": 0.22,
+        "line": 123,
+        "context": "{ name: 'Singapore', electricityRate: 0.22, sunHours: 4.5, solarRating: 'B', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.13,
+        "line": 158,
+        "context": "{ name: 'Toronto', electricityRate: 0.13, sunHours: 4.0, solarRating: 'B', solar",
+        "category": "rate"
+      },
+      {
+        "value": 0.11,
+        "line": 159,
+        "context": "{ name: 'Vancouver', electricityRate: 0.11, sunHours: 3.8, solarRating: 'C', sol",
+        "category": "rate"
+      },
+      {
+        "value": 0.12,
+        "line": 160,
+        "context": "{ name: 'Calgary', electricityRate: 0.12, sunHours: 4.5, solarRating: 'B', solar",
+        "category": "rate"
+      },
+      {
+        "value": 0.07,
+        "line": 161,
+        "context": "{ name: 'Montreal', electricityRate: 0.07, sunHours: 3.8, solarRating: 'C', sola",
+        "category": "rate"
+      },
+      {
+        "value": 0.0934,
+        "line": 180,
+        "context": "'NV': { name: 'Nevada', abbreviation: 'NV', electricityRate: 0.0934, sunHours: 6",
+        "category": "rate"
+      },
+      {
+        "value": 0.225,
+        "line": 181,
+        "context": "'CA': { name: 'California', abbreviation: 'CA', electricityRate: 0.2250, sunHour",
+        "category": "rate"
+      },
+      {
+        "value": 0.115,
+        "line": 182,
+        "context": "'AZ': { name: 'Arizona', abbreviation: 'AZ', electricityRate: 0.1150, sunHours: ",
+        "category": "rate"
+      },
+      {
+        "value": 0.118,
+        "line": 183,
+        "context": "'TX': { name: 'Texas', abbreviation: 'TX', electricityRate: 0.1180, sunHours: 5.",
+        "category": "rate"
+      },
+      {
+        "value": 0.128,
+        "line": 184,
+        "context": "'FL': { name: 'Florida', abbreviation: 'FL', electricityRate: 0.1280, sunHours: ",
+        "category": "rate"
+      },
+      {
+        "value": 0.195,
+        "line": 185,
+        "context": "'NY': { name: 'New York', abbreviation: 'NY', electricityRate: 0.1950, sunHours:",
+        "category": "rate"
+      },
+      {
+        "value": 0.128,
+        "line": 186,
+        "context": "'CO': { name: 'Colorado', abbreviation: 'CO', electricityRate: 0.1280, sunHours:",
+        "category": "rate"
+      },
+      {
+        "value": 0.098,
+        "line": 187,
+        "context": "'WA': { name: 'Washington', abbreviation: 'WA', electricityRate: 0.0980, sunHour",
+        "category": "rate"
+      },
+      {
+        "value": 0.22,
+        "line": 188,
+        "context": "'MA': { name: 'Massachusetts', abbreviation: 'MA', electricityRate: 0.2200, sunH",
+        "category": "rate"
+      },
+      {
+        "value": 0.135,
+        "line": 189,
+        "context": "'IL': { name: 'Illinois', abbreviation: 'IL', electricityRate: 0.1350, sunHours:",
+        "category": "rate"
+      },
+      {
+        "value": 0.12,
+        "line": 190,
+        "context": "'GA': { name: 'Georgia', abbreviation: 'GA', electricityRate: 0.1200, sunHours: ",
+        "category": "rate"
+      },
+      {
+        "value": 0.11,
+        "line": 191,
+        "context": "'NC': { name: 'North Carolina', abbreviation: 'NC', electricityRate: 0.1100, sun",
+        "category": "rate"
+      },
+      {
+        "value": 0.165,
+        "line": 192,
+        "context": "'NJ': { name: 'New Jersey', abbreviation: 'NJ', electricityRate: 0.1650, sunHour",
+        "category": "rate"
+      },
+      {
+        "value": 0.14,
+        "line": 193,
+        "context": "'PA': { name: 'Pennsylvania', abbreviation: 'PA', electricityRate: 0.1400, sunHo",
+        "category": "rate"
+      },
+      {
+        "value": 0.125,
+        "line": 194,
+        "context": "'OH': { name: 'Ohio', abbreviation: 'OH', electricityRate: 0.1250, sunHours: 4.0",
+        "category": "rate"
+      },
+      {
+        "value": 0.155,
+        "line": 195,
+        "context": "'MI': { name: 'Michigan', abbreviation: 'MI', electricityRate: 0.1550, sunHours:",
+        "category": "rate"
+      },
+      {
+        "value": 0.12,
+        "line": 196,
+        "context": "'NM': { name: 'New Mexico', abbreviation: 'NM', electricityRate: 0.1200, sunHour",
+        "category": "rate"
+      },
+      {
+        "value": 0.105,
+        "line": 197,
+        "context": "'UT': { name: 'Utah', abbreviation: 'UT', electricityRate: 0.1050, sunHours: 5.8",
+        "category": "rate"
+      },
+      {
+        "value": 0.11,
+        "line": 198,
+        "context": "'OR': { name: 'Oregon', abbreviation: 'OR', electricityRate: 0.1100, sunHours: 4",
+        "category": "rate"
+      },
+      {
+        "value": 0.35,
+        "line": 199,
+        "context": "'HI': { name: 'Hawaii', abbreviation: 'HI', electricityRate: 0.3500, sunHours: 5",
+        "category": "rate"
+      }
+    ],
+    "stateUsage": [
+      "zipCode",
+      "goals"
+    ],
+    "ssotViolations": [
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.04",
+        "file": "Step1Location.tsx",
+        "line": 46,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.04",
+        "file": "Step1Location.tsx",
+        "line": 47,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.04",
+        "file": "Step1Location.tsx",
+        "line": 48,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.04",
+        "file": "Step1Location.tsx",
+        "line": 49,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.04",
+        "file": "Step1Location.tsx",
+        "line": 50,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.08",
+        "file": "Step1Location.tsx",
+        "line": 60,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.07",
+        "file": "Step1Location.tsx",
+        "line": 61,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.08",
+        "file": "Step1Location.tsx",
+        "line": 62,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.28",
+        "file": "Step1Location.tsx",
+        "line": 72,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.27",
+        "file": "Step1Location.tsx",
+        "line": 73,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.27",
+        "file": "Step1Location.tsx",
+        "line": 74,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.28",
+        "file": "Step1Location.tsx",
+        "line": 75,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.35",
+        "file": "Step1Location.tsx",
+        "line": 85,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.34",
+        "file": "Step1Location.tsx",
+        "line": 86,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.35",
+        "file": "Step1Location.tsx",
+        "line": 87,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.35",
+        "file": "Step1Location.tsx",
+        "line": 88,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.25",
+        "file": "Step1Location.tsx",
+        "line": 98,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.26",
+        "file": "Step1Location.tsx",
+        "line": 99,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.24",
+        "file": "Step1Location.tsx",
+        "line": 100,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.28",
+        "file": "Step1Location.tsx",
+        "line": 101,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.22",
+        "file": "Step1Location.tsx",
+        "line": 123,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.13",
+        "file": "Step1Location.tsx",
+        "line": 158,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.11",
+        "file": "Step1Location.tsx",
+        "line": 159,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.12",
+        "file": "Step1Location.tsx",
+        "line": 160,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.07",
+        "file": "Step1Location.tsx",
+        "line": 161,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.0934",
+        "file": "Step1Location.tsx",
+        "line": 180,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.225",
+        "file": "Step1Location.tsx",
+        "line": 181,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.115",
+        "file": "Step1Location.tsx",
+        "line": 182,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.118",
+        "file": "Step1Location.tsx",
+        "line": 183,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.128",
+        "file": "Step1Location.tsx",
+        "line": 184,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.195",
+        "file": "Step1Location.tsx",
+        "line": 185,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.128",
+        "file": "Step1Location.tsx",
+        "line": 186,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.098",
+        "file": "Step1Location.tsx",
+        "line": 187,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.22",
+        "file": "Step1Location.tsx",
+        "line": 188,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.135",
+        "file": "Step1Location.tsx",
+        "line": 189,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.12",
+        "file": "Step1Location.tsx",
+        "line": 190,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.11",
+        "file": "Step1Location.tsx",
+        "line": 191,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.165",
+        "file": "Step1Location.tsx",
+        "line": 192,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.14",
+        "file": "Step1Location.tsx",
+        "line": 193,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.125",
+        "file": "Step1Location.tsx",
+        "line": 194,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.155",
+        "file": "Step1Location.tsx",
+        "line": 195,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.12",
+        "file": "Step1Location.tsx",
+        "line": 196,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.105",
+        "file": "Step1Location.tsx",
+        "line": 197,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.11",
+        "file": "Step1Location.tsx",
+        "line": 198,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.35",
+        "file": "Step1Location.tsx",
+        "line": 199,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      }
+    ]
+  },
+  {
+    "file": "Step2Industry.tsx",
+    "imports": [
+      {
+        "source": "react",
+        "items": [
+          "React"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "lucide-react",
+        "items": [
+          "Check"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hotel_motel_holidayinn_1.jpg",
+        "items": [
+          "hotelImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/Car_Wash_PitStop.jpg",
+        "items": [
+          "carWashImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/ev_charging_station.jpg",
+        "items": [
+          "evChargingImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/manufacturing_1.jpg",
+        "items": [
+          "manufacturingImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/data-centers/data-center-1.jpg",
+        "items": [
+          "dataCenterImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hospital_1.jpg",
+        "items": [
+          "hospitalImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/retail_1.jpg",
+        "items": [
+          "retailImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/office_building1.jpg",
+        "items": [
+          "officeImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/college_1.jpg",
+        "items": [
+          "collegeImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/logistics_1.jpg",
+        "items": [
+          "warehouseImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/restaurant_1.jpg",
+        "items": [
+          "restaurantImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/indoor_farm1.jpeg",
+        "items": [
+          "agricultureImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step2Industry"
+    ],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "industry",
+      "industryName"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "Step3Details.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "Building2",
+          "Loader2",
+          "AlertCircle",
+          "ChevronDown",
+          "Check",
+          "Sun",
+          "Layers",
+          "Dumbbell",
+          "UtensilsCrossed",
+          "Settings",
+          "Car",
+          "Zap",
+          "PlugZap",
+          "Factory",
+          "Server",
+          "GraduationCap",
+          "Users",
+          "Thermometer",
+          "Droplets",
+          "Wind",
+          "Battery",
+          "DollarSign",
+          "Leaf",
+          "Shield",
+          "Clock",
+          "Calendar",
+          "Square",
+          "Gauge",
+          "Target",
+          "HelpCircle",
+          "CheckCircle2",
+          "Lock",
+          "Building",
+          "Home",
+          "Mountain",
+          "Truck",
+          "Coffee",
+          "Fuel",
+          "Activity",
+          "TrendingUp",
+          "TrendingDown",
+          "Waves",
+          "Sparkles",
+          "Monitor",
+          "Lightbulb",
+          "TreePine",
+          "Key",
+          "Warehouse",
+          "Shirt",
+          "Store",
+          "CircleOff",
+          "Flame",
+          "Snowflake",
+          "Box",
+          "Bot",
+          "Award",
+          "FileText",
+          "Star",
+          "Heart",
+          "Library",
+          "Briefcase",
+          "Theater",
+          "FlaskConical",
+          "Wrench",
+          "Cog",
+          "Package",
+          "Cpu",
+          "Sofa",
+          "Wifi",
+          "Umbrella",
+          "Bath",
+          "ShoppingBag",
+          "Plus",
+          "Minus",
+          "X",
+          "LayoutGrid",
+          "MapPin",
+          "Ruler",
+          "Circle",
+          "CircleDot",
+          "Castle",
+          "Dog",
+          "Recycle",
+          "RotateCw",
+          "MessageCircle",
+          "Plane",
+          "Bed",
+          "Stethoscope",
+          "HeartPulse",
+          "Scan",
+          "Radio",
+          "Atom",
+          "ArrowUpDown",
+          "DoorOpen",
+          "Bus",
+          "Scale",
+          "Landmark",
+          "Flag",
+          "Phone",
+          "Archive",
+          "BarChart",
+          "Feather",
+          "Ticket",
+          "Tag",
+          "Film",
+          "Baby",
+          "ShoppingCart",
+          "Calculator",
+          "Milk",
+          "Apple",
+          "Carrot",
+          "Cherry",
+          "Fish",
+          "Wheat",
+          "Tractor",
+          "CloudRain",
+          "Cloud",
+          "Cylinder",
+          "IceCream",
+          "Pill",
+          "Beef",
+          "Sprout",
+          "Fan",
+          "Dice5",
+          "Wine",
+          "Beer",
+          "Music",
+          "ChefHat",
+          "ConciergeBell",
+          "GitBranch",
+          "Unplug",
+          "ToggleRight",
+          "Infinity",
+          "ArrowUpRight",
+          "ArrowLeftRight",
+          "ArrowRight"
+        ],
+        "isService": false,
+        "isCalculation": true
+      },
+      {
+        "source": "@/services/supabaseClient",
+        "items": [
+          "supabase"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/new_profile_.png",
+        "items": [
+          "merlinIcon"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hotel_motel_holidayinn_1.jpg",
+        "items": [
+          "hotelImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/Car_Wash_PitStop.jpg",
+        "items": [
+          "carWashImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/ev_charging_station.jpg",
+        "items": [
+          "evChargingImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/manufacturing_1.jpg",
+        "items": [
+          "manufacturingImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/data-centers/data-center-1.jpg",
+        "items": [
+          "dataCenterImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hospital_1.jpg",
+        "items": [
+          "hospitalImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/retail_1.jpg",
+        "items": [
+          "retailImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/office_building1.jpg",
+        "items": [
+          "officeImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/college_1.jpg",
+        "items": [
+          "collegeImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/logistics_1.jpg",
+        "items": [
+          "warehouseImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/restaurant_1.jpg",
+        "items": [
+          "restaurantImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/agriculture.jpg",
+        "items": [
+          "agricultureImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/airport_1.jpg",
+        "items": [
+          "airportImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hotel_motel_holidayinn_2.jpg",
+        "items": [
+          "casinoImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/indoor_farm2.jpg",
+        "items": [
+          "indoorFarmImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/office_building2.jpg",
+        "items": [
+          "apartmentImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/logistics_2.jpeg",
+        "items": [
+          "coldStorageImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/retail_1.jpg",
+        "items": [
+          "shoppingCenterImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/office_building3.jpg",
+        "items": [
+          "governmentImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step3Details"
+    ],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "industry",
+      "useCaseData",
+      "industryName",
+      "state",
+      "electricityRate",
+      "solarData"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "Step3HotelEnergy.tsx",
+    "imports": [
+      {
+        "source": "@/services/supabaseClient",
+        "items": [
+          "supabase"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "lucide-react",
+        "items": [
+          "Loader2",
+          "Plus",
+          "Minus"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/hotel_motel_holidayinn_1.jpg",
+        "items": [
+          "hotelImg"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [],
+    "calculations": [],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "useCaseData"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "Step4Options.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "Sun",
+          "Zap",
+          "Check",
+          "X",
+          "Star",
+          "Settings2",
+          "Leaf",
+          "Battery",
+          "Sparkles",
+          "Info",
+          "Calculator",
+          "AlertTriangle",
+          "Fuel"
+        ],
+        "isService": false,
+        "isCalculation": true
+      },
+      {
+        "source": "@/services/utilityRateService",
+        "items": [
+          "getCommercialRateByZip"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/calculationConstantsService",
+        "items": [
+          "getConstant"
+        ],
+        "isService": true,
+        "isCalculation": true
+      },
+      {
+        "source": "@/services/TrueQuoteEngine",
+        "items": [
+          "calculateTrueQuote"
+        ],
+        "isService": true,
+        "isCalculation": true
+      },
+      {
+        "source": "../utils/trueQuoteMapper",
+        "items": [
+          "mapWizardStateToTrueQuoteInput"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/new_profile_.png",
+        "items": [
+          "merlinIcon"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step4Options"
+    ],
+    "calculations": [
+      {
+        "name": "TrueQuote call",
+        "line": 24,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 852,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      }
+    ],
+    "hardcodedValues": [
+      {
+        "value": 0.12,
+        "line": 75,
+        "context": "let electricityRate = 0.12; // Fallback: EIA 2024 national average",
+        "category": "rate"
+      },
+      {
+        "value": 50,
+        "line": 403,
+        "context": "<span>50 kWp</span>",
+        "category": "sizing"
+      },
+      {
+        "value": 19,
+        "line": 585,
+        "context": "'7-19 kW each',",
+        "category": "sizing"
+      },
+      {
+        "value": 150,
+        "line": 595,
+        "context": "'50-150 kW each',",
+        "category": "sizing"
+      },
+      {
+        "value": 350,
+        "line": 605,
+        "context": "'150-350 kW each',",
+        "category": "sizing"
+      },
+      {
+        "value": 100,
+        "line": 762,
+        "context": "<span>100 kW</span>",
+        "category": "sizing"
+      }
+    ],
+    "stateUsage": [
+      "zipCode",
+      "industry",
+      "useCaseData",
+      "calculations",
+      "solarData",
+      "state",
+      "customSolarKw",
+      "customEvL2",
+      "customEvDcfc",
+      "customEvUltraFast",
+      "customGeneratorKw",
+      "generatorFuel"
+    ],
+    "ssotViolations": [
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded rate: 0.12",
+        "file": "Step4Options.tsx",
+        "line": 75,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "duplicate-calc",
+        "description": "Multiple TrueQuote calls (2x)",
+        "file": "Step4Options.tsx",
+        "line": 0,
+        "recommendation": "Consolidate to single call via MerlinOrchestrator"
+      }
+    ]
+  },
+  {
+    "file": "Step5MagicFit.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "Zap",
+          "Battery",
+          "Sun",
+          "Clock",
+          "TrendingUp",
+          "Star",
+          "Check",
+          "Loader2",
+          "Info",
+          "Shield",
+          "Home",
+          "Fuel",
+          "AlertTriangle"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "../types",
+        "items": [
+          "POWER_LEVELS"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/unifiedPricingService",
+        "items": [
+          "getBatteryPricing",
+          "getSolarPricing",
+          "getGeneratorPricing",
+          "type BatteryPricing",
+          "type SolarPricing",
+          "type GeneratorPricing"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/utilityRateService",
+        "items": [
+          "getCommercialRateByZip",
+          "getBESSSavingsOpportunity"
+        ],
+        "isService": true,
+        "isCalculation": false
+      },
+      {
+        "source": "../components/TrueQuoteVerifyBadge",
+        "items": [
+          "TrueQuoteVerifyBadge"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/hooks/useTrueQuote",
+        "items": [
+          "useTrueQuote"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/TrueQuoteEngine",
+        "items": [
+          "calculateTrueQuote"
+        ],
+        "isService": true,
+        "isCalculation": true
+      },
+      {
+        "source": "../utils/trueQuoteMapper",
+        "items": [
+          "mapWizardStateToTrueQuoteInput"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step5MagicFit"
+    ],
+    "calculations": [
+      {
+        "name": "TrueQuote call",
+        "line": 8,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 12,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 34,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 69,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 74,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 94,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 218,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 275,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 303,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 310,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 328,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      }
+    ],
+    "hardcodedValues": [
+      {
+        "value": 0,
+        "line": 147,
+        "context": "let solarCost = 0;",
+        "category": "cost"
+      },
+      {
+        "value": 0,
+        "line": 190,
+        "context": "let evCost = 0;",
+        "category": "cost"
+      }
+    ],
+    "stateUsage": [
+      "zipCode",
+      "useCaseData",
+      "industryName",
+      "industry",
+      "customSolarKw",
+      "customGeneratorKw",
+      "customEvL2",
+      "customEvDcfc",
+      "customEvUltraFast",
+      "state",
+      "solarData",
+      "facilityDetails",
+      "selectedOptions",
+      "calculations",
+      "solarTier",
+      "evTier",
+      "selectedPowerLevel"
+    ],
+    "ssotViolations": [
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded cost: 0",
+        "file": "Step5MagicFit.tsx",
+        "line": 147,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "hardcoded-constant",
+        "description": "Hardcoded cost: 0",
+        "file": "Step5MagicFit.tsx",
+        "line": 190,
+        "recommendation": "Import from @/services/data/constants or calculationConstantsService"
+      },
+      {
+        "type": "duplicate-calc",
+        "description": "Multiple TrueQuote calls (2x)",
+        "file": "Step5MagicFit.tsx",
+        "line": 0,
+        "recommendation": "Consolidate to single call via MerlinOrchestrator"
+      }
+    ]
+  },
+  {
+    "file": "Step6Quote.tsx",
+    "imports": [
+      {
+        "source": "lucide-react",
+        "items": [
+          "Battery",
+          "Sun",
+          "Zap",
+          "Fuel",
+          "DollarSign",
+          "TrendingUp",
+          "Calendar",
+          "MapPin",
+          "Building2",
+          "CheckCircle",
+          "Download",
+          "Mail",
+          "Phone",
+          "Sparkles",
+          "Shield",
+          "Info",
+          "Plus"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "../types",
+        "items": [
+          "POWER_LEVELS"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/components/modals/RequestQuoteModal",
+        "items": [
+          "RequestQuoteModal"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/utils/quoteExportUtils",
+        "items": [
+          "exportQuoteAsPDF"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/assets/images/sun_icon.png",
+        "items": [
+          "sunIcon"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/services/stateIncentivesService",
+        "items": [
+          "getIncentivesByZip",
+          "calculateIncentives",
+          "type StateIncentive"
+        ],
+        "isService": true,
+        "isCalculation": true
+      },
+      {
+        "source": "../components/TrueQuoteVerifyBadge",
+        "items": [
+          "TrueQuoteVerifyBadge"
+        ],
+        "isService": false,
+        "isCalculation": false
+      },
+      {
+        "source": "@/hooks/useTrueQuote",
+        "items": [
+          "useTrueQuote"
+        ],
+        "isService": false,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "Step6Quote"
+    ],
+    "calculations": [
+      {
+        "name": "TrueQuote call",
+        "line": 91,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 92,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "Inline financial calc",
+        "line": 132,
+        "type": "inline",
+        "shouldMigrate": true,
+        "reason": "Should use financialCalculator"
+      }
+    ],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "zipCode",
+      "solarTier",
+      "selectedOptions",
+      "selectedPowerLevel",
+      "industryName",
+      "city",
+      "state",
+      "solarData"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "types.ts",
+    "imports": [],
+    "exports": [
+      "WizardState",
+      "EnergyGoal",
+      "ENERGY_GOALS",
+      "IndustryOption",
+      "INDUSTRIES",
+      "FacilityDetails",
+      "OpportunitySelections",
+      "OpportunityInfo",
+      "PowerLevel",
+      "PowerLevelConfig",
+      "POWER_LEVELS",
+      "SystemCalculations",
+      "INITIAL_WIZARD_STATE",
+      "StepDefinition",
+      "WIZARD_STEPS"
+    ],
+    "calculations": [],
+    "hardcodedValues": [
+      {
+        "value": 350,
+        "line": 44,
+        "context": "customEvUltraFast?: number;  // Ultra-Fast chargers (250-350 kW)",
+        "category": "sizing"
+      }
+    ],
+    "stateUsage": [],
+    "ssotViolations": []
+  },
+  {
+    "file": "trueQuoteMapper.ts",
+    "imports": [
+      {
+        "source": "@/services/trueQuoteMapperConfig",
+        "items": [
+          "mapSubtype",
+          "mapFieldName",
+          "DEFAULT_SUBTYPES"
+        ],
+        "isService": true,
+        "isCalculation": false
+      }
+    ],
+    "exports": [
+      "mapWizardStateToTrueQuoteInput"
+    ],
+    "calculations": [
+      {
+        "name": "TrueQuote call",
+        "line": 11,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      },
+      {
+        "name": "TrueQuote call",
+        "line": 122,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      }
+    ],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "industry",
+      "useCaseData",
+      "zipCode",
+      "state",
+      "selectedOptions",
+      "customEvL2",
+      "customEvDcfc",
+      "customEvUltraFast"
+    ],
+    "ssotViolations": []
+  },
+  {
+    "file": "trueQuoteMapper_COMPLETE.ts",
+    "imports": [],
+    "exports": [
+      "mapWizardStateToTrueQuoteInput"
+    ],
+    "calculations": [
+      {
+        "name": "TrueQuote call",
+        "line": 9,
+        "type": "service-call",
+        "shouldMigrate": true,
+        "reason": "Should use TrueQuoteEngineV2 via MerlinOrchestrator"
+      }
+    ],
+    "hardcodedValues": [],
+    "stateUsage": [
+      "industry",
+      "useCaseData",
+      "zipCode",
+      "state",
+      "selectedOptions",
+      "customEvL2",
+      "customEvDcfc",
+      "customEvUltraFast"
+    ],
+    "ssotViolations": []
+  }
+]
