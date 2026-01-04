@@ -397,17 +397,13 @@ const IconComponents: Record<string, React.ComponentType<{ className?: string }>
 };
 
 function LucideIcon({ name, className = "w-5 h-5" }: { name: string; className?: string }) {
-  console.log(`[LucideIcon] Looking up icon: "${name}"`);
   const Icon = IconComponents[name];
   if (!Icon) {
-    console.warn(`[LucideIcon] Icon "${name}" not found in IconComponents. Available keys:`, Object.keys(IconComponents).slice(0, 30));
     return <HelpCircle className={className} />;
   }
-  console.log(`[LucideIcon] Found icon component for "${name}"`);
   try {
     return <Icon className={className} />;
   } catch (error) {
-    console.error(`[LucideIcon] Error rendering icon "${name}":`, error);
     return <HelpCircle className={className} />;
   }
 }
