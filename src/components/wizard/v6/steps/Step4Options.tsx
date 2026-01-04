@@ -21,8 +21,9 @@ import type { WizardState } from '../types';
 // ============================================================================
 import { getCommercialRateByZip } from '@/services/utilityRateService';
 import { getConstant } from '@/services/calculationConstantsService';
-import { calculateTrueQuote } from '@/services/TrueQuoteEngine';
-import { mapWizardStateToTrueQuoteInput } from '../utils/trueQuoteMapper';
+// NEW: Use modular calculators from Porsche 911 architecture
+import { calculateLoad } from '@/services/calculators/loadCalculator';
+import { calculateBESS } from '@/services/calculators/bessCalculator';
 import type { SystemCalculations } from '../types';
 
 // Merlin image
@@ -842,19 +843,32 @@ export function Step4Options({ state, updateState }: Props) {
       console.log('✅ Step 4: zipCode verified', { zipCode: state.zipCode, zipCodeLength: state.zipCode.length });
 
       try {
-        console.log('🔄 Step 4: Calling TrueQuote Engine for initial calculations...');
+        console.log('🔄 Step 4: Using Porsche 911 calculators for initial sizing...');
         
-        // Map WizardState to TrueQuoteInput
-        const trueQuoteInput = mapWizardStateToTrueQuoteInput(state);
-        console.log('📥 Step 4: TrueQuote Input:', trueQuoteInput);
+        // Use new modular calculators (SSOT)
+        const industry = (state.industry || 'hotel').replace(/-/g, '_') as any;
         
-        // Call TrueQuote Engine
-        const trueQuoteResult = calculateTrueQuote(trueQuoteInput);
-        console.log('✅ Step 4: TrueQuote Engine Result:', {
-          peakDemandKW: trueQuoteResult.results.peakDemandKW,
-          bessKW: trueQuoteResult.results.bess.powerKW,
-          bessKWh: trueQuoteResult.results.bess.energyKWh,
-          generatorKW: trueQuoteResult.results.generator?.capacityKW,
+        // Step 1: Calculate load
+        const loadResult = calculateLoad({
+          industry,
+          useCaseData: state.useCaseData || {},
+        });
+        console.log('⚡ Step 4: Load calculation:', {
+          peakDemandKW: loadResult.peakDemandKW,
+          annualConsumptionKWh: loadResult.annualConsumptionKWh,
+        });
+        
+        // Step 2: Calculate BESS sizing
+        const bessResult = calculateBESS({
+          peakDemandKW: loadResult.peakDemandKW,
+          annualConsumptionKWh: loadResult.annualConsumptionKWh,
+          industry,
+          useCaseData: state.useCaseData || {},
+          goals: state.goals || ['reduce_costs', 'backup_power', 'sustainability'],
+        });
+        console.log('🔋 Step 4: BESS calculation:', {
+          powerKW: bessResult.powerKW,
+          energyKWh: bessResult.energyKWh,
         });
 
         // Get utility rates
@@ -865,11 +879,11 @@ export function Step4Options({ state, updateState }: Props) {
         // Create initial calculations object (basic, without pricing details)
         // This is enough for ValueTicker to display values
         const initialCalculations: SystemCalculations = {
-          bessKW: trueQuoteResult.results.bess.powerKW,
-          bessKWh: trueQuoteResult.results.bess.energyKWh,
-          solarKW: trueQuoteResult.results.solar?.capacityKWp || 0,
+          bessKW: bessResult.powerKW,
+          bessKWh: bessResult.energyKWh,
+          solarKW: 0, // Solar calculated in Step 5 with full quote
           evChargers: 0,
-          generatorKW: trueQuoteResult.results.generator?.capacityKW || 0,
+          generatorKW: 0, // Generator calculated in Step 5 with full quote
           totalInvestment: 0, // Will be calculated in Step 5 with pricing
           annualSavings: 0, // Will be calculated in Step 5
           paybackYears: 0,
@@ -885,7 +899,7 @@ export function Step4Options({ state, updateState }: Props) {
         // Also store peakDemandKw in useCaseData for ValueTicker
         const updatedUseCaseData = {
           ...state.useCaseData,
-          peakDemandKw: trueQuoteResult.results.peakDemandKW,
+          peakDemandKw: loadResult.peakDemandKW,
         };
 
         // Store in state so ValueTicker can use it
@@ -896,7 +910,7 @@ export function Step4Options({ state, updateState }: Props) {
         
         console.log('✅ Step 4: Initial calculations stored in state:', {
           calculations: initialCalculations,
-          peakDemandKw: trueQuoteResult.results.peakDemandKW,
+          peakDemandKw: loadResult.peakDemandKW,
         });
       } catch (error) {
         console.error('❌ Step 4: Failed to load initial calculations:', error);
