@@ -1020,12 +1020,44 @@ export function Step3Details({ state, updateState }: Props) {
       {/* ================================================================== */}
       {/* MAIN CONTENT */}
       {/* ================================================================== */}
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Tell Us About Your {industryLabel}</h1>
-            <p className="text-slate-400 mt-1">
+            <h1 className="text-2xl font-bold text-white">
+              Tell Us About Your {industryLabel}
+              {state.state && <span className="text-purple-400"> in {state.state}</span>}
+            </h1>
+            
+            {/* Location Details Bar */}
+            {(state.electricityRate || state.solarData) && (
+              <div className="flex items-center justify-center gap-6 mt-3">
+                {state.electricityRate && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    <span className="text-slate-400">Utility Rate:</span>
+                    <span className="text-white font-medium">${state.electricityRate.toFixed(2)}/kWh</span>
+                  </div>
+                )}
+                {state.solarData && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Sun className="w-4 h-4 text-orange-400" />
+                    <span className="text-slate-400">Solar:</span>
+                    <span className="text-white font-medium">{state.solarData.sunHours} hrs/day</span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      state.solarData.rating === 'A' ? 'bg-green-500/20 text-green-400' :
+                      state.solarData.rating === 'B' ? 'bg-blue-500/20 text-blue-400' :
+                      state.solarData.rating === 'C' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-orange-500/20 text-orange-400'
+                    }`}>
+                      {state.solarData.rating}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <p className="text-slate-400 mt-2">
               {answeredRequired.length} of {requiredQuestions.length} required • {progress}% complete
             </p>
           </div>
