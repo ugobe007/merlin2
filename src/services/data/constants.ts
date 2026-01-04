@@ -240,7 +240,7 @@ export function isHighRiskState(stateCode: string): boolean {
  * Round to nearest standard generator size
  */
 export function roundToStandardGeneratorSize(kw: number): number {
-  let closest = STANDARD_GENERATOR_SIZES[0];
+  let closest: number = STANDARD_GENERATOR_SIZES[0];
   let minDiff = Math.abs(kw - closest);
   
   for (const size of STANDARD_GENERATOR_SIZES) {
