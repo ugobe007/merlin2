@@ -17,6 +17,9 @@ export interface WizardState {
   city: string;
   goals: EnergyGoal[];
   solarData?: { sunHours: number; rating: string }; // Solar irradiance data for location
+  country?: string;
+  electricityRate?: number;
+  currency?: string;
   
   // Step 2: Industry
   industry: string;
