@@ -1,0 +1,264 @@
+═══════════════════════════════════════════════════════════════════
+           WIZARD ARCHITECTURE ANALYSIS REPORT
+═══════════════════════════════════════════════════════════════════
+
+📊 SUMMARY
+─────────────────────────────────────────────────────────────────
+   Files analyzed: 18
+   SSOT violations: 52
+   Calculations to migrate: 23
+   Hardcoded values found: 74
+
+🚨 SSOT VIOLATIONS (Fix These First)
+─────────────────────────────────────────────────────────────────
+
+📄 TrueQuoteVerifyDemo.tsx
+   Line 24: hardcoded-constant
+      Hardcoded rate: 0.0934
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 162: hardcoded-constant
+      Hardcoded cost: 3210200
+      → Import from @/services/data/constants or calculationConstantsService
+
+📄 Step1Location.tsx
+   Line 46: hardcoded-constant
+      Hardcoded rate: 0.04
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 47: hardcoded-constant
+      Hardcoded rate: 0.04
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 48: hardcoded-constant
+      Hardcoded rate: 0.04
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 49: hardcoded-constant
+      Hardcoded rate: 0.04
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 50: hardcoded-constant
+      Hardcoded rate: 0.04
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 60: hardcoded-constant
+      Hardcoded rate: 0.08
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 61: hardcoded-constant
+      Hardcoded rate: 0.07
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 62: hardcoded-constant
+      Hardcoded rate: 0.08
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 72: hardcoded-constant
+      Hardcoded rate: 0.28
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 73: hardcoded-constant
+      Hardcoded rate: 0.27
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 74: hardcoded-constant
+      Hardcoded rate: 0.27
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 75: hardcoded-constant
+      Hardcoded rate: 0.28
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 85: hardcoded-constant
+      Hardcoded rate: 0.35
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 86: hardcoded-constant
+      Hardcoded rate: 0.34
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 87: hardcoded-constant
+      Hardcoded rate: 0.35
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 88: hardcoded-constant
+      Hardcoded rate: 0.35
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 98: hardcoded-constant
+      Hardcoded rate: 0.25
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 99: hardcoded-constant
+      Hardcoded rate: 0.26
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 100: hardcoded-constant
+      Hardcoded rate: 0.24
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 101: hardcoded-constant
+      Hardcoded rate: 0.28
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 123: hardcoded-constant
+      Hardcoded rate: 0.22
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 158: hardcoded-constant
+      Hardcoded rate: 0.13
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 159: hardcoded-constant
+      Hardcoded rate: 0.11
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 160: hardcoded-constant
+      Hardcoded rate: 0.12
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 161: hardcoded-constant
+      Hardcoded rate: 0.07
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 180: hardcoded-constant
+      Hardcoded rate: 0.0934
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 181: hardcoded-constant
+      Hardcoded rate: 0.225
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 182: hardcoded-constant
+      Hardcoded rate: 0.115
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 183: hardcoded-constant
+      Hardcoded rate: 0.118
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 184: hardcoded-constant
+      Hardcoded rate: 0.128
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 185: hardcoded-constant
+      Hardcoded rate: 0.195
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 186: hardcoded-constant
+      Hardcoded rate: 0.128
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 187: hardcoded-constant
+      Hardcoded rate: 0.098
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 188: hardcoded-constant
+      Hardcoded rate: 0.22
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 189: hardcoded-constant
+      Hardcoded rate: 0.135
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 190: hardcoded-constant
+      Hardcoded rate: 0.12
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 191: hardcoded-constant
+      Hardcoded rate: 0.11
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 192: hardcoded-constant
+      Hardcoded rate: 0.165
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 193: hardcoded-constant
+      Hardcoded rate: 0.14
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 194: hardcoded-constant
+      Hardcoded rate: 0.125
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 195: hardcoded-constant
+      Hardcoded rate: 0.155
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 196: hardcoded-constant
+      Hardcoded rate: 0.12
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 197: hardcoded-constant
+      Hardcoded rate: 0.105
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 198: hardcoded-constant
+      Hardcoded rate: 0.11
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 199: hardcoded-constant
+      Hardcoded rate: 0.35
+      → Import from @/services/data/constants or calculationConstantsService
+
+📄 Step4Options.tsx
+   Line 75: hardcoded-constant
+      Hardcoded rate: 0.12
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 0: duplicate-calc
+      Multiple TrueQuote calls (2x)
+      → Consolidate to single call via MerlinOrchestrator
+
+📄 Step5MagicFit.tsx
+   Line 147: hardcoded-constant
+      Hardcoded cost: 0
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 190: hardcoded-constant
+      Hardcoded cost: 0
+      → Import from @/services/data/constants or calculationConstantsService
+   Line 0: duplicate-calc
+      Multiple TrueQuote calls (2x)
+      → Consolidate to single call via MerlinOrchestrator
+
+
+📦 SERVICE DEPENDENCIES
+─────────────────────────────────────────────────────────────────
+
+TrueQuoteVerifyBadge.tsx:
+   └── @/services/financialProjections
+
+Step3Container.tsx:
+   └── @/services/supabaseClient
+
+Step3Details.tsx:
+   └── @/services/supabaseClient
+
+Step3HotelEnergy.tsx:
+   └── @/services/supabaseClient
+
+Step4Options.tsx:
+   └── @/services/utilityRateService
+   └── @/services/calculationConstantsService
+   └── @/services/TrueQuoteEngine
+
+Step5MagicFit.tsx:
+   └── @/services/unifiedPricingService
+   └── @/services/utilityRateService
+   └── @/services/TrueQuoteEngine
+
+Step6Quote.tsx:
+   └── @/services/stateIncentivesService
+
+trueQuoteMapper.ts:
+   └── @/services/trueQuoteMapperConfig
+
+
+📋 WIZARD STATE FIELDS USED
+─────────────────────────────────────────────────────────────────
+   • calculations
+   • city
+   • customEvDcfc
+   • customEvL2
+   • customEvUltraFast
+   • customGeneratorKw
+   • customSolarKw
+   • electricityRate
+   • evTier
+   • facilityDetails
+   • generatorFuel
+   • goals
+   • industry
+   • industryName
+   • selectedOptions
+   • selectedPowerLevel
+   • solarData
+   • solarTier
+   • state
+   • useCaseData
+   • zipCode
+
+
+✅ MIGRATION CHECKLIST
+─────────────────────────────────────────────────────────────────
+
+   [ ] 1. Replace TrueQuoteEngine imports with MerlinOrchestrator
+   [ ] 2. Replace calculateTrueQuote() with generateQuote()
+   [ ] 3. Update state handling to use MerlinRequest format
+   [ ] 4. Replace hardcoded constants with imports from data/constants
+   [ ] 5. Remove inline calculations, use calculator modules
+   [ ] 6. Update Step5MagicFit to use MagicFit.ts results
+   [ ] 7. Update Step6Quote to use TrueQuoteAuthenticatedResult
+   [ ] 8. Test all wizard flows end-to-end
+   [ ] 9. Deprecate old TrueQuoteEngine.ts
+   [ ] 10. Remove Step5MagicFit.tsx inline calculations
+
+
+📝 FILES TO MODIFY (Priority Order)
+─────────────────────────────────────────────────────────────────
+   1. Step1Location.tsx (45 violations, 0 calcs)
+   2. Step5MagicFit.tsx (3 violations, 11 calcs)
+   3. TrueQuoteVerifyDemo.tsx (2 violations, 0 calcs)
+   4. Step4Options.tsx (2 violations, 2 calcs)
+   5. ValueTicker.tsx (0 violations, 3 calcs)
+   6. constants.ts (0 violations, 1 calcs)
+   7. Step6Quote.tsx (0 violations, 3 calcs)
+   8. trueQuoteMapper.ts (0 violations, 2 calcs)
+   9. trueQuoteMapper_COMPLETE.ts (0 violations, 1 calcs)
+
+═══════════════════════════════════════════════════════════════════
