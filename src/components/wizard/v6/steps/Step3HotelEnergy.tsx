@@ -104,6 +104,28 @@ const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
 
   return (
     <div>
+      
+      {/* Personalized Greeting when business is known */}
+      {state.businessName && (
+        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+              <span className="text-2xl">🧙</span>
+            </div>
+            <div>
+              <p className="text-white text-lg">
+                <span className="font-bold text-amber-300">{state.businessName}</span>, let's configure your hotel's energy system!
+              </p>
+              <p className="text-slate-300 text-sm">
+                Fill in the details below and I'll build the perfect solution for your property.
+              </p>
+            </div>
+            {state.businessPhotoUrl && (
+              <img src={state.businessPhotoUrl} alt={state.businessName} className="w-16 h-16 rounded-lg object-cover ml-auto border-2 border-amber-500/50" />
+            )}
+          </div>
+        </div>
+      )}
       <label style={{ fontSize: 14, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 8 }}>
         {label}
       </label>
