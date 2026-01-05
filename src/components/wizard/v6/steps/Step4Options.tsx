@@ -686,7 +686,7 @@ function GeneratorConfig({
   const presetTiers = useMemo(() => {
     const industry = (state.industry || 'hotel').replace(/-/g, '_') as any;
     return getGeneratorPresetTiers(industry, peakDemandKW, fuelType, state.state || 'TX');
-  }, [state.selectedIndustry, state.industryCategory, peakDemandKW, fuelType, state.state]);
+  }, [state.industry, peakDemandKW, fuelType, state.state]);
   
   // Apply preset when selected
   const applyPreset = (presetId: 'standard' | 'enhanced' | 'full') => {
