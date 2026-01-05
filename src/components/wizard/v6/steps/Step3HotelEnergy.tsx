@@ -516,11 +516,26 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
       {/* Main Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         
+        {/* SECTION LABEL: Core Energy Drivers */}
+        <div style={{ 
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
+          padding: '12px 20px', background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent)',
+          borderLeft: '4px solid #3b82f6', borderRadius: '0 12px 12px 0'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 1 }}>
+            ⚡ Core Energy Drivers
+          </span>
+          <span style={{ fontSize: 12, color: COLORS.muted }}>These inputs have the highest impact on your quote</span>
+        </div>
+
         {/* ZONE 1: Category Selection */}
         <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: COLORS.heading }}>
-            1 → {getQuestion('hotelCategory')?.question_text || 'What type of hotel?'}
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>
+              1 → {getQuestion('hotelCategory')?.question_text || 'What type of hotel?'}
+            </h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', fontWeight: 600 }}>HIGH IMPACT</span>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
             {categoryOptions.map(cat => (
               <button
@@ -610,9 +625,12 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
         {/* ZONE 2: Property Snapshot - WITH +/- BUTTONS */}
         <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24, color: COLORS.heading }}>
-            2 → Property Snapshot
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>
+              2 → Property Snapshot
+            </h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', fontWeight: 600 }}>HIGH IMPACT</span>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 24 }}>
             {/* Guest Rooms with +/- */}
             <SliderWithButtons
@@ -709,11 +727,26 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
           </div>
         </div>
 
+        {/* SECTION LABEL: Optional Modifiers */}
+        <div style={{ 
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, marginTop: 16,
+          padding: '12px 20px', background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.2), transparent)',
+          borderLeft: '4px solid #8b5cf6', borderRadius: '0 12px 12px 0'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 1 }}>
+            🎛️ Optional Modifiers
+          </span>
+          <span style={{ fontSize: 12, color: COLORS.muted }}>Fine-tune your energy profile</span>
+        </div>
+
         {/* ZONE 3: Amenities Grid - 2 per row, larger boxes */}
         <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24, color: COLORS.heading }}>
-            3 → Amenities & Services
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>
+              3 → Amenities & Services
+            </h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontWeight: 600 }}>MEDIUM IMPACT</span>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
             {[
               { field: 'poolType', label: 'Pool', options: poolOptions },
@@ -746,7 +779,10 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
         {/* ZONE 4: Parking & Exterior */}
         <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: COLORS.heading }}>4 → Parking & Exterior</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>4 → Parking & Exterior</h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', fontWeight: 600 }}>LOW IMPACT</span>
+          </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {parkingOptions.map(opt => (
               <button key={opt.value} onClick={() => updateAnswer('parkingType', opt.value)}
