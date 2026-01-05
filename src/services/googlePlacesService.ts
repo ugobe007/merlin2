@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 /**
  * GOOGLE PLACES API SERVICE
  * =========================
@@ -161,7 +162,10 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
         fields: ['name', 'formatted_address', 'types', 'photos', 'place_id', 'geometry', 'business_status'],
       };
       
-      service.findPlaceFromQuery(request, (results, status) => {
+      service.findPlaceFromQuery(request, (
+        results: google.maps.places.PlaceResult[] | null,
+        status: google.maps.places.PlacesServiceStatus
+      ) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
           const place = results[0];
           
