@@ -26,6 +26,7 @@ import { generateQuote, isAuthenticated, isRejected } from '@/services/merlin';
 import type { TrueQuoteAuthenticatedResult, AuthenticatedSystemOption } from '@/services/merlin';
 import { mapWizardStateToMerlinRequest } from '../utils/trueQuoteMapper';
 import { TrueQuoteVerifyBadge } from '../components/TrueQuoteVerifyBadge';
+import { calculateIncentives } from '@/services/stateIncentivesService';
 
 // ============================================================================
 // TYPES
@@ -58,6 +59,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<'starter' | 'perfectFit' | 'beastMode' | null>(null);
+  const [stateIncentiveAmount, setStateIncentiveAmount] = useState<number>(0);
+  const [stateIncentivePrograms, setStateIncentivePrograms] = useState<string[]>([]);
 
   // === DEBUG LOGGING ===
   useEffect(() => {
@@ -99,6 +102,22 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
             beastMode: result.options.beastMode.financials,
           });
           setQuoteResult(result);
+          
+          // Load state incentives
+          try {
+            const incentiveResult = await calculateIncentives(
+              state.zipCode,
+              result.options.perfectFit.financials.totalInvestment,
+              result.options.perfectFit.bess.energyKWh,
+              'commercial',
+              result.options.perfectFit.solar.capacityKW > 0,
+              false
+            );
+            setStateIncentiveAmount(incentiveResult.stateIncentives);
+            setStateIncentivePrograms(incentiveResult.statePrograms?.map(p => p.program) || []);
+          } catch (err) {
+            console.warn('Could not load state incentives:', err);
+          }
         }
       } catch (err) {
         console.error('❌ Quote error:', err);
@@ -341,6 +360,12 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   <span>Federal ITC (30%)</span>
                   <span>-{formatCurrency(option.financials.federalITC)}</span>
                 </div>
+                {stateIncentiveAmount > 0 && (
+                  <div className="flex justify-between text-sm text-emerald-600">
+                    <span>State Incentives</span>
+                    <span>-{formatCurrency(stateIncentiveAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-base font-bold">
                   <span className="text-gray-800">Net Cost</span>
                   <span className={opt.color}>{formatCurrency(option.financials.netCost)}</span>

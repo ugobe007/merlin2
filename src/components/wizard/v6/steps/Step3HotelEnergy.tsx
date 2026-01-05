@@ -104,7 +104,7 @@ const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
 
   return (
     <div>
-      <label style={{ fontSize: 12, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 8 }}>
+      <label style={{ fontSize: 14, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 8 }}>
         {label}
       </label>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -179,8 +179,8 @@ const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
       
       {/* Min/Max labels */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-        <span style={{ fontSize: 10, color: COLORS.muted }}>{min}</span>
-        <span style={{ fontSize: 10, color: COLORS.muted }}>{max}</span>
+        <span style={{ fontSize: 14, color: COLORS.muted }}>{min}</span>
+        <span style={{ fontSize: 14, color: COLORS.muted }}>{max}</span>
       </div>
     </div>
   );
@@ -404,6 +404,28 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
   const roomQ = getQuestion('roomCount');
   const occupancyQ = getQuestion('avgOccupancy');
+  
+  // Dynamic room limits based on hotel category (Vineet's spec)
+  const getRoomLimits = () => {
+    const category = state.useCaseData?.hotelCategory;
+    switch (category) {
+      case 'budget':
+        return { min: 50, max: 100, step: 1 };
+      case 'midscale':
+        return { min: 50, max: 200, step: 1 };
+      case 'upper_midscale':
+        return { min: 100, max: 500, step: 5 };
+      case 'upscale':
+        return { min: 150, max: 750, step: 5 };
+      case 'luxury':
+        return { min: 250, max: 1000, step: 10 };
+      case 'boutique':
+        return { min: 20, max: 150, step: 1 };
+      default:
+        return { min: 10, max: 1000, step: 10 };
+    }
+  };
+  const roomLimits = getRoomLimits();
   const floorsQ = getQuestion('floorCount');
   const elevatorsQ = getQuestion('elevatorCount');
 
@@ -420,14 +442,14 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
         boxShadow: '0 20px 40px rgba(0,0,0,0.4), 0 0 60px rgba(16, 185, 129, 0.2)',
         zIndex: 100, minWidth: 200, border: '1px solid rgba(255,255,255,0.1)'
       }}>
-        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#a7f3d0', marginBottom: 4 }}>
+        <div style={{ fontSize: 14, textTransform: 'uppercase', letterSpacing: 2, color: '#a7f3d0', marginBottom: 4 }}>
           Estimated Annual Usage
         </div>
         <div style={{ fontSize: 32, fontWeight: 700, color: COLORS.value }}>
           {formatNumber(energyEstimate)}
           <span style={{ fontSize: 16, fontWeight: 400, marginLeft: 4 }}>kWh</span>
         </div>
-        <div style={{ fontSize: 12, color: '#a7f3d0', marginTop: 4 }}>
+        <div style={{ fontSize: 14, color: '#a7f3d0', marginTop: 4 }}>
           ~{formatNumber(Math.round(energyEstimate / 12))} kWh/month
         </div>
       </div>
@@ -574,7 +596,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                     padding: '8px 16px', 
                     color: COLORS.label, 
                     cursor: 'pointer', 
-                    fontSize: 13,
+                    fontSize: 15,
                     position: 'relative',
                     zIndex: 20
                   }}
@@ -596,9 +618,9 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
             <SliderWithButtons
               label="Guest Rooms"
               value={getValue('roomCount') ?? (roomQ?.default_value ? parseFloat(roomQ.default_value) : 150)}
-              min={Number(roomQ?.min_value) || 10}
-              max={Number(roomQ?.max_value) || 1000}
-              step={10}
+              min={roomLimits.min}
+              max={roomLimits.max}
+              step={roomLimits.step}
               onChange={(val) => {
                 console.log('🏨 [Step3HotelEnergy] roomCount changed to:', val);
                 updateAnswer('roomCount', val);
@@ -608,7 +630,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
             {/* Square Footage */}
             <div>
-              <label style={{ fontSize: 12, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1 }}>Square Footage</label>
+              <label style={{ fontSize: 14, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1 }}>Square Footage</label>
               <div style={{ fontSize: 28, fontWeight: 700, color: (state.useCaseData?.squareFootage || 0) > 0 ? COLORS.value : COLORS.muted, marginTop: 8 }}>
                 {formatNumber((state.useCaseData?.squareFootage || 0) > 0 ? state.useCaseData.squareFootage : estimatedSqft)}
               </div>
@@ -616,7 +638,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <input type="checkbox" checked={!state.useCaseData?.squareFootage || state.useCaseData.squareFootage === 0}
                   onChange={(e) => updateAnswer('squareFootage', e.target.checked ? 0 : estimatedSqft)}
                   style={{ accentColor: COLORS.primary }} />
-                <span style={{ fontSize: 12, color: COLORS.label }}>Auto-estimate</span>
+                <span style={{ fontSize: 14, color: COLORS.label }}>Auto-estimate</span>
               </label>
             </div>
 
@@ -634,7 +656,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
             {/* Floors & Elevators */}
             <div>
-              <label style={{ fontSize: 12, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'block' }}>
+              <label style={{ fontSize: 14, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'block' }}>
                 Floors / Elevators
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -667,7 +689,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
 
           {/* HVAC */}
           <div style={{ marginTop: 24 }}>
-            <label style={{ fontSize: 12, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, display: 'block' }}>
+            <label style={{ fontSize: 14, color: COLORS.label, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, display: 'block' }}>
               {getQuestion('hvacType')?.question_text || 'Primary HVAC System'}
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -680,7 +702,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                     borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease'
                   }}>
                   <div style={{ fontSize: 20 }}>{opt.icon}</div>
-                  <div style={{ fontSize: 12, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
+                  <div style={{ fontSize: 14, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
                 </button>
               ))}
             </div>
@@ -713,7 +735,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                         borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s ease'
                       }}>
                       <div style={{ fontSize: 24 }}>{opt.icon}</div>
-                      <div style={{ fontSize: 11, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
+                      <div style={{ fontSize: 14, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
                     </button>
                   ))}
                 </div>
@@ -735,11 +757,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                   borderRadius: 10, cursor: 'pointer'
                 }}>
                 <div style={{ fontSize: 20 }}>{opt.icon}</div>
-                <div style={{ fontSize: 11, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
+                <div style={{ fontSize: 14, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
               </button>
             ))}
           </div>
-          <label style={{ fontSize: 12, color: COLORS.label, marginBottom: 8, display: 'block' }}>Exterior Loads</label>
+          <label style={{ fontSize: 14, color: COLORS.label, marginBottom: 8, display: 'block' }}>Exterior Loads</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {exteriorOptions.map(opt => (
               <button key={opt.value} onClick={() => toggleMultiselect('exteriorLoads', opt.value)}
@@ -747,7 +769,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                   padding: '8px 12px',
                   background: (state.useCaseData?.exteriorLoads || []).includes(opt.value) ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.02)',
                   border: (state.useCaseData?.exteriorLoads || []).includes(opt.value) ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.cardBorder}`,
-                  borderRadius: 8, cursor: 'pointer', fontSize: 12, color: COLORS.value
+                  borderRadius: 8, cursor: 'pointer', fontSize: 14, color: COLORS.value
                 }}>
                 {opt.icon} {opt.label}
               </button>
@@ -765,13 +787,13 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                   flex: 1, padding: '10px 6px',
                   background: state.useCaseData?.solarInterest === opt.value ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.02)',
                   border: state.useCaseData?.solarInterest === opt.value ? `2px solid ${COLORS.warning}` : `2px solid ${COLORS.cardBorder}`,
-                  borderRadius: 8, cursor: 'pointer', fontSize: 11, color: COLORS.value
+                  borderRadius: 8, cursor: 'pointer', fontSize: 14, color: COLORS.value
                 }}>
                 {opt.label}
               </button>
             ))}
           </div>
-          <label style={{ fontSize: 12, color: COLORS.label, marginBottom: 8, display: 'block' }}>Available Space for Solar</label>
+          <label style={{ fontSize: 14, color: COLORS.label, marginBottom: 8, display: 'block' }}>Available Space for Solar</label>
           <div style={{ display: 'flex', gap: 8 }}>
             {solarSpaceOptions.map(opt => (
               <button key={opt.value} onClick={() => toggleMultiselect('solarSpace', opt.value)}
@@ -782,7 +804,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                   borderRadius: 10, cursor: 'pointer'
                 }}>
                 <div style={{ fontSize: 18 }}>{opt.icon}</div>
-                <div style={{ fontSize: 10, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
+                <div style={{ fontSize: 14, color: COLORS.value, marginTop: 4 }}>{opt.label}</div>
               </button>
             ))}
           </div>
@@ -810,7 +832,7 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                   borderRadius: 12, cursor: 'pointer'
                 }}>
                 <div style={{ fontSize: 28 }}>{opt.icon}</div>
-                <div style={{ fontSize: 13, color: COLORS.value, marginTop: 8 }}>{opt.label}</div>
+                <div style={{ fontSize: 15, color: COLORS.value, marginTop: 8 }}>{opt.label}</div>
               </button>
             ))}
           </div>
