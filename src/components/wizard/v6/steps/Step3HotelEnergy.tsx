@@ -847,8 +847,11 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
         </div>
 
         {/* ZONE 6: Existing Infrastructure */}
-        <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 32, border: `1px solid ${COLORS.cardBorder}` }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: COLORS.heading }}>6 → Existing Infrastructure</h2>
+        <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>6 → Existing Infrastructure</h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', fontWeight: 600 }}>LOW IMPACT</span>
+          </div>
           <div style={{ display: 'flex', gap: 12 }}>
             {existingOptions.map(opt => (
               <button key={opt.value}
@@ -871,6 +874,175 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
                 <div style={{ fontSize: 15, color: COLORS.value, marginTop: 8 }}>{opt.label}</div>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* SECTION LABEL: Business Context */}
+        <div style={{ 
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, marginTop: 16,
+          padding: '12px 20px', background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.2), transparent)',
+          borderLeft: '4px solid #10b981', borderRadius: '0 12px 12px 0'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: 1 }}>
+            🎯 Business Context
+          </span>
+          <span style={{ fontSize: 12, color: COLORS.muted }}>Help us understand your priorities</span>
+        </div>
+
+        {/* ZONE 7: Business Context - ChatGPT's 5 Strategic Questions */}
+        <div style={{ background: COLORS.cardBg, borderRadius: 24, padding: 32, marginBottom: 24, border: `1px solid ${COLORS.cardBorder}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: COLORS.heading }}>7 → Operations & Planning</h2>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', fontWeight: 600 }}>STRATEGIC</span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            {/* Q1: Peak Demand Timing */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 20, border: `1px solid ${COLORS.cardBorder}` }}>
+              <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                ⏰ When is your highest energy stress?
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {[
+                  { value: 'morning', label: 'Morning', desc: '6-10am' },
+                  { value: 'afternoon', label: 'Afternoon', desc: '12-5pm' },
+                  { value: 'evening', label: 'Evening', desc: '5-10pm' },
+                  { value: 'summer', label: 'Summer', desc: 'Seasonal' },
+                  { value: 'winter', label: 'Winter', desc: 'Seasonal' },
+                  { value: 'unsure', label: 'Unsure', desc: 'Auto-estimate' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => updateAnswer('peakTiming', opt.value)}
+                    style={{
+                      padding: '12px 8px',
+                      background: state.useCaseData?.peakTiming === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                      border: state.useCaseData?.peakTiming === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                      borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'center'
+                    }}>
+                    <div style={{ fontSize: 13, color: COLORS.value, fontWeight: 500 }}>{opt.label}</div>
+                    <div style={{ fontSize: 10, color: COLORS.muted }}>{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Q2: Outage Tolerance */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 20, border: `1px solid ${COLORS.cardBorder}` }}>
+              <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                ⚡ How critical is backup power?
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[
+                  { value: 'nice_to_have', label: 'Nice to have', icon: '🟢' },
+                  { value: 'critical_only', label: 'Critical systems', icon: '🟡' },
+                  { value: 'guest_rooms', label: 'Guest rooms operational', icon: '🟠' },
+                  { value: 'full_operation', label: 'Full hotel operation', icon: '🔴' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => updateAnswer('outageTolerance', opt.value)}
+                    style={{
+                      padding: '14px 12px',
+                      background: state.useCaseData?.outageTolerance === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                      border: state.useCaseData?.outageTolerance === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                      borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left'
+                    }}>
+                    <span style={{ marginRight: 8 }}>{opt.icon}</span>
+                    <span style={{ fontSize: 13, color: COLORS.value }}>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Q3: Brand Affiliation */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 20, border: `1px solid ${COLORS.cardBorder}` }}>
+              <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                🏷️ Brand affiliation
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {[
+                  { value: 'independent', label: 'Independent' },
+                  { value: 'marriott', label: 'Marriott' },
+                  { value: 'hilton', label: 'Hilton' },
+                  { value: 'hyatt', label: 'Hyatt' },
+                  { value: 'ihg', label: 'IHG' },
+                  { value: 'other', label: 'Other' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => updateAnswer('brandAffiliation', opt.value)}
+                    style={{
+                      padding: '12px 8px',
+                      background: state.useCaseData?.brandAffiliation === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                      border: state.useCaseData?.brandAffiliation === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                      borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease'
+                    }}>
+                    <div style={{ fontSize: 13, color: COLORS.value }}>{opt.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Q4: Parking Scale (for EV planning) */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 20, border: `1px solid ${COLORS.cardBorder}` }}>
+              <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                🅿️ Parking capacity
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {[
+                  { value: 'small', label: '< 25', desc: 'spaces' },
+                  { value: 'medium', label: '25-100', desc: 'spaces' },
+                  { value: 'large', label: '100-300', desc: 'spaces' },
+                  { value: 'xlarge', label: '300+', desc: 'spaces' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => updateAnswer('parkingCapacity', opt.value)}
+                    style={{
+                      padding: '12px 8px',
+                      background: state.useCaseData?.parkingCapacity === opt.value ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                      border: state.useCaseData?.parkingCapacity === opt.value ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                      borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'center'
+                    }}>
+                    <div style={{ fontSize: 15, color: COLORS.value, fontWeight: 600 }}>{opt.label}</div>
+                    <div style={{ fontSize: 10, color: COLORS.muted }}>{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Q5: Electrification Plans (full width) */}
+          <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 20, border: `1px solid ${COLORS.cardBorder}` }}>
+            <label style={{ fontSize: 14, color: COLORS.value, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+              🔮 Planning to electrify in next 3-5 years? <span style={{ fontSize: 12, color: COLORS.muted, fontWeight: 400 }}>(select all that apply)</span>
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { value: 'hvac', label: '🌡️ HVAC' },
+                { value: 'water_heating', label: '🚿 Water Heating' },
+                { value: 'kitchen', label: '👨‍🍳 Kitchen' },
+                { value: 'laundry', label: '🧺 Laundry' },
+                { value: 'fleet', label: '🚐 Fleet/Valet' },
+                { value: 'none', label: '❌ Not planned' },
+              ].map(opt => (
+                <button key={opt.value} 
+                  onClick={() => {
+                    const current = state.useCaseData?.electrificationPlans || [];
+                    if (opt.value === 'none') {
+                      updateAnswer('electrificationPlans', ['none']);
+                    } else {
+                      const filtered = current.filter((v: string) => v !== 'none');
+                      if (filtered.includes(opt.value)) {
+                        updateAnswer('electrificationPlans', filtered.filter((v: string) => v !== opt.value));
+                      } else {
+                        updateAnswer('electrificationPlans', [...filtered, opt.value]);
+                      }
+                    }
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    background: (state.useCaseData?.electrificationPlans || []).includes(opt.value) ? COLORS.selectedBg : 'rgba(255,255,255,0.02)',
+                    border: (state.useCaseData?.electrificationPlans || []).includes(opt.value) ? `2px solid ${COLORS.selectedBorder}` : `2px solid ${COLORS.cardBorder}`,
+                    borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s ease'
+                  }}>
+                  <span style={{ fontSize: 13, color: COLORS.value }}>{opt.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
