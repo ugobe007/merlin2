@@ -398,21 +398,21 @@ export function Step1Location({ state, updateState }: Props) {
                     className="w-full py-4 px-4 rounded-xl border-2 border-purple-400 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-purple-500/20"
                   >
                     <Building2 className="w-5 h-5 inline mr-2" />
-                    🏢 Add your street address for personalized recommendations
+                    🏢 Add your business name & address for personalized recommendations
                   </button>
                 )}
                 
                 {showAddressField && !businessLookup?.found && (
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-slate-300">
-                      Street Address <span className="text-slate-500">(optional)</span>
+                      Business Name & Address <span className="text-slate-500">(optional)</span>
                     </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={streetAddress}
                         onChange={(e) => setStreetAddress(e.target.value)}
-                        placeholder="e.g., 123 Main Street"
+                        placeholder="e.g., WOW Carwash, 9860 S Maryland Pkwy"
                         className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
                         onKeyDown={(e) => e.key === 'Enter' && handleAddressLookup()}
                       />
@@ -429,7 +429,7 @@ export function Step1Location({ state, updateState }: Props) {
                       </button>
                     </div>
                     <p className="text-xs text-slate-400">
-                      We'll identify your business to provide tailored energy recommendations
+                      💡 Include your business name for best results (e.g., "Hilton Hotel, 123 Main St")
                     </p>
                   </div>
                 )}
