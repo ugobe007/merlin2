@@ -210,7 +210,7 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
                 // Try a nearby search to find actual businesses at this location
                 const nearbyRequest: google.maps.places.PlaceSearchRequest = {
                   location: finalPlace.geometry.location,
-                  radius: 50, // 50 meters
+                  radius: 30, // 30 meters - very close
                   type: 'establishment'
                 };
                 
@@ -219,8 +219,22 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
                   nearbyStatus: google.maps.places.PlacesServiceStatus
                 ) => {
                   if (nearbyStatus === google.maps.places.PlacesServiceStatus.OK && nearbyResults && nearbyResults.length > 0) {
-                    // Find the first result that's not just an address
-                    const actualBusiness = nearbyResults.find(r => r.name && !/^\d+\s/.test(r.name));
+                    // Filter out generic results like cities, localities, and address-like names
+                    const excludeTypes = ['locality', 'political', 'neighborhood', 'sublocality', 'administrative_area_level_1', 'administrative_area_level_2', 'country'];
+                    
+                    // Find a real business - prioritize results with our known industry types
+                    const actualBusiness = nearbyResults.find(r => {
+                      if (!r.name) return false;
+                      // Skip if name looks like an address
+                      if (/^\d+\s/.test(r.name)) return false;
+                      // Skip if it's a generic location type
+                      if (r.types?.some(t => excludeTypes.includes(t))) return false;
+                      // Skip if name is just a city/state name
+                      if (r.name.toLowerCase() === 'las vegas' || r.name.toLowerCase() === 'nevada') return false;
+                      // Prefer results that match our known industry types
+                      const hasKnownType = r.types?.some(t => PLACE_TYPE_TO_INDUSTRY[t]);
+                      return hasKnownType || (r.types?.includes('establishment') && r.name.length > 3);
+                    });
                     
                     if (actualBusiness) {
                       // Found a real business name!
