@@ -155,12 +155,20 @@ function useSolarCalculations(
         const annualKwh = solarEnabled ? (solarSizeKwp / 1000) * solarCapacityFactor : 0;
         const co2OffsetKg = Math.round(annualKwh * 0.92 * 0.453592); // lbs to kg conversion
 
+        // Calculate actual coverage percent based on solar production vs facility consumption
+        const estimatedAnnualConsumption = state.useCaseData?.estimatedAnnualKwh || 
+          (sqft * 15); // ~15 kWh/sqft/year for commercial buildings
+        const solarProduction = solarEnabled ? (solarSizeKwp / 1000) * solarCapacityFactor : 0;
+        const actualCoveragePercent = estimatedAnnualConsumption > 0 
+          ? Math.min(100, Math.round((solarProduction / estimatedAnnualConsumption) * 100))
+          : 0;
+
         setCalculations({
           recommendedSizeKwp: recommendedSize,
           annualSavings,
           sunHours,
           co2OffsetKg,
-          coveragePercent: 60, // Coverage estimate
+          coveragePercent: actualCoveragePercent,
           isLoading: false,
           error: null
         });
@@ -967,6 +975,39 @@ export function Step4Options({ state, updateState }: Props) {
   const calculations = useSolarCalculations(state, solarSizeKwp, solarEnabled);
 
   // ================================================================
+  // AUTO-APPLY RECOMMENDED SOLAR SIZE
+  // When the recommended size changes (based on facility data), 
+  // update the slider if user hasn't customized yet
+  // ================================================================
+  const [hasUserCustomizedSolar, setHasUserCustomizedSolar] = useState(
+    state.customSolarKw !== undefined && state.customSolarKw > 0
+  );
+  
+  useEffect(() => {
+    // Only auto-apply if:
+    // 1. Solar is enabled
+    // 2. User hasn't manually customized
+    // 3. Calculations are loaded
+    // 4. Recommended size is different from current
+    if (
+      solarEnabled && 
+      !hasUserCustomizedSolar && 
+      !calculations.isLoading && 
+      calculations.recommendedSizeKwp > 0 &&
+      calculations.recommendedSizeKwp !== solarSizeKwp
+    ) {
+      console.log('🌞 Auto-applying recommended solar size:', calculations.recommendedSizeKwp, 'kWp');
+      setSolarSizeKwp(calculations.recommendedSizeKwp);
+    }
+  }, [calculations.recommendedSizeKwp, calculations.isLoading, solarEnabled, hasUserCustomizedSolar]);
+
+  // Track when user manually changes solar size
+  const handleSolarSizeChange = (newSize: number) => {
+    setHasUserCustomizedSolar(true);
+    setSolarSizeKwp(newSize);
+  };
+
+  // ================================================================
   // INITIAL TRUEQUOTE ENGINE CALCULATION FOR STEP 4
   // Call TrueQuote Engine when Step 4 loads (if calculations don't exist)
   // This populates ValueTicker and TrueQuote Verify page
@@ -1212,7 +1253,7 @@ export function Step4Options({ state, updateState }: Props) {
           enabled={solarEnabled}
           onToggle={setSolarEnabled}
           sizeKwp={solarSizeKwp}
-          onSizeChange={setSolarSizeKwp}
+          onSizeChange={handleSolarSizeChange}
           calculations={calculations}
         />
 

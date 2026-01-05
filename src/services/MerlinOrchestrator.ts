@@ -226,18 +226,18 @@ function translateWizardState(state: WizardState): MerlinRequest {
     // User preferences (from Step 4)
     preferences: {
       solar: {
-        interested: state.selectedOptions?.includes("solar") || false,
-        customSizeKw: state.customSolarKw,
+        interested: state.solarEnabled ?? state.selectedOptions?.includes("solar") ?? false,
+        customSizeKw: state.solarEnabled ? state.customSolarKw : undefined,
       },
       generator: {
-        interested: state.customGeneratorKw ? state.customGeneratorKw > 0 : false,
-        customSizeKw: state.customGeneratorKw,
+        interested: state.generatorEnabled ?? (state.customGeneratorKw ? state.customGeneratorKw > 0 : false),
+        customSizeKw: state.generatorEnabled ? state.customGeneratorKw : undefined,
         fuelType: state.generatorFuel as 'natural-gas' | 'diesel' | undefined,
       },
       ev: {
-        interested: (state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0) > 0,
-        l2Count: state.customEvL2,
-        dcfcCount: state.customEvDcfc,
+        interested: state.evEnabled ?? ((state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0) > 0),
+        l2Count: state.evEnabled ? state.customEvL2 : undefined,
+        dcfcCount: state.evEnabled ? state.customEvDcfc : undefined,
         ultraFastCount: state.customEvUltraFast,
       },
       bess: {
