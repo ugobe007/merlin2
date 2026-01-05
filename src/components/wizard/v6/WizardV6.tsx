@@ -186,8 +186,25 @@ export default function WizardV6() {
     });
   }, []);
 
-  const goNext = () => setCurrentStep(prev => Math.min(prev + 1, 6));
-  const goBack = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const goNext = () => setCurrentStep(prev => {
+    const next = prev + 1;
+    // Skip Step 2 (Industry Selection) if industry was auto-detected from business lookup
+    if (prev === 1 && state.detectedIndustry && state.industry) {
+      console.log('🧙 Skipping Step 2 - Industry auto-detected:', state.industry);
+      return 3; // Go directly to Step 3 (Details)
+    }
+    return Math.min(next, 6);
+  });
+  
+  const goBack = () => setCurrentStep(prev => {
+    const back = prev - 1;
+    // When going back from Step 3, skip Step 2 if industry was auto-detected
+    if (prev === 3 && state.detectedIndustry && state.industry) {
+      console.log('🧙 Skipping Step 2 on back - Industry auto-detected');
+      return 1; // Go back to Step 1
+    }
+    return Math.max(back, 1);
+  });
   const goToStep = (step: number) => setCurrentStep(step);
 
   // Calculate values for ValueTicker
