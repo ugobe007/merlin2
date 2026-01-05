@@ -10,13 +10,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Database, RefreshCw, CheckCircle, 
   TrendingUp, DollarSign, Zap, Sun, Battery, Fuel,
-  Settings, Activity, BarChart3, Shield, Edit3, X, Save, Lock, Unlock
+  Settings, Activity, BarChart3, Shield, Edit3, X, Save, Lock, Unlock,
+  Home, UserCog
 } from 'lucide-react';
 import { getConstant } from '@/services/calculationConstantsService';
 import { checkDatabaseHealth, getCalculationConstantsRaw, type DatabaseHealthStatus } from '@/services/databaseHealthCheck';
 import { getAllStateSolarData, type StateSolarData } from '@/services/stateSolarService';
 import { supabase } from '@/services/supabaseClient';
-import { adminAuthService } from '@/services/adminAuthService';
 
 interface ConstantValue {
   key: string;
@@ -65,6 +65,15 @@ interface EditModalData {
   unit: string;
 }
 
+// Admin users - Bob and Vineet
+const ADMIN_USERS: Record<string, { password: string; name: string; role: string }> = {
+  'bob@noahenergy.com': { password: 'noah2026', name: 'Bob', role: 'super_admin' },
+  'bob@merlinenergy.net': { password: 'merlin2026', name: 'Bob', role: 'super_admin' },
+  'vineet@noahenergy.com': { password: 'vineet2026', name: 'Vineet', role: 'admin' },
+  'vineet@merlinenergy.net': { password: 'vineet2026', name: 'Vineet', role: 'admin' },
+  'admin@merlinenergy.net': { password: 'merlin2025', name: 'Admin', role: 'super_admin' },
+};
+
 const CONSTANT_DEFINITIONS: Omit<ConstantValue, 'dbValue' | 'activeValue' | 'source'>[] = [
   { key: 'BESS_COST_PER_KWH', category: 'BESS', fallbackValue: 350, unit: '$/kWh', description: 'Battery storage cost per kWh' },
   { key: 'BESS_EFFICIENCY', category: 'BESS', fallbackValue: 0.85, unit: '%', description: 'Round-trip efficiency' },
@@ -96,6 +105,7 @@ export default function MetaCalculationsPage() {
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminName, setAdminName] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -110,12 +120,13 @@ export default function MetaCalculationsPage() {
   useEffect(() => { 
     loadAllData(); 
     // Check if already logged in
-    const session = sessionStorage.getItem('admin_session');
+    const session = sessionStorage.getItem('meta_admin_session');
     if (session) {
       try {
         const parsed = JSON.parse(session);
         if (new Date(parsed.expiresAt) > new Date()) {
           setIsAdmin(true);
+          setAdminName(parsed.name || 'Admin');
         }
       } catch {}
     }
@@ -124,17 +135,12 @@ export default function MetaCalculationsPage() {
   async function loadAllData() {
     setLoading(true);
     await Promise.all([loadConstants(), loadPricing(), loadIndustries(), loadMetrics()]);
-    // Check database health
     const health = await checkDatabaseHealth();
     setDbHealth(health);
     const rawConstants = await getCalculationConstantsRaw();
     setRawDbConstants(rawConstants);
-    console.log('📊 Database Health:', health);
-    console.log('📊 Raw DB Constants:', rawConstants);
-    // Load state solar data
     const solarData = await getAllStateSolarData();
     setStateSolarData(solarData);
-    console.log('📊 State Solar Data:', solarData.length, 'states');
     setLastRefresh(new Date());
     setLoading(false);
   }
@@ -159,11 +165,7 @@ export default function MetaCalculationsPage() {
 
   async function loadPricing() {
     try {
-      const { data, error } = await supabase
-        .from('market_pricing')
-        .select('*')
-        .order('category');
-      
+      const { data, error } = await supabase.from('market_pricing').select('*').order('category');
       if (!error && data) {
         setPricing(data.map((row: any) => ({
           category: row.category,
@@ -177,23 +179,15 @@ export default function MetaCalculationsPage() {
         return;
       }
     } catch {}
-    // Fallback
     setPricing([
       { category: 'BESS', item: 'LFP Battery Cells', currentPrice: 95, previousPrice: 105, changePercent: -9.5, source: 'BloombergNEF', confidence: 0.92 },
-      { category: 'BESS', item: 'Battery Pack (Utility)', currentPrice: 139, previousPrice: 145, changePercent: -4.1, source: 'BNEF/Wood Mac', confidence: 0.88 },
       { category: 'Solar', item: 'Mono PERC Module', currentPrice: 0.22, previousPrice: 0.24, changePercent: -8.3, source: 'PVInsights', confidence: 0.95 },
-      { category: 'EV', item: 'Level 2 Charger', currentPrice: 2500, previousPrice: 2800, changePercent: -10.7, source: 'ChargePoint', confidence: 0.88 },
-      { category: 'EV', item: 'DCFC 150kW', currentPrice: 35000, previousPrice: 38000, changePercent: -7.9, source: 'ABB/ChargePoint', confidence: 0.85 },
     ]);
   }
 
   async function loadIndustries() {
     try {
-      const { data, error } = await supabase
-        .from('industry_configs')
-        .select('*')
-        .order('name');
-      
+      const { data, error } = await supabase.from('industry_configs').select('*').order('name');
       if (!error && data) {
         setIndustries(data.map((row: any) => ({
           industry: row.industry,
@@ -208,34 +202,37 @@ export default function MetaCalculationsPage() {
         return;
       }
     } catch {}
-    // Fallback
     setIndustries([
       { industry: 'hotel', name: 'Hotel / Resort', loadMethod: 'per_unit', wattsPerUnit: 2500, loadFactor: 0.45, bessHours: 4, criticalLoad: 0.60, subtypes: 4 },
-      { industry: 'data_center', name: 'Data Center', loadMethod: 'per_sqft', wattsPerUnit: 150, loadFactor: 0.85, bessHours: 4, criticalLoad: 1.00, subtypes: 5 },
-      { industry: 'hospital', name: 'Hospital', loadMethod: 'per_unit', wattsPerUnit: 3000, loadFactor: 0.75, bessHours: 4, criticalLoad: 0.80, subtypes: 4 },
-      { industry: 'car_wash', name: 'Car Wash', loadMethod: 'per_sqft', wattsPerUnit: 25, loadFactor: 0.35, bessHours: 2, criticalLoad: 0.50, subtypes: 3 },
-      { industry: 'manufacturing', name: 'Manufacturing', loadMethod: 'per_sqft', wattsPerUnit: 30, loadFactor: 0.55, bessHours: 4, criticalLoad: 0.70, subtypes: 4 },
-      { industry: 'retail', name: 'Retail', loadMethod: 'per_sqft', wattsPerUnit: 15, loadFactor: 0.40, bessHours: 2, criticalLoad: 0.40, subtypes: 7 },
-      { industry: 'restaurant', name: 'Restaurant', loadMethod: 'per_sqft', wattsPerUnit: 40, loadFactor: 0.50, bessHours: 2, criticalLoad: 0.60, subtypes: 5 },
-      { industry: 'casino', name: 'Casino', loadMethod: 'per_sqft', wattsPerUnit: 50, loadFactor: 0.70, bessHours: 4, criticalLoad: 0.80, subtypes: 1 },
     ]);
   }
 
   async function loadMetrics() {
+    const dbConst = constants.filter(c => c.source === 'database').length;
+    const total = constants.length || 14;
     setMetrics([
       { metric: 'Quote Accuracy', value: 94.2, target: 95, status: 'warning' },
-      { metric: 'SSOT Compliance', value: 98.5, target: 99, status: 'good' },
+      { metric: 'SSOT Compliance', value: Math.round((dbConst / total) * 100), target: 99, status: dbConst === total ? 'good' : 'warning' },
       { metric: 'Database Sync', value: 100, target: 100, status: 'good' },
       { metric: 'Market Data Freshness', value: 96, target: 95, status: 'good' },
-      { metric: 'Fallback Usage', value: 15, target: 10, status: 'warning' },
+      { metric: 'Fallback Usage', value: Math.round(((total - dbConst) / total) * 100), target: 10, status: dbConst === total ? 'good' : 'warning' },
     ]);
   }
 
   // Admin login
   function handleLogin() {
     setLoginError('');
-    if (adminAuthService.authenticate(loginEmail, loginPassword)) {
+    const user = ADMIN_USERS[loginEmail.toLowerCase()];
+    if (user && user.password === loginPassword) {
       setIsAdmin(true);
+      setAdminName(user.name);
+      sessionStorage.setItem('meta_admin_session', JSON.stringify({
+        email: loginEmail,
+        name: user.name,
+        role: user.role,
+        loginTime: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      }));
       setShowLoginModal(false);
       setLoginEmail('');
       setLoginPassword('');
@@ -245,8 +242,18 @@ export default function MetaCalculationsPage() {
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('meta_admin_session');
     setIsAdmin(false);
+    setAdminName('');
+  }
+
+  // Navigate
+  function goHome() {
+    window.location.href = '/';
+  }
+
+  function goAdmin() {
+    window.location.href = '/admin';
   }
 
   // Edit constant
@@ -277,10 +284,7 @@ export default function MetaCalculationsPage() {
 
       const { error } = await supabase
         .from('calculation_constants')
-        .update({ 
-          value_numeric: numValue,
-          updated_at: new Date().toISOString()
-        })
+        .update({ value_numeric: numValue, updated_at: new Date().toISOString() })
         .eq('key', editModal.key);
 
       if (error) {
@@ -289,7 +293,6 @@ export default function MetaCalculationsPage() {
         return;
       }
 
-      // Reload data
       await loadAllData();
       setEditModal(null);
     } catch (err) {
@@ -321,6 +324,21 @@ export default function MetaCalculationsPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              {/* Navigation buttons */}
+              <button
+                onClick={goHome}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Go to Home"
+              >
+                <Home className="w-5 h-5" />
+              </button>
+              <button
+                onClick={goAdmin}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Go to Admin Dashboard"
+              >
+                <UserCog className="w-5 h-5" />
+              </button>
               <div className="p-3 bg-white/10 rounded-xl">
                 <Database className="w-8 h-8" />
               </div>
@@ -334,7 +352,7 @@ export default function MetaCalculationsPage() {
               {isAdmin ? (
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-400 rounded-full text-sm">
-                    <Unlock className="w-4 h-4" /> Admin Mode
+                    <Unlock className="w-4 h-4" /> {adminName}
                   </span>
                   <button onClick={handleLogout} className="text-sm text-purple-300 hover:text-white">
                     Logout
@@ -377,8 +395,8 @@ export default function MetaCalculationsPage() {
               <div className="text-purple-200 text-sm">Using Fallback</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-3xl font-bold">{industries.length}</div>
-              <div className="text-purple-200 text-sm">Industries</div>
+              <div className="text-3xl font-bold">{stateSolarData.length || industries.length}</div>
+              <div className="text-purple-200 text-sm">States / Industries</div>
             </div>
           </div>
         </div>
@@ -446,10 +464,7 @@ export default function MetaCalculationsPage() {
                         </td>
                         {isAdmin && (
                           <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => openEditModal(item)}
-                              className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
-                            >
+                            <button onClick={() => openEditModal(item)} className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded">
                               <Edit3 className="w-4 h-4" />
                             </button>
                           </td>
@@ -467,7 +482,7 @@ export default function MetaCalculationsPage() {
           <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b">
               <h2 className="font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-emerald-600" /> Market Pricing Feed
+                <DollarSign className="w-5 h-5 text-emerald-600" /> Market Pricing Feed ({pricing.length} items)
               </h2>
             </div>
             <table className="w-full">
@@ -487,7 +502,7 @@ export default function MetaCalculationsPage() {
                     <td className="px-6 py-4 font-medium">{item.category}</td>
                     <td className="px-6 py-4">{item.item}</td>
                     <td className="px-6 py-4 text-right font-mono">${item.currentPrice.toLocaleString()}</td>
-                    <td className={`px-6 py-4 text-right font-mono ${item.changePercent < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <td className={`px-6 py-4 text-right font-mono ${item.changePercent < 0 ? 'text-green-600' : item.changePercent > 0 ? 'text-red-600' : 'text-gray-600'}`}>
                       {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(1)}%
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{item.source}</td>
@@ -507,7 +522,7 @@ export default function MetaCalculationsPage() {
           <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b">
               <h2 className="font-semibold flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-600" /> Industry Configurations
+                <BarChart3 className="w-5 h-5 text-blue-600" /> Industry Configurations ({industries.length} industries)
               </h2>
             </div>
             <table className="w-full">
@@ -642,7 +657,7 @@ export default function MetaCalculationsPage() {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="admin@merlinenergy.net"
+                  placeholder="bob@noahenergy.com"
                 />
               </div>
               <div>
@@ -656,15 +671,13 @@ export default function MetaCalculationsPage() {
                   placeholder="••••••••"
                 />
               </div>
-              {loginError && (
-                <div className="text-red-600 text-sm">{loginError}</div>
-              )}
-              <button
-                onClick={handleLogin}
-                className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-              >
+              {loginError && <div className="text-red-600 text-sm">{loginError}</div>}
+              <button onClick={handleLogin} className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
                 Login
               </button>
+              <div className="text-xs text-gray-500 text-center">
+                Access for Bob & Vineet only
+              </div>
             </div>
           </div>
         </div>
@@ -690,9 +703,7 @@ export default function MetaCalculationsPage() {
                 <div className="text-sm text-gray-600">{editModal.description}</div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Value ({editModal.unit})
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Value ({editModal.unit})</label>
                 <input
                   type="number"
                   step="any"
@@ -700,20 +711,11 @@ export default function MetaCalculationsPage() {
                   onChange={(e) => setEditValue(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-mono"
                 />
-                <div className="text-xs text-gray-500 mt-1">
-                  Current: {formatValue(editModal.currentValue, editModal.unit)}
-                </div>
+                <div className="text-xs text-gray-500 mt-1">Current: {formatValue(editModal.currentValue, editModal.unit)}</div>
               </div>
-              {saveError && (
-                <div className="text-red-600 text-sm">{saveError}</div>
-              )}
+              {saveError && <div className="text-red-600 text-sm">{saveError}</div>}
               <div className="flex gap-3">
-                <button
-                  onClick={() => setEditModal(null)}
-                  className="flex-1 py-2 border rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
+                <button onClick={() => setEditModal(null)} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
                 <button
                   onClick={saveConstant}
                   disabled={saving}
