@@ -24,6 +24,8 @@ import { getConstant } from '@/services/calculationConstantsService';
 // NEW: Use modular calculators from Porsche 911 architecture
 import { calculateLoad } from '@/services/calculators/loadCalculator';
 import { calculateBESS } from '@/services/calculators/bessCalculator';
+import { getEVPresetTiers, type EVPresetTier } from '@/services/calculators/evCalculator';
+import { getGeneratorPresetTiers, type GeneratorPresetTier } from '@/services/calculators/generatorCalculator';
 import type { SystemCalculations } from '../types';
 
 // Merlin image
@@ -445,14 +447,38 @@ interface EVConfigProps {
   onDcFastCountChange: (count: number) => void;
   ultraFastCount: number;
   onUltraFastCountChange: (count: number) => void;
+  industry: string;
+  useCaseData: Record<string, any>;
 }
 
 function EVConfig({ 
   enabled, onToggle,
   level2Count, onLevel2CountChange,
   dcFastCount, onDcFastCountChange,
-  ultraFastCount, onUltraFastCountChange
+  ultraFastCount, onUltraFastCountChange,
+  industry,
+  useCaseData
 }: EVConfigProps) {
+  // Mode: recommended or customize
+  const [evMode, setEvMode] = useState<'recommended' | 'customize' | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<'basic' | 'standard' | 'premium' | null>(null);
+  
+  // Get preset tiers from calculator (SSOT)
+  const presetTiers = useMemo(() => {
+    return getEVPresetTiers(industry as any, useCaseData);
+  }, [industry, useCaseData]);
+  
+  // Apply preset when selected
+  const applyPreset = (presetId: 'basic' | 'standard' | 'premium') => {
+    const tier = presetTiers.find(t => t.id === presetId);
+    if (tier) {
+      setSelectedPreset(presetId);
+      onLevel2CountChange(tier.l2Count);
+      onDcFastCountChange(tier.dcfcCount);
+      onUltraFastCountChange(tier.ultraFastCount);
+    }
+  };
+  
   // Helper function to render a charger slider
   const renderChargerSlider = (
     label: string,
@@ -476,38 +502,22 @@ function EVConfig({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            onChange(Math.max(0, count - 1));
-          }}
+          onClick={(e) => { e.preventDefault(); onChange(Math.max(0, count - 1)); }}
           className="w-10 h-10 rounded-lg bg-slate-600 hover:bg-slate-500 text-white flex items-center justify-center transition-colors"
-        >
-          -
-        </button>
+        >-</button>
         <input
-          type="range"
-          min={0}
-          max={max}
-          step={1}
-          value={count}
+          type="range" min={0} max={max} step={1} value={count}
           onChange={(e) => {
             const newValue = parseInt(e.target.value, 10);
-            if (!isNaN(newValue) && newValue >= 0 && newValue <= max) {
-              onChange(newValue);
-            }
+            if (!isNaN(newValue) && newValue >= 0 && newValue <= max) onChange(newValue);
           }}
           className="flex-1 h-2 bg-slate-600 rounded-full appearance-none cursor-pointer accent-cyan-500"
         />
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            onChange(Math.min(max, count + 1));
-          }}
+          onClick={(e) => { e.preventDefault(); onChange(Math.min(max, count + 1)); }}
           className="w-10 h-10 rounded-lg bg-slate-600 hover:bg-slate-500 text-white flex items-center justify-center transition-colors"
-        >
-          +
-        </button>
+        >+</button>
       </div>
     </div>
   );
@@ -535,29 +545,27 @@ function EVConfig({
           </div>
         </div>
         
-        {/* YES/NO Toggle */}
+        {/* YES/NO Toggle - Flashing until selected */}
         <div className="flex gap-2">
           <button
-            onClick={() => onToggle(true)}
+            onClick={() => { onToggle(true); }}
             className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
               enabled
                 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 animate-pulse'
             }`}
           >
-            <Check className="w-5 h-5" />
-            YES
+            <Check className="w-5 h-5" /> YES
           </button>
           <button
-            onClick={() => onToggle(false)}
+            onClick={() => { onToggle(false); setEvMode(null); setSelectedPreset(null); }}
             className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
               !enabled
                 ? 'bg-slate-600 text-white'
                 : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
             }`}
           >
-            <X className="w-5 h-5" />
-            NO
+            <X className="w-5 h-5" /> NO
           </button>
         </div>
       </div>
@@ -567,54 +575,86 @@ function EVConfig({
         <div className="px-5 pb-5 space-y-4">
           <div className="h-px bg-cyan-500/30" />
           
-          {/* Total Summary */}
-          {totalChargers > 0 && (
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-cyan-500/30">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-400">Total Configuration</div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-white">{totalChargers} charger{totalChargers > 1 ? 's' : ''}</div>
-                  <div className="text-sm text-cyan-400">{Math.round(totalPowerKW).toLocaleString()} kW</div>
-                </div>
-              </div>
+          {/* Recommended vs Customize Toggle - Flashing until one selected */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setEvMode('recommended'); setSelectedPreset(null); }}
+              className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                evMode === 'recommended'
+                  ? 'bg-cyan-500 text-white shadow-lg'
+                  : evMode === null
+                    ? 'bg-slate-700 text-white border-2 border-cyan-400 animate-pulse'
+                    : 'bg-slate-700/50 text-slate-500'
+              }`}
+            >
+              <Star className="w-5 h-5" /> Recommended
+            </button>
+            <button
+              onClick={() => { setEvMode('customize'); setSelectedPreset(null); }}
+              className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                evMode === 'customize'
+                  ? 'bg-cyan-500 text-white shadow-lg'
+                  : evMode === null
+                    ? 'bg-slate-700 text-white border-2 border-cyan-400 animate-pulse'
+                    : 'bg-slate-700/50 text-slate-500'
+              }`}
+            >
+              <Settings2 className="w-5 h-5" /> Customize
+            </button>
+          </div>
+          
+          {/* Show preset options when Recommended selected */}
+          {evMode === 'recommended' && (
+            <div className="grid grid-cols-3 gap-3">
+              {presetTiers.map((tier) => (
+                <button
+                  key={tier.id}
+                  onClick={() => applyPreset(tier.id)}
+                  className={`p-4 rounded-xl text-left transition-all ${
+                    selectedPreset === tier.id
+                      ? 'bg-cyan-500 text-white ring-2 ring-cyan-300'
+                      : 'bg-slate-700/70 hover:bg-slate-700 text-white'
+                  }`}
+                >
+                  <div className="font-bold text-lg">{tier.name}</div>
+                  <div className="text-sm opacity-80 mb-2">{tier.description}</div>
+                  <div className="text-xs space-y-1 opacity-70">
+                    <div>🔌 {tier.l2Count} L2 • ⚡ {tier.dcfcCount} DCFC</div>
+                    {tier.ultraFastCount > 0 && <div>🚀 {tier.ultraFastCount} Ultra-Fast</div>}
+                    <div className="font-semibold">{tier.totalChargers} total • {tier.totalPowerKW.toLocaleString()} kW</div>
+                    <div className="text-cyan-300 font-bold mt-1">${(tier.estimatedCost / 1000).toFixed(0)}k installed</div>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
           
-          {/* Level 2 Chargers */}
-          {renderChargerSlider(
-            'Level 2 Chargers',
-            '7-19 kW each',
-            '🔌',
-            level2Count,
-            onLevel2CountChange,
-            50
+          {/* Show sliders when Customize selected */}
+          {evMode === 'customize' && (
+            <div className="space-y-3">
+              {renderChargerSlider('Level 2 Chargers', '7-19 kW each', '🔌', level2Count, onLevel2CountChange, 50)}
+              {renderChargerSlider('DC Fast Chargers', '50-150 kW each', '⚡', dcFastCount, onDcFastCountChange, 50)}
+              {renderChargerSlider('Ultra-Fast Chargers', '150-350 kW each', '🚀', ultraFastCount, onUltraFastCountChange, 20)}
+            </div>
           )}
           
-          {/* DC Fast Chargers */}
-          {renderChargerSlider(
-            'DC Fast Chargers',
-            '50-150 kW each',
-            '⚡',
-            dcFastCount,
-            onDcFastCountChange,
-            50
-          )}
-          
-          {/* Ultra-Fast Chargers */}
-          {renderChargerSlider(
-            'Ultra-Fast Chargers',
-            '150-350 kW each',
-            '🚀',
-            ultraFastCount,
-            onUltraFastCountChange,
-            20  // Fewer ultra-fast chargers typically
+          {/* Total Summary - show when config is complete */}
+          {((evMode === 'recommended' && selectedPreset) || (evMode === 'customize' && totalChargers > 0)) && (
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-cyan-500/30">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-slate-400">Your EV Configuration</div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-white">{totalChargers} charger{totalChargers !== 1 ? 's' : ''}</div>
+                  <div className="text-sm text-cyan-400">{Math.round(totalPowerKW).toLocaleString()} kW total capacity</div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
     </div>
   );
 }
-
 
 // ============================================================================
 // GENERATOR CONFIGURATION COMPONENT
@@ -628,14 +668,41 @@ interface GeneratorConfigProps {
   fuelType: 'natural-gas' | 'diesel';
   onFuelTypeChange: (fuel: 'natural-gas' | 'diesel') => void;
   state: WizardState;
+  peakDemandKW?: number;
 }
 
 function GeneratorConfig({ 
-  enabled, onToggle, sizeKw, onSizeChange, fuelType, onFuelTypeChange, state
+  enabled, onToggle, sizeKw, onSizeChange, fuelType, onFuelTypeChange, state, peakDemandKW = 500
 }: GeneratorConfigProps) {
-  // Check if state is high-risk for weather (FL, TX coast, LA, etc.)
-  const highRiskStates = ['FL', 'LA', 'TX', 'NC', 'SC', 'GA', 'AL', 'MS'];
+  // Mode: recommended or customize
+  const [genMode, setGenMode] = useState<'recommended' | 'customize' | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<'standard' | 'enhanced' | 'full' | null>(null);
+  
+  // Check if state is high-risk for weather
+  const highRiskStates = ['FL', 'LA', 'TX', 'NC', 'SC', 'GA', 'AL', 'MS', 'PR', 'VI'];
   const isHighRiskState = highRiskStates.includes(state.state || '');
+  
+  // Get preset tiers from calculator (SSOT)
+  const presetTiers = useMemo(() => {
+    const industry = (state.industry || 'hotel').replace(/-/g, '_') as any;
+    return getGeneratorPresetTiers(industry, peakDemandKW, fuelType, state.state || 'TX');
+  }, [state.selectedIndustry, state.industryCategory, peakDemandKW, fuelType, state.state]);
+  
+  // Apply preset when selected
+  const applyPreset = (presetId: 'standard' | 'enhanced' | 'full') => {
+    const tier = presetTiers.find(t => t.id === presetId);
+    if (tier) {
+      setSelectedPreset(presetId);
+      onSizeChange(tier.capacityKW);
+    }
+  };
+  
+  // Recalculate presets when fuel type changes
+  useEffect(() => {
+    if (selectedPreset && genMode === 'recommended') {
+      applyPreset(selectedPreset);
+    }
+  }, [fuelType]);
   
   return (
     <div className={`rounded-2xl overflow-hidden transition-all duration-300 ${
@@ -652,34 +719,32 @@ function GeneratorConfig({
             <Fuel className={`w-7 h-7 ${enabled ? 'text-white' : 'text-slate-400'}`} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Backup Generator</h3>
+            <h3 className="text-xl font-bold text-white">Add Backup Generator</h3>
             <p className="text-slate-400 text-sm">Reliable backup power for outages</p>
           </div>
         </div>
         
-        {/* YES/NO Toggle */}
+        {/* YES/NO Toggle - Flashing until selected */}
         <div className="flex gap-2">
           <button
             onClick={() => onToggle(true)}
             className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
               enabled
                 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 animate-pulse'
             }`}
           >
-            <Check className="w-5 h-5" />
-            YES
+            <Check className="w-5 h-5" /> YES
           </button>
           <button
-            onClick={() => onToggle(false)}
+            onClick={() => { onToggle(false); setGenMode(null); setSelectedPreset(null); }}
             className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
               !enabled
                 ? 'bg-slate-600 text-white'
                 : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
             }`}
           >
-            <X className="w-5 h-5" />
-            NO
+            <X className="w-5 h-5" /> NO
           </button>
         </div>
       </div>
@@ -702,16 +767,16 @@ function GeneratorConfig({
         <div className="px-5 pb-5 space-y-4">
           <div className="h-px bg-orange-500/30" />
           
-          {/* Fuel Type Selection */}
+          {/* STEP 1: Fuel Type Selection - Flashing until selected */}
           <div>
-            <label className="text-sm text-slate-400 mb-2 block">Fuel Type</label>
+            <label className="text-sm text-slate-400 mb-2 block">Step 1: Select Fuel Type</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => onFuelTypeChange('natural-gas')}
                 className={`p-4 rounded-xl transition-all text-left ${
                   fuelType === 'natural-gas'
                     ? 'bg-gradient-to-br from-blue-500/30 to-cyan-500/30 border-2 border-blue-400'
-                    : 'bg-slate-700/50 border border-slate-600 hover:border-blue-500/50'
+                    : 'bg-slate-700/50 border-2 border-orange-400 hover:border-blue-500/50 animate-pulse'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -721,7 +786,7 @@ function GeneratorConfig({
                   </span>
                   {fuelType === 'natural-gas' && <Check className="w-4 h-4 text-emerald-400 ml-auto" />}
                 </div>
-                <p className="text-xs text-slate-400">Cleaner, lower fuel costs</p>
+                <p className="text-xs text-slate-400">Cleaner, lower fuel costs, requires gas line</p>
               </button>
               
               <button
@@ -729,7 +794,7 @@ function GeneratorConfig({
                 className={`p-4 rounded-xl transition-all text-left ${
                   fuelType === 'diesel'
                     ? 'bg-gradient-to-br from-amber-500/30 to-orange-500/30 border-2 border-amber-400'
-                    : 'bg-slate-700/50 border border-slate-600 hover:border-amber-500/50'
+                    : 'bg-slate-700/50 border-2 border-orange-400 hover:border-amber-500/50 animate-pulse'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -739,48 +804,126 @@ function GeneratorConfig({
                   </span>
                   {fuelType === 'diesel' && <Check className="w-4 h-4 text-emerald-400 ml-auto" />}
                 </div>
-                <p className="text-xs text-slate-400">Higher power, more portable</p>
+                <p className="text-xs text-slate-400">Higher power, portable, no gas line needed</p>
               </button>
             </div>
           </div>
           
-          {/* Size Slider */}
-          <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm text-slate-400">Generator Size</div>
-              <div className="text-2xl font-bold text-orange-400">{sizeKw.toLocaleString()} kW</div>
+          {/* STEP 2: Recommended vs Customize Toggle */}
+          <div>
+            <label className="text-sm text-slate-400 mb-2 block">Step 2: Choose Size</label>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setGenMode('recommended'); setSelectedPreset(null); }}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  genMode === 'recommended'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : genMode === null
+                      ? 'bg-slate-700 text-white border-2 border-orange-400 animate-pulse'
+                      : 'bg-slate-700/50 text-slate-500'
+                }`}
+              >
+                <Star className="w-5 h-5" /> Recommended
+              </button>
+              <button
+                onClick={() => { setGenMode('customize'); setSelectedPreset(null); }}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  genMode === 'customize'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : genMode === null
+                      ? 'bg-slate-700 text-white border-2 border-orange-400 animate-pulse'
+                      : 'bg-slate-700/50 text-slate-500'
+                }`}
+              >
+                <Settings2 className="w-5 h-5" /> Customize
+              </button>
             </div>
-            <input
-              type="range"
-              min={100}
-              max={5000}
-              step={100}
-              value={sizeKw}
-              onChange={(e) => onSizeChange(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-600 rounded-full appearance-none cursor-pointer accent-orange-500"
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-2">
-              <span>100 kW</span>
-              <span>5,000 kW</span>
-            </div>
-            
-            {/* Quick select buttons */}
-            <div className="flex gap-2 mt-4 flex-wrap">
-              {[250, 500, 750, 1000, 1500, 2000].map((size) => (
+          </div>
+          
+          {/* Show preset options when Recommended selected */}
+          {genMode === 'recommended' && (
+            <div className="grid grid-cols-3 gap-3">
+              {presetTiers.map((tier) => (
                 <button
-                  key={size}
-                  onClick={() => onSizeChange(size)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    sizeKw === size
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
+                  key={tier.id}
+                  onClick={() => applyPreset(tier.id)}
+                  className={`p-4 rounded-xl text-left transition-all ${
+                    selectedPreset === tier.id
+                      ? 'bg-orange-500 text-white ring-2 ring-orange-300'
+                      : tier.id === 'enhanced' && isHighRiskState
+                        ? 'bg-amber-500/30 hover:bg-amber-500/40 text-white border-2 border-amber-400'
+                        : 'bg-slate-700/70 hover:bg-slate-700 text-white'
                   }`}
                 >
-                  {size >= 1000 ? `${size/1000}MW` : `${size}kW`}
+                  <div className="font-bold text-lg">{tier.name}</div>
+                  <div className="text-sm opacity-80 mb-2">{tier.description}</div>
+                  <div className="text-xs space-y-1 opacity-70">
+                    <div className="font-semibold">{tier.capacityKW.toLocaleString()} kW</div>
+                    <div className="text-orange-300 font-bold">${(tier.estimatedCost / 1000).toFixed(0)}k installed</div>
+                    <div className="text-slate-400">${(tier.annualMaintenance / 1000).toFixed(1)}k/yr maintenance</div>
+                  </div>
+                  {tier.id === 'enhanced' && isHighRiskState && (
+                    <div className="mt-2 text-xs bg-amber-500/30 rounded px-2 py-1 text-amber-200">
+                      ⚡ Recommended for {state.state}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
-          </div>
+          )}
+          
+          {/* Show slider when Customize selected */}
+          {genMode === 'customize' && (
+            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-slate-400">Generator Size</div>
+                <div className="text-2xl font-bold text-orange-400">{sizeKw.toLocaleString()} kW</div>
+              </div>
+              <input
+                type="range"
+                min={100}
+                max={5000}
+                step={50}
+                value={sizeKw}
+                onChange={(e) => onSizeChange(parseInt(e.target.value))}
+                className="w-full h-2 bg-slate-600 rounded-full appearance-none cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between text-xs text-slate-500 mt-2">
+                <span>100 kW</span>
+                <span>5,000 kW</span>
+              </div>
+              
+              {/* Quick select buttons */}
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {[250, 500, 750, 1000, 1500, 2000].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => onSizeChange(size)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      sizeKw === size
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    {size >= 1000 ? `${size/1000}MW` : `${size}kW`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Summary - show when config is complete */}
+          {((genMode === 'recommended' && selectedPreset) || (genMode === 'customize' && sizeKw > 0)) && (
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-orange-500/30">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-slate-400">Your Generator Configuration</div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-white">{sizeKw.toLocaleString()} kW {fuelType === 'diesel' ? 'Diesel' : 'Natural Gas'}</div>
+                  <div className="text-sm text-orange-400">24hr runtime at full load</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1069,6 +1212,8 @@ export function Step4Options({ state, updateState }: Props) {
           onDcFastCountChange={setDcFastCount}
           ultraFastCount={ultraFastCount}
           onUltraFastCountChange={setUltraFastCount}
+          industry={state.industry || 'retail'}
+          useCaseData={state.useCaseData || {}}
         />
 
         {/* Generator Configuration */}
@@ -1080,6 +1225,7 @@ export function Step4Options({ state, updateState }: Props) {
           fuelType={generatorFuel}
           onFuelTypeChange={setGeneratorFuel}
           state={state}
+          peakDemandKW={state.calculations?.bessKW || 500}
         />
 
         {/* Info Note */}
