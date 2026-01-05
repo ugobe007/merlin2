@@ -283,17 +283,13 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
   const calculateEnergy = (): number => {
     const sqft = (getValue('squareFootage') || 0) > 0 ? getValue('squareFootage') : estimatedSqft;
     let base = sqft * 15;
-    
-    console.log('🔋 [Energy Calc] Starting with base:', base, 'kWh (from sqft:', sqft, ')');
 
+    // Add energy from amenity selections
     ['poolType', 'fitnessCenter', 'spaServices', 'foodBeverage', 'laundryType', 'meetingSpace', 'parkingType'].forEach(field => {
       const options = getOptions(field);
-      const selectedValue = getValue(field);
-      const selected = options.find(o => o.value === selectedValue);
-      console.log(`🔋 [Energy Calc] ${field}: value="${selectedValue}", energyKwh=${selected?.energyKwh || 0}, options count=${options.length}`);
+      const selected = options.find(o => o.value === getValue(field));
       if (selected?.energyKwh) {
         base += selected.energyKwh;
-        console.log(`🔋 [Energy Calc] Added ${selected.energyKwh} kWh for ${field}, new total: ${base}`);
       }
     });
 
