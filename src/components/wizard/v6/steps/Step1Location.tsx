@@ -259,29 +259,29 @@ export function Step1Location({ state, updateState }: Props) {
               <div className="text-slate-200 text-sm mb-4 leading-relaxed">
                 {locationData.sunHours >= 5.5 ? (
                   <>
-                    <span className="text-green-400 font-semibold">☀️ Great news!</span> Your location has excellent solar potential with{' '}
+                    <span className="text-green-400 font-semibold">☀️ Great news{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has excellent solar potential with{' '}
                     <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
                     {locationData.electricityRate > 0.12 ? (
                       <> Your utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> is above average — <span className="text-green-300">solar + BESS will maximize your savings!</span></>
                     ) : locationData.electricityRate > 0.08 ? (
-                      <> With a rate of <span className="text-amber-300">${locationData.electricityRate.toFixed(4)}/kWh</span>, you'll see solid returns on solar + battery storage.</>
+                      <> With a rate of <span className="text-amber-300">${locationData.electricityRate.toFixed(4)}/kWh</span>, {businessLookup?.found ? `${businessLookup.businessName} will` : "you'll"} see solid returns on solar + battery storage.</>
                     ) : (
-                      <> Your low rate of <span className="text-green-300">${locationData.electricityRate.toFixed(4)}/kWh</span> means BESS for peak shaving and backup power is your best strategy.</>
+                      <> Your low rate of <span className="text-green-300">${locationData.electricityRate.toFixed(4)}/kWh</span> means BESS for peak shaving and backup power is {businessLookup?.found ? `${businessLookup.businessName}'s` : 'your'} best strategy.</>
                     )}
                   </>
                 ) : locationData.sunHours >= 4.5 ? (
                   <>
-                    <span className="text-amber-400 font-semibold">🌤️ Good potential!</span> Your location has{' '}
+                    <span className="text-amber-400 font-semibold">🌤️ Good potential{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has{' '}
                     <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
                     {locationData.electricityRate > 0.15 ? (
                       <> Your high utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> makes <span className="text-purple-300">BESS + solar a smart investment</span> for demand charge reduction.</>
                     ) : (
-                      <> Solar paired with battery storage will help reduce your energy costs and provide backup power.</>
+                      <> Solar paired with battery storage will help {businessLookup?.found ? businessLookup.businessName : 'you'} reduce energy costs and provide backup power.</>
                     )}
                   </>
                 ) : (
                   <>
-                    <span className="text-blue-400 font-semibold">⚡ Consider hybrid power.</span> Your location has{' '}
+                    <span className="text-blue-400 font-semibold">⚡ Consider hybrid power{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}.</span> Your location has{' '}
                     <span className="text-amber-300">{locationData.sunHours} peak sun hours/day</span> — solar output may be limited.
                     <span className="text-purple-300"> I recommend a <span className="font-semibold">generator + BESS combination</span> for reliable power, peak shaving, and backup during outages.</span>
                   </>
