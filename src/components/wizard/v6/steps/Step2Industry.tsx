@@ -5,6 +5,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import type { WizardState } from '../types';
+import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
 
 // Industry images
 import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
@@ -46,7 +47,9 @@ export function Step2Industry({ state, updateState }: Props) {
   };
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="relative space-y-8 pb-8">
+      {/* Merlin Advisor - Fixed Position */}
+      <MerlinGuide message={MERLIN_MESSAGES.step2} />
       <div className="text-center">
         <h1 className="text-4xl font-bold text-white mb-3">Select Your Industry</h1>
         <p className="text-purple-300 text-lg">This helps us customize your energy solution</p>
