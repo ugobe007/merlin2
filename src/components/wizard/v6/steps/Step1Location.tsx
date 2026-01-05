@@ -245,7 +245,7 @@ export function Step1Location({ state, updateState }: Props) {
               </button>
               
               {countryDropdownOpen && (
-                <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {INTERNATIONAL_DATA.map((country) => (
                     <button
                       key={country.code}
@@ -281,7 +281,7 @@ export function Step1Location({ state, updateState }: Props) {
                 </button>
                 
                 {cityDropdownOpen && (
-                  <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 w-full mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                     {selectedCountryData.cities.map((city) => (
                       <button
                         key={city.name}
@@ -386,14 +386,14 @@ export function Step1Location({ state, updateState }: Props) {
                 onClick={() => toggleGoal(goal.id)}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${
                   isSelected
-                    ? 'border-purple-500 bg-purple-50 shadow-md'
-                    : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                    ? 'border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20'
+                    : 'border-slate-600 bg-slate-700/50 hover:border-purple-400/50 hover:bg-slate-700'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{goal.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-medium ${isSelected ? 'text-purple-700' : 'text-white'}`}>
+                    <div className={`font-medium ${isSelected ? 'text-purple-300' : 'text-white'}`}>
                       {goal.label}
                     </div>
                     <div className="text-xs text-slate-400 mt-1 line-clamp-2">
