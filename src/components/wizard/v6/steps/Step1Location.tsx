@@ -119,7 +119,7 @@ export function Step1Location({ state, updateState }: Props) {
       const result = await lookupBusinessByAddress(searchQuery.trim());
       setBusinessLookup(result);
       
-      // If business found, update state with business info
+      // If business found, update state with business info AND auto-set industry
       if (result.found && result.businessName) {
         updateState({
           businessName: result.businessName,
@@ -129,6 +129,9 @@ export function Step1Location({ state, updateState }: Props) {
           detectedIndustry: result.industrySlug,
           businessLat: result.lat,
           businessLng: result.lng,
+          // AUTO-SET industry - user can change it on Step 2 if wrong
+          industry: result.industrySlug || '',
+          industryName: result.industrySlug ? (INDUSTRY_NAMES[result.industrySlug] || result.businessType || '') : '',
         });
       }
     } catch (error) {
@@ -463,15 +466,15 @@ export function Step1Location({ state, updateState }: Props) {
               </div>
             )}
             
-            {/* Business Found Display */}
+            {/* Business Found Display - Auto-confirmed, user can change on Step 2 */}
             {businessLookup?.found && (
-              <div className="mt-4 rounded-xl overflow-hidden border border-green-500/50 shadow-lg shadow-green-500/10">
-                {/* Header with Merlin */}
+              <div className="mt-4 rounded-xl overflow-hidden border-2 border-green-500 shadow-xl shadow-green-500/20">
+                {/* Header with Success Message */}
                 <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">🧙</span>
-                      <span className="text-white font-bold">Found your business!</span>
+                      <span className="text-2xl">✅</span>
+                      <span className="text-white font-bold text-lg">Business Confirmed!</span>
                     </div>
                     {locationData && (
                       <div className="flex items-center gap-3 text-sm">
@@ -482,10 +485,10 @@ export function Step1Location({ state, updateState }: Props) {
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4">
+                <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 p-5">
                   <div className="flex items-start gap-4">
                     {/* Business Photo or Map */}
-                    <div className="w-28 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-slate-700 border-2 border-green-500/50">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-slate-700 border-2 border-green-500/50 shadow-lg">
                       {businessLookup.photoUrl ? (
                         <img 
                           src={businessLookup.photoUrl} 
@@ -500,56 +503,41 @@ export function Step1Location({ state, updateState }: Props) {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Building2 className="w-10 h-10 text-slate-500" />
+                          <Building2 className="w-12 h-12 text-slate-500" />
                         </div>
                       )}
                     </div>
                     
                     {/* Business Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-white mb-1">
+                      <h3 className="text-2xl font-bold text-white mb-2">
                         {businessLookup.businessName}
                       </h3>
-                      {/* Show a note if name looks like an address */}
-                      {businessLookup.businessName && businessLookup.businessName.match(/^\d+\s/) && (
-                        <p className="text-amber-300 text-xs mb-1">
-                          💡 Tip: If this isn't your business name, you can still select your industry in the next step
-                        </p>
-                      )}
+                      
                       {businessLookup.industrySlug && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/50 mb-2">
-                          <span className="text-purple-300 text-sm font-medium">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/30 border border-purple-400 mb-3">
+                          <span className="text-purple-200 font-semibold">
                             {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType}
                           </span>
+                          <Check className="w-4 h-4 text-green-400" />
                         </div>
                       )}
-                      <p className="text-slate-300 text-sm">
-                        {businessLookup.formattedAddress}
+                      
+                      <p className="text-slate-300 text-sm mb-3">
+                        📍 {businessLookup.formattedAddress}
                       </p>
                       
-                      {/* What Merlin will do */}
-                      <p className="text-emerald-300 text-xs mt-2 italic">
-                        "I'll configure an energy system optimized for {businessLookup.industrySlug ? (INDUSTRY_NAMES[businessLookup.industrySlug] || 'your business').toLowerCase() + ' operations' : 'your business'}!"
-                      </p>
+                      {/* Merlin's commitment */}
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-600">
+                        <p className="text-emerald-300 text-sm">
+                          🧙 <span className="font-semibold">Merlin says:</span> "I'll design a custom energy solution for {businessLookup.businessName}. Select your goals and click Continue!"
+                        </p>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Confirmation Buttons */}
-                  <div className="mt-4 flex gap-3">
-                    <button
-                      onClick={() => {
-                        // Confirm and set industry
-                        if (businessLookup.industrySlug) {
-                          updateState({ 
-                            industry: businessLookup.industrySlug,
-                            industryName: INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType || ''
-                          });
-                        }
-                      }}
-                      className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg shadow-green-500/30"
-                    >
-                      ✓ Yes, that's my business
-                    </button>
+                  {/* Wrong business link - subtle, not a big button */}
+                  <div className="mt-4 text-center">
                     <button
                       onClick={() => {
                         setBusinessLookup(null);
@@ -560,11 +548,13 @@ export function Step1Location({ state, updateState }: Props) {
                           businessName: undefined,
                           businessAddress: undefined,
                           detectedIndustry: undefined,
+                          industry: '',
+                          industryName: '',
                         });
                       }}
-                      className="py-3 px-4 rounded-xl bg-slate-600 text-white hover:bg-slate-500 transition-all"
+                      className="text-slate-400 text-sm hover:text-white transition-colors underline"
                     >
-                      Not mine
+                      Not your business? Search again
                     </button>
                   </div>
                 </div>
