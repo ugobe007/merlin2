@@ -147,6 +147,7 @@ export function loadGoogleMapsAPI(): Promise<void> {
 
 /**
  * Look up a business by address using Google Places API
+ * Tries multiple strategies to find the actual business name
  */
 export async function lookupBusinessByAddress(address: string): Promise<PlaceLookupResult> {
   try {
@@ -157,6 +158,7 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
         document.createElement('div')
       );
       
+      // First, try to find the place
       const request: google.maps.places.FindPlaceFromQueryRequest = {
         query: address,
         fields: ['name', 'formatted_address', 'types', 'photos', 'place_id', 'geometry', 'business_status'],
@@ -201,17 +203,84 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
                 photoUrl = finalPlace.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 });
               }
               
-              resolve({
-                found: true,
-                businessName: finalPlace.name,
-                businessType: finalPlace.types?.[0],
-                formattedAddress: finalPlace.formatted_address,
-                photoUrl,
-                placeId: place.place_id,
-                lat: finalPlace.geometry?.location?.lat(),
-                lng: finalPlace.geometry?.location?.lng(),
-                industrySlug,
-              });
+              // Check if the name looks like an address (starts with a number)
+              const nameIsAddress = finalPlace.name && /^\d+\s/.test(finalPlace.name);
+              
+              if (nameIsAddress && finalPlace.geometry?.location) {
+                // Try a nearby search to find actual businesses at this location
+                const nearbyRequest: google.maps.places.PlaceSearchRequest = {
+                  location: finalPlace.geometry.location,
+                  radius: 50, // 50 meters
+                  type: 'establishment'
+                };
+                
+                service.nearbySearch(nearbyRequest, (
+                  nearbyResults: google.maps.places.PlaceResult[] | null,
+                  nearbyStatus: google.maps.places.PlacesServiceStatus
+                ) => {
+                  if (nearbyStatus === google.maps.places.PlacesServiceStatus.OK && nearbyResults && nearbyResults.length > 0) {
+                    // Find the first result that's not just an address
+                    const actualBusiness = nearbyResults.find(r => r.name && !/^\d+\s/.test(r.name));
+                    
+                    if (actualBusiness) {
+                      // Found a real business name!
+                      let nearbyIndustrySlug: string | undefined;
+                      if (actualBusiness.types) {
+                        for (const type of actualBusiness.types) {
+                          if (PLACE_TYPE_TO_INDUSTRY[type]) {
+                            nearbyIndustrySlug = PLACE_TYPE_TO_INDUSTRY[type];
+                            break;
+                          }
+                        }
+                      }
+                      
+                      let nearbyPhotoUrl: string | undefined;
+                      if (actualBusiness.photos && actualBusiness.photos.length > 0) {
+                        nearbyPhotoUrl = actualBusiness.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 });
+                      }
+                      
+                      resolve({
+                        found: true,
+                        businessName: actualBusiness.name,
+                        businessType: actualBusiness.types?.[0],
+                        formattedAddress: actualBusiness.vicinity || finalPlace.formatted_address,
+                        photoUrl: nearbyPhotoUrl || photoUrl,
+                        placeId: actualBusiness.place_id || place.place_id,
+                        lat: actualBusiness.geometry?.location?.lat() || finalPlace.geometry?.location?.lat(),
+                        lng: actualBusiness.geometry?.location?.lng() || finalPlace.geometry?.location?.lng(),
+                        industrySlug: nearbyIndustrySlug || industrySlug,
+                      });
+                      return;
+                    }
+                  }
+                  
+                  // No better result found, use original
+                  resolve({
+                    found: true,
+                    businessName: finalPlace.name,
+                    businessType: finalPlace.types?.[0],
+                    formattedAddress: finalPlace.formatted_address,
+                    photoUrl,
+                    placeId: place.place_id,
+                    lat: finalPlace.geometry?.location?.lat(),
+                    lng: finalPlace.geometry?.location?.lng(),
+                    industrySlug,
+                  });
+                });
+              } else {
+                // Name doesn't look like an address, use it
+                resolve({
+                  found: true,
+                  businessName: finalPlace.name,
+                  businessType: finalPlace.types?.[0],
+                  formattedAddress: finalPlace.formatted_address,
+                  photoUrl,
+                  placeId: place.place_id,
+                  lat: finalPlace.geometry?.location?.lat(),
+                  lng: finalPlace.geometry?.location?.lng(),
+                  industrySlug,
+                });
+              }
             });
           } else {
             // No place_id, use the initial result
