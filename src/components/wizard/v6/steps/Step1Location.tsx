@@ -214,9 +214,13 @@ export function Step1Location({ state, updateState }: Props) {
                 setZipInput(value);
               }}
               placeholder="e.g., 89101"
-              className={`w-full px-4 py-3 rounded-xl border-2 ${
-                zipError ? 'border-red-300 bg-red-50' : 'border-gray-200'
-              } focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all text-lg`}
+              className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
+                zipError 
+                  ? 'border-red-400 bg-red-900/30 text-red-300 placeholder-red-400/50' 
+                  : zipInput.length === 5 
+                    ? 'border-green-400 bg-green-900/30 text-green-300' 
+                    : 'border-purple-400 bg-slate-700 text-white placeholder-slate-400'
+              } focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
             />
             {zipError && (
               <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
