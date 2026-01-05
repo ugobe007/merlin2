@@ -355,16 +355,16 @@ export function Step1Location({ state, updateState }: Props) {
       </div>
 
       {/* RIGHT COLUMN: Your Goals */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <Check className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Check className="w-5 h-5 text-green-400" />
             </div>
             <h2 className="text-xl font-semibold text-white">Your Goals</h2>
           </div>
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-            hasEnoughGoals ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+            hasEnoughGoals ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
           }`}>
             {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
           </div>
