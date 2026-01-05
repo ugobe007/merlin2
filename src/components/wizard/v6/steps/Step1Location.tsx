@@ -15,6 +15,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check } from 'lucide-react';
 import type { WizardState, EnergyGoal } from '../types';
+import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
 
 // SSOT Imports - All location data comes from centralized data files
 import { 
@@ -160,7 +161,11 @@ export function Step1Location({ state, updateState }: Props) {
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="relative">
+      {/* Merlin Advisor - Fixed Position */}
+      <MerlinGuide message={MERLIN_MESSAGES.step1} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN: Your Location */}
       <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
         <div className="flex items-center gap-3 mb-6">
@@ -417,6 +422,7 @@ export function Step1Location({ state, updateState }: Props) {
             />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
