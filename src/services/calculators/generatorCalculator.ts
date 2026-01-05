@@ -304,3 +304,85 @@ export function getRecommendedFuelType(industry: Industry, state: string): Gener
   // Default to config or natural gas
   return config?.preferredFuel || 'natural-gas';
 }
+
+// ============================================================================
+// GENERATOR PRESET TIERS - For Recommended options in Step 4
+// ============================================================================
+
+export interface GeneratorPresetTier {
+  id: 'standard' | 'enhanced' | 'full';
+  name: string;
+  description: string;
+  capacityKW: number;
+  coveragePercent: number;
+  estimatedCost: number;
+  annualMaintenance: number;
+  rationale: string;
+}
+
+/**
+ * Generate 3 preset tiers for generator based on industry and fuel type
+ * Used by Step 4 "Recommended" option
+ */
+export function getGeneratorPresetTiers(
+  industry: Industry,
+  peakDemandKW: number,
+  fuelType: GeneratorFuel,
+  state: string
+): GeneratorPresetTier[] {
+  const config = INDUSTRY_GENERATOR_CONFIG[industry] || {
+    required: false,
+    recommendedIfNoSolar: false,
+    criticalLoadPercent: 0.40,
+    preferredFuel: 'natural-gas' as GeneratorFuel,
+    rationale: 'Standard backup power',
+  };
+  
+  const costPerKw = fuelType === 'diesel' 
+    ? GENERATOR_CONSTANTS.COST_PER_KW_DIESEL 
+    : GENERATOR_CONSTANTS.COST_PER_KW_NATGAS;
+  
+  const isHighRisk = HIGH_RISK_STATES.includes(state);
+  
+  // Calculate sizes for each tier
+  const standardKW = roundToStandardSize(Math.round(peakDemandKW * config.criticalLoadPercent));
+  const enhancedKW = roundToStandardSize(Math.round(peakDemandKW * Math.min(config.criticalLoadPercent * 1.5, 0.80)));
+  const fullKW = roundToStandardSize(Math.round(peakDemandKW * 1.0));
+  
+  const tiers: GeneratorPresetTier[] = [
+    {
+      id: 'standard',
+      name: 'Standard Backup',
+      description: `Critical loads only (${Math.round(config.criticalLoadPercent * 100)}%)`,
+      capacityKW: standardKW,
+      coveragePercent: config.criticalLoadPercent,
+      estimatedCost: Math.round(standardKW * costPerKw),
+      annualMaintenance: Math.round(standardKW * costPerKw * GENERATOR_CONSTANTS.MAINTENANCE_PERCENT),
+      rationale: config.rationale,
+    },
+    {
+      id: 'enhanced',
+      name: 'Enhanced Backup',
+      description: isHighRisk ? 'Recommended for hurricane zone' : 'Extended coverage',
+      capacityKW: enhancedKW,
+      coveragePercent: Math.min(config.criticalLoadPercent * 1.5, 0.80),
+      estimatedCost: Math.round(enhancedKW * costPerKw),
+      annualMaintenance: Math.round(enhancedKW * costPerKw * GENERATOR_CONSTANTS.MAINTENANCE_PERCENT),
+      rationale: isHighRisk 
+        ? `High-risk weather zone (${state}). Extended backup recommended.`
+        : 'Additional capacity for comfort loads',
+    },
+    {
+      id: 'full',
+      name: 'Full Backup',
+      description: '100% facility coverage',
+      capacityKW: fullKW,
+      coveragePercent: 1.0,
+      estimatedCost: Math.round(fullKW * costPerKw),
+      annualMaintenance: Math.round(fullKW * costPerKw * GENERATOR_CONSTANTS.MAINTENANCE_PERCENT),
+      rationale: 'Complete facility backup - zero interruption capability',
+    },
+  ];
+  
+  return tiers;
+}

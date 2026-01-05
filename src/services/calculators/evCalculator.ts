@@ -310,3 +310,114 @@ function buildResult(
     ].filter(b => b.cost > 0) : [],
   };
 }
+
+// ============================================================================
+// EV PRESET TIERS - For Recommended options in Step 4
+// ============================================================================
+
+export interface EVPresetTier {
+  id: 'basic' | 'standard' | 'premium';
+  name: string;
+  description: string;
+  l2Count: number;
+  dcfcCount: number;
+  ultraFastCount: number;
+  totalChargers: number;
+  totalPowerKW: number;
+  estimatedCost: number;
+  rationale: string;
+}
+
+/**
+ * Generate 3 preset tiers for EV charging based on industry
+ * Used by Step 4 "Recommended" option
+ */
+export function getEVPresetTiers(
+  industry: Industry,
+  useCaseData: Record<string, any>
+): EVPresetTier[] {
+  const config = INDUSTRY_EV_CONFIG[industry] || INDUSTRY_EV_CONFIG['retail'];
+  
+  // Calculate base chargers from facility size
+  let baseChargers = config.baseChargers;
+  
+  switch (config.scaleFactor) {
+    case 'rooms':
+      const rooms = useCaseData.roomCount || useCaseData.rooms || 100;
+      baseChargers = Math.max(config.baseChargers, Math.round(rooms * 0.05));
+      break;
+    case 'sqft':
+      const sqft = useCaseData.squareFootage || useCaseData.totalSqFt || 50000;
+      baseChargers = Math.max(config.baseChargers, Math.round(sqft / 10000));
+      break;
+    case 'beds':
+      const beds = useCaseData.bedCount || useCaseData.beds || 200;
+      baseChargers = Math.max(config.baseChargers, Math.round(beds * 0.03));
+      break;
+    case 'bays':
+      const bays = useCaseData.tunnelCount || useCaseData.bays || 2;
+      baseChargers = Math.max(config.baseChargers, bays * 2);
+      break;
+    default:
+      baseChargers = config.baseChargers;
+  }
+  
+  // Cap at reasonable maximums per tier
+  baseChargers = Math.min(baseChargers, 20);
+  
+  // Generate 3 tiers
+  const tiers: EVPresetTier[] = [
+    // Basic: Minimal setup, mostly L2
+    generateTier('basic', 'Starter', 'Essential EV amenity', 
+      baseChargers, 0.85, 0.15, 0, config),
+    
+    // Standard: Balanced mix
+    generateTier('standard', 'Standard', 'Balanced for most visitors',
+      Math.round(baseChargers * 1.5), config.l2Ratio, config.dcfcRatio, config.ultraRatio, config),
+    
+    // Premium: More fast charging
+    generateTier('premium', 'Premium', 'Maximum convenience & revenue',
+      Math.round(baseChargers * 2), 0.50, 0.35, 0.15, config),
+  ];
+  
+  return tiers;
+}
+
+function generateTier(
+  id: EVPresetTier['id'],
+  name: string,
+  description: string,
+  totalChargers: number,
+  l2Ratio: number,
+  dcfcRatio: number,
+  ultraRatio: number,
+  config: typeof INDUSTRY_EV_CONFIG[string]
+): EVPresetTier {
+  const l2Count = Math.round(totalChargers * l2Ratio);
+  const dcfcCount = Math.round(totalChargers * dcfcRatio);
+  const ultraCount = Math.round(totalChargers * ultraRatio);
+  
+  const totalPowerKW = 
+    l2Count * EV_CONSTANTS.L2_POWER_KW +
+    dcfcCount * EV_CONSTANTS.DCFC_POWER_KW +
+    ultraCount * EV_CONSTANTS.ULTRAFAST_POWER_KW;
+  
+  const estimatedCost = Math.round(
+    (l2Count * EV_CONSTANTS.L2_COST +
+     dcfcCount * EV_CONSTANTS.DCFC_COST +
+     ultraCount * EV_CONSTANTS.ULTRAFAST_COST) * EV_CONSTANTS.INSTALLATION_MULTIPLIER
+  );
+  
+  return {
+    id,
+    name,
+    description,
+    l2Count,
+    dcfcCount,
+    ultraFastCount: ultraCount,
+    totalChargers: l2Count + dcfcCount + ultraCount,
+    totalPowerKW: Math.round(totalPowerKW),
+    estimatedCost,
+    rationale: config.rationale,
+  };
+}
