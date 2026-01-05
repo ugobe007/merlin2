@@ -74,6 +74,7 @@ export function Step1Location({ state, updateState }: Props) {
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   
   // Address lookup state
+  const [businessNameInput, setBusinessNameInput] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
@@ -106,16 +107,16 @@ export function Step1Location({ state, updateState }: Props) {
 
   // Handle address lookup
   const handleAddressLookup = async () => {
-    if (!streetAddress.trim()) return;
+    if (!businessNameInput.trim() && !streetAddress.trim()) return;
     
-    // Combine street address with zip/city for better results
-    const fullAddress = region === 'us' 
-      ? `${streetAddress}, ${zipInput}`
-      : `${streetAddress}, ${selectedCity}, ${selectedCountry}`;
+    // Combine business name + address + location for best results
+    const searchQuery = region === 'us' 
+      ? `${businessNameInput}${streetAddress ? ', ' + streetAddress : ''}, ${zipInput}`
+      : `${businessNameInput}${streetAddress ? ', ' + streetAddress : ''}, ${selectedCity}, ${selectedCountry}`;
     
     setIsLookingUp(true);
     try {
-      const result = await lookupBusinessByAddress(fullAddress);
+      const result = await lookupBusinessByAddress(searchQuery.trim());
       setBusinessLookup(result);
       
       // If business found, update state with business info
@@ -142,6 +143,7 @@ export function Step1Location({ state, updateState }: Props) {
   useEffect(() => {
     if (businessLookup) {
       setBusinessLookup(null);
+      setBusinessNameInput('');
       setStreetAddress('');
       updateState({
         businessName: undefined,
@@ -403,33 +405,58 @@ export function Step1Location({ state, updateState }: Props) {
                 )}
                 
                 {showAddressField && !businessLookup?.found && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-slate-300">
-                      Business Name & Address <span className="text-slate-500">(optional)</span>
-                    </label>
-                    <div className="flex gap-2">
+                  <div className="space-y-4">
+                    {/* Business Name Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Business Name <span className="text-amber-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={businessNameInput}
+                        onChange={(e) => setBusinessNameInput(e.target.value)}
+                        placeholder="e.g., WOW Carwash, Hilton Hotel, Starbucks"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-lg"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    {/* Street Address Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Street Address <span className="text-slate-500">(optional, improves accuracy)</span>
+                      </label>
                       <input
                         type="text"
                         value={streetAddress}
                         onChange={(e) => setStreetAddress(e.target.value)}
-                        placeholder="e.g., WOW Carwash, 9860 S Maryland Pkwy"
-                        className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                        placeholder="e.g., 9860 S Maryland Pkwy"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
                         onKeyDown={(e) => e.key === 'Enter' && handleAddressLookup()}
                       />
-                      <button
-                        onClick={handleAddressLookup}
-                        disabled={isLookingUp || !streetAddress.trim()}
-                        className="px-4 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        {isLookingUp ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Search className="w-5 h-5" />
-                        )}
-                      </button>
                     </div>
-                    <p className="text-xs text-slate-400">
-                      💡 Include your business name for best results (e.g., "Hilton Hotel, 123 Main St")
+                    
+                    {/* Search Button */}
+                    <button
+                      onClick={handleAddressLookup}
+                      disabled={isLookingUp || !businessNameInput.trim()}
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30"
+                    >
+                      {isLookingUp ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Finding your business...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-5 h-5" />
+                          <span>Find My Business</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <p className="text-xs text-slate-400 text-center">
+                      🧙 Merlin will identify your business and customize your energy solution
                     </p>
                   </div>
                 )}
@@ -526,6 +553,7 @@ export function Step1Location({ state, updateState }: Props) {
                     <button
                       onClick={() => {
                         setBusinessLookup(null);
+                        setBusinessNameInput('');
                         setStreetAddress('');
                         setShowAddressField(true);
                         updateState({
