@@ -169,34 +169,79 @@ export async function lookupBusinessByAddress(address: string): Promise<PlaceLoo
         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
           const place = results[0];
           
-          // Find matching industry from place types
-          let industrySlug: string | undefined;
-          if (place.types) {
-            for (const type of place.types) {
-              if (PLACE_TYPE_TO_INDUSTRY[type]) {
-                industrySlug = PLACE_TYPE_TO_INDUSTRY[type];
-                break;
+          // If we got a place_id, try to get more details
+          if (place.place_id) {
+            const detailsRequest: google.maps.places.PlaceDetailsRequest = {
+              placeId: place.place_id,
+              fields: ['name', 'formatted_address', 'types', 'photos', 'geometry', 'business_status', 'website', 'formatted_phone_number']
+            };
+            
+            service.getDetails(detailsRequest, (
+              detailedPlace: google.maps.places.PlaceResult | null,
+              detailsStatus: google.maps.places.PlacesServiceStatus
+            ) => {
+              const finalPlace = detailsStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace 
+                ? detailedPlace 
+                : place;
+              
+              // Find matching industry from place types
+              let industrySlug: string | undefined;
+              if (finalPlace.types) {
+                for (const type of finalPlace.types) {
+                  if (PLACE_TYPE_TO_INDUSTRY[type]) {
+                    industrySlug = PLACE_TYPE_TO_INDUSTRY[type];
+                    break;
+                  }
+                }
+              }
+              
+              // Get photo URL if available
+              let photoUrl: string | undefined;
+              if (finalPlace.photos && finalPlace.photos.length > 0) {
+                photoUrl = finalPlace.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 });
+              }
+              
+              resolve({
+                found: true,
+                businessName: finalPlace.name,
+                businessType: finalPlace.types?.[0],
+                formattedAddress: finalPlace.formatted_address,
+                photoUrl,
+                placeId: place.place_id,
+                lat: finalPlace.geometry?.location?.lat(),
+                lng: finalPlace.geometry?.location?.lng(),
+                industrySlug,
+              });
+            });
+          } else {
+            // No place_id, use the initial result
+            let industrySlug: string | undefined;
+            if (place.types) {
+              for (const type of place.types) {
+                if (PLACE_TYPE_TO_INDUSTRY[type]) {
+                  industrySlug = PLACE_TYPE_TO_INDUSTRY[type];
+                  break;
+                }
               }
             }
+            
+            let photoUrl: string | undefined;
+            if (place.photos && place.photos.length > 0) {
+              photoUrl = place.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 });
+            }
+            
+            resolve({
+              found: true,
+              businessName: place.name,
+              businessType: place.types?.[0],
+              formattedAddress: place.formatted_address,
+              photoUrl,
+              placeId: place.place_id,
+              lat: place.geometry?.location?.lat(),
+              lng: place.geometry?.location?.lng(),
+              industrySlug,
+            });
           }
-          
-          // Get photo URL if available
-          let photoUrl: string | undefined;
-          if (place.photos && place.photos.length > 0) {
-            photoUrl = place.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 });
-          }
-          
-          resolve({
-            found: true,
-            businessName: place.name,
-            businessType: place.types?.[0],
-            formattedAddress: place.formatted_address,
-            photoUrl,
-            placeId: place.place_id,
-            lat: place.geometry?.location?.lat(),
-            lng: place.geometry?.location?.lng(),
-            industrySlug,
-          });
         } else {
           resolve({ found: false });
         }

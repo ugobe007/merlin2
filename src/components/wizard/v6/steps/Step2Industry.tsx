@@ -3,9 +3,10 @@
  * Updated: December 30, 2025 - Larger fonts for better readability
  */
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Sparkles, Building2 } from 'lucide-react';
 import type { WizardState } from '../types';
 import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
+import { INDUSTRY_NAMES } from '@/services/googlePlacesService';
 
 // Industry images
 import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
@@ -46,18 +47,64 @@ export function Step2Industry({ state, updateState }: Props) {
     updateState({ industry: slug, industryName: name });
   };
 
+  // Normalize industry slug (handle both dash and underscore formats)
+  const normalizeSlug = (slug: string) => slug?.replace(/-/g, '_');
+  const detectedSlug = state.detectedIndustry ? normalizeSlug(state.detectedIndustry) : null;
+  
   return (
     <div className="relative space-y-8 pb-8">
       {/* Merlin Advisor - Fixed Position */}
-      <MerlinGuide message={MERLIN_MESSAGES.step2} />
+      <MerlinGuide message={
+        state.businessName 
+          ? `I found ${state.businessName}! I've pre-selected your industry below. Confirm it's correct or choose a different one.`
+          : MERLIN_MESSAGES.step2
+      } />
+      
+      {/* Pre-detected Industry Banner */}
+      {state.businessName && detectedSlug && (
+        <div className="max-w-3xl mx-auto mb-2">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 border border-green-500/50 shadow-lg shadow-green-500/10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-green-400 font-bold">🧙 Merlin detected your business!</span>
+                </div>
+                <p className="text-white">
+                  <span className="font-semibold">{state.businessName}</span>
+                  {state.businessAddress && (
+                    <span className="text-slate-400 text-sm ml-2">• {state.businessAddress}</span>
+                  )}
+                </p>
+                <p className="text-emerald-300 text-sm mt-1">
+                  Industry: <span className="font-semibold">{INDUSTRY_NAMES[state.detectedIndustry || ''] || state.industryName || 'Unknown'}</span>
+                  {' '}— Confirm below or select a different industry
+                </p>
+              </div>
+              {state.businessPhotoUrl && (
+                <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500/50 flex-shrink-0">
+                  <img src={state.businessPhotoUrl} alt={state.businessName} className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-3">Select Your Industry</h1>
+        <h1 className="text-4xl font-bold text-white mb-3">
+          {state.businessName ? 'Confirm Your Industry' : 'Select Your Industry'}
+        </h1>
         <p className="text-purple-300 text-lg">This helps us customize your energy solution</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
         {INDUSTRIES.map((industry) => {
-          const isSelected = state.industry === industry.slug;
+          const isSelected = state.industry === industry.slug || 
+                             normalizeSlug(state.industry) === industry.slug ||
+                             state.industry === industry.slug.replace(/_/g, '-');
           return (
             <button
               key={industry.slug}
