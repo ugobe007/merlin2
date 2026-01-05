@@ -438,72 +438,107 @@ export function Step1Location({ state, updateState }: Props) {
             
             {/* Business Found Display */}
             {businessLookup?.found && (
-              <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/50">
-                <div className="flex items-start gap-4">
-                  {/* Business Photo or Map */}
-                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-700">
-                    {businessLookup.photoUrl ? (
-                      <img 
-                        src={businessLookup.photoUrl} 
-                        alt={businessLookup.businessName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : businessLookup.lat && businessLookup.lng ? (
-                      <img 
-                        src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
-                        alt="Location map"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Building2 className="w-8 h-8 text-slate-500" />
+              <div className="mt-4 rounded-xl overflow-hidden border border-green-500/50 shadow-lg shadow-green-500/10">
+                {/* Header with Merlin */}
+                <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🧙</span>
+                      <span className="text-white font-bold">Found your business!</span>
+                    </div>
+                    {locationData && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-green-100">⚡ ${locationData.electricityRate.toFixed(4)}/kWh</span>
+                        <span className="text-green-100">☀️ {locationData.sunHours} hrs/day</span>
                       </div>
                     )}
                   </div>
-                  
-                  {/* Business Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                      <span className="text-green-300 text-sm font-medium">Business Found!</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-white truncate">
-                      {businessLookup.businessName}
-                    </h3>
-                    {businessLookup.industrySlug && (
-                      <p className="text-purple-300 text-sm">
-                        {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType}
-                      </p>
-                    )}
-                    <p className="text-slate-400 text-xs mt-1 truncate">
-                      {businessLookup.formattedAddress}
-                    </p>
-                  </div>
                 </div>
                 
-                {/* Confirmation */}
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => {
-                      // Confirm and proceed
-                      if (businessLookup.industrySlug) {
-                        updateState({ industry: businessLookup.industrySlug });
-                      }
-                    }}
-                    className="flex-1 py-2 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-all"
-                  >
-                    ✓ Yes, that's correct
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBusinessLookup(null);
-                      setStreetAddress('');
-                      setShowAddressField(true);
-                    }}
-                    className="py-2 px-4 rounded-lg bg-slate-600 text-white text-sm hover:bg-slate-500 transition-all"
-                  >
-                    Not my business
-                  </button>
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Business Photo or Map */}
+                    <div className="w-28 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-slate-700 border-2 border-green-500/50">
+                      {businessLookup.photoUrl ? (
+                        <img 
+                          src={businessLookup.photoUrl} 
+                          alt={businessLookup.businessName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : businessLookup.lat && businessLookup.lng ? (
+                        <img 
+                          src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
+                          alt="Location map"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Building2 className="w-10 h-10 text-slate-500" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Business Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-white mb-1">
+                        {businessLookup.businessName}
+                      </h3>
+                      {/* Show a note if name looks like an address */}
+                      {businessLookup.businessName && businessLookup.businessName.match(/^\d+\s/) && (
+                        <p className="text-amber-300 text-xs mb-1">
+                          💡 Tip: If this isn't your business name, you can still select your industry in the next step
+                        </p>
+                      )}
+                      {businessLookup.industrySlug && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/50 mb-2">
+                          <span className="text-purple-300 text-sm font-medium">
+                            {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-slate-300 text-sm">
+                        {businessLookup.formattedAddress}
+                      </p>
+                      
+                      {/* What Merlin will do */}
+                      <p className="text-emerald-300 text-xs mt-2 italic">
+                        "I'll configure an energy system optimized for {businessLookup.industrySlug ? (INDUSTRY_NAMES[businessLookup.industrySlug] || 'your business').toLowerCase() + ' operations' : 'your business'}!"
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Confirmation Buttons */}
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() => {
+                        // Confirm and set industry
+                        if (businessLookup.industrySlug) {
+                          updateState({ 
+                            industry: businessLookup.industrySlug,
+                            industryName: INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType || ''
+                          });
+                        }
+                      }}
+                      className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg shadow-green-500/30"
+                    >
+                      ✓ Yes, that's my business
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBusinessLookup(null);
+                        setStreetAddress('');
+                        setShowAddressField(true);
+                        updateState({
+                          businessName: undefined,
+                          businessAddress: undefined,
+                          detectedIndustry: undefined,
+                        });
+                      }}
+                      className="py-3 px-4 rounded-xl bg-slate-600 text-white hover:bg-slate-500 transition-all"
+                    >
+                      Not mine
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
