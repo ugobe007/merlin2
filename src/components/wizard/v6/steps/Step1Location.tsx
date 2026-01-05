@@ -370,11 +370,19 @@ export function Step1Location({ state, updateState }: Props) {
           </div>
         </div>
 
-        {!hasEnoughGoals && (
-          <p className="text-sm text-slate-400 mb-4">
-            Select at least {MIN_GOALS_REQUIRED} goals to continue
+        {/* Always visible instruction - prominent */}
+        <div className={`mb-5 p-4 rounded-xl text-center ${
+          hasEnoughGoals 
+            ? 'bg-green-500/20 border-2 border-green-500/50' 
+            : 'bg-purple-500/20 border-2 border-purple-400/50 animate-pulse'
+        }`}>
+          <p className={`text-base font-semibold ${hasEnoughGoals ? 'text-green-300' : 'text-purple-300'}`}>
+            {hasEnoughGoals 
+              ? `✓ Great! You've selected ${selectedGoalsCount} goals` 
+              : `👆 Select ${MIN_GOALS_REQUIRED - selectedGoalsCount} more goal${MIN_GOALS_REQUIRED - selectedGoalsCount > 1 ? 's' : ''} to continue`
+            }
           </p>
-        )}
+        </div>
 
         {/* Goals Grid */}
         <div className="grid grid-cols-2 gap-3">
