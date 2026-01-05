@@ -44,6 +44,11 @@ export interface WizardState {
   customEvUltraFast?: number;  // Ultra-Fast chargers (250-350 kW)
   customGeneratorKw?: number;
   generatorFuel?: 'natural-gas' | 'diesel';
+  
+  // Enabled state flags (preserves values when toggled off)
+  solarEnabled?: boolean;
+  evEnabled?: boolean;
+  generatorEnabled?: boolean;
 
   // Step 4: Options selections
   useCaseData: Record<string, any>;
