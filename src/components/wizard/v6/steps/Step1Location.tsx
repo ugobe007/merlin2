@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check } from 'lucide-react';
+import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check, Search, Building2, Loader2 } from 'lucide-react';
 import type { WizardState, EnergyGoal } from '../types';
 import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
 
@@ -32,6 +32,13 @@ import {
   type InternationalCountry,
   type InternationalCity 
 } from '@/services/data/internationalRates';
+
+import {
+  lookupBusinessByAddress,
+  getStaticMapUrl,
+  INDUSTRY_NAMES,
+  type PlaceLookupResult
+} from '@/services/googlePlacesService';
 
 // ============================================================================
 // ENERGY GOALS
@@ -65,6 +72,12 @@ export function Step1Location({ state, updateState }: Props) {
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  
+  // Address lookup state
+  const [streetAddress, setStreetAddress] = useState('');
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
+  const [showAddressField, setShowAddressField] = useState(false);
 
   const locationData = useMemo(() => {
     if (region === 'us' && state.state) {
@@ -90,6 +103,57 @@ export function Step1Location({ state, updateState }: Props) {
     }
     return null;
   }, [region, state.state, selectedCountry, selectedCity]);
+
+  // Handle address lookup
+  const handleAddressLookup = async () => {
+    if (!streetAddress.trim()) return;
+    
+    // Combine street address with zip/city for better results
+    const fullAddress = region === 'us' 
+      ? `${streetAddress}, ${zipInput}`
+      : `${streetAddress}, ${selectedCity}, ${selectedCountry}`;
+    
+    setIsLookingUp(true);
+    try {
+      const result = await lookupBusinessByAddress(fullAddress);
+      setBusinessLookup(result);
+      
+      // If business found, update state with business info
+      if (result.found && result.businessName) {
+        updateState({
+          businessName: result.businessName,
+          businessAddress: result.formattedAddress,
+          businessPhotoUrl: result.photoUrl,
+          businessPlaceId: result.placeId,
+          detectedIndustry: result.industrySlug,
+          businessLat: result.lat,
+          businessLng: result.lng,
+        });
+      }
+    } catch (error) {
+      console.error('Address lookup failed:', error);
+      setBusinessLookup({ found: false });
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  // Clear business lookup when zip changes
+  useEffect(() => {
+    if (businessLookup) {
+      setBusinessLookup(null);
+      setStreetAddress('');
+      updateState({
+        businessName: undefined,
+        businessAddress: undefined,
+        businessPhotoUrl: undefined,
+        businessPlaceId: undefined,
+        detectedIndustry: undefined,
+        businessLat: undefined,
+        businessLng: undefined,
+      });
+    }
+  }, [zipInput, selectedCity]);
 
   // Handle zip code changes with validation
   useEffect(() => {
@@ -224,6 +288,125 @@ export function Step1Location({ state, updateState }: Props) {
             />
             {zipError && (
               <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
+            )}
+            
+            {/* Address Lookup Section - shown after valid zip */}
+            {zipInput.length === 5 && !zipError && (
+              <div className="mt-4">
+                {!showAddressField && !businessLookup?.found && (
+                  <button
+                    onClick={() => setShowAddressField(true)}
+                    className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-purple-400/50 text-purple-300 hover:border-purple-400 hover:bg-purple-500/10 transition-all text-sm"
+                  >
+                    <Building2 className="w-4 h-4 inline mr-2" />
+                    Add your street address for personalized recommendations
+                  </button>
+                )}
+                
+                {showAddressField && !businessLookup?.found && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-slate-300">
+                      Street Address <span className="text-slate-500">(optional)</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        placeholder="e.g., 123 Main Street"
+                        className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddressLookup()}
+                      />
+                      <button
+                        onClick={handleAddressLookup}
+                        disabled={isLookingUp || !streetAddress.trim()}
+                        className="px-4 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isLookingUp ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Search className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      We'll identify your business to provide tailored energy recommendations
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Business Found Display */}
+            {businessLookup?.found && (
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/50">
+                <div className="flex items-start gap-4">
+                  {/* Business Photo or Map */}
+                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-700">
+                    {businessLookup.photoUrl ? (
+                      <img 
+                        src={businessLookup.photoUrl} 
+                        alt={businessLookup.businessName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : businessLookup.lat && businessLookup.lng ? (
+                      <img 
+                        src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
+                        alt="Location map"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Building2 className="w-8 h-8 text-slate-500" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Business Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                      <span className="text-green-300 text-sm font-medium">Business Found!</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white truncate">
+                      {businessLookup.businessName}
+                    </h3>
+                    {businessLookup.industrySlug && (
+                      <p className="text-purple-300 text-sm">
+                        {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType}
+                      </p>
+                    )}
+                    <p className="text-slate-400 text-xs mt-1 truncate">
+                      {businessLookup.formattedAddress}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Confirmation */}
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Confirm and proceed
+                      if (businessLookup.industrySlug) {
+                        updateState({ industry: businessLookup.industrySlug });
+                      }
+                    }}
+                    className="flex-1 py-2 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-all"
+                  >
+                    ✓ Yes, that's correct
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBusinessLookup(null);
+                      setStreetAddress('');
+                      setShowAddressField(true);
+                    }}
+                    className="py-2 px-4 rounded-lg bg-slate-600 text-white text-sm hover:bg-slate-500 transition-all"
+                  >
+                    Not my business
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -69,7 +69,7 @@ export function MerlinGuide({ message, defaultVisible = true }: MerlinGuideProps
 
 // Step-specific messages
 export const MERLIN_MESSAGES = {
-  step1: "👋 Welcome! Let's start by finding your location and understanding your energy goals. Select at least 3 goals that matter most to your business.",
+  step1: "👋 Welcome! Enter your zip code to get started. Add your street address for personalized recommendations - we'll identify your business and tailor your energy solution. Select at least 2 goals to continue.",
   step2: "🏢 Great! Now select the industry that best describes your facility. This helps me tailor recommendations specifically for your sector.",
   step3: "📋 Perfect! Now I need some details about your facility. The more accurate your inputs, the better I can size your energy system.",
   step4: "⚡ Time to customize! You can add solar panels, EV charging, and backup generators. I'll show you recommended options based on your facility.",
