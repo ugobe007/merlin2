@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getConstant } from '@/services/calculationConstantsService';
 import { checkDatabaseHealth, getCalculationConstantsRaw, type DatabaseHealthStatus } from '@/services/databaseHealthCheck';
+import { getAllStateSolarData, type StateSolarData } from '@/services/stateSolarService';
 import { TRUEQUOTE_CONSTANTS, DEFAULTS } from '@/services/data/constants';
 
 interface ConstantValue {
@@ -77,9 +78,10 @@ export default function MetaCalculationsPage() {
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [activeTab, setActiveTab] = useState<'constants' | 'pricing' | 'industries' | 'metrics'>('constants');
+  const [activeTab, setActiveTab] = useState<'constants' | 'pricing' | 'industries' | 'solar' | 'metrics'>('constants');
   const [dbHealth, setDbHealth] = useState<DatabaseHealthStatus | null>(null);
   const [rawDbConstants, setRawDbConstants] = useState<any[]>([]);
+  const [stateSolarData, setStateSolarData] = useState<StateSolarData[]>([]);
 
   useEffect(() => { loadAllData(); }, []);
 
@@ -93,6 +95,10 @@ export default function MetaCalculationsPage() {
     setRawDbConstants(rawConstants);
     console.log('📊 Database Health:', health);
     console.log('📊 Raw DB Constants:', rawConstants);
+    // Load state solar data
+    const solarData = await getAllStateSolarData();
+    setStateSolarData(solarData);
+    console.log('📊 State Solar Data:', solarData.length, 'states');
     setLastRefresh(new Date());
     setLoading(false);
   }
@@ -223,6 +229,7 @@ export default function MetaCalculationsPage() {
             { id: 'constants', label: 'Constants', icon: Settings },
             { id: 'pricing', label: 'Market Pricing', icon: DollarSign },
             { id: 'industries', label: 'Industry Configs', icon: BarChart3 },
+            { id: 'solar', label: 'Solar by State', icon: Sun },
             { id: 'metrics', label: 'Performance', icon: Activity },
           ].map(tab => (
             <button
@@ -361,6 +368,57 @@ export default function MetaCalculationsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {activeTab === 'solar' && (
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Sun className="w-5 h-5 text-yellow-600" /> State Solar Data ({stateSolarData.length} states)
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Peak sun hours, capacity factors, and solar ratings from NREL NSRDB</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 text-xs text-gray-500 uppercase sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left">State</th>
+                    <th className="px-4 py-3 text-center">Rating</th>
+                    <th className="px-4 py-3 text-right">Sun Hours</th>
+                    <th className="px-4 py-3 text-right">kWh/kW/yr</th>
+                    <th className="px-4 py-3 text-right">Elec Rate</th>
+                    <th className="px-4 py-3 text-right">Demand $/kW</th>
+                    <th className="px-4 py-3 text-right">Tilt°</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y max-h-96 overflow-y-auto">
+                  {stateSolarData.map(state => (
+                    <tr key={state.stateCode} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className="font-medium">{state.stateCode}</span>
+                        <span className="text-gray-500 text-sm ml-2">{state.stateName}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          state.solarRating === 'A' ? 'bg-green-100 text-green-700' :
+                          state.solarRating === 'B' ? 'bg-blue-100 text-blue-700' :
+                          state.solarRating === 'C' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {state.solarRating}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">{state.peakSunHours.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold">{state.capacityFactorKwhPerKw.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono">{state.avgElectricityRate ? `$${state.avgElectricityRate.toFixed(3)}` : '-'}</td>
+                      <td className="px-4 py-3 text-right font-mono">{state.avgDemandCharge ? `$${state.avgDemandCharge.toFixed(2)}` : '-'}</td>
+                      <td className="px-4 py-3 text-right font-mono">{state.bestTiltAngle || '-'}°</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
