@@ -21,6 +21,15 @@ export interface WizardState {
   electricityRate?: number;
   currency?: string;
   
+  // Business lookup (from Google Places API)
+  businessName?: string;
+  businessAddress?: string;
+  businessPhotoUrl?: string;
+  businessPlaceId?: string;
+  detectedIndustry?: string;
+  businessLat?: number;
+  businessLng?: number;
+  
   // Step 2: Industry
   industry: string;
   industryName: string;
