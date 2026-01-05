@@ -238,7 +238,7 @@ export default function WizardV6() {
   // Start Over: Reset state and go to Step 2
   const handleStartOver = () => {
     setState(INITIAL_WIZARD_STATE);
-    setCurrentStep(2); // Go to Industry Selection
+    setCurrentStep(1); // Go back to Location (Step 1)
     setShowStartOverModal(false);
     // Clear persisted state
     try {
@@ -251,7 +251,7 @@ export default function WizardV6() {
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return (state.zipCode.length >= 5 || (state.city !== "" && state.state !== "")) && state.goals.length > 0;
+      case 1: return (state.zipCode.length === 5 && state.state !== '') && state.goals.length >= 3;
       case 2: return state.industry !== '';
       case 3: return true; // Database-driven questions handle their own validation
       case 4: return true; // Step4Options handles its own validation with forced decisions

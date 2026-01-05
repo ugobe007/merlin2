@@ -938,17 +938,26 @@ export function Step4Options({ state, updateState }: Props) {
   const [showMerlin, setShowMerlin] = useState(true);
   
   // Solar state
-  const [solarEnabled, setSolarEnabled] = useState(state.customSolarKw ? state.customSolarKw > 0 : false);
+  const [solarEnabled, setSolarEnabled] = useState(
+    state.solarEnabled !== undefined ? state.solarEnabled : (state.customSolarKw ? state.customSolarKw > 0 : false)
+  );
   const [solarSizeKwp, setSolarSizeKwp] = useState(state.customSolarKw || 850);
   
   // EV state - 3 separate sliders
-  const [evEnabled, setEvEnabled] = useState((state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0) > 0);
+  // Check evEnabled state first, then fall back to checking if any chargers exist
+  const [evEnabled, setEvEnabled] = useState(
+    state.evEnabled !== undefined 
+      ? state.evEnabled 
+      : (state.customEvL2 || 0) + (state.customEvDcfc || 0) + (state.customEvUltraFast || 0) > 0
+  );
   const [level2Count, setLevel2Count] = useState(state.customEvL2 || 0);
   const [dcFastCount, setDcFastCount] = useState(state.customEvDcfc || 0);
   const [ultraFastCount, setUltraFastCount] = useState(state.customEvUltraFast || 0);
   
   // Generator state
-  const [generatorEnabled, setGeneratorEnabled] = useState(state.customGeneratorKw ? state.customGeneratorKw > 0 : false);
+  const [generatorEnabled, setGeneratorEnabled] = useState(
+    state.generatorEnabled !== undefined ? state.generatorEnabled : (state.customGeneratorKw ? state.customGeneratorKw > 0 : false)
+  );
   const [generatorKw, setGeneratorKw] = useState(state.customGeneratorKw || 500);
   const [generatorFuel, setGeneratorFuel] = useState<'natural-gas' | 'diesel'>(state.generatorFuel || 'natural-gas');
 
@@ -1069,13 +1078,18 @@ export function Step4Options({ state, updateState }: Props) {
   const totalEvChargers = level2Count + dcFastCount + ultraFastCount;
 
   // Update parent state when values change
+  // NOTE: We preserve EV/Solar/Generator values even when disabled 
+  // so user doesn't lose their config when toggling or navigating back
   useEffect(() => {
     updateState({
-      customSolarKw: solarEnabled ? solarSizeKwp : 0,
-      customEvL2: evEnabled ? level2Count : 0,
-      customEvDcfc: evEnabled ? dcFastCount : 0,
-      customEvUltraFast: evEnabled ? ultraFastCount : 0,
-      customGeneratorKw: generatorEnabled ? generatorKw : 0,
+      customSolarKw: solarSizeKwp, // Always preserve the value
+      solarEnabled: solarEnabled,  // Track enabled state separately
+      customEvL2: level2Count,     // Always preserve
+      customEvDcfc: dcFastCount,   // Always preserve
+      customEvUltraFast: ultraFastCount, // Always preserve
+      evEnabled: evEnabled,        // Track enabled state separately
+      customGeneratorKw: generatorKw, // Always preserve
+      generatorEnabled: generatorEnabled, // Track enabled state separately
       generatorFuel: generatorFuel,
       selectedOptions: [
         ...(solarEnabled ? ['solar'] : []),
