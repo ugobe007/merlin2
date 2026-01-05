@@ -19,7 +19,7 @@ export interface SolarCalculationInput {
   industry: Industry;
   useCaseData: Record<string, any>;
   state: string;
-  sunHoursPerDay?: number;  // Optional override
+  sunHoursPerDay?: number;
   userInterested: boolean;
   customSizeKw?: number;
   mountType?: 'rooftop' | 'ground' | 'carport';
@@ -50,11 +50,13 @@ export interface SolarCalculationResult {
   }[];
 }
 
-// Fallback constants (used if DB unavailable)
-const FALLBACK_CONSTANTS = {
+// Solar constants
+const SOLAR_CONSTANTS = {
   COST_PER_WATT: 1.20,
   PANEL_WATTS: 500,
   SQFT_PER_KW: 70,
+  DEGRADATION_ANNUAL: 0.005,
+  LIFETIME_YEARS: 25,
   MIN_SIZE_KW: 25,
   MAX_SIZE_KW: 10000,
   SYSTEM_LOSSES: 0.14,
@@ -107,7 +109,7 @@ export async function calculateSolarAsync(input: SolarCalculationInput): Promise
   // Get state data from database
   const stateData = await getStateSolarData(input.state);
   
-  // Get constants from database
+  // Get constants from database (with fallbacks)
   const [costPerWatt, sqftPerKw, groundAdder, carportAdder, trackerAdder, trackerBoost, bifacialBoost] = await Promise.all([
     getConstant('SOLAR_COST_PER_WATT'),
     getConstant('SOLAR_SQFT_PER_KW'),
@@ -118,14 +120,16 @@ export async function calculateSolarAsync(input: SolarCalculationInput): Promise
     getConstant('SOLAR_BIFACIAL_BOOST'),
   ]);
 
+  // Build constants with DB values or fallbacks
   const constants = {
-    costPerWatt: costPerWatt || FALLBACK_CONSTANTS.COST_PER_WATT,
-    sqftPerKw: sqftPerKw || FALLBACK_CONSTANTS.SQFT_PER_KW,
-    groundAdder: groundAdder || FALLBACK_CONSTANTS.GROUND_MOUNT_ADDER,
-    carportAdder: carportAdder || FALLBACK_CONSTANTS.CARPORT_ADDER,
-    trackerAdder: trackerAdder || FALLBACK_CONSTANTS.TRACKER_ADDER,
-    trackerBoost: trackerBoost || FALLBACK_CONSTANTS.TRACKER_BOOST,
-    bifacialBoost: bifacialBoost || FALLBACK_CONSTANTS.BIFACIAL_BOOST,
+    ...SOLAR_CONSTANTS,
+    COST_PER_WATT: costPerWatt || SOLAR_CONSTANTS.COST_PER_WATT,
+    SQFT_PER_KW: sqftPerKw || SOLAR_CONSTANTS.SQFT_PER_KW,
+    GROUND_MOUNT_ADDER: groundAdder || SOLAR_CONSTANTS.GROUND_MOUNT_ADDER,
+    CARPORT_ADDER: carportAdder || SOLAR_CONSTANTS.CARPORT_ADDER,
+    TRACKER_ADDER: trackerAdder || SOLAR_CONSTANTS.TRACKER_ADDER,
+    TRACKER_BOOST: trackerBoost || SOLAR_CONSTANTS.TRACKER_BOOST,
+    BIFACIAL_BOOST: bifacialBoost || SOLAR_CONSTANTS.BIFACIAL_BOOST,
   };
 
   return calculateSolarInternal(input, stateData, constants);
@@ -133,7 +137,6 @@ export async function calculateSolarAsync(input: SolarCalculationInput): Promise
 
 /**
  * Calculate solar PV system sizing (sync - uses fallbacks)
- * For backward compatibility
  */
 export function calculateSolar(input: SolarCalculationInput): SolarCalculationResult {
   const fallback = FALLBACK_STATE_DATA[input.state] || { sunHours: 5.0, capacityFactor: 1500, rating: 'C' };
@@ -148,7 +151,7 @@ export function calculateSolar(input: SolarCalculationInput): SolarCalculationRe
     avgDemandCharge: null,
     bestTiltAngle: null,
   };
-  return calculateSolarInternal(input, stateData, FALLBACK_CONSTANTS);
+  return calculateSolarInternal(input, stateData, SOLAR_CONSTANTS);
 }
 
 /**
@@ -157,7 +160,7 @@ export function calculateSolar(input: SolarCalculationInput): SolarCalculationRe
 function calculateSolarInternal(
   input: SolarCalculationInput,
   stateData: StateSolarData | null,
-  constants: typeof FALLBACK_CONSTANTS
+  constants: typeof SOLAR_CONSTANTS
 ): SolarCalculationResult {
   const config = INDUSTRY_SOLAR_CONFIG[input.industry] || {
     recommended: true,
@@ -169,7 +172,6 @@ function calculateSolarInternal(
   // Use database state data or fallback
   const sunHours = input.sunHoursPerDay || stateData?.peakSunHours || 5.0;
   const capacityFactor = stateData?.capacityFactorKwhPerKw || 1500;
-  const solarRating = stateData?.solarRating || 'C';
   const optimalTilt = stateData?.bestTiltAngle || null;
 
   // If user provided custom size, use it
@@ -183,15 +185,15 @@ function calculateSolarInternal(
   }
 
   // Calculate target size based on consumption coverage
-  let targetAnnualKWh = input.annualConsumptionKWh * (config.targetCoveragePercent / 100);
+  const targetAnnualKWh = input.annualConsumptionKWh * (config.targetCoveragePercent / 100);
   
   // Apply production boosts for trackers/bifacial
   let effectiveCapacityFactor = capacityFactor;
   if (input.useTrackers) {
-    effectiveCapacityFactor *= (1 + constants.trackerBoost);
+    effectiveCapacityFactor *= (1 + constants.TRACKER_BOOST);
   }
   if (input.useBifacial) {
-    effectiveCapacityFactor *= (1 + constants.bifacialBoost);
+    effectiveCapacityFactor *= (1 + constants.BIFACIAL_BOOST);
   }
 
   let targetKW = targetAnnualKWh / effectiveCapacityFactor;
@@ -199,19 +201,19 @@ function calculateSolarInternal(
   // Check roof area constraint
   const facilitySize = input.useCaseData.squareFootage || input.useCaseData.totalSqFt || 50000;
   const availableRoofSqFt = facilitySize * config.roofUtilization;
-  const maxKWByRoof = availableRoofSqFt / constants.sqftPerKw;
+  const maxKWByRoof = availableRoofSqFt / constants.SQFT_PER_KW;
 
   // Use the smaller of target or roof-constrained size
   let capacityKW = Math.min(targetKW, maxKWByRoof);
 
   // Apply min/max limits
-  capacityKW = Math.max(FALLBACK_CONSTANTS.MIN_SIZE_KW, Math.min(FALLBACK_CONSTANTS.MAX_SIZE_KW, capacityKW));
+  capacityKW = Math.max(constants.MIN_SIZE_KW, Math.min(constants.MAX_SIZE_KW, capacityKW));
 
   // Round to nearest 25 kW
   capacityKW = Math.round(capacityKW / 25) * 25;
 
   // If size is less than minimum, don't recommend
-  if (capacityKW < FALLBACK_CONSTANTS.MIN_SIZE_KW) {
+  if (capacityKW < constants.MIN_SIZE_KW) {
     return buildResult(0, effectiveCapacityFactor, input, config, constants, stateData, 'Roof area insufficient for commercial solar');
   }
 
@@ -230,7 +232,7 @@ function buildResult(
   capacityFactor: number,
   input: SolarCalculationInput,
   config: typeof INDUSTRY_SOLAR_CONFIG[string],
-  constants: typeof FALLBACK_CONSTANTS,
+  constants: typeof SOLAR_CONSTANTS,
   stateData: StateSolarData | null,
   rationale: string
 ): SolarCalculationResult {
@@ -238,17 +240,17 @@ function buildResult(
   const coveragePercent = input.annualConsumptionKWh > 0
     ? Math.round((annualProductionKWh / input.annualConsumptionKWh) * 100)
     : 0;
-  const roofAreaSqFt = capacityKW * constants.sqftPerKw;
+  const roofAreaSqFt = capacityKW * constants.SQFT_PER_KW;
 
   // Calculate cost with mount type adders
-  let costPerWatt = constants.costPerWatt;
+  let costPerWatt = constants.COST_PER_WATT;
   if (input.mountType === 'ground') {
-    costPerWatt *= (1 + constants.groundAdder);
+    costPerWatt *= (1 + constants.GROUND_MOUNT_ADDER);
   } else if (input.mountType === 'carport') {
-    costPerWatt *= (1 + constants.carportAdder);
+    costPerWatt *= (1 + constants.CARPORT_ADDER);
   }
   if (input.useTrackers) {
-    costPerWatt *= (1 + constants.trackerAdder);
+    costPerWatt *= (1 + constants.TRACKER_ADDER);
   }
 
   const totalCost = capacityKW * 1000 * costPerWatt;
