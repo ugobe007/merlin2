@@ -296,10 +296,10 @@ export function Step1Location({ state, updateState }: Props) {
                 {!showAddressField && !businessLookup?.found && (
                   <button
                     onClick={() => setShowAddressField(true)}
-                    className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-purple-400/50 text-purple-300 hover:border-purple-400 hover:bg-purple-500/10 transition-all text-sm"
+                    className="w-full py-4 px-4 rounded-xl border-2 border-purple-400 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-purple-500/20"
                   >
-                    <Building2 className="w-4 h-4 inline mr-2" />
-                    Add your street address for personalized recommendations
+                    <Building2 className="w-5 h-5 inline mr-2" />
+                    🏢 Add your street address for personalized recommendations
                   </button>
                 )}
                 
