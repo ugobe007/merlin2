@@ -11,6 +11,7 @@ import {
   Settings, Activity, BarChart3, Shield, Edit3
 } from 'lucide-react';
 import { getConstant } from '@/services/calculationConstantsService';
+import { checkDatabaseHealth, getCalculationConstantsRaw, type DatabaseHealthStatus } from '@/services/databaseHealthCheck';
 import { TRUEQUOTE_CONSTANTS, DEFAULTS } from '@/services/data/constants';
 
 interface ConstantValue {
@@ -77,12 +78,21 @@ export default function MetaCalculationsPage() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<'constants' | 'pricing' | 'industries' | 'metrics'>('constants');
+  const [dbHealth, setDbHealth] = useState<DatabaseHealthStatus | null>(null);
+  const [rawDbConstants, setRawDbConstants] = useState<any[]>([]);
 
   useEffect(() => { loadAllData(); }, []);
 
   async function loadAllData() {
     setLoading(true);
     await Promise.all([loadConstants(), loadPricing(), loadIndustries(), loadMetrics()]);
+    // Check database health
+    const health = await checkDatabaseHealth();
+    setDbHealth(health);
+    const rawConstants = await getCalculationConstantsRaw();
+    setRawDbConstants(rawConstants);
+    console.log('📊 Database Health:', health);
+    console.log('📊 Raw DB Constants:', rawConstants);
     setLastRefresh(new Date());
     setLoading(false);
   }
