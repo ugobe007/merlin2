@@ -46,7 +46,7 @@ const ENERGY_GOALS: { id: EnergyGoal; label: string; description: string; emoji:
   { id: 'generate_revenue', label: 'Generate Revenue', description: 'Sell excess power back', emoji: '💵' },
 ];
 
-const MIN_GOALS_REQUIRED = 3;
+const MIN_GOALS_REQUIRED = 2;
 
 // ============================================================================
 // COMPONENT
@@ -167,12 +167,12 @@ export function Step1Location({ state, updateState }: Props) {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN: Your Location */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-purple-600" />
+          <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-purple-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-800">Your Location</h2>
+          <h2 className="text-xl font-semibold text-white">Your Location</h2>
         </div>
 
         {/* Region Toggle */}
@@ -181,8 +181,8 @@ export function Step1Location({ state, updateState }: Props) {
             onClick={() => setRegion('us')}
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'us'
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
             🇺🇸 United States
@@ -191,8 +191,8 @@ export function Step1Location({ state, updateState }: Props) {
             onClick={() => setRegion('international')}
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'international'
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
             <Globe className="w-4 h-4 inline mr-2" />
@@ -203,7 +203,7 @@ export function Step1Location({ state, updateState }: Props) {
         {/* US Zip Code Input */}
         {region === 'us' && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Enter your zip code
             </label>
             <input
@@ -219,7 +219,7 @@ export function Step1Location({ state, updateState }: Props) {
               } focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all text-lg`}
             />
             {zipError && (
-              <p className="mt-2 text-sm text-red-600">{zipError}</p>
+              <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
             )}
           </div>
         )}
@@ -229,14 +229,14 @@ export function Step1Location({ state, updateState }: Props) {
           <div className="space-y-4 mb-6">
             {/* Country Dropdown */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Select Country
               </label>
               <button
                 onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white flex items-center justify-between hover:border-purple-300 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
               >
-                <span className={selectedCountry ? 'text-gray-800' : 'text-gray-400'}>
+                <span className={selectedCountry ? 'text-white' : 'text-gray-400'}>
                   {selectedCountryData
                     ? `${selectedCountryData.flag} ${selectedCountryData.name}`
                     : 'Select a country...'}
@@ -254,10 +254,10 @@ export function Step1Location({ state, updateState }: Props) {
                         setSelectedCity('');
                         setCountryDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-purple-50 flex items-center gap-3 transition-colors"
+                      className="w-full px-4 py-3 text-left hover:bg-slate-600 flex items-center gap-3 transition-colors"
                     >
                       <span className="text-xl">{country.flag}</span>
-                      <span className="text-gray-800">{country.name}</span>
+                      <span className="text-white">{country.name}</span>
                     </button>
                   ))}
                 </div>
@@ -267,14 +267,14 @@ export function Step1Location({ state, updateState }: Props) {
             {/* City Dropdown */}
             {selectedCountryData && (
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Select City
                 </label>
                 <button
                   onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white flex items-center justify-between hover:border-purple-300 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
                 >
-                  <span className={selectedCity ? 'text-gray-800' : 'text-gray-400'}>
+                  <span className={selectedCity ? 'text-white' : 'text-gray-400'}>
                     {selectedCity || 'Select a city...'}
                   </span>
                   <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${cityDropdownOpen ? 'rotate-180' : ''}`} />
@@ -289,9 +289,9 @@ export function Step1Location({ state, updateState }: Props) {
                           setSelectedCity(city.name);
                           setCityDropdownOpen(false);
                         }}
-                        className="w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors"
+                        className="w-full px-4 py-3 text-left hover:bg-slate-600 transition-colors"
                       >
-                        <span className="text-gray-800">{city.name}</span>
+                        <span className="text-white">{city.name}</span>
                       </button>
                     ))}
                   </div>
@@ -303,29 +303,29 @@ export function Step1Location({ state, updateState }: Props) {
 
         {/* Location Details Card */}
         {locationData && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-100">
-            <h3 className="font-semibold text-gray-800 mb-4">
+          <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl p-5 border border-purple-400/30">
+            <h3 className="font-semibold text-white mb-4">
               📍 {region === 'us' ? `${state.city || state.state}, ${state.state}` : `${selectedCity}, ${selectedCountryData?.name}`}
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
                   <Zap className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Electricity Rate</div>
-                  <div className="font-semibold text-gray-800">
+                  <div className="text-xs text-slate-400">Electricity Rate</div>
+                  <div className="font-semibold text-white">
                     ${locationData.electricityRate.toFixed(4)}/kWh
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
                   <Sun className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Sun Hours</div>
-                  <div className="font-semibold text-gray-800">
+                  <div className="text-xs text-slate-400">Sun Hours</div>
+                  <div className="font-semibold text-white">
                     {locationData.sunHours} hrs/day
                   </div>
                 </div>
@@ -334,17 +334,17 @@ export function Step1Location({ state, updateState }: Props) {
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   locationData.solarRating === 'A' ? 'bg-green-100' :
                   locationData.solarRating === 'B' ? 'bg-blue-100' :
-                  locationData.solarRating === 'C' ? 'bg-yellow-100' : 'bg-gray-100'
+                  locationData.solarRating === 'C' ? 'bg-yellow-500/20' : 'bg-gray-100'
                 }`}>
                   <Star className={`w-5 h-5 ${
                     locationData.solarRating === 'A' ? 'text-green-600' :
                     locationData.solarRating === 'B' ? 'text-blue-600' :
-                    locationData.solarRating === 'C' ? 'text-yellow-600' : 'text-gray-600'
+                    locationData.solarRating === 'C' ? 'text-yellow-600' : 'text-slate-400'
                   }`} />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Solar Potential</div>
-                  <div className="font-semibold text-gray-800">
+                  <div className="text-xs text-slate-400">Solar Potential</div>
+                  <div className="font-semibold text-white">
                     {locationData.solarRating} - {locationData.solarLabel}
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export function Step1Location({ state, updateState }: Props) {
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <Check className="w-5 h-5 text-green-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">Your Goals</h2>
+            <h2 className="text-xl font-semibold text-white">Your Goals</h2>
           </div>
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
             hasEnoughGoals ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
@@ -371,7 +371,7 @@ export function Step1Location({ state, updateState }: Props) {
         </div>
 
         {!hasEnoughGoals && (
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-slate-400 mb-4">
             Select at least {MIN_GOALS_REQUIRED} goals to continue
           </p>
         )}
@@ -393,10 +393,10 @@ export function Step1Location({ state, updateState }: Props) {
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{goal.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-medium ${isSelected ? 'text-purple-700' : 'text-gray-800'}`}>
+                    <div className={`font-medium ${isSelected ? 'text-purple-700' : 'text-white'}`}>
                       {goal.label}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <div className="text-xs text-slate-400 mt-1 line-clamp-2">
                       {goal.description}
                     </div>
                   </div>
@@ -413,7 +413,7 @@ export function Step1Location({ state, updateState }: Props) {
 
         {/* Progress Bar */}
         <div className="mt-6">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-300 ${
                 hasEnoughGoals ? 'bg-green-500' : 'bg-purple-500'

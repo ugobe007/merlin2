@@ -251,7 +251,7 @@ export default function WizardV6() {
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return (state.zipCode.length === 5 && state.state !== '') && state.goals.length >= 3;
+      case 1: return (state.zipCode.length === 5 && state.state !== '') && state.goals.length >= 2;
       case 2: return state.industry !== '';
       case 3: return true; // Database-driven questions handle their own validation
       case 4: return true; // Step4Options handles its own validation with forced decisions
