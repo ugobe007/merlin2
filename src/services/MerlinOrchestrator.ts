@@ -182,10 +182,10 @@ function validateWizardState(state: WizardState): ValidationResult {
   }
 
   // Goals validation (minimum 3)
-  if (!state.goals || state.goals.length < 3) {
+  if (!state.goals || state.goals.length < 2) {
     errors.push({
       field: 'goals',
-      expected: 'at least 3 goals',
+      expected: 'at least 2 goals',
       received: `${state.goals?.length || 0} goals`,
     });
   }

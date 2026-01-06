@@ -74,7 +74,7 @@ export interface MerlinRequest {
   // ─────────────────────────────────────────────────────────────
   // GOALS (Step 1)
   // ─────────────────────────────────────────────────────────────
-  goals: EnergyGoal[];         // Min 3 required
+  goals: EnergyGoal[];         // Min 2 required
 
   // ─────────────────────────────────────────────────────────────
   // FACILITY (Step 2 + Step 3)
