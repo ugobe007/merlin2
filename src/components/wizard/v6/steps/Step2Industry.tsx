@@ -5,7 +5,7 @@
 import React from 'react';
 import { Check, Sparkles, Building2 } from 'lucide-react';
 import type { WizardState } from '../types';
-import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
+import { MerlinGuide } from '../MerlinGuide';
 import { INDUSTRY_NAMES } from '@/services/googlePlacesService';
 
 // Industry images
@@ -54,11 +54,7 @@ export function Step2Industry({ state, updateState }: Props) {
   return (
     <div className="relative space-y-8 pb-8">
       {/* Merlin Advisor - Fixed Position */}
-      <MerlinGuide message={
-        state.businessName 
-          ? `I found ${state.businessName}! I've pre-selected your industry below. Confirm it's correct or choose a different one.`
-          : MERLIN_MESSAGES.step2
-      } />
+      <MerlinGuide step={2} industry={state.industry} />
       
       {/* Pre-detected Industry Banner */}
       {state.businessName && detectedSlug && (

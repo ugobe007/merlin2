@@ -1,47 +1,166 @@
 /**
  * STEP 5: Magic Fit - Power Level Selection
  * =========================================
- * The Big Reveal: 3 cards with REAL calculations from TrueQuote Engine V2
+ * FINAL DESIGN V5 - Bold headlines, equipment strip, full financials
  * 
- * ✅ SSOT COMPLIANT - January 2026 Refactor (Porsche 911 Architecture)
+ * ✅ SSOT COMPLIANT - January 2026
  * 
- * CRITICAL: ALL calculations come from:
- * - MerlinOrchestrator → TrueQuoteEngineV2 → MagicFit → Validators
- * - NO local calculation functions
- * - NO hardcoded constants
- * 
- * Data Flow:
- * WizardState → mapWizardStateToMerlinRequest() → generateQuote() → Display
+ * Design Features:
+ * - Gradient headlines that POP (STARTER / PERFECT FIT / BEAST MODE)
+ * - Annual Savings as HERO number
+ * - Equipment strip with emoji icons (🔋 ☀️ ⚡ 🔥)
+ * - Full financial summary (Investment, ITC, State, Net Cost)
+ * - ROI metrics (Payback, 10-Year ROI, 25-Year Profit)
  */
 
 import React, { useEffect, useState } from 'react';
-import { Zap, Battery, Sun, Clock, TrendingUp, Star, Check, Loader2, Info, Shield, Home, Fuel, AlertTriangle, PlugZap } from 'lucide-react';
-import type { WizardState, PowerLevel } from '../types';
-import { POWER_LEVELS } from '../types';
+import { Check, Loader2, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { WizardState } from '../types';
 
 // ============================================================================
-// SSOT IMPORTS - Porsche 911 Architecture
+// SSOT IMPORTS
 // ============================================================================
 import { generateQuote, isAuthenticated, isRejected } from '@/services/merlin';
 import type { TrueQuoteAuthenticatedResult, AuthenticatedSystemOption } from '@/services/merlin';
-import { mapWizardStateToMerlinRequest } from '../utils/trueQuoteMapper';
 import { TrueQuoteVerifyBadge } from '../components/TrueQuoteVerifyBadge';
 import { calculateIncentives } from '@/services/stateIncentivesService';
 
 // ============================================================================
-// TYPES
+// TIER DESIGN CONFIG - PART 2 REFINED STYLING
 // ============================================================================
+const TIER_CONFIG = {
+  starter: {
+    name: 'STARTER',
+    tagline: 'Get your feet wet',
+    headlineClass: 'headline-starter',
+    cardBorder: 'border-slate-800',
+    cardBg: 'bg-gradient-to-b from-slate-900 to-slate-950',
+    cardHover: 'card-starter',
+    accentColor: 'text-emerald-400',
+    chipBg: 'bg-slate-800 border-slate-700/50',
+    chipText: 'text-slate-300',
+    buttonClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20',
+    metricBg: 'bg-slate-800/50',
+    savingsGlow: 'savings-glow-starter',
+  },
+  perfectFit: {
+    name: 'PERFECT FIT',
+    tagline: 'Just right for you',
+    headlineClass: 'headline-perfect',
+    cardBorder: 'border-purple-500/30',
+    cardBg: 'bg-gradient-to-b from-purple-950/50 via-slate-900 to-slate-950',
+    cardHover: 'card-perfect',
+    accentColor: 'text-purple-400',
+    chipBg: 'bg-purple-500/10 border-purple-500/30',
+    chipText: 'text-purple-200',
+    buttonClass: 'text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-purple-500/20',
+    metricBg: 'bg-purple-500/10',
+    savingsGlow: 'savings-glow-perfect',
+  },
+  beastMode: {
+    name: 'BEAST MODE',
+    tagline: 'Go all in',
+    headlineClass: 'headline-beast',
+    cardBorder: 'border-slate-800',
+    cardBg: 'bg-gradient-to-b from-slate-900 to-slate-950',
+    cardHover: 'card-beast',
+    accentColor: 'text-orange-400',
+    chipBg: 'bg-slate-800 border-slate-700/50',
+    chipText: 'text-slate-300',
+    buttonClass: 'text-orange-400 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20',
+    metricBg: 'bg-slate-800/50',
+    savingsGlow: 'savings-glow-beast',
+  },
+} as const;
 
-interface DisplayOption {
-  tier: 'starter' | 'perfectFit' | 'beastMode';
-  name: string;
-  tagline: string;
-  emoji: string;
-  color: string;
-  borderColor: string;
-  bgGradient: string;
-  option: AuthenticatedSystemOption;
-}
+// ============================================================================
+// CUSTOM STYLES - PART 2 ENHANCED DESIGN
+// ============================================================================
+const customStyles = `
+  /* Card hover transitions */
+  .card-starter, .card-perfect, .card-beast {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-starter:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 80px -20px rgba(16, 185, 129, 0.3);
+  }
+  
+  .card-perfect:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 80px -20px rgba(168, 85, 247, 0.4);
+  }
+  
+  .card-beast:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.35);
+  }
+  
+  /* STARTER - Fresh green gradient text */
+  .headline-starter {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.4));
+  }
+  
+  /* PERFECT FIT - Royal purple/pink gradient */
+  .headline-perfect {
+    background: linear-gradient(135deg, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 16px rgba(168, 85, 247, 0.5));
+  }
+  
+  /* BEAST MODE - Fire gradient */
+  .headline-beast {
+    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 25%, #f97316 50%, #ea580c 75%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.5));
+  }
+  
+  /* Savings glow effects */
+  .savings-glow-starter {
+    text-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+  }
+  
+  .savings-glow-perfect {
+    text-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+  }
+  
+  .savings-glow-beast {
+    text-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
+  }
+  
+  /* Equipment chip styling */
+  .equipment-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  
+  /* Pulse glow animation for recommended banner */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  
+  .recommended-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+`;
+
+type TierKey = keyof typeof TIER_CONFIG;
 
 // ============================================================================
 // COMPONENT
@@ -54,74 +173,61 @@ interface Props {
 }
 
 export function Step5MagicFit({ state, updateState, goToStep }: Props) {
-  // === STATE ===
   const [quoteResult, setQuoteResult] = useState<TrueQuoteAuthenticatedResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTier, setSelectedTier] = useState<'starter' | 'perfectFit' | 'beastMode' | null>(null);
-  const [stateIncentiveAmount, setStateIncentiveAmount] = useState<number>(0);
-  const [stateIncentivePrograms, setStateIncentivePrograms] = useState<string[]>([]);
+  const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
+  const [stateIncentives, setStateIncentives] = useState<Record<TierKey, number>>({
+    starter: 0,
+    perfectFit: 0,
+    beastMode: 0,
+  });
 
-  // === DEBUG LOGGING ===
-  useEffect(() => {
-    console.log('🔍 === STEP 5 STATE DEBUG ===');
-    console.log('industry:', state.industry);
-    console.log('industryName:', state.industryName);
-    console.log('useCaseData:', state.useCaseData);
-    console.log('selectedOptions:', state.selectedOptions);
-    console.log('goals:', state.goals);
-  }, [state]);
-
-  // === FETCH QUOTE FROM TRUEQUOTE ENGINE V2 ===
+  // === FETCH QUOTE ===
   useEffect(() => {
     async function loadQuote() {
       setIsLoading(true);
       setError(null);
       
       try {
-        console.log('🚀 Step5: Calling MerlinOrchestrator.generateQuote()');
-        
-        // Map wizard state to MerlinRequest format
-        const request = mapWizardStateToMerlinRequest(state);
-        console.log('📋 MerlinRequest:', request);
-        
-        // Call the Porsche 911 architecture
         const result = await generateQuote(state);
         
         if (isRejected(result)) {
-          console.error('❌ Quote rejected:', result.reason);
           setError(result.reason || 'Quote generation failed');
           return;
         }
         
         if (isAuthenticated(result)) {
-          console.log('✅ Quote authenticated:', result.quoteId);
-          console.log('📊 Options:', {
-            starter: result.options.starter.financials,
-            perfectFit: result.options.perfectFit.financials,
-            beastMode: result.options.beastMode.financials,
-          });
           setQuoteResult(result);
           
-          // Load state incentives
-          try {
-            const incentiveResult = await calculateIncentives(
-              state.zipCode,
-              result.options.perfectFit.financials.totalInvestment,
-              result.options.perfectFit.bess.energyKWh,
-              'commercial',
-              result.options.perfectFit.solar.capacityKW > 0,
-              false
-            );
-            setStateIncentiveAmount(incentiveResult.stateIncentives);
-            setStateIncentivePrograms(incentiveResult.statePrograms?.map(p => p.program) || []);
-          } catch (err) {
-            console.warn('Could not load state incentives:', err);
-          }
+          // Load state incentives for each tier
+          const incentivePromises = (['starter', 'perfectFit', 'beastMode'] as const).map(async (tier) => {
+            try {
+              const opt = result.options[tier];
+              const incentiveResult = await calculateIncentives(
+                state.zipCode,
+                opt.financials.totalInvestment,
+                opt.bess.energyKWh,
+                'commercial',
+                opt.solar.capacityKW > 0,
+                false
+              );
+              return { tier, amount: incentiveResult.stateIncentives };
+            } catch {
+              return { tier, amount: 0 };
+            }
+          });
+          
+          const results = await Promise.all(incentivePromises);
+          const incentiveMap = results.reduce((acc, { tier, amount }) => {
+            acc[tier] = amount;
+            return acc;
+          }, {} as Record<TierKey, number>);
+          
+          setStateIncentives(incentiveMap);
         }
       } catch (err) {
-        console.error('❌ Quote error:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Unable to generate quote. Please try again.';
+        const errorMessage = err instanceof Error ? err.message : 'Unable to generate quote.';
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -129,28 +235,15 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     }
     
     loadQuote();
-  }, [
-    state.zipCode, 
-    state.industry, 
-    state.useCaseData, 
-    state.selectedOptions, 
-    state.customSolarKw, 
-    state.customEvL2, 
-    state.customEvDcfc, 
-    state.customEvUltraFast,
-    state.customGeneratorKw,
-    state.generatorFuel,
-    state.goals,
-  ]);
+  }, [state]);
 
-  // === SELECT POWER LEVEL ===
-  const selectPowerLevel = (tier: 'starter' | 'perfectFit' | 'beastMode') => {
+  // === SELECT TIER ===
+  const selectPowerLevel = (tier: TierKey) => {
     if (!quoteResult) return;
     
     const option = quoteResult.options[tier];
     setSelectedTier(tier);
     
-    // Update wizard state with selected calculations
     updateState({
       selectedPowerLevel: tier === 'starter' ? 'starter' : tier === 'perfectFit' ? 'perfect_fit' : 'beast_mode',
       calculations: {
@@ -164,69 +257,35 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
         paybackYears: option.financials.paybackYears,
         tenYearROI: option.financials.tenYearROI,
         federalITC: option.financials.federalITC,
-        federalITCRate: quoteResult.baseCalculation.financials.federalITCRate,
         netInvestment: option.financials.netCost,
         quoteId: quoteResult.quoteId,
-        pricingSources: quoteResult.notes || [],
-        utilityName: quoteResult.baseCalculation.utility.name,
-        utilityRate: quoteResult.baseCalculation.utility.rate,
-        demandCharge: quoteResult.baseCalculation.utility.demandCharge,
-        hasTOU: quoteResult.baseCalculation.utility.hasTOU,
       },
     });
   };
 
-  // === RENDER HELPERS ===
+  // === FORMAT HELPERS ===
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    }
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
     return `$${value.toLocaleString()}`;
   };
 
-  const formatNumber = (value: number) => value.toLocaleString();
-
-  // === BUILD DISPLAY OPTIONS ===
-  const displayOptions: DisplayOption[] = quoteResult ? [
-    {
-      tier: 'starter',
-      name: 'Starter',
-      tagline: 'Essential savings',
-      emoji: '🌱',
-      color: 'text-emerald-600',
-      borderColor: 'border-emerald-200 hover:border-emerald-400',
-      bgGradient: 'from-emerald-50 to-green-50',
-      option: quoteResult.options.starter,
-    },
-    {
-      tier: 'perfectFit',
-      name: 'Perfect Fit',
-      tagline: 'Recommended',
-      emoji: '⭐',
-      color: 'text-purple-600',
-      borderColor: 'border-purple-300 hover:border-purple-500 ring-2 ring-purple-200',
-      bgGradient: 'from-purple-50 to-indigo-50',
-      option: quoteResult.options.perfectFit,
-    },
-    {
-      tier: 'beastMode',
-      name: 'Beast Mode',
-      tagline: 'Maximum power',
-      emoji: '🚀',
-      color: 'text-orange-600',
-      borderColor: 'border-orange-200 hover:border-orange-400',
-      bgGradient: 'from-orange-50 to-amber-50',
-      option: quoteResult.options.beastMode,
-    },
-  ] : [];
+  const formatCompact = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(0)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value}`;
+  };
 
   // === LOADING STATE ===
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
-        <p className="text-gray-600 text-lg">Calculating your perfect energy system...</p>
-        <p className="text-gray-400 text-sm mt-2">TrueQuote Engine V2 is analyzing your facility</p>
+      <div className="flex flex-col items-center justify-center py-24">
+        <div className="relative">
+          <div className="absolute inset-0 blur-2xl bg-purple-500/30 rounded-full animate-pulse" />
+          <Loader2 className="relative w-16 h-16 text-purple-400 animate-spin" />
+        </div>
+        <p className="text-white text-xl font-medium mt-6">Calculating your perfect system...</p>
+        <p className="text-slate-400 text-sm mt-2">TrueQuote Engine is analyzing your facility</p>
       </div>
     );
   }
@@ -234,13 +293,13 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
   // === ERROR STATE ===
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-red-800 mb-2">Unable to Generate Quote</h3>
-        <p className="text-red-600 mb-4">{error}</p>
+      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
+        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-red-300 mb-2">Unable to Generate Quote</h3>
+        <p className="text-red-400/80 mb-6">{error}</p>
         <button
           onClick={() => goToStep(3)}
-          className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          className="px-6 py-3 bg-red-500/20 text-red-300 rounded-xl hover:bg-red-500/30 transition-all border border-red-500/30"
         >
           Go Back to Facility Details
         </button>
@@ -248,183 +307,225 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     );
   }
 
+  if (!quoteResult) return null;
+
   // === MAIN RENDER ===
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Inject custom styles */}
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Choose Your Power Level
-        </h2>
-        <p className="text-gray-600">
-          Select the option that best fits your energy goals for{' '}
-          <span className="font-semibold text-purple-600">{state.industryName || state.industry}</span>
+      <div className="text-center">
+        <p className="text-purple-400 uppercase tracking-[0.3em] text-sm font-medium mb-3">Step 5 of 6</p>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-3" style={{ fontFamily: 'Outfit, sans-serif' }}>
+          Pick Your Power
+        </h1>
+        <p className="text-slate-400 text-lg">
+          Three configurations for{' '}
+          <span className="text-white font-medium">{state.industryName || state.industry}</span>
         </p>
-        {quoteResult && (
-          <div className="mt-3">
-            <TrueQuoteVerifyBadge 
-              quoteId={quoteResult.quoteId}
-              worksheetData={null}
-              variant="compact"
-            />
-          </div>
-        )}
       </div>
 
-      {/* Options Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {displayOptions.map((opt) => {
-          const isSelected = selectedTier === opt.tier;
-          const { option } = opt;
-          
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {(['starter', 'perfectFit', 'beastMode'] as const).map((tier) => {
+          const config = TIER_CONFIG[tier];
+          const option = quoteResult.options[tier];
+          const isSelected = selectedTier === tier;
+          const isPerfectFit = tier === 'perfectFit';
+          const stateIncentive = stateIncentives[tier];
+          const netCost = option.financials.totalInvestment - option.financials.federalITC - stateIncentive;
+          const twentyFiveYearProfit = (option.financials.annualSavings * 25) - netCost;
+
           return (
             <div
-              key={opt.tier}
-              onClick={() => selectPowerLevel(opt.tier)}
+              key={tier}
+              onClick={() => selectPowerLevel(tier)}
               className={`
-                relative cursor-pointer rounded-2xl border-2 p-6 transition-all duration-300
-                bg-gradient-to-br ${opt.bgGradient}
-                ${isSelected ? 'ring-4 ring-purple-400 scale-[1.02]' : opt.borderColor}
-                hover:shadow-lg
+                relative rounded-2xl overflow-hidden cursor-pointer card ${config.cardHover}
+                ${config.cardBg} border ${config.cardBorder}
+                ${isPerfectFit ? 'shadow-[0_0_60px_-15px_rgba(168,85,247,0.4)]' : ''}
+                ${isSelected ? 'ring-2 ring-purple-500' : ''}
               `}
             >
-              {/* Recommended Badge */}
-              {opt.tier === 'perfectFit' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Recommended
-                </div>
+              {/* Recommended Banner (Perfect Fit only) */}
+              {isPerfectFit && (
+                <>
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 recommended-glow" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+                    <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-lg shadow-purple-500/30">
+                      ⭐ RECOMMENDED
+                    </div>
+                  </div>
+                </>
               )}
 
-              {/* Header */}
-              <div className="text-center mb-4">
-                <span className="text-3xl">{opt.emoji}</span>
-                <h3 className={`text-xl font-bold mt-2 ${opt.color}`}>{opt.name}</h3>
-                <p className="text-gray-500 text-sm">{opt.tagline}</p>
-              </div>
-
-              {/* System Specs */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-600">
-                    <Battery className="w-4 h-4" /> BESS
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    {formatNumber(option.bess.powerKW)} kW / {formatNumber(option.bess.energyKWh)} kWh
-                  </span>
+              {/* Top Section */}
+              <div className={`p-5 ${isPerfectFit ? 'pt-9' : ''}`}>
+                {/* HEADLINE */}
+                <div className="text-center mb-4">
+                  <h2 
+                    className={`text-4xl font-black tracking-tight ${config.headlineClass}`}
+                    style={{ fontFamily: 'Outfit, sans-serif' }}
+                  >
+                    {config.name}
+                  </h2>
+                  <p className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? 'text-purple-300/50' : 'text-slate-500'}`}>
+                    {config.tagline}
+                  </p>
                 </div>
-                
-                {option.solar.included && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <Sun className="w-4 h-4" /> Solar
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {formatNumber(option.solar.capacityKW)} kW
-                    </span>
-                  </div>
-                )}
-                
-                {option.generator.included && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <Fuel className="w-4 h-4" /> Generator
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {formatNumber(option.generator.capacityKW)} kW
-                    </span>
-                  </div>
-                )}
-                
-                {option.ev.included && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <PlugZap className="w-4 h-4" /> EV Chargers
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount}
-                    </span>
-                  </div>
-                )}
-              </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-200 my-4" />
+                {/* HERO: Annual Savings */}
+                <div className="text-center py-4">
+                  <p className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? 'text-purple-400/50' : 'text-slate-500'}`}>
+                    Annual Savings
+                  </p>
+                  <p 
+                    className={`text-5xl font-bold ${config.accentColor} ${config.savingsGlow}`}
+                    style={{ fontFamily: 'Outfit, sans-serif' }}
+                  >
+                    {formatCurrency(option.financials.annualSavings).replace('$', '$')}
+                  </p>
+                </div>
 
-              {/* Financials */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total Investment</span>
-                  <span className="font-semibold">{formatCurrency(option.financials.totalInvestment)}</span>
-                </div>
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Federal ITC (30%)</span>
-                  <span>-{formatCurrency(option.financials.federalITC)}</span>
-                </div>
-                {stateIncentiveAmount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>State Incentives</span>
-                    <span>-{formatCurrency(stateIncentiveAmount)}</span>
+                {/* Equipment Strip */}
+                <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+                  {/* BESS - Always shown */}
+                  <div className={`equipment-chip ${config.chipBg}`}>
+                    <span>🔋</span>
+                    <span className={config.chipText}>{Math.round(option.bess.energyKWh / 1000)} MWh</span>
                   </div>
-                )}
-                <div className="flex justify-between text-base font-bold">
-                  <span className="text-gray-800">Net Cost</span>
-                  <span className={opt.color}>{formatCurrency(option.financials.netCost)}</span>
+                  
+                  {/* Solar */}
+                  {option.solar.included && option.solar.capacityKW > 0 && (
+                    <div className={`equipment-chip ${config.chipBg}`}>
+                      <span>☀️</span>
+                      <span className={config.chipText}>{option.solar.capacityKW.toLocaleString()} kW</span>
+                    </div>
+                  )}
+                  
+                  {/* EV Chargers */}
+                  {option.ev.included && (option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount) > 0 && (
+                    <div className={`equipment-chip ${config.chipBg}`}>
+                      <span>⚡</span>
+                      <span className={config.chipText}>{option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount} EV</span>
+                    </div>
+                  )}
+                  
+                  {/* Generator */}
+                  {option.generator.included && option.generator.capacityKW > 0 && (
+                    <div className={`equipment-chip ${config.chipBg}`}>
+                      <span>🔥</span>
+                      <span className={config.chipText}>{option.generator.capacityKW.toLocaleString()} kW</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-200 my-4" />
+              {/* Financial Summary */}
+              <div className={`border-t p-5 ${isPerfectFit ? 'bg-slate-950/60 border-purple-500/20' : 'bg-slate-950/80 border-slate-800'}`}>
+                <p className={`text-[10px] uppercase tracking-widest mb-3 text-center ${isPerfectFit ? 'text-purple-400/50' : 'text-slate-500'}`}>
+                  Financial Summary
+                </p>
 
-              {/* ROI Metrics */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center bg-white/50 rounded-lg p-3">
-                  <div className="text-lg font-bold text-gray-800">
-                    {option.financials.paybackYears.toFixed(1)} yrs
+                <div className="space-y-2 text-sm mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Total Investment</span>
+                    <span className="text-slate-300">{formatCurrency(option.financials.totalInvestment)}</span>
                   </div>
-                  <div className="text-xs text-gray-500">Payback</div>
-                </div>
-                <div className="text-center bg-white/50 rounded-lg p-3">
-                  <div className="text-lg font-bold text-green-600">
-                    {option.financials.tenYearROI.toFixed(0)}%
+                  <div className="flex justify-between">
+                    <span className="text-emerald-500">Federal ITC (30%)</span>
+                    <span className="text-emerald-400">−{formatCurrency(option.financials.federalITC)}</span>
                   </div>
-                  <div className="text-xs text-gray-500">10-Year ROI</div>
+                  {stateIncentive > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-cyan-500">State Incentives</span>
+                      <span className="text-cyan-400">−{formatCurrency(stateIncentive)}</span>
+                    </div>
+                  )}
+                  <div className={`h-px my-2 ${isPerfectFit ? 'bg-purple-500/20' : 'bg-slate-800'}`} />
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-white">Net Cost</span>
+                    <span className={`text-lg ${config.accentColor}`} style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {formatCurrency(netCost)}
+                    </span>
+                  </div>
                 </div>
+
+                {/* ROI Metrics */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className={`text-center p-2 rounded-lg ${config.metricBg}`}>
+                    <p className="text-lg font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {option.financials.paybackYears.toFixed(1)}
+                    </p>
+                    <p className={`text-[10px] uppercase ${isPerfectFit ? 'text-purple-300/50' : 'text-slate-500'}`}>
+                      Payback Yrs
+                    </p>
+                  </div>
+                  <div className={`text-center p-2 rounded-lg ${config.metricBg}`}>
+                    <p className="text-lg font-bold text-emerald-400" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {option.financials.tenYearROI.toFixed(0)}%
+                    </p>
+                    <p className={`text-[10px] uppercase ${isPerfectFit ? 'text-purple-300/50' : 'text-slate-500'}`}>
+                      10-Yr ROI
+                    </p>
+                  </div>
+                  <div className={`text-center p-2 rounded-lg ${config.metricBg}`}>
+                    <p className="text-lg font-bold text-emerald-400" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      {formatCompact(twentyFiveYearProfit)}
+                    </p>
+                    <p className={`text-[10px] uppercase ${isPerfectFit ? 'text-purple-300/50' : 'text-slate-500'}`}>
+                      25-Yr Profit
+                    </p>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  className={`
+                    w-full py-3 rounded-xl font-semibold text-sm border transition-all
+                    flex items-center justify-center gap-2
+                    ${isSelected ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white border-transparent' : config.buttonClass}
+                  `}
+                >
+                  {isSelected ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Selected
+                    </>
+                  ) : (
+                    `Select ${config.name.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}`
+                  )}
+                </button>
               </div>
 
-              {/* Annual Savings */}
-              <div className="mt-4 text-center bg-white/70 rounded-lg p-3">
-                <div className="text-sm text-gray-600">Annual Savings</div>
-                <div className="text-xl font-bold text-green-600">
-                  {formatCurrency(option.financials.annualSavings)}/yr
-                </div>
-              </div>
-
-              {/* Selection Indicator */}
+              {/* Selection indicator glow */}
               {isSelected && (
-                <div className="absolute top-4 right-4 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
+                <div className="absolute inset-0 pointer-events-none rounded-2xl ring-2 ring-purple-500 ring-offset-2 ring-offset-slate-950" />
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Facility Summary */}
-      {quoteResult && (
-        <div className="bg-gray-50 rounded-xl p-4 mt-6">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>
-              <strong>{quoteResult.facility.industryName}</strong> • 
-              Peak Demand: {formatNumber(quoteResult.facility.peakDemandKW)} kW • 
-              Annual Usage: {formatNumber(Math.round(quoteResult.facility.annualConsumptionKWh / 1000))} MWh
-            </span>
-            <span className="text-purple-600 font-medium">
-              Quote ID: {quoteResult.quoteId}
-            </span>
-          </div>
+      {/* Legend */}
+      <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-slate-500">
+          <span className="flex items-center gap-1.5"><span>🔋</span> BESS</span>
+          <span className="flex items-center gap-1.5"><span>☀️</span> Solar</span>
+          <span className="flex items-center gap-1.5"><span>⚡</span> EV Chargers</span>
+          <span className="flex items-center gap-1.5"><span>🔥</span> Generator</span>
         </div>
-      )}
+      </div>
+
+      {/* TrueQuote Badge */}
+      <div className="flex justify-center">
+        <TrueQuoteVerifyBadge 
+          quoteId={quoteResult.quoteId}
+          worksheetData={null}
+          variant="compact"
+        />
+      </div>
     </div>
   );
 }
