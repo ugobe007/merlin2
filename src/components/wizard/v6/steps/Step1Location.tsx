@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check, Search, Building2, Loader2 } from 'lucide-react';
 import type { WizardState, EnergyGoal } from '../types';
-import { MerlinGuide, MERLIN_MESSAGES } from '../MerlinGuide';
+import { MerlinGuide } from '../MerlinGuide';
 
 // SSOT Imports - All location data comes from centralized data files
 import { 
@@ -232,7 +232,7 @@ export function Step1Location({ state, updateState }: Props) {
   return (
     <div className="relative">
       {/* Merlin Advisor - Fixed Position */}
-      <MerlinGuide message={MERLIN_MESSAGES.step1} />
+      <MerlinGuide step={1} state={state.state} />
       
       {/* MERLIN'S LOCATION INSIGHTS PANEL */}
       {locationData && (

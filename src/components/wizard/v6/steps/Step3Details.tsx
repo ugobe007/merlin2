@@ -30,11 +30,10 @@ import {
   ShoppingCart, Calculator, Milk, Apple, Carrot, Cherry, Fish,
   Wheat, Tractor, CloudRain, Cloud, Cylinder, IceCream, Pill,
   Beef, Sprout, Fan, Dice5, Wine, Beer, Music, ChefHat,
-  ConciergeBell, GitBranch, Unplug, ToggleRight, Infinity,
+  ConciergeBell, GitBranch, Unplug, ToggleRight, Infinity as InfinityIcon,
   ArrowUpRight, ArrowLeftRight, ArrowRight
 } from 'lucide-react';
 import type { WizardState } from '../types';
-import { MerlinGuide } from '../MerlinGuide';
 import { supabase } from '@/services/supabaseClient';
 
 // Import Merlin image
@@ -393,7 +392,7 @@ const IconComponents: Record<string, React.ComponentType<{ className?: string }>
   ShoppingCart, Calculator, Milk, Apple, Carrot, Cherry, Fish,
   Wheat, Tractor, CloudRain, Cloud, Cylinder, IceCream, Pill,
   Beef, Sprout, Fan, Dice5, Wine, Beer, Music, ChefHat,
-  ConciergeBell, GitBranch, Unplug, ToggleRight, Infinity,
+  ConciergeBell, GitBranch, Unplug, ToggleRight, Infinity: InfinityIcon,
   ArrowUpRight, ArrowLeftRight, ArrowRight,
 };
 
@@ -404,7 +403,7 @@ function LucideIcon({ name, className = "w-5 h-5" }: { name: string; className?:
   }
   try {
     return <Icon className={className} />;
-  } catch (error) {
+  } catch {
     return <HelpCircle className={className} />;
   }
 }
@@ -480,12 +479,6 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   const min = optionsConfig?.min ?? parseFloat(question.min_value || '0');
   const max = optionsConfig?.max ?? parseFloat(question.max_value || '1000000');
   const step = optionsConfig?.step ?? 1;
-  
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
-    return num.toLocaleString();
-  };
 
   return (
     <div className="flex items-center gap-3">
@@ -523,7 +516,7 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
 // BOOLEAN INPUT COMPONENT
 // ============================================================================
 
-function BooleanInput({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: boolean; onChange: (v: boolean) => void; colorScheme?: ColorScheme }) {
+function BooleanInput({ value, onChange, colorScheme }: { question: CustomQuestion; value: boolean; onChange: (v: boolean) => void; colorScheme?: ColorScheme }) {
   const scheme = colorScheme || COLOR_SCHEMES[0];
   return (
     <div className="flex gap-3">
@@ -697,6 +690,7 @@ function groupQuestionsIntoPairs(questions: CustomQuestion[]): Array<CustomQuest
 // COMPACT QUESTION ITEM COMPONENT (for paired questions)
 // ============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CompactQuestionItem({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: any; onChange: (v: any) => void; colorScheme?: ColorScheme }) {
   const scheme = colorScheme || COLOR_SCHEMES[0];
   const iconName = question.icon_name || 'HelpCircle';
@@ -730,6 +724,7 @@ function CompactQuestionItem({ question, value, onChange, colorScheme }: { quest
 // QUESTION ITEM COMPONENT
 // ============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function QuestionItem({ question, value, onChange, colorScheme, compact }: { question: CustomQuestion; value: any; onChange: (v: any) => void; colorScheme?: ColorScheme; compact?: boolean }) {
   if (compact) {
     return <CompactQuestionItem question={question} value={value} onChange={onChange} colorScheme={colorScheme} />;
@@ -776,7 +771,9 @@ interface ExpandableSectionProps {
   completedCount: number;
   totalRequired: number;
   onToggle: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue: (q: CustomQuestion) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateAnswer: (f: string, v: any) => void;
   sectionRef: (el: HTMLDivElement | null) => void;
 }
@@ -848,7 +845,7 @@ function ExpandableSection({
       {isExpanded && (
         <div className="px-4 pb-4">
           <div className="border-t border-amber-500/30 pt-3">
-            {groupQuestionsIntoPairs(section.questions).map((item, idx) => {
+            {groupQuestionsIntoPairs(section.questions).map((item, _idx) => {
               if (Array.isArray(item)) {
                 // Render paired questions side-by-side
                 const [q1, q2] = item;
@@ -958,6 +955,7 @@ export function Step3Details({ state, updateState }: Props) {
   }, [questions]);
 
   // Update answer - FIXED: Use functional update to prevent race conditions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateAnswer = (fieldName: string, value: any) => {
     updateState(prev => ({
       useCaseData: { ...prev.useCaseData, [fieldName]: value }
