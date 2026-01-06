@@ -19,7 +19,7 @@
 /**
  * TRUEQUOTE™ CALCULATION ENGINE v2.0.0
  * THE SINGLE SOURCE OF TRUTH FOR ALL MERLIN CALCULATIONS
- * @author Noah Energy Solutions
+ * @author Merlin Energy
  * @version 2.0.0
  * @date January 2026
  */
