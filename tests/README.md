@@ -269,4 +269,4 @@ const results = await stagehand.extract({
 
 ## License
 
-Internal use only - Noah Energy / Merlin Platform
+Internal use only - Merlin Energy Platform

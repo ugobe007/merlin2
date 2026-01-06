@@ -5,7 +5,7 @@
  * Multi-year financial analysis for BESS + Solar + Generator investments.
  * Provides year-by-year cash flows, NPV, IRR, and break-even analysis.
  * 
- * @author Noah Energy Solutions
+ * @author Merlin Energy
  * @date January 2026
  * @version 1.0.0
  */

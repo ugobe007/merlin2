@@ -248,5 +248,5 @@ The Merlin platform is now **SSOT-compliant** with:
 
 *Audit completed: December 28, 2025*  
 *Auditor: Claude (Anthropic)*  
-*Platform: Merlin Energy - Noah Energy*
+*Platform: Merlin Energy*
 

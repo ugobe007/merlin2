@@ -10,7 +10,7 @@
  * Run: npx ts-node src/tests/trueQuoteDataFlowTest.ts
  * Or:  npm run test:truequote
  * 
- * @author Noah Energy Solutions
+ * @author Merlin Energy
  * @date January 2026
  */
 

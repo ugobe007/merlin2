@@ -118,7 +118,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
               <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg col-span-2">
                 <Award className="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-2">Noah Energy</h3>
+                  <h3 className="font-bold text-gray-800 mb-2">Merlin Energy</h3>
                   <p className="text-gray-600 text-sm">
                     Energy storage deployment, project development, and market intelligence
                   </p>
