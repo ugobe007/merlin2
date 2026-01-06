@@ -1,20 +1,20 @@
 /**
  * TRUEQUOTE ENGINE V2
  * The Prime Sub Contractor - Calculation SSOT
- * 
+ *
  * RESPONSIBILITIES:
  * 1. Receive MerlinRequest from orchestrator
  * 2. Run all calculators (load, BESS, solar, generator, EV, financials)
  * 3. Delegate to Magic Fit for 3 optimized options
  * 4. Authenticate Magic Fit's proposal
  * 5. Return TrueQuoteAuthenticatedResult
- * 
+ *
  * ARCHITECTURE:
  * - This is a SLIM orchestrator (~200 lines)
  * - All calculations delegated to dedicated calculator modules
  * - All constants from database via calculationConstantsService
  * - Magic Fit is a sub-contractor that must get approval
- * 
+ *
  * Part of TrueQuote Engine (Porsche 911 Architecture)
  * Version: 2.0.0
  */
@@ -24,44 +24,43 @@ import type {
   TrueQuoteBaseCalculation,
   TrueQuoteAuthenticatedResult,
   TrueQuoteRejection,
-} from './contracts';
-import { generateQuoteId, generateVerificationHash, isRejected } from './contracts';
+} from "./contracts";
+import { generateQuoteId, generateVerificationHash } from "./contracts";
 
 // Calculators
-import { calculateLoad } from './calculators/loadCalculator';
-import { calculateBESS } from './calculators/bessCalculator';
-import { calculateSolar, getSunHoursForState, getSolarRating } from './calculators/solarCalculator';
-import { calculateGenerator, isHighRiskWeatherState } from './calculators/generatorCalculator';
-import { calculateEV } from './calculators/evCalculator';
-import { calculateFinancials } from './calculators/financialCalculator';
+import { calculateLoad } from "./calculators/loadCalculator";
+import { calculateBESS } from "./calculators/bessCalculator";
+import { calculateSolar, getSolarRating } from "./calculators/solarCalculator";
+import { calculateGenerator, isHighRiskWeatherState } from "./calculators/generatorCalculator";
+import { calculateEV } from "./calculators/evCalculator";
+import { calculateFinancials } from "./calculators/financialCalculator";
 
 // Magic Fit
-import { generateMagicFitProposal } from './MagicFit';
+import { generateMagicFitProposal, type UserPreferences } from "./MagicFit";
 
 // Validator
-import { authenticateProposal } from './validators/proposalValidator';
+import { authenticateProposal } from "./validators/proposalValidator";
 
 // Constants
-import { DEFAULTS, STATE_SUN_HOURS } from './data/constants';
+import { STATE_SUN_HOURS } from "./data/constants";
 
 // Version
-const ENGINE_VERSION = '2.0.0';
+const ENGINE_VERSION = "2.0.0";
 
 /**
  * Process a quote request from Merlin (the orchestrator)
- * 
+ *
  * This is the main entry point for the new architecture.
  */
 export async function processQuote(
   request: MerlinRequest
 ): Promise<TrueQuoteAuthenticatedResult | TrueQuoteRejection> {
-  
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('🔷 TrueQuote v2: Processing quote request');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('📍 Location:', request.location.state, request.location.zipCode);
-  console.log('🏭 Industry:', request.facility.industry);
-  console.log('🎯 Goals:', request.goals);
+  console.log("═══════════════════════════════════════════════════════");
+  console.log("🔷 TrueQuote v2: Processing quote request");
+  console.log("═══════════════════════════════════════════════════════");
+  console.log("📍 Location:", request.location.state, request.location.zipCode);
+  console.log("🏭 Industry:", request.facility.industry);
+  console.log("🎯 Goals:", request.goals);
 
   // ─────────────────────────────────────────────────────────────
   // STEP 1: Calculate Load
@@ -70,7 +69,7 @@ export async function processQuote(
     industry: request.facility.industry,
     useCaseData: request.facility.useCaseData,
   });
-  console.log('⚡ Load:', loadResult.peakDemandKW, 'kW peak');
+  console.log("⚡ Load:", loadResult.peakDemandKW, "kW peak");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 2: Calculate BESS
@@ -82,7 +81,7 @@ export async function processQuote(
     useCaseData: request.facility.useCaseData,
     goals: request.goals,
   });
-  console.log('🔋 BESS:', bessResult.powerKW, 'kW /', bessResult.energyKWh, 'kWh');
+  console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 3: Calculate Solar
@@ -98,12 +97,17 @@ export async function processQuote(
     userInterested: request.preferences.solar.interested,
     customSizeKw: request.preferences.solar.customSizeKw,
   });
-  console.log('☀️ Solar:', solarResult.capacityKW, 'kW', solarResult.recommended ? '(recommended)' : '');
+  console.log(
+    "☀️ Solar:",
+    solarResult.capacityKW,
+    "kW",
+    solarResult.recommended ? "(recommended)" : ""
+  );
   if (solarResult.isRoofConstrained) {
-    console.log('⚠️ Solar ROOF CONSTRAINED:', {
-      ideal: solarResult.idealCapacityKW + ' kW',
-      maxRoof: solarResult.maxRoofCapacityKW + ' kW',
-      gap: solarResult.solarGapKW + ' kW (consider carport)',
+    console.log("⚠️ Solar ROOF CONSTRAINED:", {
+      ideal: solarResult.idealCapacityKW + " kW",
+      maxRoof: solarResult.maxRoofCapacityKW + " kW",
+      gap: solarResult.solarGapKW + " kW (consider carport)",
     });
   }
 
@@ -120,7 +124,12 @@ export async function processQuote(
     customSizeKw: request.preferences.generator.customSizeKw,
     fuelType: request.preferences.generator.fuelType,
   });
-  console.log('⛽ Generator:', generatorResult.capacityKW, 'kW', generatorResult.recommended ? '(recommended)' : '');
+  console.log(
+    "⛽ Generator:",
+    generatorResult.capacityKW,
+    "kW",
+    generatorResult.recommended ? "(recommended)" : ""
+  );
 
   // ─────────────────────────────────────────────────────────────
   // STEP 5: Calculate EV Charging
@@ -133,7 +142,7 @@ export async function processQuote(
     dcfcCount: request.preferences.ev.dcfcCount,
     ultraFastCount: request.preferences.ev.ultraFastCount,
   });
-  console.log('🔌 EV:', evResult.totalChargers, 'chargers /', evResult.totalPowerKW, 'kW');
+  console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 6: Calculate Financials
@@ -152,7 +161,12 @@ export async function processQuote(
     demandCharge: 15, // TODO: Get from utility service
     state: request.location.state,
   });
-  console.log('💰 Financials: $' + financialResult.netCost.toLocaleString(), 'net cost,', financialResult.simplePaybackYears, 'yr payback');
+  console.log(
+    "💰 Financials: $" + financialResult.netCost.toLocaleString(),
+    "net cost,",
+    financialResult.simplePaybackYears,
+    "yr payback"
+  );
 
   // ─────────────────────────────────────────────────────────────
   // STEP 7: Build Base Calculation
@@ -209,7 +223,7 @@ export async function processQuote(
       estimatedCost: evResult.estimatedCost,
     },
     utility: {
-      name: 'Unknown', // TODO: Get from utility service
+      name: "Unknown", // TODO: Get from utility service
       rate: 0.12,
       demandCharge: 15,
       hasTOU: false,
@@ -219,8 +233,8 @@ export async function processQuote(
       solarRating: getSolarRating(sunHours),
       climateZone: request.location.state,
       isHighRiskWeather: isHighRiskWeatherState(request.location.state),
-      weatherRiskReason: isHighRiskWeatherState(request.location.state) 
-        ? 'Hurricane/severe storm zone' 
+      weatherRiskReason: isHighRiskWeatherState(request.location.state)
+        ? "Hurricane/severe storm zone"
         : undefined,
     },
     financials: {
@@ -241,30 +255,64 @@ export async function processQuote(
   // ─────────────────────────────────────────────────────────────
   // STEP 8: Delegate to Magic Fit
   // ─────────────────────────────────────────────────────────────
-  console.log('');
-  console.log('🪄 Delegating to Magic Fit...');
-  const magicFitProposal = generateMagicFitProposal(baseCalculation, request.goals);
+  console.log("");
+  console.log("🪄 Delegating to Magic Fit...");
+
+  // Build user preferences from request
+  const userPreferences: UserPreferences = {
+    solar: {
+      interested: request.preferences.solar.interested,
+      customSizeKw: request.preferences.solar.customSizeKw,
+    },
+    generator: {
+      interested: request.preferences.generator.interested,
+      customSizeKw: request.preferences.generator.customSizeKw,
+      fuelType: request.preferences.generator.fuelType,
+    },
+    ev: {
+      interested: request.preferences.ev.interested,
+    },
+    hasNaturalGasLine: request.facility.useCaseData?.hasNaturalGasLine || false,
+  };
+
+  console.log("🪄 User preferences:", {
+    solar: userPreferences.solar.interested,
+    generator: userPreferences.generator.interested,
+    ev: userPreferences.ev.interested,
+    hasNaturalGasLine: userPreferences.hasNaturalGasLine,
+  });
+
+  const magicFitProposal = generateMagicFitProposal(
+    baseCalculation,
+    request.goals,
+    userPreferences
+  );
 
   // ─────────────────────────────────────────────────────────────
   // STEP 9: Authenticate Magic Fit's Proposal
   // ─────────────────────────────────────────────────────────────
-  console.log('');
-  console.log('🔐 Authenticating proposal...');
+  console.log("");
+  console.log("🔐 Authenticating proposal...");
   const authResult = authenticateProposal(baseCalculation, magicFitProposal);
 
-  if ('rejected' in authResult && authResult.rejected) {
-    console.error('❌ TrueQuote: Proposal REJECTED');
+  if ("rejected" in authResult && authResult.rejected) {
+    console.error("❌ TrueQuote: Proposal REJECTED");
     return authResult as TrueQuoteRejection;
   }
 
   // Type guard passed - authResult is AuthenticationResult
-  const authenticatedOptions = (authResult as { authenticated: true; options: typeof authResult extends { options: infer O } ? O : never }).options;
+  const authenticatedOptions = (
+    authResult as {
+      authenticated: true;
+      options: typeof authResult extends { options: infer O } ? O : never;
+    }
+  ).options;
 
   // ─────────────────────────────────────────────────────────────
   // STEP 10: Build Authenticated Result
   // ─────────────────────────────────────────────────────────────
   const quoteId = generateQuoteId();
-  
+
   const result: TrueQuoteAuthenticatedResult = {
     verification: {
       verified: true,
@@ -296,22 +344,22 @@ export async function processQuote(
     facility: {
       industry: request.facility.industry,
       industryName: request.facility.industryName,
-      location: `${request.location.city || ''} ${request.location.state}`.trim(),
+      location: `${request.location.city || ""} ${request.location.state}`.trim(),
       peakDemandKW: loadResult.peakDemandKW,
       annualConsumptionKWh: loadResult.annualConsumptionKWh,
     },
     warnings: [],
     notes: [
       `Quote generated by TrueQuote Engine v${ENGINE_VERSION}`,
-      `Magic Fit optimized for: ${request.goals.join(', ')}`,
+      `Magic Fit optimized for: ${request.goals.join(", ")}`,
     ],
   };
 
-  console.log('');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('✅ TrueQuote v2: Quote authenticated!');
-  console.log('📋 Quote ID:', quoteId);
-  console.log('═══════════════════════════════════════════════════════');
+  console.log("");
+  console.log("═══════════════════════════════════════════════════════");
+  console.log("✅ TrueQuote v2: Quote authenticated!");
+  console.log("📋 Quote ID:", quoteId);
+  console.log("═══════════════════════════════════════════════════════");
 
   return result;
 }
@@ -322,6 +370,6 @@ export async function processQuote(
 export function getEngineInfo(): { version: string; status: string } {
   return {
     version: ENGINE_VERSION,
-    status: 'operational',
+    status: "operational",
   };
 }
