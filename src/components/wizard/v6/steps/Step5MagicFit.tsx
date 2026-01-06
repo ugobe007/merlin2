@@ -396,12 +396,30 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                     <span className={config.chipText}>{Math.round(option.bess.energyKWh / 1000)} MWh</span>
                   </div>
                   
-                  {/* Solar */}
+                  {/* Solar - Updated to show roof vs carport */}
                   {option.solar.included && option.solar.capacityKW > 0 && (
-                    <div className={`equipment-chip ${config.chipBg}`}>
-                      <span>☀️</span>
-                      <span className={config.chipText}>{option.solar.capacityKW.toLocaleString()} kW</span>
-                    </div>
+                    <>
+                      {/* Roof Solar */}
+                      <div className={`equipment-chip ${config.chipBg}`}>
+                        <span>☀️</span>
+                        <span className={config.chipText}>
+                          {option.solar.capacityKW.toLocaleString()} kW
+                          {option.solar.isRoofConstrained && !option.solar.includesCarport && (
+                            <span className="text-amber-400 ml-1" title="Limited by roof size">⚠️</span>
+                          )}
+                        </span>
+                      </div>
+                      
+                      {/* Carport Solar (if included) */}
+                      {option.solar.includesCarport && option.solar.carportCapacityKW && option.solar.carportCapacityKW > 0 && (
+                        <div className={`equipment-chip ${config.chipBg} border-amber-500/30`}>
+                          <span>🅿️</span>
+                          <span className={`${config.chipText} text-amber-300`}>
+                            +{option.solar.carportCapacityKW.toLocaleString()} kW
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                   
                   {/* EV Chargers */}
@@ -420,6 +438,15 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                     </div>
                   )}
                 </div>
+
+                {/* Roof Constraint Warning - NEW */}
+                {option.solar.isRoofConstrained && tier === 'starter' && (
+                  <div className="text-center mb-2">
+                    <span className="text-[10px] text-amber-400/70 italic">
+                      ⚠️ Solar limited by roof size ({option.solar.maxRoofCapacityKW} kW max)
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Financial Summary */}
@@ -512,7 +539,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-5 text-xs text-slate-500">
           <span className="flex items-center gap-1.5"><span>🔋</span> BESS</span>
-          <span className="flex items-center gap-1.5"><span>☀️</span> Solar</span>
+          <span className="flex items-center gap-1.5"><span>☀️</span> Roof Solar</span>
+          <span className="flex items-center gap-1.5"><span>🅿️</span> Carport Solar</span>
           <span className="flex items-center gap-1.5"><span>⚡</span> EV Chargers</span>
           <span className="flex items-center gap-1.5"><span>🔥</span> Generator</span>
         </div>

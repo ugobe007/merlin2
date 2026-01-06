@@ -164,10 +164,12 @@ function createOption(
   notes.push(`BESS: ${Math.round(scale * 100)}% of recommended (${bessKWh} kWh)`);
 
   // ─────────────────────────────────────────────────────────────
-  // Solar Sizing
+  // Solar Sizing - RESPECTS ROOF CONSTRAINTS
   // ─────────────────────────────────────────────────────────────
   let solarKW = 0;
+  let carportSolarKW = 0;  // NEW: Additional solar via carport
   let includeSolar = base.solar.recommended;
+  let includeCarport = false;
 
   // Boost solar for sustainability goal
   let solarScale = scale;
@@ -177,11 +179,65 @@ function createOption(
   }
 
   if (includeSolar && base.solar.capacityKW > 0) {
-    solarKW = Math.round(base.solar.capacityKW * solarScale);
-    solarKW = roundToNearest(solarKW, 25);
-    solarKW = Math.max(25, solarKW);
-    notes.push(`Solar: ${solarKW} kW array`);
+    // Calculate desired solar based on scale
+    const desiredSolarKW = Math.round(base.solar.idealCapacityKW * solarScale);
+    
+    // Get max roof capacity (from new fields)
+    const maxRoofKW = base.solar.maxRoofCapacityKW || base.solar.capacityKW;
+    const isRoofConstrained = base.solar.isRoofConstrained || false;
+    
+    // ═══════════════════════════════════════════════════════════
+    // ROOF CONSTRAINT LOGIC
+    // ═══════════════════════════════════════════════════════════
+    if (isRoofConstrained) {
+      // Starter: Just use roof capacity (no carport)
+      if (tier === 'starter') {
+        solarKW = Math.min(desiredSolarKW, maxRoofKW);
+        solarKW = roundToNearest(solarKW, 25);
+        solarKW = Math.max(25, solarKW);
+        notes.push(`Solar: ${solarKW} kW (roof only, constrained)`);
+      }
+      // Perfect Fit: Roof + partial carport if needed
+      else if (tier === 'perfectFit') {
+        solarKW = maxRoofKW;
+        const gap = base.solar.idealCapacityKW - maxRoofKW;
+        if (gap > 0) {
+          // Add carport for 50% of the gap
+          carportSolarKW = roundToNearest(gap * 0.5, 25);
+          includeCarport = carportSolarKW >= 25;
+        }
+        solarKW = roundToNearest(solarKW, 25);
+        if (includeCarport) {
+          notes.push(`Solar: ${solarKW} kW roof + ${carportSolarKW} kW carport`);
+        } else {
+          notes.push(`Solar: ${solarKW} kW (roof max)`);
+        }
+      }
+      // Beast Mode: Roof + full carport to meet ideal
+      else if (tier === 'beastMode') {
+        solarKW = maxRoofKW;
+        const gap = desiredSolarKW - maxRoofKW;
+        if (gap > 0) {
+          carportSolarKW = roundToNearest(gap, 25);
+          includeCarport = carportSolarKW >= 25;
+        }
+        solarKW = roundToNearest(solarKW, 25);
+        if (includeCarport) {
+          notes.push(`Solar: ${solarKW} kW roof + ${carportSolarKW} kW carport (full coverage)`);
+        } else {
+          notes.push(`Solar: ${solarKW} kW (roof max)`);
+        }
+      }
+    } else {
+      // NOT roof constrained - use normal scaling
+      solarKW = roundToNearest(desiredSolarKW, 25);
+      solarKW = Math.max(25, solarKW);
+      notes.push(`Solar: ${solarKW} kW array`);
+    }
   }
+
+  // Total solar (roof + carport)
+  const totalSolarKW = solarKW + carportSolarKW;
 
   // ─────────────────────────────────────────────────────────────
   // Generator Sizing
@@ -236,15 +292,20 @@ function createOption(
   // ─────────────────────────────────────────────────────────────
   // Financial Calculations
   // ─────────────────────────────────────────────────────────────
+  // Calculate solar cost: roof solar + carport (15% premium for carport)
+  const roofSolarCost = solarKW * (base.solar.costPerWatt * 1000);
+  const carportSolarCost = carportSolarKW * (base.solar.costPerWatt * 1000 * 1.15); // 15% premium
+  const totalSolarCost = roofSolarCost + carportSolarCost;
+  
   const financials = calculateFinancials({
     bessCost: bessKWh * base.bess.costPerKwh,
-    solarCost: solarKW * (base.solar.costPerWatt * 1000),
+    solarCost: totalSolarCost,
     generatorCost: generatorKW * 800, // $800/kW average
     evCost: l2Count * 6000 + dcfcCount * 75000 + ultraFastCount * 150000,
     bessKW,
     bessKWh,
-    solarKW,
-    solarAnnualKWh: solarKW * 1500, // Approximate production
+    solarKW: totalSolarKW, // Use total for financial calculations
+    solarAnnualKWh: totalSolarKW * 1500, // Approximate production
     generatorKW,
     electricityRate: base.utility.rate,
     demandCharge: base.utility.demandCharge,
@@ -270,8 +331,17 @@ function createOption(
       chemistry: base.bess.chemistry,
     },
     solar: {
-      included: solarKW > 0,
-      capacityKW: solarKW,
+      included: includeSolar && totalSolarKW > 0,
+      capacityKW: solarKW,                    // Roof solar only
+      carportCapacityKW: carportSolarKW,      // NEW: Carport solar
+      totalCapacityKW: totalSolarKW,          // NEW: Total (roof + carport)
+      type: base.solar.type,
+      annualProductionKWh: Math.round(totalSolarKW * base.solar.annualProductionKWh / Math.max(1, base.solar.capacityKW)),
+      estimatedCost: Math.round(totalSolarCost),
+      // NEW: Roof constraint info for UI
+      isRoofConstrained: base.solar.isRoofConstrained || false,
+      maxRoofCapacityKW: base.solar.maxRoofCapacityKW || solarKW,
+      includesCarport: includeCarport,
     },
     generator: {
       included: generatorKW > 0,
