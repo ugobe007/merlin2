@@ -99,6 +99,13 @@ export async function processQuote(
     customSizeKw: request.preferences.solar.customSizeKw,
   });
   console.log('☀️ Solar:', solarResult.capacityKW, 'kW', solarResult.recommended ? '(recommended)' : '');
+  if (solarResult.isRoofConstrained) {
+    console.log('⚠️ Solar ROOF CONSTRAINED:', {
+      ideal: solarResult.idealCapacityKW + ' kW',
+      maxRoof: solarResult.maxRoofCapacityKW + ' kW',
+      gap: solarResult.solarGapKW + ' kW (consider carport)',
+    });
+  }
 
   // ─────────────────────────────────────────────────────────────
   // STEP 4: Calculate Generator
@@ -176,6 +183,11 @@ export async function processQuote(
       estimatedCost: solarResult.estimatedCost,
       costPerWatt: solarResult.costPerWatt,
       roofAreaSqFt: solarResult.roofAreaSqFt,
+      // NEW: Roof constraint fields (Jan 6, 2026)
+      idealCapacityKW: solarResult.idealCapacityKW,
+      maxRoofCapacityKW: solarResult.maxRoofCapacityKW,
+      solarGapKW: solarResult.solarGapKW,
+      isRoofConstrained: solarResult.isRoofConstrained,
     },
     generator: {
       recommended: generatorResult.recommended,

@@ -159,13 +159,18 @@ export interface TrueQuoteBaseCalculation {
   // ─────────────────────────────────────────────────────────────
   solar: {
     recommended: boolean;
-    capacityKW: number;
+    capacityKW: number;          // Final recommended size (respects roof constraint)
     type: SolarType;
     annualProductionKWh: number;
-    capacityFactor: number;    // 0.15-0.25 typical
+    capacityFactor: number;      // 0.15-0.25 typical
     estimatedCost: number;
     costPerWatt: number;
-    roofAreaSqFt: number;      // Required area
+    roofAreaSqFt: number;        // Required area for capacityKW
+    // NEW: Roof constraint fields (Jan 6, 2026)
+    idealCapacityKW: number;     // What we'd recommend without roof limits
+    maxRoofCapacityKW: number;   // Max that physically fits on roof
+    solarGapKW: number;          // Shortfall: idealCapacityKW - maxRoofCapacityKW
+    isRoofConstrained: boolean;  // True if roof limits the system
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -253,7 +258,16 @@ export interface SystemOption {
   };
   solar: {
     included: boolean;
-    capacityKW: number;
+    capacityKW: number;                    // Roof solar only
+    carportCapacityKW?: number;            // NEW: Carport solar (optional)
+    totalCapacityKW?: number;             // NEW: Total (roof + carport)
+    type?: SolarType;                      // NEW: Panel type
+    annualProductionKWh?: number;          // NEW: Annual production
+    estimatedCost?: number;                // NEW: Cost estimate
+    // NEW: Roof constraint info for UI
+    isRoofConstrained?: boolean;
+    maxRoofCapacityKW?: number;
+    includesCarport?: boolean;
   };
   generator: {
     included: boolean;
