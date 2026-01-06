@@ -29,7 +29,7 @@ export interface LoadCalculationResult {
 
 // Industry-specific watts per unit
 const INDUSTRY_LOAD_FACTORS: Record<string, {
-  method: 'per_unit' | 'per_sqft' | 'fixed';
+  method: 'per_unit' | 'per_sqft' | 'fixed' | 'custom';
   unitName?: string;
   wattsPerUnit?: number;
   wattsPerSqft?: number;
@@ -45,8 +45,7 @@ const INDUSTRY_LOAD_FACTORS: Record<string, {
     profile: 'peaky',
   },
   car_wash: {
-    method: 'per_sqft',
-    wattsPerSqft: 25, // High power density
+    method: 'custom', // Uses equipment-based calculation
     loadFactor: 0.35,
     profile: 'peaky',
   },
@@ -107,6 +106,122 @@ const INDUSTRY_LOAD_FACTORS: Record<string, {
   },
 };
 
+
+/**
+ * Calculate car wash load from equipment (SSOT)
+ * Based on actual equipment power ratings, not generic per-sqft
+ */
+function calculateCarWashLoad(
+  useCaseData: Record<string, any>,
+  breakdown: LoadCalculationResult['breakdown']
+): number {
+  // Equipment power ratings (kW) - from BESS Sizing Questionnaire
+  const EQUIPMENT_KW = {
+    // Tunnel equipment
+    conveyorMotor: 7.5,
+    highPressurePump: 15,
+    boosterPump: 5,
+    
+    // Wash equipment  
+    rotatingBrush: 3,
+    highPressureArch: 5,
+    foamApplicator: 2,
+    triplefoam: 3,
+    wheelBlaster: 5,
+    
+    // Drying
+    blowerMotor: 15, // per blower
+    heatedDryer: 10,
+    
+    // Water heating
+    electricWaterHeater: 36, // per unit
+    gasWaterHeater: 2, // just controls/pumps
+    
+    // Support
+    vacuumStation: 3, // per station
+    airCompressor: 7.5,
+    lighting: 5,
+    reclaimSystem: 15,
+    roSystem: 3,
+    controls: 2,
+  };
+
+  let totalKW = 0;
+
+  // Base tunnel/bay equipment
+  const bayCount = parseInt(useCaseData.bayCount || useCaseData.washBays || '1') || 1;
+  const washType = useCaseData.washType || useCaseData.facilitySubtype || 'tunnel';
+  
+  // Base equipment (always present)
+  totalKW += EQUIPMENT_KW.conveyorMotor;
+  totalKW += EQUIPMENT_KW.highPressurePump;
+  totalKW += EQUIPMENT_KW.boosterPump;
+  totalKW += EQUIPMENT_KW.controls;
+  totalKW += EQUIPMENT_KW.lighting;
+  breakdown.push({ category: 'Base Equipment', kW: totalKW, percentage: 0 });
+
+  // Wash equipment
+  const washKW = 
+    EQUIPMENT_KW.rotatingBrush * 4 + // Typical 4 brushes
+    EQUIPMENT_KW.highPressureArch * 2 +
+    EQUIPMENT_KW.foamApplicator +
+    EQUIPMENT_KW.triplefoam +
+    EQUIPMENT_KW.wheelBlaster;
+  totalKW += washKW;
+  breakdown.push({ category: 'Wash Equipment', kW: washKW, percentage: 0 });
+
+  // Drying - based on blower count
+  const blowerCount = parseInt(useCaseData.blowerCount || useCaseData.dryerCount || '4') || 4;
+  const blowerType = useCaseData.blowerType || useCaseData.dryerType || 'standard';
+  const blowerMultiplier = blowerType === 'premium' || blowerCount >= 6 ? 1.5 : 1;
+  const dryingKW = blowerCount * EQUIPMENT_KW.blowerMotor * blowerMultiplier;
+  totalKW += dryingKW;
+  breakdown.push({ category: 'Drying System', kW: dryingKW, percentage: 0 });
+
+  // Water heating
+  const waterHeaterType = useCaseData.waterHeaterType || useCaseData.heaterType || 'gas';
+  const waterHeaterKW = waterHeaterType === 'electric' ? EQUIPMENT_KW.electricWaterHeater : EQUIPMENT_KW.gasWaterHeater;
+  totalKW += waterHeaterKW;
+  breakdown.push({ category: 'Water Heating', kW: waterHeaterKW, percentage: 0 });
+
+  // Vacuum stations
+  const vacuumCount = parseInt(useCaseData.vacuumStations || useCaseData.vacuumCount || '6') || 6;
+  const vacuumKW = vacuumCount * EQUIPMENT_KW.vacuumStation;
+  totalKW += vacuumKW;
+  breakdown.push({ category: 'Vacuum Stations', kW: vacuumKW, percentage: 0 });
+
+  // Water reclaim (if enabled)
+  const hasReclaim = useCaseData.waterReclaim === 'full' || useCaseData.hasWaterReclaim === 'true' || useCaseData.hasWaterReclaim === true;
+  if (hasReclaim) {
+    totalKW += EQUIPMENT_KW.reclaimSystem + EQUIPMENT_KW.roSystem;
+    breakdown.push({ category: 'Water Reclaim', kW: EQUIPMENT_KW.reclaimSystem + EQUIPMENT_KW.roSystem, percentage: 0 });
+  }
+
+  // Air compressor
+  totalKW += EQUIPMENT_KW.airCompressor;
+  breakdown.push({ category: 'Air Compressor', kW: EQUIPMENT_KW.airCompressor, percentage: 0 });
+
+  // Peak demand factor (not all equipment runs simultaneously)
+  // Car washes typically see 70-80% of connected load at peak
+  const peakFactor = 0.75;
+  const peakDemandKW = Math.round(totalKW * peakFactor);
+
+  console.log('🚗 [loadCalculator] Car Wash Equipment Calculation:', {
+    bayCount,
+    washType,
+    blowerCount,
+    vacuumCount,
+    waterHeaterType,
+    hasReclaim,
+    totalConnectedKW: totalKW,
+    peakFactor,
+    peakDemandKW,
+  });
+
+  // Sanity check: Car wash peak should be 50-200 kW typically
+  return Math.max(50, Math.min(250, peakDemandKW));
+}
+
 /**
  * Calculate facility load based on industry and facility data
  */
@@ -149,6 +264,18 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
     case 'fixed': {
       peakDemandKW = config.baseKW || 500;
       calculationMethod = `Fixed base: ${peakDemandKW} kW`;
+      break;
+    }
+    case 'custom': {
+      // Industry-specific custom calculations
+      if (input.industry === 'car_wash') {
+        peakDemandKW = calculateCarWashLoad(input.useCaseData, breakdown);
+        calculationMethod = 'Equipment-based car wash calculation';
+      } else {
+        // Fallback for other custom industries
+        peakDemandKW = 100;
+        calculationMethod = 'Default custom calculation';
+      }
       break;
     }
   }
