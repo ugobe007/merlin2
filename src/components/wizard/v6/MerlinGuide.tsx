@@ -9,7 +9,7 @@
  */
 import React, { useState } from 'react';
 import { X, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
-import merlinImage from '@/assets/images/new_profile_merlin.png';
+import merlinImage from '@/assets/images/new_small_profile_.png';
 
 interface MerlinGuideProps {
   step: number;
