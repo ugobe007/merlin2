@@ -29,7 +29,7 @@ import { getGeneratorPresetTiers, type GeneratorPresetTier } from '@/services/ca
 import type { SystemCalculations } from '../types';
 
 // Merlin image
-import merlinIcon from '@/assets/images/new_profile_.png';
+import merlinIcon from '@/assets/images/new_profile_merlin.png';
 
 interface Props {
   state: WizardState;

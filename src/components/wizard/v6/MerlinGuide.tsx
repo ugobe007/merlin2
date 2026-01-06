@@ -10,7 +10,7 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import merlinIcon from '@/assets/images/new_profile_.png';
+import merlinIcon from '@/assets/images/new_profile_merlin.png';
 
 interface MerlinGuideProps {
   message: string;

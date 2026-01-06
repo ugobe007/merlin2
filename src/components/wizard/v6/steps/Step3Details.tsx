@@ -5,7 +5,7 @@
  * 1. Better color contrast (amber/orange panels, green selected buttons)
  * 2. Scroll to TOP of panel when clicked
  * 3. Active Merlin prompts to fill questionnaire
- * 4. Merlin uses new_profile_.png icon
+ * 4. Merlin uses new_profile_merlin.png icon
  * 
  * Updated: January 1, 2026
  */
@@ -38,7 +38,7 @@ import { MerlinGuide } from '../MerlinGuide';
 import { supabase } from '@/services/supabaseClient';
 
 // Import Merlin image
-import merlinIcon from '@/assets/images/new_profile_.png';
+import merlinIcon from '@/assets/images/new_profile_merlin.png';
 
 // Industry images for banners
 import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
