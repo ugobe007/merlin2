@@ -1465,7 +1465,7 @@ export function Step3Details({ state, updateState }: Props) {
       {showMerlin && (
         <div 
           className="fixed z-50"
-          style={{ left: '24px', bottom: '100px', maxWidth: '320px' }}
+          style={{ left: '24px', top: '100px', maxWidth: '320px' }}
         >
           <div className="bg-slate-800 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-500/20 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-cyan-600 px-4 py-2 flex items-center justify-between">
