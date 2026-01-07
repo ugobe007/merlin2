@@ -586,7 +586,7 @@ function PillSelect({ question, value, onChange, colorScheme }: PillSelectProps)
 }
 
 // ============================================================================
-// NUMBER INPUT COMPONENT - Option A: Text input with +/- buttons below
+// NUMBER INPUT COMPONENT - Vertical stack: Input on top, buttons below
 // ============================================================================
 
 function NumberInput({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: number; onChange: (v: number) => void; colorScheme?: ColorScheme }) {
@@ -599,9 +599,10 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   const max = optionsConfig?.max ?? parseFloat(question.max_value || '1000000');
   const step = optionsConfig?.step ?? 1;
 
-  // Option A: Text input on top, +/- buttons below (vertical stack)
+  // Vertical stack ONLY: Input on top, buttons below (NO landscape layout)
   return (
-    <div className="flex flex-col gap-2">
+    <div className="w-full flex flex-col">
+      {/* Input field - full width, on top */}
       <input
         type="number"
         min={min}
@@ -612,23 +613,24 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
           const newValue = parseFloat(e.target.value) || min;
           onChange(Math.max(min, Math.min(max, newValue)));
         }}
-        className="w-full px-4 py-3 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 backdrop-blur-md rounded-xl border-2 border-purple-400/40 text-white text-lg font-bold text-center focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/50 shadow-lg shadow-purple-500/20 transition-all hover:border-purple-400/60 hover:shadow-purple-500/30"
+        className="w-full px-3 py-2.5 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 backdrop-blur-md rounded-lg border-2 border-purple-400/40 text-white text-base font-bold text-center focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/50 shadow-lg shadow-purple-500/20 transition-all hover:border-purple-400/60 hover:shadow-purple-500/30"
         placeholder={question.placeholder || '0'}
       />
-      <div className="flex items-center justify-center gap-2">
+      {/* Buttons BELOW input - centered, horizontal row */}
+      <div className="flex items-center justify-center gap-2 mt-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(min, value - step))}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
+          className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
         >
-          <Minus className="w-5 h-5" />
+          <Minus className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => onChange(Math.min(max, value + step))}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
+          className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
         </button>
       </div>
     </div>
