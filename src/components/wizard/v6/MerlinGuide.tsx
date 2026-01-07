@@ -59,7 +59,7 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
     return (
       <button
         onClick={() => setIsHidden(false)}
-        className="fixed bottom-24 left-4 z-40 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform group"
+        className="fixed top-24 left-4 z-40 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform group"
         title="Show Merlin"
       >
         <img 
@@ -88,7 +88,7 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
   // Collapsed state - just show Merlin avatar
   if (isCollapsed) {
     return (
-      <div className="fixed bottom-24 left-4 z-40">
+      <div className="fixed top-24 left-4 z-40">
         <button
           onClick={() => setIsCollapsed(false)}
           className="relative group flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full pr-4 pl-1 py-1 border border-purple-500/30 shadow-xl hover:border-purple-400 transition-all"
@@ -112,7 +112,7 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
 
   // Expanded state - full panel
   return (
-    <div className="fixed bottom-24 left-4 z-40 w-80 max-w-[calc(100vw-2rem)] animate-in slide-in-from-left duration-300">
+    <div className="fixed top-24 left-4 z-40 w-80 max-w-[calc(100vw-2rem)] animate-in slide-in-from-left duration-300">
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-purple-500/30 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 px-4 py-3 flex items-center justify-between border-b border-purple-500/20">
