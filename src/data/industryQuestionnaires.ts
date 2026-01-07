@@ -1112,6 +1112,108 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
     ],
     insights: {},
   },
+
+  "heavy_duty_truck_stop": {
+    title: "Truck Stop / Travel Center Configuration",
+    icon: "🚛",
+    questions: [
+      {
+        id: "mcsChargers",
+        label: "MCS Chargers (1,250 kW each)",
+        type: "number",
+        placeholder: "e.g., 2",
+        suffix: "chargers",
+        description: "Megawatt Charging System for Semi Trucks",
+      },
+      {
+        id: "dcfc350",
+        label: "DC Fast Chargers (350 kW each)",
+        type: "number",
+        placeholder: "e.g., 10",
+        suffix: "chargers",
+        description: "For Class 8 Trucks & RVs",
+      },
+      {
+        id: "level2",
+        label: "Level 2 Chargers (19.2 kW each)",
+        type: "number",
+        placeholder: "e.g., 20",
+        suffix: "chargers",
+        description: "For Passenger Vehicles",
+      },
+      {
+        id: "serviceBays",
+        label: "Service Bays (Speedco)",
+        type: "number",
+        placeholder: "e.g., 6",
+        suffix: "bays",
+        description: "Maintenance facility bays",
+      },
+      {
+        id: "truckWashBays",
+        label: "Truck Wash Bays",
+        type: "number",
+        placeholder: "e.g., 2",
+        suffix: "bays",
+        description: "Truck wash tunnels",
+      },
+      {
+        id: "restaurantSeats",
+        label: "Restaurant Seats",
+        type: "number",
+        placeholder: "e.g., 150",
+        suffix: "seats",
+        description: "Food court / QSR capacity",
+      },
+      {
+        id: "hasShowers",
+        label: "Shower Facilities?",
+        type: "select",
+        options: [
+          { value: "true", label: "Yes" },
+          { value: "false", label: "No" },
+        ],
+      },
+      {
+        id: "hasLaundry",
+        label: "Laundry Facilities?",
+        type: "select",
+        options: [
+          { value: "true", label: "Yes" },
+          { value: "false", label: "No" },
+        ],
+      },
+      {
+        id: "parkingLotAcres",
+        label: "Parking Lot Size",
+        type: "number",
+        placeholder: "e.g., 5",
+        suffix: "acres",
+        description: "For lighting load calculation",
+      },
+      {
+        id: "climateZone",
+        label: "Climate Zone",
+        type: "select",
+        options: [
+          { value: "hot", label: "Hot (AZ, NV, TX, FL)" },
+          { value: "moderate", label: "Moderate (CA, NC, GA)" },
+          { value: "cold", label: "Cold (MN, WI, NY)" },
+        ],
+        description: "Affects HVAC and thermal management loads",
+      },
+    ],
+    insights: {
+      "mcsChargers-dcfc350":
+        "MCS + DCFC chargers can pull 2,500-5,000 kW during peak - BESS sizing critical for demand charge management",
+      "serviceBays-truckWashBays":
+        "Maintenance and wash facilities have high inrush current - size BESS to handle motor starts",
+      "hasShowers-hasLaundry":
+        "Shower and laundry facilities add 130 kW constant load - factor into baseline",
+      "hot":
+        "Hot climate zones require additional thermal management (30 kW) for battery cooling",
+    },
+  },
 };
 
 /**

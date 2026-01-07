@@ -7,6 +7,7 @@
 
 import { TRUEQUOTE_CONSTANTS } from '../data/constants';
 import type { Industry } from '../contracts';
+import { calculateTruckStopLoad } from '../industries/truckStopIndustry';
 
 export interface LoadCalculationInput {
   industry: Industry;
@@ -47,6 +48,11 @@ const INDUSTRY_LOAD_FACTORS: Record<string, {
   car_wash: {
     method: 'custom', // Uses equipment-based calculation
     loadFactor: 0.35,
+    profile: 'peaky',
+  },
+  heavy_duty_truck_stop: {
+    method: 'custom', // Uses calculateTruckStopLoad function
+    loadFactor: 0.65,
     profile: 'peaky',
   },
   data_center: {
@@ -271,6 +277,27 @@ export function calculateLoad(input: LoadCalculationInput): LoadCalculationResul
       if (input.industry === 'car_wash') {
         peakDemandKW = calculateCarWashLoad(input.useCaseData, breakdown);
         calculationMethod = 'Equipment-based car wash calculation';
+      } else if (input.industry === 'heavy_duty_truck_stop') {
+        const truckStopResult = calculateTruckStopLoad({
+          mcsChargers: parseInt(input.useCaseData.mcsChargers || '0') || 0,
+          dcfc350: parseInt(input.useCaseData.dcfc350 || input.useCaseData.dcFastChargers || '0') || 0,
+          level2: parseInt(input.useCaseData.level2 || input.useCaseData.level2Chargers || '0') || 0,
+          serviceBays: parseInt(input.useCaseData.serviceBays || '0') || 0,
+          truckWashBays: parseInt(input.useCaseData.truckWashBays || '0') || 0,
+          restaurantSeats: parseInt(input.useCaseData.restaurantSeats || '0') || 0,
+          hasShowers: input.useCaseData.hasShowers === true || input.useCaseData.hasShowers === 'true',
+          hasLaundry: input.useCaseData.hasLaundry === true || input.useCaseData.hasLaundry === 'true',
+          parkingLotAcres: parseFloat(input.useCaseData.parkingLotAcres || '5') || 5,
+          climateZone: (input.useCaseData.climateZone || 'moderate') as 'hot' | 'moderate' | 'cold',
+        });
+        peakDemandKW = truckStopResult.peakDemandKW;
+        
+        // Convert breakdown to format expected by LoadCalculationResult
+        Object.entries(truckStopResult.breakdown).forEach(([category, kW]) => {
+          breakdown.push({ category, kW, percentage: 0 });
+        });
+        
+        calculationMethod = 'Equipment-based truck stop calculation (travel center curve)';
       } else {
         // Fallback for other custom industries
         peakDemandKW = 100;
