@@ -60,6 +60,7 @@ import apartmentImg from '@/assets/images/office_building2.jpg'; // Using office
 import coldStorageImg from '@/assets/images/logistics_2.jpeg';
 import shoppingCenterImg from '@/assets/images/retail_1.jpg'; // Using retail image
 import governmentImg from '@/assets/images/office_building3.jpg'; // Using office image
+import truckStopImg from '@/assets/images/truck_stop.png';
 
 interface Props {
   state: WizardState;
@@ -127,55 +128,55 @@ interface ColorScheme {
 }
 
 const COLOR_SCHEMES: ColorScheme[] = [
-  // Section 0: Amber Gold (Primary - Premium warm)
+  // Section 0: Purple (Primary - Consistent with app theme)
   {
-    selectedBg: 'bg-amber-500/30',
-    selectedBorder: 'border-amber-400/60',
+    selectedBg: 'bg-purple-600/30',
+    selectedBorder: 'border-purple-500/60',
     selectedText: 'text-white',
-    selectedShadow: 'shadow-amber-500/25',
-    selectedIcon: 'text-amber-100',
-    hoverBorder: 'hover:border-amber-400/40',
-    sectionExpandedBg: 'bg-amber-900/15',
-    sectionExpandedBorder: 'border-amber-500/40',
-    sectionExpandedShadow: 'shadow-amber-500/10',
-    sectionIcon: 'text-amber-400',
-    sectionBadge: 'bg-amber-500/30',
-    sectionBadgeBorder: 'border-amber-400/50',
-    sectionBadgeText: 'text-amber-200',
-    numberButtonBg: 'bg-amber-500/20',
-    numberButtonBorder: 'border-amber-400/40',
-    numberButtonHover: 'hover:bg-amber-500/35',
-    numberSliderAccent: 'accent-amber-500',
-    questionIconBg: 'bg-amber-500/20',
-    questionIconBorder: 'border-amber-400/30',
-    questionIconText: 'text-amber-400',
-    textFocusBorder: 'focus:border-amber-400/60',
-    textFocusRing: 'focus:ring-amber-500/30',
+    selectedShadow: 'shadow-purple-600/25',
+    selectedIcon: 'text-purple-100',
+    hoverBorder: 'hover:border-purple-500/40',
+    sectionExpandedBg: 'bg-purple-950/20',
+    sectionExpandedBorder: 'border-purple-600/40',
+    sectionExpandedShadow: 'shadow-purple-600/10',
+    sectionIcon: 'text-purple-400',
+    sectionBadge: 'bg-purple-600/30',
+    sectionBadgeBorder: 'border-purple-500/50',
+    sectionBadgeText: 'text-purple-200',
+    numberButtonBg: 'bg-purple-600/20',
+    numberButtonBorder: 'border-purple-500/40',
+    numberButtonHover: 'hover:bg-purple-600/35',
+    numberSliderAccent: 'accent-purple-600',
+    questionIconBg: 'bg-purple-600/20',
+    questionIconBorder: 'border-purple-500/30',
+    questionIconText: 'text-purple-400',
+    textFocusBorder: 'focus:border-purple-500/60',
+    textFocusRing: 'focus:ring-purple-600/30',
   },
-  // Section 1: Warm Orange (Energetic)
+  // Section 1: Cyan (Secondary - Consistent with app theme)
   {
-    selectedBg: 'bg-orange-500/30',
-    selectedBorder: 'border-orange-400/60',
+    selectedBg: 'bg-cyan-500/30',
+    selectedBorder: 'border-cyan-400/60',
     selectedText: 'text-white',
-    selectedShadow: 'shadow-orange-500/25',
-    selectedIcon: 'text-orange-100',
-    hoverBorder: 'hover:border-orange-400/40',
-    sectionExpandedBg: 'bg-orange-900/15',
-    sectionExpandedBorder: 'border-orange-500/40',
-    sectionExpandedShadow: 'shadow-orange-500/10',
-    sectionIcon: 'text-orange-400',
-    sectionBadge: 'bg-orange-500/30',
-    sectionBadgeBorder: 'border-orange-400/50',
-    sectionBadgeText: 'text-orange-200',
-    numberButtonBg: 'bg-orange-500/20',
-    numberButtonBorder: 'border-orange-400/40',
-    numberButtonHover: 'hover:bg-orange-500/35',
-    numberSliderAccent: 'accent-orange-500',
-    questionIconBg: 'bg-orange-500/20',
-    questionIconBorder: 'border-orange-400/30',
-    questionIconText: 'text-orange-400',
-    textFocusBorder: 'focus:border-orange-400/60',
-    textFocusRing: 'focus:ring-orange-500/30',
+    selectedShadow: 'shadow-cyan-500/25',
+    selectedIcon: 'text-cyan-100',
+    hoverBorder: 'hover:border-cyan-400/40',
+    sectionExpandedBg: 'bg-cyan-950/20',
+    sectionExpandedBorder: 'border-cyan-500/40',
+    sectionExpandedShadow: 'shadow-cyan-500/10',
+    sectionIcon: 'text-cyan-400',
+    sectionBadge: 'bg-cyan-500/30',
+    sectionBadgeBorder: 'border-cyan-400/50',
+    sectionBadgeText: 'text-cyan-200',
+    numberButtonBg: 'bg-cyan-500/20',
+    numberButtonBorder: 'border-cyan-400/40',
+    numberButtonHover: 'hover:bg-cyan-500/35',
+    numberSliderAccent: 'accent-cyan-500',
+    questionIconBg: 'bg-cyan-500/20',
+    questionIconBorder: 'border-cyan-400/30',
+    questionIconText: 'text-cyan-400',
+    textFocusBorder: 'focus:border-cyan-400/60',
+    textFocusRing: 'focus:ring-cyan-500/30',
   },
   // Section 2: Deep Purple (Accent - Rich)
   {
@@ -316,6 +317,8 @@ const INDUSTRY_IMAGES: Record<string, string> = {
   'gas-station': retailImg,
   'residential': apartmentImg, // Using apartment/office image as fallback
   'microgrid': officeImg, // Using office image as fallback
+  'heavy_duty_truck_stop': truckStopImg,
+  'truck_stop': truckStopImg,
 };
 
 // Industry to use_case_id mapping
@@ -533,15 +536,9 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   const max = optionsConfig?.max ?? parseFloat(question.max_value || '1000000');
   const step = optionsConfig?.step ?? 1;
 
+  // Compact vertical input - no landscape buttons
   return (
-    <div className="flex items-center gap-3">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(min, value - step))}
-        className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-      >
-        <Minus className="w-5 h-5" />
-      </button>
+    <div className="flex flex-col gap-1.5">
       <input
         type="number"
         min={min}
@@ -552,15 +549,25 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
           const newValue = parseFloat(e.target.value) || min;
           onChange(Math.max(min, Math.min(max, newValue)));
         }}
-        className="flex-1 text-center px-4 py-3 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 text-white text-lg font-bold focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/30"
+        className="w-full px-3 py-2 bg-white/5 backdrop-blur-md rounded-lg border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/30"
+        placeholder={question.placeholder || '0'}
       />
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(max, value + step))}
-        className={`w-11 h-11 rounded-xl ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-      >
-        <Plus className="w-5 h-5" />
-      </button>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - step))}
+          className={`flex-1 px-2 py-1 text-xs rounded ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+        >
+          <Minus className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + step))}
+          className={`flex-1 px-2 py-1 text-xs rounded ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -572,29 +579,29 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
 function BooleanInput({ value, onChange, colorScheme }: { question: CustomQuestion; value: boolean; onChange: (v: boolean) => void; colorScheme?: ColorScheme }) {
   const scheme = colorScheme || COLOR_SCHEMES[0];
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2">
       <button
         type="button"
         onClick={() => onChange(true)}
-        className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 backdrop-blur-md
+        className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 backdrop-blur-md
           ${value === true 
             ? `${scheme.selectedBg} border ${scheme.selectedBorder} ${scheme.selectedText} shadow-md ${scheme.selectedShadow}` 
             : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 ' + scheme.hoverBorder
           }`}
       >
-        <Check className="w-4 h-4" />
+        <Check className="w-3.5 h-3.5" />
         Yes
       </button>
       <button
         type="button"
         onClick={() => onChange(false)}
-        className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 backdrop-blur-md
+        className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 backdrop-blur-md
           ${value === false 
             ? 'bg-slate-500/30 border border-slate-400/50 text-white shadow-md' 
             : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:border-purple-400/30'
           }`}
       >
-        <X className="w-4 h-4" />
+        <X className="w-3.5 h-3.5" />
         No
       </button>
     </div>
@@ -787,13 +794,13 @@ function QuestionItem({ question, value, onChange, colorScheme, compact }: { que
   const iconName = question.icon_name || 'HelpCircle';
   
   return (
-    <div className="py-4 border-b border-amber-500/20 last:border-b-0">
-      <div className="flex items-start gap-3 mb-3">
-        <div className={`w-9 h-9 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
-          <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
+    <div className="py-2.5 border-b border-white/5 last:border-b-0">
+      <div className="flex items-start gap-2.5 mb-2">
+        <div className={`w-7 h-7 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+          <LucideIcon name={iconName} className={`w-3.5 h-3.5 ${scheme.questionIconText}`} />
         </div>
         <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm">
+          <h4 className="text-white font-medium text-sm">
             {question.question_text}
             {question.is_required && <span className="text-pink-400 ml-1">*</span>}
           </h4>
@@ -803,7 +810,7 @@ function QuestionItem({ question, value, onChange, colorScheme, compact }: { que
         </div>
       </div>
       
-      <div className="ml-12">
+      <div className="ml-9.5">
         {question.question_type === 'select' && <PillSelect question={question} value={value || ''} onChange={onChange} colorScheme={scheme} />}
         {question.question_type === 'number' && <NumberInput question={question} value={value || 0} onChange={onChange} colorScheme={scheme} />}
         {question.question_type === 'boolean' && <BooleanInput question={question} value={value} onChange={onChange} colorScheme={scheme} />}
@@ -897,13 +904,13 @@ function ExpandableSection({
       {/* Content */}
       {isExpanded && (
         <div className="px-4 pb-4">
-          <div className="border-t border-amber-500/30 pt-3">
+          <div className="border-t border-white/10 pt-3">
             {groupQuestionsIntoPairs(section.questions).map((item, _idx) => {
               if (Array.isArray(item)) {
                 // Render paired questions side-by-side
                 const [q1, q2] = item;
                 return (
-                  <div key={`pair-${q1.id}-${q2.id}`} className="py-4 border-b border-amber-500/20 last:border-b-0">
+                  <div key={`pair-${q1.id}-${q2.id}`} className="py-2.5 border-b border-white/5 last:border-b-0">
                     <div className="grid grid-cols-2 gap-4">
                       <CompactQuestionItem
                         question={q1}
@@ -1210,8 +1217,8 @@ export function Step3Details({ state, updateState }: Props) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="w-12 h-12 text-amber-500 animate-spin mb-4" />
-        <p className="text-amber-300 text-lg">Loading {industryLabel} questions...</p>
+        <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+        <p className="text-purple-300 text-lg">Loading {industryLabel} questions...</p>
       </div>
     );
   }
@@ -1232,9 +1239,9 @@ export function Step3Details({ state, updateState }: Props) {
   // No questions
   if (questions.length === 0) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-amber-500/20 border border-amber-500/50 rounded-xl text-center">
-        <Building2 className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-        <p className="text-amber-300 font-medium">No specific questions for {industryLabel}. Click Continue to proceed.</p>
+      <div className="max-w-md mx-auto p-6 bg-purple-500/20 border border-purple-500/50 rounded-xl text-center">
+        <Building2 className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+        <p className="text-purple-300 font-medium">No specific questions for {industryLabel}. Click Continue to proceed.</p>
       </div>
     );
   }
@@ -1243,21 +1250,21 @@ export function Step3Details({ state, updateState }: Props) {
     <div className="relative pb-8">
       {/* Personalized Greeting when business is known */}
       {state.businessName && (
-        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50">
+        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg flex-shrink-0">
               <span className="text-2xl">🧙</span>
             </div>
             <div className="flex-1">
               <p className="text-white text-lg">
-                <span className="font-bold text-amber-300">{state.businessName}</span>, let&apos;s configure your energy system!
+                <span className="font-bold text-purple-300">{state.businessName}</span>, let&apos;s configure your energy system!
               </p>
               <p className="text-slate-300 text-sm">
                 Fill in the details below and I&apos;ll build the perfect solution for your business.
               </p>
             </div>
             {state.businessPhotoUrl && (
-              <img src={state.businessPhotoUrl} alt={state.businessName} className="w-16 h-16 rounded-lg object-cover border-2 border-amber-500/50 flex-shrink-0" />
+              <img src={state.businessPhotoUrl} alt={state.businessName} className="w-16 h-16 rounded-lg object-cover border-2 border-purple-500/50 flex-shrink-0" />
             )}
           </div>
         </div>
@@ -1271,18 +1278,18 @@ export function Step3Details({ state, updateState }: Props) {
           className="fixed z-50"
           style={{ left: '24px', bottom: '100px', maxWidth: '320px' }}
         >
-          <div className="bg-slate-800 border border-amber-500/50 rounded-2xl shadow-2xl shadow-amber-500/20 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 flex items-center justify-between">
+          <div className="bg-slate-800 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-500/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-cyan-600 px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-white font-bold">Merlin</span>
-                <span className="text-amber-100 text-sm">Energy Advisor</span>
+                <span className="text-purple-100 text-sm">Energy Advisor</span>
               </div>
               <button onClick={() => setShowMerlin(false)} className="text-white/80 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-4 flex gap-3">
-              <img src={merlinIcon} alt="Merlin" className="w-14 h-14 rounded-full border-2 border-amber-500 flex-shrink-0" />
+              <img src={merlinIcon} alt="Merlin" className="w-14 h-14 rounded-full border-2 border-purple-500 flex-shrink-0" />
               <div>
                 <p className="text-white text-sm leading-relaxed">{getMerlinMessage()}</p>
               </div>
@@ -1449,7 +1456,7 @@ export function Step3Details({ state, updateState }: Props) {
       {/* ================================================================== */}
       {/* MAIN CONTENT */}
       {/* ================================================================== */}
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-3">
         {/* Header */}
         <div className="text-center space-y-4">
           <div>
@@ -1495,7 +1502,7 @@ export function Step3Details({ state, updateState }: Props) {
           <div className="max-w-md mx-auto">
             <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-purple-600 to-cyan-600 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -1503,7 +1510,7 @@ export function Step3Details({ state, updateState }: Props) {
         </div>
 
         {/* Sections */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           {sections.map((section, index) => {
             const { total, completed } = getSectionCompletion(section.questions);
             return (
