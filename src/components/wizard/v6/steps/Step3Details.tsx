@@ -586,7 +586,7 @@ function PillSelect({ question, value, onChange, colorScheme }: PillSelectProps)
 }
 
 // ============================================================================
-// NUMBER INPUT COMPONENT - Slider for ranges, text input for precise values
+// NUMBER INPUT COMPONENT - Option A: Text input with +/- buttons below
 // ============================================================================
 
 function NumberInput({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: number; onChange: (v: number) => void; colorScheme?: ColorScheme }) {
@@ -599,55 +599,9 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   const max = optionsConfig?.max ?? parseFloat(question.max_value || '1000000');
   const step = optionsConfig?.step ?? 1;
 
-  // Use slider for ranges (e.g., room count 50-500), text input for precise values
-  const useSlider = (max - min) <= 1000 && (max - min) > 10;
-
-  if (useSlider) {
-    // Slider with range display
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-white">{value.toLocaleString()}</span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onChange(Math.max(min, value - step))}
-              className={`w-8 h-8 rounded-lg ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange(Math.min(max, value + step))}
-              className={`w-8 h-8 rounded-lg ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
-          style={{
-            background: `linear-gradient(to right, rgb(147, 51, 234) 0%, rgb(147, 51, 234) ${((value - min) / (max - min)) * 100}%, rgb(51, 65, 85) ${((value - min) / (max - min)) * 100}%, rgb(51, 65, 85) 100%)`
-          }}
-        />
-        <div className="flex justify-between text-xs text-slate-400">
-          <span>{min.toLocaleString()}</span>
-          <span>{max.toLocaleString()}</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Text input for precise values (no slider)
+  // Option A: Text input on top, +/- buttons below (vertical stack)
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <input
         type="number"
         min={min}
@@ -658,23 +612,23 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
           const newValue = parseFloat(e.target.value) || min;
           onChange(Math.max(min, Math.min(max, newValue)));
         }}
-        className="w-full px-3 py-2 bg-white/5 backdrop-blur-md rounded-lg border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/30"
+        className="w-full px-4 py-3 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 backdrop-blur-md rounded-xl border-2 border-purple-400/40 text-white text-lg font-bold text-center focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/50 shadow-lg shadow-purple-500/20 transition-all hover:border-purple-400/60 hover:shadow-purple-500/30"
         placeholder={question.placeholder || '0'}
       />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-center gap-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(min, value - step))}
-          className={`flex-1 px-2 py-1 text-xs rounded ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
         >
-          <Minus className="w-3 h-3" />
+          <Minus className="w-5 h-5" />
         </button>
         <button
           type="button"
           onClick={() => onChange(Math.min(max, value + step))}
-          className={`flex-1 px-2 py-1 text-xs rounded ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 border-2 border-purple-400/60 text-white flex items-center justify-center transition-all hover:from-purple-400 hover:to-cyan-400 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
         >
-          <Plus className="w-3 h-3" />
+          <Plus className="w-5 h-5" />
         </button>
       </div>
     </div>
@@ -781,7 +735,7 @@ function TextInput({ question, value, onChange, colorScheme }: { question: Custo
 // QUESTION PAIRING CONFIGURATION
 // ============================================================================
 
-// Define pairs of questions that should be rendered side-by-side
+// Define pairs/groups of questions that should be rendered side-by-side
 // Matches by field_name or question_text keywords (case-insensitive)
 const QUESTION_PAIRS: Array<[string | RegExp, string | RegExp]> = [
   // Car wash: Number of Bays/Tunnels with Tunnel Length
@@ -792,6 +746,16 @@ const QUESTION_PAIRS: Array<[string | RegExp, string | RegExp]> = [
   [/vacuum.*station/i, /(?:high.*pressure|pressure).*pump/i],
   [/number.*vacuum/i, /(?:number.*pump|high.*pressure.*pump)/i],
   [/vacuum/i, /(?:high.*pressure|pressure).*pump/i],
+  // Truck stop: Chargers (MCS, DCFC, Level 2)
+  [/mcs.*charger/i, /dc.*fast.*charger/i],
+  [/mcs.*charger/i, /level.*2.*charger/i],
+  [/dc.*fast.*charger/i, /level.*2.*charger/i],
+];
+
+// Define groups of 3+ questions that should be rendered on the same row
+const QUESTION_GROUPS: Array<string[]> = [
+  // Truck stop chargers: MCS, DCFC, Level 2
+  ['mcsChargers', 'dcfc350', 'level2'],
 ];
 
 // Check if two questions should be paired
@@ -1349,6 +1313,51 @@ export function Step3Details({ state, updateState }: Props) {
     });
   }, [questions, state.industry, state.useCaseData]);
 
+  // Group questions for row layout
+  const groupedQuestions = useMemo(() => {
+    const result: Array<CustomQuestion | CustomQuestion[]> = [];
+    const used = new Set<number>();
+    const questionMap = new Map(visibleQuestions.map((q, idx) => [q.field_name, { q, idx }]));
+    
+    // First, handle QUESTION_GROUPS (3+ questions on same row)
+    for (const group of QUESTION_GROUPS) {
+      const groupQuestions = group
+        .map(fieldName => questionMap.get(fieldName))
+        .filter(Boolean) as Array<{ q: CustomQuestion; idx: number }>;
+      
+      if (groupQuestions.length >= 2) {
+        result.push(groupQuestions.map(item => item.q));
+        groupQuestions.forEach(item => used.add(item.idx));
+      }
+    }
+    
+    // Then, handle pairs
+    for (let i = 0; i < visibleQuestions.length; i++) {
+      if (used.has(i)) continue;
+      
+      if (visibleQuestions[i].question_type === 'number') {
+        for (let j = i + 1; j < visibleQuestions.length; j++) {
+          if (used.has(j)) continue;
+          if (visibleQuestions[j].question_type === 'number' && shouldPairQuestions(visibleQuestions[i], visibleQuestions[j])) {
+            result.push([visibleQuestions[i], visibleQuestions[j]]);
+            used.add(i);
+            used.add(j);
+            break;
+          }
+        }
+        if (!used.has(i)) {
+          result.push(visibleQuestions[i]);
+          used.add(i);
+        }
+      } else {
+        result.push(visibleQuestions[i]);
+        used.add(i);
+      }
+    }
+    
+    return result;
+  }, [visibleQuestions]);
+
   // Build contextual header message
   const contextualHeader = useMemo(() => {
     const parts: string[] = [];
@@ -1504,88 +1513,144 @@ export function Step3Details({ state, updateState }: Props) {
 
         {/* All Questions in Clean List */}
         <div className="space-y-3 mb-8">
-          {visibleQuestions.map((q, idx) => {
-            const scheme = getColorScheme(idx);
-            const current = getValue(q);
-            const def = defaultValueMap[q.field_name];
-            const isChanged = def !== undefined && current !== def;
-            const iconName = q.icon_name || 'HelpCircle';
+          {groupedQuestions.map((item, groupIdx) => {
+            const isGroup = Array.isArray(item);
+            const questionsToRender = isGroup ? item : [item];
             
-            return (
-              <div
-                key={q.id || q.field_name}
-                className={`rounded-xl border backdrop-blur-md p-4 transition-all ${
-                  isChanged
-                    ? 'bg-emerald-500/10 border-emerald-400/40 shadow-lg shadow-emerald-500/10'
-                    : 'bg-white/5 border-white/10 hover:bg-white/7 hover:border-purple-500/30'
-                }`}
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`w-8 h-8 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
-                    <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-white font-medium text-sm">
-                        {q.question_text}
-                        {q.is_required && <span className="text-pink-400 ml-1">*</span>}
-                      </h4>
-                      {isChanged && (
-                        <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
-                          Updated
+            // If it's a group of number inputs, render them side-by-side
+            if (isGroup && questionsToRender.every(q => q.question_type === 'number')) {
+              return (
+                <div
+                  key={`group-${questionsToRender.map(q => q.field_name).join('-')}`}
+                  className="rounded-xl border backdrop-blur-md p-4 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-400/30 hover:border-purple-400/50 transition-all"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {questionsToRender.map((q, qIdx) => {
+                      const scheme = getColorScheme(groupIdx + qIdx);
+                      const current = getValue(q);
+                      const def = defaultValueMap[q.field_name];
+                      const isChanged = def !== undefined && current !== def;
+                      const iconName = q.icon_name || 'HelpCircle';
+                      
+                      return (
+                        <div key={q.id || q.field_name} className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-6 h-6 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+                              <LucideIcon name={iconName} className={`w-3 h-3 ${scheme.questionIconText}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-medium text-xs">
+                                {q.question_text}
+                                {q.is_required && <span className="text-pink-400 ml-1">*</span>}
+                              </h4>
+                            </div>
+                            {isChanged && (
+                              <div className="text-[9px] px-1 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
+                                ✓
+                              </div>
+                            )}
+                          </div>
+                          {q.help_text && (
+                            <p className="text-[10px] text-slate-400 mb-2">{q.help_text}</p>
+                          )}
+                          <NumberInput
+                            question={q}
+                            value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
+                            onChange={(val) => updateAnswer(q.field_name, val)}
+                            colorScheme={scheme}
+                          />
                         </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+            
+            // Single question or non-number group - render normally
+            return questionsToRender.map((q, qIdx) => {
+              const scheme = getColorScheme(groupIdx + qIdx);
+              const current = getValue(q);
+              const def = defaultValueMap[q.field_name];
+              const isChanged = def !== undefined && current !== def;
+              const iconName = q.icon_name || 'HelpCircle';
+              
+              return (
+                <div
+                  key={q.id || q.field_name}
+                  className={`rounded-xl border backdrop-blur-md p-4 transition-all ${
+                    isChanged
+                      ? 'bg-emerald-500/10 border-emerald-400/40 shadow-lg shadow-emerald-500/10'
+                      : 'bg-white/5 border-white/10 hover:bg-white/7 hover:border-purple-500/30'
+                  }`}
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className={`w-8 h-8 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+                      <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-white font-medium text-sm">
+                          {q.question_text}
+                          {q.is_required && <span className="text-pink-400 ml-1">*</span>}
+                        </h4>
+                        {isChanged && (
+                          <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
+                            Updated
+                          </div>
+                        )}
+                      </div>
+                      {q.help_text && (
+                        <p className="text-xs text-slate-400 mt-0.5">{q.help_text}</p>
                       )}
                     </div>
-                    {q.help_text && (
-                      <p className="text-xs text-slate-400 mt-0.5">{q.help_text}</p>
+                  </div>
+
+                  <div className="ml-11">
+                    {q.question_type === 'select' && (
+                      <PillSelect
+                        question={q}
+                        value={String(current || '')}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'number' && (
+                      <NumberInput
+                        question={q}
+                        value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'boolean' && (
+                      <BooleanInput
+                        question={q}
+                        value={Boolean(current)}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'multiselect' && (
+                      <MultiselectInput
+                        question={q}
+                        value={Array.isArray(current) ? current : []}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'text' && (
+                      <TextInput
+                        question={q}
+                        value={String(current || '')}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
                     )}
                   </div>
                 </div>
-
-                <div className="ml-11">
-                  {q.question_type === 'select' && (
-                    <PillSelect
-                      question={q}
-                      value={String(current || '')}
-                      onChange={(val) => updateAnswer(q.field_name, val)}
-                      colorScheme={scheme}
-                    />
-                  )}
-                  {q.question_type === 'number' && (
-                    <NumberInput
-                      question={q}
-                      value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
-                      onChange={(val) => updateAnswer(q.field_name, val)}
-                      colorScheme={scheme}
-                    />
-                  )}
-                  {q.question_type === 'boolean' && (
-                    <BooleanInput
-                      question={q}
-                      value={Boolean(current)}
-                      onChange={(val) => updateAnswer(q.field_name, val)}
-                      colorScheme={scheme}
-                    />
-                  )}
-                  {q.question_type === 'multiselect' && (
-                    <MultiselectInput
-                      question={q}
-                      value={Array.isArray(current) ? current : []}
-                      onChange={(val) => updateAnswer(q.field_name, val)}
-                      colorScheme={scheme}
-                    />
-                  )}
-                  {q.question_type === 'text' && (
-                    <TextInput
-                      question={q}
-                      value={String(current || '')}
-                      onChange={(val) => updateAnswer(q.field_name, val)}
-                      colorScheme={scheme}
-                    />
-                  )}
-                </div>
-              </div>
-            );
+              );
+            });
           })}
         </div>
 
