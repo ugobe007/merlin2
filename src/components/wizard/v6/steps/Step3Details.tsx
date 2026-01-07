@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import type { WizardState } from '../types';
 import { supabase } from '@/services/supabaseClient';
+import { industryQuestionnaires } from '@/data/industryQuestionnaires';
 
 // Import Merlin image
 import merlinIcon from '@/assets/images/new_profile_merlin.png';
@@ -349,6 +350,58 @@ const INDUSTRY_TO_USE_CASE: Record<string, string> = {
   'cold_storage': '757f3665-dade-42a3-848b-21392b4343b5',
   'cold-storage': '757f3665-dade-42a3-848b-21392b4343b5',
   'residential': '24ebfd00-562d-47e8-803b-278281f2e807',
+};
+
+function normalizeIndustryToUseCaseSlug(industry: string | null | undefined): string | null {
+  if (!industry) return null;
+  // Prefer DB slugs (kebab-case) where they exist; keep a minimal alias map
+  // for older snake_case variants.
+  const aliases: Record<string, string> = {
+    car_wash: 'car-wash',
+    ev_charging: 'ev-charging',
+    data_center: 'data-center',
+    indoor_farm: 'indoor-farm',
+    shopping_center: 'shopping-center',
+    gas_station: 'gas-station',
+    cold_storage: 'cold-storage',
+    agriculture: 'agricultural',
+  };
+  return aliases[industry] || industry;
+}
+
+function getSmartDefaultsForIndustry(state: WizardState): Record<string, unknown> {
+  const defaults: Record<string, unknown> = {};
+
+  if (state.industry === 'heavy_duty_truck_stop') {
+    // Coarse climate heuristic; user can override.
+    const hotStates = new Set(['AZ', 'NV', 'TX', 'FL']);
+    const coldStates = new Set(['MN', 'WI', 'NY']);
+    if (state.state) {
+      defaults.climateZone = hotStates.has(state.state)
+        ? 'hot'
+        : coldStates.has(state.state)
+          ? 'cold'
+          : 'moderate';
+    }
+
+    // Almost always 24/7 for travel centers.
+    defaults.operatingHours = '24_7';
+  }
+
+  return defaults;
+}
+
+const QUICK_REVIEW_FIELDS_BY_INDUSTRY: Record<string, string[]> = {
+  heavy_duty_truck_stop: [
+    'mcsChargers',
+    'dcfc350',
+    'serviceBays',
+    'climateZone',
+    'gridCapacityKW',
+    'monthlyElectricBill',
+    'monthlyDemandCharges',
+    'backupRequirements',
+  ],
 };
 
 // Section icon mapping
@@ -897,16 +950,54 @@ export function Step3Details({ state, updateState }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<number>(0);
   const [showMerlin, setShowMerlin] = useState(true);
+  const [resolvedUseCaseId, setResolvedUseCaseId] = useState<string | null>(null);
   
   // Refs for each section to scroll to
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const useCaseId = INDUSTRY_TO_USE_CASE[state.industry] || null;
+  const useCaseSlug = useMemo(() => normalizeIndustryToUseCaseSlug(state.industry), [state.industry]);
+
+  const buildFallbackQuestions = (): CustomQuestion[] => {
+    const questionnaire = industryQuestionnaires[state.industry];
+    if (!questionnaire) return [];
+
+    const fallbackSection = questionnaire.title || 'Facility Details';
+    return questionnaire.questions.map((q, idx) => {
+      const opts = Array.isArray(q.options)
+        ? q.options.map((opt: any) => {
+            if (typeof opt === 'string') return { label: opt, value: opt };
+            return { label: opt.label, value: opt.value, description: opt.description };
+          })
+        : null;
+
+      // Normalize types (industryQuestionnaires supports multi-select variants)
+      const type = (q.type === 'multi-select' || q.type === 'multiselect') ? 'multiselect' : q.type;
+
+      return {
+        id: q.id,
+        use_case_id: 'fallback',
+        question_text: q.label || q.question || q.id,
+        question_type: type as any,
+        field_name: q.id,
+        options: opts,
+        is_required: true,
+        min_value: null,
+        max_value: null,
+        default_value: null,
+        display_order: idx + 1,
+        help_text: q.helpText || null,
+        placeholder: q.placeholder || null,
+        is_advanced: false,
+        section_name: fallbackSection,
+        icon_name: null,
+      };
+    });
+  };
 
   // Fetch questions
   useEffect(() => {
     async function fetchQuestions() {
-      if (!useCaseId) {
+      if (!state.industry) {
         setQuestions([]);
         setLoading(false);
         return;
@@ -916,6 +1007,36 @@ export function Step3Details({ state, updateState }: Props) {
         setLoading(true);
         setError(null);
 
+        let useCaseId: string | null = null;
+
+        // 1) Preferred path: resolve use case by slug (no hard-coded UUIDs)
+        if (useCaseSlug) {
+          const { data: useCaseRow, error: useCaseErr } = await supabase
+            .from('use_cases')
+            .select('id')
+            .eq('slug', useCaseSlug)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (!useCaseErr && useCaseRow?.id) {
+            useCaseId = useCaseRow.id;
+          }
+        }
+
+        // 2) Fallback path: legacy UUID mapping
+        if (!useCaseId) {
+          useCaseId = INDUSTRY_TO_USE_CASE[state.industry] || null;
+        }
+
+        setResolvedUseCaseId(useCaseId);
+
+        if (!useCaseId) {
+          const fallback = buildFallbackQuestions();
+          setQuestions(fallback);
+          setExpandedSection(0);
+          return;
+        }
+
         const { data, error: fetchError } = await supabase
           .from('custom_questions')
           .select('*')
@@ -924,19 +1045,56 @@ export function Step3Details({ state, updateState }: Props) {
 
         if (fetchError) throw fetchError;
 
-        setQuestions(data || []);
+        const dbQuestions = data || [];
+        if (dbQuestions.length === 0) {
+          // DB missing questions for this use case → fallback to code-based questionnaire.
+          const fallback = buildFallbackQuestions();
+          setQuestions(fallback);
+        } else {
+          setQuestions(dbQuestions);
+        }
         setExpandedSection(0);
-        console.log("[Step3] Loaded questions:", data?.length, "for industry:", state.industry);
+        console.log("[Step3] Loaded questions:", dbQuestions.length, "for industry:", state.industry, "use_case_slug:", useCaseSlug, "use_case_id:", useCaseId);
       } catch (err) {
         console.error('Error fetching questions:', err);
-        setError('Failed to load questions. Please try again.');
+        // As a last resort, try code-based fallback before showing an error.
+        const fallback = buildFallbackQuestions();
+        if (fallback.length > 0) {
+          setQuestions(fallback);
+          setExpandedSection(0);
+          setError(null);
+        } else {
+          setError('Failed to load questions. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
     }
 
     fetchQuestions();
-  }, [useCaseId, state.industry]);
+  }, [state.industry, useCaseSlug]);
+
+  // Apply smart defaults (consultative) once questions are loaded.
+  useEffect(() => {
+    if (loading || questions.length === 0) return;
+    const smartDefaults = getSmartDefaultsForIndustry(state);
+    const keys = Object.keys(smartDefaults);
+    if (keys.length === 0) return;
+
+    updateState(prev => {
+      const existing = prev.useCaseData || {};
+      const next = { ...existing };
+      let changed = false;
+      for (const k of keys) {
+        if (next[k] === undefined) {
+          next[k] = smartDefaults[k];
+          changed = true;
+        }
+      }
+      return changed ? { ...prev, useCaseData: next } : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, questions.length, state.industry, state.state]);
 
   // Group by section
   const sections = useMemo(() => {
@@ -1014,6 +1172,26 @@ export function Step3Details({ state, updateState }: Props) {
     : 100;
 
   const industryLabel = state.industryName || 'Your Facility';
+  const quickReviewFields = QUICK_REVIEW_FIELDS_BY_INDUSTRY[state.industry] || [];
+  const quickReviewQuestions = useMemo(() => {
+    if (quickReviewFields.length === 0) return [];
+    const byField = new Map(questions.map(q => [q.field_name, q]));
+    return quickReviewFields.map(f => byField.get(f)).filter(Boolean) as CustomQuestion[];
+  }, [questions, quickReviewFields]);
+
+  const defaultValueMap = useMemo(() => {
+    const map: Record<string, unknown> = {};
+    for (const q of questions) {
+      if (q.default_value !== null && q.default_value !== undefined && q.default_value !== '') {
+        if (q.question_type === 'number') map[q.field_name] = parseFloat(q.default_value);
+        else if (q.question_type === 'boolean') map[q.field_name] = q.default_value === 'true';
+        else map[q.field_name] = q.default_value;
+      }
+    }
+    const smartDefaults = getSmartDefaultsForIndustry(state);
+    for (const [k, v] of Object.entries(smartDefaults)) map[k] = v;
+    return map;
+  }, [questions, state]);
 
   // Merlin messages based on progress
   const getMerlinMessage = () => {
@@ -1168,6 +1346,105 @@ export function Step3Details({ state, updateState }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ================================================================== */}
+      {/* QUICK REVIEW - Smart Defaults + Visual Cards */}
+      {/* ================================================================== */}
+      {quickReviewQuestions.length > 0 && (
+        <div className="max-w-5xl mx-auto mb-10">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-white text-2xl font-bold">Merlin’s estimate (quick review)</h2>
+              <p className="text-slate-300 text-sm">
+                Smart defaults are pre-filled. Tap any card to adjust. Updated fields are highlighted.
+              </p>
+            </div>
+            <div className="text-xs text-slate-400">
+              {resolvedUseCaseId ? (
+                <>
+                  DB: <span className="text-slate-300">{useCaseSlug}</span>
+                </>
+              ) : (
+                <>
+                  Using <span className="text-slate-300">built-in</span> profile
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quickReviewQuestions.map((q, idx) => {
+              const scheme = getColorScheme(idx);
+              const current = getValue(q);
+              const def = defaultValueMap[q.field_name];
+              const isChanged = def !== undefined && current !== def;
+              return (
+                <div
+                  key={q.id || q.field_name}
+                  className={`rounded-2xl border backdrop-blur-md p-4 transition-all ${
+                    isChanged
+                      ? 'bg-emerald-500/10 border-emerald-400/40 shadow-lg shadow-emerald-500/10'
+                      : 'bg-white/5 border-white/10 hover:bg-white/7'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <div className="text-white font-semibold truncate">{q.question_text}</div>
+                      {q.help_text && (
+                        <div className="text-xs text-slate-400 mt-0.5">{q.help_text}</div>
+                      )}
+                    </div>
+                    {isChanged && (
+                      <div className="text-[11px] px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
+                        Updated
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {q.question_type === 'select' && (
+                      <PillSelect
+                        question={q}
+                        value={String(current || '')}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'number' && (
+                      <NumberInput
+                        question={q}
+                        value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'boolean' && (
+                      <BooleanInput
+                        question={q}
+                        value={Boolean(current)}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                    {q.question_type === 'multiselect' && (
+                      <MultiselectInput
+                        question={q}
+                        value={Array.isArray(current) ? current : []}
+                        onChange={(val) => updateAnswer(q.field_name, val)}
+                        colorScheme={scheme}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 text-sm text-slate-300">
+            If this looks right, hit <span className="text-white font-semibold">Looks Good</span> in the footer to continue.
+          </div>
+        </div>
+      )}
 
       {/* ================================================================== */}
       {/* MAIN CONTENT */}
