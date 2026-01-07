@@ -1123,7 +1123,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 2",
         suffix: "chargers",
-        description: "Megawatt Charging System for Semi Trucks",
+        helpText: "Megawatt Charging System for Semi Trucks",
       },
       {
         id: "dcfc350",
@@ -1131,7 +1131,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 10",
         suffix: "chargers",
-        description: "For Class 8 Trucks & RVs",
+        helpText: "For Class 8 Trucks & RVs",
       },
       {
         id: "level2",
@@ -1139,7 +1139,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 20",
         suffix: "chargers",
-        description: "For Passenger Vehicles",
+        helpText: "For Passenger Vehicles",
       },
       {
         id: "serviceBays",
@@ -1147,7 +1147,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 6",
         suffix: "bays",
-        description: "Maintenance facility bays",
+        helpText: "Maintenance facility bays",
       },
       {
         id: "truckWashBays",
@@ -1155,7 +1155,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 2",
         suffix: "bays",
-        description: "Truck wash tunnels",
+        helpText: "Truck wash tunnels",
       },
       {
         id: "restaurantSeats",
@@ -1163,7 +1163,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 150",
         suffix: "seats",
-        description: "Food court / QSR capacity",
+        helpText: "Food court / QSR capacity",
       },
       {
         id: "hasShowers",
@@ -1189,7 +1189,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
         type: "number",
         placeholder: "e.g., 5",
         suffix: "acres",
-        description: "For lighting load calculation",
+        helpText: "For lighting load calculation",
       },
       {
         id: "climateZone",
@@ -1200,7 +1200,7 @@ export const industryQuestionnaires: Record<string, IndustryQuestionnaire> = {
           { value: "moderate", label: "Moderate (CA, NC, GA)" },
           { value: "cold", label: "Cold (MN, WI, NY)" },
         ],
-        description: "Affects HVAC and thermal management loads",
+        helpText: "Affects HVAC and thermal management loads",
       },
     ],
     insights: {
