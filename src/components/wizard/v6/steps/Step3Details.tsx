@@ -375,20 +375,79 @@ function normalizeIndustryToUseCaseSlug(industry: string | null | undefined): st
 function getSmartDefaultsForIndustry(state: WizardState): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
 
-  if (state.industry === 'heavy_duty_truck_stop') {
-    // Coarse climate heuristic; user can override.
-    const hotStates = new Set(['AZ', 'NV', 'TX', 'FL']);
-    const coldStates = new Set(['MN', 'WI', 'NY']);
-    if (state.state) {
-      defaults.climateZone = hotStates.has(state.state)
-        ? 'hot'
-        : coldStates.has(state.state)
-          ? 'cold'
-          : 'moderate';
-    }
+  // Climate zone inference (hot/cold/moderate)
+  const hotStates = new Set(['AZ', 'NV', 'TX', 'FL', 'CA', 'NM', 'OK', 'LA', 'MS', 'AL', 'GA', 'SC', 'HI']);
+  const coldStates = new Set(['MN', 'WI', 'NY', 'ME', 'VT', 'NH', 'MA', 'MI', 'ND', 'SD', 'MT', 'WY', 'AK']);
+  if (state.state) {
+    defaults.climateZone = hotStates.has(state.state)
+      ? 'hot'
+      : coldStates.has(state.state)
+        ? 'cold'
+        : 'moderate';
+  }
 
-    // Almost always 24/7 for travel centers.
+  // Industry-specific defaults
+  if (state.industry === 'heavy_duty_truck_stop') {
     defaults.operatingHours = '24_7';
+    defaults.mcsChargers = 2; // Typical flagship location
+    defaults.dcfc350 = 10;
+    defaults.level2 = 20;
+    defaults.serviceBays = 6;
+    defaults.truckWashBays = 1;
+    defaults.restaurantSeats = 150;
+    defaults.hasShowers = true;
+    defaults.hasLaundry = true;
+    defaults.parkingLotAcres = 5;
+    defaults.gridCapacityKW = '5000-10000';
+    defaults.monthlyElectricBill = '15000-30000';
+    defaults.monthlyDemandCharges = '5000-10000';
+    defaults.backupRequirements = 'critical';
+    defaults.primaryBESSApplication = 'demand_charge_management';
+  } else if (state.industry === 'hotel') {
+    defaults.operatingHours = '24_7';
+    // Infer from room count if available
+    const roomCount = state.useCaseData?.roomCount || state.useCaseData?.rooms;
+    if (typeof roomCount === 'number' && roomCount > 0) {
+      defaults.squareFeet = roomCount * 400; // ~400 sqft per room average
+      defaults.monthlyElectricBill = roomCount < 50 ? '2000-5000' : roomCount < 150 ? '5000-15000' : '15000-30000';
+      defaults.gridCapacityKW = roomCount < 50 ? '200-500' : roomCount < 150 ? '500-1000' : '1000-2000';
+    }
+  } else if (state.industry === 'car_wash') {
+    defaults.operatingHours = '12-16';
+    defaults.numberOfTunnels = 2;
+    defaults.vacuumStations = 6;
+    defaults.monthlyElectricBill = '2000-5000';
+  } else if (state.industry === 'data_center') {
+    defaults.operatingHours = '24_7';
+    defaults.backupRequirements = 'critical';
+    defaults.primaryBESSApplication = 'backup_power';
+  } else if (state.industry === 'office') {
+    defaults.operatingHours = '8-12';
+    defaults.monthlyElectricBill = '2000-10000';
+  } else if (state.industry === 'retail') {
+    defaults.operatingHours = '10-14';
+    defaults.monthlyElectricBill = '1000-5000';
+  } else if (state.industry === 'restaurant') {
+    defaults.operatingHours = '10-16';
+    defaults.monthlyElectricBill = '2000-8000';
+  } else if (state.industry === 'hospital') {
+    defaults.operatingHours = '24_7';
+    defaults.backupRequirements = 'critical';
+    defaults.primaryBESSApplication = 'backup_power';
+  } else if (state.industry === 'manufacturing') {
+    defaults.operatingHours = '16-24';
+    defaults.monthlyElectricBill = '10000-50000';
+  }
+
+  // Common defaults for most industries
+  if (!defaults.operatingHours) {
+    defaults.operatingHours = '12-16';
+  }
+  if (!defaults.backupRequirements) {
+    defaults.backupRequirements = 'important';
+  }
+  if (!defaults.primaryBESSApplication) {
+    defaults.primaryBESSApplication = 'demand_charge_management';
   }
 
   return defaults;
@@ -1355,190 +1414,138 @@ export function Step3Details({ state, updateState }: Props) {
       </div>
 
       {/* ================================================================== */}
-      {/* QUICK REVIEW - Smart Defaults + Visual Cards */}
+      {/* CONSULTATIVE REVIEW - All Questions in One List */}
       {/* ================================================================== */}
-      {quickReviewQuestions.length > 0 && (
-        <div className="max-w-5xl mx-auto mb-10">
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-white text-2xl font-bold">Merlin’s estimate (quick review)</h2>
-              <p className="text-slate-300 text-sm">
-                Smart defaults are pre-filled. Tap any card to adjust. Updated fields are highlighted.
-              </p>
-            </div>
-            <div className="text-xs text-slate-400">
-              {resolvedUseCaseId ? (
-                <>
-                  DB: <span className="text-slate-300">{useCaseSlug}</span>
-                </>
-              ) : (
-                <>
-                  Using <span className="text-slate-300">built-in</span> profile
-                </>
-              )}
+      <div className="max-w-4xl mx-auto">
+        {/* Header: "Based on [Location] + [Industry], here's what I'm assuming:" */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 rounded-2xl p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-2xl">🧙</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-white text-xl font-bold mb-2">
+                  Based on {state.city && state.state 
+                    ? `${state.city}, ${state.state}` 
+                    : state.state 
+                      ? state.state 
+                      : 'your location'} + {industryLabel}
+                  {state.useCaseData?.roomCount ? ` + ${state.useCaseData.roomCount} rooms` : ''}
+                  {state.useCaseData?.squareFeet ? ` + ${state.useCaseData.squareFeet.toLocaleString()} sqft` : ''}
+                  , here&apos;s what I&apos;m assuming:
+                </h2>
+                <p className="text-slate-300 text-sm">
+                  I&apos;ve pre-filled {questions.length} estimates based on industry standards and your location. 
+                  Tap any value to adjust. Only change what&apos;s wrong.
+                </p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quickReviewQuestions.map((q, idx) => {
-              const scheme = getColorScheme(idx);
-              const current = getValue(q);
-              const def = defaultValueMap[q.field_name];
-              const isChanged = def !== undefined && current !== def;
-              return (
-                <div
-                  key={q.id || q.field_name}
-                  className={`rounded-2xl border backdrop-blur-md p-4 transition-all ${
-                    isChanged
-                      ? 'bg-emerald-500/10 border-emerald-400/40 shadow-lg shadow-emerald-500/10'
-                      : 'bg-white/5 border-white/10 hover:bg-white/7'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <div className="text-white font-semibold truncate">{q.question_text}</div>
-                      {q.help_text && (
-                        <div className="text-xs text-slate-400 mt-0.5">{q.help_text}</div>
+        {/* All Questions in Clean List */}
+        <div className="space-y-3 mb-8">
+          {questions.map((q, idx) => {
+            const scheme = getColorScheme(idx);
+            const current = getValue(q);
+            const def = defaultValueMap[q.field_name];
+            const isChanged = def !== undefined && current !== def;
+            const iconName = q.icon_name || 'HelpCircle';
+            
+            return (
+              <div
+                key={q.id || q.field_name}
+                className={`rounded-xl border backdrop-blur-md p-4 transition-all ${
+                  isChanged
+                    ? 'bg-emerald-500/10 border-emerald-400/40 shadow-lg shadow-emerald-500/10'
+                    : 'bg-white/5 border-white/10 hover:bg-white/7 hover:border-purple-500/30'
+                }`}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div className={`w-8 h-8 rounded-lg ${scheme.questionIconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 border ${scheme.questionIconBorder}`}>
+                    <LucideIcon name={iconName} className={`w-4 h-4 ${scheme.questionIconText}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-white font-medium text-sm">
+                        {q.question_text}
+                        {q.is_required && <span className="text-pink-400 ml-1">*</span>}
+                      </h4>
+                      {isChanged && (
+                        <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
+                          Updated
+                        </div>
                       )}
                     </div>
-                    {isChanged && (
-                      <div className="text-[11px] px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 whitespace-nowrap">
-                        Updated
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    {q.question_type === 'select' && (
-                      <PillSelect
-                        question={q}
-                        value={String(current || '')}
-                        onChange={(val) => updateAnswer(q.field_name, val)}
-                        colorScheme={scheme}
-                      />
-                    )}
-                    {q.question_type === 'number' && (
-                      <NumberInput
-                        question={q}
-                        value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
-                        onChange={(val) => updateAnswer(q.field_name, val)}
-                        colorScheme={scheme}
-                      />
-                    )}
-                    {q.question_type === 'boolean' && (
-                      <BooleanInput
-                        question={q}
-                        value={Boolean(current)}
-                        onChange={(val) => updateAnswer(q.field_name, val)}
-                        colorScheme={scheme}
-                      />
-                    )}
-                    {q.question_type === 'multiselect' && (
-                      <MultiselectInput
-                        question={q}
-                        value={Array.isArray(current) ? current : []}
-                        onChange={(val) => updateAnswer(q.field_name, val)}
-                        colorScheme={scheme}
-                      />
+                    {q.help_text && (
+                      <p className="text-xs text-slate-400 mt-0.5">{q.help_text}</p>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          <div className="mt-4 text-sm text-slate-300">
-            If this looks right, hit <span className="text-white font-semibold">Looks Good</span> in the footer to continue.
-          </div>
-        </div>
-      )}
-
-      {/* ================================================================== */}
-      {/* MAIN CONTENT */}
-      {/* ================================================================== */}
-      <div className="max-w-5xl mx-auto space-y-3">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">
-              Tell Us About Your {industryLabel}
-              {state.state && <span className="text-purple-400"> in {state.state}</span>}
-            </h1>
-            
-            {/* Location Details Bar */}
-            {(state.electricityRate || state.solarData) && (
-              <div className="flex items-center justify-center gap-6 mt-3">
-                {state.electricityRate && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Zap className="w-4 h-4 text-yellow-400" />
-                    <span className="text-slate-400">Utility Rate:</span>
-                    <span className="text-white font-medium">${state.electricityRate.toFixed(2)}/kWh</span>
-                  </div>
-                )}
-                {state.solarData && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Sun className="w-4 h-4 text-orange-400" />
-                    <span className="text-slate-400">Solar:</span>
-                    <span className="text-white font-medium">{state.solarData.sunHours} hrs/day</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      state.solarData.rating === 'A' ? 'bg-green-500/20 text-green-400' :
-                      state.solarData.rating === 'B' ? 'bg-blue-500/20 text-blue-400' :
-                      state.solarData.rating === 'C' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-orange-500/20 text-orange-400'
-                    }`}>
-                      {state.solarData.rating}
-                    </span>
-                  </div>
-                )}
+                <div className="ml-11">
+                  {q.question_type === 'select' && (
+                    <PillSelect
+                      question={q}
+                      value={String(current || '')}
+                      onChange={(val) => updateAnswer(q.field_name, val)}
+                      colorScheme={scheme}
+                    />
+                  )}
+                  {q.question_type === 'number' && (
+                    <NumberInput
+                      question={q}
+                      value={typeof current === 'number' ? current : parseFloat(String(current || 0))}
+                      onChange={(val) => updateAnswer(q.field_name, val)}
+                      colorScheme={scheme}
+                    />
+                  )}
+                  {q.question_type === 'boolean' && (
+                    <BooleanInput
+                      question={q}
+                      value={Boolean(current)}
+                      onChange={(val) => updateAnswer(q.field_name, val)}
+                      colorScheme={scheme}
+                    />
+                  )}
+                  {q.question_type === 'multiselect' && (
+                    <MultiselectInput
+                      question={q}
+                      value={Array.isArray(current) ? current : []}
+                      onChange={(val) => updateAnswer(q.field_name, val)}
+                      colorScheme={scheme}
+                    />
+                  )}
+                  {q.question_type === 'text' && (
+                    <TextInput
+                      question={q}
+                      value={String(current || '')}
+                      onChange={(val) => updateAnswer(q.field_name, val)}
+                      colorScheme={scheme}
+                    />
+                  )}
+                </div>
               </div>
-            )}
-            
-            <p className="text-slate-400 mt-2">
-              {answeredRequired.length} of {requiredQuestions.length} required • {progress}% complete
-            </p>
-          </div>
-          
-          {/* Progress bar */}
-          <div className="max-w-md mx-auto">
-            <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-purple-600 to-cyan-600 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Sections */}
-        <div className="space-y-2">
-          {sections.map((section, index) => {
-            const { total, completed } = getSectionCompletion(section.questions);
-            return (
-              <ExpandableSection
-                key={section.name}
-                section={section}
-                index={index}
-                isExpanded={expandedSection === index}
-                completedCount={completed}
-                totalRequired={total}
-                onToggle={() => handleToggleSection(index)}
-                getValue={getValue}
-                updateAnswer={updateAnswer}
-                sectionRef={(el) => { sectionRefs.current[index] = el; }}
-              />
             );
           })}
         </div>
 
-        {/* Completion indicator */}
-        {progress >= 100 && (
-          <div className="p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-center">
-            <p className="text-emerald-400 font-medium flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-5 h-5" />
-              All required questions answered. Click Continue below!
-            </p>
-          </div>
-        )}
+        {/* "Looks good? Let's calculate your system" Message */}
+        <div className="bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 rounded-xl p-6 mt-8 text-center">
+          <p className="text-white font-semibold text-lg mb-2">
+            {progress >= 100 ? (
+              <>✅ All set! Use the &quot;Continue&quot; button below to calculate your system.</>
+            ) : (
+              <>Complete {requiredQuestions.length - answeredRequired.length} more required field{requiredQuestions.length - answeredRequired.length !== 1 ? 's' : ''} to continue</>
+            )}
+          </p>
+          <p className="text-slate-300 text-sm">
+            {progress >= 100 
+              ? 'Review your answers above and adjust anything that looks wrong. Then click Continue in the footer.'
+              : 'Tap any field above to adjust Merlin\'s estimates.'}
+          </p>
+        </div>
       </div>
     </div>
   );
