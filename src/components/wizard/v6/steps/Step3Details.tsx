@@ -30,6 +30,7 @@ import merlinIcon from '@/assets/images/new_small_profile_.png';
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState> | ((prev: WizardState) => Partial<WizardState>)) => void;
+  goToStep?: (step: number) => void;
 }
 
 // ============================================================================
@@ -234,7 +235,7 @@ function getQuestionsForIndustry(industry: string): Question[] {
 // COMPONENT
 // ============================================================================
 
-export function Step3Details({ state, updateState }: Props) {
+export function Step3Details({ state, updateState, goToStep }: Props) {
   const questions = getQuestionsForIndustry(state.industry || 'default');
   
   // Initialize with smart defaults
@@ -273,7 +274,7 @@ export function Step3Details({ state, updateState }: Props) {
   const locationName = state.city ? `${state.city}, ${state.state}` : state.state || 'your location';
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-[calc(100vh-200px)]">
       {/* ═══════════════════════════════════════════════════════════
           LEFT SIDEBAR - Progress & Summary
           ═══════════════════════════════════════════════════════════ */}
@@ -484,11 +485,14 @@ export function Step3Details({ state, updateState }: Props) {
                     onClick={() => {
                       if (activeQuestion < questions.length) {
                         setActiveQuestion(activeQuestion + 1);
+                      } else if (goToStep) {
+                        // If on last question, advance to next step
+                        goToStep(4);
                       }
                     }}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
                   >
-                    Continue
+                    {activeQuestion < questions.length ? 'Next Question' : 'Continue to Options'}
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
