@@ -573,7 +573,11 @@ function PillSelect({ question, value, onChange, colorScheme }: PillSelectProps)
                 </div>
               )}
             </div>
-            {isSelected && <Check className="w-4 h-4 text-purple-200 flex-shrink-0" />}
+            {isSelected && (
+              <div className="flex-shrink-0">
+                <Check className="w-5 h-5 text-purple-200" />
+              </div>
+            )}
           </button>
         );
       })}
@@ -582,7 +586,7 @@ function PillSelect({ question, value, onChange, colorScheme }: PillSelectProps)
 }
 
 // ============================================================================
-// NUMBER INPUT COMPONENT
+// NUMBER INPUT COMPONENT - Slider for ranges, text input for precise values
 // ============================================================================
 
 function NumberInput({ question, value, onChange, colorScheme }: { question: CustomQuestion; value: number; onChange: (v: number) => void; colorScheme?: ColorScheme }) {
@@ -595,7 +599,53 @@ function NumberInput({ question, value, onChange, colorScheme }: { question: Cus
   const max = optionsConfig?.max ?? parseFloat(question.max_value || '1000000');
   const step = optionsConfig?.step ?? 1;
 
-  // Compact vertical input - no landscape buttons
+  // Use slider for ranges (e.g., room count 50-500), text input for precise values
+  const useSlider = (max - min) <= 1000 && (max - min) > 10;
+
+  if (useSlider) {
+    // Slider with range display
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold text-white">{value.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onChange(Math.max(min, value - step))}
+              className={`w-8 h-8 rounded-lg ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(Math.min(max, value + step))}
+              className={`w-8 h-8 rounded-lg ${scheme.numberButtonBg} backdrop-blur-md border ${scheme.numberButtonBorder} ${scheme.numberButtonHover} text-white flex items-center justify-center transition-all`}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
+          style={{
+            background: `linear-gradient(to right, rgb(147, 51, 234) 0%, rgb(147, 51, 234) ${((value - min) / (max - min)) * 100}%, rgb(51, 65, 85) ${((value - min) / (max - min)) * 100}%, rgb(51, 65, 85) 100%)`
+          }}
+        />
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>{min.toLocaleString()}</span>
+          <span>{max.toLocaleString()}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Text input for precise values (no slider)
   return (
     <div className="flex flex-col gap-1.5">
       <input
@@ -1259,6 +1309,77 @@ export function Step3Details({ state, updateState }: Props) {
     return map;
   }, [questions, state]);
 
+  // Adaptive question filtering - show/hide questions based on previous answers
+  const visibleQuestions = useMemo(() => {
+    return questions.filter((q: CustomQuestion) => {
+      // Check if question should be visible based on current answers
+      const currentData = state.useCaseData || {};
+      
+      // Hotel-specific adaptive logic
+      if (state.industry === 'hotel') {
+        const hotelCategory = currentData.hotelCategory || currentData.propertyType;
+        const roomCount = currentData.roomCount || currentData.rooms || 0;
+        
+        // Hide luxury amenities if not full-service
+        if (q.field_name === 'hasSpa' || q.field_name === 'hasGym' || q.field_name === 'hasFullServiceRestaurant') {
+          if (hotelCategory === 'limited' || hotelCategory === 'extended_stay') return false;
+        }
+        
+        // Show large hotel questions only if room count > 150
+        if (q.field_name === 'hasConferenceCenter' || q.field_name === 'hasBallroom') {
+          if (roomCount < 150) return false;
+        }
+        
+        // Show small hotel questions only if room count < 50
+        if (q.field_name === 'hasValet' || q.field_name === 'hasConcierge') {
+          if (roomCount >= 50) return false;
+        }
+      }
+      
+      // Truck stop adaptive logic
+      if (state.industry === 'heavy_duty_truck_stop') {
+        // Show MCS questions only if user indicates interest in truck charging
+        if (q.field_name === 'mcsChargers' && currentData.wantsTruckCharging === false) {
+          return false;
+        }
+      }
+      
+      // Default: show all questions
+      return true;
+    });
+  }, [questions, state.industry, state.useCaseData]);
+
+  // Build contextual header message
+  const contextualHeader = useMemo(() => {
+    const parts: string[] = [];
+    
+    if (state.city && state.state) {
+      parts.push(`${state.city}, ${state.state}`);
+    } else if (state.state) {
+      parts.push(state.state);
+    }
+    
+    if (state.industry === 'hotel') {
+      const roomCount = state.useCaseData?.roomCount || state.useCaseData?.rooms;
+      if (roomCount) {
+        parts.push(`${roomCount}-room hotel`);
+      } else {
+        parts.push(industryLabel);
+      }
+      
+      const hotelCategory = state.useCaseData?.hotelCategory || state.useCaseData?.propertyType;
+      if (hotelCategory === 'full_service' || hotelCategory === 'luxury') {
+        parts.push('(Full Service)');
+      } else if (hotelCategory === 'limited') {
+        parts.push('(Limited Service)');
+      }
+    } else {
+      parts.push(industryLabel);
+    }
+    
+    return parts.join(' + ');
+  }, [state.city, state.state, state.industry, state.useCaseData, industryLabel]);
+
   // Merlin messages based on progress
   const getMerlinMessage = () => {
     if (progress === 0) {
@@ -1358,62 +1479,6 @@ export function Step3Details({ state, updateState }: Props) {
       )}
 
       {/* ================================================================== */}
-      {/* BANNER - Industry Image */}
-      {/* ================================================================== */}
-      <div className="mb-10">
-        <div style={{
-          position: 'relative',
-          borderRadius: 24,
-          overflow: 'hidden',
-          marginBottom: 24,
-          height: 200,
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
-        }}>
-          <img
-            src={INDUSTRY_IMAGES[state.industry] || INDUSTRY_IMAGES['hotel']}
-            alt={industryLabel}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 0.6
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '24px 32px',
-            textAlign: 'center'
-          }}>
-            <h1 style={{
-              fontSize: 36,
-              fontWeight: 700,
-              margin: 0,
-              color: 'white',
-              textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-            }}>
-              {industryLabel} Energy Profile
-            </h1>
-            <p style={{
-              color: '#94a3b8',
-              marginTop: 8,
-              fontSize: 16,
-              textShadow: '0 1px 4px rgba(0,0,0,0.5)'
-            }}>
-              Tell us about your property • {questions.length} questions
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ================================================================== */}
       {/* CONSULTATIVE REVIEW - All Questions in One List */}
       {/* ================================================================== */}
       <div className="max-w-4xl mx-auto">
@@ -1426,17 +1491,10 @@ export function Step3Details({ state, updateState }: Props) {
               </div>
               <div className="flex-1">
                 <h2 className="text-white text-xl font-bold mb-2">
-                  Based on {state.city && state.state 
-                    ? `${state.city}, ${state.state}` 
-                    : state.state 
-                      ? state.state 
-                      : 'your location'} + {industryLabel}
-                  {state.useCaseData?.roomCount ? ` + ${state.useCaseData.roomCount} rooms` : ''}
-                  {state.useCaseData?.squareFeet ? ` + ${state.useCaseData.squareFeet.toLocaleString()} sqft` : ''}
-                  , here&apos;s what I&apos;m assuming:
+                  Based on {contextualHeader}, here&apos;s what I&apos;m assuming:
                 </h2>
                 <p className="text-slate-300 text-sm">
-                  I&apos;ve pre-filled {questions.length} estimates based on industry standards and your location. 
+                  I&apos;ve pre-filled {visibleQuestions.length} estimates based on industry standards and your location. 
                   Tap any value to adjust. Only change what&apos;s wrong.
                 </p>
               </div>
@@ -1446,7 +1504,7 @@ export function Step3Details({ state, updateState }: Props) {
 
         {/* All Questions in Clean List */}
         <div className="space-y-3 mb-8">
-          {questions.map((q, idx) => {
+          {visibleQuestions.map((q, idx) => {
             const scheme = getColorScheme(idx);
             const current = getValue(q);
             const def = defaultValueMap[q.field_name];
