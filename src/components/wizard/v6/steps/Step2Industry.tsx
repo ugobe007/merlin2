@@ -21,10 +21,12 @@ import collegeImg from '@/assets/images/college_1.jpg';
 import warehouseImg from '@/assets/images/logistics_1.jpg';
 import restaurantImg from '@/assets/images/restaurant_1.jpg';
 import agricultureImg from '@/assets/images/indoor_farm1.jpeg';
+import lovesTruckImg from '@/assets/images/loves_truck.png';
 
 const INDUSTRIES = [
   { slug: 'hotel', name: 'Hotel / Hospitality', image: hotelImg },
   { slug: 'car_wash', name: 'Car Wash', image: carWashImg },
+  { slug: 'heavy_duty_truck_stop', name: 'Truck Stop / Travel Center', image: lovesTruckImg },
   { slug: 'ev_charging', name: 'EV Charging Hub', image: evChargingImg },
   { slug: 'manufacturing', name: 'Manufacturing', image: manufacturingImg },
   { slug: 'data_center', name: 'Data Center', image: dataCenterImg },

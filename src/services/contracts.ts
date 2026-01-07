@@ -38,7 +38,7 @@ export type Industry =
   | 'college' | 'warehouse' | 'restaurant' | 'agriculture'
   | 'airport' | 'casino' | 'indoor_farm' | 'apartment'
   | 'cold_storage' | 'shopping_center' | 'government' | 'gas_station'
-  | 'residential' | 'microgrid';
+  | 'residential' | 'microgrid' | 'heavy_duty_truck_stop';
 
 export type EnergyGoal = 
   | 'reduce_costs' | 'backup_power' | 'sustainability' 
