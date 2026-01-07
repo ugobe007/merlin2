@@ -404,7 +404,7 @@ export default function WizardV6() {
                   : 'bg-slate-700 text-slate-400 cursor-not-allowed'
               }`}
             >
-              {currentStep === 5 ? 'View Quote' : 'Continue'} <ArrowRight className="w-5 h-5" />
+              {currentStep === 5 ? 'View Quote' : currentStep === 3 ? 'Looks Good' : 'Continue'} <ArrowRight className="w-5 h-5" />
             </button>
           ) : (
             <button 
