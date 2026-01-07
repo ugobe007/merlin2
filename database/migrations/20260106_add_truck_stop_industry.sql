@@ -60,7 +60,7 @@ BEGIN
       'Heavy Duty Truck Stop / Travel Center',
       'heavy_duty_truck_stop',
       'HIGH-VOLTAGE NODES - Industrial-Utility thinking required. Not gas stations—electrical demand profiles comparable to small manufacturing plants or high-density data centers. Extreme demand from MW-class EV charging (MCS/DCFC), heavy inductive loads (Speedco maintenance), and 24/7 hospitality operations. Love''s Travel Stops, Pilot Flying J, TA/Petro, TravelCenters of America.',
-      'transportation_logistics',
+      'commercial',
       'free',
       true,
       25  -- Display order (adjust if needed)
