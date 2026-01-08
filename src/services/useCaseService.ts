@@ -183,20 +183,38 @@ export class UseCaseService {
       ]);
 
       // Transform custom_questions from database format to frontend format
+      // Handle schema mismatch: TypeScript types say 'question_key' and 'select_options'
+      // but migrations use 'field_name' and 'options'. Database likely has both.
       const rawQuestions = questionsResult.status === "fulfilled" ? questionsResult.value : [];
-      const transformedQuestions = rawQuestions.map((q) => ({
-        id: (q as any).field_name || q.id,
-        question: q.question_text,
-        type: q.question_type,
-        default: q.default_value,
-        required: q.is_required,
-        options: (q as any).options,
-        min: q.min_value,
-        max: q.max_value,
-        helpText: q.help_text,
-        placeholder: (q as any).placeholder,
-        metadata: (q as any).metadata || {}, // Include metadata for is_advanced flag
-      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transformedQuestions = rawQuestions.map((q: any) => {
+        // Get field name - database may have both question_key (schema) and field_name (migrations)
+        const fieldName = q.field_name || q.question_key || q.id;
+        
+        // Get options from select_options (schema standard) or options (migration format)
+        let options = q.select_options || q.options || null;
+        
+        // Parse JSONB if it's a string
+        if (options && typeof options === 'string') {
+          try {
+            options = JSON.parse(options);
+          } catch {
+            options = null;
+          }
+        }
+        
+        // Return raw database question with both field names for compatibility
+        return {
+          ...q,
+          // Ensure field_name exists (use question_key if field_name doesn't exist)
+          field_name: fieldName,
+          // Ensure both option fields exist for compatibility
+          select_options: options,
+          options: options,
+          // Preserve section_name if it exists
+          section_name: q.section_name || null
+        };
+      });
 
       return {
         ...useCase,
