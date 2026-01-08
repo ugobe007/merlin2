@@ -75,6 +75,105 @@ input[type="range"].slider::-moz-range-thumb:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Purple Slider Styles for QuestionRenderer (Merlin Theme) */
+input[type="range"].slider-input-purple {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgb(51 65 85); /* slate-700 */
+  height: 8px;
+  border-radius: 9999px;
+}
+
+input[type="range"].slider-input-purple::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgb(168 85 247) 0%, rgb(99 102 241) 100%);
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"].slider-input-purple::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.3);
+}
+
+input[type="range"].slider-input-purple::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgb(168 85 247) 0%, rgb(99 102 241) 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"].slider-input-purple::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.3);
+}
+
+input[type="range"].slider-input-purple::-moz-range-track {
+  background: rgb(51 65 85); /* slate-700 */
+  height: 8px;
+  border-radius: 9999px;
+}
+
+/* Slider Input Styles (Generic - for QuestionRenderer) */
+input[type="range"].slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 9999px;
+}
+
+input[type="range"].slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgb(168 85 247), rgb(99 102 241));
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+  transition: all 0.2s;
+}
+
+input[type="range"].slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.3);
+}
+
+input[type="range"].slider-input::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgb(168 85 247), rgb(99 102 241));
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+  transition: all 0.2s;
+}
+
+input[type="range"].slider-input::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.3);
+}
+
+input[type="range"].slider-input::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+}
+
+/* Slate-750 background utility */
+.bg-slate-750 {
+  background-color: rgb(30 41 59 / 0.5);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

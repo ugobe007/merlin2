@@ -3,7 +3,7 @@
  * Updated: December 30, 2025 - Larger fonts for better readability
  */
 import React from 'react';
-import { Check, Sparkles, Building2 } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import type { WizardState } from '../types';
 import { MerlinGuide } from '../MerlinGuide';
 import { INDUSTRY_NAMES } from '@/services/googlePlacesService';

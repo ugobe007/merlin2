@@ -5,7 +5,6 @@
  * Part of TrueQuote Engine (Porsche 911 Architecture)
  */
 
-import { TRUEQUOTE_CONSTANTS } from '../data/constants';
 import type { Industry } from '../contracts';
 import { calculateTruckStopLoad } from '../industries/truckStopIndustry';
 

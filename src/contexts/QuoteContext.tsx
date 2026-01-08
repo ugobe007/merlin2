@@ -11,7 +11,7 @@
  * - Simplifies testing and debugging
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import type { QuoteDocument, QuoteDocumentUpdate } from "../types/QuoteDocument";
 import {
   createEmptyQuote,

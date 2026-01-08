@@ -21,16 +21,12 @@ import { MerlinGuide } from '../MerlinGuide';
 import { 
   US_STATE_DATA, 
   getStateFromZip, 
-  getStateData,
-  isValidUSZip,
-  type StateElectricityData 
+  getStateData 
 } from '@/services/data/stateElectricityRates';
 import { 
   INTERNATIONAL_DATA, 
   getCountryData, 
-  getCityData,
-  type InternationalCountry,
-  type InternationalCity 
+  getCityData 
 } from '@/services/data/internationalRates';
 
 import {

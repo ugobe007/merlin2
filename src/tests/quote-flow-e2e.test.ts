@@ -7,7 +7,7 @@
  * Created: Dec 2025 - Comprehensive SSOT audit
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Mock Supabase before imports
 vi.mock("@/lib/supabaseClient", () => ({

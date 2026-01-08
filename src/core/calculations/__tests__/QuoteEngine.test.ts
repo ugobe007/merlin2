@@ -18,10 +18,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { 
   QuoteEngine, 
-  type QuoteInput,
-  type ValidationResult,
-  type VersionedQuoteResult,
-  type QuickEstimate
+  type QuoteInput
 } from '../QuoteEngine';
 
 // ============================================================================

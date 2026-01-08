@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Sparkles, Zap, Save, Users, TrendingUp } from 'lucide-react';
 
 interface JoinMerlinModalProps {

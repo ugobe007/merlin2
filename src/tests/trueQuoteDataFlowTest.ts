@@ -14,7 +14,7 @@
  * @date January 2026
  */
 
-import { calculateTrueQuote, TRUEQUOTE_CONSTANTS, INDUSTRY_CONFIGS } from '../services/TrueQuoteEngine';
+import { calculateTrueQuote, TRUEQUOTE_CONSTANTS } from '../services/TrueQuoteEngine';
 import type { TrueQuoteInput, TrueQuoteResult } from '../services/TrueQuoteEngine';
 
 // ============================================================================

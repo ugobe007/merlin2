@@ -3,7 +3,7 @@
 // File: src/components/wizard/v6/step3/inputs/index.tsx
 // ============================================
 
-import React, { useState } from 'react';
+import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 

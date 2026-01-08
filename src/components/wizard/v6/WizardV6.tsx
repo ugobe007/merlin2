@@ -7,7 +7,7 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 
 import { Step1Location } from './steps/Step1Location';
 import { Step2Industry } from './steps/Step2Industry';
-import { Step3Details } from './steps/Step3Details';
+import { Step3Details } from '@/components/wizard/Step3Details';
 import { Step3HotelEnergy } from './steps/Step3HotelEnergy';
 import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
@@ -282,7 +282,7 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1: return <Step1Location state={state} updateState={updateState} />;
       case 2: return <Step2Industry state={state} updateState={updateState} />;
-      case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} goToStep={goToStep} />;
+      case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} onNext={() => goToStep(4)} />;
       case 4: return <Step4Options state={state} updateState={updateState} />;
       case 5: return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
       case 6: return <Step6Quote state={state} />;

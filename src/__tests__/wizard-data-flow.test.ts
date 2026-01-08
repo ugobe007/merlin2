@@ -12,7 +12,7 @@
  * 4. Verify final quote matches inputs
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Mock services
 vi.mock("@/services/useCaseService", () => ({
