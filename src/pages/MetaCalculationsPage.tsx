@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Database, RefreshCw, CheckCircle, 
+  Database, RefreshCw, 
   TrendingUp, DollarSign, Zap, Sun, Battery, Fuel,
   Settings, Activity, BarChart3, Shield, Edit3, X, Save, Lock, Unlock,
   Home, UserCog

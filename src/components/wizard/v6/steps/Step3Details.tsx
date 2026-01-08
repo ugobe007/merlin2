@@ -23,7 +23,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Check, Edit3, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Check, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import type { WizardState } from '../types';
 import merlinIcon from '@/assets/images/new_small_profile_.png';
 

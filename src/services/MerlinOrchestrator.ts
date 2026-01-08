@@ -44,7 +44,7 @@ import type {
   EnergyGoal,
   Industry,
 } from './contracts';
-import { createMerlinRequest, isAuthenticated, isRejected } from './contracts';
+import { createMerlinRequest, isRejected } from './contracts';
 import { processQuote } from './TrueQuoteEngineV2';
 
 // Version

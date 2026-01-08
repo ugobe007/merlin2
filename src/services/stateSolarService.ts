@@ -20,7 +20,7 @@ export interface StateSolarData {
 }
 
 // Cache for state solar data
-let solarDataCache: Map<string, StateSolarData> = new Map();
+const solarDataCache: Map<string, StateSolarData> = new Map();
 let cacheTimestamp: Date | null = null;
 const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 

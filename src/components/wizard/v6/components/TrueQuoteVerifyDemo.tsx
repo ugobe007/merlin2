@@ -7,7 +7,7 @@
  * Click either badge to see the verification worksheet modal.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TrueQuoteVerifyBadge } from './TrueQuoteVerifyBadge';
 import type { TrueQuoteWorksheetData } from './TrueQuoteVerifyBadge';
 

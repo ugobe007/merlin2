@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import UseCaseROI from '../UseCaseROI';
 
 type ModalName = 'showChatModal' | 'showEnhancedAnalytics' | 'showEnhancedBESSAnalytics' | 'bessAnalytics' | 'showTemplates';

@@ -8,7 +8,7 @@
  * Purpose: Validate SSOT architecture after data flow audit fixes
  */
 
-import { describe, test, expect, beforeAll } from "vitest";
+import { describe, test, expect } from "vitest";
 
 // SSOT Services
 import {

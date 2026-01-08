@@ -51,8 +51,6 @@ import {
   Paragraph,
   TextRun,
   Table,
-  TableRow,
-  TableCell,
   WidthType,
   AlignmentType,
   HeadingLevel,
@@ -69,7 +67,6 @@ import {
   createLabelValueRow,
   createLabelValueTable,
   createHighlightedLabelValueRow,
-  boldParagraph,
 } from "@/utils/wordHelpers";
 
 /**
