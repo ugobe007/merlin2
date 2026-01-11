@@ -20,7 +20,7 @@ export function QuestionnaireEngine({
   initialValues = {},
   onComplete,
   onProgressUpdate,
-  onQuestionChange,
+  onQuestionChange: _onQuestionChange,
   onJumpToSection,
 }: QuestionnaireEngineProps) {
   // State
@@ -296,55 +296,27 @@ export function QuestionnaireEngine({
               data-question-field={question.field}
               data-question-index={index}
             >
-              {/* Question Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  {/* Section Badge */}
-                  <div className="mb-3">
-                    <SectionBadge section={question.section || 'facility'} />
-                  </div>
-                  
-                  {/* Question Number and Text */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`
-                      w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm
-                      ${isAnswered
-                        ? "bg-green-500 text-white"
-                        : "bg-slate-700 text-slate-300"
-                      }
-                    `}>
-                      {isAnswered ? <Check className="w-5 h-5" /> : index + 1}
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {question.question}
-                    </h2>
-                  </div>
-
-                  {/* Help Text */}
-                  {question.helpText && (
-                    <p className="text-sm text-slate-400 mt-2 ml-13">
-                      {question.helpText}
-                    </p>
-                  )}
-
-                  {/* Validation Error */}
-                  {showError && (
-                    <p className="text-sm text-red-400 mt-2 ml-13 flex items-center gap-2">
-                      <span>⚠️</span> This field is required
-                    </p>
-                  )}
+              {/* Question Number Badge */}
+              <div className="mb-4 flex items-center gap-3">
+                <div className={`
+                  w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
+                  ${isAnswered
+                    ? "bg-green-500 text-white"
+                    : "bg-slate-700 text-slate-300"
+                  }
+                `}>
+                  {isAnswered ? <Check className="w-4 h-4" /> : index + 1}
                 </div>
+                <SectionBadge section={question.section || 'facility'} />
               </div>
 
-              {/* Question Input */}
-              <div className="ml-13">
-                <QuestionRenderer
-                  question={question}
-                  value={answers[question.field]}
-                  onChange={(value) => handleAnswer(question.field, value)}
-                  showValidation={showError}
-                />
-              </div>
+              {/* Question Input - QuestionRenderer includes question text and inputs */}
+              <QuestionRenderer
+                question={question}
+                value={answers[question.field]}
+                onChange={(value) => handleAnswer(question.field, value)}
+                showValidation={showError}
+              />
 
               {/* Auto-scroll Prompt (appears when question is answered) */}
               {isAnswered && autoScrollEnabled && index < visibleQuestions.length - 1 && (
