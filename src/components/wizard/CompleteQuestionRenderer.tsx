@@ -343,6 +343,9 @@ function renderInputComponent(
         </div>
       );
   }
+  // Explicit return to satisfy TypeScript
+  // This line is technically unreachable but TypeScript requires it
+  return null;
 }
 
 // ============================================================================
