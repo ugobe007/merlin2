@@ -250,10 +250,11 @@ export function QuestionnaireEngine({
                 className={`
                   question-card
                   mb-8
-                  bg-white rounded-2xl shadow-lg p-8
+                  bg-slate-800/50 border border-slate-700 rounded-2xl shadow-lg p-8
                   transition-all duration-300 ease-out
-                  ${isCurrent ? "opacity-100" : "opacity-60"}
-                  ${showError ? "ring-2 ring-red-500" : ""}
+                  ${isCurrent ? "opacity-100 border-purple-500/50" : "opacity-60"}
+                  ${showError ? "ring-2 ring-red-500 border-red-500" : ""}
+                  ${isAnswered ? "border-green-500/30 bg-green-500/5" : ""}
                 `}
                 style={{
                   minHeight: "calc(100vh - 300px)",
@@ -266,13 +267,13 @@ export function QuestionnaireEngine({
                   <div
                     className={`
                       w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm
-                      ${isAnswered ? "bg-green-500 text-white" : "bg-slate-200 text-slate-600"}
+                      ${isAnswered ? "bg-green-500 text-white" : "bg-slate-700 text-slate-300"}
                     `}
                   >
                     {isAnswered ? <Check className="w-5 h-5" /> : index + 1}
                   </div>
                   {question.section && (
-                    <div className="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-600">
+                    <div className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs font-medium text-purple-300">
                       {question.section}
                     </div>
                   )}
@@ -291,7 +292,7 @@ export function QuestionnaireEngine({
 
           {/* Solar Preview */}
           {shouldShowSolarPreview() && (
-            <div className="mb-8 bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-2xl shadow-lg p-8">
               <SolarPreviewCard
                 industry={industry}
                 roofArea={
@@ -327,7 +328,7 @@ export function QuestionnaireEngine({
 
           {/* Complete Button - only show when all answered */}
           {answeredCount === visibleQuestions.length && (
-            <div className="mb-8 bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-2xl shadow-lg p-8">
               <button
                 onClick={handleComplete}
                 className="
