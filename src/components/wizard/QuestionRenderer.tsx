@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Question } from '@/data/carwash-questions.config';
-import { CheckboxGrid } from '../v6/step3/inputs';
+import { CheckboxGrid } from './v6/step3/inputs';
 
 interface QuestionRendererProps {
   question: Question;
