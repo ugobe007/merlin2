@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { QuestionRenderer } from "./QuestionRenderer";
 import { SolarPreviewCard } from "./SolarPreviewCard";
-import { Check, Sparkles, ArrowDown } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Question } from "@/data/carwash-questions.config";
 
 interface QuestionnaireEngineProps {
@@ -26,20 +26,19 @@ export function QuestionnaireEngine({
   // State
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialValues);
   const [showValidation, setShowValidation] = useState<Record<string, boolean>>({});
-  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
-  const [userScrolled, setUserScrolled] = useState(false);
-  const [scrollingToQuestion, setScrollingToQuestion] = useState<string | null>(null);
-  
-  // Refs for question elements
-  const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [scrollLocked, setScrollLocked] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const questionCardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Get filtered questions (based on showIf conditions)
   const visibleQuestions = questions.filter((question) => {
     if (!question.showIf) return true;
     return question.showIf(answers);
   });
+
+  const currentQuestion = visibleQuestions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === visibleQuestions.length - 1;
 
   // Calculate progress
   const answeredCount = visibleQuestions.filter((q) => {
@@ -69,12 +68,9 @@ export function QuestionnaireEngine({
 
   // Validate answer based on question type
   const validateAnswer = useCallback((question: Question, value: unknown): boolean => {
-    // Number inputs (slider, number_buttons): 0 is valid, only check for null/undefined/NaN
     if (question.type === "slider" || question.type === "number_buttons") {
       return typeof value === "number" && !isNaN(value);
     }
-
-    // Area input: must be object with value property
     if (question.type === "area_input") {
       if (!value || typeof value !== "object" || !("value" in value)) {
         return false;
@@ -82,134 +78,120 @@ export function QuestionnaireEngine({
       const areaValue = (value as { value: string | number }).value;
       return areaValue !== null && areaValue !== undefined && areaValue !== "";
     }
-
-    // Other types (buttons, toggle, etc.): check for falsy values
     return !!value;
   }, []);
 
+  // Check if question is answered
+  const isQuestionAnswered = useCallback(
+    (question: Question): boolean => {
+      const answer = answers[question.field];
+      return validateAnswer(question, answer);
+    },
+    [answers, validateAnswer]
+  );
+
   // Handle answer change
-  const handleAnswer = useCallback((field: string, value: unknown) => {
-    setAnswers((prev) => {
-      const newAnswers = {
+  const handleAnswer = useCallback(
+    (field: string, value: unknown) => {
+      setAnswers((prev) => ({
         ...prev,
         [field]: value,
-      };
-      return newAnswers;
-    });
-    setShowValidation((prev) => ({
-      ...prev,
-      [field]: false,
-    }));
-  }, []);
+      }));
+      setShowValidation((prev) => ({
+        ...prev,
+        [field]: false,
+      }));
 
-  // Check if question is answered
-  const isQuestionAnswered = useCallback((question: Question): boolean => {
-    const answer = answers[question.field];
-    return validateAnswer(question, answer);
-  }, [answers, validateAnswer]);
+      // Unlock scroll when question is answered
+      const question = visibleQuestions.find((q) => q.field === field);
+      if (question && validateAnswer(question, value)) {
+        setScrollLocked(false);
+      }
+    },
+    [visibleQuestions, validateAnswer]
+  );
 
-  // Find next unanswered question
-  const findNextUnansweredQuestion = useCallback((): Question | null => {
-    const currentIndex = visibleQuestions.findIndex((q) => !isQuestionAnswered(q));
-    if (currentIndex >= 0) {
-      return visibleQuestions[currentIndex];
+  // Scroll to next question
+  const scrollToNextQuestion = useCallback(() => {
+    if (!scrollContainerRef.current || currentQuestionIndex >= visibleQuestions.length - 1) {
+      return;
     }
-    return null;
-  }, [visibleQuestions, isQuestionAnswered]);
 
-  // Smooth scroll to question element using scrollIntoView
-  const scrollToQuestion = useCallback((questionField: string, behavior: ScrollBehavior = 'smooth') => {
-    const questionElement = questionRefs.current[questionField];
-    if (questionElement) {
-      setScrollingToQuestion(questionField);
-      
-      // Use scrollIntoView for smooth scrolling to specific element
-      questionElement.scrollIntoView({
-        behavior: behavior,
-        block: 'center', // Center the element in the viewport
-        inline: 'nearest',
+    const nextIndex = currentQuestionIndex + 1;
+    const nextCard = questionCardRefs.current[nextIndex];
+
+    if (nextCard) {
+      nextCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
 
-      // Clear scrolling state after scroll completes
+      // Lock scroll for next question after scroll completes
       setTimeout(() => {
-        setScrollingToQuestion(null);
-      }, behavior === 'smooth' ? 800 : 100);
+        setScrollLocked(true);
+        setCurrentQuestionIndex(nextIndex);
+      }, 500);
     }
-  }, []);
+  }, [currentQuestionIndex, visibleQuestions.length]);
 
-  // Auto-scroll to next unanswered question when answer is provided
+  // Auto-scroll to next question when current is answered
   useEffect(() => {
-    if (!autoScrollEnabled || userScrolled) return;
-
-    // Find the most recently answered question
-    const lastAnsweredQuestion = visibleQuestions
-      .slice()
-      .reverse()
-      .find((q) => isQuestionAnswered(q));
-
-    if (lastAnsweredQuestion) {
-      const nextUnanswered = findNextUnansweredQuestion();
-      if (nextUnanswered && nextUnanswered.field !== lastAnsweredQuestion.field) {
-        // Scroll to next unanswered question after a short delay
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
-        scrollTimeoutRef.current = setTimeout(() => {
-          scrollToQuestion(nextUnanswered.field, 'smooth');
-        }, 500); // Delay to allow UI to update
+    if (!scrollLocked && currentQuestion && isQuestionAnswered(currentQuestion)) {
+      if (!isLastQuestion) {
+        scrollToNextQuestion();
       }
     }
+  }, [answers, scrollLocked, currentQuestion, isQuestionAnswered, isLastQuestion, scrollToNextQuestion]);
 
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [answers, autoScrollEnabled, userScrolled, visibleQuestions, isQuestionAnswered, findNextUnansweredQuestion, scrollToQuestion]);
-
-  // Track user scroll to disable auto-scroll
+  // Prevent scroll when locked
   useEffect(() => {
-    const container = containerRef.current;
+    const container = scrollContainerRef.current;
     if (!container) return;
 
-    let scrollTimer: NodeJS.Timeout;
-    const handleScroll = () => {
-      setUserScrolled(true);
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        setUserScrolled(false); // Re-enable auto-scroll after user stops scrolling for 2 seconds
-      }, 2000);
+    const handleScroll = (e: Event) => {
+      if (scrollLocked) {
+        e.preventDefault();
+        e.stopPropagation();
+        container.scrollTop = questionCardRefs.current[currentQuestionIndex]?.offsetTop || 0;
+      }
     };
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener("scroll", handleScroll, { passive: false });
     return () => {
-      container.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimer);
+      container.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [scrollLocked, currentQuestionIndex]);
+
+  // Scroll to current question on mount/change
+  useEffect(() => {
+    const currentCard = questionCardRefs.current[currentQuestionIndex];
+    if (currentCard && scrollContainerRef.current) {
+      currentCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [currentQuestionIndex]);
 
   // Handle completion
   const handleComplete = useCallback(() => {
-    // Validate all required questions
-    const invalidQuestions = visibleQuestions.filter((q) => {
-      // All questions are considered required for now
-      return !isQuestionAnswered(q);
-    });
+    const invalidQuestions = visibleQuestions.filter((q) => !isQuestionAnswered(q));
 
     if (invalidQuestions.length > 0) {
-      // Show validation errors and scroll to first invalid question
       const validationState: Record<string, boolean> = {};
       invalidQuestions.forEach((q) => {
         validationState[q.field] = true;
       });
       setShowValidation(validationState);
-      scrollToQuestion(invalidQuestions[0].field, 'smooth');
+      const firstInvalidIndex = visibleQuestions.findIndex((q) => q.field === invalidQuestions[0].field);
+      if (firstInvalidIndex >= 0) {
+        setCurrentQuestionIndex(firstInvalidIndex);
+      }
       return;
     }
 
-    // All questions answered - complete
     onComplete(answers);
-  }, [answers, visibleQuestions, isQuestionAnswered, onComplete, scrollToQuestion]);
+  }, [answers, visibleQuestions, isQuestionAnswered, onComplete]);
 
   // Check if should show solar preview
   const shouldShowSolarPreview = useCallback(() => {
@@ -230,303 +212,149 @@ export function QuestionnaireEngine({
   }
 
   return (
-    <div className="questionnaire-engine">
-      {/* Progress Bar (Top) */}
-      <div className="mb-8 sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm pb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-slate-400">
-            {answeredCount} of {visibleQuestions.length} questions answered
-          </span>
-          <div className="flex items-center gap-3">
-            {/* Auto-scroll Toggle */}
-            <button
-              onClick={() => setAutoScrollEnabled(!autoScrollEnabled)}
-              className={`
-                text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-2
-                ${autoScrollEnabled
-                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                  : "bg-slate-800 text-slate-400 border border-slate-700"
-                }
-              `}
-              title={autoScrollEnabled ? "Auto-scroll enabled" : "Auto-scroll disabled"}
-            >
-              <Sparkles className={`w-3 h-3 ${autoScrollEnabled ? 'text-purple-400' : 'text-slate-500'}`} />
-              {autoScrollEnabled ? "Auto-scroll" : "Manual"}
-            </button>
+    <div className="questionnaire-engine flex flex-col h-full">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-slate-900 border-b border-slate-800 pb-4 pt-4">
+        <div className="max-w-4xl mx-auto px-8">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-medium text-slate-400">Step 3 of 6 · System Details</span>
             <span className="text-sm text-slate-400">{Math.round(progress)}% Complete</span>
           </div>
-        </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Scrolling Questions Container */}
-      <div
-        ref={containerRef}
-        className="space-y-12 pb-12"
-        style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}
-      >
-        {visibleQuestions.map((question, index) => {
-          const isAnswered = isQuestionAnswered(question);
-          const isScrollingTo = scrollingToQuestion === question.field;
-          const showError = showValidation[question.field] || false;
-
-          return (
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
             <div
-              key={question.id || question.field}
-              ref={(el) => {
-                questionRefs.current[question.field] = el;
-              }}
-              className={`
-                question-container
-                p-6 rounded-2xl border-2 transition-all duration-300
-                ${isAnswered
-                  ? "bg-green-500/5 border-green-500/30"
-                  : showError
-                    ? "bg-red-500/5 border-red-500/50 animate-pulse"
-                    : isScrollingTo
-                      ? "bg-purple-500/10 border-purple-500/50 ring-4 ring-purple-500/20"
-                      : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
-                }
-              `}
-              data-question-field={question.field}
-              data-question-index={index}
-            >
-              {/* Question Number Badge */}
-              <div className="mb-4 flex items-center gap-3">
-                <div className={`
-                  w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
-                  ${isAnswered
-                    ? "bg-green-500 text-white"
-                    : "bg-slate-700 text-slate-300"
-                  }
-                `}>
-                  {isAnswered ? <Check className="w-4 h-4" /> : index + 1}
-                </div>
-                <SectionBadge section={question.section || 'facility'} />
-              </div>
-
-              {/* Question Input - QuestionRenderer includes question text and inputs */}
-              <QuestionRenderer
-                question={question}
-                value={answers[question.field]}
-                onChange={(value) => handleAnswer(question.field, value)}
-                showValidation={showError}
-              />
-
-              {/* Auto-scroll Prompt (appears when question is answered) */}
-              {isAnswered && autoScrollEnabled && index < visibleQuestions.length - 1 && (
-                <div className="mt-6 ml-14 animate-pulse">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm">
-                    <ArrowDown className="w-4 h-4" />
-                    <span>Scrolling to next question...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Solar Preview (appears when roof area is entered) */}
-        {shouldShowSolarPreview() && (
-          <div className="mt-8">
-            <SolarPreviewCard
-              industry={industry}
-              roofArea={
-                answers.roofArea &&
-                typeof answers.roofArea === "object" &&
-                "value" in answers.roofArea
-                  ? Number((answers.roofArea as { value: string | number }).value)
-                  : undefined
-              }
-              roofUnit={
-                answers.roofArea && typeof answers.roofArea === "object" && "unit" in answers.roofArea
-                  ? ((answers.roofArea as { unit: string }).unit as "sqft" | "sqm")
-                  : "sqft"
-              }
-              carportInterest={answers.carportInterest as "yes" | "no" | "unsure" | undefined}
-              carportArea={
-                answers.carportArea &&
-                typeof answers.carportArea === "object" &&
-                "value" in answers.carportArea
-                  ? Number((answers.carportArea as { value: string | number }).value)
-                  : undefined
-              }
-              carportUnit={
-                answers.carportArea &&
-                typeof answers.carportArea === "object" &&
-                "unit" in answers.carportArea
-                  ? ((answers.carportArea as { unit: string }).unit as "sqft" | "sqm")
-                  : "sqft"
-              }
+              className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
             />
           </div>
-        )}
-
-        {/* Complete Button (only show when all questions answered) */}
-        {answeredCount === visibleQuestions.length && (
-          <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm pt-6 pb-4 border-t border-slate-800 mt-12">
-            <button
-              onClick={handleComplete}
-              className="
-                w-full px-8 py-4 rounded-xl font-semibold text-lg
-                bg-gradient-to-r from-purple-500 to-indigo-600
-                text-white hover:shadow-lg hover:shadow-purple-500/30
-                transition-all flex items-center justify-center gap-2
-              "
-            >
-              <span>Complete Questionnaire</span>
-              <Check className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
-      {/* Section Summary (Bottom) */}
-      <div className="mt-8 pt-6 border-t border-slate-800">
-        <SectionSummary
-          questions={visibleQuestions}
-          answers={answers}
-          onJumpToSection={onJumpToSection}
-          scrollToQuestion={scrollToQuestion}
-        />
-      </div>
-    </div>
-  );
-}
+      {/* Scroll Container - One question per viewport */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto"
+        style={{ scrollBehavior: "smooth", scrollSnapType: "y mandatory" }}
+      >
+        <div className="max-w-4xl mx-auto px-8 py-12">
+          {visibleQuestions.map((question, index) => {
+            const isAnswered = isQuestionAnswered(question);
+            const isCurrent = index === currentQuestionIndex;
+            const showError = showValidation[question.field] || false;
 
-// ============================================================================
-// SECTION BADGE
-// ============================================================================
-
-function SectionBadge({ section }: { section: string }) {
-  const sectionMeta: Record<string, { label: string; icon: string; color: string }> = {
-    facility: {
-      label: "Facility Details",
-      icon: "🏪",
-      color: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    operations: {
-      label: "Operations",
-      icon: "⚙️",
-      color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-    },
-    energy: {
-      label: "Energy Systems",
-      icon: "⚡",
-      color: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    solar: {
-      label: "Solar Potential",
-      icon: "☀️",
-      color: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-    },
-  };
-
-  const meta = sectionMeta[section] || sectionMeta.facility;
-
-  return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold ${meta.color}`}>
-      <span>{meta.icon}</span>
-      <span>{meta.label}</span>
-    </div>
-  );
-}
-
-// ============================================================================
-// SECTION SUMMARY
-// ============================================================================
-
-function SectionSummary({
-  questions,
-  answers,
-  onJumpToSection,
-  scrollToQuestion,
-}: {
-  questions: Question[];
-  answers: Record<string, unknown>;
-  onJumpToSection?: (sectionId: string) => void;
-  scrollToQuestion: (field: string, behavior?: ScrollBehavior) => void;
-}) {
-  const sections = ["facility", "operations", "energy", "solar"];
-
-  const isQuestionAnswered = (question: Question): boolean => {
-    const answer = answers[question.field];
-    if (question.type === "area_input") {
-      return Boolean(
-        answer &&
-        typeof answer === "object" &&
-        "value" in answer &&
-        (answer as { value: string | number }).value
-      );
-    }
-    if (question.type === "slider" || question.type === "number_buttons") {
-      return typeof answer === "number" && !isNaN(answer);
-    }
-    return answer !== undefined && answer !== null && answer !== "";
-  };
-
-  const handleSectionClick = (sectionId: string) => {
-    if (onJumpToSection) {
-      onJumpToSection(sectionId);
-    }
-    // Find first question in section and scroll to it
-    const sectionQuestion = questions.find((q) => q.section === sectionId);
-    if (sectionQuestion) {
-      scrollToQuestion(sectionQuestion.field, 'smooth');
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-4 gap-3">
-      {sections.map((sectionId) => {
-        const sectionQuestions = questions.filter((q) => q.section === sectionId);
-        const answeredCount = sectionQuestions.filter(isQuestionAnswered).length;
-        const progress = sectionQuestions.length > 0 ? (answeredCount / sectionQuestions.length) * 100 : 0;
-
-        const sectionMeta: Record<string, { label: string; icon: string }> = {
-          facility: { label: "Facility", icon: "🏪" },
-          operations: { label: "Operations", icon: "⚙️" },
-          energy: { label: "Energy", icon: "⚡" },
-          solar: { label: "Solar", icon: "☀️" },
-        };
-
-        const meta = sectionMeta[sectionId];
-
-        return (
-          <button
-            key={sectionId}
-            onClick={() => handleSectionClick(sectionId)}
-            className="
-              text-center p-3 rounded-lg transition-all w-full
-              bg-slate-900/50 hover:bg-slate-800/50
-              border border-slate-800 hover:border-slate-700
-            "
-          >
-            <div className="text-2xl mb-1">{meta.icon}</div>
-            <div className="text-xs text-slate-400 mb-2">{meta.label}</div>
-            <div className="text-sm font-bold text-white">
-              {answeredCount}/{sectionQuestions.length}
-            </div>
-            <div className="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+            return (
               <div
+                key={question.id || question.field}
+                ref={(el) => {
+                  questionCardRefs.current[index] = el;
+                }}
                 className={`
-                  h-full transition-all duration-300
-                  ${progress === 100
-                    ? "bg-green-500"
-                    : "bg-purple-500"
-                  }
+                  question-card
+                  mb-8
+                  bg-white rounded-2xl shadow-lg p-8
+                  transition-all duration-300 ease-out
+                  ${isCurrent ? "opacity-100" : "opacity-60"}
+                  ${showError ? "ring-2 ring-red-500" : ""}
                 `}
-                style={{ width: `${progress}%` }}
+                style={{
+                  minHeight: "calc(100vh - 300px)",
+                  scrollSnapAlign: "start",
+                  scrollSnapStop: "always",
+                }}
+              >
+                {/* Question Number */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm
+                      ${isAnswered ? "bg-green-500 text-white" : "bg-slate-200 text-slate-600"}
+                    `}
+                  >
+                    {isAnswered ? <Check className="w-5 h-5" /> : index + 1}
+                  </div>
+                  {question.section && (
+                    <div className="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-600">
+                      {question.section}
+                    </div>
+                  )}
+                </div>
+
+                {/* Question Renderer - includes question text and inputs */}
+                <QuestionRenderer
+                  question={question}
+                  value={answers[question.field]}
+                  onChange={(value) => handleAnswer(question.field, value)}
+                  showValidation={showError}
+                />
+              </div>
+            );
+          })}
+
+          {/* Solar Preview */}
+          {shouldShowSolarPreview() && (
+            <div className="mb-8 bg-white rounded-2xl shadow-lg p-8">
+              <SolarPreviewCard
+                industry={industry}
+                roofArea={
+                  answers.roofArea &&
+                  typeof answers.roofArea === "object" &&
+                  "value" in answers.roofArea
+                    ? Number((answers.roofArea as { value: string | number }).value)
+                    : undefined
+                }
+                roofUnit={
+                  answers.roofArea && typeof answers.roofArea === "object" && "unit" in answers.roofArea
+                    ? ((answers.roofArea as { unit: string }).unit as "sqft" | "sqm")
+                    : "sqft"
+                }
+                carportInterest={answers.carportInterest as "yes" | "no" | "unsure" | undefined}
+                carportArea={
+                  answers.carportArea &&
+                  typeof answers.carportArea === "object" &&
+                  "value" in answers.carportArea
+                    ? Number((answers.carportArea as { value: string | number }).value)
+                    : undefined
+                }
+                carportUnit={
+                  answers.carportArea &&
+                  typeof answers.carportArea === "object" &&
+                  "unit" in answers.carportArea
+                    ? ((answers.carportArea as { unit: string }).unit as "sqft" | "sqm")
+                    : "sqft"
+                }
               />
             </div>
-          </button>
-        );
-      })}
+          )}
+
+          {/* Complete Button - only show when all answered */}
+          {answeredCount === visibleQuestions.length && (
+            <div className="mb-8 bg-white rounded-2xl shadow-lg p-8">
+              <button
+                onClick={handleComplete}
+                className="
+                  w-full px-8 py-4 rounded-xl font-semibold text-lg
+                  bg-gradient-to-r from-purple-500 to-indigo-600
+                  text-white hover:shadow-lg hover:shadow-purple-500/30
+                  transition-all flex items-center justify-center gap-2
+                "
+              >
+                <span>Complete Questionnaire</span>
+                <Check className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sticky Footer */}
+      <div className="sticky bottom-0 z-10 bg-slate-900 border-t border-slate-800 py-3">
+        <div className="max-w-4xl mx-auto px-8">
+          <p className="text-sm text-center text-slate-400">You can change answers anytime</p>
+        </div>
+      </div>
     </div>
   );
 }
+
+// ============================================================================
+// SECTION SUMMARY (removed for cleaner UX per spec)
+// ============================================================================
