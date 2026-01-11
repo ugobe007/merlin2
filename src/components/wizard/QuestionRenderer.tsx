@@ -69,6 +69,14 @@ export function QuestionRenderer({
             onChange={onChange} 
           />
         )}
+        
+        {question.type === 'checkbox' && question.options && (
+          <CheckboxGrid
+            options={question.options}
+            value={(value as string[]) || []}
+            onChange={(values) => onChange(values)}
+          />
+        )}
       </div>
 
       {/* Merlin Tip (Optional) */}

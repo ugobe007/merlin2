@@ -42,10 +42,12 @@ function transformDatabaseQuestion(dbQuestion: any, index: number): Question {
     questionType = 'slider';
   } else if (dbType === 'select') {
     questionType = 'buttons';
-  } else if (dbType === 'toggle') {
+  } else if (dbType === 'toggle' || dbType === 'boolean') {
     questionType = 'toggle';
   } else if (dbType === 'area_input') {
     questionType = 'area_input';
+  } else if (dbType === 'checkbox' || dbType === 'multiselect') {
+    questionType = 'checkbox';
   }
 
   // Parse options - database schema uses select_options, migrations use options
