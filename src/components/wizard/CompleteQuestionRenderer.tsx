@@ -464,7 +464,7 @@ function ExistingThenPlanned({ question, value, onChange }: { question: Question
                 })}
                 min={option.quantityRange.min}
                 max={option.quantityRange.max}
-                step={option.quantityRange.step}
+                // step prop removed (not supported)
               />
             </div>
           )
