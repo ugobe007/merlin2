@@ -7,7 +7,7 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 
 import { Step1Location } from './steps/Step1Location';
 import { Step2Industry } from './steps/Step2Industry';
-import { Step3Details } from '@/components/wizard/Step3Details';
+import { Step3Details } from './steps/Step3Details';
 // Removed: Step3HotelEnergy - all industries now use Step3Details (scrolling questionnaire)
 import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
