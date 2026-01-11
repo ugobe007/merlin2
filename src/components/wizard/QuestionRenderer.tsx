@@ -30,27 +30,21 @@ export function QuestionRenderer({
 
       {/* Question Input - Rendered by Type */}
       <div className="question-input mb-6">
-        {question.type === 'buttons' && (
-          <ButtonsQuestion 
-            question={question} 
-            value={value} 
-            onChange={onChange} 
+        {(question.type === 'buttons' || question.type === 'number_buttons') && (
+          <PanelButtonGroup
+            question={question}
+            value={value as string | number | undefined}
+            onChange={onChange}
+            showValidation={showValidation}
           />
         )}
         
         {question.type === 'slider' && (
-          <SliderQuestion 
-            question={question} 
-            value={value} 
-            onChange={onChange} 
-          />
-        )}
-        
-        {question.type === 'number_buttons' && (
-          <NumberButtonsQuestion 
-            question={question} 
-            value={value} 
-            onChange={onChange} 
+          <SliderWithButtons
+            question={question}
+            value={value as number | undefined}
+            onChange={onChange}
+            showValidation={showValidation}
           />
         )}
         
