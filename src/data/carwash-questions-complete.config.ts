@@ -656,7 +656,7 @@ export const carWashQuestionsComplete: Question[] = [
     type: 'slider',
     section: 'solar',
     title: 'Available roof area for solar panels?',
-    subtitle: 'Total roof space (we'll calculate usable area)',
+      subtitle: 'Total roof space (we\'ll calculate usable area)',
     range: { min: 0, max: 25000, step: 100 },
     smartDefault: 5000,
     unit: ' sq ft',
