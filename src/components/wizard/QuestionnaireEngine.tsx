@@ -108,7 +108,12 @@ export function QuestionnaireEngine({
         return;
       }
     } else if (currentQuestion.type === "area_input") {
-      if (currentValue === null || currentValue === undefined || typeof currentValue !== "object" || !("value" in currentValue)) {
+      if (
+        currentValue === null ||
+        currentValue === undefined ||
+        typeof currentValue !== "object" ||
+        !("value" in currentValue)
+      ) {
         setShowValidation(true);
         return;
       }
