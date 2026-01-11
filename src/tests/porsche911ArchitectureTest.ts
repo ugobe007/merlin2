@@ -131,8 +131,8 @@ test('calculateFinancials - ROI positive', () => {
   });
   return {
     expected: 'payback < 20yr, ROI > 0%',
-    actual: `payback: ${result.simplePaybackYears.toFixed(1)}yr, ROI: ${result.tenYearROI.toFixed(0)}%`,
-    passed: result.simplePaybackYears < 20 && result.tenYearROI > 0,
+    actual: `payback: ${result.simplePaybackYears.toFixed(1)}yr, ROI: ${result.fiveYearROI.toFixed(0)}%`,
+    passed: result.simplePaybackYears < 20 && result.fiveYearROI > 0,
   };
 });
 

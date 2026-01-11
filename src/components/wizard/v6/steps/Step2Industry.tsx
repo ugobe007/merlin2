@@ -107,6 +107,8 @@ export function Step2Industry({ state, updateState }: Props) {
             <button
               key={industry.slug}
               onClick={() => selectIndustry(industry.slug, industry.name)}
+              data-industry={industry.slug}
+              data-testid={`industry-${industry.slug}`}
               className={`relative group overflow-hidden rounded-2xl transition-all duration-300 ${
                 isSelected 
                   ? 'ring-4 ring-purple-500 scale-105 shadow-xl shadow-purple-500/30' 

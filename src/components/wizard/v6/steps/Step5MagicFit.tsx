@@ -13,9 +13,10 @@
  * - ROI metrics (Payback, 10-Year ROI, 25-Year Profit)
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Check, Loader2, AlertTriangle } from "lucide-react";
 import type { WizardState } from "../types";
+import { MerlinAdvisorPanel } from "@/components/wizard/MerlinAdvisorPanel";
 
 // ============================================================================
 // SSOT IMPORTS
@@ -24,6 +25,7 @@ import { generateQuote, isAuthenticated, isRejected } from "@/services/merlin";
 import type { TrueQuoteAuthenticatedResult } from "@/services/merlin";
 import { TrueQuoteVerifyBadge } from "../components/TrueQuoteVerifyBadge";
 import type { TrueQuoteWorksheetData } from "../components/TrueQuoteVerifyBadge";
+import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
 import { calculateIncentives } from "@/services/stateIncentivesService";
 
 // ============================================================================
@@ -206,7 +208,7 @@ function buildWorksheetData(
         typeName: quoteResult.facility?.industryName || state.industry || "",
         subtype: state.useCaseData?.facilityType || state.industry || "",
         subtypeName: state.useCaseData?.facilitySubtype || state.industry || "",
-        facilityDetails: state.useCaseData || {},
+        facilityDetails: state.useCaseData?.inputs || {}, // Use inputs, not entire useCaseData object
       },
     },
 
@@ -251,10 +253,21 @@ function buildWorksheetData(
         stepNumber: 3,
         category: "solar_sizing",
         name: "Size Solar Array",
-        description: "Solar PV sizing based on consumption offset target",
+        description: `Solar PV sizing based on ${state.selectedOptions?.includes('solar') ? 'user selection' : 'system recommendation'} from Step 4`,
         formula: "Solar kW = Target Annual kWh ÷ Capacity Factor",
         calculation: `${(option.solar?.capacityKW || 0).toLocaleString()} kW solar array`,
         inputs: [
+          {
+            name: "Solar Selected",
+            value: state.selectedOptions?.includes('solar') ? 'Yes' : 'No',
+            source: "Step 4 Options",
+          },
+          {
+            name: "Custom Solar kW",
+            value: state.customSolarKw || 0,
+            unit: "kW",
+            source: state.customSolarKw ? "User input (Step 4)" : "Auto-calculated",
+          },
           {
             name: "Annual Consumption",
             value: base.load.annualConsumptionKWh,
@@ -272,23 +285,110 @@ function buildWorksheetData(
       },
       {
         stepNumber: 4,
+        category: "generator",
+        name: "Generator Configuration",
+        description: `Generator sizing based on ${state.selectedOptions?.includes('generator') ? 'user selection' : 'system recommendation'} from Step 4`,
+        formula: "Generator kW = Peak Demand × Backup Factor",
+        calculation: `${(option.generator?.capacityKW || 0).toLocaleString()} kW generator`,
+        inputs: [
+          {
+            name: "Generator Selected",
+            value: state.selectedOptions?.includes('generator') ? 'Yes' : 'No',
+            source: "Step 4 Options",
+          },
+          {
+            name: "Custom Generator kW",
+            value: state.customGeneratorKw || 0,
+            unit: "kW",
+            source: state.customGeneratorKw ? "User input (Step 4)" : "Auto-calculated",
+          },
+          {
+            name: "Peak Demand",
+            value: base.load.peakDemandKW,
+            unit: "kW",
+            source: "Step 1",
+          },
+        ],
+        output: { name: "Generator Capacity", value: option.generator?.capacityKW || 0, unit: "kW" },
+      },
+      {
+        stepNumber: 5,
+        category: "ev_charging",
+        name: "EV Charging Configuration",
+        description: `EV charging stations based on ${state.selectedOptions?.includes('ev') ? 'user selection' : 'system recommendation'} from Step 4`,
+        formula: "EV Chargers = L2 Count + DCFC Count + Ultra Fast Count",
+        calculation: `${(option.ev?.l2Count || 0) + (option.ev?.dcfcCount || 0) + (option.ev?.ultraFastCount || 0)} total EV chargers`,
+        inputs: [
+          {
+            name: "EV Charging Selected",
+            value: state.selectedOptions?.includes('ev') ? 'Yes' : 'No',
+            source: "Step 4 Options",
+          },
+          {
+            name: "L2 Chargers",
+            value: option.ev?.l2Count || 0,
+            source: state.customEvL2 ? `User input (${state.customEvL2} from Step 4)` : "Auto-calculated",
+          },
+          {
+            name: "DCFC Chargers",
+            value: option.ev?.dcfcCount || 0,
+            source: state.customEvDcfc ? `User input (${state.customEvDcfc} from Step 4)` : "Auto-calculated",
+          },
+          {
+            name: "Ultra Fast Chargers",
+            value: option.ev?.ultraFastCount || 0,
+            source: "Auto-calculated",
+          },
+        ],
+        output: { 
+          name: "Total EV Chargers", 
+          value: (option.ev?.l2Count || 0) + (option.ev?.dcfcCount || 0) + (option.ev?.ultraFastCount || 0),
+          unit: "chargers"
+        },
+      },
+      {
+        stepNumber: 7,
         category: "financial",
         name: "Calculate Financials",
-        description: "Total investment and savings calculation",
+        description: "Total investment and savings calculation including all selected components",
         formula: "Net Cost = Total Investment - Federal ITC - State Incentives",
         calculation: `$${option.financials.netCost.toLocaleString()} = $${option.financials.totalInvestment.toLocaleString()} - $${option.financials.federalITC.toLocaleString()}`,
         inputs: [
           {
+            name: "BESS Investment",
+            value: option.bess.energyKWh * 175, // Estimated cost per kWh
+            unit: "USD",
+            source: "BESS pricing",
+          },
+          {
+            name: "Solar Investment",
+            value: (option.solar?.capacityKW || 0) * 1200, // Estimated cost per kW
+            unit: "USD",
+            source: state.selectedOptions?.includes('solar') ? "User selection (Step 4)" : "Optional",
+          },
+          {
+            name: "Generator Investment",
+            value: (option.generator?.capacityKW || 0) * 700, // Estimated cost per kW
+            unit: "USD",
+            source: state.selectedOptions?.includes('generator') ? "User selection (Step 4)" : "Optional",
+          },
+          {
+            name: "EV Charging Investment",
+            value: ((option.ev?.l2Count || 0) * 5000) + ((option.ev?.dcfcCount || 0) * 50000),
+            unit: "USD",
+            source: state.selectedOptions?.includes('ev') ? "User selection (Step 4)" : "Optional",
+          },
+          {
             name: "Total Investment",
             value: option.financials.totalInvestment,
             unit: "USD",
-            source: "Equipment pricing",
+            source: "Sum of all components",
           },
           {
             name: "Federal ITC",
             value: option.financials.federalITC,
             unit: "USD",
-            source: "IRS 30% ITC",
+            source: "IRS 30% ITC (BESS + Solar only)",
           },
         ],
         output: { name: "Net Cost", value: option.financials.netCost, unit: "USD" },
@@ -360,14 +460,25 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(true); // Start collapsed to match defaultCollapsed={true}
   const [stateIncentives, setStateIncentives] = useState<Record<TierKey, number>>({
     starter: 0,
     perfectFit: 0,
     beastMode: 0,
   });
+  
+  // Create a stable key for quote generation (only changes when inputs change)
+  const quoteKey = `${state.zipCode}-${state.industry}-${JSON.stringify(state.useCaseData)}-${JSON.stringify(state.selectedOptions)}-${state.customSolarKw}-${state.customGeneratorKw}`;
+  const lastQuoteKeyRef = useRef<string>('');
+  const initializedQuoteIdRef = useRef<string | null>(null);
 
   // === FETCH QUOTE ===
   useEffect(() => {
+    // Skip if this is the same quote key (prevents re-generation)
+    if (quoteKey === lastQuoteKeyRef.current) {
+      return;
+    }
+
     async function loadQuote() {
       setIsLoading(true);
       setError(null);
@@ -382,6 +493,46 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
 
         if (isAuthenticated(result)) {
           setQuoteResult(result);
+          
+          // CRITICAL: Update wizard state immediately with perfectFit values (default)
+          // This ensures ValueTicker has values to display even before user selects a tier
+          // Only do this ONCE per quoteId to prevent infinite loop
+          if (result.quoteId !== initializedQuoteIdRef.current) {
+            const defaultTier: TierKey = result.options.perfectFit ? 'perfectFit' : (result.options.starter ? 'starter' : 'beastMode');
+            const defaultOption = result.options[defaultTier];
+            if (defaultOption) {
+              // Set default tier selection in UI
+              setSelectedTier(defaultTier);
+              
+              // Update wizard state with default tier values
+              updateState({
+                selectedPowerLevel: defaultTier === "starter" ? "starter" : defaultTier === "perfectFit" ? "perfect_fit" : "beast_mode",
+                calculations: {
+                  bessKW: defaultOption.bess.powerKW,
+                  bessKWh: defaultOption.bess.energyKWh,
+                  solarKW: defaultOption.solar.capacityKW,
+                  evChargers: defaultOption.ev.l2Count + defaultOption.ev.dcfcCount + defaultOption.ev.ultraFastCount,
+                  generatorKW: defaultOption.generator.capacityKW,
+                  totalInvestment: defaultOption.financials.totalInvestment,
+                  annualSavings: defaultOption.financials.annualSavings,
+                  paybackYears: defaultOption.financials.paybackYears,
+                  fiveYearROI: defaultOption.financials.fiveYearROI || ((defaultOption.financials.annualSavings * 5) / defaultOption.financials.netCost) * 100,
+                  federalITC: defaultOption.financials.federalITC,
+                  netInvestment: defaultOption.financials.netCost,
+                  quoteId: result.quoteId,
+                  // Add utility rate info for ValueTicker
+                  utilityRate: state.electricityRate || 0.12,
+                  demandCharge: state.calculations?.demandCharge || 15,
+                },
+              });
+              
+              // Mark this quoteId as initialized to prevent re-initialization
+              initializedQuoteIdRef.current = result.quoteId;
+            }
+          }
+          
+          // Update last quote key after processing (prevents regeneration loop)
+          lastQuoteKeyRef.current = quoteKey;
 
           // Load state incentives for each tier
           const incentivePromises = (["starter", "perfectFit", "beastMode"] as const).map(
@@ -423,7 +574,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     }
 
     loadQuote();
-  }, [state]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey]); // Only re-run when quoteKey changes (inputs change)
 
   // === SELECT TIER ===
   const selectPowerLevel = (tier: TierKey) => {
@@ -444,7 +596,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
         totalInvestment: option.financials.totalInvestment,
         annualSavings: option.financials.annualSavings,
         paybackYears: option.financials.paybackYears,
-        tenYearROI: option.financials.tenYearROI,
+        fiveYearROI: option.financials.fiveYearROI || ((option.financials.annualSavings * 5) / option.financials.netCost) * 100, // Calculate 5-year ROI if not provided
         federalITC: option.financials.federalITC,
         netInvestment: option.financials.netCost,
         quoteId: quoteResult.quoteId,
@@ -500,11 +652,27 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
 
   // === MAIN RENDER ===
   return (
-    <div className="space-y-8">
-      {/* Inject custom styles */}
-      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
-      {/* Header */}
-      <div className="text-center">
+    <div className="relative">
+      {/* Left-Side Collapsible Merlin Advisor Panel (hidden by default for Step 5) */}
+      <MerlinAdvisorPanel
+        currentWizardStep={5}
+        totalWizardSteps={6}
+        defaultCollapsed={true}
+        stepGuidance="✨ Almost there! Choose your power level based on your needs. Perfect Fit is our recommendation for the best balance of savings and investment."
+        onCollapseChange={setIsPanelCollapsed}
+      />
+
+      {/* Main Content - Centered, shifts right when panel is open */}
+      <div 
+        className="max-w-7xl mx-auto space-y-8 transition-all duration-300" 
+        style={{ 
+          ...(isPanelCollapsed ? {} : { marginLeft: '320px', marginRight: 'auto' })
+        }}
+      >
+        {/* Inject custom styles */}
+        <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+        {/* Header */}
+        <div className="text-center">
         <p className="text-purple-400 uppercase tracking-[0.3em] text-sm font-medium mb-3">
           Step 5 of 6
         </p>
@@ -520,8 +688,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
         </p>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Cards Grid - Wider cards with more spacing */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {(["starter", "perfectFit", "beastMode"] as const).map((tier) => {
           const config = TIER_CONFIG[tier];
           const option = quoteResult.options[tier];
@@ -543,22 +711,23 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                 ${isSelected ? "ring-2 ring-purple-500" : ""}
               `}
             >
-              {/* Recommended Banner (Perfect Fit only) */}
+              {/* Recommended Banner (Perfect Fit only) - TrueQuote Branded */}
               {isPerfectFit && (
                 <>
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 recommended-glow" />
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                    <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-lg shadow-purple-500/30">
-                      ⭐ RECOMMENDED
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 recommended-glow" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+                    <TrueQuoteBadge size="sm" variant="pill" className="!h-5 !px-2 !py-0" />
+                    <div className="bg-gradient-to-r from-amber-600/90 to-amber-500/90 text-white px-3 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-lg shadow-amber-500/40 border border-amber-400/50">
+                      RECOMMENDED
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Top Section */}
-              <div className={`p-5 ${isPerfectFit ? "pt-9" : ""}`}>
+              {/* Top Section - Reduced vertical padding for wider, less tall cards */}
+              <div className={`px-6 py-4 ${isPerfectFit ? "pt-10" : "pt-6"}`}>
                 {/* HEADLINE */}
-                <div className="text-center mb-4">
+                <div className="text-center mb-3">
                   <h2
                     className={`text-4xl font-black tracking-tight ${config.headlineClass}`}
                     style={{ fontFamily: "Outfit, sans-serif" }}
@@ -572,8 +741,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   </p>
                 </div>
 
-                {/* HERO: Annual Savings */}
-                <div className="text-center py-4">
+                {/* HERO: Annual Savings - Reduced padding */}
+                <div className="text-center py-3">
                   <p
                     className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                   >
@@ -587,8 +756,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   </p>
                 </div>
 
-                {/* Equipment Strip */}
-                <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+                {/* Equipment Strip - Tighter spacing */}
+                <div className="flex flex-wrap justify-center gap-1.5 mb-2">
                   {/* BESS - Always shown */}
                   <div className={`equipment-chip ${config.chipBg}`}>
                     <span>🔋</span>
@@ -659,26 +828,26 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                 )}
               </div>
 
-              {/* Financial Summary */}
+              {/* Financial Summary - Reduced padding */}
               <div
-                className={`border-t p-5 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
+                className={`border-t px-6 py-4 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
               >
                 <p
-                  className={`text-[10px] uppercase tracking-widest mb-3 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
                 >
                   Financial Summary
                 </p>
 
-                <div className="space-y-2 text-sm mb-4">
+                <div className="space-y-1.5 text-sm mb-3">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Total Investment</span>
                     <span className="text-slate-300">
                       {formatCurrency(option.financials.totalInvestment)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-emerald-500">Federal ITC (30%)</span>
-                    <span className="text-emerald-400">
+                    <span className="text-emerald-400 text-xl font-bold">
                       −{formatCurrency(option.financials.federalITC)}
                     </span>
                   </div>
@@ -702,8 +871,8 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   </div>
                 </div>
 
-                {/* ROI Metrics */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                {/* ROI Metrics - Tighter spacing */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className={`text-center p-2 rounded-lg ${config.metricBg}`}>
                     <p
                       className="text-lg font-bold text-white"
@@ -722,12 +891,12 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                       className="text-lg font-bold text-emerald-400"
                       style={{ fontFamily: "Outfit, sans-serif" }}
                     >
-                      {option.financials.tenYearROI.toFixed(0)}%
+                      {(option.financials.fiveYearROI || ((option.financials.annualSavings * 5) / option.financials.netCost) * 100).toFixed(0)}%
                     </p>
                     <p
                       className={`text-[10px] uppercase ${isPerfectFit ? "text-purple-300/50" : "text-slate-500"}`}
                     >
-                      10-Yr ROI
+                      5-Yr ROI
                     </p>
                   </div>
                   <div className={`text-center p-2 rounded-lg ${config.metricBg}`}>
@@ -745,18 +914,25 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
                   </div>
                 </div>
 
-                {/* CTA Button */}
+                {/* CTA Button - Larger when selected */}
                 <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card onClick from firing
+                    selectPowerLevel(tier);
+                  }}
                   className={`
-                    w-full py-3 rounded-xl font-semibold text-sm border transition-all
+                    w-full rounded-xl font-semibold border transition-all
                     flex items-center justify-center gap-2
-                    ${isSelected ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white border-transparent" : config.buttonClass}
+                    ${isSelected 
+                      ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white border-transparent py-5 text-lg shadow-lg shadow-purple-500/30 scale-105 transform" 
+                      : `py-3 text-sm ${config.buttonClass}`
+                    }
                   `}
                 >
                   {isSelected ? (
                     <>
-                      <Check className="w-4 h-4" />
-                      Selected
+                      <Check className="w-5 h-5" />
+                      <span className="font-bold">Selected</span>
                     </>
                   ) : (
                     `Select ${config.name
@@ -776,34 +952,60 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
         })}
       </div>
 
-      {/* Legend */}
-      <div className="flex justify-center">
-        <div className="flex flex-wrap justify-center gap-5 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span>🔋</span> BESS
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span>☀️</span> Roof Solar
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span>🅿️</span> Carport Solar
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span>⚡</span> EV Chargers
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span>🔥</span> Generator
-          </span>
+      {/* Equipment Legend Panel - Simple List Design (No Buttons) */}
+      <div className="mt-8 p-6 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-800/80 to-slate-900/90 border-2 border-purple-500/30 shadow-2xl shadow-purple-500/10">
+        <h3 className="text-center text-lg font-bold text-white mb-6" style={{ fontFamily: "Outfit, sans-serif" }}>
+          Equipment Breakdown
+        </h3>
+        
+        {/* Equipment Items - Plain Icons and Text (No Button Styling) */}
+        <div className="flex flex-wrap justify-center gap-8 text-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">🔋</span>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">BESS</span>
+              <span className="text-slate-400 text-xs">Battery Storage</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">☀️</span>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">Roof Solar</span>
+              <span className="text-slate-400 text-xs">Rooftop Array</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">🅿️</span>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">Carport Solar</span>
+              <span className="text-slate-400 text-xs">Canopy Array</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">⚡</span>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">EV Chargers</span>
+              <span className="text-slate-400 text-xs">Charging Stations</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">🔥</span>
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">Generator</span>
+              <span className="text-slate-400 text-xs">Backup Power</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* TrueQuote Badge */}
-      <div className="flex justify-center">
+      {/* TrueQuote Verification Badge - Bottom Center (Working Link) */}
+      <div className="flex justify-center mt-8">
         <TrueQuoteVerifyBadge
           quoteId={quoteResult.quoteId}
           worksheetData={buildWorksheetData(quoteResult, state, selectedTier)}
           variant="compact"
         />
+      </div>
       </div>
     </div>
   );

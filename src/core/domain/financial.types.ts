@@ -84,7 +84,7 @@ export interface FinancialCalculationResult {
   
   // ROI Metrics (Simple)
   paybackYears: number;
-  roi10Year: number;
+  roi5Year: number;  // Changed from roi10Year to 5-year for more credible ROI timeline
   roi25Year: number;
   
   // Advanced Metrics (NPV/IRR with degradation)

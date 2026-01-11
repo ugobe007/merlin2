@@ -25,7 +25,7 @@ export interface RAVSInput {
     npv: number; // Net Present Value ($)
     irr: number; // Internal Rate of Return (%)
     paybackYears: number; // Simple payback period
-    roi10Year: number; // 10-year ROI (%)
+    roi5Year: number; // 5-year ROI (%)
     initialInvestment: number; // Total upfront cost ($)
   };
 
@@ -274,7 +274,7 @@ interface ComponentResult {
 
 function calculateFinancialScore(input: RAVSInput): ComponentResult {
   const factors: RAVSFactor[] = [];
-  const { npv, irr, paybackYears, roi10Year, initialInvestment } = input.financial;
+  const { npv, irr, paybackYears, roi5Year, initialInvestment } = input.financial;
 
   // NPV Score (0-100)
   // Positive NPV is good, higher is better
@@ -368,34 +368,34 @@ function calculateFinancialScore(input: RAVSInput): ComponentResult {
     description: `${paybackYears.toFixed(1)} year payback`,
   });
 
-  // 10-Year ROI Score (0-100)
+  // 5-Year ROI Score (0-100)
   const roiScore = Math.min(
     100,
     Math.max(
       0,
-      roi10Year >= 200
+      roi5Year >= 200
         ? 98
-        : roi10Year >= 150
+        : roi5Year >= 150
           ? 92
-          : roi10Year >= 100
+          : roi5Year >= 100
             ? 85
-            : roi10Year >= 75
+            : roi5Year >= 75
               ? 78
-              : roi10Year >= 50
+              : roi5Year >= 50
                 ? 70
-                : roi10Year >= 25
+                : roi5Year >= 25
                   ? 60
-                  : roi10Year >= 0
+                  : roi5Year >= 0
                     ? 45
                     : 20
     )
   );
   factors.push({
-    name: "10-Year ROI",
+    name: "5-Year ROI",
     score: roiScore,
     weight: 0.2,
-    impact: roi10Year >= 100 ? "positive" : roi10Year >= 50 ? "neutral" : "negative",
-    description: `${roi10Year.toFixed(0)}% cumulative ROI`,
+    impact: roi5Year >= 100 ? "positive" : roi5Year >= 50 ? "neutral" : "negative",
+    description: `${roi5Year.toFixed(0)}% cumulative ROI`,
   });
 
   // Calculate weighted score
@@ -774,7 +774,7 @@ export function quickRAVS(params: {
       npv: params.npv,
       irr: params.irr,
       paybackYears: params.paybackYears,
-      roi10Year: (params.npv / (params.systemSizeKW * 400)) * 100,
+      roi5Year: (params.npv / (params.systemSizeKW * 400)) * 100,
       initialInvestment: params.systemSizeKW * 400,
     },
     project: {

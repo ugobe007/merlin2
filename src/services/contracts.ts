@@ -233,7 +233,7 @@ export interface TrueQuoteBaseCalculation {
     netCost: number;
     annualSavings: number;
     simplePaybackYears: number;
-    tenYearROI: number;
+    fiveYearROI: number;  // Changed from fiveYearROI to 5-year for more credible ROI timeline
     twentyFiveYearNPV: number;
   };
 }
@@ -290,7 +290,7 @@ export interface SystemOption {
     netCost: number;
     annualSavings: number;
     paybackYears: number;
-    tenYearROI: number;
+    fiveYearROI: number;  // Changed from fiveYearROI to 5-year for more credible ROI timeline
     monthlyPayment?: number;   // If financing available
   };
 

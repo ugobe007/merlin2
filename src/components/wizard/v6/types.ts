@@ -219,7 +219,7 @@ export interface SystemCalculations {
   totalInvestment: number;
   annualSavings: number;
   paybackYears: number;
-  tenYearROI: number;
+  fiveYearROI: number;  // Changed from fiveYearROI to 5-year for more credible ROI timeline
   
   // After incentives
   federalITC: number;          // ITC amount

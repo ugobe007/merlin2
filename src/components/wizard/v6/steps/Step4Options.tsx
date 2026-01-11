@@ -17,12 +17,17 @@ import {
   Fuel,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Check,
   Plus,
   Star,
   TrendingUp,
+  AlertTriangle,
+  Shield,
 } from "lucide-react";
 import type { WizardState } from "../types";
+import { TrueQuoteBadge } from "@/components/shared/TrueQuoteBadge";
+import { MerlinAdvisorPanel } from "@/components/wizard/MerlinAdvisorPanel";
 
 interface Props {
   state: WizardState;
@@ -59,7 +64,7 @@ interface EvTier {
   monthlyRevenueRaw: number;
   installCost: string;
   installCostRaw: number;
-  tenYearRevenue: number;
+  fiveYearRevenue: number;  // Changed from tenYearRevenue to 5-year for more credible ROI timeline
   guestAppeal: string;
   tag?: string;
 }
@@ -118,7 +123,7 @@ function calcEv(name: string, l2: number, dc: number): EvTier {
     monthlyRevenueRaw: rev,
     installCost: `$${cost.toLocaleString()}`,
     installCostRaw: cost,
-    tenYearRevenue: rev * 12 * 10,
+    fiveYearRevenue: rev * 12 * 5,  // Changed from 10 years to 5 years
     guestAppeal: stars,
   };
 }
@@ -145,6 +150,7 @@ function calcGen(name: string, kw: number, fuel: string): GeneratorTier {
 // ============================================================================
 
 const Step4Options = ({ state, updateState }: Props) => {
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(true); // Start collapsed to match defaultCollapsed={true}
   const [selectedOptions, setSelectedOptions] = useState<string[]>(
     state.selectedOptions || ["solar"]
   );
@@ -198,9 +204,9 @@ const Step4Options = ({ state, updateState }: Props) => {
   const curSolar = solarTier ? solarOpts[solarTier as keyof typeof solarOpts] : null;
   const curEv = evTier ? evOpts[evTier as keyof typeof evOpts] : null;
   const curGen = generatorTier ? genOpts[generatorTier as keyof typeof genOpts] : null;
-  const tenYr =
-    (selectedOptions.includes("solar") && curSolar ? curSolar.annualSavingsRaw * 10 : 0) +
-    (selectedOptions.includes("ev") && curEv ? curEv.tenYearRevenue : 0);
+  const fiveYr =
+    (selectedOptions.includes("solar") && curSolar ? curSolar.annualSavingsRaw * 5 : 0) +
+    (selectedOptions.includes("ev") && curEv ? curEv.fiveYearRevenue : 0);
   const maxSolar = solarOpts.maximum.annualSavingsRaw;
 
   const sync = (opts: string[], sol: string | null, ev: string | null) =>
@@ -227,17 +233,32 @@ const Step4Options = ({ state, updateState }: Props) => {
 
   return (
     <div className="relative">
+      {/* Left-Side Collapsible Merlin Advisor Panel (hidden by default for Step 4) */}
+      <MerlinAdvisorPanel
+        currentWizardStep={4}
+        totalWizardSteps={6}
+        defaultCollapsed={true}
+        stepGuidance="✨ Now let's explore opportunities! Solar, EV charging, and backup generators can maximize your ROI and energy independence."
+        onCollapseChange={setIsPanelCollapsed}
+      />
+
       {/* Background glow effects */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto relative z-10 space-y-6">
+      {/* Main Content - Centered, shifts right only when panel is open */}
+      <div 
+        className="max-w-4xl mx-auto relative z-10 space-y-6 transition-all duration-300" 
+        style={{ 
+          ...(isPanelCollapsed ? {} : { marginLeft: '320px', marginRight: 'auto' })
+        }}
+      >
         {/* Header */}
         <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm font-medium text-purple-300 mb-4">
-            <Star className="w-4 h-4 text-amber-400" />
-            Personalized Recommendations
-          </span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-amber-500/20 border border-amber-500/30 rounded-full text-sm font-medium mb-4">
+            <TrueQuoteBadge size="sm" variant="pill" className="!h-5 !px-2" />
+            <span className="text-amber-300 font-semibold">Personalized Recommendations</span>
+          </div>
           <h1
             className="text-3xl md:text-4xl font-bold text-white mb-3"
             style={{ fontFamily: "Outfit, sans-serif" }}
@@ -302,6 +323,38 @@ const Step4Options = ({ state, updateState }: Props) => {
             accentColor="amber"
           >
             <div className="p-5 border-t border-slate-700/50">
+              {/* TrueQuote Verification Button - Prominent */}
+              <div className="mb-4 p-4 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 border-2 border-amber-500/50 rounded-xl shadow-xl shadow-amber-500/10 hover:shadow-amber-500/20 transition-all hover:scale-[1.02]">
+                <button
+                  onClick={() => {
+                    // TODO: Open TrueQuote calculator/modal
+                    console.log('TrueQuote calculator clicked');
+                  }}
+                  className="w-full flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <TrueQuoteBadge size="md" variant="premium" animated={true} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">
+                        Verified Calculations
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        Click to verify savings calculations and sources
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="px-3 py-1.5 bg-amber-500/20 border border-amber-500/40 rounded-lg flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-bold text-amber-400">1</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                  </div>
+                </button>
+              </div>
+              
               <div className="text-sm text-slate-400 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-amber-400" />
                 Choose configuration based on {(usage / 1e6).toFixed(2)}M kWh usage:
@@ -342,10 +395,10 @@ const Step4Options = ({ state, updateState }: Props) => {
             badgeColor="emerald"
             value={
               curEv
-                ? `$${Math.round(curEv.tenYearRevenue / 1000)}k`
-                : `$${Math.round(evOpts.premium.tenYearRevenue / 1000)}k+`
+                ? `$${Math.round(curEv.fiveYearRevenue / 1000)}k`
+                : `$${Math.round(evOpts.premium.fiveYearRevenue / 1000)}k+`
             }
-            valueLabel={curEv ? "Selected" : "10yr Revenue"}
+            valueLabel={curEv ? "Selected" : "5yr Revenue"}
             isSelected={selectedOptions.includes("ev")}
             isExpanded={expandedCard === "ev"}
             onToggle={() => toggle("ev")}
@@ -375,8 +428,8 @@ const Step4Options = ({ state, updateState }: Props) => {
                       { label: "Monthly Rev", value: o.monthlyRevenue, highlight: true },
                       { label: "Install Cost", value: o.installCost },
                       {
-                        label: "10yr Revenue",
-                        value: `$${(o.tenYearRevenue / 1000).toFixed(0)}k`,
+                        label: "5yr Revenue",
+                        value: `$${(o.fiveYearRevenue / 1000).toFixed(0)}k`,
                         highlight: true,
                         color: "cyan",
                       },
@@ -503,12 +556,12 @@ const Step4Options = ({ state, updateState }: Props) => {
                 </div>
               )}
               <div className="border-l-2 border-emerald-500/30 pl-6 text-right">
-                <div className="text-xs text-slate-500">Combined 10-Year Value</div>
+                <div className="text-xs text-slate-500">Combined 5-Year Value</div>
                 <div
                   className="text-3xl font-bold text-emerald-400"
                   style={{ fontFamily: "Outfit, sans-serif" }}
                 >
-                  ${Math.round(tenYr / 1000).toLocaleString()}k
+                  ${Math.round(fiveYr / 1000).toLocaleString()}k
                 </div>
               </div>
             </div>
@@ -609,10 +662,12 @@ function OptionCard({
           <div>
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-white">{title}</h3>
+              {/* TrueQuote Branded Badge */}
+              <TrueQuoteBadge size="sm" variant="pill" className="!h-6 !px-2.5" />
               <span
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${badgeColors[badgeColor]}`}
               >
-                {badge} ⭐
+                {badge}
               </span>
             </div>
             <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
@@ -709,12 +764,13 @@ function TierCard({ tier, isSelected, onClick, accentColor, sizeLabel, metrics }
         }
       `}
     >
-      {/* Tag */}
+      {/* Tag - TrueQuote Branded */}
       {tier.tag && (
         <div
-          className={`absolute -top-2.5 right-3 px-2.5 py-1 ${tagColors[tier.tag] || "bg-purple-500"} rounded-md text-[10px] font-bold text-white shadow-lg`}
+          className={`absolute -top-2.5 right-3 flex items-center gap-1.5 px-2.5 py-1 ${tagColors[tier.tag] || "bg-purple-500"} rounded-md text-[10px] font-bold text-white shadow-lg`}
         >
-          {tier.tag}
+          <Shield className="w-3 h-3 text-amber-300" />
+          <span>{tier.tag}</span>
         </div>
       )}
 

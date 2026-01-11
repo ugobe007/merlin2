@@ -65,6 +65,10 @@ const INDUSTRY_NORMALIZE: Record<string, Industry> = {
   'gas-station': 'gas_station',
   'residential': 'residential',
   'microgrid': 'microgrid',
+  'heavy-duty-truck-stop': 'heavy_duty_truck_stop',
+  'heavy_duty_truck_stop': 'heavy_duty_truck_stop',
+  'truck-stop': 'heavy_duty_truck_stop',
+  'truck_stop': 'heavy_duty_truck_stop',
 };
 
 /**
@@ -194,6 +198,15 @@ const industryTypeMapLegacy: Record<string, string> = {
   'indoor_farm': 'indoor-farm',
   'government': 'government',
   'public-building': 'government',
+  'heavy-duty-truck-stop': 'heavy_duty_truck_stop',
+  'heavy_duty_truck_stop': 'heavy_duty_truck_stop',
+  'truck-stop': 'heavy_duty_truck_stop',
+  'truck_stop': 'heavy_duty_truck_stop',
+  'airport': 'airport',
+  'gas-station': 'gas_station',
+  'gas_station': 'gas_station',
+  'residential': 'residential',
+  'microgrid': 'microgrid',
 };
 
 /**
@@ -219,6 +232,15 @@ function getSubtypeFieldName(industry: string): string {
     'agriculture': 'farmType',
     'indoor-farm': 'farmType',
     'cold-storage': 'facilityType',
+    'heavy_duty_truck_stop': 'facilityType',
+    'heavy-duty-truck-stop': 'facilityType',
+    'truck-stop': 'facilityType',
+    'truck_stop': 'facilityType',
+    'airport': 'facilityType',
+    'gas-station': 'facilityType',
+    'gas_station': 'facilityType',
+    'residential': 'facilityType',
+    'microgrid': 'facilityType',
   };
   return fieldMap[industry] || 'type';
 }

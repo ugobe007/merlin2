@@ -313,11 +313,51 @@ input[type="range"].slider-input::-moz-range-track {
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), 0 0 50px rgba(168, 85, 247, 0.3);
   }
   50% {
-    box-shadow: 0 0 60px rgba(251, 191, 36, 0.35);
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.7), 0 0 70px rgba(168, 85, 247, 0.5);
   }
+}
+
+@keyframes pulseGlowGreen {
+  0%,
+  100% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.5), 0 0 50px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.7), 0 0 70px rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes pulseGlowBlue {
+  0%,
+  100% {
+    box-shadow: 0 8px 32px rgba(96, 165, 250, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  }
+  50% {
+    box-shadow: 0 12px 48px rgba(96, 165, 250, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  }
+}
+
+/* Scroll highlight animation for auto-scroll effect */
+@keyframes scrollHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6), 0 8px 32px rgba(168, 85, 247, 0.4);
+    transform: scale(1.01);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+    transform: scale(1);
+  }
+}
+
+.animate-scroll-highlight {
+  animation: scrollHighlight 1.5s ease-out;
 }
 
 /* Fire & Ice glow-pulse animation for GlowButton */
@@ -440,4 +480,11 @@ body [class*="WizardBottomNav"]:not([data-wizard-v5-nav]) {
 
 .pulse-attention {
   animation: subtlePulse 2s ease-in-out infinite;
+}
+
+/* Pulsate animation for Merlin Assessment (deep purple theme) */
+@keyframes pulsate {
+  0% { box-shadow: 0 0 0 0 rgba(124,58,237,0.5); }
+  50% { box-shadow: 0 0 25px 8px rgba(124,58,237,0.4), 0 0 50px 15px rgba(88,28,135,0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.5); }
 }

@@ -6,6 +6,24 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getQuestionIcon, isImageIcon, isSvgIcon, QUESTION_ICON_MAP, type IconConfig } from '@/components/wizard/QuestionIconMap';
+import {
+  InBayAutomaticIcon,
+  ExpressTunnelIcon,
+  MiniTunnelIcon,
+  SelfServeBayIcon,
+  GantryTruckWashIcon,
+  BlowerIcon,
+  HeatedDryerIcon,
+  NoDryerIcon,
+  GasFlameIcon,
+  ElectricIcon,
+  SnowflakeIcon,
+  FullReclaimIcon,
+  PartialReclaimIcon,
+  NoReclaimIcon,
+  VacuumIcon,
+} from '@/components/icons/MerlinIcons';
 
 // ============================================
 // COLOR SCHEME SYSTEM
@@ -145,13 +163,99 @@ interface QuestionConfig {
 }
 
 // ============================================
-// UTILITY: Get Lucide Icon by name
+// UTILITY: Get Icon (Custom SVG, Lucide, or Emoji)
 // ============================================
-
-const getIcon = (iconName: string, className?: string) => {
-  const Icon = (LucideIcons as any)[iconName];
-  if (!Icon) return null;
-  return <Icon className={className || "w-5 h-5"} />;
+const getIcon = (
+  iconNameOrValue: string, 
+  className?: string, 
+  questionField?: string, 
+  optionValue?: string
+) => {
+  let displayIcon: IconConfig | string | null = null;
+  
+  // PRIORITY 1: Context-aware mapping (question field + option value) for car wash
+  if (questionField && optionValue) {
+    const fieldKey = questionField.toLowerCase();
+    const valueKey = optionValue.toLowerCase();
+    
+    // Facility Type Options
+    if (fieldKey === 'facilitytype' || fieldKey === 'facility_type') {
+      if (valueKey === 'iba') displayIcon = { type: 'svg', value: InBayAutomaticIcon, alt: 'IBA' };
+      else if (valueKey === 'tunnel_express') displayIcon = { type: 'svg', value: ExpressTunnelIcon, alt: 'Express Tunnel' };
+      else if (valueKey === 'tunnel_mini') displayIcon = { type: 'svg', value: MiniTunnelIcon, alt: 'Mini Tunnel' };
+      else if (valueKey === 'self_serve') displayIcon = { type: 'svg', value: SelfServeBayIcon, alt: 'Self-Serve' };
+      else if (valueKey === 'gantry') displayIcon = { type: 'svg', value: GantryTruckWashIcon, alt: 'Gantry' };
+    }
+    // Blower Type Options
+    else if (fieldKey === 'blowertype' || fieldKey === 'blower_type') {
+      if (valueKey === 'none') displayIcon = { type: 'svg', value: NoDryerIcon, alt: 'No Dryers' };
+      else if (valueKey === 'standard_4' || valueKey === 'premium_6') displayIcon = { type: 'svg', value: BlowerIcon, alt: 'Blowers' };
+      else if (valueKey === 'heated') displayIcon = { type: 'svg', value: HeatedDryerIcon, alt: 'Heated Dryers' };
+    }
+    // Water Heater Options
+    else if (fieldKey === 'waterheatertype' || fieldKey === 'water_heater_type') {
+      if (valueKey === 'gas') displayIcon = { type: 'svg', value: GasFlameIcon, alt: 'Gas' };
+      else if (valueKey === 'electric') displayIcon = { type: 'svg', value: ElectricIcon, alt: 'Electric' };
+      else if (valueKey === 'none') displayIcon = { type: 'svg', value: SnowflakeIcon, alt: 'No Heat' };
+    }
+    // Water Reclaim Options
+    else if (fieldKey === 'waterreclaim' || fieldKey === 'water_reclaim') {
+      if (valueKey === 'full') displayIcon = { type: 'svg', value: FullReclaimIcon, alt: 'Full Reclaim' };
+      else if (valueKey === 'partial') displayIcon = { type: 'svg', value: PartialReclaimIcon, alt: 'Partial' };
+      else if (valueKey === 'none') displayIcon = { type: 'svg', value: NoReclaimIcon, alt: 'No Reclaim' };
+    }
+  }
+  
+  // PRIORITY 2: Try option value mapping directly
+  if (!displayIcon && optionValue) {
+    const valueKey = optionValue.toLowerCase();
+    if (QUESTION_ICON_MAP[valueKey]) {
+      displayIcon = QUESTION_ICON_MAP[valueKey] as IconConfig | string;
+    } else {
+      const mapped = getQuestionIcon(valueKey, '');
+      if (mapped !== '❓') displayIcon = mapped;
+    }
+  }
+  
+  // PRIORITY 3: Try icon name from database (emoji or icon key)
+  if (!displayIcon && iconNameOrValue) {
+    // Check if it's already in QUESTION_ICON_MAP
+    if (QUESTION_ICON_MAP[iconNameOrValue]) {
+      displayIcon = QUESTION_ICON_MAP[iconNameOrValue] as IconConfig | string;
+    } else {
+      // Try getQuestionIcon pattern matching
+      const mapped = getQuestionIcon(iconNameOrValue, '');
+      if (mapped !== '❓') {
+        displayIcon = mapped;
+      } else {
+        // Check if it's an emoji
+        if (/[\p{Emoji}]/u.test(iconNameOrValue)) {
+          displayIcon = iconNameOrValue;
+        }
+      }
+    }
+  }
+  
+  // PRIORITY 4: Fallback to Lucide icon
+  if (!displayIcon) {
+    const LucideIcon = (LucideIcons as any)[iconNameOrValue];
+    if (LucideIcon) {
+      return <LucideIcon className={className || "w-5 h-5"} />;
+    }
+  }
+  
+  // Render the found icon
+  if (displayIcon) {
+    if (typeof displayIcon === 'object' && isSvgIcon(displayIcon)) {
+      return React.createElement(displayIcon.value, { className: className || "w-5 h-5" });
+    } else if (typeof displayIcon === 'object' && isImageIcon(displayIcon)) {
+      return <img src={typeof displayIcon.value === 'string' ? displayIcon.value : ''} alt={displayIcon.alt || 'Icon'} className={className || "w-5 h-5"} />;
+    } else if (typeof displayIcon === 'string') {
+      return <span className="text-xl">{displayIcon}</span>;
+    }
+  }
+  
+  return null;
 };
 
 // ============================================
@@ -164,6 +268,7 @@ interface PanelButtonGroupProps {
   onChange: (value: string) => void;
   columns?: 2 | 3 | 4 | 5 | 6;
   colorScheme?: ColorScheme;
+  questionField?: string; // Add question field for context-aware icon mapping
 }
 
 export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
@@ -172,6 +277,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
   onChange,
   columns = Math.min(options.length, 4) as 2 | 3 | 4 | 5 | 6,
   colorScheme,
+  questionField,
 }) => {
   const scheme = colorScheme || getColorScheme(0);
   const gridCols = {
@@ -207,12 +313,12 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
             )}
             
             {/* Icon */}
-            {option.icon && (
+            {(option.icon || option.value) && (
               <div className={cn(
                 'w-10 h-10 rounded-lg flex items-center justify-center mb-2',
                 isSelected ? `bg-gradient-to-br ${scheme.primaryGradient} text-white` : 'bg-slate-100 text-slate-600'
               )}>
-                {getIcon(option.icon, 'w-5 h-5')}
+                {getIcon(option.icon || '', 'w-5 h-5', questionField, option.value)}
               </div>
             )}
             
@@ -411,6 +517,7 @@ interface CheckboxGridProps {
   onChange: (value: string[]) => void;
   columns?: 2 | 3 | 4;
   colorScheme?: ColorScheme;
+  questionField?: string; // Add question field for context-aware icon mapping
 }
 
 export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
@@ -419,6 +526,7 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
   onChange,
   columns = 3,
   colorScheme,
+  questionField,
 }) => {
   const scheme = colorScheme || getColorScheme(0);
   const gridCols = {
@@ -471,12 +579,12 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
         </div>
         
         {/* Icon */}
-        {option.icon && (
+        {(option.icon || option.value) && (
           <div className={cn(
             'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
             isSelected ? scheme.iconBg : 'bg-slate-100 text-slate-500'
           )}>
-            {getIcon(option.icon, 'w-4 h-4')}
+            {getIcon(option.icon || '', 'w-4 h-4', questionField, option.value)}
           </div>
         )}
         
@@ -693,6 +801,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
             value={value || []}
             onChange={(v) => onChange(field_name, v)}
             colorScheme={scheme}
+            questionField={field_name}
           />
         );
 
@@ -704,6 +813,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
               value={value}
               onChange={(v) => onChange(field_name, v)}
               colorScheme={scheme}
+              questionField={field_name}
             />
           );
         }

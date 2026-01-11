@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X } from 'lucide-react';
 import { QuestionRenderer } from './QuestionRenderer';
 import { SolarPreviewCard } from './SolarPreviewCard';
 import type { Question } from '@/data/carwash-questions.config';
@@ -9,7 +10,8 @@ interface QuestionnaireEngineProps {
   initialValues?: Record<string, unknown>;
   onComplete: (answers: Record<string, unknown>) => void;
   onProgressUpdate?: (progress: number) => void;
-  onQuestionChange?: (question: Question, progress: number) => void;
+  onQuestionChange?: (question: Question, progress: number, questionIndex: number, totalVisible: number) => void;
+  onAnswerUpdate?: (answers: Record<string, unknown>) => void;
   onJumpToSection?: (sectionId: string) => void;
 }
 
@@ -20,13 +22,27 @@ export function QuestionnaireEngine({
   onComplete,
   onProgressUpdate,
   onQuestionChange,
+  onAnswerUpdate,
   onJumpToSection
 }: QuestionnaireEngineProps) {
-  // State
+  // CRITICAL FIX: Only initialize answers once on mount, don't reset when initialValues changes
+  // This prevents infinite loops when initialValues changes due to state updates from handleAnswerUpdate
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialValues);
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showValidation, setShowValidation] = useState(false);
-  const [autoAdvanceEnabled, setAutoAdvanceEnabled] = useState(true);
+  const [nextQuestionNotification, setNextQuestionNotification] = useState<{ message: string; question: Question | null } | null>(null);
+  const [isUserAdjusting, setIsUserAdjusting] = useState(false); // Track if user is actively adjusting (smart input +/-)
+  const [userAnsweredQuestions, setUserAnsweredQuestions] = useState<Set<string>>(new Set()); // Track which questions user has explicitly answered
+  const questionRef = useRef<HTMLDivElement>(null);
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isAdjustingRef = useRef(false); // CRITICAL: Use ref for synchronous checking (state updates are async)
+  
+  // Sync ref with state for use in callbacks
+  const setIsUserAdjustingSync = (value: boolean) => {
+    isAdjustingRef.current = value;
+    setIsUserAdjusting(value);
+  };
 
   // Get filtered questions (based on showIf conditions)
   const visibleQuestions = questions.filter((question) => {
@@ -44,53 +60,100 @@ export function QuestionnaireEngine({
       onProgressUpdate(progress);
     }
     if (onQuestionChange && currentQuestion) {
-      onQuestionChange(currentQuestion, progress);
+      onQuestionChange(currentQuestion, progress, currentQuestionIndex, visibleQuestions.length);
     }
-  }, [progress, currentQuestion, onProgressUpdate, onQuestionChange]);
+  }, [progress, currentQuestion, currentQuestionIndex, visibleQuestions.length, onProgressUpdate, onQuestionChange]);
 
-  // Auto-advance when answer is provided
+  // Update answers callback - SIMPLIFIED: Only call when answers actually change
+  // Use a ref to track if we've already called the callback for this answer set
+  const lastCallbackRef = useRef<string>('');
+  
   useEffect(() => {
-    if (!autoAdvanceEnabled || !currentQuestion) return undefined;
-
-    const currentValue = answers[currentQuestion.field];
+    // Create a stable key from answers to detect actual changes
+    const answersKey = JSON.stringify(answers);
     
-    // Check if question has been answered
-    if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
-      // For area_input type, check if value exists
-      if (currentQuestion.type === 'area_input') {
-        if (!currentValue || typeof currentValue !== 'object' || !('value' in currentValue)) {
-          return undefined;
-        }
-        const value = (currentValue as { value: string | number }).value;
-        if (!value || value === '') {
-          return undefined;
-        }
-      }
-
-      // Auto-advance after short delay (for better UX)
-      const timer = setTimeout(() => {
-        if (!isLastQuestion) {
-          handleNext();
-        }
-      }, 600);
-
-      return () => clearTimeout(timer);
+    // Only call callback if answers actually changed
+    if (answersKey !== lastCallbackRef.current && onAnswerUpdate) {
+      lastCallbackRef.current = answersKey;
+      // Call immediately - no debouncing needed if we're checking for actual changes
+      onAnswerUpdate(answers);
     }
-    
+  }, [answers, onAnswerUpdate]);
+
+  // DISABLED: Auto-advance completely disabled - users must manually click Continue button
+  // This prevents premature advancement when adjusting sliders or number inputs
+  // The Continue button in the footer will be highlighted when questions are answered
+  useEffect(() => {
+    // Clear any existing timer - auto-advance is disabled
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
     return undefined;
-  }, [answers, currentQuestion, autoAdvanceEnabled, isLastQuestion]);
+  }, [answers, currentQuestion]);
 
   // Handle answer change
   const handleAnswer = (field: string, value: unknown) => {
-    setAnswers((prev) => ({
-      ...prev,
+    // CRITICAL FIX: Only mark as user-answered if NOT currently adjusting
+    // Use ref for synchronous check (state updates are async and might not be ready yet)
+    const isAdjusting = isAdjustingRef.current;
+    
+    if (!isAdjusting) {
+      setUserAnsweredQuestions(prev => new Set(prev).add(field));
+      console.log(`✅ Marked question "${field}" as answered by user`);
+      
+      // CRITICAL FIX: Only show next question notification if NOT adjusting
+      // Show next question notification only when user has finished adjusting
+      if (!isLastQuestion) {
+        const nextQuestion = visibleQuestions[currentQuestionIndex + 1];
+        if (nextQuestion) {
+          // Extract what to select from next question text
+          const nextQuestionText = nextQuestion.question.toLowerCase();
+          let notificationMessage = 'Next question';
+          
+          // Try to extract "number of X" from question text
+          const numberMatch = nextQuestionText.match(/number of (.+?)(\?|$)/);
+          if (numberMatch) {
+            notificationMessage = `Next, select number of ${numberMatch[1]}`;
+          } else if (nextQuestionText.includes('how many')) {
+            const howManyMatch = nextQuestionText.match(/how many (.+?)(\?|$)/);
+            if (howManyMatch) {
+              notificationMessage = `Next, select number of ${howManyMatch[1]}`;
+            }
+          }
+          
+          setNextQuestionNotification({
+            message: notificationMessage,
+            question: nextQuestion
+          });
+          
+          // Don't auto-dismiss - user must click Next or close button
+        }
+      }
+    } else {
+      console.log(`🚫 Question "${field}" NOT marked as answered - user is adjusting (notification blocked)`);
+    }
+    
+    // Always update the answer value (even while adjusting, so UI reflects changes)
+    const updatedAnswers = {
+      ...answers,
       [field]: value
-    }));
+    };
+    setAnswers(updatedAnswers);
     setShowValidation(false);
+    
+    // CRITICAL FIX: Don't call onAnswerUpdate directly here - let the useEffect handle it
+    // This prevents double updates and infinite loops
+    // The useEffect (line 72) will detect the change and call onAnswerUpdate with debouncing
   };
 
   // Navigate to next question
-  const handleNext = () => {
+  const handleNext = (clearNotification = false) => {
+    // Only clear notification if explicitly requested (user clicked Next button)
+    if (clearNotification) {
+      setNextQuestionNotification(null);
+    }
+    
     if (!currentQuestion) return;
     
     const currentValue = answers[currentQuestion.field];
@@ -113,12 +176,37 @@ export function QuestionnaireEngine({
     }
 
     if (isLastQuestion) {
-      // Complete questionnaire
-      onComplete(answers);
+      // Check that all visible questions have been answered
+      const allAnswered = visibleQuestions.every((q) => {
+        const answer = answers[q.field];
+        if (q.type === 'area_input') {
+          return answer && typeof answer === 'object' && 'value' in answer && (answer as { value: string | number }).value;
+        }
+        return answer !== undefined && answer !== null && answer !== '';
+      });
+      
+      if (allAnswered) {
+        // All questions answered - complete questionnaire
+        onComplete(answers);
+      } else {
+        // Not all questions answered - show validation
+        setShowValidation(true);
+      }
     } else {
       // Move to next question
       setCurrentQuestionIndex((prev) => prev + 1);
       setShowValidation(false);
+      
+      // Smooth scroll to top of question container after state update
+      setTimeout(() => {
+        if (questionRef.current && typeof questionRef.current.scrollIntoView === 'function') {
+          questionRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          });
+        }
+      }, 50);
     }
   };
 
@@ -195,144 +283,185 @@ export function QuestionnaireEngine({
     );
   }
 
+  // Track refs for each question to enable smooth scrolling
+  const questionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  // Enhanced scroll to next unanswered question with smooth animation and visual feedback
+  const scrollToNextUnanswered = useCallback((fromIndex: number) => {
+    // Find next unanswered question
+    const nextUnansweredIndex = visibleQuestions.findIndex((q, idx) => {
+      if (idx <= fromIndex) return false;
+      const answer = answers[q.field];
+      if (q.type === 'area_input') {
+        return !answer || typeof answer !== 'object' || !('value' in answer) || !(answer as { value: string | number }).value;
+      }
+      return !answer || answer === null || answer === '';
+    });
+    
+    if (nextUnansweredIndex >= 0) {
+      const questionElement = questionRefs.current.get(nextUnansweredIndex);
+      if (questionElement) {
+        // Update current question index first
+        setCurrentQuestionIndex(nextUnansweredIndex);
+        
+        // Smooth scroll with offset for better visibility
+        setTimeout(() => {
+          // Use scrollIntoView with options for smooth centering
+          questionElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center', // Center the question for better visibility
+            inline: 'nearest'
+          });
+          
+          // Add a visual highlight effect using CSS class
+          questionElement.classList.add('animate-scroll-highlight');
+          setTimeout(() => {
+            questionElement.classList.remove('animate-scroll-highlight');
+          }, 1500);
+        }, 150); // Slight delay to let state update
+      }
+    } else if (fromIndex < visibleQuestions.length - 1) {
+      // All questions answered - scroll to show completion
+      const lastQuestionElement = questionRefs.current.get(visibleQuestions.length - 1);
+      if (lastQuestionElement) {
+        setTimeout(() => {
+          lastQuestionElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 150);
+      }
+    }
+  }, [visibleQuestions, answers]);
+
   return (
-    <div className="questionnaire-engine">
-      {/* Progress Bar (Top) */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-slate-400">
-            Question {currentQuestionIndex + 1} of {visibleQuestions.length}
-          </span>
-          <span className="text-sm text-slate-400">
-            {progress.toFixed(0)}% Complete
-          </span>
-        </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+    <div className="questionnaire-engine space-y-6">
+      {/* Render ALL questions in vertical scroll format */}
+      {visibleQuestions.map((question, index) => {
+        const isAnswered = answers[question.field] !== undefined && answers[question.field] !== null && answers[question.field] !== '';
+        const isCurrent = index === currentQuestionIndex;
+        
+        return (
+          <div 
+            key={question.id}
+            ref={(el) => {
+              if (el) {
+                questionRefs.current.set(index, el);
+              } else {
+                questionRefs.current.delete(index);
+              }
+            }}
+            className="scroll-mt-24 transition-all duration-500"
+            style={{
+              scrollMarginTop: '120px' // Account for header/fixed elements
+            }}
+          >
+            {/* Question Card */}
+            <div className={`
+              bg-slate-800/50 border-2 rounded-2xl p-8 shadow-xl transition-all duration-300
+              ${isCurrent 
+                ? 'border-purple-500/50 shadow-purple-500/20 ring-2 ring-purple-500/30' 
+                : isAnswered
+                ? 'border-blue-500/30 shadow-blue-500/10'
+                : 'border-slate-700/50'
+              }
+            `}
+            id={`question-${question.id}`}
+            >
+              {/* Question Number Badge */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`
+                  w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all
+                  ${isCurrent 
+                    ? 'bg-purple-500/30 border-2 border-purple-500/50 text-purple-300' 
+                    : isAnswered
+                    ? 'bg-blue-500/20 border-2 border-blue-500/30 text-blue-300'
+                    : 'bg-slate-700/50 border-2 border-slate-600/50 text-slate-400'
+                  }
+                `}>
+                  {index + 1}
+                </div>
+                <span className="text-sm text-slate-400">
+                  Question {index + 1} of {visibleQuestions.length}
+                </span>
+                {isAnswered && (
+                  <span className="ml-auto text-blue-400 text-sm font-medium flex items-center gap-1">
+                    ✓ Answered
+                  </span>
+                )}
+              </div>
 
-      {/* Section Badge */}
-      <div className="mb-6">
-        <SectionBadge section={currentQuestion.section} />
-      </div>
+              {/* Question Renderer */}
+              <QuestionRenderer
+                question={question}
+                value={answers[question.field]}
+                onChange={(value) => {
+                  handleAnswer(question.field, value);
+                  // Automated scroll to next unanswered question after a brief delay
+                  // This provides visual feedback and guides the user naturally
+                  if (!isUserAdjusting) {
+                    setTimeout(() => {
+                      scrollToNextUnanswered(index);
+                    }, 600); // Reduced delay for snappier feel
+                  }
+                }}
+                showValidation={showValidation && isCurrent}
+                onAdjustingChange={setIsUserAdjustingSync}
+              />
+            </div>
 
-      {/* Current Question */}
-      <div className="mb-8">
-        <QuestionRenderer
-          question={currentQuestion}
-          value={answers[currentQuestion.field]}
-          onChange={(value) => handleAnswer(currentQuestion.field, value)}
-          showValidation={showValidation}
-        />
-      </div>
+            {/* Solar Preview (show after roof area question) */}
+            {question.section === 'solar' && question.field === 'roofArea' && shouldShowSolarPreview() && (
+              <div className="mt-4">
+                <SolarPreviewCard
+                  industry={industry}
+                  roofArea={
+                    answers.roofArea && typeof answers.roofArea === 'object' && 'value' in answers.roofArea
+                      ? Number((answers.roofArea as { value: string | number }).value)
+                      : undefined
+                  }
+                  roofUnit={
+                    answers.roofArea && typeof answers.roofArea === 'object' && 'unit' in answers.roofArea
+                      ? (answers.roofArea as { unit: string }).unit as 'sqft' | 'sqm'
+                      : 'sqft'
+                  }
+                  carportInterest={answers.carportInterest as 'yes' | 'no' | 'unsure' | undefined}
+                  carportArea={
+                    answers.carportArea && typeof answers.carportArea === 'object' && 'value' in answers.carportArea
+                      ? Number((answers.carportArea as { value: string | number }).value)
+                      : undefined
+                  }
+                  carportUnit={
+                    answers.carportArea && typeof answers.carportArea === 'object' && 'unit' in answers.carportArea
+                      ? (answers.carportArea as { unit: string }).unit as 'sqft' | 'sqm'
+                      : 'sqft'
+                  }
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
 
-      {/* Solar Preview (appears when roof area is entered) */}
-      {shouldShowSolarPreview() && currentQuestion.section === 'solar' && (
-        <div className="mb-8">
-          <SolarPreviewCard
-            industry={industry}
-            roofArea={
-              answers.roofArea && typeof answers.roofArea === 'object' && 'value' in answers.roofArea
-                ? Number((answers.roofArea as { value: string | number }).value)
-                : undefined
-            }
-            roofUnit={
-              answers.roofArea && typeof answers.roofArea === 'object' && 'unit' in answers.roofArea
-                ? (answers.roofArea as { unit: string }).unit as 'sqft' | 'sqm'
-                : 'sqft'
-            }
-            carportInterest={answers.carportInterest as 'yes' | 'no' | 'unsure' | undefined}
-            carportArea={
-              answers.carportArea && typeof answers.carportArea === 'object' && 'value' in answers.carportArea
-                ? Number((answers.carportArea as { value: string | number }).value)
-                : undefined
-            }
-            carportUnit={
-              answers.carportArea && typeof answers.carportArea === 'object' && 'unit' in answers.carportArea
-                ? (answers.carportArea as { unit: string }).unit as 'sqft' | 'sqm'
-                : 'sqft'
-            }
-          />
-        </div>
-      )}
-
-      {/* Navigation Controls */}
-      <div className="flex items-center justify-between gap-4 mt-8">
-        {/* Previous Button */}
-        <button
-          onClick={handlePrevious}
-          disabled={currentQuestionIndex === 0}
-          className={`
-            px-6 py-3 rounded-xl font-semibold transition-all
-            ${currentQuestionIndex === 0
-              ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-              : 'bg-slate-800 text-white hover:bg-slate-700'
-            }
-          `}
-        >
-          ← Previous
-        </button>
-
-        {/* Auto-advance Toggle */}
-        <button
-          onClick={() => setAutoAdvanceEnabled(!autoAdvanceEnabled)}
-          className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
-          title={autoAdvanceEnabled ? 'Auto-advance enabled' : 'Auto-advance disabled'}
-        >
-          {autoAdvanceEnabled ? '⚡ Auto-advance' : '⏸️ Manual'}
-        </button>
-
-        {/* Next/Complete Button */}
-        <button
-          onClick={handleNext}
-          className="
-            px-8 py-3 rounded-xl font-semibold
-            bg-gradient-to-r from-purple-500 to-indigo-600
-            text-white hover:shadow-lg hover:shadow-purple-500/30
-            transition-all
-          "
-        >
-          {isLastQuestion ? 'Complete ✓' : 'Next →'}
-        </button>
-      </div>
-
-      {/* Question Navigation Dots */}
-      <div className="mt-8 flex justify-center gap-2 flex-wrap">
-        {visibleQuestions.map((question, index) => {
-          const isAnswered = answers[question.field] !== undefined && answers[question.field] !== null;
-          const isCurrent = index === currentQuestionIndex;
-
-          return (
-            <button
-              key={question.id}
-              onClick={() => handleJumpToQuestion(index)}
-              className={`
-                w-2.5 h-2.5 rounded-full transition-all
-                ${isCurrent
-                  ? 'bg-purple-500 w-8'
-                  : isAnswered
-                  ? 'bg-green-500 hover:bg-green-400'
-                  : 'bg-slate-700 hover:bg-slate-600'
-                }
-              `}
-              title={`Question ${index + 1}: ${question.question}`}
+      {/* Progress Summary at Bottom */}
+      <div className="mt-12 pt-8 border-t border-slate-800">
+        <div className="bg-slate-800/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Progress Summary</h3>
+            <span className="text-purple-300 font-medium">
+              {visibleQuestions.filter(q => answers[q.field] && answers[q.field] !== '').length} of {visibleQuestions.length} answered
+            </span>
+          </div>
+          <div className="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all duration-500"
+              style={{ 
+                width: `${(visibleQuestions.filter(q => answers[q.field] && answers[q.field] !== '').length / visibleQuestions.length) * 100}%` 
+              }}
             />
-          );
-        })}
-      </div>
-
-      {/* Section Summary (Bottom) */}
-      <div className="mt-8 pt-6 border-t border-slate-800">
-        <SectionSummary
-          questions={visibleQuestions}
-          answers={answers}
-          currentSection={currentQuestion.section}
-          onJumpToSection={onJumpToSection}
-        />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -358,6 +487,11 @@ function SectionBadge({ section }: { section: string }) {
       label: 'Energy Systems', 
       icon: '⚡', 
       color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+    },
+    equipment: { 
+      label: 'Equipment Details', 
+      icon: '🔧', 
+      color: 'bg-orange-500/20 text-orange-300 border-orange-500/30' 
     },
     solar: { 
       label: 'Solar Potential', 

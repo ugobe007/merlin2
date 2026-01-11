@@ -37,7 +37,7 @@ export interface QuoteResult {
     npv: number;
     irr: number;
     paybackYears: number;
-    roi10Year: number;
+    roi5Year: number;
     roi25Year: number;
     annualSavings: number;
     taxCredit: number;
@@ -90,7 +90,7 @@ export const buildQuote = async (input: BuildQuoteInput): Promise<QuoteResult> =
       npv: financials.npv ?? 0,
       irr: financials.irr ?? 0,
       paybackYears: financials.paybackYears,
-      roi10Year: financials.roi10Year,
+      roi5Year: financials.roi5Year,
       roi25Year: financials.roi25Year,
       annualSavings: financials.annualSavings || 0,
       taxCredit: financials.taxCredit || (equipmentCost + installationCost) * 0.30 // 30% ITC

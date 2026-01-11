@@ -813,25 +813,46 @@ const SummaryTab: React.FC<{ worksheetData: TrueQuoteWorksheetData }> = ({ works
               <span className="text-slate-500">Type</span>
               <span className="text-white font-medium">{inputs.industry.subtypeName}</span>
             </div>
-            {/* Show key facility details */}
-            {Object.entries(facilityDetails).slice(0, 4).map(([key, value]) => {
-              // Skip internal fields
-              if (key.startsWith('_') || key === 'undefined') return null;
-              // Format the key nicely
-              const label = key
-                .replace(/([A-Z])/g, ' $1')
-                .replace(/^./, str => str.toUpperCase())
-                .replace('Sq Ft', 'sq ft')
-                .replace('K W', 'kW');
-              return (
-                <div key={key} className="flex justify-between">
-                  <span className="text-slate-500">{label}</span>
-                  <span className="text-white font-medium">
-                    {typeof value === 'number' ? value.toLocaleString() : String(value)}
-                  </span>
-                </div>
-              );
-            })}
+            {/* Show key facility details - properly handle nested objects and arrays */}
+            {Object.entries(facilityDetails)
+              .filter(([key, value]) => {
+                // Skip internal fields and undefined/null values
+                if (key.startsWith('_') || key === 'undefined' || value === null || value === undefined) return false;
+                // Skip nested objects (we'll show specific fields instead)
+                if (typeof value === 'object' && !Array.isArray(value)) return false;
+                return true;
+              })
+              .slice(0, 6)
+              .map(([key, value]) => {
+                // Format the key nicely
+                const label = key
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, str => str.toUpperCase())
+                  .replace('Sq Ft', 'sq ft')
+                  .replace('K W', 'kW')
+                  .replace('Mcs', 'MCS')
+                  .replace('Dcfc', 'DCFC')
+                  .replace('Level2', 'Level 2');
+                
+                // Format the value properly
+                let displayValue: string;
+                if (typeof value === 'number') {
+                  displayValue = value.toLocaleString();
+                } else if (Array.isArray(value)) {
+                  displayValue = value.length > 0 ? `${value.length} items` : 'None';
+                } else if (typeof value === 'boolean') {
+                  displayValue = value ? 'Yes' : 'No';
+                } else {
+                  displayValue = String(value);
+                }
+                
+                return (
+                  <div key={key} className="flex justify-between">
+                    <span className="text-slate-500">{label}</span>
+                    <span className="text-white font-medium">{displayValue}</span>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </div>
