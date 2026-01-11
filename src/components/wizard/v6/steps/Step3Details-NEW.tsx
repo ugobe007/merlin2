@@ -3,14 +3,6 @@
  * 
  * Drop-in replacement for existing Step3Details.tsx
  * Uses new CompleteStep3 with full backward compatibility
- * 
- * This replaces the old questionnaire engine with the new
- * CompleteStep3 system that includes:
- * - 27 comprehensive questions
- * - 12 question types
- * - Conditional logic
- * - Live calculations
- * - Quote generation
  */
 
 import React from 'react';
@@ -38,7 +30,7 @@ export function Step3Details({
       updateState={updateState}
       initialData={initialData}
       onComplete={(data) => {
-        // Sync answers back to state as user types
+        // Sync answers back to state
         updateState({
           useCaseData: {
             ...state.useCaseData,
@@ -47,7 +39,7 @@ export function Step3Details({
         });
       }}
       onNext={(quoteData) => {
-        // Save complete data and proceed to Step 4
+        // Save complete data and proceed
         updateState({
           useCaseData: {
             ...state.useCaseData,
