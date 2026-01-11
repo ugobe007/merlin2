@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Question } from '@/data/carwash-questions.config';
+import { CheckboxGrid } from '../v6/step3/inputs';
 
 interface QuestionRendererProps {
   question: Question;
@@ -74,7 +75,7 @@ export function QuestionRenderer({
           <CheckboxGrid
             options={question.options}
             value={(value as string[]) || []}
-            onChange={(values) => onChange(values)}
+            onChange={(values: string[]) => onChange(values)}
           />
         )}
       </div>
