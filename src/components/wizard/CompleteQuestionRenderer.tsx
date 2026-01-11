@@ -189,7 +189,6 @@ function renderInputComponent(
               onChange={onChange}
               min={modifications?.range?.min || 1}
               max={modifications?.range?.max || 10}
-              step={modifications?.range?.step || 1}
             />
           );
         }
@@ -249,7 +248,6 @@ function renderInputComponent(
           min={question.range?.min || 0}
           max={question.range?.max || 100}
           step={question.range?.step || 1}
-          unit={question.unit || ''}
         />
       );
 
@@ -265,7 +263,6 @@ function renderInputComponent(
             onChange={onChange}
             min={question.range?.min || 0}
             max={question.range?.max || 100}
-            step={question.range?.step || 1}
           />
         </div>
       );

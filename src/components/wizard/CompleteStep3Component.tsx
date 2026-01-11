@@ -262,7 +262,9 @@ export function CompleteStep3Component({
               {visibleQuestions.map((question, index) => (
                 <div
                   key={question.id}
-                  ref={(el) => (questionRefs.current[index] = el)}
+                  ref={(el) => {
+                    questionRefs.current[index] = el;
+                  }}
                   className={`
                     scroll-mt-24 transition-all duration-300
                     ${index === currentQuestionIndex 

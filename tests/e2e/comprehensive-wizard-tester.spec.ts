@@ -42,6 +42,65 @@ const INDUSTRIES = [
 // HELPER: SELECT INDUSTRY - FIXED VERSION
 // ============================================================================
 
+/**
+ * Complete Step 1 (Location) - REQUIRED before industry selection
+ */
+async function completeStep1IfNeeded(page: Page): Promise<boolean> {
+  try {
+    // Wait for page to load
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
+    
+    // Look for ZIP code input (indicates Step 1)
+    const zipInput = page.locator('input[placeholder*="ZIP"], input[placeholder*="zip"], input[type="text"]').first();
+    const isStep1 = await zipInput.isVisible({ timeout: 3000 }).catch(() => false);
+    
+    if (!isStep1) {
+      // Already past Step 1
+      return true;
+    }
+    
+    // Fill in a valid ZIP code
+    await zipInput.click({ timeout: 5000 });
+    await zipInput.fill('90210'); // Beverly Hills, CA
+    await page.waitForTimeout(1000); // Wait for state to auto-populate
+    
+    // Look for goal buttons - click at least 2
+    const goalLabels = ['Cut Energy Costs', 'Backup Power', 'Sustainability'];
+    let goalsSelected = 0;
+    
+    for (const label of goalLabels) {
+      if (goalsSelected >= 2) break;
+      
+      const goalButton = page.locator(`button:has-text("${label}")`).first();
+      const isVisible = await goalButton.isVisible({ timeout: 2000 }).catch(() => false);
+      
+      if (isVisible) {
+        await goalButton.click({ timeout: 3000 }).catch(() => {});
+        goalsSelected++;
+        await page.waitForTimeout(300);
+      }
+    }
+    
+    // Click Continue button
+    const continueButton = page.locator('button:has-text("Continue"), button:has-text("Next")').first();
+    const buttonVisible = await continueButton.isVisible({ timeout: 5000 }).catch(() => false);
+    
+    if (buttonVisible) {
+      await continueButton.waitFor({ state: 'visible', timeout: 5000 });
+      await page.waitForTimeout(500);
+      await continueButton.click({ timeout: 5000 });
+      await page.waitForTimeout(1500); // Wait for navigation
+      return true;
+    }
+    
+    return false;
+  } catch (error: any) {
+    console.log(`⚠️  Step 1 completion skipped: ${error.message}`);
+    return false;
+  }
+}
+
 async function selectIndustrySafe(page: Page, industry: typeof INDUSTRIES[0]) {
   try {
     console.log(`🎯 Selecting industry: ${industry.displayName}`);
@@ -49,9 +108,9 @@ async function selectIndustrySafe(page: Page, industry: typeof INDUSTRIES[0]) {
     // Wait for page to be fully loaded (network idle)
     await page.waitForLoadState('networkidle', { timeout: 10000 });
 
-    // Wait for industry buttons to be visible
-    const industryContainer = page.locator('[data-testid="industry-selection"], .industry-grid, button:has-text("Hotel")').first();
-    await industryContainer.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for industry buttons to be visible - try multiple selectors
+    const industryButton = page.locator(`button:has-text("${industry.displayName}")`).first();
+    await industryButton.waitFor({ state: 'visible', timeout: 15000 });
 
     // Find industry button by display name - try multiple strategies
     let industryButton = page.locator(`button:has-text("${industry.displayName}")`).first();
@@ -175,6 +234,19 @@ test.describe('COMPREHENSIVE WIZARD TESTER - ALL INDUSTRIES', () => {
         await page.waitForTimeout(500); // Small buffer for React to render
         
         report.stepResults['wizard_loaded'] = true;
+
+        // ====================================================================
+        // STEP 1: COMPLETE LOCATION (REQUIRED)
+        // ====================================================================
+        
+        console.log(`📍 Step 1: Completing location...`);
+        
+        const step1Complete = await completeStep1IfNeeded(page);
+        report.stepResults['step1_complete'] = step1Complete;
+        
+        if (!step1Complete) {
+          report.warnings.push('Step 1 (Location) may not have completed');
+        }
 
         // ====================================================================
         // STEP 2: SELECT INDUSTRY
