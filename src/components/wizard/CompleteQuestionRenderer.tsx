@@ -339,7 +339,9 @@ function renderInputComponent(
           </div>
           <div className="text-sm text-slate-400">
             Type: {question.type}
-          </div>
+
+  // Ensure function always returns something
+  return <div className="text-red-400">Question type not handled</div>;          </div>
         </div>
       );
   }
