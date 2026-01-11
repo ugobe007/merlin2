@@ -245,17 +245,17 @@ function validateOption(
     received: String(option.financials.paybackYears),
   });
 
-  // ROI calculation verification
+  // ROI calculation verification (5-year with 3% annual increase = 5.15x multiplier)
   const expectedROI = option.financials.netCost > 0
-    ? ((option.financials.annualSavings * 10 - option.financials.netCost) / option.financials.netCost) * 100
+    ? ((option.financials.annualSavings * 5.15 - option.financials.netCost) / option.financials.netCost) * 100
     : 0;
-  const roiDiff = Math.abs(expectedROI - option.financials.tenYearROI);
+  const roiDiff = Math.abs(expectedROI - option.financials.fiveYearROI);
 
   checks.push({
-    name: 'financials.tenYearROI.accurate',
+    name: 'financials.fiveYearROI.accurate',
     passed: roiDiff <= VALIDATION_RULES.ROI_TOLERANCE,
     expected: `${expectedROI.toFixed(1)}% (±${VALIDATION_RULES.ROI_TOLERANCE}%)`,
-    received: `${option.financials.tenYearROI}%`,
+    received: `${option.financials.fiveYearROI}%`,
     message: roiDiff > VALIDATION_RULES.ROI_TOLERANCE ? 'ROI calculation mismatch' : undefined,
   });
 

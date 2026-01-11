@@ -128,9 +128,9 @@ export function Step6Quote({ state }: Props) {
   // Generate quote ID if not already set (fallback for backwards compatibility)
   const quoteId = calculations.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
 
-  // Calculate key savings numbers
-  const tenYearSavings = calculations.annualSavings * 10;
-  const netTenYearValue = tenYearSavings - calculations.netInvestment;
+  // Calculate key savings numbers (5-year for more credible ROI timeline)
+  const fiveYearSavings = calculations.annualSavings * 5.15; // Accounts for 3% annual increase
+  const netFiveYearValue = fiveYearSavings - calculations.netInvestment;
 
   // Debug logging
   console.log('🔍 Step 6 Solar Debug - DISPLAY VALUES:', {
@@ -248,7 +248,7 @@ export function Step6Quote({ state }: Props) {
         >
           <div className="p-8 text-center">
             <div className="text-slate-400 text-lg font-medium mb-3">
-              💰 Your 10-Year Savings with Merlin
+              💰 Your 5-Year Savings with Merlin
             </div>
             <div 
               style={{ 
@@ -260,7 +260,7 @@ export function Step6Quote({ state }: Props) {
                 letterSpacing: '-0.02em'
               }}
             >
-              ${tenYearSavings.toLocaleString()}
+              ${fiveYearSavings.toLocaleString()}
             </div>
             <div className="mt-6 flex items-center justify-center gap-8 text-slate-300">
               <div className="text-center">
@@ -274,19 +274,19 @@ export function Step6Quote({ state }: Props) {
               </div>
               <div className="w-px h-10 bg-slate-600" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">{calculations.tenYearROI}%</div>
-                <div className="text-sm text-slate-500">10yr ROI</div>
+                <div className="text-2xl font-bold text-white">{calculations.fiveYearROI?.toFixed(0) || ((calculations.annualSavings * 5.15 - calculations.netInvestment) / calculations.netInvestment * 100).toFixed(0)}%</div>
+                <div className="text-sm text-slate-500">5yr ROI</div>
               </div>
             </div>
           </div>
           {/* Net Value Footer */}
           <div className="px-8 py-4 bg-black/30 border-t border-cyan-500/20 flex items-center justify-between">
-            <span className="text-slate-400">After investment, your net profit:</span>
+            <span className="text-slate-400">After investment, your net profit (5-year):</span>
             <span 
               className="text-2xl font-bold"
               style={{ color: '#10b981' }}
             >
-              +${netTenYearValue.toLocaleString()}
+              +${netFiveYearValue.toLocaleString()}
             </span>
           </div>
         </div>
@@ -702,9 +702,9 @@ export function Step6Quote({ state }: Props) {
             <div className="text-center p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
               <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
               <div className="text-2xl font-bold text-purple-400">
-                {calculations.tenYearROI}%
+                {calculations.fiveYearROI?.toFixed(0) || ((calculations.annualSavings * 5.15 - calculations.netInvestment) / calculations.netInvestment * 100).toFixed(0)}%
               </div>
-              <div className="text-xs text-slate-400 mt-1">10-Year ROI</div>
+              <div className="text-xs text-slate-400 mt-1">5-Year ROI</div>
             </div>
           </div>
         </div>

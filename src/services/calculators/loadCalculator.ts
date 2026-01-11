@@ -27,8 +27,16 @@ export interface LoadCalculationResult {
   }[];
 }
 
-// Industry-specific watts per unit
-const INDUSTRY_LOAD_FACTORS: Record<string, {
+// ============================================================================
+// INDUSTRY LOAD FACTORS (DEPRECATED - Use industryTemplates.ts instead)
+// ============================================================================
+// This is kept for backward compatibility during migration.
+// New code should use getIndustryTemplate() from industryTemplates.ts
+// which pulls factors from the database (calculation_constants table).
+// ============================================================================
+
+// Legacy hardcoded factors (fallback only)
+const INDUSTRY_LOAD_FACTORS_LEGACY: Record<string, {
   method: 'per_unit' | 'per_sqft' | 'fixed' | 'custom';
   unitName?: string;
   wattsPerUnit?: number;
@@ -110,6 +118,9 @@ const INDUSTRY_LOAD_FACTORS: Record<string, {
     profile: 'peaky',
   },
 };
+
+// Alias for backward compatibility (will be removed after migration)
+const INDUSTRY_LOAD_FACTORS = INDUSTRY_LOAD_FACTORS_LEGACY;
 
 
 /**
@@ -231,12 +242,25 @@ function calculateCarWashLoad(
  * Calculate facility load based on industry and facility data
  */
 export function calculateLoad(input: LoadCalculationInput): LoadCalculationResult {
-  const config = INDUSTRY_LOAD_FACTORS[input.industry] || {
-    method: 'per_sqft',
-    wattsPerSqft: 15,
-    loadFactor: 0.40,
-    profile: 'flat' as const,
-  };
+  // Try to get from industryTemplates.ts (database-driven SSOT)
+  // Fall back to legacy hardcoded factors if unavailable
+  let config = INDUSTRY_LOAD_FACTORS_LEGACY[input.industry];
+  
+  // TODO: Migrate to async getIndustryTemplate() call
+  // For now, use legacy factors but log that we should migrate
+  if (import.meta.env.DEV && config) {
+    console.log(`📊 [loadCalculator] Using legacy factors for ${input.industry}. Consider migrating to industryTemplates.ts`);
+  }
+  
+  // Fallback to default if industry not found
+  if (!config) {
+    config = {
+      method: 'per_sqft',
+      wattsPerSqft: 15,
+      loadFactor: 0.40,
+      profile: 'flat' as const,
+    };
+  }
 
   let peakDemandKW = 0;
   let calculationMethod = '';

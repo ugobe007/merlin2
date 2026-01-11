@@ -530,7 +530,7 @@ function createOption(
       netCost: financials.netCost,
       annualSavings: financials.annualSavings,
       paybackYears: financials.simplePaybackYears,
-      tenYearROI: financials.tenYearROI,
+      fiveYearROI: financials.fiveYearROI || ((financials.annualSavings * 5.15 - financials.netCost) / financials.netCost * 100), // Calculate 5-year ROI if not provided
     },
     coverage: {
       energyCoveragePercent,

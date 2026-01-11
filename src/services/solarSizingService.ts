@@ -380,7 +380,7 @@ export function calculateSolarPayback(
   incentives: number = 0
 ): {
   paybackYears: number;
-  roi10Year: number;
+  roi5Year: number;
   roi20Year: number;
 } {
   const netCost = systemCost - incentives;
@@ -391,7 +391,7 @@ export function calculateSolarPayback(
   for (let year = 1; year <= 10; year++) {
     cumulativeSavings += annualEnergySavings * Math.pow(1.02, year - 1);
   }
-  const roi10Year = ((cumulativeSavings - netCost) / netCost) * 100;
+  const roi5Year = ((cumulativeSavings - netCost) / netCost) * 100;
 
   cumulativeSavings = 0;
   for (let year = 1; year <= 20; year++) {
@@ -401,7 +401,7 @@ export function calculateSolarPayback(
 
   return {
     paybackYears: Math.round(paybackYears * 10) / 10,
-    roi10Year: Math.round(roi10Year),
+    roi5Year: Math.round(roi5Year),
     roi20Year: Math.round(roi20Year),
   };
 }

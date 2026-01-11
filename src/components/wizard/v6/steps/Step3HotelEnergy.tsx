@@ -266,10 +266,23 @@ const Step3HotelEnergy = ({ state, updateState }: Props) => {
   };
 
   // SSOT: Update value using functional update (like Step3Details)
+  // CRITICAL: Save to inputs structure so canProceed() can detect answers
   const updateAnswer = (fieldName: string, value: any) => {
-    updateState((prev: WizardState): Partial<WizardState> => ({
-      useCaseData: { ...prev.useCaseData, [fieldName]: value }
-    }));
+    updateState((prev: WizardState): Partial<WizardState> => {
+      const currentUseCaseData = prev.useCaseData || {};
+      const currentInputs = currentUseCaseData.inputs || {};
+      
+      return {
+        useCaseData: {
+          ...currentUseCaseData,
+          [fieldName]: value, // Keep direct access for backward compatibility
+          inputs: {
+            ...currentInputs,
+            [fieldName]: value // Also save to inputs structure for canProceed() validation
+          }
+        }
+      };
+    });
   };
 
   const estimatedSqft = useMemo(() => {

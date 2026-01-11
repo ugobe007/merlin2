@@ -16,7 +16,7 @@ export interface FinancialMetrics {
   conservative: {
     annualSavings: number;
     paybackYears: number;
-    roi10Year: number;
+    roi5Year: number;
     roi25Year: number;
     npv?: number;
     initialInvestment: number;
@@ -24,7 +24,7 @@ export interface FinancialMetrics {
   aggressive: {
     annualSavings: number;
     paybackYears: number;
-    roi10Year: number;
+    roi5Year: number;
     roi25Year: number;
     npv?: number;
     initialInvestment: number;
@@ -130,7 +130,7 @@ async function calculateBESSFinancials(
     conservative: {
       annualSavings: conservative.annualSavings,
       paybackYears: conservative.paybackYears,
-      roi10Year: conservative.roi10Year,
+      roi5Year: conservative.roi5Year,
       roi25Year: conservative.roi25Year,
       npv: conservative.npv,
       initialInvestment: conservative.totalProjectCost,
@@ -138,7 +138,7 @@ async function calculateBESSFinancials(
     aggressive: {
       annualSavings: aggressive.annualSavings,
       paybackYears: aggressive.paybackYears,
-      roi10Year: aggressive.roi10Year,
+      roi5Year: aggressive.roi5Year,
       roi25Year: aggressive.roi25Year,
       npv: aggressive.npv,
       initialInvestment: aggressive.totalProjectCost,
@@ -189,7 +189,7 @@ async function calculateSolarFinancials(
     conservative: {
       annualSavings: conservative.annualSavings,
       paybackYears: conservative.paybackYears,
-      roi10Year: conservative.roi10Year,
+      roi5Year: conservative.roi5Year,
       roi25Year: conservative.roi25Year,
       npv: conservative.npv,
       initialInvestment: conservative.totalProjectCost,
@@ -197,7 +197,7 @@ async function calculateSolarFinancials(
     aggressive: {
       annualSavings: aggressive.annualSavings,
       paybackYears: aggressive.paybackYears,
-      roi10Year: aggressive.roi10Year,
+      roi5Year: aggressive.roi5Year,
       roi25Year: aggressive.roi25Year,
       npv: aggressive.npv,
       initialInvestment: aggressive.totalProjectCost,
@@ -246,7 +246,7 @@ async function calculateGeneratorFinancials(
     conservative: {
       annualSavings: conservative.annualSavings,
       paybackYears: conservative.paybackYears,
-      roi10Year: conservative.roi10Year,
+      roi5Year: conservative.roi5Year,
       roi25Year: conservative.roi25Year,
       npv: conservative.npv,
       initialInvestment: conservative.totalProjectCost,
@@ -254,7 +254,7 @@ async function calculateGeneratorFinancials(
     aggressive: {
       annualSavings: aggressive.annualSavings,
       paybackYears: aggressive.paybackYears,
-      roi10Year: aggressive.roi10Year,
+      roi5Year: aggressive.roi5Year,
       roi25Year: aggressive.roi25Year,
       npv: aggressive.npv,
       initialInvestment: aggressive.totalProjectCost,
@@ -306,7 +306,7 @@ async function calculateEVChargingFinancials(
     conservative: {
       annualSavings: conservative.annualSavings * evSavingsMultiplier,
       paybackYears: conservative.paybackYears * 0.9, // Slightly better payback
-      roi10Year: conservative.roi10Year * 1.1,
+      roi5Year: conservative.roi5Year * 1.1,
       roi25Year: conservative.roi25Year * 1.1,
       npv: conservative.npv ? conservative.npv * 1.1 : undefined,
       initialInvestment: conservative.totalProjectCost,
@@ -314,7 +314,7 @@ async function calculateEVChargingFinancials(
     aggressive: {
       annualSavings: aggressive.annualSavings * evSavingsMultiplier,
       paybackYears: aggressive.paybackYears * 0.85,
-      roi10Year: aggressive.roi10Year * 1.15,
+      roi5Year: aggressive.roi5Year * 1.15,
       roi25Year: aggressive.roi25Year * 1.15,
       npv: aggressive.npv ? aggressive.npv * 1.15 : undefined,
       initialInvestment: aggressive.totalProjectCost,

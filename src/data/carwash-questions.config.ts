@@ -8,19 +8,22 @@ export interface QuestionOption {
   label: string;
   icon?: string;
   description?: string;
+  kW?: number; // Power estimate in kW for equipment options
 }
 
 export interface Question {
   id: number;
-  section: 'facility' | 'operations' | 'energy' | 'solar';
+  section: 'facility' | 'operations' | 'energy' | 'equipment' | 'solar';
   field: string;
   question: string;
-  type: 'buttons' | 'slider' | 'number_buttons' | 'toggle' | 'area_input' | 'time_range';
+  type: 'buttons' | 'slider' | 'number_buttons' | 'toggle' | 'area_input' | 'time_range' | 'increment_box' | 'multiselect';
   options?: QuestionOption[];
-  range?: { min: number; max: number; step: number };
+  range?: { min: number; max: number; step?: number; default?: number };
   unit?: string;
   smartDefault: any;
   helpText?: string;
+  powerEstimate?: string; // Power estimate description (e.g., '0.5 kW each')
+  incrementBy?: number; // For increment_box type
   showIf?: (answers: Record<string, unknown>) => boolean;
   merlinTip?: string;
 }
@@ -39,25 +42,25 @@ export const CAR_WASH_QUESTIONS: Question[] = [
       { 
         value: 'express_tunnel', 
         label: 'Express Tunnel', 
-        icon: '🚗',
+        icon: 'expressTunnel', // Use icon key to map to SVG icon
         description: 'High-volume automated tunnel wash'
       },
       { 
         value: 'flex_serve', 
         label: 'Flex Serve', 
-        icon: '🎯',
+        icon: 'flexServe', // Will map to ExpressTunnelIcon or MiniTunnelIcon
         description: 'Combination of tunnel and self-service'
       },
       { 
         value: 'in_bay_automatic', 
         label: 'In-Bay Automatic', 
-        icon: '🏪',
+        icon: 'inBayAutomatic', // Maps to InBayAutomaticIcon
         description: 'Automated wash in stationary bay'
       },
       { 
         value: 'self_serve', 
         label: 'Self-Serve', 
-        icon: '💪',
+        icon: 'selfServeBay', // Maps to SelfServeBayIcon
         description: 'Customer-operated wand bays'
       }
     ],
@@ -178,6 +181,25 @@ export const CAR_WASH_QUESTIONS: Question[] = [
     smartDefault: 'vfd',
     helpText: 'VFD pumps save 20-40% energy vs constant speed',
     merlinTip: 'Variable speed pumps paired with solar and storage maximize efficiency and reduce demand charges.'
+  },
+  
+  {
+    id: 8.5,
+    section: 'energy',
+    field: 'pumpQuantity',
+    question: 'How many water pumps?',
+    type: 'number_buttons',
+    options: [
+      { value: '1', label: '1 Pump' },
+      { value: '2', label: '2 Pumps' },
+      { value: '3', label: '3 Pumps' },
+      { value: '4', label: '4 Pumps' },
+      { value: '5+', label: '5+ Pumps' }
+    ],
+    smartDefault: '2',
+    showIf: (answers) => answers.pumpConfiguration === 'multi_pump' || answers.pumpConfiguration === 'high_pressure',
+    helpText: 'Number of pumps affects total power demand',
+    merlinTip: 'Multiple pumps allow for staged operation and better load management with battery storage.'
   },
   
   {
@@ -349,6 +371,192 @@ export const CAR_WASH_QUESTIONS: Question[] = [
     showIf: (answers) => answers.carportInterest === 'yes' || answers.carportInterest === 'unsure',
     helpText: '100% of this area is usable for solar (no obstructions)',
     merlinTip: 'Carport structures provide 100% usable solar area - no HVAC units or vents to work around!'
+  },
+  
+  // ========================================================================
+  // SECTION 5: EQUIPMENT DETAILS
+  // ========================================================================
+  {
+    id: 19,
+    section: 'equipment',
+    field: 'kioskCount',
+    question: 'Number of payment/wash system kiosks?',
+    type: 'increment_box',
+    range: { min: 0, max: 10, default: 2 },
+    incrementBy: 1,
+    smartDefault: 2,
+    helpText: 'Entry stations with touchscreens, card readers',
+    powerEstimate: '0.5 kW each',
+    merlinTip: 'Most express tunnels have 2-3 kiosks for payment entry'
+  },
+  
+  {
+    id: 20,
+    section: 'equipment',
+    field: 'conveyorMotorHP',
+    question: 'Conveyor drive motor size?',
+    type: 'buttons',
+    options: [
+      { value: '5', label: '5 HP', description: 'Small tunnel', kW: 3.7 },
+      { value: '10', label: '10 HP', description: 'Medium tunnel', kW: 7.5 },
+      { value: '15', label: '15 HP', description: 'Large tunnel', kW: 11.2 }
+    ],
+    smartDefault: '10',
+    helpText: 'This is the heartbeat of your tunnel - runs continuously',
+    merlinTip: 'The conveyor moves 2,000-5,000 lbs continuously during operations'
+  },
+  
+  {
+    id: 21,
+    section: 'equipment',
+    field: 'brushMotorCount',
+    question: 'Total number of brush/arch motors?',
+    type: 'increment_box',
+    range: { min: 0, max: 20, default: 15 },
+    incrementBy: 1,
+    smartDefault: 15,
+    helpText: 'Wrap-around, top, side washers, mitter curtains',
+    powerEstimate: '2-5 HP each motor',
+    merlinTip: 'Each moving brush has its own motor - modern tunnels have 10-20 motors'
+  },
+  
+  {
+    id: 22,
+    section: 'equipment',
+    field: 'blowerCount',
+    question: 'Number of dryer blowers?',
+    type: 'increment_box',
+    range: { min: 0, max: 20, default: 10 },
+    incrementBy: 1,
+    smartDefault: 10,
+    helpText: 'Typically 10-15 HP each',
+    powerEstimate: '10-15 HP per blower',
+    merlinTip: '🚨 CRITICAL: Dryers account for 40-50% of your total electric bill!'
+  },
+  
+  {
+    id: 23,
+    section: 'equipment',
+    field: 'heatedDryers',
+    question: 'Are dryers heated?',
+    type: 'toggle',
+    options: [
+      { value: 'yes', label: 'Yes', description: 'Adds 30-50 kW' },
+      { value: 'no', label: 'No', description: 'Blowers only' }
+    ],
+    smartDefault: 'no',
+    showIf: (answers) => (answers.blowerCount as number) > 0,
+    helpText: 'Heated dryers warm the air for better evaporation',
+    merlinTip: 'Premium washes use heated dryers - adds significant load but better results'
+  },
+  
+  {
+    id: 24,
+    section: 'equipment',
+    field: 'centralVacuumHP',
+    question: 'Central vacuum turbine size?',
+    type: 'slider',
+    range: { min: 20, max: 50, step: 5 },
+    unit: 'HP',
+    smartDefault: 30,
+    helpText: 'Industrial vacuum for 20+ free stalls',
+    merlinTip: 'This powers all your free vacuum stalls simultaneously - runs continuously'
+  },
+  
+  {
+    id: 25,
+    section: 'equipment',
+    field: 'highPressurePumpCount',
+    question: 'Number of high-pressure pumps?',
+    type: 'increment_box',
+    range: { min: 1, max: 10, default: 3 },
+    incrementBy: 1,
+    smartDefault: 3,
+    helpText: '10-25 HP each',
+    powerEstimate: '15 HP average',
+    merlinTip: '🚨 CRITICAL: High-pressure pumps are 20-30% of your electric bill!'
+  },
+  
+  {
+    id: 26,
+    section: 'equipment',
+    field: 'roPumpHP',
+    question: 'Reverse Osmosis system pump size?',
+    type: 'buttons',
+    options: [
+      { value: 'none', label: 'No RO System', kW: 0 },
+      { value: 'small', label: 'Small (5 HP)', kW: 3.7 },
+      { value: 'medium', label: 'Medium (10 HP)', kW: 7.5 },
+      { value: 'large', label: 'Large (15 HP)', kW: 11.2 }
+    ],
+    smartDefault: 'medium',
+    helpText: 'Creates spot-free rinse water',
+    merlinTip: 'RO systems filter water for spot-free final rinse'
+  },
+  
+  {
+    id: 27,
+    section: 'equipment',
+    field: 'airCompressorHP',
+    question: 'Air compressor size?',
+    type: 'buttons',
+    options: [
+      { value: 'small', label: '5 HP', description: 'Basic foaming', kW: 3.7 },
+      { value: 'medium', label: '10 HP', description: 'Standard system', kW: 7.5 },
+      { value: 'large', label: '15 HP', description: 'Heavy duty', kW: 11.2 }
+    ],
+    smartDefault: 'medium',
+    helpText: 'Critical for foaming soap and pneumatic equipment',
+    merlinTip: 'Powers soap foaming and air-driven equipment throughout tunnel'
+  },
+  
+  {
+    id: 28,
+    section: 'equipment',
+    field: 'tunnelLighting',
+    question: 'Tunnel lighting type?',
+    type: 'buttons',
+    options: [
+      { value: 'basic', label: 'Basic LED', description: 'Functional only', kW: 5 },
+      { value: 'enhanced', label: 'Enhanced LED', description: 'Better visibility', kW: 8 },
+      { value: 'premium', label: 'Premium + Effects', description: 'Light show', kW: 15 }
+    ],
+    smartDefault: 'enhanced',
+    helpText: 'Tunnel lighting plus any special effects',
+    merlinTip: 'Premium washes use LED light shows - customers love the experience!'
+  },
+  
+  {
+    id: 29,
+    section: 'equipment',
+    field: 'exteriorSignage',
+    question: 'Exterior signage and lighting?',
+    type: 'buttons',
+    options: [
+      { value: 'basic', label: 'Basic', description: 'Standard LED signs', kW: 5 },
+      { value: 'premium', label: 'Premium', description: 'LED + animated', kW: 10 },
+      { value: 'signature', label: 'Signature', description: 'Full light show', kW: 20 }
+    ],
+    smartDefault: 'basic',
+    helpText: 'Exterior signage, pole signs, building lighting',
+    merlinTip: 'Signature lighting makes your wash visible from miles away!'
+  },
+  
+  {
+    id: 30,
+    section: 'equipment',
+    field: 'officeFacilities',
+    question: 'Office/facilities included?',
+    type: 'multiselect',
+    options: [
+      { value: 'office', label: 'Office Space', kW: 2 },
+      { value: 'breakroom', label: 'Break Room', kW: 3 },
+      { value: 'bathroom', label: 'Bathrooms', kW: 1 },
+      { value: 'security', label: 'Security Cameras', kW: 0.5 }
+    ],
+    smartDefault: [],
+    helpText: 'Select all that apply',
+    merlinTip: 'Office facilities add consistent base load to your energy profile'
   }
 ];
 
@@ -435,6 +643,12 @@ export const SECTIONS = [
     label: 'Energy Systems',
     icon: '⚡',
     description: 'Equipment and power requirements'
+  },
+  {
+    id: 'equipment',
+    label: 'Equipment Details',
+    icon: '🔧',
+    description: 'Detailed equipment specifications'
   },
   {
     id: 'solar',

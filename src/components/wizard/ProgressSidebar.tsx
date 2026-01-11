@@ -8,6 +8,9 @@ interface ProgressSidebarProps {
   currentQuestion: Question;
   progress: number;
   onJumpToSection?: (sectionId: string) => void;
+  currentWizardStep?: number; // Step 1-6 in overall wizard
+  totalWizardSteps?: number;  // Usually 6
+  isFirstQuestion?: boolean;  // Show welcome message if true
 }
 
 export function ProgressSidebar({
@@ -15,7 +18,10 @@ export function ProgressSidebar({
   answers,
   currentQuestion,
   progress,
-  onJumpToSection
+  onJumpToSection,
+  currentWizardStep = 3,
+  totalWizardSteps = 6,
+  isFirstQuestion = false
 }: ProgressSidebarProps) {
   // Calculate section progress
   const getSectionProgress = (sectionId: string) => {
@@ -45,53 +51,62 @@ export function ProgressSidebar({
     <div className="progress-sidebar bg-slate-900 h-full flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-slate-800">
-        <h2 className="text-xl font-bold text-white mb-1">
+        <h2 className="text-xl font-bold text-white mb-4">
           Your Progress
         </h2>
-        <p className="text-sm text-slate-400">
-          Step 3: Use Case Details
-        </p>
+        
+        {/* Battery Progress Indicator - Visual wizard progress */}
+        <BatteryProgressIndicator currentStep={currentWizardStep} />
+        
+        {/* Welcome Message (only for first question) - Cleaner, more concise */}
+        {isFirstQuestion && (
+          <div className="mt-4 p-3 bg-gradient-to-br from-purple-600/15 to-purple-600/5 border border-purple-600/30 rounded-lg">
+            <div className="flex items-start gap-2.5">
+              <span className="text-xl">👋</span>
+              <div>
+                <p className="text-xs text-purple-200 leading-relaxed font-medium">
+                  Click options to answer. Answers save automatically and you'll move forward.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Progress Ring */}
-      <div className="p-6 flex justify-center">
-        <HeatMapProgressRing progress={progress} />
-      </div>
-
-      {/* Section Checklist */}
+      {/* Current Section Only - Dynamic, shows only active section */}
       <div className="px-6 pb-6 flex-1 overflow-y-auto">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          Sections
-        </h3>
-        <div className="space-y-3">
-          {SECTIONS.map((section) => {
-            const sectionProgress = getSectionProgress(section.id);
-            const isCurrentSection = currentQuestion.section === section.id;
-            const isComplete = sectionProgress.percentage === 100;
-
-            return (
+        {/* Only show the current section, not all sections */}
+        {(() => {
+          const currentSection = SECTIONS.find(s => s.id === currentQuestion.section);
+          if (!currentSection) return null;
+          
+          const sectionProgress = getSectionProgress(currentSection.id);
+          const isComplete = sectionProgress.percentage === 100;
+          
+          return (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                Current Section
+              </h3>
               <button
-                key={section.id}
-                onClick={() => onJumpToSection && onJumpToSection(section.id)}
+                onClick={() => onJumpToSection && onJumpToSection(currentSection.id)}
                 className={`
                   w-full text-left p-4 rounded-xl transition-all
-                  ${isCurrentSection
-                    ? 'bg-purple-500/20 border-2 border-purple-500/50'
-                    : isComplete
-                    ? 'bg-green-500/10 border-2 border-green-500/30 hover:bg-green-500/15'
-                    : 'bg-slate-800 border-2 border-slate-700 hover:bg-slate-750'
+                  ${isComplete
+                    ? 'bg-green-500/10 border-2 border-green-500/30'
+                    : 'bg-purple-500/20 border-2 border-purple-500/50'
                   }
                 `}
               >
                 <div className="flex items-start gap-3">
                   {/* Icon */}
-                  <div className="text-2xl flex-shrink-0">{section.icon}</div>
+                  <div className="text-2xl flex-shrink-0">{currentSection.icon}</div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className={`font-semibold text-sm ${isCurrentSection ? 'text-purple-300' : 'text-white'}`}>
-                        {section.label}
+                      <h4 className="font-semibold text-sm text-purple-300">
+                        {currentSection.label}
                       </h4>
                       {isComplete && (
                         <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
@@ -102,7 +117,7 @@ export function ProgressSidebar({
                       )}
                     </div>
                     <p className="text-xs text-slate-400 mb-2">
-                      {section.description}
+                      {currentSection.description}
                     </p>
                     
                     {/* Progress Bar */}
@@ -111,12 +126,7 @@ export function ProgressSidebar({
                         <div
                           className={`
                             h-full transition-all duration-500
-                            ${isComplete
-                              ? 'bg-green-500'
-                              : isCurrentSection
-                              ? 'bg-purple-500'
-                              : 'bg-slate-600'
-                            }
+                            ${isComplete ? 'bg-green-500' : 'bg-purple-500'}
                           `}
                           style={{ width: `${sectionProgress.percentage}%` }}
                         />
@@ -128,18 +138,12 @@ export function ProgressSidebar({
                   </div>
                 </div>
               </button>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Merlin Assistant */}
-      <div className="px-6 pb-6 border-t border-slate-800 pt-6">
-        <MerlinAssistant
-          currentQuestion={currentQuestion}
-          estimatedSavings={estimatedMonthlySavings}
-        />
-      </div>
+      {/* Merlin Assistant - Removed (now shown in main content area at top) */}
 
       {/* Savings Preview (if available) */}
       {estimatedMonthlySavings > 0 && (
@@ -179,63 +183,121 @@ export function ProgressSidebar({
 }
 
 // ============================================================================
-// HEAT-MAP PROGRESS RING
+// BATTERY PROGRESS INDICATOR
 // ============================================================================
 
-function HeatMapProgressRing({ progress }: { progress: number }) {
-  const radius = 60;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+interface BatteryProgressIndicatorProps {
+  currentStep: number; // 1-6 in overall wizard
+}
 
-  // Color based on progress (Red → Yellow → Green)
-  const getColor = (progress: number) => {
-    if (progress < 33) {
-      return '#ef4444'; // Red
-    } else if (progress < 66) {
-      return '#f59e0b'; // Amber/Yellow
-    } else {
-      return '#10b981'; // Green
-    }
+function BatteryProgressIndicator({ currentStep }: BatteryProgressIndicatorProps) {
+  // M-E-R-L-I-N (6 letters for 6 steps)
+  const steps = [
+    { number: 6, label: 'Quote', short: 'N', color: '#8b5cf6' },
+    { number: 5, label: 'System', short: 'I', color: '#06b6d4' },
+    { number: 4, label: 'Options', short: 'L', color: '#10b981' },
+    { number: 3, label: 'Details', short: 'R', color: '#3b82f6' },
+    { number: 2, label: 'Industry', short: 'E', color: '#f59e0b' },
+    { number: 1, label: 'Location', short: 'M', color: '#ef4444' }
+  ];
+
+  // Calculate fill percentage (Step 1 = 0%, Step 6 = 100%)
+  const fillPercentage = ((currentStep - 1) / 5) * 100;
+
+  // Get step color
+  const getStepColor = (step: number) => {
+    if (step < currentStep) return steps.find(s => s.number === step)?.color || '#10b981'; // Completed (use step color)
+    if (step === currentStep) return '#3b82f6'; // Current (blue)
+    return '#475569'; // Upcoming (gray)
   };
 
-  const color = getColor(progress);
+  // Build gradient stops for the fill
+  const gradientStops = steps.map((step, index) => {
+    const percentage = (index / 5) * 100;
+    const color = getStepColor(step.number);
+    return `${color} ${percentage}%`;
+  }).join(', ');
 
   return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg width="160" height="160" className="transform -rotate-90">
-        {/* Background circle */}
-        <circle
-          cx="80"
-          cy="80"
-          r={radius}
-          stroke="rgb(30 41 59)"
-          strokeWidth="12"
-          fill="none"
-        />
-        {/* Progress circle */}
-        <circle
-          cx="80"
-          cy="80"
-          r={radius}
-          stroke={color}
-          strokeWidth="12"
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          className="transition-all duration-500 ease-out"
+    <div className="flex flex-col items-center">
+      {/* Battery Container */}
+      <div className="relative w-20 h-56 bg-slate-800/50 rounded-lg border-2 border-slate-600 overflow-hidden shadow-inner">
+        {/* Battery Fill (from bottom to top, like charging) */}
+        <div
+          className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out"
           style={{
-            filter: `drop-shadow(0 0 8px ${color}40)`
+            height: `${fillPercentage}%`,
+            background: `linear-gradient(to top, ${gradientStops})`,
+            boxShadow: `0 0 30px ${getStepColor(currentStep)}60, inset 0 0 15px rgba(255,255,255,0.15)`,
+            filter: `drop-shadow(0 0 8px ${getStepColor(currentStep)}40)`
           }}
         />
-      </svg>
-      {/* Center text */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-4xl font-bold text-white">
-          {Math.round(progress)}%
+        
+        {/* Step Dividers and Labels */}
+        <div className="absolute inset-0 flex flex-col">
+          {steps.map((step, index) => {
+            const isActive = step.number === currentStep;
+            const isCompleted = step.number < currentStep;
+            const stepHeight = 100 / 6; // Each step takes 1/6 of the height
+            
+            return (
+              <React.Fragment key={step.number}>
+                {/* Step Segment */}
+                <div
+                  className={`
+                    flex-1 flex items-center justify-center relative
+                    transition-all duration-300
+                    ${isActive 
+                      ? 'bg-blue-500/20' 
+                      : isCompleted
+                      ? 'bg-green-500/10'
+                      : ''
+                    }
+                  `}
+                  style={{ minHeight: `${stepHeight}%` }}
+                >
+                  {/* Step Label */}
+                  <div
+                    className={`
+                      w-full h-full flex items-center justify-center text-xs font-bold
+                      transition-all duration-300
+                      ${isActive 
+                        ? 'text-blue-200 scale-110' 
+                        : isCompleted
+                        ? 'text-green-300'
+                        : 'text-slate-500'
+                      }
+                    `}
+                    title={step.label}
+                  >
+                    {step.short}
+                  </div>
+                  
+                  {/* Divider (except for last step) */}
+                  {index < steps.length - 1 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-slate-700/50" />
+                  )}
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
-        <div className="text-xs text-slate-400 mt-1">
-          Complete
+      </div>
+      
+      {/* Battery Terminal (top - positive terminal) */}
+      <div className="w-6 h-3 bg-slate-600 rounded-t border-2 border-slate-700 border-b-0" />
+      
+      {/* Current Step Label */}
+      <div className="mt-4 text-center">
+        <div className="text-sm font-bold text-white mb-1">
+          Step {currentStep} of 6
+        </div>
+        <div className="text-xs text-slate-400">
+          {steps.find(s => s.number === currentStep)?.label}
+        </div>
+        {/* Progress Percentage */}
+        <div className="mt-2 text-xs text-purple-300 font-semibold">
+          {Math.round(fillPercentage)}% Complete
         </div>
       </div>
     </div>

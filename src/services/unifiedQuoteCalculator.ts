@@ -90,7 +90,7 @@ export interface QuoteResult {
   financials: {
     annualSavings: number;
     paybackYears: number;
-    roi10Year: number;
+    roi5Year: number;  // Changed from roi5Year to 5-year for more credible ROI timeline
     roi25Year: number;
     npv: number;
     irr: number;
@@ -351,7 +351,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
     financials: {
       annualSavings: financials.annualSavings,
       paybackYears: actualPayback,
-      roi10Year: financials.roi10Year,
+      roi5Year: financials.roi5Year,
       roi25Year: financials.roi25Year,
       npv: financials.npv ?? 0,
       irr: financials.irr ?? 0,

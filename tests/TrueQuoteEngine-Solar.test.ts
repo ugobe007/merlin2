@@ -28,16 +28,16 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       expect(result.roofArea).toBe(5000);
       expect(result.roofUsableFactor).toBe(0.65); // 65% usable
       expect(result.roofSolarUsable).toBe(3250); // 5000 × 0.65
-      expect(result.roofSolarKW).toBeCloseTo(487.5, 1); // 3250 × 0.15
+      expect(result.roofSolarKW).toBeCloseTo(65, 1); // 3250 × 0.020
       
       // Verify no carport
       expect(result.carportSolarUsable).toBe(0);
       expect(result.carportSolarKW).toBe(0);
       
       // Verify totals
-      expect(result.totalSolarKW).toBeCloseTo(487.5, 1);
-      // 487.5 kW is > 250, so it's Extra Large (not Medium)
-      expect(result.systemSizeCategory).toBe('Extra Large');
+      expect(result.totalSolarKW).toBeCloseTo(65, 1);
+      // 65 kW is 25-100, so it's Medium
+      expect(result.systemSizeCategory).toBe('Medium');
     });
 
     it('should calculate carport solar correctly (1500 sqft carport)', () => {
@@ -54,12 +54,12 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       expect(result.carportArea).toBe(1500);
       expect(result.carportUsableFactor).toBe(1.0); // 100% usable
       expect(result.carportSolarUsable).toBe(1500); // 1500 × 1.0
-      expect(result.carportSolarKW).toBeCloseTo(225, 1); // 1500 × 0.15
+      expect(result.carportSolarKW).toBeCloseTo(30, 1); // 1500 × 0.020
       
       // Verify totals
-      expect(result.totalSolarKW).toBeCloseTo(712.5, 1); // 487.5 + 225
-      // 712.5 kW is > 250, so it's Extra Large (not Medium)
-      expect(result.systemSizeCategory).toBe('Extra Large');
+      expect(result.totalSolarKW).toBeCloseTo(95, 1); // 65 + 30
+      // 95 kW is 25-100, so it's Medium
+      expect(result.systemSizeCategory).toBe('Medium');
     });
 
     it('should calculate annual generation correctly', () => {
@@ -72,8 +72,8 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
         carportUnit: 'sqft'
       });
 
-      // 712.5 kW × 1200 hours = 855,000 kWh/year
-      expect(result.annualGenerationKWh).toBe(855000);
+      // 95 kW × 1200 hours = 114,000 kWh/year
+      expect(result.annualGenerationKWh).toBe(114000);
     });
 
     it('should handle "unsure" carport interest as "yes"', () => {
@@ -88,7 +88,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
 
       // Should include carport in calculation
       expect(result.carportSolarKW).toBeGreaterThan(0);
-      expect(result.totalSolarKW).toBeCloseTo(712.5, 1);
+      expect(result.totalSolarKW).toBeCloseTo(95, 1);
     });
 
     it('should ignore carport area when interest is "no"', () => {
@@ -103,7 +103,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
 
       // Carport should not be included
       expect(result.carportSolarKW).toBe(0);
-      expect(result.totalSolarKW).toBeCloseTo(487.5, 1);
+      expect(result.totalSolarKW).toBeCloseTo(65, 1);
     });
   });
 
@@ -125,7 +125,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       expect(result.roofArea).toBeCloseTo(5000, 0);
       expect(result.roofUnit).toBe('sqft');
       // Should match 5000 sqft calculation exactly
-      expect(result.roofSolarKW).toBeCloseTo(487.5, 1);
+      expect(result.roofSolarKW).toBeCloseTo(65, 1);
     });
 
     it('should handle mixed units (roof sqft, carport sqm)', () => {
@@ -142,7 +142,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       // 139.35 sqm × 10.764 = ~1500 sqft
       expect(result.carportArea).toBeCloseTo(1500, 0);
       // Should match 5000 + 1500 calculation exactly
-      expect(result.totalSolarKW).toBeCloseTo(712.5, 1);
+      expect(result.totalSolarKW).toBeCloseTo(95, 1);
     });
   });
 
@@ -169,12 +169,12 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
     it('should classify as Medium system (25-100 kW)', () => {
       const result = calculateSolarCapacity({
         industry: 'car_wash',
-        roofArea: 500,
+        roofArea: 2000,
         roofUnit: 'sqft',
         carportInterest: 'no'
       });
 
-      // 500 × 0.65 × 0.15 = 48.75 kW (Medium)
+      // 2000 × 0.65 × 0.020 = 26 kW (Medium)
       expect(result.totalSolarKW).toBeGreaterThanOrEqual(25);
       expect(result.totalSolarKW).toBeLessThan(100);
       expect(result.systemSizeCategory).toBe('Medium');
@@ -190,12 +190,13 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
         carportUnit: 'sqft'
       });
 
-      // Roof: 10000 × 0.65 × 0.15 = 975 kW
-      // Carport: 5000 × 1.0 × 0.15 = 750 kW
-      // Total: 1725 kW (Extra Large)
+      // Roof: 10000 × 0.65 × 0.020 = 130 kW
+      // Carport: 5000 × 1.0 × 0.020 = 100 kW
+      // Total: 230 kW (Large)
       
-      expect(result.totalSolarKW).toBeGreaterThan(250);
-      expect(result.systemSizeCategory).toBe('Extra Large');
+      expect(result.totalSolarKW).toBeGreaterThanOrEqual(100);
+      expect(result.totalSolarKW).toBeLessThan(250);
+      expect(result.systemSizeCategory).toBe('Large');
     });
   });
 
@@ -208,7 +209,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       const template = getSolarTemplate('car_wash');
       expect(template.roofUsableFactor).toBe(0.65);
       expect(template.carportUsableFactor).toBe(1.0);
-      expect(template.solarDensity).toBe(0.150);
+      expect(template.solarDensity).toBe(0.020);
     });
 
     it('should use correct factors for hotel (55% roof)', () => {
@@ -361,7 +362,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       });
 
       expect(result.carportSolarKW).toBe(0);
-      expect(result.totalSolarKW).toBeCloseTo(487.5, 1);
+      expect(result.totalSolarKW).toBeCloseTo(65, 1);
     });
 
     it('should handle very small roof areas', () => {
@@ -372,8 +373,8 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
         carportInterest: 'no'
       });
 
-      // 10 × 0.65 × 0.15 = 0.975 kW
-      expect(result.totalSolarKW).toBeCloseTo(0.975, 2);
+      // 10 × 0.65 × 0.020 = 0.13 kW
+      expect(result.totalSolarKW).toBeCloseTo(0.13, 2);
       expect(result.systemSizeCategory).toBe('Small');
     });
 
@@ -388,7 +389,7 @@ describe('TrueQuoteEngine - Solar Calculations', () => {
       });
 
       expect(result.carportUnit).toBe('sqft');
-      expect(result.carportSolarKW).toBeCloseTo(225, 1);
+      expect(result.carportSolarKW).toBeCloseTo(30, 1);
     });
   });
 });

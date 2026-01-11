@@ -151,7 +151,7 @@ export interface TrueQuoteResult {
     generator?: { capacityKW: number; required: boolean; cost: number };
     financial: {
       totalInvestment: number; federalITC: number; stateIncentives: number; netCost: number;
-      annualSavings: number; paybackYears: number; tenYearROI: number; twentyFiveYearNPV: number;
+      annualSavings: number; paybackYears: number; fiveYearROI: number; twentyFiveYearNPV: number;
     };
     emissions: { annualCO2OffsetKg: number; equivalentTreesPlanted: number; equivalentCarsRemoved: number };
   };
@@ -224,7 +224,7 @@ const HOSPITAL_CONFIG: IndustryConfig = {
     teaching: { name: "Teaching Hospital", bessMultiplier: 0.6, criticalLoadPercent: 0.9, durationHours: 4, generatorRequired: true, generatorSizing: 1.5 },
   },
   powerCalculation: {
-    method: "per_unit", unitName: "beds", wattsPerUnit: 10000,
+    method: "per_unit", unitName: "beds", wattsPerUnit: 5000, // ASHRAE standard: 4-6 kW/bed, use 5 kW (5000W) as default
     modifiers: [
       { name: "ICU", trigger: "icuBeds", multiplier: 1.1 },
       { name: "Operating Rooms", trigger: "operatingRooms", multiplier: 1.05 },
@@ -245,7 +245,7 @@ const HOTEL_CONFIG: IndustryConfig = {
     luxury: { name: "Luxury / Resort", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 4, generatorRequired: true, generatorSizing: 1.25 },
   },
   powerCalculation: {
-    method: "per_unit", unitName: "rooms", wattsPerUnit: 3000,
+    method: "per_unit", unitName: "rooms", wattsPerUnit: 3500, // Industry standard: 3-4 kW/room peak, use 3.5 kW (3500W) as default
     modifiers: [
       { name: "Restaurant", trigger: "foodBeverage", multiplier: 1.15 },
       { name: "Spa", trigger: "spaServices", multiplier: 1.1 },
@@ -301,7 +301,7 @@ const MANUFACTURING_CONFIG: IndustryConfig = {
     pharmaceutical: { name: "Pharmaceutical", bessMultiplier: 0.5, criticalLoadPercent: 0.85, durationHours: 4, generatorRequired: true, generatorSizing: 1.3 },
     other: { name: "Other Manufacturing", bessMultiplier: 0.4, criticalLoadPercent: 0.4, durationHours: 4, generatorRequired: false },
   },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 5, modifiers: [{ name: "Large Motors", trigger: "largeLoads", multiplier: 1.2 }] },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 15.0, modifiers: [{ name: "Large Motors", trigger: "largeLoads", multiplier: 1.2 }] },
   bessDefaults: { minPowerKW: 100, maxPowerKW: 10000, defaultDurationHours: 4 },
   financialDefaults: { peakShavingPercent: 0.3, arbitrageSpread: 0.05 },
   recommendations: { solarRecommended: true },
@@ -315,7 +315,7 @@ const RETAIL_CONFIG: IndustryConfig = {
     largeGrocery: { name: "Large Grocery", bessMultiplier: 0.45, criticalLoadPercent: 0.55, durationHours: 4, generatorRequired: false },
     departmentStore: { name: "Department Store", bessMultiplier: 0.4, criticalLoadPercent: 0.4, durationHours: 4, generatorRequired: false },
   },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 1.5, modifiers: [{ name: "Walk-in Cooler", trigger: "walkInCooler", multiplier: 1.1 }, { name: "Walk-in Freezer", trigger: "walkInFreezer", multiplier: 1.2 }] },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 8.0, modifiers: [{ name: "Walk-in Cooler", trigger: "walkInCooler", multiplier: 1.1 }, { name: "Walk-in Freezer", trigger: "walkInFreezer", multiplier: 1.2 }] },
   bessDefaults: { minPowerKW: 25, maxPowerKW: 5000, defaultDurationHours: 4 },
   financialDefaults: { peakShavingPercent: 0.25, arbitrageSpread: 0.05 },
   recommendations: { solarRecommended: true },
@@ -343,7 +343,7 @@ const OFFICE_CONFIG: IndustryConfig = {
     highRise: { name: "High-Rise", bessMultiplier: 0.45, criticalLoadPercent: 0.5, durationHours: 4, generatorRequired: true, generatorSizing: 1.2 },
     medicalOffice: { name: "Medical Office", bessMultiplier: 0.45, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: true, generatorSizing: 1.25 },
   },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 0.6, modifiers: [{ name: "Data Center", trigger: "dataCenterKw", multiplier: 1.2 }, { name: "Elevators", trigger: "elevatorCount", multiplier: 1.05 }] },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 6.0, modifiers: [{ name: "Data Center", trigger: "dataCenterKw", multiplier: 1.2 }, { name: "Elevators", trigger: "elevatorCount", multiplier: 1.05 }] },
   bessDefaults: { minPowerKW: 25, maxPowerKW: 5000, defaultDurationHours: 4 },
   financialDefaults: { peakShavingPercent: 0.2, arbitrageSpread: 0.04 },
   recommendations: { solarRecommended: true, generatorCondition: "highRise,medicalOffice" },
@@ -371,7 +371,7 @@ const AGRICULTURE_CONFIG: IndustryConfig = {
     dairy: { name: "Dairy", bessMultiplier: 0.45, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: false },
     greenhouse: { name: "Greenhouse", bessMultiplier: 0.45, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: false },
   },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 0.05, modifiers: [{ name: "Irrigation", trigger: "irrigatedAcres", multiplier: 8.0 }] },
+  powerCalculation: { method: "fixed", baseLoadKW: 100 }, // Uses calculateAgriculturePower() via facilityData.peakDemandKW (based on acres × kW/acre + irrigationKW)
   bessDefaults: { minPowerKW: 50, maxPowerKW: 5000, defaultDurationHours: 4 },
   financialDefaults: { peakShavingPercent: 0.35, arbitrageSpread: 0.06 },
   recommendations: { solarRecommended: true },
@@ -385,7 +385,7 @@ const WAREHOUSE_CONFIG: IndustryConfig = {
     refrigerated: { name: "Refrigerated", bessMultiplier: 0.45, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: true, generatorSizing: 1.25 },
     frozen: { name: "Frozen", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 4, generatorRequired: true, generatorSizing: 1.3 },
   },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 0.2, modifiers: [{ name: "Electric Forklifts", trigger: "fleetElectrification", multiplier: 1.1 }] },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 2.0, modifiers: [{ name: "Electric Forklifts", trigger: "fleetElectrification", multiplier: 1.1 }] },
   bessDefaults: { minPowerKW: 50, maxPowerKW: 10000, defaultDurationHours: 4 },
   financialDefaults: { peakShavingPercent: 0.3, arbitrageSpread: 0.05 },
   recommendations: { solarRecommended: true, generatorCondition: "refrigerated,frozen" },
@@ -430,8 +430,8 @@ const SHOPPING_CENTER_CONFIG: IndustryConfig = {
 
 const INDOOR_FARM_CONFIG: IndustryConfig = {
   slug: "indoor-farm", name: "Indoor Farm / Vertical Farm",
-  subtypes: { default: { name: "Indoor Farm", bessMultiplier: 0.55, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.35 } },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 65 },
+  subtypes: { default: { name: "Indoor Farm", bessMultiplier: 0.55, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.35, description: "High-intensity grow lights + HVAC: 40-60 W/sq ft peak" } },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 50.0 }, // POWER_DENSITY_STANDARDS: 40-60 W/sq ft, use 50 W/sq ft
   bessDefaults: { minPowerKW: 100, maxPowerKW: 20000, defaultDurationHours: 6 },
   financialDefaults: { peakShavingPercent: 0.4, arbitrageSpread: 0.08 },
   recommendations: { solarRecommended: true },
@@ -439,11 +439,83 @@ const INDOOR_FARM_CONFIG: IndustryConfig = {
 
 const GOVERNMENT_CONFIG: IndustryConfig = {
   slug: "government", name: "Government Building",
-  subtypes: { default: { name: "Government Facility", bessMultiplier: 0.6, criticalLoadPercent: 0.7, durationHours: 8, generatorRequired: true, generatorSizing: 1.4 } },
-  powerCalculation: { method: "per_sqft", wattsPerSqft: 6 },
+  subtypes: { default: { name: "Government Facility", bessMultiplier: 0.6, criticalLoadPercent: 0.7, durationHours: 8, generatorRequired: true, generatorSizing: 1.4, description: "FEMP benchmark: 1.5 W/sq ft for public buildings" } },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 1.5 },
   bessDefaults: { minPowerKW: 100, maxPowerKW: 30000, defaultDurationHours: 8 },
   financialDefaults: { peakShavingPercent: 0.3, arbitrageSpread: 0.05 },
   recommendations: { solarRecommended: true },
+};
+
+const TRUCK_STOP_CONFIG: IndustryConfig = {
+  slug: "heavy_duty_truck_stop", name: "Heavy Duty Truck Stop / Travel Center",
+  subtypes: {
+    default: { name: "Truck Stop / Travel Center", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3, description: "High-voltage nodes with extreme demand profiles from MW-class charging, heavy industrial equipment, and 24/7 hospitality operations" },
+    loves_travel_stops: { name: "Love's Travel Stop", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+    pilot_flying_j: { name: "Pilot Flying J", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+    ta_petro: { name: "TA Petro", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+    travel_centers_of_america: { name: "Travel Centers of America", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+    independent_truck_plaza: { name: "Independent Truck Plaza", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+  },
+  powerCalculation: { method: "fixed", baseLoadKW: 1000 }, // Will use custom calculator via facilityData.peakDemandKW if available
+  bessDefaults: { minPowerKW: 200, maxPowerKW: 20000, defaultDurationHours: 6 },
+  financialDefaults: { peakShavingPercent: 0.35, arbitrageSpread: 0.07 },
+  recommendations: { solarRecommended: true, generatorCondition: "default" },
+};
+
+const AIRPORT_CONFIG: IndustryConfig = {
+  slug: "airport", name: "Airport / Aviation",
+  subtypes: {
+    default: { name: "Small Regional Airport", bessMultiplier: 0.5, criticalLoadPercent: 0.75, durationHours: 2, generatorRequired: true, generatorSizing: 1.3, description: "Based on annual passengers: <1M = 2-6MW" },
+    smallRegional: { name: "Small Regional (<1M passengers)", bessMultiplier: 0.5, criticalLoadPercent: 0.75, durationHours: 2, generatorRequired: true, generatorSizing: 1.3 },
+    mediumRegional: { name: "Medium Regional (1-5M passengers)", bessMultiplier: 0.5, criticalLoadPercent: 0.75, durationHours: 2, generatorRequired: true, generatorSizing: 1.3 },
+    largeRegional: { name: "Large Regional (5-15M passengers)", bessMultiplier: 0.5, criticalLoadPercent: 0.75, durationHours: 2, generatorRequired: true, generatorSizing: 1.3 },
+    majorHub: { name: "Major Hub (15-50M passengers)", bessMultiplier: 0.5, criticalLoadPercent: 0.8, durationHours: 2, generatorRequired: true, generatorSizing: 1.4 },
+    megaHub: { name: "Mega Hub (50M+ passengers)", bessMultiplier: 0.5, criticalLoadPercent: 0.85, durationHours: 2, generatorRequired: true, generatorSizing: 1.4 },
+  },
+  powerCalculation: { method: "fixed", baseLoadKW: 2000 }, // Uses calculateAirportPower() via facilityData.peakDemandKW (based on annualPassengersMillions)
+  bessDefaults: { minPowerKW: 125, maxPowerKW: 250000, defaultDurationHours: 2 },
+  financialDefaults: { peakShavingPercent: 0.3, arbitrageSpread: 0.05 },
+  recommendations: { solarRecommended: true, generatorCondition: "default" },
+};
+
+const GAS_STATION_CONFIG: IndustryConfig = {
+  slug: "gas_station", name: "Gas Station / Convenience Store",
+  subtypes: {
+    default: { name: "Gas Station with C-Store", bessMultiplier: 0.4, criticalLoadPercent: 0.5, durationHours: 4, generatorRequired: false, description: "NACS benchmark: 1.5 kW/dispenser + 15 kW store" },
+    "gas-only": { name: "Gas Only (No Store)", bessMultiplier: 0.35, criticalLoadPercent: 0.4, durationHours: 4, generatorRequired: false },
+    "with-cstore": { name: "Gas Station with C-Store", bessMultiplier: 0.4, criticalLoadPercent: 0.5, durationHours: 4, generatorRequired: false },
+    "truck-stop": { name: "Truck Stop", bessMultiplier: 0.5, criticalLoadPercent: 0.7, durationHours: 6, generatorRequired: true, generatorSizing: 1.3 },
+  },
+  powerCalculation: { method: "fixed", baseLoadKW: 50 }, // Uses calculateGasStationPower() via facilityData.peakDemandKW (based on dispenserCount + hasConvenienceStore)
+  bessDefaults: { minPowerKW: 10, maxPowerKW: 2000, defaultDurationHours: 4 },
+  financialDefaults: { peakShavingPercent: 0.3, arbitrageSpread: 0.05 },
+  recommendations: { solarRecommended: true },
+};
+
+const RESIDENTIAL_CONFIG: IndustryConfig = {
+  slug: "residential", name: "Residential",
+  subtypes: {
+    default: { name: "Single Family Home", bessMultiplier: 0.3, criticalLoadPercent: 0.4, durationHours: 4, generatorRequired: false, description: "RECS benchmark: 5 W/sq ft peak demand" },
+    "single-family": { name: "Single Family Home", bessMultiplier: 0.3, criticalLoadPercent: 0.4, durationHours: 4, generatorRequired: false },
+    "multi-family": { name: "Multi-Family Building", bessMultiplier: 0.35, criticalLoadPercent: 0.5, durationHours: 4, generatorRequired: false },
+  },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 5.0 }, // RECS benchmark: 5 W/sq ft peak
+  bessDefaults: { minPowerKW: 5, maxPowerKW: 100, defaultDurationHours: 4 },
+  financialDefaults: { peakShavingPercent: 0.25, arbitrageSpread: 0.04 },
+  recommendations: { solarRecommended: true },
+};
+
+const MICROGRID_CONFIG: IndustryConfig = {
+  slug: "microgrid", name: "Microgrid / Renewable Energy",
+  subtypes: {
+    default: { name: "Grid-Tied Microgrid", bessMultiplier: 0.5, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: false, description: "Mixed-load benchmark: 8 W/sq ft for grid-tied systems" },
+    "grid-tied": { name: "Grid-Tied Microgrid", bessMultiplier: 0.5, criticalLoadPercent: 0.6, durationHours: 4, generatorRequired: false },
+    "islanded": { name: "Islanded Microgrid", bessMultiplier: 0.7, criticalLoadPercent: 1.0, durationHours: 12, generatorRequired: true, generatorSizing: 1.5, description: "Islanded systems require full backup capacity and longer duration" },
+  },
+  powerCalculation: { method: "per_sqft", wattsPerSqft: 8.0, modifiers: [{ name: "Renewable Integration", trigger: "renewableCapacity", multiplier: 1.2 }] },
+  bessDefaults: { minPowerKW: 100, maxPowerKW: 10000, defaultDurationHours: 4 },
+  financialDefaults: { peakShavingPercent: 0.4, arbitrageSpread: 0.08 },
+  recommendations: { solarRecommended: true, generatorCondition: "islanded" },
 };
 
 // INDUSTRY REGISTRY
@@ -466,6 +538,11 @@ export const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
   "shopping-center": SHOPPING_CENTER_CONFIG, "shopping-mall": SHOPPING_CENTER_CONFIG,
   "indoor-farm": INDOOR_FARM_CONFIG, indoor_farm: INDOOR_FARM_CONFIG,
   government: GOVERNMENT_CONFIG, "public-building": GOVERNMENT_CONFIG,
+  "heavy-duty-truck-stop": TRUCK_STOP_CONFIG, "heavy_duty_truck_stop": TRUCK_STOP_CONFIG, "truck-stop": TRUCK_STOP_CONFIG, "truck_stop": TRUCK_STOP_CONFIG,
+  airport: AIRPORT_CONFIG,
+  "gas-station": GAS_STATION_CONFIG, gas_station: GAS_STATION_CONFIG,
+  residential: RESIDENTIAL_CONFIG,
+  microgrid: MICROGRID_CONFIG,
 };
 
 // STATE DATA + HELPER FUNCTIONS
@@ -681,7 +758,8 @@ export class TrueQuoteEngine {
     const solarSavings = solar ? solar.annualProductionKWh * locationData.electricityRate : 0;
     const annualSavings = demandSavings + arbitrageSavings + solarSavings;
     const paybackYears = netCost / annualSavings;
-    const tenYearROI = ((annualSavings * 10 - netCost) / netCost) * 100;
+    // 5-year ROI with 3% annual increase (5.15x multiplier)
+    const fiveYearROI = annualSavings > 0 && netCost > 0 ? ((annualSavings * 5.15 - netCost) / netCost) * 100 : 0;
 
     const npvCashFlows = Array.from({ length: 25 }, (_, i) => annualSavings / Math.pow(1 + TRUEQUOTE_CONSTANTS.DISCOUNT_RATE, i + 1));
     const twentyFiveYearNPV = npvCashFlows.reduce((sum, cf) => sum + cf, 0) - netCost;
@@ -748,7 +826,7 @@ export class TrueQuoteEngine {
         solar, evCharging, generator,
         financial: {
           totalInvestment: Math.round(totalInvestment), federalITC: Math.round(federalITC), stateIncentives: 0, netCost: Math.round(netCost),
-          annualSavings: Math.round(annualSavings), paybackYears: Math.round(paybackYears * 10) / 10, tenYearROI: Math.round(tenYearROI), twentyFiveYearNPV: Math.round(twentyFiveYearNPV),
+          annualSavings: Math.round(annualSavings), paybackYears: Math.round(paybackYears * 10) / 10, fiveYearROI: Math.round(fiveYearROI * 10) / 10, twentyFiveYearNPV: Math.round(twentyFiveYearNPV),
         },
         emissions: { annualCO2OffsetKg, equivalentTreesPlanted, equivalentCarsRemoved },
       },
@@ -771,7 +849,38 @@ export class TrueQuoteEngine {
     const powerCalc = config.powerCalculation;
     let basePowerKW = 0;
 
-    if (powerCalc.method === "per_unit" && powerCalc.unitName && powerCalc.wattsPerUnit) {
+    // Check if peakDemandKW is already calculated (e.g., from custom calculator like truck stops)
+    if (facilityData.peakDemandKW !== undefined && typeof facilityData.peakDemandKW === 'number' && facilityData.peakDemandKW > 0) {
+      basePowerKW = facilityData.peakDemandKW;
+      steps.push({
+        stepNumber: stepNum++, category: "power_demand", name: "Use Pre-calculated Peak Demand",
+        description: "Peak demand calculated by industry-specific calculator",
+        formula: "Peak Demand = Industry Calculator Result",
+        calculation: `${basePowerKW.toLocaleString()} kW (from ${config.name} calculator)`,
+        inputs: [
+          { name: "Calculation Method", value: "Industry-specific calculator", source: `${config.name} load calculator` },
+        ],
+        output: { name: "Peak Demand", value: basePowerKW, unit: "kW" },
+      });
+      return { peakDemandKW: Math.round(basePowerKW), powerSteps: steps };
+    }
+
+    // Handle "fixed" method - use baseLoadKW or fallback to 0
+    if (powerCalc.method === "fixed") {
+      basePowerKW = powerCalc.baseLoadKW || 0;
+      if (basePowerKW > 0) {
+        steps.push({
+          stepNumber: stepNum++, category: "power_demand", name: "Fixed Base Load",
+          description: "Using fixed base load for this industry type",
+          formula: "Peak Demand = Fixed Base Load",
+          calculation: `${basePowerKW.toLocaleString()} kW`,
+          inputs: [
+            { name: "Base Load", value: basePowerKW, unit: "kW", source: "Industry standard" },
+          ],
+          output: { name: "Peak Demand", value: basePowerKW, unit: "kW" },
+        });
+      }
+    } else if (powerCalc.method === "per_unit" && powerCalc.unitName && powerCalc.wattsPerUnit) {
       const unitCount = this.extractUnitCount(facilityData, powerCalc.unitName);
       let effectiveWattsPerUnit = powerCalc.wattsPerUnit;
 
