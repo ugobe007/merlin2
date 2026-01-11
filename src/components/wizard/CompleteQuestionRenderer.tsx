@@ -131,8 +131,7 @@ export function CompleteQuestionRenderer({
 // FIXED: Added return type and default return
 // ============================================================================
 function renderInputComponent(
-  question: any,
-  value: any,
+): React.ReactNode {  value: any,
   onChange: (value: any) => void,
   options?: any[]
 ): React.ReactNode {  // ← FIXED: Added return type
