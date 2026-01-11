@@ -68,7 +68,7 @@ export interface AIOptimizationResult {
     totalCost: number;
     annualSavings: number;
     paybackYears: number;
-    roi5Year: number;
+    roi10Year: number;
   };
   suggestion?: AIOptimizationSuggestion;
   benchmarkComparison?: {
@@ -362,7 +362,7 @@ export async function getAIOptimization(input: AIOptimizationInput): Promise<AIO
     }
 
     // Check if larger size improves ROI
-    if (largerSizeMetrics.roi5Year > currentMetrics.roi5Year * 1.15) {
+    if (largerSizeMetrics.roi10Year > currentMetrics.roi10Year * 1.15) {
       if (!improvement || largerSizeMetrics.paybackYears < bestAlternative.paybackYears) {
         bestAlternative = largerSizeMetrics;
         bestConfig = {
@@ -403,7 +403,7 @@ export async function getAIOptimization(input: AIOptimizationInput): Promise<AIO
           totalCost: currentMetrics.netCost,
           annualSavings: currentMetrics.annualSavings,
           paybackYears: currentMetrics.paybackYears,
-          roi5Year: currentMetrics.roi5Year,
+          roi10Year: currentMetrics.roi10Year,
         },
         benchmarkComparison: {
           percentile: benchmark.percentile,
@@ -443,7 +443,7 @@ export async function getAIOptimization(input: AIOptimizationInput): Promise<AIO
         totalCost: currentMetrics.netCost,
         annualSavings: currentMetrics.annualSavings,
         paybackYears: currentMetrics.paybackYears,
-        roi5Year: currentMetrics.roi5Year,
+        roi10Year: currentMetrics.roi10Year,
       },
       suggestion,
       benchmarkComparison: calculateBenchmarkPercentile(currentMetrics, input.useCase),
@@ -540,19 +540,19 @@ function calculateBenchmarkPercentile(
 ): { percentile: number; comparison: string } {
   // Simplified percentile calculation based on ROI
   // In production, this would compare against historical data
-  const roi5Year = metrics.roi5Year;
+  const roi10Year = metrics.roi10Year;
   const paybackYears = metrics.paybackYears;
 
   let percentile = 50; // Default to median
 
   // Excellent performance
-  if (roi5Year > 150 && paybackYears < 4) {
+  if (roi10Year > 150 && paybackYears < 4) {
     percentile = 90;
-  } else if (roi5Year > 120 && paybackYears < 5) {
+  } else if (roi10Year > 120 && paybackYears < 5) {
     percentile = 75;
-  } else if (roi5Year > 100 && paybackYears < 6) {
+  } else if (roi10Year > 100 && paybackYears < 6) {
     percentile = 60;
-  } else if (roi5Year < 80 || paybackYears > 7) {
+  } else if (roi10Year < 80 || paybackYears > 7) {
     percentile = 30;
   }
 

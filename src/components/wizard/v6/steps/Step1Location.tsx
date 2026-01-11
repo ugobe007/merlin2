@@ -14,7 +14,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check, Search, Building2, Loader2 } from 'lucide-react';
-import type { WizardState } from '../types';
+import type { WizardState, EnergyGoal } from '../types';
+import { MerlinGuide } from '../MerlinGuide';
 
 // SSOT Imports - All location data comes from centralized data files
 import { 
@@ -35,8 +36,20 @@ import {
   type PlaceLookupResult
 } from '@/services/googlePlacesService';
 
-import merlinProfileImage from '@/assets/images/new_small_profile_.png';
+// ============================================================================
+// ENERGY GOALS
+// ============================================================================
 
+const ENERGY_GOALS: { id: EnergyGoal; label: string; description: string; emoji: string }[] = [
+  { id: 'reduce_costs', label: 'Cut Energy Costs', description: 'Reduce monthly electricity bills', emoji: '✂️' },
+  { id: 'backup_power', label: 'Backup Power', description: 'Stay powered during outages', emoji: '🔋' },
+  { id: 'sustainability', label: 'Sustainability', description: 'Reduce carbon footprint', emoji: '🌱' },
+  { id: 'grid_independence', label: 'Grid Independence', description: 'Less reliance on utilities', emoji: '🏠' },
+  { id: 'peak_shaving', label: 'Peak Shaving', description: 'Avoid peak rate charges', emoji: '⚡' },
+  { id: 'generate_revenue', label: 'Generate Revenue', description: 'Sell excess power back', emoji: '💵' },
+];
+
+const MIN_GOALS_REQUIRED = 2;
 
 // ============================================================================
 // COMPONENT
@@ -62,8 +75,6 @@ export function Step1Location({ state, updateState }: Props) {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [businessLookup, setBusinessLookup] = useState<PlaceLookupResult | null>(null);
   const [showAddressField, setShowAddressField] = useState(false);
-  const [weatherExpanded, setWeatherExpanded] = useState(false);
-  const [merlinAssessmentExpanded, setMerlinAssessmentExpanded] = useState(false);
 
   const locationData = useMemo(() => {
     if (region === 'us' && state.state) {
@@ -92,7 +103,6 @@ export function Step1Location({ state, updateState }: Props) {
 
   // Handle address lookup
   const handleAddressLookup = async () => {
-    // Allow lookup with just address OR business name (not both required)
     if (!businessNameInput.trim() && !streetAddress.trim()) return;
     
     // Combine business name + address + location for best results
@@ -201,262 +211,372 @@ export function Step1Location({ state, updateState }: Props) {
     }
   }, [selectedCountry, selectedCity, region, updateState]);
 
+  // Toggle goal selection
+  const toggleGoal = (goalId: EnergyGoal) => {
+    const currentGoals = state.goals || [];
+    const newGoals = currentGoals.includes(goalId)
+      ? currentGoals.filter(g => g !== goalId)
+      : [...currentGoals, goalId];
+    updateState({ goals: newGoals });
+  };
+
+  const selectedGoalsCount = state.goals?.length || 0;
+  const hasEnoughGoals = selectedGoalsCount >= MIN_GOALS_REQUIRED;
+
   const selectedCountryData = selectedCountry ? getCountryData(selectedCountry) : null;
 
-  // Weather risk assessment helper (simplified - can be enhanced with real data)
-  const getWeatherRisks = () => {
-    // Simplified weather risk based on state (can be enhanced with real weather data)
-    const stateCode = state.state || '';
-    const isHighRiskState = ['TX', 'OK', 'KS', 'NE', 'CO', 'FL', 'LA', 'MS', 'AL'].includes(stateCode);
-    const isMedRiskState = ['CA', 'AZ', 'NM', 'NV', 'UT', 'WY', 'MT', 'ND', 'SD'].includes(stateCode);
-    
-    return [
-      [
-        { icon: '🌩️', level: isHighRiskState ? 'Med' : 'Low', label: 'Thunder', color: isHighRiskState ? '#f59e0b' : '#22c55e', bg: isHighRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🌪️', level: isHighRiskState ? 'High' : 'Low', label: 'Tornado', color: isHighRiskState ? '#ef4444' : '#22c55e', bg: isHighRiskState ? 'linear-gradient(135deg,rgba(127,29,29,0.6),rgba(185,28,28,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🌀', level: isHighRiskState ? 'High' : 'Low', label: 'Hurricane', color: isHighRiskState ? '#ef4444' : '#22c55e', bg: isHighRiskState ? 'linear-gradient(135deg,rgba(127,29,29,0.6),rgba(185,28,28,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '💨', level: isMedRiskState ? 'Med' : 'Low', label: 'Wind', color: isMedRiskState ? '#f59e0b' : '#22c55e', bg: isMedRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '⚡', level: isHighRiskState ? 'Med' : 'Low', label: 'Lightning', color: isHighRiskState ? '#f59e0b' : '#22c55e', bg: isHighRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-      ],
-      [
-        { icon: '🔥', level: isMedRiskState ? 'High' : 'Low', label: 'Heat', color: isMedRiskState ? '#ef4444' : '#22c55e', bg: isMedRiskState ? 'linear-gradient(135deg,rgba(127,29,29,0.6),rgba(185,28,28,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🥶', level: 'Low', label: 'Cold', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🧊', level: 'Low', label: 'Ice', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '❄️', level: 'Low', label: 'Blizzard', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🏜️', level: isMedRiskState ? 'Med' : 'Low', label: 'Drought', color: isMedRiskState ? '#f59e0b' : '#22c55e', bg: isMedRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-      ],
-      [
-        { icon: '🌧️', level: 'Low', label: 'Rain', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🌊', level: isHighRiskState ? 'Med' : 'Low', label: 'Flood', color: isHighRiskState ? '#f59e0b' : '#22c55e', bg: isHighRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🌨️', level: 'Low', label: 'Hail', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🔥', level: isMedRiskState ? 'Med' : 'Low', label: 'Wildfire', color: isMedRiskState ? '#f59e0b' : '#22c55e', bg: isMedRiskState ? 'linear-gradient(135deg,rgba(120,53,15,0.5),rgba(180,83,9,0.3))' : 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-        { icon: '🌊', level: 'Low', label: 'Tsunami', color: '#22c55e', bg: 'linear-gradient(135deg,rgba(30,41,59,0.8),rgba(51,65,85,0.4))' },
-      ],
-    ];
-  };
-
-  // Get location metrics for display
-  const locationMetrics = locationData ? [
-    { label: 'Peak Sun', value: locationData.sunHours.toFixed(1), unit: 'hrs/day', color: '#f59e0b' },
-    { label: 'Electricity Rate', value: `$${locationData.electricityRate.toFixed(2)}`, unit: 'per kWh', color: '#22c55e' },
-    { label: 'Weather Risk', value: 'Low', unit: '', color: '#22c55e', highlight: true },
-    { label: 'Solar Grade', value: locationData.solarRating, unit: locationData.solarLabel, color: '#f59e0b' },
-  ] : [];
-
-  // Get Merlin's assessment
-  const getMerlinAssessment = () => {
-    if (!locationData) return null;
-    
-    const sunExposure = locationData.sunHours >= 5.5 ? 'Excellent' : locationData.sunHours >= 4.5 ? 'Good' : 'Fair';
-    const electricityRates = locationData.electricityRate > 0.12 ? 'High' : locationData.electricityRate > 0.08 ? 'Competitive' : 'Low';
-    const weatherRisk = 'Low'; // Can be enhanced with real weather data
-    const systemConfig = locationData.sunHours >= 5.5 && locationData.electricityRate > 0.10 ? 'BESS + Solar' : locationData.sunHours >= 4.5 ? 'BESS + Solar' : 'BESS + Generator';
-    
-    const comment = locationData.sunHours >= 5.5 
-      ? 'Solar + battery storage maximizes your ROI without backup generator costs.'
-      : locationData.sunHours >= 4.5
-      ? 'Solar paired with battery storage will help reduce energy costs and provide backup power.'
-      : 'Consider a generator + BESS combination for reliable power, peak shaving, and backup during outages.';
-    
-    return { sunExposure, electricityRates, weatherRisk, systemConfig, comment };
-  };
-
-  const assessment = getMerlinAssessment();
-  const weatherRisks = getWeatherRisks();
-  const locationName = region === 'us' 
-    ? `${US_STATE_DATA[state.state]?.name || state.state}, ${state.state}`
-    : `${selectedCity}, ${selectedCountry}`;
-
   return (
-    <div className="grid grid-cols-2 flex-1 overflow-hidden pb-16 items-stretch">
+    <div className="relative">
+      {/* Merlin Advisor - Fixed Position */}
+      <MerlinGuide step={1} state={state.state} />
+      
+      {/* MERLIN'S LOCATION INSIGHTS PANEL */}
+      {locationData && (
+        <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-slate-800 via-slate-800/95 to-slate-800 border border-amber-500/30 shadow-xl shadow-amber-500/10">
+          <div className="flex items-start gap-4">
+            {/* Merlin Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300">
+                <span className="text-3xl">🧙</span>
+              </div>
+            </div>
+            
+            {/* Recommendation Content */}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-amber-400 font-bold text-lg">Merlin's Analysis</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-white font-medium">
+                  {region === 'us' 
+                    ? `${US_STATE_DATA[state.state]?.name || state.state}, ${state.state}`
+                    : `${selectedCity}, ${selectedCountry}`
+                  }
+                </span>
+              </div>
+              
+              {/* Smart Recommendation Message */}
+              <div className="text-slate-200 text-sm mb-4 leading-relaxed">
+                {locationData.sunHours >= 5.5 ? (
+                  <>
+                    <span className="text-green-400 font-semibold">☀️ Great news{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has excellent solar potential with{' '}
+                    <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
+                    {locationData.electricityRate > 0.12 ? (
+                      <> Your utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> is above average — <span className="text-green-300">solar + BESS will maximize your savings!</span></>
+                    ) : locationData.electricityRate > 0.08 ? (
+                      <> With a rate of <span className="text-amber-300">${locationData.electricityRate.toFixed(4)}/kWh</span>, {businessLookup?.found ? `${businessLookup.businessName} will` : "you'll"} see solid returns on solar + battery storage.</>
+                    ) : (
+                      <> Your low rate of <span className="text-green-300">${locationData.electricityRate.toFixed(4)}/kWh</span> means BESS for peak shaving and backup power is {businessLookup?.found ? `${businessLookup.businessName}'s` : 'your'} best strategy.</>
+                    )}
+                  </>
+                ) : locationData.sunHours >= 4.5 ? (
+                  <>
+                    <span className="text-amber-400 font-semibold">🌤️ Good potential{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has{' '}
+                    <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
+                    {locationData.electricityRate > 0.15 ? (
+                      <> Your high utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> makes <span className="text-purple-300">BESS + solar a smart investment</span> for demand charge reduction.</>
+                    ) : (
+                      <> Solar paired with battery storage will help {businessLookup?.found ? businessLookup.businessName : 'you'} reduce energy costs and provide backup power.</>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-blue-400 font-semibold">⚡ Consider hybrid power{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}.</span> Your location has{' '}
+                    <span className="text-amber-300">{locationData.sunHours} peak sun hours/day</span> — solar output may be limited.
+                    <span className="text-purple-300"> I recommend a <span className="font-semibold">generator + BESS combination</span> for reliable power, peak shaving, and backup during outages.</span>
+                  </>
+                )}
+              </div>
+              
+              {/* Quick Stats Row */}
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-200 text-sm font-medium">{locationData.sunHours} hrs/day</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-200 text-sm font-medium">${locationData.electricityRate.toFixed(4)}/kWh</span>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                  locationData.solarRating === 'A' ? 'bg-green-500/10 border border-green-500/30' :
+                  locationData.solarRating === 'B' ? 'bg-amber-500/10 border border-amber-500/30' :
+                  'bg-blue-500/10 border border-blue-500/30'
+                }`}>
+                  <Star className={`w-4 h-4 ${
+                    locationData.solarRating === 'A' ? 'text-green-400' :
+                    locationData.solarRating === 'B' ? 'text-amber-400' :
+                    'text-blue-400'
+                  }`} />
+                  <span className={`text-sm font-medium ${
+                    locationData.solarRating === 'A' ? 'text-green-200' :
+                    locationData.solarRating === 'B' ? 'text-amber-200' :
+                    'text-blue-200'
+                  }`}>{locationData.solarRating} - {locationData.solarLabel}</span>
+                </div>
+              </div>
+              
+              {/* What Merlin Does - Explanation */}
+              <div className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  <span className="text-amber-400 font-semibold">How Merlin helps:</span> Based on your location's solar irradiance, utility rates, and weather patterns, 
+                  I'll design an optimal energy system combining <span className="text-purple-300">battery storage (BESS)</span>, 
+                  <span className="text-amber-300"> solar panels</span>, and <span className="text-blue-300">backup generators</span> — 
+                  tailored to maximize your savings and ensure reliable power for your business.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN: Your Location */}
-      <div className="p-5 px-7 flex flex-col overflow-y-auto">
-        {/* Section Header */}
-        <div className="flex items-center gap-3.5 mb-5 shrink-0">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600/20 to-blue-600/10 border-2 border-blue-600/40 flex items-center justify-center">
-            <span className="text-2xl">📍</span>
+      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-purple-400" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-white">Your Location</h2>
-            <p className="text-sm text-slate-300 mt-1 leading-relaxed">Tell us where you are so we can help optimize your energy savings...</p>
-          </div>
+          <h2 className="text-xl font-semibold text-white">Your Location</h2>
         </div>
 
         {/* Region Toggle */}
-        <div className="flex bg-white/5 rounded-xl p-1 mb-4 shrink-0">
-          <button 
+        <div className="flex gap-2 mb-6">
+          <button
             onClick={() => setRegion('us')}
-            className={`flex-1 py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2.5 transition-all ${
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'us'
-                ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-transparent text-slate-500 hover:text-slate-300'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
-            <span className="text-xl">🇺🇸</span> US
+            🇺🇸 United States
           </button>
-          <button 
+          <button
             onClick={() => setRegion('international')}
-            className={`flex-1 py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2.5 transition-all ${
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
               region === 'international'
-                ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-transparent text-slate-500 hover:text-slate-300'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500'
             }`}
           >
-            <span className="text-xl">🌐</span> Intl
+            <Globe className="w-4 h-4 inline mr-2" />
+            International
           </button>
         </div>
 
-        {/* ZIP Code Input */}
+        {/* US Zip Code Input */}
         {region === 'us' && (
-          <div className="mb-4 shrink-0">
-            <label className="block text-xs text-slate-200 mb-2 uppercase tracking-wider">ZIP Code</label>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Enter your zip code
+            </label>
             <input
               type="text"
-              inputMode="numeric"
               value={zipInput}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '').slice(0, 5);
                 setZipInput(value);
               }}
-              onKeyDown={(e) => {
-                // Allow backspace, delete, tab, escape, enter, and arrow keys
-                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
-                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                    (e.keyCode === 65 && e.ctrlKey === true) ||
-                    (e.keyCode === 67 && e.ctrlKey === true) ||
-                    (e.keyCode === 86 && e.ctrlKey === true) ||
-                    (e.keyCode === 88 && e.ctrlKey === true)) {
-                  return;
-                }
-                // Ensure that it is a number and stop the keypress
-                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                  e.preventDefault();
-                }
-              }}
-              className={`w-full p-3.5 text-2xl font-semibold text-center tracking-[8px] bg-blue-600/10 border-2 rounded-xl outline-none font-mono focus:ring-2 focus:ring-purple-500/30 transition-all ${
+              placeholder="e.g., 89101"
+              className={`w-full px-4 py-4 rounded-xl border-2 text-xl font-bold text-center tracking-widest ${
                 zipError 
-                  ? 'border-red-400 text-red-300 focus:border-red-400' 
+                  ? 'border-red-400 bg-red-900/30 text-red-300 placeholder-red-400/50' 
                   : zipInput.length === 5 
-                    ? 'border-green-400 text-green-300 focus:border-green-400' 
-                    : 'border-blue-600/30 text-slate-400 focus:border-purple-500'
-              }`}
-              placeholder="89052"
-              autoComplete="postal-code"
+                    ? 'border-green-400 bg-green-900/30 text-green-300' 
+                    : 'border-purple-400 bg-slate-700 text-white placeholder-slate-400'
+              } focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
             />
             {zipError && (
-              <p className="mt-2 text-xs text-red-400">{zipError}</p>
+              <p className="mt-2 text-sm text-red-400 font-medium">{zipError}</p>
+            )}
+            
+            {/* Address Lookup Section - shown after valid zip */}
+            {zipInput.length === 5 && !zipError && (
+              <div className="mt-4">
+                {!showAddressField && !businessLookup?.found && (
+                  <button
+                    onClick={() => setShowAddressField(true)}
+                    className="w-full py-4 px-4 rounded-xl border-2 border-purple-400 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-white transition-all text-base font-medium shadow-lg shadow-purple-500/20"
+                  >
+                    <Building2 className="w-5 h-5 inline mr-2" />
+                    🏢 Add your business name & address for personalized recommendations
+                  </button>
+                )}
+                
+                {showAddressField && !businessLookup?.found && (
+                  <div className="space-y-4">
+                    {/* Business Name Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Business Name <span className="text-amber-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={businessNameInput}
+                        onChange={(e) => setBusinessNameInput(e.target.value)}
+                        placeholder="e.g., WOW Carwash, Hilton Hotel, Starbucks"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-lg"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    {/* Street Address Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Street Address <span className="text-slate-500">(optional, improves accuracy)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        placeholder="e.g., 9860 S Maryland Pkwy"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddressLookup()}
+                      />
+                    </div>
+                    
+                    {/* Search Button */}
+                    <button
+                      onClick={handleAddressLookup}
+                      disabled={isLookingUp || !businessNameInput.trim()}
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30"
+                    >
+                      {isLookingUp ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Finding your business...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-5 h-5" />
+                          <span>Find My Business</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <p className="text-xs text-slate-400 text-center">
+                      🧙 Merlin will identify your business and customize your energy solution
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Business Found Display - Auto-confirmed, user can change on Step 2 */}
+            {businessLookup?.found && (
+              <div className="mt-4 rounded-xl overflow-hidden border-2 border-green-500 shadow-xl shadow-green-500/20">
+                {/* Header with Success Message */}
+                <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">✅</span>
+                      <span className="text-white font-bold text-lg">Business Confirmed!</span>
+                    </div>
+                    {locationData && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-green-100">⚡ ${locationData.electricityRate.toFixed(4)}/kWh</span>
+                        <span className="text-green-100">☀️ {locationData.sunHours} hrs/day</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 p-5">
+                  <div className="flex items-start gap-4">
+                    {/* Business Photo or Map */}
+                    <div className="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-slate-700 border-2 border-green-500/50 shadow-lg">
+                      {businessLookup.photoUrl ? (
+                        <img 
+                          src={businessLookup.photoUrl} 
+                          alt={businessLookup.businessName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : businessLookup.lat && businessLookup.lng ? (
+                        <img 
+                          src={getStaticMapUrl(businessLookup.lat, businessLookup.lng, 17)}
+                          alt="Location map"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Building2 className="w-12 h-12 text-slate-500" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Business Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-2xl font-bold text-white mb-2">
+                        {businessLookup.businessName}
+                      </h3>
+                      
+                      {businessLookup.industrySlug && (
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/30 border border-purple-400 mb-3">
+                          <span className="text-purple-200 font-semibold">
+                            {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType}
+                          </span>
+                          <Check className="w-4 h-4 text-green-400" />
+                        </div>
+                      )}
+                      
+                      <p className="text-slate-300 text-sm mb-3">
+                        📍 {businessLookup.formattedAddress}
+                      </p>
+                      
+                      {/* Merlin's commitment */}
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-600">
+                        <p className="text-emerald-300 text-sm">
+                          🧙 <span className="font-semibold">Merlin says:</span> "I'll design a custom energy solution for {businessLookup.businessName}. Select your goals and click Continue!"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Wrong business link - subtle, not a big button */}
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => {
+                        setBusinessLookup(null);
+                        setBusinessNameInput('');
+                        setStreetAddress('');
+                        setShowAddressField(true);
+                        updateState({
+                          businessName: undefined,
+                          businessAddress: undefined,
+                          detectedIndustry: undefined,
+                          industry: '',
+                          industryName: '',
+                        });
+                      }}
+                      className="text-slate-400 text-sm hover:text-white transition-colors underline"
+                    >
+                      Not your business? Search again
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
 
-            {/* Business Name */}
-        {region === 'us' && zipInput.length === 5 && !zipError && (
-          <>
-            {/* Business Confirmed Card - Show ABOVE search button if found */}
-            {businessLookup?.found && (
-              <div className="mb-4 bg-green-500/10 border border-green-500/20 rounded-xl p-5 flex flex-col shrink-0">
-                <div className="flex gap-3.5">
-                  <div className="w-20 h-16 rounded-lg bg-gradient-to-br from-slate-800 to-slate-700 shrink-0 flex items-center justify-center">
-                    {businessLookup.photoUrl ? (
-                      <img src={businessLookup.photoUrl} alt={businessLookup.businessName} className="w-full h-full object-cover rounded-lg" />
-                    ) : (
-                      <span className="text-[10px] text-slate-500">Photo</span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xl font-semibold mb-2 text-white">{businessLookup.businessName}</div>
-                    {businessLookup.industrySlug && (
-                      <span className="text-sm text-blue-400 bg-blue-600/15 px-3 py-1.5 rounded-md">
-                        {INDUSTRY_NAMES[businessLookup.industrySlug] || businessLookup.businessType} ✓
-                      </span>
-                    )}
-                    <div className="text-base text-slate-400 mt-2.5">📍 {businessLookup.formattedAddress}</div>
-                  </div>
-                </div>
-                <div className="flex-1" />
-                <button
-                  onClick={() => {
-                    setBusinessLookup(null);
-                    setBusinessNameInput('');
-                    setStreetAddress('');
-                    updateState({
-                      businessName: undefined,
-                      businessAddress: undefined,
-                      detectedIndustry: undefined,
-                      industry: '',
-                      industryName: '',
-                    });
-                  }}
-                  className="text-sm text-slate-500 bg-transparent border-none underline cursor-pointer self-start mt-3"
-                >
-                  Not your business? Search again
-                </button>
-              </div>
-            )}
-
-            <div className="mb-4 shrink-0">
-              <label className="block text-xs text-slate-200 mb-2 uppercase tracking-wider">
-                Business Name <span className="text-[9px] text-slate-500 normal-case">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={businessNameInput}
-                onChange={(e) => setBusinessNameInput(e.target.value)}
-                className="w-full p-3 text-sm bg-blue-600/10 border-2 border-blue-600/30 rounded-xl text-slate-400 outline-none"
-                placeholder="e.g., WOW Carwash"
-              />
-            </div>
-
-            {/* Street Address */}
-            <div className="mb-4 shrink-0">
-              <label className="block text-xs text-slate-200 mb-2 uppercase tracking-wider">
-                Street Address <span className="text-[9px] text-slate-500 normal-case">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={streetAddress}
-                onChange={(e) => setStreetAddress(e.target.value)}
-                className="w-full p-3 text-sm bg-blue-600/10 border border-blue-600/25 rounded-xl text-slate-400 outline-none"
-                placeholder="e.g., 3405 St Rose Pkwy"
-              />
-            </div>
-
-            {/* Find My Business Button */}
-            <button
-              onClick={handleAddressLookup}
-              disabled={isLookingUp || (!businessNameInput.trim() && !streetAddress.trim())}
-              className="w-full p-3.5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl text-white text-base font-semibold flex items-center justify-center gap-2.5 mb-2.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-500 hover:to-indigo-500 transition-all"
-            >
-              {isLookingUp ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Finding...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4" />
-                  <span>Find My Business</span>
-                </>
-              )}
-            </button>
-            <p className="text-xs text-slate-500 text-center mb-4 shrink-0">
-              🧙 Merlin will identify your business and customize your energy solution
-            </p>
-          </>
-        )}
-
         {/* International Dropdowns */}
         {region === 'international' && (
-          <div className="space-y-4 mb-4 shrink-0">
+          <div className="space-y-4 mb-6">
             {/* Country Dropdown */}
             <div className="relative">
-              <label className="block text-xs text-slate-200 mb-2 uppercase tracking-wider">Country</label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Select Country
+              </label>
               <button
                 onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                className="w-full p-3 text-sm bg-blue-600/10 border-2 border-blue-600/30 rounded-xl text-slate-400 flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
               >
-                <span>{selectedCountryData ? `${selectedCountryData.flag} ${selectedCountryData.name}` : 'Select a country...'}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className={selectedCountry ? 'text-white' : 'text-gray-400'}>
+                  {selectedCountryData
+                    ? `${selectedCountryData.flag} ${selectedCountryData.name}`
+                    : 'Select a country...'}
+                </span>
+                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               
               {countryDropdownOpen && (
@@ -482,13 +602,17 @@ export function Step1Location({ state, updateState }: Props) {
             {/* City Dropdown */}
             {selectedCountryData && (
               <div className="relative">
-                <label className="block text-xs text-slate-200 mb-2 uppercase tracking-wider">City</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Select City
+                </label>
                 <button
                   onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                  className="w-full p-3 text-sm bg-blue-600/10 border-2 border-blue-600/30 rounded-xl text-slate-400 flex items-center justify-between"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-slate-700 text-white flex items-center justify-between hover:border-purple-400 transition-all"
                 >
-                  <span>{selectedCity || 'Select a city...'}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${cityDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className={selectedCity ? 'text-white' : 'text-gray-400'}>
+                    {selectedCity || 'Select a city...'}
+                  </span>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${cityDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {cityDropdownOpen && (
@@ -512,188 +636,136 @@ export function Step1Location({ state, updateState }: Props) {
           </div>
         )}
 
-      </div>
-
-      {/* RIGHT COLUMN: Merlin Advisor */}
-      <div className="flex flex-col p-5 px-7 overflow-y-auto">
-        {/* Welcome Panel - Expanded with Stroke and Glow */}
-        <div 
-          className="mb-6 shrink-0 relative overflow-hidden rounded-3xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95))',
-            boxShadow: `
-              0 0 30px rgba(168, 85, 247, 0.3),
-              0 0 60px rgba(99, 102, 241, 0.2),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1)
-            `,
-            border: '1px solid',
-            borderColor: 'rgba(168, 85, 247, 0.4)',
-            padding: '24px'
-          }}
-        >
-          {/* Glow effect overlay */}
-          <div 
-            className="absolute inset-0 opacity-50 rounded-3xl"
-            style={{
-              background: 'radial-gradient(circle at 30% 20%, rgba(168, 85, 247, 0.15), transparent 60%)',
-              pointerEvents: 'none'
-            }}
-          />
-      
-          {/* Content */}
-          <div className="relative z-10">
-            {/* Advisor Header */}
-            <div className="flex items-start gap-4 mb-5">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border-3 border-purple-500/60 flex items-center justify-center relative shrink-0 overflow-hidden"
-                style={{
-                  boxShadow: '0 0 20px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.1)'
-                }}
-              >
-                <img 
-                  src={merlinProfileImage}
-                  alt="Merlin AI Energy Advisor"
-                  className="w-full h-full object-cover rounded-full"
-                />
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-3 border-[#0f172a] z-10" 
-                  style={{
-                    boxShadow: '0 0 10px rgba(34, 197, 94, 0.6)'
-                  }}
-                />
+        {/* Location Details Card */}
+        {locationData && (
+          <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl p-5 border border-purple-400/30">
+            <h3 className="font-semibold text-white mb-4">
+              📍 {region === 'us' ? `${state.city || state.state}, ${state.state}` : `${selectedCity}, ${selectedCountryData?.name}`}
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Electricity Rate</div>
+                  <div className="font-semibold text-white">
+                    ${locationData.electricityRate.toFixed(4)}/kWh
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-2" style={{ textShadow: '0 2px 10px rgba(168, 85, 247, 0.3)' }}>
-                  Welcome to Merlin Energy
-                </h3>
-                <p className="text-base text-slate-200 leading-relaxed mb-3">
-                  I'm <span className="font-semibold text-purple-300">MerlinAI</span>, your Energy Advisor. Let me help you <span className="font-semibold text-emerald-400">maximize your energy savings</span> and find the perfect energy solution for your business.
-                </p>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  I'll analyze your location, assess your energy needs, and recommend a customized system that reduces costs, provides backup power, and maximizes your return on investment.
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+                  <Sun className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Sun Hours</div>
+                  <div className="font-semibold text-white">
+                    {locationData.sunHours} hrs/day
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 col-span-2">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  locationData.solarRating === 'A' ? 'bg-green-100' :
+                  locationData.solarRating === 'B' ? 'bg-blue-100' :
+                  locationData.solarRating === 'C' ? 'bg-yellow-500/20' : 'bg-gray-100'
+                }`}>
+                  <Star className={`w-5 h-5 ${
+                    locationData.solarRating === 'A' ? 'text-green-600' :
+                    locationData.solarRating === 'B' ? 'text-blue-600' :
+                    locationData.solarRating === 'C' ? 'text-yellow-600' : 'text-slate-400'
+                  }`} />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Solar Potential</div>
+                  <div className="font-semibold text-white">
+                    {locationData.solarRating} - {locationData.solarLabel}
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+        )}
+      </div>
 
-            {/* MerlinAI Assessment - Collapsible */}
-            {assessment && (
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <button
-                  onClick={() => setMerlinAssessmentExpanded(!merlinAssessmentExpanded)}
-                  className="w-full flex items-center justify-between gap-2.5 mb-3 p-2 hover:bg-white/5 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-xl">🧙</span>
-                    <span className="text-base font-semibold text-white">MerlinAI Assessment</span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${merlinAssessmentExpanded ? 'rotate-180' : ''} group-hover:text-white`} />
-                </button>
-                {merlinAssessmentExpanded && (
-                  <div 
-                    className="bg-gradient-to-br from-purple-900/40 to-purple-800/30 border border-purple-700/30 rounded-xl p-3 px-4 shadow-lg shadow-purple-900/20 transition-all duration-300"
-                    style={{ animation: 'pulsate 2s ease-in-out infinite' }}
-                  >
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-lg">☀️</span>
-                        <span className="text-sm text-white">Sun Exposure</span>
-                      </div>
-                      <span className="text-xs font-semibold px-3 py-1 rounded-md text-green-400 bg-green-500/15">{assessment.sunExposure}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-lg">⚡</span>
-                        <span className="text-sm text-white">Electricity Rates</span>
-                      </div>
-                      <span className="text-xs font-semibold px-3 py-1 rounded-md text-green-400 bg-green-500/15">{assessment.electricityRates}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-lg">🌤️</span>
-                        <span className="text-sm text-white">Weather Risk</span>
-                      </div>
-                      <span className="text-xs font-semibold px-3 py-1 rounded-md text-green-400 bg-green-500/15">{assessment.weatherRisk}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-lg">🎯</span>
-                        <span className="text-sm text-white">System Configuration Initial Assessment</span>
-                      </div>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded text-white" style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}>
-                        {assessment.systemConfig}
-                      </span>
-                    </div>
-                    <div className="pt-2">
-                      <div className="flex items-start gap-3">
-                        <span className="text-xl">💬</span>
-                        <div>
-                          <span className="text-xs text-slate-400 font-medium">Comment</span>
-                          <p className="text-sm text-slate-300 mt-1 leading-relaxed">{assessment.comment}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+      {/* RIGHT COLUMN: Your Goals */}
+      <div className="bg-slate-800/80 rounded-2xl p-6 shadow-lg border border-slate-600">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Check className="w-5 h-5 text-green-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-white">Your Goals</h2>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            hasEnoughGoals ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
+          }`}>
+            {selectedGoalsCount}/{MIN_GOALS_REQUIRED} selected
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
-          {/* Location Analysis */}
-          {locationData && (
-            <div className="shrink-0">
-              <div className="flex items-center gap-2.5 mb-3">
-                <span className="text-lg">🔍</span>
-                <span className="text-base font-semibold text-white">Location Analysis</span>
-                <span className="ml-auto text-sm text-yellow-400 bg-yellow-400/15 px-3 py-1 rounded-lg font-semibold">{locationName}</span>
-              </div>
-              <div className="grid grid-cols-4 gap-2.5">
-                {locationMetrics.map((metric, i) => (
-                  <div 
-                    key={i} 
-                    className={`${metric.highlight ? 'bg-green-500/10 border-green-500/15' : 'bg-white/5 border-white/5'} border rounded-xl p-3 text-center`}
-                  >
-                    <div className="text-xs text-white mb-1">{metric.label}</div>
-                    <div className="text-xl font-bold" style={{ color: metric.color }}>{metric.value}</div>
-                    {metric.unit && <div className="text-[10px] text-white">{metric.unit}</div>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-
-          {/* Weather Risk Assessment - Collapsible, Below Merlin Assessment */}
-          {locationData && (
-            <div className="shrink-0">
-              <button
-                onClick={() => setWeatherExpanded(!weatherExpanded)}
-                className="w-full flex items-center justify-between gap-2.5 mb-3 p-2 hover:bg-slate-800/30 rounded-lg transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg">⛈️</span>
-                  <span className="text-base font-semibold text-white">Location Weather Risk Assessment</span>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${weatherExpanded ? 'rotate-180' : ''}`} />
-              </button>
-              {weatherExpanded && (
-                <div className="bg-green-500/5 border border-green-500/15 rounded-xl p-3">
-                  {weatherRisks.map((row, rowIdx) => (
-                    <div key={rowIdx} className={`grid grid-cols-5 gap-1.5 ${rowIdx < 2 ? 'mb-1.5' : ''}`}>
-                      {row.map((risk, i) => (
-                        <div key={i} className="text-center p-1.5 rounded-md" style={{ background: risk.bg }}>
-                          <div className="text-base">{risk.icon}</div>
-                          <div className="text-[10px] font-semibold mt-0.5" style={{ color: risk.color }}>{risk.level}</div>
-                          <div className="text-[9px] text-white">{risk.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        {/* Always visible instruction - prominent */}
+        <div className={`mb-5 p-4 rounded-xl text-center ${
+          hasEnoughGoals 
+            ? 'bg-green-500/20 border-2 border-green-500/50' 
+            : 'bg-purple-500/20 border-2 border-purple-400/50 animate-pulse'
+        }`}>
+          <p className={`text-base font-semibold ${hasEnoughGoals ? 'text-green-300' : 'text-purple-300'}`}>
+            {hasEnoughGoals 
+              ? `✓ Great! You've selected ${selectedGoalsCount} goals` 
+              : `👆 Select ${MIN_GOALS_REQUIRED - selectedGoalsCount} more goal${MIN_GOALS_REQUIRED - selectedGoalsCount > 1 ? 's' : ''} to continue`
+            }
+          </p>
         </div>
+
+        {/* Goals Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {ENERGY_GOALS.map((goal) => {
+            const isSelected = state.goals?.includes(goal.id);
+            return (
+              <button
+                key={goal.id}
+                onClick={() => toggleGoal(goal.id)}
+                className={`p-4 rounded-xl border-2 text-left transition-all ${
+                  isSelected
+                    ? 'border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20'
+                    : 'border-slate-600 bg-slate-700/50 hover:border-purple-400/50 hover:bg-slate-700'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{goal.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-medium ${isSelected ? 'text-purple-300' : 'text-white'}`}>
+                      {goal.label}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 line-clamp-2">
+                      {goal.description}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-6">
+          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${
+                hasEnoughGoals ? 'bg-green-500' : 'bg-purple-500'
+              }`}
+              style={{ width: `${Math.min(100, (selectedGoalsCount / MIN_GOALS_REQUIRED) * 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

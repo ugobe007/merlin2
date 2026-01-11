@@ -100,7 +100,7 @@ export const BENCHMARK_BOUNDS = {
   },
 
   // ROI 10-Year (%)
-  roi5Year: {
+  roi10Year: {
     min: 50, // Minimum acceptable
     max: 400, // Exceptional case
     typical: 150, // Typical commercial

@@ -55,7 +55,7 @@ async function testCalculationConsolidation() {
 
     console.log("\n📈 Simple ROI Metrics:");
     console.log(`  Payback Period: ${result.paybackYears.toFixed(2)} years`);
-    console.log(`  ROI (5 years): ${result.roi5Year.toFixed(1)}%`);
+    console.log(`  ROI (10 years): ${result.roi10Year.toFixed(1)}%`);
     console.log(`  ROI (25 years): ${result.roi25Year.toFixed(1)}%`);
 
     // Test 2: Advanced metrics (NPV/IRR)

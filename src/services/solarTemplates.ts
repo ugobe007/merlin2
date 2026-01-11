@@ -39,7 +39,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     
     roofUsableFactor: 0.65,
     carportUsableFactor: 1.0,
-    solarDensity: 0.020,  // 20W per sq ft (modern 400-500W panels)
+    solarDensity: 0.150,  // 150W per sq ft
     
     defaultSystemSize: 'medium',
     typicalRoofArea: {
@@ -59,7 +59,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     assumptions: [
       '65% roof usable - accounts for HVAC units, vents, access paths, and setback requirements',
       '100% carport usable - purpose-built structure with no obstructions',
-      'Modern 400-500W panels at 20W per sq ft installed density (typical commercial panels)',
+      'Modern 400W panels at 150W per sq ft installed density',
       'South-facing orientation preferred for maximum generation',
       '15° tilt angle optimized for car wash latitudes and snow load'
     ],
@@ -72,7 +72,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     
     roofUsableFactor: 0.55,
     carportUsableFactor: 1.0,
-    solarDensity: 0.020,
+    solarDensity: 0.150,
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
@@ -92,7 +92,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     assumptions: [
       '55% roof usable - cooling towers, elevator penthouses, and rooftop equipment reduce available space',
       '100% carport usable - guest parking shade structures',
-      'Modern 400-500W panels at 20W per sq ft installed density (typical commercial panels)',
+      'Modern 400W panels at 150W per sq ft installed density',
       'South-facing orientation for consistent generation',
       '10° tilt angle for hotel applications'
     ],
@@ -105,7 +105,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     
     roofUsableFactor: 0.75,
     carportUsableFactor: 1.0,
-    solarDensity: 0.020,
+    solarDensity: 0.150,
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
@@ -125,7 +125,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     assumptions: [
       '75% roof usable - big box stores typically have minimal rooftop equipment',
       '100% carport usable - customer parking structures',
-      'Modern 400-500W panels at 20W per sq ft installed density (typical commercial panels)',
+      'Modern 400W panels at 150W per sq ft installed density',
       'South-facing for maximum generation',
       '5° tilt angle minimizes wind load on large commercial roofs'
     ],
@@ -138,7 +138,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     
     roofUsableFactor: 0.80,
     carportUsableFactor: 1.0,
-    solarDensity: 0.020,
+    solarDensity: 0.150,
     
     defaultSystemSize: 'xlarge',
     typicalRoofArea: {
@@ -158,7 +158,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     assumptions: [
       '80% roof usable - warehouses have the cleanest roofs of any commercial building type',
       '100% carport usable - truck/trailer parking and loading dock covers',
-      'Modern 400-500W panels at 20W per sq ft installed density (typical commercial panels)',
+      'Modern 400W panels at 150W per sq ft installed density',
       'South-facing for maximum generation',
       '5° tilt angle for minimal wind resistance on massive roofs'
     ],
@@ -171,7 +171,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     
     roofUsableFactor: 0.60,
     carportUsableFactor: 1.0,
-    solarDensity: 0.020,
+    solarDensity: 0.150,
     
     defaultSystemSize: 'large',
     typicalRoofArea: {
@@ -191,7 +191,7 @@ export const SOLAR_TEMPLATES: Record<string, IndustrySolarTemplate> = {
     assumptions: [
       '60% roof usable - manufacturing facilities have significant rooftop HVAC, exhaust systems, and cranes',
       '100% carport usable - employee and shipping/receiving parking',
-      'Modern 400-500W panels at 20W per sq ft installed density (typical commercial panels)',
+      'Modern 400W panels at 150W per sq ft installed density',
       'South-facing for maximum generation',
       '10° tilt angle for manufacturing applications'
     ],

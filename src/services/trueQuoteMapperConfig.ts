@@ -445,15 +445,6 @@ export const DEFAULT_SUBTYPES: Record<string, string> = {
   "shopping-center": "default",
   "indoor-farm": "default",
   government: "default",
-  "heavy_duty_truck_stop": "default",
-  "heavy-duty-truck-stop": "default",
-  "truck-stop": "default",
-  "truck_stop": "default",
-  airport: "default",
-  "gas-station": "default",
-  gas_station: "default",
-  residential: "default",
-  microgrid: "default",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
