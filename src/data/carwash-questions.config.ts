@@ -15,7 +15,7 @@ export interface Question {
   section: 'facility' | 'operations' | 'energy' | 'solar';
   field: string;
   question: string;
-  type: 'buttons' | 'slider' | 'number_buttons' | 'toggle' | 'area_input' | 'time_range';
+  type: 'buttons' | 'slider' | 'number_buttons' | 'toggle' | 'area_input' | 'time_range' | 'checkbox';
   options?: QuestionOption[];
   range?: { min: number; max: number; step: number };
   unit?: string;
