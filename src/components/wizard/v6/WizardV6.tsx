@@ -8,12 +8,11 @@ import RequestQuoteModal from '@/components/modals/RequestQuoteModal';
 import { Step1Location } from './steps/Step1Location';
 import { Step2Industry } from './steps/Step2Industry';
 import { Step3Details } from '@/components/wizard/Step3Details';
-import { Step3HotelEnergy } from './steps/Step3HotelEnergy';
+// Removed: Step3HotelEnergy - all industries now use Step3Details (scrolling questionnaire)
 import { Step4Options } from './steps/Step4Options';
 import { Step5MagicFit } from './steps/Step5MagicFit';
 import { Step6Quote } from './steps/Step6Quote';
 import { ValueTicker } from './components/ValueTicker';
-import { FloatingBatteryIcon } from '@/components/wizard/FloatingBatteryIcon';
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -89,8 +88,6 @@ function StartOverModal({ isOpen, onClose, onConfirm }: StartOverModalProps) {
 // ============================================================================
 
 export default function WizardV6() {
-  // Removed collapsible navigation - now always visible and compact
-  
   // ✅ FIXED: Check URL parameter to force fresh start
   // If ?fresh=true or wizard is accessed directly, clear all persisted state
   const shouldStartFresh = (() => {
@@ -227,22 +224,16 @@ export default function WizardV6() {
     const peakDemandCharges = peakDemand * demandRate * 12; // Annual (monthly × 12)
     
     // Get system sizes from state (Step 4 custom values or Step 5 calculations)
-    // CRITICAL: Use calculations from Step 5 if available (most accurate)
-    // Fallback to custom values from Step 4, then to 0
-    const solarKw = state.calculations?.solarKW || state.customSolarKw || 0;
+    const solarKw = state.customSolarKw || state.calculations?.solarKW || 0;
     const bessKwh = state.calculations?.bessKWh || 0;
-    const generatorKw = state.calculations?.generatorKW || state.customGeneratorKw || 0;
+    const generatorKw = state.customGeneratorKw || 0;
+    const evL2Count = state.customEvL2 || 0;
+    const evDcfcCount = state.customEvDcfc || 0;
     
-    // EV charger counts - use calculations if available, otherwise custom values
-    const calculatedEvChargers = state.calculations?.evChargers || 0;
-    const evL2Count = calculatedEvChargers > 0 ? Math.floor(calculatedEvChargers * 0.7) : (state.customEvL2 || 0);
-    const evDcfcCount = calculatedEvChargers > 0 ? Math.ceil(calculatedEvChargers * 0.3) : (state.customEvDcfc || 0);
-    
-    // Flags based on selectedOptions (set in Step 4) OR calculations (Step 5)
-    // If we have calculations, use those to determine flags (more accurate)
-    const hasSolar = state.calculations?.solarKW > 0 || state.selectedOptions?.includes('solar') || false;
-    const hasGenerator = state.calculations?.generatorKW > 0 || state.selectedOptions?.includes('generator') || false;
-    const hasEv = state.calculations?.evChargers > 0 || state.selectedOptions?.includes('ev') || false;
+    // Flags based on selectedOptions (set in Step 4)
+    const hasSolar = state.selectedOptions?.includes('solar') || false;
+    const hasGenerator = state.selectedOptions?.includes('generator') || false;
+    const hasEv = state.selectedOptions?.includes('ev') || false;
     
     return {
       annualEnergySpend,
@@ -277,34 +268,10 @@ export default function WizardV6() {
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return state.zipCode.length === 5 && state.state !== ''; // Only require ZIP code and state (goals are in Step 2)
+      case 1: return (state.zipCode.length === 5 && state.state !== '') && state.goals.length >= 2;
       case 2: return state.industry !== '';
-      case 3: {
-        // Step 3 requires ALL questions to be answered before continuing
-        if (!state.useCaseData || !state.useCaseData.inputs) return false;
-        
-        const answeredCount = Object.keys(state.useCaseData.inputs).filter(key => {
-          const value = state.useCaseData.inputs[key];
-          if (value === undefined || value === null || value === '') return false;
-          if (typeof value === 'object' && 'value' in value) {
-            return value.value !== undefined && value.value !== null && value.value !== '';
-          }
-          return true;
-        }).length;
-        
-        // Check if we have total question count stored
-        const totalQuestions = state.useCaseData._totalQuestions;
-        if (totalQuestions && totalQuestions > 0) {
-          // Require all questions to be answered
-          return answeredCount >= totalQuestions;
-        }
-        
-        // Fallback: require at least 3 answers (reasonable minimum for any use case)
-        return answeredCount >= 3;
-      }
-      case 4: 
-        // Step 4 requires selectedOptions to be set (user must make decisions)
-        return !!(state.selectedOptions && state.selectedOptions.length > 0);
+      case 3: return true; // Database-driven questions handle their own validation
+      case 4: return true; // Step4Options handles its own validation with forced decisions
       case 5: return state.selectedPowerLevel !== null;
       case 6: return true;
       default: return false;
@@ -315,7 +282,7 @@ export default function WizardV6() {
     switch (currentStep) {
       case 1: return <Step1Location state={state} updateState={updateState} />;
       case 2: return <Step2Industry state={state} updateState={updateState} />;
-      case 3: return state.industry === 'hotel' ? <Step3HotelEnergy state={state} updateState={updateState} /> : <Step3Details state={state} updateState={updateState} onNext={() => goToStep(4)} />;
+      case 3: return <Step3Details state={state} updateState={updateState} onNext={() => goToStep(4)} />;
       case 4: return <Step4Options state={state} updateState={updateState} />;
       case 5: return <Step5MagicFit state={state} updateState={updateState} goToStep={goToStep} />;
       case 6: return <Step6Quote state={state} />;
@@ -324,23 +291,13 @@ export default function WizardV6() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 overflow-y-auto" 
-      style={{ 
-        background: 'linear-gradient(to bottom right, rgb(15 23 42), rgb(30 41 59), rgb(15 23 42))',
-        width: '100%',
-        minHeight: '100vh'
-      }}
-    >
-      {/* Floating Battery Icon - Upper Right */}
-      <FloatingBatteryIcon currentStep={currentStep} />
-
+    <div className="fixed inset-0 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* ═══════════════════════════════════════════════════════════════════════
           HEADER - Fixed at top with z-index 100
           ═══════════════════════════════════════════════════════════════════════ */}
       <header 
         className="sticky top-0 bg-slate-900/95 backdrop-blur-md border-b border-purple-500/20"
-        style={{ zIndex: 100, marginBottom: 0 }}
+        style={{ zIndex: 100 }}
       >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left: Logo + Start Over */}
@@ -364,117 +321,97 @@ export default function WizardV6() {
           <div className="text-purple-300 text-sm">Step {currentStep} of 6</div>
         </div>
         
-        {/* Step Navigation - Larger text, more spacing */}
-        <div className="max-w-6xl mx-auto px-4 py-3 border-t border-purple-500/20">
-          <div className="flex justify-between text-base items-center gap-4">
-            {WIZARD_STEPS.map((step) => (
-              <button
-                key={step.number}
-                onClick={() => step.number < currentStep && goToStep(step.number)}
-                className={`transition-colors px-4 py-2 rounded-lg font-medium ${
-                  step.number === currentStep 
-                    ? 'text-white font-semibold bg-purple-600/20' 
-                    : step.number < currentStep 
-                      ? 'text-purple-400 hover:text-purple-300 cursor-pointer hover:bg-purple-600/10' 
-                      : 'text-slate-500'
-                }`}
-              >
-                {step.name}
-              </button>
-            ))}
-          </div>
+        {/* Progress Bar */}
+        <div className="h-1 bg-slate-800">
+          <div 
+            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-300" 
+            style={{ width: `${(currentStep / 6) * 100}%` }} 
+          />
+        </div>
+        
+        {/* Step Navigation */}
+        <div className="max-w-6xl mx-auto px-4 py-2 flex justify-between text-xs">
+          {WIZARD_STEPS.map((step) => (
+            <button
+              key={step.number}
+              onClick={() => step.number < currentStep && goToStep(step.number)}
+              className={`transition-colors ${
+                step.number === currentStep 
+                  ? 'text-white font-semibold' 
+                  : step.number < currentStep 
+                    ? 'text-purple-400 hover:text-purple-300 cursor-pointer' 
+                    : 'text-slate-500'
+              }`}
+            >
+              {step.name}
+            </button>
+          ))}
         </div>
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          VALUE TICKER - Sticky at top, floats above content
+          VALUE TICKER - Shows on all steps
           ═══════════════════════════════════════════════════════════════════════ */}
-      <ValueTicker
-        currentStep={currentStep}
-        {...tickerValues}
-      />
+      <div className="max-w-6xl mx-auto px-4">
+        <ValueTicker
+          currentStep={currentStep}
+          {...tickerValues}
+        />
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          MAIN CONTENT - Full width, scrollable area with padding for fixed footer
+          MAIN CONTENT - Scrollable area with padding for fixed footer
           ═══════════════════════════════════════════════════════════════════════ */}
       <main 
-        className="w-full min-h-screen"
-        style={{ paddingBottom: '140px' }}
+        className="max-w-6xl mx-auto px-4 py-8"
+        style={{ paddingBottom: '120px' }}
       >
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          {renderStep()}
-        </div>
+        {renderStep()}
       </main>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FOOTER - Fixed at bottom with HIGH z-index, larger buttons
+          FOOTER - Fixed at bottom with HIGH z-index
           ═══════════════════════════════════════════════════════════════════════ */}
       <footer 
         className="fixed bottom-0 left-0 right-0 bg-slate-900/98 backdrop-blur-md border-t border-purple-500/30"
         style={{ zIndex: 9999 }}
       >
-        <div className="w-full px-6 py-5 flex items-center justify-between">
-          {/* Back Button - Larger */}
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          {/* Back Button */}
           <button
             onClick={goBack}
             disabled={currentStep === 1}
-            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all ${
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
               currentStep === 1 
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                : 'bg-slate-700 text-white hover:bg-slate-600 hover:scale-105'
+                : 'bg-slate-700 text-white hover:bg-slate-600'
             }`}
           >
-            <ArrowLeft className="w-6 h-6" /> Back
+            <ArrowLeft className="w-5 h-5" /> Back
           </button>
           
           {/* Step Indicator */}
-          <div className="text-slate-400 text-base">Step {currentStep} of 6</div>
+          <div className="text-slate-400 text-sm">Step {currentStep} of 6</div>
           
-          {/* Continue / Get Quote Button - Larger */}
+          {/* Continue / Get Quote Button */}
           {currentStep < 6 ? (
             <button
-              onClick={() => {
-                // CRITICAL FIX: For Step 3, explicitly check all questions are answered before advancing
-                if (currentStep === 3 && state.useCaseData) {
-                  const inputs = state.useCaseData.inputs || {};
-                  const totalQuestions = state.useCaseData._totalQuestions || 0;
-                  const answeredCount = Object.keys(inputs).filter(key => {
-                    const value = inputs[key];
-                    if (value === undefined || value === null || value === '') return false;
-                    if (typeof value === 'object' && 'value' in value) {
-                      return value.value !== undefined && value.value !== null && value.value !== '';
-                    }
-                    return true;
-                  }).length;
-                  
-                  if (totalQuestions > 0 && answeredCount < totalQuestions) {
-                    console.warn(`⚠️ Cannot advance: Only ${answeredCount} of ${totalQuestions} questions answered`);
-                    return;
-                  }
-                }
-                
-                // Proceed with navigation (only if all validation passes)
-                goNext();
-              }}
+              onClick={goNext}
               disabled={!canProceed()}
-              className={`flex items-center gap-3 px-10 py-5 rounded-xl font-bold text-lg transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 canProceed() 
-                  ? 'bg-gradient-to-r from-purple-600 via-purple-500 to-cyan-600 text-white hover:from-purple-500 hover:via-purple-400 hover:to-cyan-500 shadow-xl shadow-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105' 
+                  ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-500 hover:to-cyan-500 shadow-lg shadow-purple-500/25' 
                   : 'bg-slate-700 text-slate-400 cursor-not-allowed'
               }`}
-              style={canProceed() ? {
-                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                boxShadow: '0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(168, 85, 247, 0.3)'
-              } : {}}
             >
-              {currentStep === 5 ? 'View Quote' : 'Continue'} <ArrowRight className="w-6 h-6" />
+              {currentStep === 5 ? 'View Quote' : currentStep === 3 ? 'Looks Good' : 'Continue'} <ArrowRight className="w-5 h-5" />
             </button>
           ) : (
             <button 
               onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-3 px-10 py-5 rounded-xl font-bold text-lg bg-gradient-to-r from-emerald-600 to-cyan-600 text-white hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 transition-all hover:scale-105"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-gradient-to-r from-emerald-600 to-cyan-600 text-white hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 transition-all"
             >
-              <Sparkles className="w-6 h-6" /> Get Official Quote
+              <Sparkles className="w-5 h-5" /> Get Official Quote
             </button>
           )}
         </div>

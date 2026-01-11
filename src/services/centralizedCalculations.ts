@@ -30,7 +30,6 @@
 import { supabase } from "./supabaseClient";
 import { getBatteryPricing } from "./unifiedPricingService";
 import { getConstant } from "./calculationConstantsService";
-import type { UseCaseConditions } from "./useCaseConditionsService";
 
 // ============================================
 // INTERFACES
@@ -99,10 +98,10 @@ export interface FinancialCalculationResult {
   windSavings: number;
   annualSavings: number;
 
-    // ROI Metrics (Simple)
-    paybackYears: number;
-    roi5Year: number;  // Changed from roi5Year to 5-year for more credible ROI timeline
-    roi25Year: number;
+  // ROI Metrics (Simple)
+  paybackYears: number;
+  roi10Year: number;
+  roi25Year: number;
 
   // Advanced Metrics (NPV/IRR with degradation)
   npv?: number; // Net Present Value
@@ -343,31 +342,12 @@ function extractConstant(
  * THE MASTER CALCULATION FUNCTION
  * This is the ONLY function that should be used for financial calculations
  * across the entire application.
- * 
- * @param input - Financial calculation input
- * @param conditions - Optional use case conditions (for better performance, reduces DB calls)
  */
 export async function calculateFinancialMetrics(
-  input: FinancialCalculationInput,
-  conditions?: UseCaseConditions
+  input: FinancialCalculationInput
 ): Promise<FinancialCalculationResult> {
-  // Use conditions if provided, otherwise fetch constants from database
-  const constants: CalculationConstants = conditions
-    ? {
-        PEAK_SHAVING_MULTIPLIER: 365, // Default, can be added to conditions if needed
-        DEMAND_CHARGE_MONTHLY_PER_MW: 15000, // Default
-        GRID_SERVICE_REVENUE_PER_MW: 30000, // Default
-        SOLAR_CAPACITY_FACTOR: 1500, // Default
-        WIND_CAPACITY_FACTOR: 2500, // Default
-        FEDERAL_TAX_CREDIT_RATE: conditions.financialConstants.federalITCRate,
-        ANNUAL_CYCLES: 365, // Default
-        ROUND_TRIP_EFFICIENCY: 0.85, // Default
-        DEGRADATION_RATE_ANNUAL: 0.02, // Default
-        OM_COST_PERCENT: 0.025, // Default
-        lastUpdated: conditions.loadedAt,
-        dataSource: conditions.source
-      }
-    : await getCalculationConstants();
+  // Fetch constants from database
+  const constants = await getCalculationConstants();
 
   const {
     storageSizeMW,
@@ -458,8 +438,7 @@ export async function calculateFinancialMetrics(
 
   // Prevent division by zero or invalid results
   const paybackYears = annualSavings > 0 ? netCost / annualSavings : 999;
-  // 5-year ROI with 3% annual increase (5.15x multiplier)
-  const roi5Year = annualSavings > 0 && netCost > 0 ? ((annualSavings * 5.15 - netCost) / netCost) * 100 : 0;
+  const roi10Year = annualSavings > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
   const roi25Year = annualSavings > 0 ? ((annualSavings * 25 - netCost) / netCost) * 100 : 0;
 
   if (import.meta.env.DEV) {
@@ -562,7 +541,7 @@ export async function calculateFinancialMetrics(
 
     // ROI Metrics (Simple)
     paybackYears,
-    roi5Year,
+    roi10Year,
     roi25Year,
 
     // Advanced Metrics (NPV/IRR with degradation)

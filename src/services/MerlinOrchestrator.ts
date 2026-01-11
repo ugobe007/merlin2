@@ -181,16 +181,12 @@ function validateWizardState(state: WizardState): ValidationResult {
     });
   }
 
-  // Goals validation (optional - removed from Step 1, but kept for backward compatibility)
-  // Goals are no longer required, but if present, they should be valid
-  // This is a legacy field - most users won't have goals set
-
-  // Use case data validation - CRITICAL: Must have inputs from Step 3
-  if (!state.useCaseData || !state.useCaseData.inputs || Object.keys(state.useCaseData.inputs).length === 0) {
+  // Goals validation (minimum 3)
+  if (!state.goals || state.goals.length < 2) {
     errors.push({
-      field: 'useCaseData',
-      expected: 'use case data with inputs from Step 3 (facility details)',
-      received: state.useCaseData ? `inputs missing (${Object.keys(state.useCaseData.inputs || {}).length} keys)` : 'useCaseData missing',
+      field: 'goals',
+      expected: 'at least 2 goals',
+      received: `${state.goals?.length || 0} goals`,
     });
   }
 

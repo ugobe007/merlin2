@@ -78,7 +78,7 @@ interface QuoteResult {
   netCost: number;
   annualSavings: number;
   paybackYears: number;
-  roi5Year: number;  // Changed from roi10Year to 5-year for more credible ROI timeline
+  roi10Year: number;
   co2ReductionTons: number;
 }
 
@@ -225,7 +225,7 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
         netCost: quoteResult.costs.netCost,
         annualSavings: quoteResult.financials.annualSavings,
         paybackYears: quoteResult.financials.paybackYears,
-        roi5Year: quoteResult.financials.roi5Year,
+        roi10Year: quoteResult.financials.roi10Year,
         co2ReductionTons: (solarKW * 1500 * 0.0004), // ~0.4 kg CO2/kWh avoided
       };
       
@@ -523,7 +523,7 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
                     </div>
                     <div className="bg-purple-50 rounded-lg p-4 text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {quoteResult.roi5Year.toFixed(0)}%
+                        {quoteResult.roi10Year.toFixed(0)}%
                       </div>
                       <div className="text-sm text-purple-700">10-Year ROI</div>
                     </div>

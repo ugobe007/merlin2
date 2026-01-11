@@ -51,7 +51,7 @@ export interface FinancialCalculationResult {
   
   // Key metrics
   simplePaybackYears: number;
-  fiveYearROI: number;  // Changed from fiveYearROI to 5-year for more credible ROI timeline
+  tenYearROI: number;
   twentyFiveYearNPV: number;
   irr: number;
   lcoe: number;  // Levelized cost of energy ($/kWh)
@@ -119,9 +119,8 @@ export function calculateFinancials(input: FinancialCalculationInput): Financial
 
   // Key metrics
   const simplePaybackYears = annualSavings > 0 ? netCost / annualSavings : 99;
-  // 5-year ROI with 3% annual increase (5.15x multiplier)
-  const fiveYearROI = annualSavings > 0 && netCost > 0
-    ? ((annualSavings * 5.15 - netCost) / netCost) * 100 
+  const tenYearROI = annualSavings > 0 
+    ? ((annualSavings * 10 - netCost) / netCost) * 100 
     : 0;
 
   // NPV calculation with degradation and escalation
@@ -162,7 +161,7 @@ export function calculateFinancials(input: FinancialCalculationInput): Financial
     solarSavings: Math.round(solarSavings),
     annualSavings: Math.round(annualSavings),
     simplePaybackYears: Math.round(simplePaybackYears * 10) / 10,
-    fiveYearROI: Math.round(fiveYearROI * 10) / 10,
+    tenYearROI: Math.round(tenYearROI * 10) / 10,
     twentyFiveYearNPV: Math.round(twentyFiveYearNPV),
     irr: Math.round(irr * 10) / 10,
     lcoe: Math.round(lcoe * 1000) / 1000,
@@ -324,7 +323,7 @@ export function getFinancialSummary(result: FinancialCalculationResult): {
       { label: 'Net Cost (after incentives)', value: `$${result.netCost.toLocaleString()}`, highlight: true },
       { label: 'Annual Savings', value: `$${result.annualSavings.toLocaleString()}` },
       { label: 'Payback Period', value: `${result.simplePaybackYears} years`, highlight: result.simplePaybackYears <= 5 },
-      { label: '5-Year ROI', value: `${result.fiveYearROI}%`, highlight: result.fiveYearROI > 50 },
+      { label: '10-Year ROI', value: `${result.tenYearROI}%`, highlight: result.tenYearROI > 100 },
       { label: '25-Year NPV', value: `$${result.twentyFiveYearNPV.toLocaleString()}` },
     ],
   };

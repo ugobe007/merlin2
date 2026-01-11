@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Home, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { QuestionnaireEngine } from './QuestionnaireEngine';
-import { MerlinAdvisorPanel } from './MerlinAdvisorPanel';
+import { ProgressSidebar } from './ProgressSidebar';
 import { CAR_WASH_QUESTIONS } from '@/data/carwash-questions.config';
 import type { Question } from '@/data/carwash-questions.config';
 import { UseCaseService } from '@/services/useCaseService';
-import { loadUseCaseConditions, type UseCaseConditions } from '@/services/useCaseConditionsService';
-
-
+import { simplifyQuestion } from './questionSimplifier';
 
 interface Step3DetailsProps {
   state: {
@@ -29,40 +26,26 @@ function transformDatabaseQuestion(dbQuestion: any, index: number): Question {
   // UseCaseService ensures both exist, but prioritize field_name (used in migrations)
   const fieldName = dbQuestion.field_name || dbQuestion.question_key || dbQuestion.field || String(dbQuestion.id || index + 1);
   
-  // Get question text
-  const questionText = dbQuestion.question_text || dbQuestion.question || '';
+  // Get question text and simplify it
+  const originalQuestionText = dbQuestion.question_text || dbQuestion.question || '';
+  const simplification = simplifyQuestion(originalQuestionText, fieldName, dbQuestion.question_type);
+  const questionText = simplification.simplifiedText;
   
   // Get question type
   const dbType = dbQuestion.question_type || dbQuestion.type || 'select';
   
   // Map database question_type to our Question type
-  // CRITICAL: number_buttons REQUIRES options, so check first!
   let questionType: Question['type'] = 'buttons';
-  
-  // Check if we have min/max for number types (can use slider instead)
-  const hasMinMax = (dbQuestion.min_value !== null && dbQuestion.min_value !== undefined) &&
-                    (dbQuestion.max_value !== null && dbQuestion.max_value !== undefined);
-  
   if (dbType === 'number') {
-    // If number type has min/max, prefer slider (doesn't need options)
-    if (hasMinMax) {
-      questionType = 'slider';
-    } else {
-      // number_buttons requires options - will check below
-      questionType = 'number_buttons';
-    }
+    questionType = 'number_buttons';
   } else if (dbType === 'slider') {
     questionType = 'slider';
   } else if (dbType === 'select') {
     questionType = 'buttons';
-  } else if (dbType === 'boolean' || dbType === 'toggle') {
+  } else if (dbType === 'toggle') {
     questionType = 'toggle';
   } else if (dbType === 'area_input') {
     questionType = 'area_input';
-  } else if (dbType === 'text') {
-    // Text input - not yet supported, fallback to buttons
-    console.warn(`⚠️ Text input type not yet supported for question: ${fieldName}`);
-    questionType = 'buttons';
   }
 
   // Parse options - database schema uses select_options, migrations use options
@@ -107,60 +90,6 @@ function transformDatabaseQuestion(dbQuestion: any, index: number): Question {
       { value: 'yes', label: 'Yes', icon: '✅' },
       { value: 'no', label: 'No', icon: '❌' }
     ];
-  }
-  
-  // CRITICAL FIX: If number_buttons has no options, generate them or fallback to slider
-  // Also: If range is large (>20 or >15 options), prefer slider for better UX
-  if (questionType === 'number_buttons' && !options) {
-    const min = dbQuestion.min_value !== null && dbQuestion.min_value !== undefined 
-      ? Number(dbQuestion.min_value) 
-      : 0;
-    const max = dbQuestion.max_value !== null && dbQuestion.max_value !== undefined 
-      ? Number(dbQuestion.max_value) 
-      : 10;
-    
-    // If range is large, use slider instead
-    if (max > 20 || (max - min) > 15) {
-      questionType = 'slider';
-      console.log(`⚠️ Number question "${fieldName}" has large range (${min}-${max}), using slider instead`);
-    }
-    
-    // If we have a reasonable range, generate options
-    if (max <= 20 && max > min) {
-      options = Array.from({ length: max - min + 1 }, (_, i) => ({
-        value: String(min + i),
-        label: String(min + i),
-        icon: undefined,
-        description: undefined
-      }));
-      console.log(`✅ Generated ${options.length} options for number_buttons question: ${fieldName}`);
-    } else if (hasMinMax) {
-      // Fallback to slider if range is too large
-      console.warn(`⚠️ Number question "${fieldName}" has large range (${min}-${max}), using slider instead`);
-      questionType = 'slider';
-    } else {
-      // Last resort: generate 0-10 options
-      console.warn(`⚠️ Number question "${fieldName}" has no options or range, generating 0-10 options`);
-      options = Array.from({ length: 11 }, (_, i) => ({
-        value: String(i),
-        label: String(i),
-        icon: undefined,
-        description: undefined
-      }));
-    }
-  }
-  
-  // Validate: buttons and number_buttons MUST have options
-  if ((questionType === 'buttons' || questionType === 'number_buttons') && !options) {
-    console.error(`❌ CRITICAL: Question "${fieldName}" (${questionType}) has no options!`);
-    console.error(`   Database question:`, {
-      question_type: dbType,
-      field_name: fieldName,
-      select_options: dbQuestion.select_options,
-      options: dbQuestion.options,
-      min_value: dbQuestion.min_value,
-      max_value: dbQuestion.max_value
-    });
   }
 
   // Map section from section_name (if available) or infer from field name
@@ -227,7 +156,7 @@ function transformDatabaseQuestion(dbQuestion: any, index: number): Question {
     range,
     unit: dbQuestion.unit || dbQuestion.suffix || '',
     smartDefault,
-    helpText: dbQuestion.help_text || dbQuestion.helpText || undefined,
+    helpText: simplification.helpText || dbQuestion.help_text || dbQuestion.helpText || undefined,
     showIf: undefined, // Can be added later if database supports conditional logic
     merlinTip: undefined // Can be added later if database supports Merlin tips
   };
@@ -235,90 +164,42 @@ function transformDatabaseQuestion(dbQuestion: any, index: number): Question {
 
 export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) {
   const [progress, setProgress] = useState(0);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [visibleQuestionsLength, setVisibleQuestionsLength] = useState(0);
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [questions, setQuestions] = useState<Question[]>(CAR_WASH_QUESTIONS);
+  const [currentQuestion, setCurrentQuestion] = useState<Question>(CAR_WASH_QUESTIONS[0]);
   const [loading, setLoading] = useState(true);
-  const [conditions, setConditions] = useState<UseCaseConditions | null>(null);
 
   // Load questions based on industry
   useEffect(() => {
     async function loadQuestions() {
       if (!state.industry) {
-        console.warn('⚠️ No industry selected, showing empty state');
-        setQuestions([]);
-        setCurrentQuestion(null);
+        setQuestions(CAR_WASH_QUESTIONS);
+        setCurrentQuestion(CAR_WASH_QUESTIONS[0]);
         setLoading(false);
         return;
       }
 
-      // Load use case conditions (all template variables in one place)
       try {
-        const useCaseConditions = await loadUseCaseConditions(state.industry);
-        setConditions(useCaseConditions);
+        // Normalize industry slug (handle both dash and underscore formats)
+        // Database uses hyphens (e.g., 'car-wash'), code uses underscores (e.g., 'car_wash')
+        // Convert underscore to hyphen for database query
+        let useCaseSlug = state.industry.replace(/_/g, '-');
+        // Special case: some industries use underscores in database
+        // Try hyphen first, then fall back to underscore if not found
+        console.log(`📋 Loading questions for industry: ${state.industry} (slug: ${useCaseSlug})`);
         
-        if (import.meta.env.DEV) {
-          console.log('✅ [Conditions Loaded]', {
-            useCase: useCaseConditions.useCaseSlug,
-            version: useCaseConditions.version,
-            source: useCaseConditions.source,
-            errors: useCaseConditions.errors?.length || 0
-          });
-        }
-      } catch (error) {
-        console.warn('⚠️ Failed to load conditions, using fallbacks:', error);
-        // Continue without conditions (fallback behavior)
-      }
-
-      try {
-        // Try multiple slug formats (database uses dashes, but Step2Industry might use underscores)
-        const slugVariants = [
-          state.industry,                    // Try as-is first
-          state.industry.replace(/_/g, '-'), // Convert underscores to dashes (data_center -> data-center)
-          state.industry.replace(/-/g, '_')  // Convert dashes to underscores (data-center -> data_center)
-        ];
+        // Fetch questions from database
+        let useCase = await useCaseService.getUseCaseBySlug(useCaseSlug);
         
-        // Remove duplicates
-        const uniqueSlugs = Array.from(new Set(slugVariants));
-        
-        console.log(`\n📋 ========================================`);
-        console.log(`📋 STEP 3: Loading Questions`);
-        console.log(`📋 ========================================`);
-        console.log(`📋 Industry from state: "${state.industry}"`);
-        console.log(`🔍 Trying slug variants: ${uniqueSlugs.map(s => `"${s}"`).join(', ')}`);
-        
-        let useCase = null;
-        let foundSlug = null;
-        
-        // Try each slug variant until we find one that works
-        for (const slug of uniqueSlugs) {
-          try {
-            console.log(`   🔎 Attempting: "${slug}"...`);
-            useCase = await useCaseService.getUseCaseBySlug(slug);
-            if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
-              foundSlug = slug;
-              console.log(`   ✅ FOUND! "${slug}" has ${useCase.custom_questions.length} questions`);
-              break;
-            } else if (useCase) {
-              console.log(`   ⚠️  Found use case "${slug}" but it has no questions`);
-            } else {
-              console.log(`   ❌ Use case "${slug}" not found in database`);
-            }
-          } catch (err) {
-            // Continue to next variant
-            console.log(`   ❌ Error with "${slug}":`, err instanceof Error ? err.message : String(err));
-          }
+        // Fallback: if not found with hyphen, try with underscore
+        if (!useCase && useCaseSlug.includes('-')) {
+          useCaseSlug = state.industry; // Keep original underscore format
+          console.log(`⚠️  Not found with hyphen, trying: ${useCaseSlug}`);
+          useCase = await useCaseService.getUseCaseBySlug(useCaseSlug);
         }
         
         if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
           const dbQuestions = useCase.custom_questions;
-          console.log(`\n✅ SUCCESS: Loaded ${dbQuestions.length} questions from database`);
-          console.log(`✅ Use Case: "${foundSlug}" (${useCase.name || 'Unknown'})`);
-          console.log(`✅ First question: "${dbQuestions[0]?.question_text || 'N/A'}"`);
-          console.log(`📋 ========================================\n`);
+          console.log(`✅ Loaded ${dbQuestions.length} questions from database for ${useCaseSlug}`);
           
           // Transform database questions to our Question format
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -328,39 +209,25 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
           
           setQuestions(transformedQuestions);
           setCurrentQuestion(transformedQuestions[0]);
-          setVisibleQuestionsLength(transformedQuestions.length);
         } else {
           // Fallback to config files if no database questions
-          console.log(`\n⚠️  ========================================`);
-          console.log(`⚠️  WARNING: No Database Questions Found`);
-          console.log(`⚠️  ========================================`);
-          console.log(`⚠️  Industry: "${state.industry}"`);
-          console.log(`⚠️  Tried slugs: ${uniqueSlugs.map(s => `"${s}"`).join(', ')}`);
-          console.log(`⚠️  Checking fallback config files...`);
+          console.log(`⚠️ No database questions found for ${useCaseSlug}, using fallback`);
           
           // For now, only car wash has a config file
           if (state.industry === 'car_wash' || state.industry === 'car-wash') {
-            console.log(`✅ Using car wash config file fallback (${CAR_WASH_QUESTIONS.length} questions)`);
             setQuestions(CAR_WASH_QUESTIONS);
             setCurrentQuestion(CAR_WASH_QUESTIONS[0]);
-            setVisibleQuestionsLength(CAR_WASH_QUESTIONS.length);
           } else {
-            // Empty questions - show "not available" message
-            console.error(`❌ No questions available for industry: "${state.industry}"`);
-            console.error(`❌ Please check:`);
-            console.error(`   1. Does use case "${state.industry}" exist in database?`);
-            console.error(`   2. Does it have custom_questions?`);
-            console.error(`   3. Is the slug format correct? (tried: ${uniqueSlugs.join(', ')})`);
-            console.log(`⚠️  ========================================\n`);
+            // Empty questions fallback (should not happen in production)
+            console.warn(`No questions available for industry: ${state.industry}`);
             setQuestions([]);
-            setCurrentQuestion(null);
           }
         }
       } catch (error) {
-        console.error(`❌ Error loading questions for ${state.industry}:`, error);
-        // Show empty state on error (user will see "Questions Not Available" message)
-        setQuestions([]);
-        setCurrentQuestion(null);
+        console.error(`Error loading questions for ${state.industry}:`, error);
+        // Fallback to car wash questions on error
+        setQuestions(CAR_WASH_QUESTIONS);
+        setCurrentQuestion(CAR_WASH_QUESTIONS[0]);
       } finally {
         setLoading(false);
       }
@@ -369,21 +236,21 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
     loadQuestions();
   }, [state.industry]);
 
-  // CRITICAL FIX: Memoize initialValues to prevent infinite loops
-  // If we don't memoize, this creates a new object on every render, causing QuestionnaireEngine to reset answers
-  const initialValues = useMemo(() => {
-    return conditions
-      ? { ...conditions.questionDefaults, ...(state.useCaseData?.inputs || {}) }
-      : (state.useCaseData?.inputs || {});
-  }, [conditions?.questionDefaults, state.useCaseData?.inputs]);
+  // Initialize with existing data or smart defaults
+  const initialValues = state.useCaseData?.inputs || {};
 
-  // Handle questionnaire completion - SIMPLIFIED
+  // Handle questionnaire completion
   const handleComplete = (answers: Record<string, unknown>) => {
     // Structure the data according to our SSOT format
     const useCaseData = {
       version: '2.0.0',
       industry: state.industry,
+      
+      // Raw user inputs
       inputs: answers,
+      
+      // Pre-calculated values will be added here by TrueQuoteEngine
+      // This happens in the next step or during validation
       calculated: {}
     };
 
@@ -392,7 +259,7 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
       useCaseData
     });
 
-    // Move to next step - WizardV6's canProceed() will validate before allowing navigation
+    // Move to next step
     onNext();
   };
 
@@ -402,45 +269,10 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
   };
 
   // Handle question changes
-  const handleQuestionChange = (question: Question, newProgress: number, questionIndex: number, totalVisible: number) => {
+  const handleQuestionChange = (question: Question, newProgress: number) => {
     setCurrentQuestion(question);
     setProgress(newProgress);
-    setCurrentQuestionIndex(questionIndex);
-    setVisibleQuestionsLength(totalVisible);
   };
-
-  // Track answers and save to wizard state - SIMPLIFIED VERSION
-  const handleAnswerUpdate = (updatedAnswers: Record<string, unknown>) => {
-    setAnswers(updatedAnswers);
-    
-    // Count valid answers
-    const validAnswerCount = Object.keys(updatedAnswers).filter(key => {
-      const value = updatedAnswers[key];
-      if (value === undefined || value === null || value === '') return false;
-      if (typeof value === 'object' && 'value' in value) {
-        return value.value !== undefined && value.value !== null && value.value !== '';
-      }
-      return true;
-    }).length;
-    
-    // Update wizard state with current answers
-    // WizardV6's canProceed() will check if all questions are answered
-    const useCaseData = {
-      version: '2.0.0',
-      industry: state.industry,
-      inputs: updatedAnswers,
-      calculated: state.useCaseData?.calculated || {},
-      _totalQuestions: questions.length,
-      _answeredCount: validAnswerCount
-    };
-    
-    updateState({
-      useCaseData
-    });
-  };
-
-  // Note: Financial metrics are now displayed in the ValueTicker component (sticky at top)
-  // This removes duplicate displays and reduces clutter. The ValueTicker receives data from WizardV6.
 
   // Handle section jump (from sidebar)
   const handleJumpToSection = (sectionId: string) => {
@@ -488,88 +320,40 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
     );
   }
 
-  // Get industry image path
-  const getIndustryImage = (industry: string): string => {
-    const imageMap: Record<string, string> = {
-      'car_wash': '/src/assets/images/car_wash_1.jpg',
-      'car-wash': '/src/assets/images/car_wash_1.jpg',
-      'hotel_hospitality': '/src/assets/images/hotel_motel_holidayinn_1.jpg',
-      'hotel': '/src/assets/images/hotel_motel_holidayinn_1.jpg',
-      'heavy_duty_truck_stop': '/src/assets/images/truck_stop.png',
-      'heavy-duty-truck-stop': '/src/assets/images/truck_stop.png',
-      'ev_charging': '/src/assets/images/ev_charging_station.jpg',
-      'ev-charging': '/src/assets/images/ev_charging_station.jpg',
-      'retail': '/src/assets/images/retail_1.jpg',
-      'warehouse_logistics': '/src/assets/images/logistics_1.jpg',
-      'manufacturing': '/src/assets/images/manufacturing_1.jpg',
-      'hospital': '/src/assets/images/hospital_1.jpg',
-      'office': '/src/assets/images/office_building1.jpg',
-      'college': '/src/assets/images/college_1.jpg',
-      'restaurant': '/src/assets/images/restaurant_1.jpg',
-      'data_center': '/src/assets/images/data-centers',
-      'agriculture': '/src/assets/images/agriculture.jpg'
-    };
-    return imageMap[industry] || '/src/assets/images/Merlin_energy1.jpg';
-  };
-
   return (
-    <div className="step3-details relative min-h-screen" style={{ background: 'transparent' }}>
-      {/* Left-Side Collapsible Merlin Advisor Panel */}
-      {currentQuestion && questions.length > 0 && (
-        <MerlinAdvisorPanel
-          currentQuestion={currentQuestion}
+    <div className="step3-details flex h-screen bg-slate-900">
+      {/* Left Sidebar - Progress Tracking */}
+      <div className="w-80 flex-shrink-0 border-r border-slate-800 overflow-y-auto">
+        <ProgressSidebar
           questions={questions}
-          answers={answers || (initialValues as Record<string, unknown>)}
-          currentQuestionIndex={currentQuestionIndex}
-          visibleQuestionsLength={visibleQuestionsLength}
-          currentWizardStep={3}
-          totalWizardSteps={6}
+          answers={initialValues as Record<string, unknown>}
+          currentQuestion={currentQuestion}
+          progress={progress}
           onJumpToSection={handleJumpToSection}
-          onCollapseChange={setIsPanelCollapsed}
         />
-      )}
+      </div>
 
-      {/* Main Content Area - Shifts right when panel is open */}
-      <div 
-        className="relative max-w-6xl mx-auto px-4 py-8 transition-all duration-300" 
-        style={{ 
-          paddingBottom: '120px',
-          marginLeft: isPanelCollapsed ? '0' : '320px' // Shift content when panel is open
-        }}
-      >
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Let's Learn About Your {getIndustryName(state.industry)}
-          </h1>
-          <p className="text-purple-300 text-lg">
-            Answer the questions below - scroll through as you go
-          </p>
-        </div>
+      {/* Right Panel - Questionnaire */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-8 py-12">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Let's Learn About Your {getIndustryName(state.industry)}
+            </h1>
+            <p className="text-xl text-slate-400">
+              Answer a few questions so Merlin can size the perfect energy system for you.
+            </p>
+          </div>
 
-        {/* Questionnaire Engine - Full Width, Scrollable */}
-        <div className="space-y-8">
+          {/* Questionnaire Engine */}
           <QuestionnaireEngine
             questions={questions}
             industry={state.industry}
             initialValues={(initialValues || {}) as Record<string, unknown>}
             onComplete={handleComplete}
             onProgressUpdate={handleProgressUpdate}
-            onQuestionChange={(question, progress, questionIndex, totalVisible) => {
-              handleQuestionChange(question, progress, questionIndex, totalVisible);
-              // CRITICAL: Update total question count in wizard state when question changes
-              // This allows Continue button to validate that all questions are answered
-              if (totalVisible > 0 && state.useCaseData?._totalQuestions !== totalVisible) {
-                updateState({
-                  useCaseData: {
-                    ...state.useCaseData,
-                    _totalQuestions: totalVisible,
-                    _visibleQuestionsCount: totalVisible
-                  }
-                });
-              }
-            }}
-            onAnswerUpdate={handleAnswerUpdate}
+            onQuestionChange={handleQuestionChange}
             onJumpToSection={handleJumpToSection}
           />
         </div>
@@ -577,11 +361,6 @@ export function Step3Details({ state, updateState, onNext }: Step3DetailsProps) 
     </div>
   );
 }
-
-// ============================================================================
-// STEP INDICATOR COMPONENT
-// ============================================================================
-
 
 // ============================================================================
 // HELPER FUNCTIONS

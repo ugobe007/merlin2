@@ -247,7 +247,7 @@ export async function processQuote(
       netCost: financialResult.netCost,
       annualSavings: financialResult.annualSavings,
       simplePaybackYears: financialResult.simplePaybackYears,
-      fiveYearROI: financialResult.fiveYearROI,
+      tenYearROI: financialResult.tenYearROI,
       twentyFiveYearNPV: financialResult.twentyFiveYearNPV,
     },
   };
