@@ -367,21 +367,23 @@ export function QuestionnaireEngine({
           </div>
         )}
 
-        {/* Complete Button (at bottom of questions) */}
-        <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm pt-6 pb-4 border-t border-slate-800 mt-12">
-          <button
-            onClick={handleComplete}
-            className="
-              w-full px-8 py-4 rounded-xl font-semibold text-lg
-              bg-gradient-to-r from-purple-500 to-indigo-600
-              text-white hover:shadow-lg hover:shadow-purple-500/30
-              transition-all flex items-center justify-center gap-2
-            "
-          >
-            <span>Complete Questionnaire</span>
-            <Check className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Complete Button (only show when all questions answered) */}
+        {answeredCount === visibleQuestions.length && (
+          <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm pt-6 pb-4 border-t border-slate-800 mt-12">
+            <button
+              onClick={handleComplete}
+              className="
+                w-full px-8 py-4 rounded-xl font-semibold text-lg
+                bg-gradient-to-r from-purple-500 to-indigo-600
+                text-white hover:shadow-lg hover:shadow-purple-500/30
+                transition-all flex items-center justify-center gap-2
+              "
+            >
+              <span>Complete Questionnaire</span>
+              <Check className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Section Summary (Bottom) */}
