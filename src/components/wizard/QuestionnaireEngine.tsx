@@ -89,6 +89,26 @@ export function QuestionnaireEngine({
     setShowValidation(false);
   };
 
+  // Validate answer based on question type
+  const validateAnswer = (question: Question, value: unknown): boolean => {
+    // Number inputs (slider, number_buttons): 0 is valid, only check for null/undefined/NaN
+    if (question.type === "slider" || question.type === "number_buttons") {
+      return typeof value === "number" && !isNaN(value);
+    }
+
+    // Area input: must be object with value property
+    if (question.type === "area_input") {
+      if (!value || typeof value !== "object" || !("value" in value)) {
+        return false;
+      }
+      const areaValue = (value as { value: string | number }).value;
+      return areaValue !== null && areaValue !== undefined && areaValue !== "";
+    }
+
+    // Other types (buttons, toggle, etc.): check for falsy values
+    return !!value;
+  };
+
   // Navigate to next question
   const handleNext = () => {
     if (!currentQuestion) return;
@@ -96,38 +116,9 @@ export function QuestionnaireEngine({
     const currentValue = answers[currentQuestion.field];
 
     // Validate current answer
-    // For number inputs, 0 is a valid value, so check for null/undefined specifically
-    if (currentQuestion.type === "slider" || currentQuestion.type === "number_buttons") {
-      if (currentValue === null || currentValue === undefined) {
-        setShowValidation(true);
-        return;
-      }
-      // Ensure it's a number
-      if (typeof currentValue !== "number" || isNaN(currentValue)) {
-        setShowValidation(true);
-        return;
-      }
-    } else if (currentQuestion.type === "area_input") {
-      if (
-        currentValue === null ||
-        currentValue === undefined ||
-        typeof currentValue !== "object" ||
-        !("value" in currentValue)
-      ) {
-        setShowValidation(true);
-        return;
-      }
-      const value = (currentValue as { value: string | number }).value;
-      if (value === null || value === undefined || value === "") {
-        setShowValidation(true);
-        return;
-      }
-    } else {
-      // For other types (buttons, toggle, etc.), check for falsy values
-      if (!currentValue) {
-        setShowValidation(true);
-        return;
-      }
+    if (!validateAnswer(currentQuestion, currentValue)) {
+      setShowValidation(true);
+      return;
     }
 
     if (isLastQuestion) {
