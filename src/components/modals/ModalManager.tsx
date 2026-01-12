@@ -1,43 +1,43 @@
-import React from 'react';
-import { createPortal } from 'react-dom';
-import { authService } from '../../services/authService';
-import EditableUserProfile from '../EditableUserProfile';
-import Portfolio from '../Portfolio';
-import AuthModal from '../AuthModal';
-import VendorManager from '../VendorManager';
-import PricingPlans from '../PricingPlans';
-import WelcomeModal from './WelcomeModal';
-import AccountSetup from './AccountSetup';
-import EnhancedProfile from '../EnhancedProfile';
-import JoinMerlinModal from './JoinMerlinModal';
-import WizardV6 from '../wizard/v6/WizardV6';
-import CalculationModal from './CalculationModal';
-import SaveProjectModal from './SaveProjectModal';
-import LoadProjectModal from './LoadProjectModal';
-import AdvancedAnalytics from '../AdvancedAnalytics';
-import ProfessionalFinancialModeling from '../ProfessionalFinancialModeling';
-import EnhancedBESSAnalytics from '../EnhancedBESSAnalytics';
-import FinancingCalculator from '../FinancingCalculator';
-import UseCaseTemplates from '../UseCaseTemplates';
-import PricingDataCapture from '../PricingDataCapture';
-import MarketIntelligenceDashboard from '../MarketIntelligenceDashboard';
-import VendorSponsorship from '../VendorSponsorship';
-import PrivacyPolicy from '../PrivacyPolicy';
-import TermsOfService from '../TermsOfService';
-import SecurityPrivacySettings from '../SecurityPrivacySettings';
-import SystemHealth from '../SystemHealth';
-import StatusPage from '../StatusPage';
-import UtilityRatesManager from '../UtilityRatesManager';
-import QuoteTemplates from '../QuoteTemplates';
-import PricingPresets from '../PricingPresets';
-import QuoteReviewWorkflow from '../QuoteReviewWorkflow';
-import CostSavingsModal from './CostSavingsModal';
-import RevenueGenerationModal from './RevenueGenerationModal';
-import SustainabilityModal from './SustainabilityModal';
-import PowerAdjustmentModal from './PowerAdjustmentModal';
-import AIChatModal from './AIChatModal';
-import { generateCalculationBreakdown } from '../../utils/calculationFormulas';
-import type { ProfileData } from './AccountSetup';
+import React from "react";
+import { createPortal } from "react-dom";
+import { authService } from "../../services/authService";
+import EditableUserProfile from "../EditableUserProfile";
+import Portfolio from "../Portfolio";
+import AuthModal from "../AuthModal";
+import VendorManager from "../VendorManager";
+import PricingPlans from "../PricingPlans";
+import WelcomeModal from "./WelcomeModal";
+import AccountSetup from "./AccountSetup";
+import EnhancedProfile from "../EnhancedProfile";
+import JoinMerlinModal from "./JoinMerlinModal";
+import WizardV6 from "../wizard/v6/WizardV6";
+import CalculationModal from "./CalculationModal";
+import SaveProjectModal from "./SaveProjectModal";
+import LoadProjectModal from "./LoadProjectModal";
+import AdvancedAnalytics from "../AdvancedAnalytics";
+import ProfessionalFinancialModeling from "../ProfessionalFinancialModeling";
+import EnhancedBESSAnalytics from "../EnhancedBESSAnalytics";
+import FinancingCalculator from "../FinancingCalculator";
+import UseCaseTemplates from "../UseCaseTemplates";
+import PricingDataCapture from "../PricingDataCapture";
+import MarketIntelligenceDashboard from "../MarketIntelligenceDashboard";
+import VendorSponsorship from "../VendorSponsorship";
+import PrivacyPolicy from "../PrivacyPolicy";
+import TermsOfService from "../TermsOfService";
+import SecurityPrivacySettings from "../SecurityPrivacySettings";
+import SystemHealth from "../SystemHealth";
+import StatusPage from "../StatusPage";
+import UtilityRatesManager from "../UtilityRatesManager";
+import QuoteTemplates from "../QuoteTemplates";
+import PricingPresets from "../PricingPresets";
+import QuoteReviewWorkflow from "../QuoteReviewWorkflow";
+import CostSavingsModal from "./CostSavingsModal";
+import RevenueGenerationModal from "./RevenueGenerationModal";
+import SustainabilityModal from "./SustainabilityModal";
+import PowerAdjustmentModal from "./PowerAdjustmentModal";
+import AIChatModal from "./AIChatModal";
+import { generateCalculationBreakdown } from "../../utils/calculationFormulas";
+import type { ProfileData } from "./AccountSetup";
 
 interface ModalManagerProps {
   // Modal state flags
@@ -73,7 +73,7 @@ interface ModalManagerProps {
   showPricingPresets: boolean;
   showReviewWorkflow: boolean;
   showPowerAdjustmentModal: boolean;
-  selectedUseCaseForAdjustment: any;
+  selectedUseCaseForAdjustment: unknown;
   showCostSavingsModal: boolean;
   showRevenueModal: boolean;
   showSustainabilityModal: boolean;
@@ -111,7 +111,7 @@ interface ModalManagerProps {
   setShowPricingPresets: (show: boolean) => void;
   setShowReviewWorkflow: (show: boolean) => void;
   setShowPowerAdjustmentModal: (show: boolean) => void;
-  setSelectedUseCaseForAdjustment: (useCase: any) => void;
+  setSelectedUseCaseForAdjustment: (useCase: unknown) => void;
   setShowCostSavingsModal: (show: boolean) => void;
   setShowRevenueModal: (show: boolean) => void;
   setShowSustainabilityModal: (show: boolean) => void;
@@ -126,13 +126,13 @@ interface ModalManagerProps {
   handleProfileComplete: (profileData: ProfileData) => void;
   handleContinueToEnhancedProfile: () => void;
   handleEnhancedProfileClose: () => void;
-  loadProjectFromStorage: (quote: any) => void;
+  loadProjectFromStorage: (quote: unknown) => void;
   handleUploadProject: () => void;
   handleCreateWithWizard: () => void;
   handleUploadFromComputer: () => void;
   handleUploadFromPortfolio: () => void;
-  handleApplyTemplate: (template: any) => void;
-  handleApplyUseCaseTemplate: (useCase: any) => void;
+  handleApplyTemplate: (template: unknown) => void;
+  handleApplyUseCaseTemplate: (useCase: unknown) => void;
   isFirstTimeProfile: boolean;
 
   // Project data
@@ -154,8 +154,8 @@ interface ModalManagerProps {
   annualSavings: number;
   valueKwh: number;
   warranty: string;
-  currentQuoteStatus: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared';
-  
+  currentQuoteStatus: "draft" | "in-review" | "approved" | "rejected" | "shared";
+
   // Setters for wizard data
   setPowerMW: (power: number) => void;
   setStandbyHours: (hours: number) => void;
@@ -165,93 +165,207 @@ interface ModalManagerProps {
   setWindMW: (wind: number) => void;
   setGeneratorMW: (generator: number) => void;
   setValueKwh: (value: number) => void;
-  setCurrentQuoteStatus: (status: 'draft' | 'in-review' | 'approved' | 'rejected' | 'shared') => void;
-  
+  setCurrentQuoteStatus: (
+    status: "draft" | "in-review" | "approved" | "rejected" | "shared"
+  ) => void;
+
   // Advanced mode props
   startWizardInAdvancedMode?: boolean;
   setStartWizardInAdvancedMode?: (value: boolean) => void;
   setShowAdvancedQuoteBuilderModal?: (show: boolean) => void;
-  setAdvancedQuoteBuilderInitialView?: (view: 'landing' | 'custom-config') => void;
+  setAdvancedQuoteBuilderInitialView?: (view: "landing" | "custom-config") => void;
   skipWizardIntro?: boolean;
   setSkipWizardIntro?: (value: boolean) => void;
 }
 
 export default function ModalManager(props: ModalManagerProps) {
-  if (import.meta.env.DEV) { console.log('🔧 ModalManager received showBESSAnalytics:', props.showBESSAnalytics); }
-  if (import.meta.env.DEV) { console.log('🔧 ModalManager received ALL PROPS:', props); }
-  
+  if (import.meta.env.DEV) {
+    console.log("🔧 ModalManager received showBESSAnalytics:", props.showBESSAnalytics);
+  }
+  if (import.meta.env.DEV) {
+    console.log("🔧 ModalManager received ALL PROPS:", props);
+  }
+
   const {
     // Modal states
-    showUserProfile, showPortfolio, showAuthModal, showVendorManager, showPricingPlans,
-    showWelcomeModal, showAccountSetup, showEnhancedProfile, showJoinModal, showSmartWizard,
-    showCalculationModal, showSaveProjectModal, showLoadProjectModal, showAnalytics, showProfessionalAnalytics, showBESSAnalytics, showFinancing,
-    showTemplates, showChatModal, showPricingDataCapture, showMarketIntelligence, showVendorSponsorship,
-    showPrivacyPolicy, showTermsOfService, showSecuritySettings, showSystemHealth, showStatusPage,
-    showUtilityRates, showQuoteTemplates, showPricingPresets, showReviewWorkflow,
-    showCostSavingsModal, showRevenueModal, showSustainabilityModal, showPowerAdjustmentModal, selectedUseCaseForAdjustment,
-    
+    showUserProfile,
+    showPortfolio,
+    showAuthModal,
+    showVendorManager,
+    showPricingPlans,
+    showWelcomeModal,
+    showAccountSetup,
+    showEnhancedProfile,
+    showJoinModal,
+    showSmartWizard,
+    showCalculationModal,
+    showSaveProjectModal,
+    showLoadProjectModal,
+    showAnalytics,
+    showProfessionalAnalytics,
+    showBESSAnalytics,
+    showFinancing,
+    showTemplates,
+    showChatModal,
+    showPricingDataCapture,
+    showMarketIntelligence,
+    showVendorSponsorship,
+    showPrivacyPolicy,
+    showTermsOfService,
+    showSecuritySettings,
+    showSystemHealth,
+    showStatusPage,
+    showUtilityRates,
+    showQuoteTemplates,
+    showPricingPresets,
+    showReviewWorkflow,
+    showCostSavingsModal,
+    showRevenueModal,
+    showSustainabilityModal,
+    showPowerAdjustmentModal,
+    selectedUseCaseForAdjustment,
+
     // Advanced mode
-    startWizardInAdvancedMode, setStartWizardInAdvancedMode, setShowAdvancedQuoteBuilderModal,
-    setAdvancedQuoteBuilderInitialView, skipWizardIntro, setSkipWizardIntro,
+    startWizardInAdvancedMode: _startWizardInAdvancedMode,
+    setStartWizardInAdvancedMode: _setStartWizardInAdvancedMode,
+    setShowAdvancedQuoteBuilderModal: _setShowAdvancedQuoteBuilderModal,
+    setAdvancedQuoteBuilderInitialView: _setAdvancedQuoteBuilderInitialView,
+    skipWizardIntro: _skipWizardIntro,
+    setSkipWizardIntro: _setSkipWizardIntro,
 
     // Modal setters
-    setShowUserProfile, setShowPortfolio, setShowAuthModal, setShowVendorManager, setShowPricingPlans,
-    setShowWelcomeModal, setShowAccountSetup, setShowEnhancedProfile, setShowJoinModal, setShowSmartWizard,
-    setShowCalculationModal, setShowSaveProjectModal, setShowLoadProjectModal, setShowAnalytics, setShowProfessionalAnalytics, setShowBESSAnalytics, setShowFinancing,
-    setShowTemplates, setShowChatModal, setShowPricingDataCapture, setShowMarketIntelligence, setShowVendorSponsorship,
-    setShowPrivacyPolicy, setShowTermsOfService, setShowSecuritySettings, setShowSystemHealth, setShowStatusPage,
-    setShowUtilityRates, setShowQuoteTemplates, setShowPricingPresets, setShowReviewWorkflow,
-    setShowCostSavingsModal, setShowRevenueModal, setShowSustainabilityModal, setShowPowerAdjustmentModal, setSelectedUseCaseForAdjustment,
+    setShowUserProfile,
+    setShowPortfolio,
+    setShowAuthModal,
+    setShowVendorManager,
+    setShowPricingPlans,
+    setShowWelcomeModal: _setShowWelcomeModal,
+    setShowAccountSetup,
+    setShowEnhancedProfile: _setShowEnhancedProfile,
+    setShowJoinModal,
+    setShowSmartWizard,
+    setShowCalculationModal,
+    setShowSaveProjectModal,
+    setShowLoadProjectModal,
+    setShowAnalytics,
+    setShowProfessionalAnalytics,
+    setShowBESSAnalytics,
+    setShowFinancing,
+    setShowTemplates,
+    setShowChatModal,
+    setShowPricingDataCapture,
+    setShowMarketIntelligence,
+    setShowVendorSponsorship,
+    setShowPrivacyPolicy,
+    setShowTermsOfService,
+    setShowSecuritySettings,
+    setShowSystemHealth,
+    setShowStatusPage,
+    setShowUtilityRates,
+    setShowQuoteTemplates,
+    setShowPricingPresets,
+    setShowReviewWorkflow,
+    setShowCostSavingsModal,
+    setShowRevenueModal,
+    setShowSustainabilityModal,
+    setShowPowerAdjustmentModal,
+    setSelectedUseCaseForAdjustment: _setSelectedUseCaseForAdjustment,
 
     // Data and handlers
-    isLoggedIn, setIsLoggedIn, handleLoginSuccess, handleGoHome, handleProfileSetup, handleStartWizard,
-    handleProfileComplete, handleContinueToEnhancedProfile, handleEnhancedProfileClose,
-    loadProjectFromStorage, handleUploadProject, handleCreateWithWizard, handleUploadFromComputer,
-    handleUploadFromPortfolio, handleApplyTemplate, handleApplyUseCaseTemplate, isFirstTimeProfile,
+    isLoggedIn,
+    setIsLoggedIn,
+    handleLoginSuccess,
+    handleGoHome,
+    handleProfileSetup,
+    handleStartWizard,
+    handleProfileComplete,
+    handleContinueToEnhancedProfile,
+    handleEnhancedProfileClose,
+    loadProjectFromStorage,
+    handleUploadProject,
+    handleCreateWithWizard,
+    handleUploadFromComputer,
+    handleUploadFromPortfolio,
+    handleApplyTemplate,
+    handleApplyUseCaseTemplate,
+    isFirstTimeProfile,
 
     // Project data
-    quoteName, powerMW, standbyHours, solarMWp, windMW, generatorMW, batteryKwh, pcsKw,
-    bosPercent, epcPercent, genKw, solarKwp, windKw, location, grandCapEx, annualSavings,
-    valueKwh, warranty, currentQuoteStatus,
+    quoteName,
+    powerMW,
+    standbyHours,
+    solarMWp,
+    windMW,
+    generatorMW,
+    batteryKwh,
+    pcsKw,
+    bosPercent,
+    epcPercent,
+    genKw,
+    solarKwp,
+    windKw,
+    location,
+    grandCapEx,
+    annualSavings,
+    valueKwh,
+    warranty: _warranty,
+    currentQuoteStatus: _currentQuoteStatus,
 
     // Setters
-    setPowerMW, setStandbyHours, setUseCase, setWarranty, setSolarMWp, setWindMW, setGeneratorMW,
-    setValueKwh, setCurrentQuoteStatus
+    setPowerMW: _setPowerMW,
+    setStandbyHours: _setStandbyHours,
+    setUseCase: _setUseCase,
+    setWarranty: _setWarranty,
+    setSolarMWp: _setSolarMWp,
+    setWindMW: _setWindMW,
+    setGeneratorMW: _setGeneratorMW,
+    setValueKwh,
+    setCurrentQuoteStatus,
   } = props;
 
   return (
     <>
       {/* Modals */}
       {showUserProfile && (
-        <EditableUserProfile 
-          onClose={() => setShowUserProfile(false)} 
-          onLoginSuccess={handleLoginSuccess} 
-          onLogout={() => setIsLoggedIn(false)} 
+        <EditableUserProfile
+          onClose={() => setShowUserProfile(false)}
+          onLoginSuccess={handleLoginSuccess}
+          onLogout={() => setIsLoggedIn(false)}
           isLoggedIn={isLoggedIn}
           onShowQuoteTemplates={() => setShowQuoteTemplates(true)}
           onShowPricingPresets={() => setShowPricingPresets(true)}
           onShowVendorLeads={() => setShowVendorSponsorship(true)}
         />
       )}
-      {showPortfolio && <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />}
-      {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />}
-      {showVendorManager && <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />}
+      {showPortfolio && (
+        <Portfolio onClose={() => setShowPortfolio(false)} onLoadQuote={loadProjectFromStorage} />
+      )}
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
+      {showVendorManager && (
+        <VendorManager isOpen={showVendorManager} onClose={() => setShowVendorManager(false)} />
+      )}
       {showPricingPlans && (
-        <PricingPlans 
-          onClose={() => setShowPricingPlans(false)} 
+        <PricingPlans
+          onClose={() => setShowPricingPlans(false)}
           onSignUp={() => {
             setShowPricingPlans(false);
             setShowAuthModal(true);
           }}
-          currentTier="free" 
+          currentTier="free"
         />
       )}
-      
+
       {/* Welcome and Account Setup Modals */}
       {showWelcomeModal && (
         <WelcomeModal
           onClose={handleGoHome}
-          userName={authService.getCurrentUser()?.firstName || 'User'}
+          userName={authService.getCurrentUser()?.firstName || "User"}
           onSetupProfile={handleProfileSetup}
           onStartWizard={handleStartWizard}
           onGoHome={handleGoHome}
@@ -262,20 +376,17 @@ export default function ModalManager(props: ModalManagerProps) {
           onClose={() => setShowAccountSetup(false)}
           onComplete={handleProfileComplete}
           onContinueToProfile={handleContinueToEnhancedProfile}
-          userName={authService.getCurrentUser()?.firstName || 'User'}
-          accountType={authService.getCurrentUser()?.accountType || 'individual'}
+          userName={authService.getCurrentUser()?.firstName || "User"}
+          accountType={authService.getCurrentUser()?.accountType || "individual"}
           companyName={authService.getCurrentUser()?.company}
         />
       )}
       {showEnhancedProfile && (
-        <EnhancedProfile
-          onClose={handleEnhancedProfileClose}
-          isFirstTime={isFirstTimeProfile}
-        />
+        <EnhancedProfile onClose={handleEnhancedProfileClose} isFirstTime={isFirstTimeProfile} />
       )}
-  
+
       {/* Join Merlin Modal - Shows benefits first */}
-      <JoinMerlinModal 
+      <JoinMerlinModal
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onViewPricing={() => {
@@ -283,7 +394,7 @@ export default function ModalManager(props: ModalManagerProps) {
           setShowPricingPlans(true);
         }}
       />
-      
+
       {/* V5 Wizard */}
       {showSmartWizard && (
         <div className="fixed inset-0 z-50">
@@ -332,134 +443,139 @@ export default function ModalManager(props: ModalManagerProps) {
       />
 
       {/* Advanced Analytics Modal */}
-      {showAnalytics && createPortal(
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          style={{ 
-            zIndex: 9999999,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100vh'
-          }}
-        >
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh] overflow-auto">
-            <AdvancedAnalytics
-              isOpen={showAnalytics}
-              onClose={() => setShowAnalytics(false)}
-              projectData={{
-                quoteName,
-                powerMW,
-                durationHours: standbyHours,
-                totalCapEx: grandCapEx,
-                annualSavings,
-              }}
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      {showAnalytics &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            style={{
+              zIndex: 9999999,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100vw",
+              height: "100vh",
+            }}
+          >
+            <div className="relative w-full h-full max-w-7xl max-h-[90vh] overflow-auto">
+              <AdvancedAnalytics
+                isOpen={showAnalytics}
+                onClose={() => setShowAnalytics(false)}
+                projectData={{
+                  quoteName,
+                  powerMW,
+                  durationHours: standbyHours,
+                  totalCapEx: grandCapEx,
+                  annualSavings,
+                }}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Professional Financial Modeling Modal */}
-      {showProfessionalAnalytics && createPortal(
-        <ProfessionalFinancialModeling
-          isOpen={showProfessionalAnalytics}
-          onClose={() => setShowProfessionalAnalytics(false)}
-          projectData={{
-            quoteName,
-            powerMW,
-            durationHours: standbyHours,
-            totalCapEx: grandCapEx,
-            annualSavings,
-            electricityRate: valueKwh || 0.12,
-            location: location || 'United States',
-            batteryLifeYears: 25,
-            discountRate: 0.08
-          }}
-          userTier="free"
-          onUpgradeClick={() => {
-            setShowProfessionalAnalytics(false);
-            setShowPricingPlans(true);
-          }}
-        />,
-        document.body
-      )}
+      {showProfessionalAnalytics &&
+        createPortal(
+          <ProfessionalFinancialModeling
+            isOpen={showProfessionalAnalytics}
+            onClose={() => setShowProfessionalAnalytics(false)}
+            projectData={{
+              quoteName,
+              powerMW,
+              durationHours: standbyHours,
+              totalCapEx: grandCapEx,
+              annualSavings,
+              electricityRate: valueKwh || 0.12,
+              location: location || "United States",
+              batteryLifeYears: 25,
+              discountRate: 0.08,
+            }}
+            userTier="free"
+            onUpgradeClick={() => {
+              setShowProfessionalAnalytics(false);
+              setShowPricingPlans(true);
+            }}
+          />,
+          document.body
+        )}
 
       {/* BESS Analytics Modal - Clean presentation with transparent backdrop */}
-      {showBESSAnalytics && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-4"
-          style={{ 
-            zIndex: 9999999,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'transparent'
-          }}
-          onClick={(e) => {
-            // Only close if clicking the backdrop, not the modal content
-            if (e.target === e.currentTarget) {
-              setShowBESSAnalytics(false);
-            }
-          }}
-        >
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh] overflow-auto">
-            <EnhancedBESSAnalytics
-              isOpen={showBESSAnalytics}
-              onClose={() => setShowBESSAnalytics(false)}
-              projectData={{
-                quoteName,
-                storageSizeMW: powerMW,
-                durationHours: standbyHours,
-                useCase: 'commercial',
-                location: location || 'United States',
-              }}
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      {showBESSAnalytics &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{
+              zIndex: 9999999,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "transparent",
+            }}
+            onClick={(e) => {
+              // Only close if clicking the backdrop, not the modal content
+              if (e.target === e.currentTarget) {
+                setShowBESSAnalytics(false);
+              }
+            }}
+          >
+            <div className="relative w-full h-full max-w-7xl max-h-[90vh] overflow-auto">
+              <EnhancedBESSAnalytics
+                isOpen={showBESSAnalytics}
+                onClose={() => setShowBESSAnalytics(false)}
+                projectData={{
+                  quoteName,
+                  storageSizeMW: powerMW,
+                  durationHours: standbyHours,
+                  useCase: "commercial",
+                  location: location || "United States",
+                }}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Financing Calculator Modal */}
-      {showFinancing && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none' }}>
-          <div style={{ pointerEvents: 'auto' }}>
-            <FinancingCalculator
-              isOpen={showFinancing}
-              onClose={() => setShowFinancing(false)}
-              projectData={{
-                quoteName,
-                totalCapEx: grandCapEx,
-                annualSavings,
-                powerMW,
-                durationHours: standbyHours,
-              }}
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      {showFinancing &&
+        createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "none" }}>
+            <div style={{ pointerEvents: "auto" }}>
+              <FinancingCalculator
+                isOpen={showFinancing}
+                onClose={() => setShowFinancing(false)}
+                projectData={{
+                  quoteName,
+                  totalCapEx: grandCapEx,
+                  annualSavings,
+                  powerMW,
+                  durationHours: standbyHours,
+                }}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Use Case Templates Modal */}
-      {showTemplates && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none' }}>
-          <div style={{ pointerEvents: 'auto' }}>
-            <UseCaseTemplates
-              isOpen={showTemplates}
-              onClose={() => setShowTemplates(false)}
-              onApplyTemplate={handleApplyTemplate}
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      {showTemplates &&
+        createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "none" }}>
+            <div style={{ pointerEvents: "auto" }}>
+              <UseCaseTemplates
+                isOpen={showTemplates}
+                onClose={() => setShowTemplates(false)}
+                onApplyTemplate={handleApplyTemplate}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Pricing Data Capture Modal */}
       {showPricingDataCapture && (
@@ -473,51 +589,37 @@ export default function ModalManager(props: ModalManagerProps) {
       {showMarketIntelligence && (
         <MarketIntelligenceDashboard
           onClose={() => setShowMarketIntelligence(false)}
-          userTier={authService.getCurrentUser()?.tier as 'free' | 'professional' | 'enterprise_pro' | 'business'}
+          userTier={
+            authService.getCurrentUser()?.tier as
+              | "free"
+              | "professional"
+              | "enterprise_pro"
+              | "business"
+          }
         />
       )}
 
       {/* Vendor Sponsorship Marketplace */}
       {showVendorSponsorship && (
-        <VendorSponsorship
-          onClose={() => setShowVendorSponsorship(false)}
-        />
+        <VendorSponsorship onClose={() => setShowVendorSponsorship(false)} />
       )}
 
       {/* Privacy Policy */}
-      {showPrivacyPolicy && (
-        <PrivacyPolicy
-          onClose={() => setShowPrivacyPolicy(false)}
-        />
-      )}
+      {showPrivacyPolicy && <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />}
 
       {/* Terms of Service */}
-      {showTermsOfService && (
-        <TermsOfService
-          onClose={() => setShowTermsOfService(false)}
-        />
-      )}
+      {showTermsOfService && <TermsOfService onClose={() => setShowTermsOfService(false)} />}
 
       {/* Security & Privacy Settings */}
       {showSecuritySettings && (
-        <SecurityPrivacySettings
-          onClose={() => setShowSecuritySettings(false)}
-        />
+        <SecurityPrivacySettings onClose={() => setShowSecuritySettings(false)} />
       )}
 
       {/* System Health Dashboard */}
-      {showSystemHealth && (
-        <SystemHealth
-          onClose={() => setShowSystemHealth(false)}
-        />
-      )}
+      {showSystemHealth && <SystemHealth onClose={() => setShowSystemHealth(false)} />}
 
       {/* Public Status Page */}
-      {showStatusPage && (
-        <StatusPage
-          onClose={() => setShowStatusPage(false)}
-        />
-      )}
+      {showStatusPage && <StatusPage onClose={() => setShowStatusPage(false)} />}
 
       {/* Utility Rates Manager */}
       {showUtilityRates && (
@@ -525,9 +627,12 @@ export default function ModalManager(props: ModalManagerProps) {
           onClose={() => setShowUtilityRates(false)}
           onSelectRate={(rate, rateType) => {
             // Apply selected utility rate to the quote
-            const selectedRate = rateType === 'residential' ? rate.residentialRate :
-                                rateType === 'commercial' ? rate.commercialRate :
-                                rate.industrialRate;
+            const selectedRate =
+              rateType === "residential"
+                ? rate.residentialRate
+                : rateType === "commercial"
+                  ? rate.commercialRate
+                  : rate.industrialRate;
             setValueKwh(selectedRate);
             alert(`Utility rate updated to $${selectedRate.toFixed(3)}/kWh from ${rate.utility}`);
           }}
@@ -543,7 +648,7 @@ export default function ModalManager(props: ModalManagerProps) {
             alert(`Template "${template.name}" selected! Quote generation will use this template.`);
             // Template will be used when generating the quote document
           }}
-          userId={authService.getCurrentUser()?.email || 'guest'}
+          userId={authService.getCurrentUser()?.email || "guest"}
         />
       )}
 
@@ -553,10 +658,12 @@ export default function ModalManager(props: ModalManagerProps) {
           onClose={() => setShowPricingPresets(false)}
           onSelectPreset={(preset) => {
             // Apply preset pricing to quote builder
-            alert(`Pricing preset "${preset.name}" applied!\n\nBattery: $${preset.battery.pricePerKWh}/kWh\nInverter: $${preset.inverter.pricePerKW}/kW\n${preset.epc.enabled ? 'EPC fees included' : ''}`);
+            alert(
+              `Pricing preset "${preset.name}" applied!\n\nBattery: $${preset.battery.pricePerKWh}/kWh\nInverter: $${preset.inverter.pricePerKW}/kW\n${preset.epc.enabled ? "EPC fees included" : ""}`
+            );
             // Pricing will be applied to calculations
           }}
-          userId={authService.getCurrentUser()?.email || 'guest'}
+          userId={authService.getCurrentUser()?.email || "guest"}
         />
       )}
 
@@ -564,10 +671,10 @@ export default function ModalManager(props: ModalManagerProps) {
       {showReviewWorkflow && (
         <QuoteReviewWorkflow
           onClose={() => setShowReviewWorkflow(false)}
-          quoteId={`quote-${quoteName.replace(/\s+/g, '-').toLowerCase()}`}
+          quoteId={`quote-${quoteName.replace(/\s+/g, "-").toLowerCase()}`}
           quoteName={quoteName}
-          userId={authService.getCurrentUser()?.email || 'guest'}
-          userName={authService.getCurrentUser()?.email || 'Guest User'}
+          userId={authService.getCurrentUser()?.email || "guest"}
+          userName={authService.getCurrentUser()?.email || "Guest User"}
           onStatusChange={(status) => {
             setCurrentQuoteStatus(status);
           }}
@@ -610,10 +717,7 @@ export default function ModalManager(props: ModalManagerProps) {
       />
 
       {/* AI Chat Assistant Modal */}
-      <AIChatModal
-        isOpen={showChatModal}
-        onClose={() => setShowChatModal(false)}
-      />
+      <AIChatModal isOpen={showChatModal} onClose={() => setShowChatModal(false)} />
     </>
   );
 }
