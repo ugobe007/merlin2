@@ -14,7 +14,7 @@ import { buildModalManagerProps } from "../utils/modalProps";
 import { useBessQuoteBuilder } from "../hooks/useBessQuoteBuilder";
 // import { saveAs } from "file-saver"; // Unused
 // import { UTILITY_RATES } from "../utils/energyCalculations"; // Unused
-import { authService } from "../services/authService";
+import { authService } from "@/services/authService";
 // import WordExportService from "../services/export/WordExportService"; // Unused
 import HeroSection from "./sections/HeroSection";
 import MainQuoteForm from "./forms/MainQuoteForm";
