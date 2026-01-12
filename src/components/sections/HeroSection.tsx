@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import type { UseCaseData } from '../UseCaseROI';
+import React, { useState, useEffect } from "react";
+import type { UseCaseData } from "../UseCaseROI";
 // QuoteBuilderLanding moved to legacy - using wizard v5
-import RealWorldApplicationModal from '../modals/RealWorldApplicationModal';
-import { QuoteEngine } from '@/core/calculations';
+import RealWorldApplicationModal from "../modals/RealWorldApplicationModal";
+import { QuoteEngine } from "@/core/calculations";
 import merlinImage from "../../assets/images/new_profile_merlin.png";
-import { MethodologyStatement } from '../shared/IndustryComplianceBadges';
-import { TrueQuoteModal } from '../shared/TrueQuoteModal';
-import badgeGoldIcon from '../../assets/images/badge_gold_icon.jpg';
-import badgeIcon from '../../assets/images/badge_icon.jpg';
+import { MethodologyStatement } from "../shared/IndustryComplianceBadges";
+import { TrueQuoteModal } from "../shared/TrueQuoteModal";
+import badgeGoldIcon from "../../assets/images/badge_gold_icon.jpg";
+import badgeIcon from "../../assets/images/badge_icon.jpg";
 
 // Marketing constants for display-only calculations (hero stats, not quotes)
-import { COST_MULTIPLIERS } from '@/constants/marketing';
+import { COST_MULTIPLIERS } from "@/constants/marketing";
 
 // Import use case images
 import carWashValet from "../../assets/images/car_wash_valet.jpg";
@@ -49,221 +49,221 @@ import college3 from "../../assets/images/college_3.jpg";
 // Hero use cases with real financial data - Diverse Industries (Alternating Pattern)
 const heroUseCases = [
   {
-    id: 'hotel-luxury',
-    name: 'Luxury Hotel',
+    id: "hotel-luxury",
+    name: "Luxury Hotel",
     image: hotelHolidayInn2,
-    savings: '$1.2M',
-    payback: '1.1 yrs',
-    roi: '920%',
-    systemSize: '2.0 MW / 8 MWh'
+    savings: "$1.2M",
+    payback: "1.1 yrs",
+    roi: "920%",
+    systemSize: "2.0 MW / 8 MWh",
   },
   {
-    id: 'data-center-enterprise',
-    name: 'Enterprise Data Center',
+    id: "data-center-enterprise",
+    name: "Enterprise Data Center",
     image: dataCenter1,
-    savings: '$2.8M',
-    payback: '1.2 yrs',
-    roi: '840%',
-    systemSize: '5.0 MW / 20 MWh'
+    savings: "$2.8M",
+    payback: "1.2 yrs",
+    roi: "840%",
+    systemSize: "5.0 MW / 20 MWh",
   },
   {
-    id: 'car-wash-tunnel',
-    name: 'Tunnel Car Wash',
+    id: "car-wash-tunnel",
+    name: "Tunnel Car Wash",
     image: carWashValet,
-    savings: '$156K',
-    payback: '1.8 yrs',
-    roi: '560%',
-    systemSize: '0.65 MW / 2.6 MWh'
+    savings: "$156K",
+    payback: "1.8 yrs",
+    roi: "560%",
+    systemSize: "0.65 MW / 2.6 MWh",
   },
   {
-    id: 'ev-charging',
-    name: 'EV Charging Hub',
+    id: "ev-charging",
+    name: "EV Charging Hub",
     image: evChargingStationImage,
-    savings: '$8.7M',
-    payback: '6 mo',
-    roi: '2,400%',
-    systemSize: '5.0 MW / 20 MWh'
+    savings: "$8.7M",
+    payback: "6 mo",
+    roi: "2,400%",
+    systemSize: "5.0 MW / 20 MWh",
   },
   {
-    id: 'hospital',
-    name: 'Hospital',
+    id: "hospital",
+    name: "Hospital",
     image: hospital3Image,
-    savings: '$890K',
-    payback: '1.8 yrs',
-    roi: '560%',
-    systemSize: '1.5 MW / 6 MWh'
+    savings: "$890K",
+    payback: "1.8 yrs",
+    roi: "560%",
+    systemSize: "1.5 MW / 6 MWh",
   },
   {
-    id: 'hotel-resort',
-    name: 'Resort & Casino',
+    id: "hotel-resort",
+    name: "Resort & Casino",
     image: hotelHolidayInn3,
-    savings: '$1.6M',
-    payback: '0.9 yrs',
-    roi: '1,100%',
-    systemSize: '2.5 MW / 10 MWh'
+    savings: "$1.6M",
+    payback: "0.9 yrs",
+    roi: "1,100%",
+    systemSize: "2.5 MW / 10 MWh",
   },
   {
-    id: 'data-center-colocation',
-    name: 'Colocation Facility',
+    id: "data-center-colocation",
+    name: "Colocation Facility",
     image: dataCenter2,
-    savings: '$1.9M',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '3.5 MW / 14 MWh'
+    savings: "$1.9M",
+    payback: "1.4 yrs",
+    roi: "720%",
+    systemSize: "3.5 MW / 14 MWh",
   },
   {
-    id: 'car-wash-auto',
-    name: 'Automated Car Wash',
+    id: "car-wash-auto",
+    name: "Automated Car Wash",
     image: carWash1,
-    savings: '$145K',
-    payback: '1.9 yrs',
-    roi: '530%',
-    systemSize: '0.6 MW / 2.4 MWh'
+    savings: "$145K",
+    payback: "1.9 yrs",
+    roi: "530%",
+    systemSize: "0.6 MW / 2.4 MWh",
   },
   {
-    id: 'airport',
-    name: 'Regional Airport',
+    id: "airport",
+    name: "Regional Airport",
     image: airportImage,
-    savings: '$2.1M',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '4.0 MW / 16 MWh'
+    savings: "$2.1M",
+    payback: "1.4 yrs",
+    roi: "720%",
+    systemSize: "4.0 MW / 16 MWh",
   },
   {
-    id: 'hotel-boutique',
-    name: 'Boutique Hotel',
+    id: "hotel-boutique",
+    name: "Boutique Hotel",
     image: hotelHolidayInn1,
-    savings: '$890K',
-    payback: '1.3 yrs',
-    roi: '780%',
-    systemSize: '1.5 MW / 6 MWh'
+    savings: "$890K",
+    payback: "1.3 yrs",
+    roi: "780%",
+    systemSize: "1.5 MW / 6 MWh",
   },
   {
-    id: 'data-center-hyperscale',
-    name: 'Hyperscale Data Center',
+    id: "data-center-hyperscale",
+    name: "Hyperscale Data Center",
     image: dataCenter3,
-    savings: '$4.2M',
-    payback: '1.1 yrs',
-    roi: '930%',
-    systemSize: '8.0 MW / 32 MWh'
+    savings: "$4.2M",
+    payback: "1.1 yrs",
+    roi: "930%",
+    systemSize: "8.0 MW / 32 MWh",
   },
   {
-    id: 'ev-hotel',
-    name: 'Hotel + EV Charging',
+    id: "ev-hotel",
+    name: "Hotel + EV Charging",
     image: evChargingHotelImage,
-    savings: '$560K',
-    payback: '1.2 yrs',
-    roi: '830%',
-    systemSize: '1.2 MW / 4.8 MWh'
+    savings: "$560K",
+    payback: "1.2 yrs",
+    roi: "830%",
+    systemSize: "1.2 MW / 4.8 MWh",
   },
   {
-    id: 'hospital-urgent-care',
-    name: 'Urgent Care Center',
+    id: "hospital-urgent-care",
+    name: "Urgent Care Center",
     image: hospitalImage,
-    savings: '$420K',
-    payback: '2.0 yrs',
-    roi: '500%',
-    systemSize: '0.8 MW / 3.2 MWh'
+    savings: "$420K",
+    payback: "2.0 yrs",
+    roi: "500%",
+    systemSize: "0.8 MW / 3.2 MWh",
   },
   {
-    id: 'ev-charging-public',
-    name: 'Public EV Charging Network',
+    id: "ev-charging-public",
+    name: "Public EV Charging Network",
     image: evChargingStationImage,
-    savings: '$3.2M',
-    payback: '0.8 yrs',
-    roi: '1,250%',
-    systemSize: '3.0 MW / 12 MWh'
+    savings: "$3.2M",
+    payback: "0.8 yrs",
+    roi: "1,250%",
+    systemSize: "3.0 MW / 12 MWh",
   },
   {
-    id: 'hospital-medical-center',
-    name: 'Medical Center',
+    id: "hospital-medical-center",
+    name: "Medical Center",
     image: hospital2Image,
-    savings: '$1.1M',
-    payback: '1.5 yrs',
-    roi: '670%',
-    systemSize: '2.0 MW / 8 MWh'
+    savings: "$1.1M",
+    payback: "1.5 yrs",
+    roi: "670%",
+    systemSize: "2.0 MW / 8 MWh",
   },
   {
-    id: 'manufacturing-plant',
-    name: 'Manufacturing Plant',
+    id: "manufacturing-plant",
+    name: "Manufacturing Plant",
     image: manufacturing1,
-    savings: '$1.8M',
-    payback: '1.3 yrs',
-    roi: '770%',
-    systemSize: '3.5 MW / 14 MWh'
+    savings: "$1.8M",
+    payback: "1.3 yrs",
+    roi: "770%",
+    systemSize: "3.5 MW / 14 MWh",
   },
   {
-    id: 'logistics-warehouse',
-    name: 'Logistics Center',
+    id: "logistics-warehouse",
+    name: "Logistics Center",
     image: logistics1,
-    savings: '$950K',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '2.0 MW / 8 MWh'
+    savings: "$950K",
+    payback: "1.4 yrs",
+    roi: "720%",
+    systemSize: "2.0 MW / 8 MWh",
   },
   {
-    id: 'office-building',
-    name: 'Office Building',
+    id: "office-building",
+    name: "Office Building",
     image: officeBuilding1,
-    savings: '$680K',
-    payback: '1.6 yrs',
-    roi: '630%',
-    systemSize: '1.2 MW / 4.8 MWh'
+    savings: "$680K",
+    payback: "1.6 yrs",
+    roi: "630%",
+    systemSize: "1.2 MW / 4.8 MWh",
   },
   {
-    id: 'indoor-farm',
-    name: 'Indoor Farm',
+    id: "indoor-farm",
+    name: "Indoor Farm",
     image: indoorFarm1,
-    savings: '$420K',
-    payback: '1.9 yrs',
-    roi: '530%',
-    systemSize: '0.8 MW / 3.2 MWh'
+    savings: "$420K",
+    payback: "1.9 yrs",
+    roi: "530%",
+    systemSize: "0.8 MW / 3.2 MWh",
   },
   {
-    id: 'airport-regional-2',
-    name: 'Regional Airport',
+    id: "airport-regional-2",
+    name: "Regional Airport",
     image: airport1,
-    savings: '$2.1M',
-    payback: '1.4 yrs',
-    roi: '720%',
-    systemSize: '4.0 MW / 16 MWh'
+    savings: "$2.1M",
+    payback: "1.4 yrs",
+    roi: "720%",
+    systemSize: "4.0 MW / 16 MWh",
   },
   {
-    id: 'manufacturing-factory',
-    name: 'Factory',
+    id: "manufacturing-factory",
+    name: "Factory",
     image: manufacturing2,
-    savings: '$1.5M',
-    payback: '1.5 yrs',
-    roi: '670%',
-    systemSize: '2.8 MW / 11.2 MWh'
+    savings: "$1.5M",
+    payback: "1.5 yrs",
+    roi: "670%",
+    systemSize: "2.8 MW / 11.2 MWh",
   },
   {
-    id: 'logistics-distribution',
-    name: 'Distribution Center',
+    id: "logistics-distribution",
+    name: "Distribution Center",
     image: logistics2,
-    savings: '$1.2M',
-    payback: '1.3 yrs',
-    roi: '770%',
-    systemSize: '2.5 MW / 10 MWh'
+    savings: "$1.2M",
+    payback: "1.3 yrs",
+    roi: "770%",
+    systemSize: "2.5 MW / 10 MWh",
   },
   {
-    id: 'college-university',
-    name: 'College & University',
+    id: "college-university",
+    name: "College & University",
     image: college1,
-    savings: '$1.4M',
-    payback: '1.2 yrs',
-    roi: '830%',
-    systemSize: '2.8 MW / 11.2 MWh'
+    savings: "$1.4M",
+    payback: "1.2 yrs",
+    roi: "830%",
+    systemSize: "2.8 MW / 11.2 MWh",
   },
   {
-    id: 'college-campus',
-    name: 'University Campus',
+    id: "college-campus",
+    name: "University Campus",
     image: college3,
-    savings: '$980K',
-    payback: '1.5 yrs',
-    roi: '670%',
-    systemSize: '2.0 MW / 8 MWh'
-  }
+    savings: "$980K",
+    payback: "1.5 yrs",
+    roi: "670%",
+    systemSize: "2.0 MW / 8 MWh",
+  },
 ];
 
 interface HeroSectionProps {
@@ -274,7 +274,7 @@ interface HeroSectionProps {
   setShowCostSavingsModal: (show: boolean) => void;
   setShowRevenueModal: (show: boolean) => void;
   setShowSustainabilityModal: (show: boolean) => void;
-  setCurrentQuote: (quote: any) => void;
+  setCurrentQuote: (quote: unknown) => void;
   setShowQuotePreview: (show: boolean) => void;
   selectedCountry: string;
   bosPercent: number;
@@ -287,30 +287,33 @@ interface HeroSectionProps {
 
 export default function HeroSection({
   setShowAbout,
-  setShowJoinModal,
+  setShowJoinModal: _setShowJoinModal,
   setShowSmartWizard,
   setShowAdvancedQuoteBuilder,
-  setShowCostSavingsModal,
-  setShowRevenueModal,
-  setShowSustainabilityModal,
+  setShowCostSavingsModal: _setShowCostSavingsModal,
+  setShowRevenueModal: _setShowRevenueModal,
+  setShowSustainabilityModal: _setShowSustainabilityModal,
   setCurrentQuote,
   setShowQuotePreview,
   selectedCountry,
   bosPercent,
   epcPercent,
-  pcsKw,
-  setShowPowerAdjustmentModal,
-  setSelectedUseCaseForAdjustment
+  pcsKw: _pcsKw,
+  setShowPowerAdjustmentModal: _setShowPowerAdjustmentModal,
+  setSelectedUseCaseForAdjustment: _setSelectedUseCaseForAdjustment,
 }: HeroSectionProps) {
-  const [showQuoteBuilderLanding, setShowQuoteBuilderLanding] = useState(false);
+  const [, setShowQuoteBuilderLanding] = useState(false); // Only setter used
   const [selectedUseCaseForQuote, setSelectedUseCaseForQuote] = useState<UseCaseData | null>(null);
   const [showRealWorldModal, setShowRealWorldModal] = useState(false);
-  const [selectedApplication, setSelectedApplication] = useState<'hotel' | 'data-center' | 'ev-charging'>('hotel');
+  const [selectedApplication] = useState<"hotel" | "data-center" | "ev-charging">("hotel");
+  void selectedApplication; // Explicitly mark as intentionally unused if not used later
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showUseCaseDetail, setShowUseCaseDetail] = useState(false);
-  const [selectedHeroUseCase, setSelectedHeroUseCase] = useState<typeof heroUseCases[0] | null>(null);
-  
+  const [selectedHeroUseCase, setSelectedHeroUseCase] = useState<(typeof heroUseCases)[0] | null>(
+    null
+  );
+
   // Merlin Intelligence Engine popup states
   const [activeInfoPopup, setActiveInfoPopup] = useState<string | null>(null);
   const [showMerlinVideo, setShowMerlinVideo] = useState(false);
@@ -324,32 +327,32 @@ export default function HeroSection({
     return () => clearInterval(interval);
   }, []);
 
-  const handleLoadTemplate = (useCase: UseCaseData) => {
+  const _handleLoadTemplate = (useCase: UseCaseData) => {
     // Set the selected use case and show the QuoteBuilderLanding modal
     setSelectedUseCaseForQuote(useCase);
-    setShowQuoteBuilderLanding(true);
+    setShowQuoteBuilderLanding(true); // Used by handler, even though _showQuoteBuilderLanding is unused
   };
 
-  const handleGenerateQuote = async () => {
+  const _handleGenerateQuote = async () => {
     if (!selectedUseCaseForQuote) return;
-    
+
     const uc = selectedUseCaseForQuote;
-    
+
     // ✅ SSOT: Use QuoteEngine.generateQuote() for actual quote generation
     // This ensures quote preview matches what user would get from wizard
     try {
       const quoteResult = await QuoteEngine.generateQuote({
         storageSizeMW: uc.systemSizeMW,
         durationHours: uc.duration,
-        location: selectedCountry || 'United States',
+        location: selectedCountry || "United States",
         electricityRate: 0.15, // Default rate - QuoteEngine handles regional adjustments
-        useCase: uc.industry.toLowerCase().replace(/ /g, '-'),
-        gridConnection: 'on-grid',
+        useCase: uc.industry.toLowerCase().replace(/ /g, "-"),
+        gridConnection: "on-grid",
         solarMW: 0,
         windMW: 0,
         generatorMW: 0,
       });
-      
+
       // Create quote object from SSOT result
       // Map equipment breakdown to cost structure expected by QuotePreviewModal
       const generatedQuote = {
@@ -361,10 +364,10 @@ export default function HeroSection({
         solarMW: 0,
         windMW: 0,
         generatorMW: 0,
-        gridConnection: 'On-grid',
+        gridConnection: "On-grid",
         application: uc.industry,
-        location: selectedCountry || 'United States',
-        warranty: '10 years',
+        location: selectedCountry || "United States",
+        warranty: "10 years",
         pcsIncluded: true,
         costs: {
           batterySystem: quoteResult.equipment.batteries.totalCost,
@@ -381,20 +384,24 @@ export default function HeroSection({
           generatorControls: 0,
           bos: Math.round(quoteResult.costs.equipmentCost * (bosPercent / 100)),
           epc: Math.round(quoteResult.costs.equipmentCost * (epcPercent / 100)),
-          tariffs: Math.round(quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.tariffPercent / 100)),
-          shipping: Math.round(quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.shippingPercent / 100)),
-          grandTotal: quoteResult.costs.netCost
+          tariffs: Math.round(
+            quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.tariffPercent / 100)
+          ),
+          shipping: Math.round(
+            quoteResult.costs.totalProjectCost * (COST_MULTIPLIERS.shippingPercent / 100)
+          ),
+          grandTotal: quoteResult.costs.netCost,
         },
         annualSavings: quoteResult.financials.annualSavings,
-        paybackPeriod: quoteResult.financials.paybackYears
+        paybackPeriod: quoteResult.financials.paybackYears,
       };
-      
+
       // Close landing modal and show quote preview with download option
       setShowQuoteBuilderLanding(false);
       setCurrentQuote(generatedQuote);
       setShowQuotePreview(true);
     } catch (error) {
-      console.error('Error generating quote:', error);
+      console.error("Error generating quote:", error);
       // Fallback: redirect to wizard for proper quote generation
       handleCustomizeSystem();
     }
@@ -402,39 +409,39 @@ export default function HeroSection({
 
   const handleCustomizeSystem = () => {
     if (!selectedUseCaseForQuote) return;
-    
+
     // Store use case data and start from step 1
     const wizardData = {
-      selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, '-'),
+      selectedTemplate: selectedUseCaseForQuote.industry.toLowerCase().replace(/ /g, "-"),
       storageSizeMW: selectedUseCaseForQuote.systemSizeMW,
       durationHours: selectedUseCaseForQuote.duration,
       location: selectedCountry,
       jumpToStep: 1, // Start from beginning for customization
-      useCase: selectedUseCaseForQuote
+      useCase: selectedUseCaseForQuote,
     };
-    
-    localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
+
+    localStorage.setItem("merlin_wizard_quickstart", JSON.stringify(wizardData));
     setShowQuoteBuilderLanding(false);
     setShowSmartWizard(true);
   };
 
-  const handleCancelQuoteBuilder = () => {
+  const _handleCancelQuoteBuilder = () => {
     setShowQuoteBuilderLanding(false);
     setSelectedUseCaseForQuote(null);
   };
 
-  const handleLoadTemplate_OLD = (useCase: UseCaseData) => {
+  const _handleLoadTemplate_OLD = (useCase: UseCaseData) => {
     // Store use case data in localStorage for wizard to pick up
     const wizardData = {
-      selectedTemplate: useCase.industry.toLowerCase().replace(' ', '-'),
+      selectedTemplate: useCase.industry.toLowerCase().replace(" ", "-"),
       storageSizeMW: useCase.systemSizeMW,
       durationHours: useCase.duration,
       location: selectedCountry,
       jumpToStep: 5, // Go directly to quote summary
-      useCase: useCase
+      useCase: useCase,
     };
-    
-    localStorage.setItem('merlin_wizard_quickstart', JSON.stringify(wizardData));
+
+    localStorage.setItem("merlin_wizard_quickstart", JSON.stringify(wizardData));
     setShowSmartWizard(true);
   };
 
@@ -442,444 +449,515 @@ export default function HeroSection({
     <>
       {/* ========== MERLIN HERO - POLISHED PROFESSIONAL DESIGN ========== */}
       <section className="relative py-8 px-4 md:px-8 lg:px-12">
-        
         {/* Hero Card with rounded corners and drop shadow */}
-        <div 
+        <div
           className="relative min-h-[85vh] overflow-hidden rounded-3xl"
           style={{
-            boxShadow: '0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(91,33,182,0.3)'
+            boxShadow: "0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(91,33,182,0.3)",
           }}
         >
-        
-        {/* Purple gradient background - Merlin brand */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-950 rounded-3xl"></div>
-        
-        {/* Subtle ambient glow */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div 
-            className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)' }}
-          />
-          <div 
-            className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-15"
-            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)' }}
-          />
-        </div>
+          {/* Purple gradient background - Merlin brand */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-950 rounded-3xl"></div>
 
-        <div className="relative z-10 min-h-screen">
-          {/* ========== NEW HERO DESIGN - Two Column Grid ========== */}
-          <div 
-            className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch"
-          >
-            
-            {/* ========== LEFT PANEL - Darker Purple Gradient ========== */}
-            <div 
-              className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
+          {/* Subtle ambient glow */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-20"
               style={{
-                background: 'linear-gradient(165deg, #2d1a54 0%, #3d2272 40%, #4a2888 70%, #3d2272 100%)',
-                boxShadow: '20px 0 80px rgba(0,0,0,0.5)'
+                background: "radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)",
               }}
-            >
-              
-              {/* AI Badge */}
-              <div 
-                className="inline-flex items-center gap-2 mb-8"
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  padding: '10px 18px',
-                  borderRadius: '100px',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  color: '#fff',
-                  width: 'fit-content'
-                }}
-              >
-                <span style={{ fontSize: '14px' }}>✨</span>
-                <span>AI-Powered Energy Solutions</span>
-              </div>
+            />
+            <div
+              className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-15"
+              style={{
+                background: "radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)",
+              }}
+            />
+          </div>
 
-              {/* Intro Text */}
-              <p 
-                className="mb-4 lg:text-[18px] md:text-[22px] text-[18px]"
+          <div className="relative z-10 min-h-screen">
+            {/* ========== NEW HERO DESIGN - Two Column Grid ========== */}
+            <div className="grid min-h-screen lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch">
+              {/* ========== LEFT PANEL - Darker Purple Gradient ========== */}
+              <div
+                className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
                 style={{
-                  fontWeight: 500,
-                  color: 'rgba(255,255,255,0.85)',
-                  lineHeight: 1.5
+                  background:
+                    "linear-gradient(165deg, #2d1a54 0%, #3d2272 40%, #4a2888 70%, #3d2272 100%)",
+                  boxShadow: "20px 0 80px rgba(0,0,0,0.5)",
                 }}
               >
-                Welcome to <span style={{ color: '#fbbf24', fontWeight: 800 }}>Merlin Energy</span> — Advanced AI powered energy solutions and services company.
-              </p>
-
-              {/* Main Headline - Improved Typography */}
-              <h1 
-                className="mb-8 lg:text-[72px] md:text-[48px] text-[36px]"
-                style={{
-                  fontWeight: 900,
-                  lineHeight: 0.95,
-                  letterSpacing: '-0.02em',
-                  color: '#fff',
-                  fontKerning: 'normal',
-                  textRendering: 'optimizeLegibility',
-                  WebkitFontSmoothing: 'antialiased',
-                  MozOsxFontSmoothing: 'grayscale'
-                }}
-              >
-                Slash Your
-                <span className="block" style={{ color: '#fbbf24', letterSpacing: '-0.025em' }}>
-                  Energy Costs
-                </span>
-              </h1>
-
-              {/* Subheadline with TrueQuote badge */}
-              <div 
-                className="mb-8"
-                style={{
-                  fontSize: '20px',
-                  color: 'rgba(255,255,255,0.85)',
-                  lineHeight: 1.7,
-                  maxWidth: '480px'
-                }}
-              >
-                Get your custom energy savings quote in 5 easy steps. See exactly how much you'll save with battery storage.{' '}
-                <button
-                  onClick={() => setShowTrueQuoteModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105"
+                {/* AI Badge */}
+                <div
+                  className="inline-flex items-center gap-2 mb-8"
                   style={{
-                    background: 'linear-gradient(135deg, #1C1917 0%, #292524 100%)',
-                    border: '1.5px solid #D97706',
-                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.3)',
-                    fontSize: '11px',
-                    verticalAlign: 'middle',
-                    display: 'inline-flex',
-                    marginLeft: '4px',
+                    background: "rgba(255,255,255,0.12)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    padding: "10px 18px",
+                    borderRadius: "100px",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    color: "#fff",
+                    width: "fit-content",
                   }}
                 >
-                  <img 
-                    src={badgeGoldIcon} 
-                    alt="TrueQuote"
-                    className="w-4 h-4 object-contain"
-                  />
-                  <span style={{ color: '#FBBF24', fontWeight: 600 }}>TrueQuote™</span>
+                  <span style={{ fontSize: "14px" }}>✨</span>
+                  <span>AI-Powered Energy Solutions</span>
+                </div>
+
+                {/* Intro Text */}
+                <p
+                  className="mb-4 lg:text-[18px] md:text-[22px] text-[18px]"
+                  style={{
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.85)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Welcome to{" "}
+                  <span style={{ color: "#fbbf24", fontWeight: 800 }}>Merlin Energy</span> —
+                  Advanced AI powered energy solutions and services company.
+                </p>
+
+                {/* Main Headline - Improved Typography */}
+                <h1
+                  className="mb-8 lg:text-[72px] md:text-[48px] text-[36px]"
+                  style={{
+                    fontWeight: 900,
+                    lineHeight: 0.95,
+                    letterSpacing: "-0.02em",
+                    color: "#fff",
+                    fontKerning: "normal",
+                    textRendering: "optimizeLegibility",
+                    WebkitFontSmoothing: "antialiased",
+                    MozOsxFontSmoothing: "grayscale",
+                  }}
+                >
+                  Slash Your
+                  <span className="block" style={{ color: "#fbbf24", letterSpacing: "-0.025em" }}>
+                    Energy Costs
+                  </span>
+                </h1>
+
+                {/* Subheadline with TrueQuote badge */}
+                <div
+                  className="mb-8"
+                  style={{
+                    fontSize: "20px",
+                    color: "rgba(255,255,255,0.85)",
+                    lineHeight: 1.7,
+                    maxWidth: "480px",
+                  }}
+                >
+                  Get your custom energy savings quote in 5 easy steps. See exactly how much you'll
+                  save with battery storage.{" "}
+                  <button
+                    onClick={() => setShowTrueQuoteModal(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105"
+                    style={{
+                      background: "linear-gradient(135deg, #1C1917 0%, #292524 100%)",
+                      border: "1.5px solid #D97706",
+                      boxShadow: "0 2px 8px rgba(217, 119, 6, 0.3)",
+                      fontSize: "11px",
+                      verticalAlign: "middle",
+                      display: "inline-flex",
+                      marginLeft: "4px",
+                    }}
+                  >
+                    <img src={badgeGoldIcon} alt="TrueQuote" className="w-4 h-4 object-contain" />
+                    <span style={{ color: "#FBBF24", fontWeight: 600 }}>TrueQuote™</span>
+                  </button>
+                </div>
+
+                {/* CTA Button - Professional Typography */}
+                <button
+                  onClick={() => {
+                    // ✅ FIXED: Clear persisted wizard state to ensure fresh start at Step 1
+                    try {
+                      // Clear bufferService storage (uses 'merlin_wizard_buffer' key)
+                      localStorage.removeItem("merlin_wizard_buffer");
+                      sessionStorage.removeItem("merlin_wizard_buffer");
+                      // Also clear legacy keys just in case
+                      localStorage.removeItem("merlin-wizard-state");
+                      sessionStorage.removeItem("merlin-wizard-step");
+                      // Add URL parameter to force fresh start
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("fresh", "true");
+                      window.history.replaceState({}, "", url.toString());
+                      console.log("✅ Cleared wizard state for fresh start");
+                    } catch (e) {
+                      console.error("Failed to clear wizard state:", e);
+                    }
+                    setShowSmartWizard(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-2.5 mb-4 transition-all duration-300"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    border: "2px solid rgba(255, 255, 255, 0.25)",
+                    color: "#5B21B6",
+                    borderRadius: "16px",
+                    fontWeight: 900,
+                    fontSize: "20px",
+                    lineHeight: "1.2",
+                    letterSpacing: "-0.02em",
+                    fontKerning: "auto",
+                    textRendering: "optimizeLegibility",
+                    WebkitFontSmoothing: "antialiased",
+                    MozOsxFontSmoothing: "grayscale",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    WebkitTextStroke: "0.3px rgba(91, 33, 182, 0.3)",
+                    padding: "18px 40px",
+                    boxShadow:
+                      "0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)",
+                    textShadow: "0 1px 2px rgba(255,255,255,0.5)",
+                  }}
+                  aria-label="Start Saving with SmartWizard"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, rgba(56, 189, 248, 0.95) 0%, rgba(34, 211, 238, 0.95) 50%, rgba(34, 197, 94, 0.95) 100%)";
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.4)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 28px rgba(56, 189, 248, 0.5), 0 0 60px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255,255,255,0.4)";
+                    e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)";
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)";
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                  }}
+                >
+                  <span style={{ fontSize: "22px", lineHeight: "1" }}>✨</span>
+                  <span style={{ letterSpacing: "-0.01em", fontWeight: 900 }}>
+                    Get My Free Quote
+                  </span>
+                  <span style={{ fontSize: "20px", marginLeft: "2px" }}>→</span>
+                </button>
+
+                {/* ProQuote Panel - Advanced Configuration Option */}
+                <div
+                  className="mb-6 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
+                  onClick={() => setShowAdvancedQuoteBuilder(true)}
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)",
+                    border: "2px solid rgba(99, 102, 241, 0.5)",
+                    boxShadow:
+                      "0 8px 32px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255,255,255,0.05) inset",
+                    width: "100%",
+                    maxWidth: "460px",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <div className="px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={badgeIcon}
+                        alt="ProQuote Badge"
+                        className="w-10 h-10 flex-shrink-0 object-contain"
+                        style={{
+                          filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
+                        }}
+                      />
+                      <div>
+                        <div className="text-white font-bold text-sm flex items-center gap-2">
+                          ProQuote™
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 font-medium">
+                            PRO
+                          </span>
+                        </div>
+                        <div className="text-indigo-300/80 text-xs">
+                          Custom system configuration
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition-colors"
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                      }}
+                    >
+                      <span className="text-white/80 text-sm group-hover:text-white transition-colors">
+                        →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Merlin Link */}
+                <button
+                  onClick={() => setShowAbout(true)}
+                  className="inline-flex items-center gap-2 transition-all"
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: "15px",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "rgba(255,255,255,0.9)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+                  }}
+                >
+                  <span style={{ fontSize: "18px" }}>🧙</span>
+                  <span>About Merlin AI →</span>
                 </button>
               </div>
 
-              {/* CTA Button - Professional Typography */}
-              <button
-                onClick={() => {
-                  // ✅ FIXED: Clear persisted wizard state to ensure fresh start at Step 1
-                  try {
-                    localStorage.removeItem('merlin-wizard-state');
-                    sessionStorage.removeItem('merlin-wizard-step');
-                  } catch (e) {
-                    console.error('Failed to clear wizard state:', e);
-                  }
-                  setShowSmartWizard(true);
-                }}
-                className="inline-flex items-center justify-center gap-2.5 mb-4 transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid rgba(255, 255, 255, 0.25)',
-                  color: '#5B21B6',
-                  borderRadius: '16px',
-                  fontWeight: 900,
-                  fontSize: '20px',
-                  lineHeight: '1.2',
-                  letterSpacing: '-0.02em',
-                  fontKerning: 'auto',
-                  textRendering: 'optimizeLegibility',
-                  WebkitFontSmoothing: 'antialiased',
-                  MozOsxFontSmoothing: 'grayscale',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  WebkitTextStroke: '0.3px rgba(91, 33, 182, 0.3)',
-                  padding: '18px 40px',
-                  boxShadow: '0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)',
-                  textShadow: '0 1px 2px rgba(255,255,255,0.5)'
-                }}
-                aria-label="Start Saving with SmartWizard"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.95) 0%, rgba(34, 211, 238, 0.95) 50%, rgba(34, 197, 94, 0.95) 100%)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                  e.currentTarget.style.boxShadow = '0 6px 28px rgba(56, 189, 248, 0.5), 0 0 60px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255,255,255,0.4)';
-                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.85) 0%, rgba(34, 211, 238, 0.85) 50%, rgba(34, 197, 94, 0.85) 100%)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(56, 189, 248, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                }}
-              >
-                <span style={{ fontSize: '22px', lineHeight: '1' }}>✨</span>
-                <span style={{ letterSpacing: '-0.01em', fontWeight: 900 }}>Get My Free Quote</span>
-                <span style={{ fontSize: '20px', marginLeft: '2px' }}>→</span>
-              </button>
+              {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
+              <div className="relative overflow-hidden lg:h-full min-h-[500px]">
+                <div className="absolute inset-0">
+                  {heroUseCases.map((useCase, index) => (
+                    <div
+                      key={useCase.id}
+                      className={`absolute inset-0 transition-opacity duration-800 ${
+                        index === currentImageIndex ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
+                      <img
+                        src={useCase.image}
+                        alt={useCase.name}
+                        className="w-full h-full object-cover"
+                      />
 
-              {/* ProQuote Panel - Advanced Configuration Option */}
-              <div 
-                className="mb-6 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group"
-                onClick={() => setShowAdvancedQuoteBuilder(true)}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.9) 100%)',
-                  border: '2px solid rgba(99, 102, 241, 0.5)',
-                  boxShadow: '0 8px 32px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255,255,255,0.05) inset',
-                  width: '100%',
-                  maxWidth: '460px',
-                  backdropFilter: 'blur(8px)',
-                }}
-              >
-                <div className="px-4 py-3 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={badgeIcon} 
-                      alt="ProQuote Badge"
-                      className="w-10 h-10 flex-shrink-0 object-contain"
-                      style={{
-                        filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
-                      }}
-                    />
-                    <div>
-                      <div className="text-white font-bold text-sm flex items-center gap-2">
-                        ProQuote™
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 font-medium">PRO</span>
-                      </div>
-                      <div className="text-indigo-300/80 text-xs">Custom system configuration</div>
+                      {/* Purple overlay */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(99, 102, 241, 0.25) 30%, transparent 60%)",
+                        }}
+                      />
                     </div>
-                  </div>
-                  <div 
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition-colors"
+                  ))}
+                </div>
+
+                {/* Stats Card Overlay - Translucent Glassmorphism */}
+                {heroUseCases[currentImageIndex] && (
+                  <div
+                    className="absolute bottom-8 left-8 right-8 cursor-pointer transition-all hover:scale-[1.02]"
+                    onClick={() => {
+                      setSelectedHeroUseCase(heroUseCases[currentImageIndex]);
+                      setShowUseCaseDetail(true);
+                    }}
                     style={{
-                      background: 'rgba(255,255,255,0.1)',
+                      background: "rgba(15, 10, 35, 0.15)",
+                      backdropFilter: "blur(20px)",
+                      WebkitBackdropFilter: "blur(20px)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      borderRadius: "20px",
+                      padding: "24px 32px",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
                     }}
                   >
-                    <span className="text-white/80 text-sm group-hover:text-white transition-colors">→</span>
+                    <div className="flex items-center justify-between mb-5">
+                      <span style={{ fontSize: "22px", fontWeight: 700, color: "#fff" }}>
+                        {heroUseCases[currentImageIndex].name}
+                      </span>
+                      <div className="flex items-center gap-4">
+                        <span
+                          className="text-xs opacity-50 hover:opacity-100 transition-opacity"
+                          style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
+                        >
+                          Click for details →
+                        </span>
+                        <span
+                          style={{
+                            background: "rgba(255,255,255,0.1)",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            color: "rgba(255,255,255,0.8)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {heroUseCases[currentImageIndex].systemSize}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 md:gap-6">
+                      <div className="text-center">
+                        <div
+                          className="lg:text-[36px] md:text-[32px] text-[28px]"
+                          style={{ fontWeight: 800, marginBottom: "6px", color: "#fbbf24" }}
+                        >
+                          {heroUseCases[currentImageIndex].savings}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "rgba(255,255,255,0.5)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.03em",
+                          }}
+                        >
+                          Annual Savings
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div
+                          className="lg:text-[36px] md:text-[32px] text-[28px]"
+                          style={{ fontWeight: 800, marginBottom: "6px", color: "#fff" }}
+                        >
+                          {heroUseCases[currentImageIndex].payback}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "rgba(255,255,255,0.5)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.03em",
+                          }}
+                        >
+                          Payback
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div
+                          className="lg:text-[36px] md:text-[32px] text-[28px]"
+                          style={{ fontWeight: 800, marginBottom: "6px", color: "#4ade80" }}
+                        >
+                          {heroUseCases[currentImageIndex].roi}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "rgba(255,255,255,0.5)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.03em",
+                          }}
+                        >
+                          25-Year ROI
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                {/* Carousel Dots */}
+                <div className="absolute bottom-3 right-20 flex items-center gap-2 z-20">
+                  {heroUseCases.map((uc, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`rounded-full transition-all duration-300 cursor-pointer ${
+                        index === currentImageIndex
+                          ? "bg-[#fbbf24] w-8 h-2"
+                          : "bg-white/30 hover:bg-white/50 w-2 h-2"
+                      }`}
+                      title={uc.name}
+                    />
+                  ))}
                 </div>
-              </div>
 
-              {/* Merlin Link */}
-              <button
-                onClick={() => setShowAbout(true)}
-                className="inline-flex items-center gap-2 transition-all"
-                style={{
-                  color: 'rgba(255,255,255,0.6)',
-                  fontSize: '15px',
-                  textDecoration: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.9)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-                }}
-              >
-                <span style={{ fontSize: '18px' }}>🧙</span>
-                <span>About Merlin AI →</span>
-              </button>
-            </div>
-
-            {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
-            <div className="relative overflow-hidden lg:h-full min-h-[500px]">
-              <div className="absolute inset-0">
-                {heroUseCases.map((useCase, index) => (
-                  <div
-                    key={useCase.id}
-                    className={`absolute inset-0 transition-opacity duration-800 ${
-                      index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <img 
-                      src={useCase.image} 
-                      alt={useCase.name}
-                      className="w-full h-full object-cover"
-                    />
-                    
-                    {/* Purple overlay */}
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(99, 102, 241, 0.25) 30%, transparent 60%)'
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Stats Card Overlay - Translucent Glassmorphism */}
-              {heroUseCases[currentImageIndex] && (
-                <div 
-                  className="absolute bottom-8 left-8 right-8 cursor-pointer transition-all hover:scale-[1.02]"
-                  onClick={() => {
-                    setSelectedHeroUseCase(heroUseCases[currentImageIndex]);
-                    setShowUseCaseDetail(true);
-                  }}
+                {/* Settings Button */}
+                <button
+                  onClick={() => setShowAdvancedQuoteBuilder(true)}
+                  className="absolute bottom-3 right-6 w-11 h-11 flex items-center justify-center transition-all hover:rotate-45 cursor-pointer z-20"
                   style={{
-                    background: 'rgba(15, 10, 35, 0.15)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '20px',
-                    padding: '24px 32px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)'
+                    background: "rgba(139, 92, 246, 0.7)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "50%",
+                    color: "#fff",
+                    fontSize: "20px",
                   }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(139, 92, 246, 0.9)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(139, 92, 246, 0.7)";
+                  }}
+                  title="Advanced Settings"
                 >
-                  <div className="flex items-center justify-between mb-5">
-                    <span style={{ fontSize: '22px', fontWeight: 700, color: '#fff' }}>
-                      {heroUseCases[currentImageIndex].name}
-                    </span>
-                    <div className="flex items-center gap-4">
-                      <span 
-                        className="text-xs opacity-50 hover:opacity-100 transition-opacity"
-                        style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}
-                      >
-                        Click for details →
-                      </span>
-                      <span 
-                        style={{
-                          background: 'rgba(255,255,255,0.1)',
-                          padding: '8px 14px',
-                          borderRadius: '8px',
-                          fontSize: '13px',
-                          color: 'rgba(255,255,255,0.8)',
-                          fontWeight: 600
-                        }}
-                      >
-                        {heroUseCases[currentImageIndex].systemSize}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 md:gap-6">
-                    <div className="text-center">
-                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#fbbf24' }}>
-                        {heroUseCases[currentImageIndex].savings}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        Annual Savings
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#fff' }}>
-                        {heroUseCases[currentImageIndex].payback}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        Payback
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="lg:text-[36px] md:text-[32px] text-[28px]" style={{ fontWeight: 800, marginBottom: '6px', color: '#4ade80' }}>
-                        {heroUseCases[currentImageIndex].roi}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        25-Year ROI
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Carousel Dots */}
-              <div className="absolute bottom-3 right-20 flex items-center gap-2 z-20">
-                {heroUseCases.map((uc, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`rounded-full transition-all duration-300 cursor-pointer ${
-                      index === currentImageIndex 
-                        ? 'bg-[#fbbf24] w-8 h-2' 
-                        : 'bg-white/30 hover:bg-white/50 w-2 h-2'
-                    }`}
-                    title={uc.name}
-                  />
-                ))}
+                  ⚙
+                </button>
               </div>
-
-              {/* Settings Button */}
-              <button
-                onClick={() => setShowAdvancedQuoteBuilder(true)}
-                className="absolute bottom-3 right-6 w-11 h-11 flex items-center justify-center transition-all hover:rotate-45 cursor-pointer z-20"
-                style={{
-                  background: 'rgba(139, 92, 246, 0.7)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '50%',
-                  color: '#fff',
-                  fontSize: '20px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.9)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.7)';
-                }}
-                title="Advanced Settings"
-              >
-                ⚙
-              </button>
             </div>
           </div>
         </div>
-      </div>
       </section>
 
       {/* ========== THE MERLIN INTELLIGENCE ENGINE ========== */}
       <section className="py-24 px-4 md:px-8 lg:px-12 relative overflow-hidden">
         {/* Deep purple gradient background */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #4c1d95 0%, #6b21a8 30%, #7c3aed 60%, #8b5cf6 100%)'
+            background:
+              "linear-gradient(180deg, #4c1d95 0%, #6b21a8 30%, #7c3aed 60%, #8b5cf6 100%)",
           }}
         />
-        
+
         {/* Animated grid pattern overlay */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px'
+            backgroundSize: "50px 50px",
           }}
         />
-        
+
         {/* Glowing orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse" />
           <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-[80px]" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px]" />
         </div>
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
-          
           {/* Section Header */}
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-amber-500/20 backdrop-blur-sm rounded-full px-5 py-2 mb-8 border border-purple-400/30">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-purple-200 text-sm font-medium tracking-wide">POWERED BY ADVANCED AI</span>
+              <span className="text-purple-200 text-sm font-medium tracking-wide">
+                POWERED BY ADVANCED AI
+              </span>
             </div>
-            
+
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
               The Merlin Intelligence
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400">
                 Engine
               </span>
             </h2>
-            
+
             <p className="text-lg md:text-xl text-purple-200/80 max-w-3xl mx-auto leading-relaxed mb-8">
-              Stop guessing. Stop calling multiple vendors. Our AI analyzes <span className="text-amber-300 font-semibold">30+ industry configurations</span>, 
-              real utility rates, and <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build your optimal energy system in 5 easy steps.
+              Stop guessing. Stop calling multiple vendors. Our AI analyzes{" "}
+              <span className="text-amber-300 font-semibold">30+ industry configurations</span>,
+              real utility rates, and{" "}
+              <span className="text-cyan-300 font-semibold">NREL-validated pricing</span> to build
+              your optimal energy system in 5 easy steps.
             </p>
-            
+
             {/* Data Sources Badge */}
             <div className="flex justify-center">
               <div className="flex items-center gap-4 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                 <span className="text-sm text-purple-300 font-medium">Data sourced from:</span>
                 <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg border border-blue-400/30">NREL</span>
-                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm font-semibold rounded-lg border border-emerald-400/30">DOE</span>
-                  <span className="px-3 py-1 bg-orange-500/20 text-orange-300 text-sm font-semibold rounded-lg border border-orange-400/30">Sandia</span>
-                  <span className="px-3 py-1 bg-red-500/20 text-red-300 text-sm font-semibold rounded-lg border border-red-400/30">UL</span>
-                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm font-semibold rounded-lg border border-purple-400/30">IEEE</span>
-                  <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-sm font-semibold rounded-lg border border-cyan-400/30">EIA</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-sm font-semibold rounded-lg border border-blue-400/30">
+                    NREL
+                  </span>
+                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm font-semibold rounded-lg border border-emerald-400/30">
+                    DOE
+                  </span>
+                  <span className="px-3 py-1 bg-orange-500/20 text-orange-300 text-sm font-semibold rounded-lg border border-orange-400/30">
+                    Sandia
+                  </span>
+                  <span className="px-3 py-1 bg-red-500/20 text-red-300 text-sm font-semibold rounded-lg border border-red-400/30">
+                    UL
+                  </span>
+                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm font-semibold rounded-lg border border-purple-400/30">
+                    IEEE
+                  </span>
+                  <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-sm font-semibold rounded-lg border border-cyan-400/30">
+                    EIA
+                  </span>
                 </div>
               </div>
             </div>
@@ -887,109 +965,198 @@ export default function HeroSection({
 
           {/* Main Visual: AI System Diagram */}
           <div className="relative mb-20">
-            
             {/* Central AI Hub */}
             <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-0">
-              
               {/* Left Side - Inputs */}
               <div className="flex flex-col gap-6 lg:w-1/3">
                 {/* Input 1: Your Business */}
                 <div className="group relative">
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'facility' ? null : 'facility')}
+                  <div
+                    onClick={() =>
+                      setActiveInfoPopup(activeInfoPopup === "facility" ? null : "facility")
+                    }
                     className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: '0 0 30px rgba(139,92,246,0.15)' }}
+                    style={{ boxShadow: "0 0 30px rgba(139,92,246,0.15)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(139,92,246,0.5))' }}>🏢</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(139,92,246,0.5))" }}
+                      >
+                        🏢
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Your Facility</h4>
-                        <p className="text-purple-300/70 text-sm">Industry type, square footage, operating hours, peak demand</p>
+                        <p className="text-purple-300/70 text-sm">
+                          Industry type, square footage, operating hours, peak demand
+                        </p>
                       </div>
                     </div>
                     {/* Click indicator */}
-                    <div className="absolute top-2 right-2 text-purple-400/60 text-xs">Click to learn more</div>
+                    <div className="absolute top-2 right-2 text-purple-400/60 text-xs">
+                      Click to learn more
+                    </div>
                     {/* Connection line */}
-                    <div className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent" style={{ transform: 'translateX(100%)' }} />
+                    <div
+                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent"
+                      style={{ transform: "translateX(100%)" }}
+                    />
                   </div>
                   {/* Popup for Facility */}
-                  {activeInfoPopup === 'facility' && (
+                  {activeInfoPopup === "facility" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-purple-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">How Facility Analysis Works</h5>
-                      <p className="text-purple-200 text-sm mb-3">Merlin uses industry-specific power profiles from ASHRAE, CBECS, and Energy Star databases to understand your energy needs:</p>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Merlin uses industry-specific power profiles from ASHRAE, CBECS, and Energy
+                        Star databases to understand your energy needs:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Industry Type:</span> 30+ pre-configured profiles (hospitals, hotels, data centers, EV charging, manufacturing...)</li>
-                        <li>• <span className="text-white">Square Footage:</span> Calculates base load using industry W/sqft standards</li>
-                        <li>• <span className="text-white">Operating Hours:</span> Determines peak demand windows and TOU optimization</li>
-                        <li>• <span className="text-white">Peak Demand:</span> Sizes battery for maximum demand charge reduction</li>
+                        <li>
+                          • <span className="text-white">Industry Type:</span> 30+ pre-configured
+                          profiles (hospitals, hotels, data centers, EV charging, manufacturing...)
+                        </li>
+                        <li>
+                          • <span className="text-white">Square Footage:</span> Calculates base load
+                          using industry W/sqft standards
+                        </li>
+                        <li>
+                          • <span className="text-white">Operating Hours:</span> Determines peak
+                          demand windows and TOU optimization
+                        </li>
+                        <li>
+                          • <span className="text-white">Peak Demand:</span> Sizes battery for
+                          maximum demand charge reduction
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-cyan-300">💡 We know a hospital needs different power than a car wash!</div>
+                      <div className="mt-3 text-xs text-cyan-300">
+                        💡 We know a hospital needs different power than a car wash!
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Input 2: Location & Rates */}
                 <div className="group relative">
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'location' ? null : 'location')}
+                  <div
+                    onClick={() =>
+                      setActiveInfoPopup(activeInfoPopup === "location" ? null : "location")
+                    }
                     className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: '0 0 30px rgba(6,182,212,0.15)' }}
+                    style={{ boxShadow: "0 0 30px rgba(6,182,212,0.15)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(6,182,212,0.5))' }}>📍</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(6,182,212,0.5))" }}
+                      >
+                        📍
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Location & Utility</h4>
-                        <p className="text-purple-300/70 text-sm">Local utility rates, demand charges, TOU schedules</p>
+                        <p className="text-purple-300/70 text-sm">
+                          Local utility rates, demand charges, TOU schedules
+                        </p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2 text-cyan-400/60 text-xs">Click to learn more</div>
-                    <div className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent" style={{ transform: 'translateX(100%)' }} />
+                    <div className="absolute top-2 right-2 text-cyan-400/60 text-xs">
+                      Click to learn more
+                    </div>
+                    <div
+                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent"
+                      style={{ transform: "translateX(100%)" }}
+                    />
                   </div>
                   {/* Popup for Location */}
-                  {activeInfoPopup === 'location' && (
+                  {activeInfoPopup === "location" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-cyan-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">How Location & Utility Works</h5>
-                      <p className="text-purple-200 text-sm mb-3">Your location directly impacts savings potential and ROI:</p>
+                      <h5 className="text-amber-400 font-bold mb-2">
+                        How Location & Utility Works
+                      </h5>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Your location directly impacts savings potential and ROI:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Utility Rates:</span> We pull actual $/kWh rates for your region (CA has higher rates = bigger savings!)</li>
-                        <li>• <span className="text-white">Demand Charges:</span> $/kW charges that battery storage can dramatically reduce</li>
-                        <li>• <span className="text-white">TOU Schedules:</span> Time-of-use pricing lets you buy low, use high—battery arbitrage</li>
-                        <li>• <span className="text-white">Incentives:</span> State and local rebates stacked on top of 30% federal ITC</li>
+                        <li>
+                          • <span className="text-white">Utility Rates:</span> We pull actual $/kWh
+                          rates for your region (CA has higher rates = bigger savings!)
+                        </li>
+                        <li>
+                          • <span className="text-white">Demand Charges:</span> $/kW charges that
+                          battery storage can dramatically reduce
+                        </li>
+                        <li>
+                          • <span className="text-white">TOU Schedules:</span> Time-of-use pricing
+                          lets you buy low, use high—battery arbitrage
+                        </li>
+                        <li>
+                          • <span className="text-white">Incentives:</span> State and local rebates
+                          stacked on top of 30% federal ITC
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-emerald-300">📊 A facility in California vs. Texas can see 2-3x different savings!</div>
+                      <div className="mt-3 text-xs text-emerald-300">
+                        📊 A facility in California vs. Texas can see 2-3x different savings!
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Input 3: Goals */}
                 <div className="group relative">
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'goals' ? null : 'goals')}
+                  <div
+                    onClick={() => setActiveInfoPopup(activeInfoPopup === "goals" ? null : "goals")}
                     className="relative bg-gradient-to-br from-purple-900/90 to-indigo-950/90 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/30 hover:border-amber-400/50 transition-all cursor-pointer hover:scale-[1.02]"
-                    style={{ boxShadow: '0 0 30px rgba(16,185,129,0.15)' }}
+                    style={{ boxShadow: "0 0 30px rgba(16,185,129,0.15)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(16,185,129,0.5))' }}>🎯</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(16,185,129,0.5))" }}
+                      >
+                        🎯
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Your Goals</h4>
-                        <p className="text-purple-300/70 text-sm">Cost savings, backup power, sustainability, EV charging</p>
+                        <p className="text-purple-300/70 text-sm">
+                          Cost savings, backup power, sustainability, EV charging
+                        </p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">Click to learn more</div>
-                    <div className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent" style={{ transform: 'translateX(100%)' }} />
+                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">
+                      Click to learn more
+                    </div>
+                    <div
+                      className="hidden lg:block absolute right-0 top-1/2 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent"
+                      style={{ transform: "translateX(100%)" }}
+                    />
                   </div>
                   {/* Popup for Goals */}
-                  {activeInfoPopup === 'goals' && (
+                  {activeInfoPopup === "goals" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">How Goal Optimization Works</h5>
-                      <p className="text-purple-200 text-sm mb-3">Different goals require different system configurations:</p>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Different goals require different system configurations:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Cost Savings:</span> Optimize for peak shaving + TOU arbitrage = maximum ROI</li>
-                        <li>• <span className="text-white">Backup Power:</span> Size battery for critical load hours (4-8 hour backup typical)</li>
-                        <li>• <span className="text-white">Sustainability:</span> Pair with solar for net-zero goals, carbon reduction metrics</li>
-                        <li>• <span className="text-white">EV Charging:</span> Level 2, DCFC, or HPC—we calculate infrastructure needs</li>
+                        <li>
+                          • <span className="text-white">Cost Savings:</span> Optimize for peak
+                          shaving + TOU arbitrage = maximum ROI
+                        </li>
+                        <li>
+                          • <span className="text-white">Backup Power:</span> Size battery for
+                          critical load hours (4-8 hour backup typical)
+                        </li>
+                        <li>
+                          • <span className="text-white">Sustainability:</span> Pair with solar for
+                          net-zero goals, carbon reduction metrics
+                        </li>
+                        <li>
+                          • <span className="text-white">EV Charging:</span> Level 2, DCFC, or
+                          HPC—we calculate infrastructure needs
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-amber-300">⚡ Multi-goal optimization: save money AND go green AND add EV charging!</div>
+                      <div className="mt-3 text-xs text-amber-300">
+                        ⚡ Multi-goal optimization: save money AND go green AND add EV charging!
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1002,54 +1169,79 @@ export default function HeroSection({
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-80 h-80 bg-gradient-to-r from-purple-500/40 via-amber-500/30 to-cyan-500/40 rounded-full blur-[80px] animate-pulse" />
                   </div>
-                  
+
                   {/* Floating magical particles around Merlin */}
                   <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-8 left-12 w-3 h-3 bg-amber-400 rounded-full animate-ping opacity-60" style={{ animationDuration: '2s' }} />
-                    <div className="absolute top-16 right-8 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
-                    <div className="absolute bottom-20 left-8 w-2.5 h-2.5 bg-purple-400 rounded-full animate-ping opacity-60" style={{ animationDuration: '3s', animationDelay: '1s' }} />
-                    <div className="absolute bottom-12 right-16 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50" style={{ animationDuration: '2.2s', animationDelay: '0.8s' }} />
+                    <div
+                      className="absolute top-8 left-12 w-3 h-3 bg-amber-400 rounded-full animate-ping opacity-60"
+                      style={{ animationDuration: "2s" }}
+                    />
+                    <div
+                      className="absolute top-16 right-8 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"
+                      style={{ animationDuration: "2.5s", animationDelay: "0.5s" }}
+                    />
+                    <div
+                      className="absolute bottom-20 left-8 w-2.5 h-2.5 bg-purple-400 rounded-full animate-ping opacity-60"
+                      style={{ animationDuration: "3s", animationDelay: "1s" }}
+                    />
+                    <div
+                      className="absolute bottom-12 right-16 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"
+                      style={{ animationDuration: "2.2s", animationDelay: "0.8s" }}
+                    />
                   </div>
-                  
+
                   {/* Core container - CLICKABLE - NO HARD CIRCLE EDGE */}
-                  <div 
+                  <div
                     onClick={() => setShowMerlinVideo(true)}
                     className="relative flex flex-col items-center justify-center cursor-pointer group transition-transform hover:scale-105 active:scale-95 py-8"
                     title="Merlin Magic - Click to see how it works"
                   >
                     {/* Click glow effect - expands on click */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 group-active:from-amber-500/30 group-active:via-amber-500/40 group-active:to-amber-500/30 transition-all duration-300 blur-xl scale-90 group-active:scale-125" />
-                    
+
                     {/* Merlin Image - MUCH LARGER and FLOATING with STRONG DROP SHADOW */}
-                    <img 
-                      src={merlinImage} 
-                      alt="Merlin AI" 
+                    <img
+                      src={merlinImage}
+                      alt="Merlin AI"
                       className="w-56 h-56 md:w-72 md:h-72 lg:w-80 lg:h-80 mb-2 object-contain animate-float relative z-10"
-                      style={{ 
-                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.6)) drop-shadow(0 0 60px rgba(139,92,246,0.4))'
+                      style={{
+                        filter:
+                          "drop-shadow(0 20px 40px rgba(0,0,0,0.6)) drop-shadow(0 0 60px rgba(139,92,246,0.4))",
                       }}
                     />
-                    
+
                     {/* Text below Merlin */}
                     <div className="text-center relative z-10 mt-4">
-                      <div className="text-amber-400 font-black text-2xl tracking-wide drop-shadow-lg">MERLIN AI</div>
+                      <div className="text-amber-400 font-black text-2xl tracking-wide drop-shadow-lg">
+                        MERLIN AI
+                      </div>
                       <div className="text-purple-300/80 text-sm mt-1 flex items-center gap-2 justify-center">
-                        <span className="w-5 h-5 rounded-full bg-amber-500/80 flex items-center justify-center text-xs">▶</span>
+                        <span className="w-5 h-5 rounded-full bg-amber-500/80 flex items-center justify-center text-xs">
+                          ▶
+                        </span>
                         <span>Click to see the magic</span>
                       </div>
                     </div>
-                    
+
                     {/* Processing indicators - BELOW */}
                     <div className="flex gap-2 mt-6 relative z-10">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
-                      <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-lg shadow-amber-500/50" style={{ animationDelay: '0.2s' }} />
-                      <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-500/50" style={{ animationDelay: '0.4s' }} />
+                      <div
+                        className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-lg shadow-amber-500/50"
+                        style={{ animationDelay: "0.2s" }}
+                      />
+                      <div
+                        className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-500/50"
+                        style={{ animationDelay: "0.4s" }}
+                      />
                     </div>
                   </div>
-                  
+
                   {/* Data flow labels around Merlin */}
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-purple-500/30 shadow-lg">
-                    <span className="text-purple-300 text-sm font-medium">30+ Industry Configs</span>
+                    <span className="text-purple-300 text-sm font-medium">
+                      30+ Industry Configs
+                    </span>
                   </div>
                   <div className="absolute top-1/2 -left-28 -translate-y-1/2 bg-purple-950/90 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg hidden xl:block">
                     <span className="text-cyan-300 text-sm font-medium">NREL ATB 2024</span>
@@ -1064,99 +1256,193 @@ export default function HeroSection({
               <div className="flex flex-col gap-6 lg:w-1/3">
                 {/* Output 1: Optimal System */}
                 <div className="group relative">
-                  <div className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent" style={{ transform: 'translateX(-100%)' }} />
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'system' ? null : 'system')}
+                  <div
+                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent"
+                    style={{ transform: "translateX(-100%)" }}
+                  />
+                  <div
+                    onClick={() =>
+                      setActiveInfoPopup(activeInfoPopup === "system" ? null : "system")
+                    }
                     className="relative bg-gradient-to-br from-amber-500/20 to-amber-600/10 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: '0 0 30px rgba(251,191,36,0.15)' }}
+                    style={{ boxShadow: "0 0 30px rgba(251,191,36,0.15)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(251,191,36,0.5))' }}>⚡</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(251,191,36,0.5))" }}
+                      >
+                        ⚡
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Perfect System Size</h4>
-                        <p className="text-purple-300/70 text-sm">Battery kWh, inverter capacity, duration optimized for your load</p>
+                        <p className="text-purple-300/70 text-sm">
+                          Battery kWh, inverter capacity, duration optimized for your load
+                        </p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">Click to learn more</div>
+                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">
+                      Click to learn more
+                    </div>
                   </div>
                   {/* Popup for System Size */}
-                  {activeInfoPopup === 'system' && (
+                  {activeInfoPopup === "system" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
                       <h5 className="text-amber-400 font-bold mb-2">Perfect System Sizing</h5>
-                      <p className="text-purple-200 text-sm mb-3">Merlin calculates your optimal BESS size based on your actual load profile:</p>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Merlin calculates your optimal BESS size based on your actual load profile:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Battery kWh:</span> Sized to shave peak demand while maximizing ROI</li>
-                        <li>• <span className="text-white">Inverter Capacity:</span> Power rating matched to discharge requirements</li>
-                        <li>• <span className="text-white">Duration:</span> 2-4 hour systems most common; we recommend based on your TOU schedule</li>
+                        <li>
+                          • <span className="text-white">Battery kWh:</span> Sized to shave peak
+                          demand while maximizing ROI
+                        </li>
+                        <li>
+                          • <span className="text-white">Inverter Capacity:</span> Power rating
+                          matched to discharge requirements
+                        </li>
+                        <li>
+                          • <span className="text-white">Duration:</span> 2-4 hour systems most
+                          common; we recommend based on your TOU schedule
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-emerald-300">🔋 No oversizing = lower cost. No undersizing = captured savings!</div>
+                      <div className="mt-3 text-xs text-emerald-300">
+                        🔋 No oversizing = lower cost. No undersizing = captured savings!
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Output 2: Add-ons */}
                 <div className="group relative">
-                  <div className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent" style={{ transform: 'translateX(-100%)' }} />
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'addons' ? null : 'addons')}
+                  <div
+                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-amber-500 to-transparent"
+                    style={{ transform: "translateX(-100%)" }}
+                  />
+                  <div
+                    onClick={() =>
+                      setActiveInfoPopup(activeInfoPopup === "addons" ? null : "addons")
+                    }
                     className="relative bg-gradient-to-br from-amber-500/20 to-amber-600/10 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: '0 0 30px rgba(251,191,36,0.15)' }}
+                    style={{ boxShadow: "0 0 30px rgba(251,191,36,0.15)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(251,191,36,0.5))' }}>☀️</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(251,191,36,0.5))" }}
+                      >
+                        ☀️
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Solar & Generation</h4>
-                        <p className="text-purple-300/70 text-sm">Exact solar kWp, generator sizing, EV charger specs</p>
+                        <p className="text-purple-300/70 text-sm">
+                          Exact solar kWp, generator sizing, EV charger specs
+                        </p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">Click to learn more</div>
+                    <div className="absolute top-2 right-2 text-amber-400/60 text-xs">
+                      Click to learn more
+                    </div>
                   </div>
                   {/* Popup for Add-ons */}
-                  {activeInfoPopup === 'addons' && (
+                  {activeInfoPopup === "addons" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-amber-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">Smart Add-on Recommendations</h5>
-                      <p className="text-purple-200 text-sm mb-3">Merlin suggests complementary systems to maximize value:</p>
+                      <h5 className="text-amber-400 font-bold mb-2">
+                        Smart Add-on Recommendations
+                      </h5>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Merlin suggests complementary systems to maximize value:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Solar PV:</span> Sized to offset load + charge batteries during cheap hours</li>
-                        <li>• <span className="text-white">EV Charging:</span> Level 2, DCFC, or HPC infrastructure recommendations</li>
-                        <li>• <span className="text-white">Generators:</span> Backup power sizing for critical loads during outages</li>
-                        <li>• <span className="text-white">Grid Services:</span> Frequency regulation, demand response revenue streams</li>
+                        <li>
+                          • <span className="text-white">Solar PV:</span> Sized to offset load +
+                          charge batteries during cheap hours
+                        </li>
+                        <li>
+                          • <span className="text-white">EV Charging:</span> Level 2, DCFC, or HPC
+                          infrastructure recommendations
+                        </li>
+                        <li>
+                          • <span className="text-white">Generators:</span> Backup power sizing for
+                          critical loads during outages
+                        </li>
+                        <li>
+                          • <span className="text-white">Grid Services:</span> Frequency regulation,
+                          demand response revenue streams
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-cyan-300">💡 Solar + Storage can double your savings vs. storage alone!</div>
+                      <div className="mt-3 text-xs text-cyan-300">
+                        💡 Solar + Storage can double your savings vs. storage alone!
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Output 3: Full Financial */}
                 <div className="group relative">
-                  <div className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-emerald-500 to-transparent" style={{ transform: 'translateX(-100%)' }} />
-                  <div 
-                    onClick={() => setActiveInfoPopup(activeInfoPopup === 'financial' ? null : 'financial')}
+                  <div
+                    className="hidden lg:block absolute left-0 top-1/2 w-8 h-0.5 bg-gradient-to-l from-emerald-500 to-transparent"
+                    style={{ transform: "translateX(-100%)" }}
+                  />
+                  <div
+                    onClick={() =>
+                      setActiveInfoPopup(activeInfoPopup === "financial" ? null : "financial")
+                    }
                     className="relative bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/40 cursor-pointer hover:scale-[1.02] transition-transform"
-                    style={{ boxShadow: '0 0 30px rgba(16,185,129,0.2)' }}
+                    style={{ boxShadow: "0 0 30px rgba(16,185,129,0.2)" }}
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-4xl shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(16,185,129,0.5))' }}>💰</span>
+                      <span
+                        className="text-4xl shrink-0"
+                        style={{ filter: "drop-shadow(0 4px 8px rgba(16,185,129,0.5))" }}
+                      >
+                        💰
+                      </span>
                       <div>
                         <h4 className="text-white font-bold text-lg mb-1">Complete Quote</h4>
-                        <p className="text-purple-300/70 text-sm">ROI, payback, NPV, 30% ITC, exportable reports</p>
+                        <p className="text-purple-300/70 text-sm">
+                          ROI, payback, NPV, 30% ITC, exportable reports
+                        </p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">Click to learn more</div>
+                    <div className="absolute top-2 right-2 text-emerald-400/60 text-xs">
+                      Click to learn more
+                    </div>
                   </div>
                   {/* Popup for Financial */}
-                  {activeInfoPopup === 'financial' && (
+                  {activeInfoPopup === "financial" && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-purple-950/95 backdrop-blur-xl rounded-xl p-5 border border-emerald-500/50 shadow-2xl">
-                      <h5 className="text-amber-400 font-bold mb-2">Bank-Ready Financial Analysis</h5>
-                      <p className="text-purple-200 text-sm mb-3">Professional-grade financials you can take to investors:</p>
+                      <h5 className="text-amber-400 font-bold mb-2">
+                        Bank-Ready Financial Analysis
+                      </h5>
+                      <p className="text-purple-200 text-sm mb-3">
+                        Professional-grade financials you can take to investors:
+                      </p>
                       <ul className="text-purple-300/80 text-sm space-y-2">
-                        <li>• <span className="text-white">Simple Payback:</span> Years to recover investment from savings</li>
-                        <li>• <span className="text-white">NPV & IRR:</span> Net present value and internal rate of return</li>
-                        <li>• <span className="text-white">30% Federal ITC:</span> Investment Tax Credit automatically included</li>
-                        <li>• <span className="text-white">Revenue Stacking:</span> Peak shaving + TOU + grid services combined</li>
-                        <li>• <span className="text-white">Export:</span> Word, Excel, or PDF reports for financing applications</li>
+                        <li>
+                          • <span className="text-white">Simple Payback:</span> Years to recover
+                          investment from savings
+                        </li>
+                        <li>
+                          • <span className="text-white">NPV & IRR:</span> Net present value and
+                          internal rate of return
+                        </li>
+                        <li>
+                          • <span className="text-white">30% Federal ITC:</span> Investment Tax
+                          Credit automatically included
+                        </li>
+                        <li>
+                          • <span className="text-white">Revenue Stacking:</span> Peak shaving + TOU
+                          + grid services combined
+                        </li>
+                        <li>
+                          • <span className="text-white">Export:</span> Word, Excel, or PDF reports
+                          for financing applications
+                        </li>
                       </ul>
-                      <div className="mt-3 text-xs text-amber-300">📊 DSCR, MACRS depreciation, and 25-year cash flows included!</div>
+                      <div className="mt-3 text-xs text-amber-300">
+                        📊 DSCR, MACRS depreciation, and 25-year cash flows included!
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1167,31 +1453,52 @@ export default function HeroSection({
           {/* Value Proposition Cards - Enhanced with animated illustrations */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {/* No Guesswork - with visual diagram */}
-            <div 
+            <div
               className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 text-center hover:border-purple-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
             >
               {/* Animated Icon Container */}
               <div className="relative w-24 h-24 mx-auto mb-5">
                 {/* Animated rings */}
-                <div className="absolute inset-0 border-2 border-dashed border-purple-500/30 rounded-full animate-spin" style={{ animationDuration: '20s' }} />
-                <div className="absolute inset-2 border border-purple-400/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+                <div
+                  className="absolute inset-0 border-2 border-dashed border-purple-500/30 rounded-full animate-spin"
+                  style={{ animationDuration: "20s" }}
+                />
+                <div
+                  className="absolute inset-2 border border-purple-400/20 rounded-full animate-spin"
+                  style={{ animationDuration: "15s", animationDirection: "reverse" }}
+                />
                 {/* Center icon with glow */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative">
                     <div className="absolute -inset-2 bg-purple-500/30 rounded-full blur-lg group-hover:bg-purple-400/40 transition-colors" />
-                    <span className="relative text-5xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(139,92,246,0.5))' }}>🎯</span>
+                    <span
+                      className="relative text-5xl"
+                      style={{ filter: "drop-shadow(0 4px 12px rgba(139,92,246,0.5))" }}
+                    >
+                      🎯
+                    </span>
                   </div>
                 </div>
                 {/* Mini data points around */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
-                <div className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
+                <div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.3s" }}
+                />
+                <div
+                  className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-amber-400 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.6s" }}
+                />
+                <div
+                  className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.9s" }}
+                />
               </div>
               <h4 className="text-xl font-bold text-white mb-3">Zero Guesswork</h4>
               <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
-                Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what you need.
+                Industry-tested formulas from ASHRAE, CBECS, and Energy Star calculate exactly what
+                you need.
               </p>
               {/* Visual detail - mini formula */}
               <div className="text-xs text-purple-400/60 font-mono bg-purple-900/50 rounded-lg py-2 px-3 inline-block">
@@ -1200,9 +1507,9 @@ export default function HeroSection({
             </div>
 
             {/* No Vendor Calls - with phone/time visual */}
-            <div 
+            <div
               className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
             >
               {/* Animated Icon Container */}
               <div className="relative w-24 h-24 mx-auto mb-5">
@@ -1212,7 +1519,12 @@ export default function HeroSection({
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative">
                     <div className="absolute -inset-2 bg-amber-500/30 rounded-full blur-lg group-hover:bg-amber-400/40 transition-colors" />
-                    <span className="relative text-5xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(251,191,36,0.5))' }}>📞</span>
+                    <span
+                      className="relative text-5xl"
+                      style={{ filter: "drop-shadow(0 4px 12px rgba(251,191,36,0.5))" }}
+                    >
+                      📞
+                    </span>
                     {/* X mark overlay - animated */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-0.5 bg-red-500 rotate-45 opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -1226,7 +1538,8 @@ export default function HeroSection({
               </div>
               <h4 className="text-xl font-bold text-white mb-3">Skip the Vendor Calls</h4>
               <p className="text-purple-300/70 text-sm leading-relaxed mb-4">
-                Get accurate quotes instantly. Real market pricing from NREL benchmarks, not sales tactics.
+                Get accurate quotes instantly. Real market pricing from NREL benchmarks, not sales
+                tactics.
               </p>
               {/* Comparison bar */}
               <div className="flex items-center justify-center gap-3 text-xs">
@@ -1243,9 +1556,9 @@ export default function HeroSection({
             </div>
 
             {/* Maximum Savings - with chart animation */}
-            <div 
+            <div
               className="group bg-gradient-to-br from-purple-900/80 to-indigo-950/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 text-center hover:border-emerald-400/40 transition-all hover:-translate-y-1"
-              style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+              style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
             >
               {/* Animated Chart Visual */}
               <div className="relative w-24 h-24 mx-auto mb-5">
@@ -1253,14 +1566,31 @@ export default function HeroSection({
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-full animate-pulse" />
                 {/* Mini bar chart rising animation */}
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-1 h-12">
-                  <div className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse" style={{ height: '40%', animationDelay: '0s' }} />
-                  <div className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse" style={{ height: '60%', animationDelay: '0.2s' }} />
-                  <div className="w-3 bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-sm animate-pulse" style={{ height: '100%', animationDelay: '0.4s' }} />
+                  <div
+                    className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse"
+                    style={{ height: "40%", animationDelay: "0s" }}
+                  />
+                  <div
+                    className="w-3 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm animate-pulse"
+                    style={{ height: "60%", animationDelay: "0.2s" }}
+                  />
+                  <div
+                    className="w-3 bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-sm animate-pulse"
+                    style={{ height: "100%", animationDelay: "0.4s" }}
+                  />
                 </div>
                 {/* Up arrow */}
-                <div className="absolute top-2 right-2 text-emerald-400 animate-bounce" style={{ animationDuration: '1.5s' }}>
+                <div
+                  className="absolute top-2 right-2 text-emerald-400 animate-bounce"
+                  style={{ animationDuration: "1.5s" }}
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </div>
                 {/* $ indicator */}
@@ -1272,7 +1602,9 @@ export default function HeroSection({
               </p>
               {/* Savings breakdown mini */}
               <div className="flex justify-center gap-2 text-xs">
-                <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">Peak Shaving</span>
+                <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">
+                  Peak Shaving
+                </span>
                 <span className="bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full">TOU</span>
                 <span className="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full">Grid</span>
               </div>
@@ -1280,43 +1612,59 @@ export default function HeroSection({
           </div>
 
           {/* Stats Bar - Enhanced with animated counters and icons */}
-          <div 
+          <div
             className="relative bg-gradient-to-r from-purple-900/60 via-purple-900/40 to-purple-900/60 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/20 mb-16 overflow-hidden"
-            style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+            style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
           >
             {/* Animated background shimmer */}
-            <div 
+            <div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
-              style={{ animation: 'shimmer 4s ease-in-out infinite' }}
+              style={{ animation: "shimmer 4s ease-in-out infinite" }}
             />
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10">
               <div className="group">
                 <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🏢</span>
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
+                    🏢
+                  </span>
                 </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 mb-2 group-hover:scale-110 transition-transform">30+</div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 mb-2 group-hover:scale-110 transition-transform">
+                  30+
+                </div>
                 <div className="text-purple-300/70 text-sm">Industry Templates</div>
               </div>
               <div className="group">
                 <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">💰</span>
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
+                    💰
+                  </span>
                 </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 mb-2 group-hover:scale-110 transition-transform">$2M+</div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 mb-2 group-hover:scale-110 transition-transform">
+                  $2M+
+                </div>
                 <div className="text-purple-300/70 text-sm">Savings Calculated</div>
               </div>
               <div className="group">
                 <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">⚡</span>
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
+                    ⚡
+                  </span>
                 </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">5 Steps</div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 mb-2 group-hover:scale-110 transition-transform">
+                  5 Steps
+                </div>
                 <div className="text-purple-300/70 text-sm">Easy Quote Process</div>
               </div>
               <div className="group">
                 <div className="flex justify-center mb-2">
-                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🎁</span>
+                  <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">
+                    🎁
+                  </span>
                 </div>
-                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500 mb-2 group-hover:scale-110 transition-transform">30%</div>
+                <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500 mb-2 group-hover:scale-110 transition-transform">
+                  30%
+                </div>
                 <div className="text-purple-300/70 text-sm">Federal Tax Credit</div>
               </div>
             </div>
@@ -1324,22 +1672,26 @@ export default function HeroSection({
 
           {/* CTA */}
           <div className="text-center">
-            <button 
+            <button
               onClick={() => setShowSmartWizard(true)}
               className="group relative inline-flex items-center gap-4 px-12 py-5 rounded-full font-bold text-xl transition-all hover:scale-105 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)',
-                boxShadow: '0 0 50px rgba(139,92,246,0.5), 0 10px 40px rgba(0,0,0,0.3)'
+                background: "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)",
+                boxShadow: "0 0 50px rgba(139,92,246,0.5), 0 10px 40px rgba(0,0,0,0.3)",
               }}
             >
               {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              
+
               <img src={merlinImage} alt="" className="w-8 h-8 relative z-10" />
               <span className="text-white relative z-10">Start SmartWizard</span>
-              <span className="text-amber-300 relative z-10 group-hover:translate-x-1 transition-transform">→</span>
+              <span className="text-amber-300 relative z-10 group-hover:translate-x-1 transition-transform">
+                →
+              </span>
             </button>
-            <p className="text-purple-300/50 mt-4 text-sm">No signup required • Get your quote in 5 easy steps</p>
+            <p className="text-purple-300/50 mt-4 text-sm">
+              No signup required • Get your quote in 5 easy steps
+            </p>
           </div>
         </div>
       </section>
@@ -1347,44 +1699,50 @@ export default function HeroSection({
       {/* ========== REAL-WORLD SUCCESS STORIES ========== */}
       <section className="py-20 px-4 md:px-8 lg:px-12 relative">
         <div className="max-w-7xl mx-auto">
-          
           <div className="text-center mb-12">
             <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Real-World <span className="text-amber-400">Success Stories</span>
             </h3>
-            <p className="text-purple-200/70 text-lg">See how businesses like yours are saving with Merlin</p>
+            <p className="text-purple-200/70 text-lg">
+              See how businesses like yours are saving with Merlin
+            </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Data Center */}
-            <div 
+            <div
               className="group cursor-pointer"
-              onClick={() => { console.log('Data Center card clicked'); setShowSmartWizard(true); }}
+              onClick={() => {
+                console.log("Data Center card clicked");
+                setShowSmartWizard(true);
+              }}
             >
-              <div 
+              <div
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
-                style={{ boxShadow: '0 25px 80px rgba(0,0,0,0.4)' }}
+                style={{ boxShadow: "0 25px 80px rgba(0,0,0,0.4)" }}
               >
                 {/* Image */}
                 <div className="relative h-56 overflow-hidden">
-                  <img 
-                    src={carWashValet} 
-                    alt="Car Wash Success Story" 
+                  <img
+                    src={carWashValet}
+                    alt="Car Wash Success Story"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
-                  
+
                   {/* Savings Badge */}
                   <div className="absolute top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
                     $127K/yr savings
                   </div>
                 </div>
-                
+
                 {/* Content */}
                 <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
                   <h4 className="text-xl font-bold text-white mb-2">Multi-Bay Car Wash</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">500 kW peak demand • 32% energy savings</p>
-                  
+                  <p className="text-purple-200/70 text-sm mb-4">
+                    500 kW peak demand • 32% energy savings
+                  </p>
+
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center bg-white/10 rounded-xl py-2">
                       <div className="text-lg font-bold text-amber-400">1.2yr</div>
@@ -1399,28 +1757,33 @@ export default function HeroSection({
                       <div className="text-xs text-purple-300">System</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">→</span>
+                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                      →
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Hotel */}
-            <div 
+            <div
               className="group cursor-pointer"
-              onClick={() => { console.log('Hotel card clicked'); setShowSmartWizard(true); }}
+              onClick={() => {
+                console.log("Hotel card clicked");
+                setShowSmartWizard(true);
+              }}
             >
-              <div 
+              <div
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
-                style={{ boxShadow: '0 25px 80px rgba(0,0,0,0.4)' }}
+                style={{ boxShadow: "0 25px 80px rgba(0,0,0,0.4)" }}
               >
                 <div className="relative h-56 overflow-hidden">
-                  <img 
-                    src={hotelImage} 
-                    alt="Luxury Hotel" 
+                  <img
+                    src={hotelImage}
+                    alt="Luxury Hotel"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
@@ -1428,11 +1791,11 @@ export default function HeroSection({
                     $89K/yr savings
                   </div>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
                   <h4 className="text-xl font-bold text-white mb-2">Luxury Hotel</h4>
                   <p className="text-purple-200/70 text-sm mb-4">350 rooms • High HVAC demand</p>
-                  
+
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center bg-white/10 rounded-xl py-2">
                       <div className="text-lg font-bold text-amber-400">3.2yr</div>
@@ -1447,28 +1810,33 @@ export default function HeroSection({
                       <div className="text-xs text-purple-300">System</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">→</span>
+                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                      →
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* EV Charging */}
-            <div 
+            <div
               className="group cursor-pointer"
-              onClick={() => { console.log('EV Charging card clicked'); setShowSmartWizard(true); }}
+              onClick={() => {
+                console.log("EV Charging card clicked");
+                setShowSmartWizard(true);
+              }}
             >
-              <div 
+              <div
                 className="relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
-                style={{ boxShadow: '0 25px 80px rgba(0,0,0,0.4)' }}
+                style={{ boxShadow: "0 25px 80px rgba(0,0,0,0.4)" }}
               >
                 <div className="relative h-56 overflow-hidden">
-                  <img 
-                    src={evChargingStationImage} 
-                    alt="EV Charging Hub" 
+                  <img
+                    src={evChargingStationImage}
+                    alt="EV Charging Hub"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-purple-900 via-purple-900/50 to-transparent" />
@@ -1476,11 +1844,13 @@ export default function HeroSection({
                     $215K/yr savings
                   </div>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-6">
                   <h4 className="text-xl font-bold text-white mb-2">EV Charging Hub</h4>
-                  <p className="text-purple-200/70 text-sm mb-4">12 DCFC chargers • High demand spikes</p>
-                  
+                  <p className="text-purple-200/70 text-sm mb-4">
+                    12 DCFC chargers • High demand spikes
+                  </p>
+
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center bg-white/10 rounded-xl py-2">
                       <div className="text-lg font-bold text-amber-400">2.8yr</div>
@@ -1495,10 +1865,12 @@ export default function HeroSection({
                       <div className="text-xs text-purple-300">System</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-purple-300">Click for similar quote</span>
-                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">→</span>
+                    <span className="text-amber-400 group-hover:translate-x-2 transition-transform">
+                      →
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1509,61 +1881,93 @@ export default function HeroSection({
 
       {/* ========== HOW MERLIN WORKS POPUP ========== */}
       {showHowItWorks && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowHowItWorks(false)}>
-          <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-2xl w-full p-8 shadow-2xl border border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowHowItWorks(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-2xl w-full p-8 shadow-2xl border border-purple-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <img src={merlinImage} alt="Merlin" className="w-12 h-12" />
                 <h2 className="text-3xl font-bold text-white">How Merlin Works</h2>
               </div>
-              <button onClick={() => setShowHowItWorks(false)} className="text-purple-300 hover:text-white text-2xl">×</button>
+              <button
+                onClick={() => setShowHowItWorks(false)}
+                className="text-purple-300 hover:text-white text-2xl"
+              >
+                ×
+              </button>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">1</div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                  1
+                </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Tell Us About Your Business</h3>
-                  <p className="text-purple-200/70">Answer a few quick questions about your facility, energy usage, and goals.</p>
+                  <p className="text-purple-200/70">
+                    Answer a few quick questions about your facility, energy usage, and goals.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">2</div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                  2
+                </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Merlin Analyzes Your Needs</h3>
-                  <p className="text-purple-200/70">Our AI uses NREL ATB 2024 pricing and DOE-aligned methodology to design the optimal energy solution.</p>
+                  <p className="text-purple-200/70">
+                    Our AI uses NREL ATB 2024 pricing and DOE-aligned methodology to design the
+                    optimal energy solution.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">3</div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                  3
+                </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Get Your Custom Quote</h3>
-                  <p className="text-purple-200/70">Receive a detailed, bank-ready proposal with ROI projections and equipment specs—all with traceable sources.</p>
+                  <p className="text-purple-200/70">
+                    Receive a detailed, bank-ready proposal with ROI projections and equipment
+                    specs—all with traceable sources.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">4</div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-900 font-bold shrink-0">
+                  4
+                </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">Start Saving Money</h3>
-                  <p className="text-purple-200/70">Connect with certified installers and start cutting your energy costs.</p>
+                  <p className="text-purple-200/70">
+                    Connect with certified installers and start cutting your energy costs.
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             {/* Industry Compliance Statement */}
             <div className="mt-6 pt-4 border-t border-purple-500/30">
-              <MethodologyStatement 
-                variant="compact" 
+              <MethodologyStatement
+                variant="compact"
                 darkMode={true}
                 message="NREL ATB 2024 & DOE StoreFAST aligned"
               />
             </div>
-            
-            <button 
-              onClick={() => { setShowHowItWorks(false); setShowSmartWizard(true); }}
+
+            <button
+              onClick={() => {
+                setShowHowItWorks(false);
+                setShowSmartWizard(true);
+              }}
               className="w-full mt-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
             >
               🪄 Start My Free Quote →
@@ -1574,52 +1978,57 @@ export default function HeroSection({
 
       {/* ========== MERLIN ANIMATION/VIDEO MODAL - DYNAMIC FLOW ========== */}
       {showMerlinVideo && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={() => setShowMerlinVideo(false)}>
-          <div 
+        <div
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setShowMerlinVideo(false)}
+        >
+          <div
             className="bg-gradient-to-br from-slate-900 via-purple-900/90 to-indigo-950 rounded-3xl max-w-5xl w-full overflow-hidden shadow-2xl border border-purple-500/30"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - More Compact */}
             <div className="p-4 border-b border-purple-500/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={merlinImage} alt="Merlin" className="w-12 h-12 drop-shadow-xl animate-float" />
+                <img
+                  src={merlinImage}
+                  alt="Merlin"
+                  className="w-12 h-12 drop-shadow-xl animate-float"
+                />
                 <div>
                   <h2 className="text-xl font-bold text-white">The Power of Merlin AI</h2>
                   <p className="text-purple-300/60 text-xs">Your energy savings journey</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowMerlinVideo(false)} 
+              <button
+                onClick={() => setShowMerlinVideo(false)}
                 className="w-8 h-8 bg-purple-800/50 hover:bg-purple-700/50 rounded-full flex items-center justify-center text-white text-lg transition-colors"
               >
                 ×
               </button>
             </div>
-            
+
             {/* ANIMATED FLOW - Inputs → Merlin → BIG SAVINGS */}
             <div className="p-6">
-              
               {/* Flow Visualization */}
               <div className="relative mb-8">
                 {/* Connection Line - Animated */}
                 <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0 hidden md:block">
                   <div className="absolute inset-0 bg-purple-900 rounded-full" />
-                  <div 
+                  <div
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-amber-500 to-emerald-500 rounded-full"
                     style={{
-                      animation: 'flowLine 3s ease-in-out infinite',
-                      width: '100%'
+                      animation: "flowLine 3s ease-in-out infinite",
+                      width: "100%",
                     }}
                   />
                 </div>
-                
+
                 {/* Three Stage Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                  
                   {/* STAGE 1: YOUR INPUTS */}
-                  <div 
+                  <div
                     className="bg-gradient-to-br from-purple-800/60 to-purple-900/60 backdrop-blur-xl rounded-2xl p-5 border border-purple-500/40 transform transition-all hover:scale-[1.02]"
-                    style={{ animation: 'slideInLeft 0.5s ease-out' }}
+                    style={{ animation: "slideInLeft 0.5s ease-out" }}
                   >
                     <div className="text-center mb-4">
                       <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-purple-600/50 mb-3">
@@ -1627,44 +2036,57 @@ export default function HeroSection({
                       </div>
                       <h3 className="text-lg font-bold text-white">Your Inputs</h3>
                     </div>
-                    
+
                     {/* Animated Input Items */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.2s both' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.2s both" }}
+                      >
                         <span className="text-lg">🏢</span>
                         <div>
                           <div className="text-xs text-purple-300">Industry</div>
                           <div className="text-sm text-white font-medium">Hotel • 350 rooms</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.4s both' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.4s both" }}
+                      >
                         <span className="text-lg">📍</span>
                         <div>
                           <div className="text-xs text-purple-300">Location</div>
-                          <div className="text-sm text-white font-medium">California • $0.24/kWh</div>
+                          <div className="text-sm text-white font-medium">
+                            California • $0.24/kWh
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg" style={{ animation: 'fadeSlideIn 0.6s ease-out 0.6s both' }}>
+                      <div
+                        className="flex items-center gap-2 p-2 bg-purple-900/50 rounded-lg"
+                        style={{ animation: "fadeSlideIn 0.6s ease-out 0.6s both" }}
+                      >
                         <span className="text-lg">🎯</span>
                         <div>
                           <div className="text-xs text-purple-300">Goals</div>
-                          <div className="text-sm text-white font-medium">Cost savings + EV charging</div>
+                          <div className="text-sm text-white font-medium">
+                            Cost savings + EV charging
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Arrow indicator (mobile) */}
                     <div className="md:hidden flex justify-center mt-4 text-purple-400 animate-bounce">
                       <span className="text-2xl">↓</span>
                     </div>
                   </div>
-                  
+
                   {/* STAGE 2: MERLIN MAGIC - Central, highlighted */}
-                  <div 
+                  <div
                     className="bg-gradient-to-br from-amber-500/20 via-amber-600/15 to-orange-600/20 backdrop-blur-xl rounded-2xl p-5 border-2 border-amber-500/50 transform transition-all hover:scale-[1.02] relative"
-                    style={{ 
-                      animation: 'pulseGlow 2s ease-in-out infinite',
-                      boxShadow: '0 0 40px rgba(251,191,36,0.2)'
+                    style={{
+                      animation: "pulseGlow 2s ease-in-out infinite",
+                      boxShadow: "0 0 40px rgba(251,191,36,0.2)",
                     }}
                   >
                     {/* Processing Badge */}
@@ -1672,18 +2094,37 @@ export default function HeroSection({
                       <div className="w-2 h-2 bg-purple-900 rounded-full animate-pulse" />
                       AI Processing
                     </div>
-                    
+
                     <div className="text-center mb-4 pt-2">
                       <div className="relative inline-block">
-                        <img src={merlinImage} alt="Merlin" className="w-20 h-20 animate-float drop-shadow-2xl" />
+                        <img
+                          src={merlinImage}
+                          alt="Merlin"
+                          className="w-20 h-20 animate-float drop-shadow-2xl"
+                        />
                         {/* Sparkles around Merlin */}
-                        <div className="absolute -top-2 -left-2 text-lg animate-ping" style={{ animationDuration: '1.5s' }}>✨</div>
-                        <div className="absolute -top-1 -right-3 text-sm animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }}>⚡</div>
-                        <div className="absolute -bottom-1 -left-3 text-sm animate-ping" style={{ animationDuration: '1.8s', animationDelay: '0.3s' }}>🔮</div>
+                        <div
+                          className="absolute -top-2 -left-2 text-lg animate-ping"
+                          style={{ animationDuration: "1.5s" }}
+                        >
+                          ✨
+                        </div>
+                        <div
+                          className="absolute -top-1 -right-3 text-sm animate-ping"
+                          style={{ animationDuration: "2s", animationDelay: "0.5s" }}
+                        >
+                          ⚡
+                        </div>
+                        <div
+                          className="absolute -bottom-1 -left-3 text-sm animate-ping"
+                          style={{ animationDuration: "1.8s", animationDelay: "0.3s" }}
+                        >
+                          🔮
+                        </div>
                       </div>
                       <h3 className="text-lg font-bold text-amber-400 mt-2">Merlin Analyzes</h3>
                     </div>
-                    
+
                     {/* Processing Indicators */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
@@ -1691,54 +2132,60 @@ export default function HeroSection({
                         <span className="text-xs text-white">Industry power profile matched</span>
                       </div>
                       <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
-                        <div className="w-4 h-4 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                        <div
+                          className="w-4 h-4 bg-cyan-400 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.2s" }}
+                        />
                         <span className="text-xs text-white">NREL ATB 2024 pricing applied</span>
                       </div>
                       <div className="flex items-center gap-2 p-2 bg-purple-950/40 rounded-lg">
-                        <div className="w-4 h-4 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                        <div
+                          className="w-4 h-4 bg-amber-400 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.4s" }}
+                        />
                         <span className="text-xs text-white">Optimal configuration found!</span>
                       </div>
                     </div>
-                    
+
                     {/* Arrow indicator (mobile) */}
                     <div className="md:hidden flex justify-center mt-4 text-amber-400 animate-bounce">
                       <span className="text-2xl">↓</span>
                     </div>
                   </div>
-                  
+
                   {/* STAGE 3: BIG SAVINGS - Most emphasized */}
-                  <div 
+                  <div
                     className="bg-gradient-to-br from-emerald-600/30 via-emerald-700/20 to-green-800/30 backdrop-blur-xl rounded-2xl p-5 border-2 border-emerald-500/60 transform transition-all hover:scale-[1.02] relative overflow-hidden"
-                    style={{ 
-                      animation: 'slideInRight 0.5s ease-out 0.3s both',
-                      boxShadow: '0 0 50px rgba(16,185,129,0.25)'
+                    style={{
+                      animation: "slideInRight 0.5s ease-out 0.3s both",
+                      boxShadow: "0 0 50px rgba(16,185,129,0.25)",
                     }}
                   >
                     {/* Shimmer effect */}
-                    <div 
+                    <div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full"
-                      style={{ animation: 'shimmer 2s ease-in-out infinite' }}
+                      style={{ animation: "shimmer 2s ease-in-out infinite" }}
                     />
-                    
+
                     <div className="text-center mb-4 relative z-10">
                       <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/40 mb-3">
                         <span className="text-3xl">💰</span>
                       </div>
                       <h3 className="text-lg font-bold text-emerald-400">Your Savings</h3>
                     </div>
-                    
+
                     {/* BIG SAVINGS NUMBERS - Animated counter effect */}
                     <div className="space-y-3 relative z-10">
                       <div className="text-center p-3 bg-purple-950/50 rounded-xl">
-                        <div 
+                        <div
                           className="text-3xl md:text-4xl font-black text-amber-400"
-                          style={{ textShadow: '0 0 20px rgba(251,191,36,0.5)' }}
+                          style={{ textShadow: "0 0 20px rgba(251,191,36,0.5)" }}
                         >
                           $127,500
                         </div>
                         <div className="text-xs text-emerald-300/80">Annual Savings</div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="text-center p-2 bg-purple-950/50 rounded-lg">
                           <div className="text-xl font-bold text-purple-300">2.1 yrs</div>
@@ -1749,7 +2196,7 @@ export default function HeroSection({
                           <div className="text-xs text-cyan-300/60">25-yr ROI</div>
                         </div>
                       </div>
-                      
+
                       {/* Tax Credit Badge */}
                       <div className="flex items-center justify-center gap-2 text-xs text-emerald-300 bg-emerald-500/10 py-2 rounded-full">
                         <span>✓</span> 30% Federal Tax Credit Included
@@ -1758,7 +2205,7 @@ export default function HeroSection({
                   </div>
                 </div>
               </div>
-              
+
               {/* System Configuration Preview */}
               <div className="bg-purple-900/40 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-purple-500/20">
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1788,17 +2235,22 @@ export default function HeroSection({
                   </div>
                 </div>
               </div>
-              
+
               {/* CTA - Larger, more prominent */}
-              <button 
-                onClick={() => { setShowMerlinVideo(false); setShowSmartWizard(true); }}
+              <button
+                onClick={() => {
+                  setShowMerlinVideo(false);
+                  setShowSmartWizard(true);
+                }}
                 className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-5 rounded-full font-bold text-xl hover:shadow-xl hover:shadow-amber-500/40 transition-all flex items-center justify-center gap-3 group"
               >
                 <span className="text-2xl group-hover:animate-bounce">🪄</span>
                 <span>Get Your Personalized Quote</span>
                 <span className="group-hover:translate-x-2 transition-transform">→</span>
               </button>
-              <p className="text-center text-purple-300/40 text-sm mt-3">No signup required • 5 easy steps</p>
+              <p className="text-center text-purple-300/40 text-sm mt-3">
+                No signup required • 5 easy steps
+              </p>
             </div>
           </div>
         </div>
@@ -1806,59 +2258,81 @@ export default function HeroSection({
 
       {/* ========== USE CASE DETAIL POPUP ========== */}
       {showUseCaseDetail && selectedHeroUseCase && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowUseCaseDetail(false)}>
-          <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowUseCaseDetail(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-purple-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Hero Image */}
             <div className="relative h-48">
-              <img src={selectedHeroUseCase.image} alt={selectedHeroUseCase.name} className="w-full h-full object-cover" />
+              <img
+                src={selectedHeroUseCase.image}
+                alt={selectedHeroUseCase.name}
+                className="w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-purple-900 to-transparent" />
-              <button 
-                onClick={() => setShowUseCaseDetail(false)} 
+              <button
+                onClick={() => setShowUseCaseDetail(false)}
                 className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white text-xl transition-colors"
               >
                 ×
               </button>
               <div className="absolute bottom-4 left-6">
-                <span className="bg-amber-400 text-purple-900 px-3 py-1 rounded-full text-sm font-bold">{selectedHeroUseCase.systemSize}</span>
+                <span className="bg-amber-400 text-purple-900 px-3 py-1 rounded-full text-sm font-bold">
+                  {selectedHeroUseCase.systemSize}
+                </span>
               </div>
             </div>
-            
+
             {/* Content */}
             <div className="p-8">
               <h2 className="text-3xl font-bold text-white mb-6">{selectedHeroUseCase.name}</h2>
-              
+
               {/* Financial Metrics */}
               <div className="grid grid-cols-3 gap-6 mb-8">
                 <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-amber-400 mb-1">{selectedHeroUseCase.savings}</div>
+                  <div className="text-4xl font-black text-amber-400 mb-1">
+                    {selectedHeroUseCase.savings}
+                  </div>
                   <div className="text-sm text-purple-300/70">Annual Savings</div>
                 </div>
                 <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-purple-300 mb-1">{selectedHeroUseCase.payback}</div>
+                  <div className="text-4xl font-black text-purple-300 mb-1">
+                    {selectedHeroUseCase.payback}
+                  </div>
                   <div className="text-sm text-purple-300/70">Payback Period</div>
                 </div>
                 <div className="bg-purple-800/30 rounded-2xl p-5 text-center border border-purple-500/20">
-                  <div className="text-4xl font-black text-cyan-400 mb-1">{selectedHeroUseCase.roi}</div>
+                  <div className="text-4xl font-black text-cyan-400 mb-1">
+                    {selectedHeroUseCase.roi}
+                  </div>
                   <div className="text-sm text-purple-300/70">25-Year ROI</div>
                 </div>
               </div>
-              
+
               {/* Description */}
               <p className="text-purple-200/80 mb-8 leading-relaxed">
-                This {selectedHeroUseCase.name.toLowerCase()} installation demonstrates the power of battery storage for energy cost reduction. 
-                With a {selectedHeroUseCase.systemSize} system, businesses in this sector typically see dramatic reductions in peak demand charges 
-                and can take advantage of time-of-use rate arbitrage.
+                This {selectedHeroUseCase.name.toLowerCase()} installation demonstrates the power of
+                battery storage for energy cost reduction. With a {selectedHeroUseCase.systemSize}{" "}
+                system, businesses in this sector typically see dramatic reductions in peak demand
+                charges and can take advantage of time-of-use rate arbitrage.
               </p>
-              
+
               {/* CTA */}
               <div className="flex gap-4">
-                <button 
-                  onClick={() => { setShowUseCaseDetail(false); setShowSmartWizard(true); }}
+                <button
+                  onClick={() => {
+                    setShowUseCaseDetail(false);
+                    setShowSmartWizard(true);
+                  }}
                   className="flex-1 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-900 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all"
                 >
                   🪄 Get a Quote Like This
                 </button>
-                <button 
+                <button
                   onClick={() => setShowUseCaseDetail(false)}
                   className="px-6 py-4 border border-purple-400/50 text-purple-200 rounded-full font-semibold hover:bg-purple-800/30 transition-all"
                 >

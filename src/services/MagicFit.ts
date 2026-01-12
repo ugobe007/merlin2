@@ -283,11 +283,17 @@ function createOption(
   // Calculate duration based on scenario
   const targetDuration = base.bess.durationHours * bessConfig.durationMultiplier;
 
-  // Adjust kWh to meet duration target if needed
+  // Adjust kWh to meet duration target if needed, BUT respect 250% max limit
   const minKWhForDuration = bessKW * targetDuration;
+  const maxAllowedKWh = Math.round(base.bess.energyKWh * 2.5); // 250% max per validator
+
   if (bessKWh < minKWhForDuration) {
-    bessKWh = roundToNearest(minKWhForDuration, 100);
+    // Try to meet duration, but cap at 250% of base
+    bessKWh = Math.min(roundToNearest(minKWhForDuration, 100), maxAllowedKWh);
   }
+
+  // Final safety check: never exceed 250% of base
+  bessKWh = Math.min(bessKWh, maxAllowedKWh);
 
   // Add note about UPS mode if applicable
   if (bessUpsizeMultiplier > 1.0) {

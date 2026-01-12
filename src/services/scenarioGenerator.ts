@@ -13,7 +13,13 @@
  */
 
 import { calculateQuote, type QuoteResult } from "./unifiedQuoteCalculator";
-import { getIndustryBESSRatio, getIndustryLoadProfile, getRegionalTOUSchedule, calculateArbitrageSavings } from "@/components/wizard/v6/constants";
+// ⚠️ NOTE: calculateArbitrageSavings was removed from constants.ts (SSOT violation)
+// This file is legacy/experimental and may need refactoring to use TrueQuote results
+import {
+  getIndustryBESSRatio,
+  getIndustryLoadProfile,
+  getRegionalTOUSchedule,
+} from "@/components/wizard/v6/constants";
 
 // ============================================
 // TYPES
@@ -122,15 +128,18 @@ export async function generateScenarios(
   // Get industry-specific parameters
   const baseRatio = getIndustryBESSRatio(input.industryType);
   const loadProfile = getIndustryLoadProfile(input.industryType);
-  const touSchedule = getRegionalTOUSchedule(input.state);
+  const _touSchedule = getRegionalTOUSchedule(input.state);
+  void _touSchedule; // Explicitly mark as intentionally unused
 
-  // Calculate arbitrage potential for this location/industry combo
-  const arbitrageResult = calculateArbitrageSavings(
-    input.dailyKWh,
-    input.industryType,
-    input.state,
-    input.electricityRate
-  );
+  // ⚠️ LEGACY: Calculate arbitrage potential (simplified, non-SSOT)
+  // This is a placeholder for legacy scenario generation.
+  // For WizardV6, use TrueQuote results instead.
+  const rateSpread = input.electricityRate * 0.3; // Assume 30% spread between peak/off-peak
+  const annualSavings = input.dailyKWh * rateSpread * 365;
+  const arbitrageResult = {
+    annualSavings,
+    touOverlapScore: 0.6, // Default TOU overlap score
+  };
 
   console.log("📊 [ScenarioGenerator] Base parameters:", {
     peakDemandKW: input.peakDemandKW,
@@ -166,8 +175,9 @@ async function generateSingleScenario(
   input: ScenarioGeneratorInput,
   type: ScenarioType,
   baseRatio: number,
-  arbitrageResult: ReturnType<typeof calculateArbitrageSavings>
+  _arbitrageResult: { annualSavings: number; touOverlapScore: number }
 ): Promise<ScenarioConfig> {
+  void _arbitrageResult; // Explicitly mark as intentionally unused
   const multipliers = SCENARIO_MULTIPLIERS[type];
   const metadata = getScenarioMetadata(type);
 

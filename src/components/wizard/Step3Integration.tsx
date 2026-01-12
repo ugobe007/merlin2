@@ -1,24 +1,30 @@
 /**
  * Step 3 Integration Layer
- * 
+ *
  * Connects the new Complete Step 3 with existing Step3Details
  * Provides smooth migration path and backward compatibility
  */
-import React, { useState, useEffect } from 'react';
-import { CompleteStep3Component } from './CompleteStep3Component';
-import { calculateCompleteQuote } from '@/services/CompleteTrueQuoteEngine';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { CompleteStep3Component } from "./CompleteStep3Component";
+import { assertNoDerivedFieldsInStep3 } from "./v6/utils/wizardStateValidator";
+// ✅ REMOVED: calculateCompleteQuote import
+// Step 3 no longer computes derived values - TrueQuote is SSOT (Option A - Recommended)
+// import { calculateCompleteQuote } from '@/services/CompleteTrueQuoteEngine';
+
+type WizardStep3State = {
+  industry?: string;
+  useCaseData?: Record<string, unknown> & {
+    inputs?: Record<string, unknown>;
+  };
+};
 
 interface Step3IntegrationProps {
-  // Existing props from your current implementation
-  state?: {
-    industry?: string;
-    useCaseData?: Record<string, unknown>;
-  };
-  updateState?: (updates: any) => void;
-  onComplete?: (data: any) => void;
-  initialData?: Record<string, any>;
+  state?: WizardStep3State;
+  updateState?: (updates: Partial<WizardStep3State>) => void;
+  onComplete?: (data: unknown) => void;
+  initialData?: Record<string, unknown>;
   onBack?: () => void;
-  onNext?: (quoteData: any) => void;
+  onNext?: (quoteData: { answers: Record<string, unknown>; timestamp: string }) => void;
 }
 
 export function Step3Integration({
@@ -27,61 +33,92 @@ export function Step3Integration({
   onComplete,
   initialData = {},
   onBack,
-  onNext
+  onNext,
 }: Step3IntegrationProps) {
-  const [answers, setAnswers] = useState<Record<string, any>>(
-    initialData || (state.useCaseData?.inputs as Record<string, any>) || {}
-  );
+  const [answers, setAnswers] = useState<Record<string, unknown>>(() => {
+    const fromInitial = initialData && Object.keys(initialData).length > 0 ? initialData : null;
+
+    const fromState = (state.useCaseData?.inputs as Record<string, unknown>) ?? null;
+
+    return fromInitial ?? fromState ?? {};
+  });
   const [isComplete, setIsComplete] = useState(false);
 
   // ============================================================================
   // INTEGRATION HOOKS
   // ============================================================================
 
-  // Sync answers with parent component
+  // Sync answers with parent component (debounced to prevent infinite loops)
+  const prevAnswersRef = useRef<Record<string, unknown>>(answers);
   useEffect(() => {
-    if (updateState) {
-      updateState({
-        useCaseData: {
-          ...state.useCaseData,
-          inputs: answers
-        }
-      });
-    }
+    // Only update if answers actually changed (deep comparison)
+    const answersChanged = JSON.stringify(prevAnswersRef.current) !== JSON.stringify(answers);
 
-    if (onComplete) {
-      onComplete(answers);
-    }
-  }, [answers, updateState, onComplete, state.useCaseData]);
-
-  // Handle completion
-  const handleComplete = () => {
-    const quote = calculateCompleteQuote(answers);
-    
-    setIsComplete(true);
-
-    if (onNext) {
-      onNext({
-        answers,
-        quote,
-        timestamp: new Date().toISOString()
-      });
-    } else if (updateState) {
-      // If no onNext, just update state with quote
+    if (answersChanged && updateState) {
+      prevAnswersRef.current = answers;
       updateState({
         useCaseData: {
           ...state.useCaseData,
           inputs: answers,
-          calculated: quote
-        }
+        },
+      });
+    }
+  }, [answers, updateState, state.useCaseData]);
+
+  // Handle completion
+  const handleComplete = () => {
+    // ✅ OPTION A (RECOMMENDED): Step 3 only stores raw inputs
+    // TrueQuote is SSOT for derived values (estimatedAnnualKwh, peakDemandKw)
+    // These will be computed by TrueQuoteEngineV2 in Step 5
+
+    setIsComplete(true);
+
+    // ✅ INVARIANT A: Build the next state and assert no derived fields
+    const nextState = {
+      ...state,
+      useCaseData: {
+        ...state.useCaseData,
+        inputs: answers,
+        // NOTE: estimatedAnnualKwh and peakDemandKw will be computed by TrueQuote in Step 5
+        // This ensures TrueQuote is the single source of truth for all calculations
+      },
+    };
+
+    // ✅ CONTRACT INVARIANT A: Block any attempt to persist derived fields into useCaseData
+    // Validates the actual next state you intend to commit
+    if (import.meta.env.DEV) {
+      assertNoDerivedFieldsInStep3(nextState);
+    }
+
+    // Update state with ONLY raw inputs (no derived calculations)
+    if (updateState) {
+      updateState({
+        useCaseData: nextState.useCaseData,
+      });
+    }
+
+    // Call onComplete if provided
+    onComplete?.(nextState.useCaseData);
+
+    if (onNext) {
+      onNext({
+        answers,
+        timestamp: new Date().toISOString(),
       });
     }
   };
 
-  // Handle answers update
-  const handleAnswersChange = (newAnswers: Record<string, any>) => {
-    setAnswers(newAnswers);
-  };
+  // Handle answers update (memoized to prevent infinite loops)
+  const handleAnswersChange = useCallback(
+    (newAnswers: Record<string, unknown>) => {
+      // Only update if answers actually changed
+      const answersChanged = JSON.stringify(answers) !== JSON.stringify(newAnswers);
+      if (answersChanged) {
+        setAnswers(newAnswers);
+      }
+    },
+    [answers]
+  );
 
   // ============================================================================
   // RENDER
@@ -91,14 +128,18 @@ export function Step3Integration({
       {/* Complete Step 3 Component */}
       <CompleteStep3Component
         state={state}
-        updateState={(updates) => {
+        updateState={(updates: Partial<WizardStep3State>) => {
           // Update state and sync answers
           if (updateState) {
             updateState(updates);
           }
           // Also update local answers if inputs are in updates
-          if (updates.useCaseData?.inputs) {
-            setAnswers(updates.useCaseData.inputs as Record<string, any>);
+          if (
+            updates.useCaseData &&
+            "inputs" in updates.useCaseData &&
+            updates.useCaseData.inputs
+          ) {
+            setAnswers(updates.useCaseData.inputs as Record<string, unknown>);
           }
         }}
         initialAnswers={answers}
@@ -117,15 +158,15 @@ export function Step3Integration({
           <div className="max-w-2xl p-8 bg-slate-900 rounded-2xl border-2 border-green-500 shadow-2xl">
             <div className="text-center">
               <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-3xl font-bold text-white mb-3">
-                Step 3 Complete!
-              </h2>
+              <h2 className="text-3xl font-bold text-white mb-3">Step 3 Complete!</h2>
               <p className="text-slate-300 mb-6">
                 Your car wash energy profile has been analyzed and your custom quote is ready.
               </p>
 
-              {/* Quote Summary */}
-              <QuoteSummaryCard answers={answers} />
+              {/* NOTE: Quote summary removed - TrueQuote will compute in Step 5 */}
+              <p className="text-slate-400 mb-6">
+                Your answers have been saved. Click Continue to proceed to Step 4.
+              </p>
 
               <div className="flex gap-4 justify-center mt-6">
                 <button
@@ -137,12 +178,13 @@ export function Step3Integration({
                 <button
                   onClick={() => {
                     if (onNext) {
-                      onNext({ answers, quote: calculateCompleteQuote(answers) });
+                      // ✅ Only pass raw answers - TrueQuote will compute in Step 5
+                      onNext({ answers, timestamp: new Date().toISOString() });
                     }
                   }}
                   className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
                 >
-                  Continue to Quote →
+                  Continue to Step 4 →
                 </button>
               </div>
             </div>
@@ -154,38 +196,10 @@ export function Step3Integration({
 }
 
 // ============================================================================
-// QUOTE SUMMARY CARD
+// QUOTE SUMMARY CARD - REMOVED
 // ============================================================================
-function QuoteSummaryCard({ answers }: { answers: Record<string, any> }) {
-  const quote = calculateCompleteQuote(answers);
-
-  return (
-    <div className="grid grid-cols-3 gap-4 p-6 bg-slate-800/50 rounded-xl mb-4">
-      <div className="text-center">
-        <div className="text-sm text-slate-400 mb-1">System Size</div>
-        <div className="text-2xl font-bold text-white">
-          {quote.solarSystem.totalSolarKW.toFixed(1)} kW
-        </div>
-        <div className="text-xs text-slate-500">Solar</div>
-      </div>
-
-      <div className="text-center">
-        <div className="text-sm text-slate-400 mb-1">Annual Savings</div>
-        <div className="text-2xl font-bold text-green-400">
-          ${Math.round(quote.totalAnnualSavings).toLocaleString()}
-        </div>
-        <div className="text-xs text-slate-500">Per year</div>
-      </div>
-
-      <div className="text-center">
-        <div className="text-sm text-slate-400 mb-1">Payback</div>
-        <div className="text-2xl font-bold text-white">
-          {quote.combinedPayback.toFixed(1)} yrs
-        </div>
-        <div className="text-xs text-slate-500">Simple payback</div>
-      </div>
-    </div>
-  );
-}
+// ✅ REMOVED: QuoteSummaryCard component
+// Step 3 no longer computes derived values - TrueQuote is SSOT
+// Quote summary will be shown in Step 5 after TrueQuote computes results
 
 export default Step3Integration;

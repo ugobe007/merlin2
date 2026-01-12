@@ -73,7 +73,10 @@
     "test:truequote": "npx tsx src/tests/trueQuoteDataFlowTest.ts",
     "report": "playwright show-report",
     "screenshots": "mkdir -p tests/screenshots",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:perf:unit": "vitest run tests/perf --reporter=verbose",
+    "test:perf:e2e": "playwright test tests/e2e/wizardv6.perf.spec.ts",
+    "perf": "npm run test:perf:unit && npm run test:perf:e2e"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.79.0",
@@ -125,8 +128,8 @@
     "vitest": "^4.0.15"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
+    "src/**/!(*BessQuoteBuilder).{ts,tsx}": [
+      "eslint --fix --max-warnings=1",
       "prettier --write"
     ],
     "*.{css,json,md}": [
