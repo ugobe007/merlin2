@@ -687,11 +687,11 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                   {unlockedClues.length}
                 </span>
               )}
-              <Gift className="w-4 h-4" />
+              <Lightbulb className="w-4 h-4" />
               {isExpanded ? (
                 <>Hide <ChevronUp className="w-4 h-4" /></>
               ) : (
-                <>Secrets <ChevronDown className="w-4 h-4" /></>
+                <>Suggestions <ChevronDown className="w-4 h-4" /></>
               )}
             </button>
           </div>
@@ -740,7 +740,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 <div>
                   <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Unlock className="w-3.5 h-3.5" />
-                    Unlocked Secrets ({unlockedClues.length})
+                    Unlocked Suggestions ({unlockedClues.length})
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {unlockedClues.map((clue) => (
@@ -755,7 +755,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 <div>
                   <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5" />
-                    Locked Secrets ({lockedClues.length})
+                    More Suggestions ({lockedClues.length})
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {lockedClues.slice(0, 4).map((clue) => (
@@ -764,7 +764,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                   </div>
                   {lockedClues.length > 4 && (
                     <p className="text-slate-500 text-xs mt-2 text-center">
-                      +{lockedClues.length - 4} more secrets to discover...
+                      +{lockedClues.length - 4} more suggestions to unlock...
                     </p>
                   )}
                 </div>
@@ -775,7 +775,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="text-slate-400">Discovery Progress</span>
                   <span className="text-amber-400 font-medium">
-                    {unlockedClues.length}/{discoveryClues.length} secrets found
+                    {unlockedClues.length}/{discoveryClues.length} suggestions unlocked
                   </span>
                 </div>
                 <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -786,7 +786,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 </div>
                 {unlockedClues.length === discoveryClues.length && (
                   <p className="text-emerald-400 text-xs mt-2 text-center flex items-center justify-center gap-1">
-                    <Award className="w-3 h-3" /> All secrets discovered! Maximum savings unlocked!
+                    <Award className="w-3 h-3" /> All suggestions unlocked! Maximum savings revealed!
                   </p>
                 )}
               </div>
