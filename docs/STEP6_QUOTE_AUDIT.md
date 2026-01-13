@@ -84,6 +84,7 @@ import { generatePDFQuote } from '@/utils/quoteExport'; // or wherever PDF expor
 
 export function Step6Quote({ state }: Props) {
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const { selected } = state.calculations || {}; // Destructure nested structure
   
   const handleRequestQuote = () => {
     setShowRequestModal(true);
@@ -92,10 +93,11 @@ export function Step6Quote({ state }: Props) {
   const handleDownloadPDF = async () => {
     try {
       // Map wizard state to quote export format
+      // NOTE: calculations uses nested { base, selected } structure
       const quoteData = {
         quoteName: `Merlin Quote - ${state.industryName}`,
-        powerMW: calculations.bessKW / 1000,
-        totalMWh: calculations.bessKWh / 1000,
+        powerMW: selected.bessKW / 1000,       // ✅ Read from selected
+        totalMWh: selected.bessKWh / 1000,     // ✅ Read from selected
         // ... map other fields
       };
       await generatePDFQuote(quoteData);
@@ -132,15 +134,16 @@ export function Step6Quote({ state }: Props) {
       </button>
       
       {/* Request Quote Modal */}
+      {/* NOTE: calculations uses nested { base, selected } structure */}
       <RequestQuoteModal
         isOpen={showRequestModal}
         onClose={() => setShowRequestModal(false)}
         quoteData={{
-          storageSizeMW: calculations.bessKW / 1000,
+          storageSizeMW: selected.bessKW / 1000,       // ✅ Read from selected
           durationHours: powerLevel?.durationHours || 4,
-          energyCapacity: calculations.bessKWh / 1000,
-          solarMW: calculations.solarKW / 1000,
-          totalCost: calculations.totalInvestment,
+          energyCapacity: selected.bessKWh / 1000,    // ✅ Read from selected
+          solarMW: selected.solarKW / 1000,           // ✅ Read from selected
+          totalCost: selected.totalInvestment,        // ✅ Read from selected
           industryName: state.industryName,
           location: `${state.city || ''} ${state.state || ''}`.trim(),
         }}

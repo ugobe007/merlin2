@@ -1,1 +1,6 @@
+# SSOT validation check
+if [ -f "./scripts/check-ssot.sh" ]; then
+  bash ./scripts/check-ssot.sh
+fi
+
 npx lint-staged

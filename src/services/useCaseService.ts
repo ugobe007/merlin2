@@ -660,9 +660,9 @@ export class UseCaseService {
         pricingScenarios[0]
       );
 
-      // ✅ FIX: Use centralized pricing service (NREL ATB 2024 ~$155/kWh) instead of hardcoded $600/kWh
+      // ✅ FIX: Use centralized pricing service (SSOT: $175/kWh commercial) instead of hardcoded $600/kWh
       const batteryPricing = await getBatteryPricing(recommendedSizeMw, preferredDurationHours);
-      const systemCostPerKwh = batteryPricing.pricePerKWh || 155; // Fallback to NREL if fetch fails
+      const systemCostPerKwh = batteryPricing.pricePerKWh || 175; // Fallback to DEFAULTS.BESS.costPerKWhCommercial
       const estimatedCost = recommendedSizeMw * 1000 * preferredDurationHours * systemCostPerKwh;
 
       // ✅ FIX: Use centralized financial calculations for consistent payback/ROI

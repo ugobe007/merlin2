@@ -1076,7 +1076,7 @@ export function calculateOfficeProfile(inputs: OfficeInputs): OfficeCalculations
 
   // Savings
   const demandChargeSavings = Math.round(estimatedPeakKw * 15 * 12 * 0.3); // 30% reduction
-  const solarSavings = Math.round(recommendedSolarKw * 375); // $375/kW commercial
+  const solarSavings = Math.round(recommendedSolarKw * 400); // SSOT: $400/kW commercial (DEFAULTS.Preview.solarSavingsPerKW)
   const annualSavings = demandChargeSavings + solarSavings;
 
   // Confidence level

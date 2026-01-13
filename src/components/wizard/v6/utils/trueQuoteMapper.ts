@@ -23,7 +23,20 @@ import { createMerlinRequest } from '@/services/contracts';
 // ============================================================================
 // LEGACY SUPPORT - Old TrueQuoteInput format (for gradual migration)
 // ============================================================================
-import type { TrueQuoteInput } from '@/services/TrueQuoteEngine';
+// @deprecated - TrueQuoteInput type kept inline for legacy mapWizardStateToTrueQuoteInput function
+// This function is only used by deprecated useTrueQuote.ts hook
+interface TrueQuoteInput {
+  location: { zipCode: string; state: string };
+  industry: { type: string; subtype: string; facilityData: Record<string, number | string | boolean> };
+  options: { 
+    solarEnabled: boolean; 
+    evChargingEnabled: boolean; 
+    generatorEnabled: boolean;
+    level2Chargers?: number;
+    dcFastChargers?: number;
+    ultraFastChargers?: number;
+  };
+}
 import { mapSubtype, mapFieldName, DEFAULT_SUBTYPES } from '@/services/trueQuoteMapperConfig';
 
 // ============================================================================
@@ -126,8 +139,9 @@ export function mapWizardStateToMerlinRequest(state: WizardState): MerlinRequest
         ultraFastCount: state.customEvUltraFast,
       },
       bess: {
-        customPowerKw: state.calculations?.bessKW,
-        customEnergyKwh: state.calculations?.bessKWh,
+        // ✅ FIXED: Read from nested structure (calculations.selected.*)
+        customPowerKw: state.calculations?.selected?.bessKW,
+        customEnergyKwh: state.calculations?.selected?.bessKWh,
       },
     },
 

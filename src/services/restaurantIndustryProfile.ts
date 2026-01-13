@@ -836,7 +836,7 @@ export function calculateRestaurantProfile(inputs: RestaurantInputs): Restaurant
 
   // Demand charge savings (peak shaving during rushes)
   const demandChargeSavings = Math.round(estimatedPeakKw * peakDemandMultiplier * 15 * 12 * 0.35); // 35% reduction
-  const annualSavings = demandChargeSavings + recommendedSolarKw * 350;
+  const annualSavings = demandChargeSavings + recommendedSolarKw * 400; // $400/kW solar savings (DEFAULTS.Preview)
 
   // Confidence level
   let confidenceLevel: "low" | "medium" | "high" = "medium";

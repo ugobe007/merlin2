@@ -4,9 +4,11 @@
  * All types in ONE place. No hunting.
  *
  * Created: December 28, 2025
+ * Updated: January 2026 - Added IndustryInputs type support
  */
 
 import type { TrueQuoteAuthenticatedResult } from "@/services/merlin";
+import type { IndustryInputs } from "@/types/industryInputTypes";
 
 // ============================================================================
 // WIZARD STATE - Single source of truth
@@ -61,9 +63,10 @@ export interface WizardState {
   evEnabled?: boolean;
   generatorEnabled?: boolean;
 
-  // Step 4: Options selections
+  // Step 3: Use Case Data - industry-specific inputs
+  // Uses typed IndustryInputs union for type safety
   useCaseData: {
-    inputs: Record<string, unknown>;
+    inputs: IndustryInputs | Record<string, unknown>;
     // Optional: room for metadata if needed later
     // meta?: Record<string, any>;
   };

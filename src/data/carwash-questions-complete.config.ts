@@ -46,6 +46,7 @@ export interface Question {
   quantityOptions?: Array<{
     value: string;
     label: string;
+    icon?: string | any;
     description?: string;
   }>;
   existingOptions?: Array<{
@@ -105,47 +106,37 @@ export const carWashQuestionsComplete: Question[] = [
   },
   {
     id: 'tunnelOrBayCount',
-    type: 'auto_confirm',
+    type: 'buttons',
     section: 'facility',
     title: 'Number of tunnels or bays?',
-    subtitle: 'Express tunnels are single-lane operations',
+    subtitle: 'Select how many wash lanes your facility has',
+    options: [
+      { value: '1', label: '1', icon: '1️⃣', description: 'Single lane' },
+      { value: '2', label: '2', icon: '2️⃣', description: 'Two lanes' },
+      { value: '3', label: '3', icon: '3️⃣', description: 'Three lanes' },
+      { value: '4', label: '4', icon: '4️⃣', description: 'Four lanes' },
+    ],
     conditionalLogic: {
       dependsOn: 'facilityType',
       showIf: () => true,
       modifyOptions: (facilityType: string) => {
-        if (facilityType === 'express_tunnel') {
-          return {
-            autoValue: 1,
-            locked: true,
-            message: '1 Tunnel (Standard configuration)'
-          };
-        }
-        if (facilityType === 'mini_tunnel') {
-          return {
-            autoValue: 1,
-            locked: true,
-            message: '1 Tunnel (Max: 1 tunnel)'
-          };
-        }
-        if (facilityType === 'in_bay_automatic') {
-          return {
-            autoValue: 1,
-            locked: true,
-            message: '1 Bay (Max: 1 bay)'
-          };
-        }
+        // Self-serve can have more bays
         if (facilityType === 'self_serve') {
           return {
-            autoValue: null,
-            locked: false,
-            range: { min: 1, max: 10, step: 1 },
-            message: 'Self-serve locations can have up to 10 bays'
+            options: [
+              { value: '2', label: '2', icon: '2️⃣', description: 'Two bays' },
+              { value: '4', label: '4', icon: '4️⃣', description: 'Four bays' },
+              { value: '6', label: '6', icon: '6️⃣', description: 'Six bays' },
+              { value: '8', label: '8', icon: '8️⃣', description: 'Eight bays' },
+            ]
           };
         }
-        return { autoValue: 1, locked: false };
+        return {};
       }
     },
-    validation: { required: true, min: 1, max: 10 },
+    smartDefault: '1',
+    merlinTip: 'Express tunnels typically have 1-2 lanes • Self-serve locations average 4-6 bays',
+    validation: { required: true },
     impactsCalculations: ['capacity', 'equipmentLoad']
   },
   {
@@ -182,9 +173,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Days open per week?',
     subtitle: 'Typical operating days',
     options: [
-      { value: '5', label: '5', description: 'days' },
-      { value: '6', label: '6', description: 'days' },
-      { value: '7', label: '7', description: 'days' }
+      { value: '5', label: '5', icon: '5️⃣', description: 'days' },
+      { value: '6', label: '6', icon: '6️⃣', description: 'days' },
+      { value: '7', label: '7', icon: '7️⃣', description: 'days' }
     ],
     smartDefault: '7',
     validation: { required: true },
@@ -211,9 +202,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Do you have an existing natural gas line?',
     subtitle: 'Affects water heating and generator fuel options',
     options: [
-      { value: 'yes', label: 'Yes' },
-      { value: 'no', label: 'No' },
-      { value: 'unknown', label: 'Not Sure / Unknown' }
+      { value: 'yes', label: 'Yes', icon: '✅' },
+      { value: 'no', label: 'No', icon: '❌' },
+      { value: 'unknown', label: 'Not Sure / Unknown', icon: '❓' }
     ],
     validation: { required: true },
     impactsCalculations: ['heatingOptions', 'operatingCosts']
@@ -307,10 +298,10 @@ export const carWashQuestionsComplete: Question[] = [
       }
     ],
     quantityOptions: [
-      { value: '1-2', label: '1-2 Pumps', description: '15-30 HP total' },
-      { value: '3-4', label: '3-4 Pumps', description: '45-80 HP total' },
-      { value: '5-6', label: '5-6 Pumps', description: '100-150 HP total' },
-      { value: '7+', label: '7+ Pumps', description: '150+ HP total' }
+      { value: '1-2', label: '1-2 Pumps', icon: '💧', description: '15-30 HP total' },
+      { value: '3-4', label: '3-4 Pumps', icon: '💧💧', description: '45-80 HP total' },
+      { value: '5-6', label: '5-6 Pumps', icon: '💦', description: '100-150 HP total' },
+      { value: '7+', label: '7+ Pumps', icon: '🌊', description: '150+ HP total' }
     ],
     validation: { required: true },
     impactsCalculations: ['pumpLoad', 'peakDemand']
@@ -384,10 +375,10 @@ export const carWashQuestionsComplete: Question[] = [
       }
     ],
     quantityOptions: [
-      { value: 'standard', label: 'Standard', description: '4 blowers' },
-      { value: 'premium', label: 'Premium', description: '6+ blowers' },
-      { value: 'heated', label: 'Heated', description: 'Heated dryers' },
-      { value: 'none', label: 'None', description: 'Air dry' }
+      { value: 'standard', label: 'Standard', icon: '💨', description: '4 blowers' },
+      { value: 'premium', label: 'Premium', icon: '💨💨', description: '6+ blowers' },
+      { value: 'heated', label: 'Heated', icon: '♨️', description: 'Heated dryers' },
+      { value: 'none', label: 'None', icon: '❌', description: 'Air dry' }
     ],
     validation: { required: true },
     impactsCalculations: ['dryerLoad', 'peakDemand']
@@ -411,7 +402,7 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'EV Charging Infrastructure?',
     subtitle: 'Do you have EV chargers on site? (optional)',
     existingOptions: [
-      { value: 'none', label: 'No EV Chargers on site' },
+      { value: 'none', label: 'No EV Chargers on site', icon: '❌' },
       {
         value: 'level2',
         label: 'Level 2 Chargers',
@@ -479,9 +470,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Conveyor motor size?',
     subtitle: 'Main drive motor for tunnel conveyor',
     options: [
-      { value: '5', label: '5 HP', description: '3.7 kW' },
-      { value: '10', label: '10 HP', description: '7.5 kW' },
-      { value: '15', label: '15 HP', description: '11.2 kW' }
+      { value: '5', label: '5 HP', icon: '⚙️', description: '3.7 kW' },
+      { value: '10', label: '10 HP', icon: '⚙️', description: '7.5 kW' },
+      { value: '15', label: '15 HP', icon: '⚙️', description: '11.2 kW' }
     ],
     smartDefault: '10',
     conditionalLogic: {
@@ -566,10 +557,10 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'RO (Reverse Osmosis) system pump?',
     subtitle: 'For spot-free rinse water',
     options: [
-      { value: 'none', label: 'None', description: '0 kW' },
-      { value: 'small', label: 'Small (5 HP)', description: '3.7 kW' },
-      { value: 'medium', label: 'Medium (10 HP)', description: '7.5 kW' },
-      { value: 'large', label: 'Large (15 HP)', description: '11.2 kW' }
+      { value: 'none', label: 'None', icon: '❌', description: '0 kW' },
+      { value: 'small', label: 'Small (5 HP)', icon: '💧', description: '3.7 kW' },
+      { value: 'medium', label: 'Medium (10 HP)', icon: '💧', description: '7.5 kW' },
+      { value: 'large', label: 'Large (15 HP)', icon: '💦', description: '11.2 kW' }
     ],
     smartDefault: 'small',
     validation: { required: true },
@@ -585,9 +576,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Air compressor size?',
     subtitle: 'For foaming soap and pneumatic equipment',
     options: [
-      { value: '5', label: '5 HP', description: '3.7 kW' },
-      { value: '10', label: '10 HP', description: '7.5 kW' },
-      { value: '15', label: '15 HP', description: '11.2 kW' }
+      { value: '5', label: '5 HP', icon: '💨', description: '3.7 kW' },
+      { value: '10', label: '10 HP', icon: '💨', description: '7.5 kW' },
+      { value: '15', label: '15 HP', icon: '💨', description: '11.2 kW' }
     ],
     smartDefault: '10',
     validation: { required: true },
@@ -600,9 +591,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Tunnel lighting?',
     subtitle: 'Interior wash tunnel illumination',
     options: [
-      { value: 'basic', label: 'Basic LED', description: '5 kW' },
-      { value: 'enhanced', label: 'Enhanced LED', description: '8 kW' },
-      { value: 'premium', label: 'Premium + Effects', description: '15 kW' }
+      { value: 'basic', label: 'Basic LED', icon: '💡', description: '5 kW' },
+      { value: 'enhanced', label: 'Enhanced LED', icon: '💡', description: '8 kW' },
+      { value: 'premium', label: 'Premium + Effects', icon: '✨', description: '15 kW' }
     ],
     smartDefault: 'enhanced',
     validation: { required: true },
@@ -615,9 +606,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Exterior signage?',
     subtitle: 'Illuminated brand signs and pricing displays',
     options: [
-      { value: 'basic', label: 'Basic', description: '5 kW' },
-      { value: 'premium', label: 'Premium', description: '10 kW' },
-      { value: 'signature', label: 'Signature', description: '20 kW' }
+      { value: 'basic', label: 'Basic', icon: '🪧', description: '5 kW' },
+      { value: 'premium', label: 'Premium', icon: '🪧', description: '10 kW' },
+      { value: 'signature', label: 'Signature', icon: '🌟', description: '20 kW' }
     ],
     smartDefault: 'premium',
     validation: { required: true },
@@ -630,10 +621,10 @@ export const carWashQuestionsComplete: Question[] = [
     title: 'Office facilities?',
     subtitle: 'Select all that apply',
     options: [
-      { value: 'office', label: 'Office', description: '2 kW' },
-      { value: 'break_room', label: 'Break Room', description: '3 kW' },
-      { value: 'bathrooms', label: 'Bathrooms', description: '1 kW' },
-      { value: 'security', label: 'Security Cameras', description: '0.5 kW' }
+      { value: 'office', label: 'Office', icon: '🏢', description: '2 kW' },
+      { value: 'break_room', label: 'Break Room', icon: '☕', description: '3 kW' },
+      { value: 'bathrooms', label: 'Bathrooms', icon: '🚻', description: '1 kW' },
+      { value: 'security', label: 'Security Cameras', icon: '📹', description: '0.5 kW' }
     ],
     smartDefault: [],
     validation: { required: false },

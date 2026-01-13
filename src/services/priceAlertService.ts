@@ -76,15 +76,15 @@ export interface NewsArticle {
 }
 
 // =====================================================
-// BASELINE PRICING (for comparison)
+// BASELINE PRICING (for comparison) - Q1 2026 Market
 // =====================================================
 
 const BASELINE_PRICES = {
-  battery_kwh_utility: 140.0, // $/kWh for utility-scale
-  battery_kwh_commercial: 180.0, // $/kWh for commercial
-  battery_kwh_residential: 250.0, // $/kWh for residential
-  battery_mwh_utility: 500000, // $/MWh installed
-  solar_watt: 1.2, // $/W installed
+  battery_kwh_utility: 115.0, // $/kWh for utility-scale (≥3 MW)
+  battery_kwh_commercial: 175.0, // $/kWh for commercial (100kW-3MW)
+  battery_kwh_residential: 275.0, // $/kWh for small commercial (<100kW)
+  battery_mwh_utility: 115000, // $/MWh installed (utility-scale)
+  solar_watt: 0.95, // $/W installed (commercial)
   wind_kw: 1500.0, // $/kW installed
 };
 

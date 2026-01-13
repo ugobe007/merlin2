@@ -241,8 +241,9 @@ function translateWizardState(state: WizardState): MerlinRequest {
         ultraFastCount: state.customEvUltraFast,
       },
       bess: {
-        customPowerKw: state.calculations?.bessKW,
-        customEnergyKwh: state.calculations?.bessKWh,
+        // ✅ FIXED: Read from nested structure (state.calculations.selected.*)
+        customPowerKw: state.calculations?.selected?.bessKW,
+        customEnergyKwh: state.calculations?.selected?.bessKWh,
       },
     },
 

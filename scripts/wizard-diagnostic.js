@@ -157,14 +157,24 @@
       results.step5.issues.push('No power level selected');
     }
     
-    // CALCULATIONS
+    // CALCULATIONS (Updated Jan 2026: nested structure { base, selected })
     if (state.calculations) {
-      if (state.calculations.bessKW > 0 && state.calculations.bessKWh > 0) {
+      // Check for correct nested structure
+      const hasNestedStructure = state.calculations.base && state.calculations.selected;
+      const selected = state.calculations.selected || {};
+      
+      if (hasNestedStructure && selected.bessKW > 0 && selected.bessKWh > 0) {
         results.calculations.status = '✅';
+      } else if (!hasNestedStructure && state.calculations.bessKW) {
+        // Old flat structure detected
+        results.calculations.status = '⚠️';
+        results.calculations.issues.push('FLAT STRUCTURE DETECTED - should be { base, selected }');
+        results.calculations.issues.push('bessKW found at root instead of calculations.selected.bessKW');
       } else {
         results.calculations.status = '❌';
-        if (state.calculations.bessKW === 0) results.calculations.issues.push('BESS Power = 0 kW');
-        if (state.calculations.bessKWh === 0) results.calculations.issues.push('BESS Energy = 0 kWh');
+        if (!hasNestedStructure) results.calculations.issues.push('Missing nested { base, selected } structure');
+        if (selected.bessKW === 0) results.calculations.issues.push('BESS Power = 0 kW');
+        if (selected.bessKWh === 0) results.calculations.issues.push('BESS Energy = 0 kWh');
       }
     } else {
       results.calculations.status = '❌';
@@ -201,29 +211,59 @@
       console.log('   Data:', step.data);
     });
     
-    // BESS-specific analysis
+    // BESS-specific analysis (Updated Jan 2026: nested structure)
     console.log('\n%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #8B5CF6;');
     console.log('%c🔋 BESS CALCULATION ANALYSIS', 'font-size: 14px; font-weight: bold;');
     console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #8B5CF6;');
     
     const calc = state.calculations || {};
-    console.log(`\n   BESS Power:  ${calc.bessKW || 0} kW ${calc.bessKW === 0 ? '← ❌ PROBLEM!' : ''}`);
-    console.log(`   BESS Energy: ${calc.bessKWh || 0} kWh ${calc.bessKWh === 0 ? '← ❌ PROBLEM!' : ''}`);
-    console.log(`   Solar:       ${calc.solarKW || 0} kW`);
-    console.log(`   Generator:   ${calc.generatorKW || 0} kW`);
-    console.log(`   Investment:  $${(calc.totalInvestment || 0).toLocaleString()}`);
-    console.log(`   Savings:     $${(calc.annualSavings || 0).toLocaleString()}/yr`);
-    console.log(`   Payback:     ${calc.paybackYears || 0} years`);
+    const hasNestedStructure = calc.base && calc.selected;
+    const selected = calc.selected || {};
+    const base = calc.base || {};
     
-    // Root cause analysis
-    if (calc.bessKW === 0 || calc.bessKWh === 0) {
+    // Check for flat vs nested
+    if (!hasNestedStructure && calc.bessKW) {
+      console.log('\n   %c⚠️  FLAT STRUCTURE DETECTED (Legacy)!', 'color: #F59E0B; font-weight: bold;');
+      console.log('   %cExpected: calculations.selected.bessKW', 'color: #F59E0B;');
+      console.log('   %cFound: calculations.bessKW (flat)', 'color: #F59E0B;');
+      console.log('\n   %c🔧 FIX: Update code to write { base: {...}, selected: {...} }', 'color: #10B981;');
+    }
+    
+    console.log('\n   %cStructure:', 'font-weight: bold;');
+    console.log(`      Nested format: ${hasNestedStructure ? '✅' : '❌'}`);
+    console.log(`      base keys: [${Object.keys(base).join(', ') || 'EMPTY'}]`);
+    console.log(`      selected keys: [${Object.keys(selected).join(', ') || 'EMPTY'}]`);
+    
+    console.log('\n   %cSelected Values:', 'font-weight: bold;');
+    console.log(`   BESS Power:  ${selected.bessKW || calc.bessKW || 0} kW ${(selected.bessKW || calc.bessKW) === 0 ? '← ❌ PROBLEM!' : ''}`);
+    console.log(`   BESS Energy: ${selected.bessKWh || calc.bessKWh || 0} kWh ${(selected.bessKWh || calc.bessKWh) === 0 ? '← ❌ PROBLEM!' : ''}`);
+    console.log(`   Solar:       ${selected.solarKW || calc.solarKW || 0} kW`);
+    console.log(`   Generator:   ${selected.generatorKW || calc.generatorKW || 0} kW`);
+    console.log(`   Investment:  $${(selected.totalInvestment || calc.totalInvestment || 0).toLocaleString()}`);
+    console.log(`   Savings:     $${(selected.annualSavings || calc.annualSavings || 0).toLocaleString()}/yr`);
+    console.log(`   Payback:     ${selected.paybackYears || calc.paybackYears || 0} years`);
+    
+    // Root cause analysis (Updated Jan 2026)
+    const bessKW = selected.bessKW || calc.bessKW || 0;
+    const bessKWh = selected.bessKWh || calc.bessKWh || 0;
+    
+    if (bessKW === 0 || bessKWh === 0) {
       console.log('\n%c⚠️  ROOT CAUSE ANALYSIS', 'font-size: 14px; font-weight: bold; color: #F59E0B;');
       console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #F59E0B;');
       
+      // Check for nested structure issues
+      if (!hasNestedStructure) {
+        console.log('\n   %c💡 STRUCTURE ISSUE: Missing nested { base, selected } format', 'color: #F59E0B;');
+        console.log('   %c   Expected: state.calculations = { base: {...}, selected: {...} }', 'color: #F59E0B;');
+        console.log('\n   %c🔧 FIX: Update Step5MagicFit.tsx to write nested structure', 'color: #10B981;');
+      }
+      
       const ucKeys = Object.keys(state.useCaseData || {});
+      const inputKeys = Object.keys(state.useCaseData?.inputs || {});
       const fdKeys = Object.keys(state.facilityDetails || {});
       
       console.log(`\n   useCaseData keys: [${ucKeys.join(', ') || 'EMPTY'}]`);
+      console.log(`   useCaseData.inputs keys: [${inputKeys.join(', ') || 'EMPTY'}]`);
       console.log(`   facilityDetails keys: [${fdKeys.join(', ')}]`);
       
       if (ucKeys.length === 0) {

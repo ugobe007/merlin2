@@ -12,9 +12,10 @@
  *
  * Part of TrueQuote Engine (Porsche 911 Architecture)
  *
- * VERSION 1.1.0 - January 2026
+ * VERSION 1.1.1 - January 2026
  * - Added UPS Mode logic for when user opts out of solar AND generator
  * - BESS upsized to compensate for lack of on-site generation
+ * - SSOT: Now uses DEFAULTS for generator/EV pricing
  */
 
 import type {
@@ -25,9 +26,10 @@ import type {
   EnergyGoal,
 } from "./contracts";
 import { calculateFinancials } from "./calculators/financialCalculator";
+import { DEFAULTS } from "./data/constants";
 
 // Magic Fit version
-const MAGIC_FIT_VERSION = "1.1.0";
+const MAGIC_FIT_VERSION = "1.1.1";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // USER PREFERENCES INTERFACE
@@ -460,11 +462,16 @@ function createOption(
   const carportSolarCost = carportSolarKW * (base.solar.costPerWatt * 1000 * 1.15);
   const totalSolarCost = roofSolarCost + carportSolarCost;
 
+  // SSOT: Use DEFAULTS for generator cost based on fuel type
+  const generatorCostPerKW = generatorFuelType === 'diesel' 
+    ? DEFAULTS.Generator.dieselCostPerKW 
+    : DEFAULTS.Generator.natgasCostPerKW;
+
   const financials = calculateFinancials({
     bessCost: bessKWh * base.bess.costPerKwh,
     solarCost: totalSolarCost,
-    generatorCost: generatorKW * 800,
-    evCost: l2Count * 6000 + dcfcCount * 75000 + ultraFastCount * 150000,
+    generatorCost: generatorKW * generatorCostPerKW,
+    evCost: l2Count * DEFAULTS.EV.l2Cost + dcfcCount * DEFAULTS.EV.dcfcCost + ultraFastCount * DEFAULTS.EV.ultraFastCost,
     bessKW,
     bessKWh,
     solarKW: totalSolarKW,

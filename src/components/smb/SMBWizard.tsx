@@ -12,9 +12,11 @@
  * <SMBWizard industrySlug="ev-charging-hub" />
  * <SMBWizard industrySlug="hotel" />
  * 
+ * SSOT: Uses DEFAULTS.Environmental for CO2 calculations
+ * 
  * @module SMBWizard
- * @version 1.0.0
- * @date November 30, 2025
+ * @version 1.0.1
+ * @date January 2026 - SSOT compliance
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -24,6 +26,7 @@ import { Zap, Sun, Battery, ChevronRight, ChevronLeft, Building2, Car, Hotel, Ut
 // Services
 import { getIndustryProfile, type IndustryPowerProfile } from '@/services/industryPowerProfilesService';
 import { supabase } from '@/services/supabaseClient';
+import { DEFAULTS } from '@/services/data/constants';
 
 // ✅ SSOT: Use QuoteEngine for all quote generation
 import { QuoteEngine } from '@/core/calculations';
@@ -226,7 +229,8 @@ export const SMBWizard: React.FC<SMBWizardProps> = ({ industrySlug, onComplete }
         annualSavings: quoteResult.financials.annualSavings,
         paybackYears: quoteResult.financials.paybackYears,
         roi10Year: quoteResult.financials.roi10Year,
-        co2ReductionTons: (solarKW * 1500 * 0.0004), // ~0.4 kg CO2/kWh avoided
+        // SSOT: Use DEFAULTS.Environmental.co2PerKWh (0.4 kg/kWh)
+        co2ReductionTons: (solarKW * 1500 * DEFAULTS.Environmental.co2PerKWh / 1000),
       };
       
       setQuoteResult(result);
