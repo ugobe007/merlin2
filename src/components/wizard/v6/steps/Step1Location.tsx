@@ -227,103 +227,34 @@ export function Step1Location({ state, updateState }: Props) {
 
   return (
     <div className="relative">
-      {/* NOTE: MerlinAdvisor is now rendered at WizardV6 level for all steps */}
+      {/* NOTE: MerlinBar is now rendered at WizardV6 level with unified messaging */}
       
-      {/* MERLIN'S LOCATION INSIGHTS PANEL */}
+      {/* COMPACT LOCATION STATS - Shows quick stats after location selected */}
       {locationData && (
-        <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-slate-800 via-slate-800/95 to-slate-800 border border-amber-500/30 shadow-xl shadow-amber-500/10">
-          <div className="flex items-start gap-4">
-            {/* Merlin Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300">
-                <span className="text-3xl">🧙</span>
-              </div>
-            </div>
-            
-            {/* Recommendation Content */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-amber-400 font-bold text-lg">Merlin's Analysis</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-white font-medium">
-                  {region === 'us' 
-                    ? `${US_STATE_DATA[state.state]?.name || state.state}, ${state.state}`
-                    : `${selectedCity}, ${selectedCountry}`
-                  }
-                </span>
-              </div>
-              
-              {/* Smart Recommendation Message */}
-              <div className="text-slate-200 text-sm mb-4 leading-relaxed">
-                {locationData.sunHours >= 5.5 ? (
-                  <>
-                    <span className="text-green-400 font-semibold">☀️ Great news{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has excellent solar potential with{' '}
-                    <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
-                    {locationData.electricityRate > 0.12 ? (
-                      <> Your utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> is above average — <span className="text-green-300">solar + BESS will maximize your savings!</span></>
-                    ) : locationData.electricityRate > 0.08 ? (
-                      <> With a rate of <span className="text-amber-300">${locationData.electricityRate.toFixed(4)}/kWh</span>, {businessLookup?.found ? `${businessLookup.businessName} will` : "you'll"} see solid returns on solar + battery storage.</>
-                    ) : (
-                      <> Your low rate of <span className="text-green-300">${locationData.electricityRate.toFixed(4)}/kWh</span> means BESS for peak shaving and backup power is {businessLookup?.found ? `${businessLookup.businessName}'s` : 'your'} best strategy.</>
-                    )}
-                  </>
-                ) : locationData.sunHours >= 4.5 ? (
-                  <>
-                    <span className="text-amber-400 font-semibold">🌤️ Good potential{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}!</span> Your location has{' '}
-                    <span className="text-amber-300 font-bold">{locationData.sunHours} peak sun hours/day</span>.
-                    {locationData.electricityRate > 0.15 ? (
-                      <> Your high utility rate of <span className="text-red-400 font-bold">${locationData.electricityRate.toFixed(4)}/kWh</span> makes <span className="text-purple-300">BESS + solar a smart investment</span> for demand charge reduction.</>
-                    ) : (
-                      <> Solar paired with battery storage will help {businessLookup?.found ? businessLookup.businessName : 'you'} reduce energy costs and provide backup power.</>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <span className="text-blue-400 font-semibold">⚡ Consider hybrid power{businessLookup?.found ? ` for ${businessLookup.businessName}` : ''}.</span> Your location has{' '}
-                    <span className="text-amber-300">{locationData.sunHours} peak sun hours/day</span> — solar output may be limited.
-                    <span className="text-purple-300"> I recommend a <span className="font-semibold">generator + BESS combination</span> for reliable power, peak shaving, and backup during outages.</span>
-                  </>
-                )}
-              </div>
-              
-              {/* Quick Stats Row */}
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                  <Sun className="w-4 h-4 text-amber-400" />
-                  <span className="text-amber-200 text-sm font-medium">{locationData.sunHours} hrs/day</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-200 text-sm font-medium">${locationData.electricityRate.toFixed(4)}/kWh</span>
-                </div>
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                  locationData.solarRating === 'A' ? 'bg-green-500/10 border border-green-500/30' :
-                  locationData.solarRating === 'B' ? 'bg-amber-500/10 border border-amber-500/30' :
-                  'bg-blue-500/10 border border-blue-500/30'
-                }`}>
-                  <Star className={`w-4 h-4 ${
-                    locationData.solarRating === 'A' ? 'text-green-400' :
-                    locationData.solarRating === 'B' ? 'text-amber-400' :
-                    'text-blue-400'
-                  }`} />
-                  <span className={`text-sm font-medium ${
-                    locationData.solarRating === 'A' ? 'text-green-200' :
-                    locationData.solarRating === 'B' ? 'text-amber-200' :
-                    'text-blue-200'
-                  }`}>{locationData.solarRating} - {locationData.solarLabel}</span>
-                </div>
-              </div>
-              
-              {/* What Merlin Does - Explanation */}
-              <div className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  <span className="text-amber-400 font-semibold">How Merlin helps:</span> Based on your location's solar irradiance, utility rates, and weather patterns, 
-                  I'll design an optimal energy system combining <span className="text-purple-300">battery storage (BESS)</span>, 
-                  <span className="text-amber-300"> solar panels</span>, and <span className="text-blue-300">backup generators</span> — 
-                  tailored to maximize your savings and ensure reliable power for your business.
-                </p>
-              </div>
-            </div>
+        <div className="mb-6 flex flex-wrap gap-3 justify-center">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
+            <Sun className="w-4 h-4 text-amber-400" />
+            <span className="text-amber-200 text-sm font-medium">{locationData.sunHours} hrs/day</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30">
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-200 text-sm font-medium">${locationData.electricityRate.toFixed(4)}/kWh</span>
+          </div>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+            locationData.solarRating === 'A' ? 'bg-green-500/10 border border-green-500/30' :
+            locationData.solarRating === 'B' ? 'bg-amber-500/10 border border-amber-500/30' :
+            'bg-blue-500/10 border border-blue-500/30'
+          }`}>
+            <Star className={`w-4 h-4 ${
+              locationData.solarRating === 'A' ? 'text-green-400' :
+              locationData.solarRating === 'B' ? 'text-amber-400' :
+              'text-blue-400'
+            }`} />
+            <span className={`text-sm font-medium ${
+              locationData.solarRating === 'A' ? 'text-green-200' :
+              locationData.solarRating === 'B' ? 'text-amber-200' :
+              'text-blue-200'
+            }`}>{locationData.solarRating} - {locationData.solarLabel}</span>
           </div>
         </div>
       )}

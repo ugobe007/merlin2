@@ -13,8 +13,7 @@ import { Step3Details } from "./steps/Step3Details";
 import { Step4Options } from "./steps/Step4Options";
 import { Step5MagicFit } from "./steps/Step5MagicFit";
 import { Step6Quote } from "./steps/Step6Quote";
-import { ValueTicker } from "./components/ValueTicker";
-import { MerlinAdvisor } from "./MerlinAdvisor";
+import { MerlinBar } from "./MerlinBar";
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -198,56 +197,66 @@ export default function WizardV6() {
     });
   const goToStep = (step: number) => setCurrentStep(step);
 
-  // Calculate values for ValueTicker
-  const tickerValues = useMemo(() => {
-    // ✅ COMMIT 3: ValueTicker now reads from nested structure (calculations.base.* and calculations.selected.*)
-    // Step 5 is the SSOT for all derived values
-
-    // Base data from Step 5 calculations.base (SSOT - never changes)
-    // Fallback to 0 if not yet calculated (Steps 1-4)
+  // Calculate values for MerlinBar (unified command center)
+  const merlinBarProps = useMemo(() => {
+    // Base data from Step 5 calculations.base (SSOT)
     const annualUsage = state.calculations?.base?.annualConsumptionKWh || 0;
     const peakDemand = state.calculations?.base?.peakDemandKW || 0;
-
-    // Utility rates from calculations.base (Step 5) or defaults
-    // SSOT: Use rate from calculations.base (set by Step5MagicFit from utilityRateService)
-    // Fallback to EIA 2024 national average commercial rate
     const utilityRate = state.calculations?.base?.utilityRate || 0.12;
-    const demandRate = state.calculations?.base?.demandCharge || 15; // $/kW typical commercial rate
+    const demandRate = state.calculations?.base?.demandCharge || 15;
 
-    // Calculate annual energy spend and peak demand charges
     const annualEnergySpend = annualUsage * utilityRate;
-    const peakDemandCharges = peakDemand * demandRate * 12; // Annual (monthly × 12)
+    const peakDemandCharges = peakDemand * demandRate * 12;
 
-    // Get system sizes from state (Step 4 custom values or Step 5 calculations.selected)
-    // calculations.selected changes when user picks a tier, calculations.base never changes
+    // System sizes from state or calculations
     const solarKw = state.customSolarKw || state.calculations?.selected?.solarKW || 0;
     const bessKwh = state.calculations?.selected?.bessKWh || 0;
     const generatorKw = state.customGeneratorKw || state.calculations?.selected?.generatorKW || 0;
-    // EV counts: prefer custom values, then calculations.selected, then 0
     const evL2Count = state.customEvL2 || state.calculations?.selected?.evChargers || 0;
-    const evDcfcCount = state.customEvDcfc || 0; // Note: evChargers in selected is total, not split
+    const evDcfcCount = state.customEvDcfc || 0;
 
-    // Flags based on selectedOptions (set in Step 4)
+    // Flags
     const hasSolar = state.selectedOptions?.includes("solar") || false;
     const hasGenerator = state.selectedOptions?.includes("generator") || false;
     const hasEv = state.selectedOptions?.includes("ev") || false;
 
     return {
-      annualEnergySpend,
-      peakDemandCharges,
-      annualUsageKwh: annualUsage,
+      // Location data
+      state: state.state,
+      city: state.city,
+      sunHours: state.solarData?.sunHours,
+      electricityRate: state.electricityRate || utilityRate,
+      solarRating: state.solarData?.rating,
+      
+      // Goals & Industry
+      goals: state.goals,
+      industry: state.industry,
+      industryName: state.industryName,
+      
+      // Options & Equipment
+      hasSolar,
+      hasGenerator,
+      hasEv,
       solarKw,
       bessKwh,
       generatorKw,
       generatorFuel: state.generatorFuel || "natural-gas",
       evL2Count,
       evDcfcCount,
-      hasSolar,
-      hasGenerator,
-      hasEv,
-      industryType: state.industryName,
+      
+      // Baseline data
+      annualEnergySpend,
+      peakDemandCharges,
+      annualUsageKwh: annualUsage,
+      
+      // Selection state
+      selectedTier: state.selectedPowerLevel as 'efficient' | 'balanced' | 'maximum' | undefined,
+      annualSavings: state.calculations?.selected?.annualSavings,
+      
+      // Callbacks
+      onJumpToStep: goToStep,
     };
-  }, [state]);
+  }, [state, goToStep]);
 
   // Start Over: Reset state and go to Step 1
   const handleStartOver = () => {
@@ -358,10 +367,10 @@ export default function WizardV6() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          VALUE TICKER - Shows on all steps
+          MERLIN BAR - Unified command center, shows on all steps
           ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="max-w-6xl mx-auto px-4">
-        <ValueTicker currentStep={currentStep} {...tickerValues} />
+      <div className="max-w-6xl mx-auto">
+        <MerlinBar currentStep={currentStep} {...merlinBarProps} />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
@@ -424,28 +433,6 @@ export default function WizardV6() {
         isOpen={showStartOverModal}
         onClose={() => setShowStartOverModal(false)}
         onConfirm={handleStartOver}
-      />
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          MERLIN ADVISOR - Fixed right panel, the Star of the wizard!
-          ═══════════════════════════════════════════════════════════════════════ */}
-      <MerlinAdvisor
-        currentStep={currentStep}
-        state={state.state}
-        city={state.city}
-        goals={state.goals}
-        sunHours={state.solarData?.sunHours}
-        electricityRate={state.electricityRate}
-        solarRating={state.solarData?.rating}
-        industry={state.industry}
-        industryName={state.industryName}
-        hasSolar={state.selectedOptions?.includes('solar')}
-        hasGenerator={state.selectedOptions?.includes('generator')}
-        hasEv={state.selectedOptions?.includes('ev')}
-        solarKw={state.customSolarKw || state.calculations?.selected?.solarKW}
-        generatorKw={state.customGeneratorKw || state.calculations?.selected?.generatorKW}
-        selectedTier={state.selectedPowerLevel || undefined}
-        annualSavings={state.calculations?.selected?.annualSavings}
       />
 
       {/* Request Quote Modal - only show when on step 6 */}
