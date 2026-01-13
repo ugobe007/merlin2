@@ -53,11 +53,11 @@ export interface ConstantsCache {
 // ============================================
 
 const FALLBACK_CONSTANTS: Record<string, { value: number; source: string }> = {
-  // Pricing
-  battery_cost_per_kwh_small: { value: 350, source: "NREL ATB 2024" },
-  battery_cost_per_kwh_medium: { value: 300, source: "NREL ATB 2024" },
-  battery_cost_per_kwh_large: { value: 250, source: "NREL ATB 2024" },
-  solar_cost_per_watt: { value: 2.5, source: "SEIA Q3 2024" },
+  // Pricing - Q1 2026 Market
+  battery_cost_per_kwh_small: { value: 275, source: "Q1 2026 Market (<100kW)" },
+  battery_cost_per_kwh_medium: { value: 175, source: "Q1 2026 Market (100kW-3MW)" },
+  battery_cost_per_kwh_large: { value: 115, source: "Q1 2026 Market (≥3MW)" },
+  solar_cost_per_watt: { value: 0.95, source: "Q1 2026 Market (commercial)" },
   inverter_cost_per_kw: { value: 150, source: "Industry average" },
   installation_percentage: { value: 0.15, source: "Industry standard" },
 

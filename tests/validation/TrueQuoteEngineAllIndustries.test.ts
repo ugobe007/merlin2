@@ -1,14 +1,21 @@
 /**
  * TrueQuote Engine - All Industries Validation Test
  * 
- * Tests that all 12 industries work correctly with TrueQuote Engine
- * after adding configs for the 7 missing industries.
+ * @deprecated This test uses the legacy TrueQuoteEngine (v1).
+ * For new tests, use TrueQuoteEngineV2 via the Porsche 911 architecture:
+ *   - import { runTrueQuote } from '@/services/TrueQuoteEngineV2';
+ *   - Or use MerlinOrchestrator.process(request)
+ * 
+ * This file is kept for backward compatibility and regression testing
+ * of the legacy engine interface.
  * 
  * Date: January 2, 2026
+ * Updated: January 13, 2026 - Added deprecation notice
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateTrueQuote, type TrueQuoteInput } from '@/services/TrueQuoteEngine';
+// @deprecated - Using legacy TrueQuoteEngine for backward compatibility
+import { calculateTrueQuote, type TrueQuoteInput } from '@/services/_deprecated/TrueQuoteEngine';
 
 describe('TrueQuote Engine - All Industries', () => {
   

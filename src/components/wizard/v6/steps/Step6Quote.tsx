@@ -26,6 +26,7 @@ import {
 
 import type { WizardState } from "../types";
 import { POWER_LEVELS } from "../types";
+import { useSSOTValidation } from "@/utils/ssotValidation";
 
 import RequestQuoteModal from "@/components/modals/RequestQuoteModal";
 import { exportQuoteAsPDF } from "@/utils/quoteExportUtils";
@@ -38,6 +39,9 @@ interface Props {
 export function Step6Quote({ state }: Props) {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showPricingSources, setShowPricingSources] = useState(false);
+
+  // SSOT Validation: Ensure calculations has correct nested structure
+  useSSOTValidation(state.calculations, 'Step6Quote');
 
   const calculations = state.calculations;
   const selectedPowerLevel = state.selectedPowerLevel;
@@ -62,7 +66,8 @@ export function Step6Quote({ state }: Props) {
         ? Math.round((selected.federalITC / selected.totalInvestment) * 100)
         : 30;
 
-  const quoteId = selected.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
+  // ✅ FIXED: Read quoteId from base (SSOT) not selected
+  const quoteId = base.quoteId || `MQ-${Date.now().toString(36).toUpperCase()}`;
 
   const tenYearSavings = (selected.annualSavings || 0) * 10;
   const netTenYearValue = tenYearSavings - (selected.netInvestment || 0);
@@ -108,8 +113,9 @@ export function Step6Quote({ state }: Props) {
         cyclesPerYear: 365,
         warrantyYears: 15,
 
-        utilityRate: selected.utilityRate ?? base.utilityRate ?? state.electricityRate ?? 0.12,
-        demandCharge: selected.demandCharge ?? base.demandCharge ?? 15,
+        // ✅ FIXED: Read utility data from base (SSOT) not selected
+        utilityRate: base.utilityRate ?? state.electricityRate ?? 0.12,
+        demandCharge: base.demandCharge ?? 15,
 
         solarPVIncluded: (selected.solarKW || 0) > 0,
         solarCapacityKW: selected.solarKW || 0,
@@ -288,7 +294,6 @@ export function Step6Quote({ state }: Props) {
               <span className="font-semibold">
                 $
                 {(
-                  selected.utilityRate ??
                   base.utilityRate ??
                   state.electricityRate ??
                   0.12
@@ -309,7 +314,7 @@ export function Step6Quote({ state }: Props) {
           </div>
         </div>
 
-        {selected.pricingSources?.length ? (
+        {base.pricingSources?.length ? (
           <div className="mt-6">
             <button
               onClick={() => setShowPricingSources((s) => !s)}
@@ -319,7 +324,7 @@ export function Step6Quote({ state }: Props) {
             </button>
             {showPricingSources && (
               <ul className="mt-3 text-sm text-slate-300 list-disc pl-5">
-                {selected.pricingSources.map((src) => (
+                {base.pricingSources.map((src: string) => (
                   <li key={src}>{src}</li>
                 ))}
               </ul>

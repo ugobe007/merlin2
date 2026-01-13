@@ -275,16 +275,8 @@ export function CompleteStep3Component({
                   ref={(el) => {
                     questionRefs.current[index] = el;
                   }}
-                  className={`
-                    scroll-mt-24 transition-all duration-300
-                    ${
-                      index === currentQuestionIndex
-                        ? "opacity-100 scale-100"
-                        : index < currentQuestionIndex
-                          ? "opacity-60 scale-95"
-                          : "opacity-40 scale-90"
-                    }
-                  `}
+                  className="scroll-mt-24 transition-all duration-300 opacity-100"
+                  onClick={() => setCurrentQuestionIndex(index)}
                 >
                   <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl">
                     <CompleteQuestionRenderer

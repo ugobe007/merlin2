@@ -231,11 +231,11 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200",
-              "hover:scale-[1.02] hover:shadow-md",
+              "relative flex flex-col items-center p-4 rounded-xl transition-all duration-200",
+              "hover:scale-[1.02]",
               isSelected
-                ? `${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/10 shadow-[0_0_20px_rgba(139,92,246,0.25)]`
-                : `border-slate-200 bg-white/80 ${scheme.bgHover}`
+                ? `border-2 ${scheme.borderSelected} bg-gradient-to-br ${scheme.primaryGradient}/10 shadow-[0_0_20px_rgba(139,92,246,0.25)]`
+                : `border border-transparent bg-slate-800/50 hover:bg-slate-700/50`
             )}
           >
             {/* Selection checkmark */}
@@ -257,7 +257,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
                   "w-10 h-10 rounded-lg flex items-center justify-center mb-2",
                   isSelected
                     ? `bg-gradient-to-br ${scheme.primaryGradient} text-white`
-                    : "bg-slate-100 text-slate-600"
+                    : "bg-slate-700/50 text-slate-300"
                 )}
               >
                 {getIcon(option.icon, "w-5 h-5", undefined, option.value)}
@@ -268,7 +268,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
             <span
               className={cn(
                 "text-sm font-medium text-center",
-                isSelected ? scheme.textSelected : "text-slate-700"
+                isSelected ? scheme.textSelected : "text-slate-200"
               )}
             >
               {option.label}
@@ -276,7 +276,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
 
             {/* Description */}
             {option.description && (
-              <span className="text-xs text-slate-500 text-center mt-1 line-clamp-2">
+              <span className="text-xs text-slate-400 text-center mt-1 line-clamp-2">
                 {option.description}
               </span>
             )}

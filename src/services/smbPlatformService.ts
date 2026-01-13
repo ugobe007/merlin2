@@ -609,7 +609,7 @@ export function quickEstimate(input: { unitCount: number; state: string; industr
   const monthlySavings = (storageKwh * rate * 0.3 * 30) / hoursBackup;
 
   // Rough cost estimate
-  const cost = storageKwh * 350;
+  const cost = storageKwh * 175; // $175/kWh commercial (DEFAULTS.BESS.costPerKWhCommercial)
   const netCost = cost * 0.7; // After ITC
   const paybackYears = netCost / (monthlySavings * 12);
 

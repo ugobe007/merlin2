@@ -1,6 +1,71 @@
 # Vineet Features Implementation Plan
 ## Date: January 4, 2026
 
+---
+
+## ✅ WORKFLOW AUDIT - January 13, 2026
+
+### Architecture Verified - All Links Working
+
+**The TrueQuote SSOT Flow:**
+```
+WizardV6.tsx (state management + bufferService auto-save)
+   ↓
+Step5MagicFit.tsx (calls generateQuote)
+   ↓
+@/services/merlin/index.ts (public API)
+   ↓
+MerlinOrchestrator.ts (translateWizardState → MerlinRequest)
+   ↓
+TrueQuoteEngineV2.ts (processQuote - runs all calculators)
+   ├── loadCalculator.ts
+   ├── bessCalculator.ts
+   ├── solarCalculator.ts
+   ├── generatorCalculator.ts
+   ├── evCalculator.ts
+   └── financialCalculator.ts
+   ↓
+MagicFit.ts (generateMagicFitProposal - 3 tier options)
+   ↓
+proposalValidator.ts (authenticateProposal)
+   ↓
+TrueQuoteAuthenticatedResult (returned to Step5)
+   ↓
+Step5MagicFit → updateState({ calculations: { base, selected } })
+   ↓
+Step6Quote.tsx (displays results)
+```
+
+### Type Mismatch FIXED
+
+| Issue | Location | Fix Applied |
+|-------|----------|-------------|
+| Flat vs nested `calculations` | Step5MagicFit.tsx | ✅ Now writes `{ base, selected }` structure |
+| `federalITCRate` read from wrong source | Step5MagicFit.tsx | ✅ Now reads from `base.financials` |
+| `quoteId` read from `selected` | Step6Quote.tsx | ✅ Now reads from `base.quoteId` |
+| `utilityRate/demandCharge` read from `selected` | Step6Quote.tsx | ✅ Now reads from `base` |
+| `pricingSources` read from `selected` | Step6Quote.tsx | ✅ Now reads from `base` |
+| `bessKW/bessKWh` read flat | trueQuoteMapper.ts | ✅ Now reads from `calculations.selected.*` |
+
+### Buffer Service Status
+- ✅ Auto-save working (1s debounce)
+- ✅ Immediate save on step change
+- ✅ Save on beforeunload
+- ✅ Migration support for old buffers
+- ⚠️ Supabase backup: TODO (placeholder implemented)
+
+### ValueTicker Flow
+- ✅ Reads from `calculations.base.*` for load data
+- ✅ Reads from `calculations.selected.*` for tier data
+- ✅ Falls back gracefully when calculations not yet available
+
+### Build Status
+- 105 TypeScript errors (down from 115)
+- Remaining errors are pre-existing `useCaseData` type issues
+- Core workflow types are now correctly aligned
+
+---
+
 ## Feature 1: EV Charging - Recommended vs Customize Flow
 
 ### Current State:

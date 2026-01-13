@@ -1094,7 +1094,7 @@ export function calculateHospitalProfile(inputs: HospitalInputs): HospitalCalcul
 
   // Savings
   const demandChargeSavings = Math.round(estimatedPeakKw * 15 * 12 * 0.25); // 25% demand reduction
-  const solarSavings = Math.round(recommendedSolarKw * 400);
+  const solarSavings = Math.round(recommendedSolarKw * 400); // SSOT: DEFAULTS.Preview.solarSavingsPerKW
   const annualSavings = demandChargeSavings + solarSavings;
 
   // Compliance check

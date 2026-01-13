@@ -147,9 +147,9 @@ const NREL_TRANSFORMER_PRICING: TransformerPricing = {
 };
 
 const NREL_SOLAR_PRICING: SolarPricing = {
-  pricePerWatt: 0.85, // $0.85/W for utility-scale (NREL ATB 2024, may be updated)
-  manufacturer: "Various (NREL ATB 2024)",
-  model: "Utility-Scale Solar",
+  pricePerWatt: 0.95, // $0.95/W for commercial (Q1 2026 market)
+  manufacturer: "Various (Q1 2026 Market)",
+  model: "Commercial Solar",
   efficiency: 0.2,
   warrantyYears: 25,
   dataSource: "nrel",

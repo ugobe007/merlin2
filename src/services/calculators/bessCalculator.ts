@@ -32,8 +32,12 @@ export interface BESSCalculationResult {
 }
 
 // BESS constants
+import { getBESSCostPerKWh, DEFAULTS } from '../data/constants';
+
+// BESS constants - uses SSOT from data/constants.ts
 const BESS_CONSTANTS = {
-  COST_PER_KWH: 350,          // $/kWh installed
+  // NOTE: COST_PER_KWH is now size-aware - use getBESSCostPerKWh(systemKW)
+  COST_PER_KWH_DEFAULT: DEFAULTS.BESS.costPerKWh,  // $175/kWh (commercial default)
   COST_PER_KW: 150,           // $/kW for power electronics
   EFFICIENCY: 0.85,           // Round-trip efficiency
   DEGRADATION_ANNUAL: 0.025,  // 2.5% per year
@@ -172,8 +176,9 @@ export function calculateBESS(input: BESSCalculationInput): BESSCalculationResul
   // Recalculate actual duration
   const actualDuration = energyKWh / powerKW;
 
-  // Calculate costs
-  const energyCost = energyKWh * BESS_CONSTANTS.COST_PER_KWH;
+  // Calculate costs - use size-aware pricing
+  const costPerKWh = getBESSCostPerKWh(powerKW);
+  const energyCost = energyKWh * costPerKWh;
   const powerCost = powerKW * BESS_CONSTANTS.COST_PER_KW;
   const totalCost = energyCost + powerCost;
 
@@ -185,7 +190,7 @@ export function calculateBESS(input: BESSCalculationInput): BESSCalculationResul
     efficiency: BESS_CONSTANTS.EFFICIENCY,
     warrantyYears: BESS_CONSTANTS.WARRANTY_YEARS,
     estimatedCost: Math.round(totalCost),
-    costPerKwh: BESS_CONSTANTS.COST_PER_KWH,
+    costPerKwh: costPerKWh,
     sizingRationale: `${config.rationale}. ${Math.round(adjustedCriticalLoad * 100)}% critical load × ${adjustedDuration}hr duration.`,
     breakdown: [
       { component: 'Battery Modules', cost: Math.round(energyCost * 0.65) },

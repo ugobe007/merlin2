@@ -430,24 +430,41 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
     if (!quoteResult) return;
 
     const option = quoteResult.options[tier];
+    const base = quoteResult.baseCalculation;
     setSelectedTier(tier);
 
+    // ✅ FIXED: Write nested { base, selected } structure matching SystemCalculations type
     updateState({
       selectedPowerLevel:
         tier === "starter" ? "starter" : tier === "perfectFit" ? "perfect_fit" : "beast_mode",
       calculations: {
-        bessKW: option.bess.powerKW,
-        bessKWh: option.bess.energyKWh,
-        solarKW: option.solar.capacityKW,
-        evChargers: option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount,
-        generatorKW: option.generator.capacityKW,
-        totalInvestment: option.financials.totalInvestment,
-        annualSavings: option.financials.annualSavings,
-        paybackYears: option.financials.paybackYears,
-        tenYearROI: option.financials.tenYearROI,
-        federalITC: option.financials.federalITC,
-        netInvestment: option.financials.netCost,
-        quoteId: quoteResult.quoteId,
+        // Base calculations (SSOT - immutable, from TrueQuote baseCalculation)
+        base: {
+          annualConsumptionKWh: base.load.annualConsumptionKWh,
+          peakDemandKW: base.load.peakDemandKW,
+          utilityName: base.utility.name,
+          utilityRate: base.utility.rate,
+          demandCharge: base.utility.demandCharge,
+          hasTOU: base.utility.hasTOU,
+          quoteId: quoteResult.quoteId,
+          pricingSources: ["NREL ATB 2024", "EIA", "IRS"],
+        },
+        // Selected tier calculations (changes when user picks a tier)
+        selected: {
+          bessKW: option.bess.powerKW,
+          bessKWh: option.bess.energyKWh,
+          solarKW: option.solar.capacityKW,
+          evChargers: option.ev.l2Count + option.ev.dcfcCount + option.ev.ultraFastCount,
+          generatorKW: option.generator.capacityKW,
+          totalInvestment: option.financials.totalInvestment,
+          annualSavings: option.financials.annualSavings,
+          paybackYears: option.financials.paybackYears,
+          tenYearROI: option.financials.tenYearROI,
+          federalITC: option.financials.federalITC,
+          // ✅ FIXED: Get federalITCRate from baseCalculation (not option.financials)
+          federalITCRate: base.financials.federalITCRate,
+          netInvestment: option.financials.netCost,
+        },
       },
     });
   };

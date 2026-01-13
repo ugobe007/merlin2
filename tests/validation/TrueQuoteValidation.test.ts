@@ -1,11 +1,15 @@
 /**
  * TrueQuote Validation Test
  * 
+ * @deprecated This test uses the legacy TrueQuoteEngine (v1).
+ * For new tests, use TrueQuoteEngineV2 via the Porsche 911 architecture.
+ * 
  * Tests the TrueQuote Engine against known-correct benchmarks
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateTrueQuote } from '@/services/TrueQuoteEngine';
+// @deprecated - Using legacy TrueQuoteEngine for backward compatibility
+import { calculateTrueQuote } from '@/services/_deprecated/TrueQuoteEngine';
 import {
   BENCHMARKS,
   validateAgainstBenchmark,

@@ -1223,7 +1223,7 @@ export function calculateUniversityProfile(inputs: UniversityInputs): University
 
   // Savings
   const demandChargeSavings = Math.round(estimatedPeakMw * 1000 * 12 * 12 * 0.3); // 30% reduction
-  const solarSavings = Math.round(recommendedSolarMw * 1000 * 350); // $350/kW
+  const solarSavings = Math.round(recommendedSolarMw * 1000 * 400); // SSOT: $400/kW (DEFAULTS.Preview.solarSavingsPerKW)
   const annualSavings = demandChargeSavings + solarSavings;
 
   // Climate analysis

@@ -296,14 +296,24 @@ function printSummary(state) {
     issues.push('⚠️ useCaseData is empty - Step 3 may be writing to facilityDetails instead');
   }
   
-  // Check calculations
+  // Check calculations (Updated Jan 2026: nested structure)
   if (!state.calculations) {
     issues.push('❌ CRITICAL: No calculations object (Step 5 calculation failed)');
   } else {
-    if (state.calculations.bessKW === 0) {
+    const hasNestedStructure = state.calculations.base && state.calculations.selected;
+    const selected = state.calculations.selected || {};
+    
+    if (!hasNestedStructure && state.calculations.bessKW !== undefined) {
+      issues.push('⚠️ STRUCTURE: calculations has FLAT format instead of { base, selected }');
+    }
+    
+    const bessKW = selected.bessKW ?? state.calculations.bessKW ?? 0;
+    const bessKWh = selected.bessKWh ?? state.calculations.bessKWh ?? 0;
+    
+    if (bessKW === 0) {
       issues.push('❌ CRITICAL: BESS Power = 0 kW (calculation returned nothing)');
     }
-    if (state.calculations.bessKWh === 0) {
+    if (bessKWh === 0) {
       issues.push('❌ CRITICAL: BESS Storage = 0 kWh (calculation returned nothing)');
     }
   }

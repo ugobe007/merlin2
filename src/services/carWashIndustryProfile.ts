@@ -594,7 +594,7 @@ export function calculateCarWashProfile(inputs: CarWashInputs): CarWashCalculati
 
   // Savings
   const demandChargeSavings = Math.round(estimatedPeakKw * demandRate * 12 * 0.6);
-  const solarSavings = Math.round(recommendedSolarKw * 400);
+  const solarSavings = Math.round(recommendedSolarKw * 400); // SSOT: DEFAULTS.Preview.solarSavingsPerKW
   const annualSavings = demandChargeSavings + solarSavings;
 
   // Confidence

@@ -195,7 +195,8 @@ updateState({
 **Step4Options** reads from `useCaseData`:
 ```typescript
 const sqft = state.useCaseData?.squareFootage || 50000;
-const peakLoadMW = state.calculations?.bessKW ? state.calculations.bessKW / 1000 : 1;
+// Updated Jan 2026: calculations uses nested structure { base, selected }
+const peakLoadMW = state.calculations?.selected?.bessKW ? state.calculations.selected.bessKW / 1000 : 1;
 ```
 
 **Status**: ✅ **VERIFIED**
@@ -229,21 +230,26 @@ const trueQuoteInput = mapWizardStateToTrueQuoteInput(state);
 
 **Step5MagicFit** calculates and stores:
 ```typescript
+// Updated Jan 2026: Uses nested structure { base, selected }
 updateState({
   selectedPowerLevel: level,
   calculations: {
-    bessKW, bessKWh,
-    solarKW, evPowerKW,
-    totalInvestment, annualSavings,
-    ...
+    base: { bessKW, bessKWh, solarKW, ... },    // MagicFit base recommendations
+    selected: {                                 // User's selected values
+      bessKW, bessKWh,
+      solarKW, evPowerKW,
+      totalInvestment, annualSavings,
+      ...
+    }
   }
 });
 ```
 
-**Step6Quote** reads from `state.calculations`:
+**Step6Quote** reads from `state.calculations.selected`:
 ```typescript
-const { calculations } = state;
-// Uses: calculations.bessKW, calculations.solarKW, etc.
+// Updated Jan 2026: Uses nested structure
+const { selected } = state.calculations || {};
+// Uses: selected.bessKW, selected.solarKW, etc.
 ```
 
 **Status**: ✅ **VERIFIED**

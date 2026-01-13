@@ -15,6 +15,7 @@
 import type { Industry, SolarType } from '../contracts';
 import { getStateSolarData, type StateSolarData } from '../stateSolarService';
 import { getConstant } from '../calculationConstantsService';
+import { getSolarCostPerWatt, DEFAULTS } from '../data/constants';
 
 export interface SolarCalculationInput {
   peakDemandKW: number;
@@ -58,11 +59,12 @@ export interface SolarCalculationResult {
   }[];
 }
 
-// Solar constants
+// Solar constants - uses SSOT from data/constants.ts
 const SOLAR_CONSTANTS = {
-  COST_PER_WATT: 1.20,
+  // NOTE: COST_PER_WATT is now size-aware - use getSolarCostPerWatt(systemKW)
+  COST_PER_WATT: DEFAULTS.Solar.costPerWatt,  // $0.95/W (commercial default)
   PANEL_WATTS: 500,
-  SQFT_PER_KW: 50,              // Updated: 500W panels need ~50 sq ft per kW (was 70)
+  SQFT_PER_KW: 50,              // Updated: 500W panels need ~50 sq ft per kW
   USABLE_ROOF_PERCENT: 0.60,    // 60% of roof is typically usable
   DEGRADATION_ANNUAL: 0.005,
   LIFETIME_YEARS: 25,

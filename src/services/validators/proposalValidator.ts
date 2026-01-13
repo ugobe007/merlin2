@@ -260,7 +260,7 @@ function validateOption(
   });
 
   // Federal ITC validation (should be ~30% of BESS + Solar costs)
-  const estimatedITCBase = (option.bess.energyKWh * 350) + (option.solar.capacityKW * 1200);
+  const estimatedITCBase = (option.bess.energyKWh * 175) + (option.solar.capacityKW * 1200);
   const expectedITC = estimatedITCBase * 0.30;
   const itcDiff = Math.abs(expectedITC - option.financials.federalITC);
   const itcTolerance = expectedITC * 0.20; // 20% tolerance

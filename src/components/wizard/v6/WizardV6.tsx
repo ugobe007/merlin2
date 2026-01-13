@@ -431,12 +431,12 @@ export default function WizardV6() {
           isOpen={showRequestModal}
           onClose={() => setShowRequestModal(false)}
           quoteData={{
-            storageSizeMW: state.calculations.bessKW / 1000,
+            storageSizeMW: state.calculations.selected.bessKW / 1000,
             durationHours:
               POWER_LEVELS.find((l) => l.id === state.selectedPowerLevel)?.durationHours || 4,
-            energyCapacity: state.calculations.bessKWh / 1000,
-            solarMW: state.calculations.solarKW > 0 ? state.calculations.solarKW / 1000 : 0,
-            totalCost: state.calculations.totalInvestment,
+            energyCapacity: state.calculations.selected.bessKWh / 1000,
+            solarMW: state.calculations.selected.solarKW > 0 ? state.calculations.selected.solarKW / 1000 : 0,
+            totalCost: state.calculations.selected.totalInvestment,
             industryName: state.industryName,
             location: `${state.city || ""} ${state.state || ""}`.trim() || state.zipCode,
           }}

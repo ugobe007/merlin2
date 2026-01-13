@@ -2,6 +2,9 @@
  * TRUEQUOTE DATA FLOW TEST SUITE
  * ===============================
  * 
+ * @deprecated This test uses the legacy TrueQuoteEngine (v1).
+ * For new tests, use TrueQuoteEngineV2 via the Porsche 911 architecture.
+ * 
  * Tests the complete data flow:
  * 1. Wizard State → TrueQuoteMapper → TrueQuoteEngine
  * 2. TrueQuoteEngine calculations are correct
@@ -14,8 +17,9 @@
  * @date January 2026
  */
 
-import { calculateTrueQuote, TRUEQUOTE_CONSTANTS } from '../services/TrueQuoteEngine';
-import type { TrueQuoteInput, TrueQuoteResult } from '../services/TrueQuoteEngine';
+// @deprecated - Using legacy TrueQuoteEngine for backward compatibility
+import { calculateTrueQuote, TRUEQUOTE_CONSTANTS } from '../services/_deprecated/TrueQuoteEngine';
+import type { TrueQuoteInput, TrueQuoteResult } from '../services/_deprecated/TrueQuoteEngine';
 
 // ============================================================================
 // TEST UTILITIES

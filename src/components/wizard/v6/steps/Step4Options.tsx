@@ -8,6 +8,8 @@
  * - Borders: Purple (purple-500/30) or slate (slate-700)
  * - Accents: Purple/violet for primary, emerald for positive, amber for highlights
  * - Text: White for headers, slate-300/400 for secondary
+ * 
+ * SSOT: Uses step4PreviewService for all preview calculations
  */
 
 import React, { useState, useMemo } from "react";
@@ -23,16 +25,23 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { WizardState } from "../types";
+import {
+  calculateSolarPreview,
+  calculateEvPreview,
+  calculateGeneratorPreview,
+  type SolarPreviewResult,
+  type EvPreviewResult,
+  type GeneratorPreviewResult,
+} from "@/services/step4PreviewService";
 
 interface Props {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
 }
 
-interface SolarTier {
-  name: string;
+// UI display types (extend the service results with display fields)
+interface SolarTier extends SolarPreviewResult {
   size: string;
-  sizeKw: number;
   coverage: string;
   panels: number;
   annualProduction: string;
@@ -48,95 +57,75 @@ interface SolarTier {
   tag?: string;
 }
 
-interface EvTier {
-  name: string;
+interface EvTier extends EvPreviewResult {
   chargers: string;
-  l2Count: number;
-  dcfcCount: number;
   power: string;
   carsPerDay: string;
-  monthlyRevenue: string;
+  monthlyRevenueStr: string;
   monthlyRevenueRaw: number;
-  installCost: string;
+  installCostStr: string;
   installCostRaw: number;
-  tenYearRevenue: number;
   guestAppeal: string;
   tag?: string;
 }
 
-interface GeneratorTier {
-  name: string;
+interface GeneratorTier extends GeneratorPreviewResult {
   size: string;
-  sizeKw: number;
-  fuelType: string;
   runtime: string;
-  installCost: string;
-  netCost: string;
-  netCostRaw: number;
-  annualMaintenance: string;
-  coverage: string;
+  installCostStr: string;
+  netCostStr: string;
+  annualMaintenanceStr: string;
   tag?: string;
 }
 
+// SSOT-compliant calculation wrappers that format for UI display
 function calcSolar(name: string, pct: number, usage: number, sun: number): SolarTier {
-  const kw = Math.round((usage * pct) / (sun * 365 * 0.85) / 5) * 5;
-  const prod = kw * sun * 365 * 0.85;
-  const cost = kw * 1000 * 1.5;
-  const net = cost * 0.7;
-  const savings = prod * 0.12;
+  const result = calculateSolarPreview(
+    { annualUsageKwh: usage, sunHoursPerDay: sun, coveragePercent: pct },
+    name
+  );
   return {
-    name,
-    size: `${kw} kW`,
-    sizeKw: kw,
+    ...result,
+    size: result.sizeLabel,
     coverage: `${Math.round(pct * 100)}%`,
-    panels: Math.ceil((kw * 1000) / 500),
-    annualProduction: Math.round(prod).toLocaleString(),
-    annualProductionRaw: Math.round(prod),
-    annualSavings: `$${Math.round(savings).toLocaleString()}`,
-    annualSavingsRaw: Math.round(savings),
-    installCost: `$${Math.round(cost).toLocaleString()}`,
-    installCostRaw: Math.round(cost),
-    netCost: `$${Math.round(net).toLocaleString()}`,
-    netCostRaw: Math.round(net),
-    payback: `${(net / savings).toFixed(1)} years`,
-    co2Offset: `${Math.round(prod * 0.0007)} tons/yr`,
+    panels: result.panelCount,
+    annualProduction: result.annualProductionKwh.toLocaleString(),
+    annualProductionRaw: result.annualProductionKwh,
+    annualSavings: `$${result.annualSavings.toLocaleString()}`,
+    annualSavingsRaw: result.annualSavings,
+    installCost: `$${result.installCost.toLocaleString()}`,
+    installCostRaw: result.installCost,
+    netCost: `$${result.netCostAfterITC.toLocaleString()}`,
+    netCostRaw: result.netCostAfterITC,
+    payback: `${result.paybackYears} years`,
+    co2Offset: `${result.co2OffsetTons} tons/yr`,
   };
 }
 
 function calcEv(name: string, l2: number, dc: number): EvTier {
-  const cost = l2 * 6000 + dc * 45000;
-  const rev = l2 * 150 + dc * 800;
+  const result = calculateEvPreview({ l2Count: l2, dcfcCount: dc }, name);
   const stars = dc > 0 ? (dc >= 4 ? "★★★★★" : "★★★★☆") : "★★★☆☆";
   return {
-    name,
-    chargers: dc > 0 ? `${l2} L2 + ${dc} DC Fast` : `${l2} Level 2`,
-    l2Count: l2,
-    dcfcCount: dc,
-    power: `${Math.round(l2 * 7.7 + dc * 62.5)} kW`,
-    carsPerDay: `${Math.round((l2 * 2 + dc * 8) * 0.8)}-${l2 * 2 + dc * 8}`,
-    monthlyRevenue: `$${rev.toLocaleString()}`,
-    monthlyRevenueRaw: rev,
-    installCost: `$${cost.toLocaleString()}`,
-    installCostRaw: cost,
-    tenYearRevenue: rev * 12 * 10,
+    ...result,
+    chargers: result.chargersLabel,
+    power: `${result.totalPowerKw} kW`,
+    monthlyRevenueStr: `$${result.monthlyRevenue.toLocaleString()}`,
+    monthlyRevenueRaw: result.monthlyRevenue,
+    installCostStr: `$${result.installCost.toLocaleString()}`,
+    installCostRaw: result.installCost,
     guestAppeal: stars,
   };
 }
 
-function calcGen(name: string, kw: number, fuel: string): GeneratorTier {
-  const cost = kw * 350 * 1.4;
-  const net = cost * 0.9;
+function calcGen(name: string, kw: number, fuel: 'diesel' | 'natural-gas'): GeneratorTier {
+  const result = calculateGeneratorPreview({ sizeKw: kw, fuelType: fuel }, name);
   return {
-    name,
-    size: `${kw} kW`,
-    sizeKw: kw,
-    fuelType: fuel,
-    runtime: `${Math.round(500 / (kw * 0.07))} hrs`,
-    installCost: `$${Math.round(cost).toLocaleString()}`,
-    netCost: `$${Math.round(net).toLocaleString()}`,
-    netCostRaw: Math.round(net),
-    annualMaintenance: `$${Math.round(cost * 0.02).toLocaleString()}/yr`,
-    coverage: kw >= 400 ? "Full facility" : kw >= 200 ? "Critical loads" : "Emergency only",
+    ...result,
+    size: result.sizeLabel,
+    runtime: `${result.runtimeHours} hrs`,
+    installCostStr: `$${result.installCost.toLocaleString()}`,
+    netCostStr: `$${result.netCostAfterITC.toLocaleString()}`,
+    annualMaintenanceStr: `$${result.annualMaintenance.toLocaleString()}/yr`,
   };
 }
 
@@ -185,10 +174,10 @@ const Step4Options = ({ state, updateState }: Props) => {
 
   const genOpts = useMemo(
     () => ({
-      essential: calcGen("Essential", 150, "Diesel"),
-      standard: { ...calcGen("Standard", 300, "Diesel"), tag: "Recommended" },
+      essential: calcGen("Essential", 150, "diesel"),
+      standard: { ...calcGen("Standard", 300, "diesel"), tag: "Recommended" },
       full: {
-        ...calcGen("Full Backup", Math.round((peak * 1.1) / 50) * 50, "Natural Gas"),
+        ...calcGen("Full Backup", Math.round((peak * 1.1) / 50) * 50, "natural-gas"),
         tag: "Full Coverage",
       },
     }),
@@ -202,6 +191,7 @@ const Step4Options = ({ state, updateState }: Props) => {
     (selectedOptions.includes("solar") && curSolar ? curSolar.annualSavingsRaw * 10 : 0) +
     (selectedOptions.includes("ev") && curEv ? curEv.tenYearRevenue : 0);
   const maxSolar = solarOpts.maximum.annualSavingsRaw;
+  const maxEvRevenue = evOpts.premium.monthlyRevenueRaw;
 
   const sync = (opts: string[], sol: string | null, ev: string | null) =>
     updateState({ selectedOptions: opts, solarTier: sol, evTier: ev });

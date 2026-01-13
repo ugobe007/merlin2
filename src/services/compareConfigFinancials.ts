@@ -88,11 +88,11 @@ export function calculateFinancialsSync(inputs: FinancialInputs): FinancialResul
   // Use industry-standard estimates for synchronous calculation
   // These will be replaced by async SSOT call
 
-  // Equipment costs (NREL ATB 2024)
-  const batteryCostPerKWh = 150; // $/kWh LFP 4-hour
-  const solarCostPerW = 1.2; // $/W commercial
+  // Equipment costs (SSOT: TRUEQUOTE_CONSTANTS)
+  const batteryCostPerKWh = 175; // $/kWh LFP commercial (DEFAULTS.BESS.costPerKWhCommercial)
+  const solarCostPerW = 0.95; // $/W commercial (DEFAULTS.Solar.costPerWattCommercial)
   const windCostPerW = 1.5; // $/W small wind
-  const generatorCostPerKW = 700; // $/kW natural gas
+  const generatorCostPerKW = 650; // $/kW natural gas (DEFAULTS.Generator.natgasCostPerKW)
 
   const batteryCost = batteryKWh * batteryCostPerKWh;
   const solarCost = solarKW * 1000 * solarCostPerW;
@@ -137,8 +137,8 @@ export function calculateFinancialsSync(inputs: FinancialInputs): FinancialResul
     roi25Year,
     npv25Year,
     sources: {
-      batteryCost: "NREL ATB 2024 ($150/kWh LFP)",
-      solarCost: "NREL ATB 2024 ($1.20/W commercial)",
+      batteryCost: "Q1 2026 Market ($175/kWh commercial LFP)",
+      solarCost: "Q1 2026 Market ($0.95/W commercial)",
       incentives: "IRS ITC 30% (IRA 2022)",
       savingsMethodology: "NREL StoreFAST model",
     },
@@ -162,10 +162,10 @@ function formatQuoteResult(
   const equipment = quote.equipment;
 
   // Extract equipment costs from quote
-  const batteryCost = equipment?.batteries?.totalCost || inputs.batteryKWh * 150;
-  const solarCost = equipment?.solar?.totalCost || inputs.solarKW * 1200;
+  const batteryCost = equipment?.batteries?.totalCost || inputs.batteryKWh * 175; // $175/kWh commercial
+  const solarCost = equipment?.solar?.totalCost || inputs.solarKW * 950; // $0.95/W commercial
   const windCost = equipment?.wind?.totalCost || inputs.windKW * 1500;
-  const generatorCost = equipment?.generators?.totalCost || inputs.generatorKW * 700;
+  const generatorCost = equipment?.generators?.totalCost || inputs.generatorKW * 650; // $650/kW natgas
   const installationCost = costs.installationCost || 0;
 
   const grossCost =
@@ -202,8 +202,8 @@ function formatQuoteResult(
     roi25Year,
     npv25Year,
     sources: {
-      batteryCost: "NREL ATB 2024 ($150/kWh LFP)",
-      solarCost: "NREL ATB 2024 ($1.20/W commercial)",
+      batteryCost: "Q1 2026 Market ($175/kWh commercial LFP)",
+      solarCost: "Q1 2026 Market ($0.95/W commercial)",
       incentives: "IRS ITC 30% (IRA 2022)",
       savingsMethodology: "NREL StoreFAST model",
     },

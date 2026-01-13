@@ -8,10 +8,14 @@
  * Layout (56px collapsed):
  * [❄️ VALUE] [████████ 78%] | Annual $137k | 10-Year $1.4M | Without -$12k/mo
  * 
+ * SSOT: Uses DEFAULTS.Preview for all calculations
+ * 
  * Created: December 31, 2025
+ * Updated: January 2026 - SSOT compliance
  */
 
 import React, { useState, useMemo } from 'react';
+import { DEFAULTS } from '@/services/data/constants';
 
 // ============================================================================
 // TYPES
@@ -40,7 +44,7 @@ interface ValueTickerProps {
 }
 
 // ============================================================================
-// VALUE CALCULATIONS (SSOT)
+// VALUE CALCULATIONS (SSOT - uses DEFAULTS.Preview)
 // ============================================================================
 function calculateValues(props: ValueTickerProps) {
   const {
@@ -56,34 +60,34 @@ function calculateValues(props: ValueTickerProps) {
     hasEv
   } = props;
 
-  // Solar savings: ~$400/kW/year (conservative)
-  const solarSavings = hasSolar ? solarKw * 400 : 0;
+  const P = DEFAULTS.Preview;
 
-  // BESS demand charge reduction: 60% of demand charges
-  const bessSavings = bessKwh > 0 ? peakDemandCharges * 0.6 : 0;
+  // Solar savings: uses DEFAULTS.Preview.solarSavingsPerKW
+  const solarSavings = hasSolar ? solarKw * P.solarSavingsPerKW : 0;
 
-  // EV charging revenue: L2 ~$150/mo, DCFC ~$800/mo
-  const evRevenue = hasEv ? ((evL2Count * 150) + (evDcfcCount * 800)) * 12 : 0;
+  // BESS demand charge reduction: uses DEFAULTS.Preview.bessDemanReductionPercent
+  const bessSavings = bessKwh > 0 ? peakDemandCharges * P.bessDemanReductionPercent : 0;
 
-  // Outage protection value: ~$50k/year avoided losses
-  const outageProtection = hasGenerator ? 50000 : (bessKwh > 0 ? 25000 : 0);
+  // EV charging revenue: uses DEFAULTS.Preview.evL2/evDcfcMonthlyRevenue
+  const evRevenue = hasEv ? ((evL2Count * P.evL2MonthlyRevenue) + (evDcfcCount * P.evDcfcMonthlyRevenue)) * 12 : 0;
 
-  // Generator fuel savings (if replacing grid during peak)
-  const generatorSavings = hasGenerator ? generatorKw * 50 : 0;
+  // Outage protection value: uses DEFAULTS.Preview.outageProtectionWith*
+  const outageProtection = hasGenerator ? P.outageProtectionWithGen : (bessKwh > 0 ? P.outageProtectionWithBess : 0);
+
+  // Generator fuel savings: uses DEFAULTS.Preview.generatorSavingsPerKW
+  const generatorSavings = hasGenerator ? generatorKw * P.generatorSavingsPerKW : 0;
 
   // Total annual value
   const annualValue = solarSavings + bessSavings + evRevenue + outageProtection + generatorSavings;
 
-  // 10-year projection (with 3% annual increase)
-  const tenYearValue = annualValue * 10.5; // Simplified compound
+  // 10-year projection: uses DEFAULTS.Preview.tenYearMultiplier
+  const tenYearValue = annualValue * P.tenYearMultiplier;
 
   // Cost of inaction: demand charges + outage exposure
-  const avgOutagesPerYear = 3;
-  const outageCostPerHour = 12000;
-  const monthlyWaste = (peakDemandCharges / 12) + (avgOutagesPerYear * outageCostPerHour * 4 / 12);
+  const monthlyWaste = (peakDemandCharges / 12) + (P.avgOutagesPerYear * P.outageCostPerHour * 4 / 12);
 
   // Max potential (for temperature gauge)
-  const maxPotential = (annualEnergySpend * 0.35) + (peakDemandCharges * 0.6) + 50000 + 50000;
+  const maxPotential = (annualEnergySpend * 0.35) + (peakDemandCharges * P.bessDemanReductionPercent) + P.outageProtectionWithGen + P.outageProtectionWithGen;
   const temperaturePercent = maxPotential > 0 ? Math.min(100, (annualValue / maxPotential) * 100) : 0;
 
   return {

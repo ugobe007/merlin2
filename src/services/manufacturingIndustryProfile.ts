@@ -1042,7 +1042,7 @@ export function calculateManufacturingProfile(
 
   // Savings calculations
   const demandChargeSavings = Math.round(demandChargeEstimate * 0.4); // 40% reduction
-  const solarSavings = Math.round(recommendedSolarKw * 350); // $350/kW industrial
+  const solarSavings = Math.round(recommendedSolarKw * 400); // SSOT: $400/kW (DEFAULTS.Preview.solarSavingsPerKW)
   const annualSavings = demandChargeSavings + solarSavings;
 
   // Outage risk cost

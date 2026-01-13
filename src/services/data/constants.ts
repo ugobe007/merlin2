@@ -18,14 +18,25 @@ import { getConstant } from '../calculationConstantsService';
 // ============================================================================
 
 export const TRUEQUOTE_CONSTANTS = {
-  // BESS
-  BESS_COST_PER_KWH: 350,
+  // BESS - Q1 2026 Market Pricing (from actual vendor quotes)
+  // NOTE: These are COMMERCIAL scale defaults. For utility-scale, use marketIntelligence.ts
+  // Market reality: $100-135/kWh utility, $150-200/kWh commercial, $250-400/kWh small commercial
+  BESS_COST_PER_KWH_UTILITY: 115,      // ≥3 MW systems ($100-135/kWh range mid-point)
+  BESS_COST_PER_KWH_COMMERCIAL: 175,   // 100kW-3MW systems ($150-200/kWh range)
+  BESS_COST_PER_KWH_SMALL: 275,        // <100kW systems ($250-325/kWh range)
+  BESS_COST_PER_KWH: 175,              // Default for commercial (most wizard users)
   BESS_EFFICIENCY: 0.85,
   BESS_DEGRADATION_ANNUAL: 0.025,
   BESS_LIFETIME_YEARS: 15,
   
-  // Solar
-  SOLAR_COST_PER_KWP: 1200,
+  // Solar - Q1 2026 Market Pricing (DC-side, before installation)
+  // Utility-scale (≥5 MW): $0.65-0.85/W → $0.75/W
+  // Commercial (100kW-5MW): $0.85-1.10/W → $0.95/W
+  // Small commercial (<100kW): $1.10-1.40/W → $1.25/W
+  SOLAR_COST_PER_W_UTILITY: 0.75,     // ≥5 MW systems
+  SOLAR_COST_PER_W_COMMERCIAL: 0.95,  // 100kW-5MW systems
+  SOLAR_COST_PER_W_SMALL: 1.25,       // <100kW systems
+  SOLAR_COST_PER_KWP: 950,            // Default $0.95/W → $950/kWp (commercial)
   SOLAR_PANEL_WATTS: 500,
   SOLAR_CAPACITY_FACTOR: 0.2,
   SOLAR_DEGRADATION_ANNUAL: 0.005,
@@ -72,7 +83,11 @@ export const TRUEQUOTE_CONSTANTS = {
 
 export const DEFAULTS = {
   BESS: {
-    costPerKWh: TRUEQUOTE_CONSTANTS.BESS_COST_PER_KWH,
+    // Size-aware pricing (Q1 2026 market)
+    costPerKWh: TRUEQUOTE_CONSTANTS.BESS_COST_PER_KWH,              // Default commercial
+    costPerKWhUtility: TRUEQUOTE_CONSTANTS.BESS_COST_PER_KWH_UTILITY,   // ≥3 MW
+    costPerKWhCommercial: TRUEQUOTE_CONSTANTS.BESS_COST_PER_KWH_COMMERCIAL, // 100kW-3MW
+    costPerKWhSmall: TRUEQUOTE_CONSTANTS.BESS_COST_PER_KWH_SMALL,       // <100kW
     costPerKW: 150,
     efficiency: TRUEQUOTE_CONSTANTS.BESS_EFFICIENCY,
     degradationRate: TRUEQUOTE_CONSTANTS.BESS_DEGRADATION_ANNUAL,
@@ -80,12 +95,16 @@ export const DEFAULTS = {
     roundTripEfficiency: 0.85,
   },
   Solar: {
-    costPerWatt: TRUEQUOTE_CONSTANTS.SOLAR_COST_PER_KWP / 1000, // Convert to $/W
+    // Size-aware pricing (Q1 2026 market)
+    costPerWatt: TRUEQUOTE_CONSTANTS.SOLAR_COST_PER_KWP / 1000, // Default commercial $0.95/W
+    costPerWattUtility: TRUEQUOTE_CONSTANTS.SOLAR_COST_PER_W_UTILITY,     // ≥5 MW: $0.75/W
+    costPerWattCommercial: TRUEQUOTE_CONSTANTS.SOLAR_COST_PER_W_COMMERCIAL, // 100kW-5MW: $0.95/W
+    costPerWattSmall: TRUEQUOTE_CONSTANTS.SOLAR_COST_PER_W_SMALL,         // <100kW: $1.25/W
     panelWatts: TRUEQUOTE_CONSTANTS.SOLAR_PANEL_WATTS,
     capacityFactor: TRUEQUOTE_CONSTANTS.SOLAR_CAPACITY_FACTOR,
     degradationRate: TRUEQUOTE_CONSTANTS.SOLAR_DEGRADATION_ANNUAL,
     lifetimeYears: TRUEQUOTE_CONSTANTS.SOLAR_LIFETIME_YEARS,
-    sqftPerKW: 70,
+    sqftPerKW: 50, // Updated: 500W panels need ~50 sq ft per kW
   },
   Generator: {
     dieselCostPerKW: TRUEQUOTE_CONSTANTS.GENERATOR_COST_PER_KW,
@@ -131,6 +150,19 @@ export const DEFAULTS = {
     roiTolerance: 20,
     minCostPerKWh: 200,
     maxCostPerKWh: 600,
+  },
+  // Preview/estimate constants (for ValueTicker, quick previews)
+  Preview: {
+    solarSavingsPerKW: 400,           // $/kW/year (conservative)
+    bessDemanReductionPercent: 0.60,  // 60% of demand charges saved
+    evL2MonthlyRevenue: 150,          // $/month per L2 charger
+    evDcfcMonthlyRevenue: 800,        // $/month per DCFC
+    outageProtectionWithGen: 50000,   // $/year avoided losses with generator
+    outageProtectionWithBess: 25000,  // $/year avoided losses with BESS only
+    generatorSavingsPerKW: 50,        // $/kW/year fuel savings
+    tenYearMultiplier: 10.5,          // Compound factor for 10-year projection
+    avgOutagesPerYear: 3,
+    outageCostPerHour: 12000,         // $/hour outage cost
   },
 } as const;
 
@@ -220,6 +252,42 @@ export async function getConstantWithFallback(
  */
 export function getSunHours(stateCode: string): number {
   return STATE_SUN_HOURS[stateCode.toUpperCase()] || 4.5; // Default to US average
+}
+
+/**
+ * Get BESS cost per kWh based on system size (Q1 2026 market pricing)
+ * 
+ * Size tiers:
+ * - Utility-scale (≥3 MW / ≥3000 kW): $100-135/kWh → $115/kWh
+ * - Commercial (100-3000 kW): $150-200/kWh → $175/kWh
+ * - Small commercial (<100 kW): $250-325/kWh → $275/kWh
+ */
+export function getBESSCostPerKWh(systemSizeKW: number): number {
+  if (systemSizeKW >= 3000) {
+    return DEFAULTS.BESS.costPerKWhUtility;   // $115/kWh
+  } else if (systemSizeKW >= 100) {
+    return DEFAULTS.BESS.costPerKWhCommercial; // $175/kWh
+  } else {
+    return DEFAULTS.BESS.costPerKWhSmall;      // $275/kWh
+  }
+}
+
+/**
+ * Get solar cost per watt based on system size (Q1 2026 market pricing)
+ * 
+ * Size tiers:
+ * - Utility-scale (≥5 MW / ≥5000 kW): $0.65-0.85/W → $0.75/W
+ * - Commercial (100-5000 kW): $0.85-1.10/W → $0.95/W
+ * - Small commercial (<100 kW): $1.10-1.40/W → $1.25/W
+ */
+export function getSolarCostPerWatt(systemSizeKW: number): number {
+  if (systemSizeKW >= 5000) {
+    return DEFAULTS.Solar.costPerWattUtility;   // $0.75/W
+  } else if (systemSizeKW >= 100) {
+    return DEFAULTS.Solar.costPerWattCommercial; // $0.95/W
+  } else {
+    return DEFAULTS.Solar.costPerWattSmall;      // $1.25/W
+  }
 }
 
 /**

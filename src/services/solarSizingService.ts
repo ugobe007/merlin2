@@ -154,13 +154,13 @@ export function calculateSolarBESSSystem(inputs: SolarBESSSystemInputs): SolarBE
   // Size for 1.25× peak load (safety factor for surge)
   const inverterRating = Math.ceil((peakLoadkW * 1000 * 1.25) / 100) * 100; // Round to nearest 100W
 
-  // STEP 8: Calculate costs (2025 pricing)
+  // STEP 8: Calculate costs (SSOT: DEFAULTS.BESS/Solar)
   const costs = {
-    battery: batteryCapacitykWh * 250, // $250/kWh for commercial lithium
-    solar: actualSolarWattage * 0.5, // $0.50/W for commercial solar
+    battery: batteryCapacitykWh * 175, // $175/kWh commercial (DEFAULTS.BESS.costPerKWhCommercial)
+    solar: actualSolarWattage * 0.95, // $0.95/W commercial (DEFAULTS.Solar.costPerWattCommercial)
     chargeController: chargeControllerType === "MPPT" ? 2000 : 500, // MPPT more expensive
     inverter: inverterRating * 0.3, // $0.30/W for inverter
-    installation: (actualSolarWattage * 0.5 + batteryCapacitykWh * 250) * 0.15, // 15% labor
+    installation: (actualSolarWattage * 0.5 + batteryCapacitykWh * 175) * 0.15, // 15% labor
     total: 0,
   };
   costs.total = Object.values(costs).reduce((sum, cost) => sum + cost, 0);

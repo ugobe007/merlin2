@@ -98,27 +98,34 @@ export function calculateMarketAlignedBESSPricing(
   systemSizeMW: number,
   durationHours: number,
   location: string,
-  installationYear: number = 2024
+  installationYear: number = 2026
 ) {
   const energyCapacityMWh = systemSizeMW * durationHours;
 
-  // Q4 2024 - Q1 2025 Market Reality Pricing
-  // NOTE: NREL ATB 2024 data lags 12-18 months (based on 2022-2023 data)
-  // Market drivers: Chinese LFP oversupply, cell price collapse ($50-60/kWh), aggressive competition
-  // Size-based pricing (Q4 2024 - Q1 2025 market reality):
-  // 3-10 MW: $101-125/kWh | 10-50 MW: $95-115/kWh | 50+ MW: $85-105/kWh
-  // Commercial (100-500 kWh): $250-400/kWh | Residential: $500-800/kWh
+  // Q1 2026 Market Reality Pricing (from actual vendor quotes)
+  // Market drivers: Chinese LFP oversupply continues, cell prices ~$50-60/kWh
+  // 
+  // UTILITY SCALE (≥3 MW):
+  //   - 50+ MW: $85-105/kWh → $95/kWh
+  //   - 10-50 MW: $90-115/kWh → $105/kWh  
+  //   - 3-10 MW: $100-135/kWh → $115/kWh
+  //
+  // COMMERCIAL (<3 MW):
+  //   - 100kW-3MW: $150-200/kWh → $175/kWh
+  //   - <100kW: $250-325/kWh → $275/kWh
+  //
+  // RESIDENTIAL: $400-600/kWh (not our target market)
   let batteryCostPerKWh: number;
   if (systemSizeMW >= 50) {
-    batteryCostPerKWh = 95; // $85-105/kWh range, use mid-point
+    batteryCostPerKWh = 95;   // $85-105/kWh range (utility mega-scale)
   } else if (systemSizeMW >= 10) {
-    batteryCostPerKWh = 105; // $95-115/kWh range
+    batteryCostPerKWh = 105;  // $90-115/kWh range (utility large)
   } else if (systemSizeMW >= 3) {
-    batteryCostPerKWh = 113; // $101-125/kWh range
+    batteryCostPerKWh = 115;  // $100-135/kWh range (utility mid) - YOUR MARKET QUOTES
   } else if (systemSizeMW >= 0.1) {
-    batteryCostPerKWh = 325; // $250-400/kWh commercial range
+    batteryCostPerKWh = 175;  // $150-200/kWh commercial range
   } else {
-    batteryCostPerKWh = 650; // $500-800/kWh residential range
+    batteryCostPerKWh = 275;  // $250-325/kWh small commercial
   }
   const pcsCostPerKW = 120; // $/kW - power conversion (validated from UK EV Hub quote)
   const bosCostPerKW = 28.8; // $/kW - balance of system (12%)
