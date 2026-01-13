@@ -11,17 +11,51 @@ import React, { useState } from 'react';
 import { X, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
 import merlinImage from '@/assets/images/new_small_profile_.png';
 
+import type { EnergyGoal } from './types';
+
 interface MerlinGuideProps {
   step: number;
   industry?: string;
   state?: string;
+  goals?: EnergyGoal[];
+  sunHours?: number;
+  electricityRate?: number;
+  solarRating?: string;
 }
+
+// Goal-specific insights for Step 1
+const GOAL_INSIGHTS: Record<EnergyGoal, { benefit: string; preview: string }> = {
+  reduce_costs: {
+    benefit: "Cut 20-40% off energy bills",
+    preview: "I'll calculate exact savings in Step 5"
+  },
+  backup_power: {
+    benefit: "8-24 hours backup during outages",
+    preview: "We'll size your backup in Step 4"
+  },
+  sustainability: {
+    benefit: "Reduce carbon footprint 40-60%",
+    preview: "Solar + BESS = maximum green impact"
+  },
+  grid_independence: {
+    benefit: "60-80% energy self-sufficiency",
+    preview: "I'll design your independence roadmap"
+  },
+  peak_shaving: {
+    benefit: "Eliminate 30-50% of demand charges",
+    preview: "BESS handles this automatically"
+  },
+  generate_revenue: {
+    benefit: "Earn $3K-15K/year from grid services",
+    preview: "We'll explore revenue options in Step 4"
+  }
+};
 
 const STEP_MESSAGES: Record<number, { title: string; message: string; tip?: string }> = {
   1: {
     title: "Welcome! 🎉",
     message: "I'm Merlin, your energy advisor. Let's find the perfect energy solution for your business.",
-    tip: "Enter your ZIP code and I'll show you solar potential for your area!"
+    tip: "Enter your ZIP code and select your goals - I'll preview your potential!"
   },
   2: {
     title: "Choose Your Industry",
@@ -34,9 +68,9 @@ const STEP_MESSAGES: Record<number, { title: string; message: string; tip?: stri
     tip: "Don't worry about exact numbers - estimates work great!"
   },
   4: {
-    title: "Boost Your Savings! ⚡",
-    message: "Based on your location, here are some add-ons that could maximize your investment.",
-    tip: "Solar + BESS is a powerful combo in sunny states!"
+    title: "Customize Your System ⚡",
+    message: "Based on your facility, here are add-ons that maximize your goals.",
+    tip: "I'll calculate exact sizing for each option you choose!"
   },
   5: {
     title: "Choose Your Power Level",
@@ -50,7 +84,7 @@ const STEP_MESSAGES: Record<number, { title: string; message: string; tip?: stri
   }
 };
 
-export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
+export function MerlinGuide({ step, industry, state, goals, sunHours, electricityRate, solarRating }: MerlinGuideProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -76,8 +110,36 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
 
   const stepData = STEP_MESSAGES[step] || STEP_MESSAGES[1];
 
-  // Dynamic context messages
+  // Dynamic context messages based on step and available data
   let contextMessage = stepData.message;
+  let dynamicTip = stepData.tip;
+  
+  // Step 1: Location + Goals awareness
+  if (step === 1) {
+    if (goals && goals.length >= 2 && state) {
+      contextMessage = `Great choices! Based on your goals, I'm already planning your ${sunHours && sunHours >= 5 ? 'solar + BESS' : 'BESS + backup'} strategy for ${state}.`;
+      
+      // Pick most relevant tip based on goals
+      if (goals.includes('reduce_costs') || goals.includes('peak_shaving')) {
+        dynamicTip = electricityRate && electricityRate > 0.12 
+          ? `With ${state}'s high rates ($${electricityRate?.toFixed(3)}/kWh), BESS pays for itself fast!`
+          : "I'll calculate your exact savings after we learn about your facility.";
+      } else if (goals.includes('sustainability')) {
+        dynamicTip = sunHours && sunHours >= 5 
+          ? `${state} gets ${sunHours} hrs/day of sun - solar will crush your carbon footprint!`
+          : "Even with moderate sun, solar + BESS cuts emissions significantly.";
+      } else if (goals.includes('backup_power')) {
+        dynamicTip = "We'll size your backup system in Step 4 based on your critical loads.";
+      } else if (goals.includes('generate_revenue')) {
+        dynamicTip = "I'll show you grid services and arbitrage opportunities in Step 4!";
+      }
+    } else if (goals && goals.length > 0) {
+      contextMessage = `Good start! Select ${2 - goals.length} more goal${goals.length === 1 ? '' : 's'} so I can tailor your solution.`;
+    } else if (state) {
+      contextMessage = `${state} has great energy potential! Now tell me your goals so I can start planning.`;
+    }
+  }
+  
   if (step === 2 && industry) {
     contextMessage = `Great choice! ${industry} facilities typically see 20-40% energy savings with BESS.`;
   }
@@ -155,11 +217,33 @@ export function MerlinGuide({ step, industry, state }: MerlinGuideProps) {
             </div>
           </div>
 
-          {stepData.tip && (
+          {dynamicTip && (
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
               <p className="text-purple-300 text-xs">
-                <span className="font-semibold text-purple-400">💡 Pro Tip:</span> {stepData.tip}
+                <span className="font-semibold text-purple-400">💡 Pro Tip:</span> {dynamicTip}
               </p>
+            </div>
+          )}
+          
+          {/* Goal Preview Section - Only on Step 1 when goals are selected */}
+          {step === 1 && goals && goals.length > 0 && (
+            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-3 space-y-2">
+              <p className="text-xs text-slate-400 font-medium">📋 Your Goals Preview:</p>
+              {goals.slice(0, 3).map((goal) => {
+                const insight = GOAL_INSIGHTS[goal];
+                return insight ? (
+                  <div key={goal} className="flex items-start gap-2">
+                    <span className="text-green-400 text-xs">✓</span>
+                    <div className="text-xs">
+                      <span className="text-slate-200">{insight.benefit}</span>
+                      <span className="text-slate-500 ml-1">— {insight.preview}</span>
+                    </div>
+                  </div>
+                ) : null;
+              })}
+              {goals.length > 3 && (
+                <p className="text-xs text-slate-500">+{goals.length - 3} more goals...</p>
+              )}
             </div>
           )}
         </div>

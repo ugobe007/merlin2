@@ -227,8 +227,15 @@ export function Step1Location({ state, updateState }: Props) {
 
   return (
     <div className="relative">
-      {/* Merlin Advisor - Fixed Position */}
-      <MerlinGuide step={1} state={state.state} />
+      {/* Merlin Advisor - Fixed Position with Goal Awareness */}
+      <MerlinGuide 
+        step={1} 
+        state={state.state}
+        goals={state.goals}
+        sunHours={locationData?.sunHours}
+        electricityRate={locationData?.electricityRate}
+        solarRating={locationData?.solarRating}
+      />
       
       {/* MERLIN'S LOCATION INSIGHTS PANEL */}
       {locationData && (
