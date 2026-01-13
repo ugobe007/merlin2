@@ -25,7 +25,8 @@ import React, { useState, useMemo } from 'react';
 import { 
   ChevronDown, ChevronUp, Sun, Zap, Battery, Car, Flame,
   TrendingUp, Shield, Leaf, DollarSign, Sparkles, Info,
-  Calculator, BarChart3, HelpCircle, ArrowRight, Star, CheckCircle
+  Calculator, BarChart3, HelpCircle, ArrowRight, Star, CheckCircle,
+  Lock, Unlock, Gift, Lightbulb, Eye, Target, Award, AlertTriangle
 } from 'lucide-react';
 import { DEFAULTS } from '@/services/data/constants';
 
@@ -297,10 +298,268 @@ function formatCurrency(value: number): string {
 }
 
 // ============================================================================
+// DISCOVERY PANEL - Hidden clues that unlock based on user selections
+// ============================================================================
+interface DiscoveryClue {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  secret: string;
+  unlocked: boolean;
+  unlockedBy: string;
+  category: 'savings' | 'opportunity' | 'warning' | 'bonus';
+  impactValue?: string;
+}
+
+function getDiscoveryClues(props: MerlinBarProps): DiscoveryClue[] {
+  const clues: DiscoveryClue[] = [];
+  const { 
+    state, sunHours, electricityRate, goals, industry, industryName,
+    hasSolar, hasGenerator, hasEv, solarKw, generatorKw, bessKwh,
+    evL2Count, evDcfcCount, currentStep, selectedTier, annualSavings
+  } = props;
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOCATION-BASED SECRETS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // High electricity rate secret
+  clues.push({
+    id: 'high-rate-bonus',
+    icon: <DollarSign className="w-4 h-4" />,
+    title: 'Rate Arbitrage Opportunity',
+    secret: electricityRate && electricityRate >= 0.15 
+      ? `Your $${electricityRate.toFixed(2)}/kWh rate means BESS pays back 2x faster than average!`
+      : 'Unlock: Location with rates above $0.15/kWh reveals arbitrage bonus',
+    unlocked: !!(electricityRate && electricityRate >= 0.15),
+    unlockedBy: 'High electricity rate detected',
+    category: 'savings',
+    impactValue: electricityRate && electricityRate >= 0.15 ? '+40% ROI boost' : undefined
+  });
+  
+  // Solar goldmine states
+  const solarGoldmineStates = ['CA', 'AZ', 'NV', 'TX', 'FL', 'NM', 'CO', 'UT'];
+  clues.push({
+    id: 'solar-goldmine',
+    icon: <Sun className="w-4 h-4" />,
+    title: 'Solar Goldmine Zone',
+    secret: state && solarGoldmineStates.includes(state)
+      ? `${state} is in the top 10% for solar production! Your panels will generate 20-30% more than northern states.`
+      : 'Unlock: Select a location in the Solar Belt (CA, AZ, NV, TX, FL...)',
+    unlocked: !!(state && solarGoldmineStates.includes(state)),
+    unlockedBy: `Location: ${state}`,
+    category: 'opportunity',
+    impactValue: state && solarGoldmineStates.includes(state) ? '+25% solar output' : undefined
+  });
+  
+  // Peak sun hours secret
+  clues.push({
+    id: 'peak-sun-bonus',
+    icon: <Sparkles className="w-4 h-4" />,
+    title: 'Peak Sun Performer',
+    secret: sunHours && sunHours >= 5.5
+      ? `${sunHours} peak sun hours/day = ${Math.round(sunHours * 365)} hours/year of prime solar production!`
+      : 'Unlock: Location with 5.5+ peak sun hours reveals solar optimization secret',
+    unlocked: !!(sunHours && sunHours >= 5.5),
+    unlockedBy: `${sunHours} hrs/day sun`,
+    category: 'opportunity',
+    impactValue: sunHours && sunHours >= 5.5 ? `${Math.round((sunHours - 4) * 15)}% above avg` : undefined
+  });
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INDUSTRY-SPECIFIC SECRETS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Hotel night load secret
+  if (industry === 'hotel' || !industry) {
+    clues.push({
+      id: 'hotel-night-load',
+      icon: <Battery className="w-4 h-4" />,
+      title: 'Night Owl Advantage',
+      secret: industry === 'hotel'
+        ? 'Hotels use 60% of energy at night for HVAC/lighting. BESS charges cheap (off-peak) and powers your nights!'
+        : 'Unlock: Select Hotel industry to reveal night-load optimization',
+      unlocked: industry === 'hotel',
+      unlockedBy: 'Hotel industry selected',
+      category: 'savings',
+      impactValue: industry === 'hotel' ? 'TOU arbitrage: $2K-8K/yr' : undefined
+    });
+  }
+  
+  // Data center UPS replacement
+  if (industry === 'data-center' || !industry) {
+    clues.push({
+      id: 'datacenter-ups',
+      icon: <Shield className="w-4 h-4" />,
+      title: 'UPS Replacement Bonus',
+      secret: industry === 'data-center'
+        ? 'BESS replaces expensive UPS systems while earning revenue! Typical savings: $50-200K on UPS equipment.'
+        : 'Unlock: Select Data Center to reveal UPS cost elimination',
+      unlocked: industry === 'data-center',
+      unlockedBy: 'Data Center selected',
+      category: 'bonus',
+      impactValue: industry === 'data-center' ? '$50-200K saved' : undefined
+    });
+  }
+  
+  // Manufacturing demand spike protection
+  if (industry === 'manufacturing' || !industry) {
+    clues.push({
+      id: 'mfg-demand-spike',
+      icon: <TrendingUp className="w-4 h-4" />,
+      title: 'Demand Spike Shield',
+      secret: industry === 'manufacturing'
+        ? 'Your machinery creates demand spikes = huge demand charges. BESS shaves peaks by 40-60%, saving $30K-100K/yr!'
+        : 'Unlock: Select Manufacturing to reveal demand charge elimination',
+      unlocked: industry === 'manufacturing',
+      unlockedBy: 'Manufacturing selected',
+      category: 'savings',
+      impactValue: industry === 'manufacturing' ? '$30K-100K/yr saved' : undefined
+    });
+  }
+  
+  // EV station stacking
+  if (industry === 'ev-charging' || hasEv) {
+    clues.push({
+      id: 'ev-revenue-stack',
+      icon: <Car className="w-4 h-4" />,
+      title: 'Revenue Stacking Secret',
+      secret: hasEv || industry === 'ev-charging'
+        ? 'Stack EV charging fees + demand response payments + grid services = 3 revenue streams from one BESS!'
+        : 'Unlock: Add EV Charging to reveal triple-revenue strategy',
+      unlocked: hasEv || industry === 'ev-charging',
+      unlockedBy: 'EV charging enabled',
+      category: 'bonus',
+      impactValue: hasEv || industry === 'ev-charging' ? '+$15-50K/yr revenue' : undefined
+    });
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GOAL-BASED SECRETS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Sustainability + solar combo
+  clues.push({
+    id: 'green-bonus',
+    icon: <Leaf className="w-4 h-4" />,
+    title: 'Green Premium Unlock',
+    secret: goals?.includes('sustainability') && hasSolar
+      ? 'Solar + BESS combo qualifies for green energy credits, ESG reporting benefits, and potential carbon credit revenue!'
+      : 'Unlock: Select Sustainability goal + Solar to reveal green premium',
+    unlocked: !!(goals?.includes('sustainability') && hasSolar),
+    unlockedBy: 'Sustainability + Solar',
+    category: 'bonus',
+    impactValue: goals?.includes('sustainability') && hasSolar ? 'Carbon credits available' : undefined
+  });
+  
+  // Revenue generation secret
+  clues.push({
+    id: 'grid-services',
+    icon: <Zap className="w-4 h-4" />,
+    title: 'Grid Services Revenue',
+    secret: goals?.includes('generate_revenue')
+      ? 'Your BESS can earn $50-150/kW/year from frequency regulation + demand response programs!'
+      : 'Unlock: Select "Generate Revenue" goal to reveal grid income streams',
+    unlocked: goals?.includes('generate_revenue') || false,
+    unlockedBy: 'Revenue goal selected',
+    category: 'opportunity',
+    impactValue: goals?.includes('generate_revenue') ? '$50-150/kW/yr' : undefined
+  });
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EQUIPMENT COMBINATION SECRETS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Solar + BESS synergy
+  clues.push({
+    id: 'solar-bess-synergy',
+    icon: <Target className="w-4 h-4" />,
+    title: 'Perfect Pairing Bonus',
+    secret: hasSolar && bessKwh && bessKwh > 0
+      ? `Solar + ${Math.round(bessKwh)} kWh BESS = store excess solar for peak hours. Typical boost: +30% solar value!`
+      : 'Unlock: Enable Solar + BESS together to reveal synergy bonus',
+    unlocked: !!(hasSolar && bessKwh && bessKwh > 0),
+    unlockedBy: 'Solar + BESS combo',
+    category: 'savings',
+    impactValue: hasSolar && bessKwh ? '+30% solar value' : undefined
+  });
+  
+  // Generator + BESS hybrid
+  clues.push({
+    id: 'gen-bess-hybrid',
+    icon: <Flame className="w-4 h-4" />,
+    title: 'Hybrid Power Secret',
+    secret: hasGenerator && bessKwh && bessKwh > 0
+      ? 'BESS handles short outages (80% of events). Generator kicks in for extended outages. Result: 50% less fuel use!'
+      : 'Unlock: Enable Generator + BESS for hybrid fuel savings',
+    unlocked: !!(hasGenerator && bessKwh && bessKwh > 0),
+    unlockedBy: 'Generator + BESS combo',
+    category: 'savings',
+    impactValue: hasGenerator && bessKwh ? '50% fuel reduction' : undefined
+  });
+  
+  // Triple threat: Solar + BESS + Generator
+  clues.push({
+    id: 'triple-threat',
+    icon: <Award className="w-4 h-4" />,
+    title: '🏆 Triple Threat Achievement',
+    secret: hasSolar && hasGenerator && bessKwh && bessKwh > 0
+      ? 'ULTIMATE COMBO: Solar generates, BESS stores, Generator backs up. You have the most resilient + profitable setup possible!'
+      : 'Unlock: Enable Solar + Generator + BESS for ultimate energy independence',
+    unlocked: !!(hasSolar && hasGenerator && bessKwh && bessKwh > 0),
+    unlockedBy: 'All three systems',
+    category: 'bonus',
+    impactValue: hasSolar && hasGenerator && bessKwh ? 'Max resilience achieved!' : undefined
+  });
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER SELECTION SECRETS (Step 5+)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  if (currentStep >= 5) {
+    clues.push({
+      id: 'tier-insight',
+      icon: <Lightbulb className="w-4 h-4" />,
+      title: 'MagicFit Insight',
+      secret: selectedTier
+        ? selectedTier === 'efficient' 
+          ? 'Efficient tier = fastest payback. Great if you want ROI proof before expanding!'
+          : selectedTier === 'balanced'
+            ? 'Balanced tier = sweet spot for most businesses. Best risk/reward ratio!'
+            : 'Maximum tier = future-proof investment. Best for growing businesses with expanding needs.'
+        : 'Unlock: Select a MagicFit tier to reveal optimization insight',
+      unlocked: !!selectedTier,
+      unlockedBy: `${selectedTier ? selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1) : 'None'} tier`,
+      category: 'opportunity'
+    });
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WARNING CLUES (things to watch out for)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Low rate warning
+  if (electricityRate && electricityRate < 0.08) {
+    clues.push({
+      id: 'low-rate-warning',
+      icon: <AlertTriangle className="w-4 h-4" />,
+      title: 'Low Rate Strategy',
+      secret: 'Your low electricity rate means demand charge reduction is your primary savings driver, not energy arbitrage. Focus on peak shaving!',
+      unlocked: true,
+      unlockedBy: `Rate: $${electricityRate.toFixed(2)}/kWh`,
+      category: 'warning'
+    });
+  }
+  
+  return clues;
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 const MerlinBar: React.FC<MerlinBarProps> = (props) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'discoveries' | 'tips'>('discoveries');
   const { currentStep } = props;
   
   // Get step-specific message
@@ -312,6 +571,11 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
   
   // Get energy opportunities
   const opportunities = useMemo(() => getEnergyOpportunities(props), [props]);
+  
+  // Get discovery clues
+  const discoveryClues = useMemo(() => getDiscoveryClues(props), [props]);
+  const unlockedClues = discoveryClues.filter(c => c.unlocked);
+  const lockedClues = discoveryClues.filter(c => !c.unlocked);
   
   // Confidence stars
   const renderStars = (count: number) => {
@@ -413,25 +677,125 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               </div>
             )}
             
-            {/* Expand/Collapse */}
+            {/* Expand/Collapse with unlock badge */}
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-sm transition-colors relative"
             >
+              {unlockedClues.length > 0 && !isExpanded && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg animate-pulse">
+                  {unlockedClues.length}
+                </span>
+              )}
+              <Gift className="w-4 h-4" />
               {isExpanded ? (
-                <>Less <ChevronUp className="w-4 h-4" /></>
+                <>Hide <ChevronUp className="w-4 h-4" /></>
               ) : (
-                <>More <ChevronDown className="w-4 h-4" /></>
+                <>Secrets <ChevronDown className="w-4 h-4" /></>
               )}
             </button>
           </div>
         </div>
       </div>
       
-      {/* Expanded Section */}
+      {/* Expanded Section - Discovery Panel */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-slate-700/50">
-          <div className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Tab Selector */}
+          <div className="flex gap-2 pt-3 mb-3">
+            <button
+              onClick={() => setActiveTab('discoveries')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'discoveries'
+                  ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50'
+              }`}
+            >
+              <Gift className="w-4 h-4" />
+              Discoveries
+              <span className={`px-1.5 py-0.5 rounded text-xs ${
+                activeTab === 'discoveries' ? 'bg-amber-500/30 text-amber-300' : 'bg-slate-700 text-slate-400'
+              }`}>
+                {unlockedClues.length}/{discoveryClues.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('tips')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'tips'
+                  ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-purple-400 border border-purple-500/30'
+                  : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              Tips & Actions
+            </button>
+          </div>
+          
+          {/* Discovery Panel Content */}
+          {activeTab === 'discoveries' && (
+            <div className="space-y-4">
+              {/* Unlocked Secrets */}
+              {unlockedClues.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Unlock className="w-3.5 h-3.5" />
+                    Unlocked Secrets ({unlockedClues.length})
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {unlockedClues.map((clue) => (
+                      <DiscoveryCard key={clue.id} clue={clue} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Locked Secrets (teasers) */}
+              {lockedClues.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5" />
+                    Locked Secrets ({lockedClues.length})
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {lockedClues.slice(0, 4).map((clue) => (
+                      <DiscoveryCard key={clue.id} clue={clue} />
+                    ))}
+                  </div>
+                  {lockedClues.length > 4 && (
+                    <p className="text-slate-500 text-xs mt-2 text-center">
+                      +{lockedClues.length - 4} more secrets to discover...
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Progress bar */}
+              <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-slate-400">Discovery Progress</span>
+                  <span className="text-amber-400 font-medium">
+                    {unlockedClues.length}/{discoveryClues.length} secrets found
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                    style={{ width: `${(unlockedClues.length / discoveryClues.length) * 100}%` }}
+                  />
+                </div>
+                {unlockedClues.length === discoveryClues.length && (
+                  <p className="text-emerald-400 text-xs mt-2 text-center flex items-center justify-center gap-1">
+                    <Award className="w-3 h-3" /> All secrets discovered! Maximum savings unlocked!
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Tips Panel Content */}
+          {activeTab === 'tips' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Energy Opportunities */}
             <div>
@@ -570,9 +934,87 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
                 )}
               </div>
             </div>
-          </div>
+            </div>
+          )}
         </div>
       )}
+    </div>
+  );
+};
+
+// ============================================================================
+// DISCOVERY CARD COMPONENT
+// ============================================================================
+interface DiscoveryCardProps {
+  clue: DiscoveryClue;
+}
+
+const DiscoveryCard: React.FC<DiscoveryCardProps> = ({ clue }) => {
+  const categoryStyles = {
+    savings: {
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/30',
+      icon: 'text-emerald-400',
+      badge: 'bg-emerald-500/20 text-emerald-300'
+    },
+    opportunity: {
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/30',
+      icon: 'text-amber-400',
+      badge: 'bg-amber-500/20 text-amber-300'
+    },
+    warning: {
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/30',
+      icon: 'text-red-400',
+      badge: 'bg-red-500/20 text-red-300'
+    },
+    bonus: {
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/30',
+      icon: 'text-purple-400',
+      badge: 'bg-purple-500/20 text-purple-300'
+    }
+  };
+  
+  const style = categoryStyles[clue.category];
+  
+  if (clue.unlocked) {
+    return (
+      <div className={`p-3 rounded-lg ${style.bg} border ${style.border} transition-all hover:scale-[1.02]`}>
+        <div className="flex items-start gap-2">
+          <div className={`flex-shrink-0 ${style.icon} mt-0.5`}>{clue.icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-white text-sm font-medium">{clue.title}</span>
+              {clue.impactValue && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${style.badge} font-medium`}>
+                  {clue.impactValue}
+                </span>
+              )}
+            </div>
+            <p className="text-slate-300 text-xs leading-relaxed">{clue.secret}</p>
+            <p className="text-slate-500 text-[10px] mt-1 flex items-center gap-1">
+              <Unlock className="w-3 h-3" /> {clue.unlockedBy}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Locked state
+  return (
+    <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30 opacity-60 hover:opacity-80 transition-opacity">
+      <div className="flex items-start gap-2">
+        <div className="flex-shrink-0 text-slate-500 mt-0.5">
+          <Lock className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-slate-400 text-sm font-medium mb-1">{clue.title}</div>
+          <p className="text-slate-500 text-xs leading-relaxed">{clue.secret}</p>
+        </div>
+      </div>
     </div>
   );
 };
