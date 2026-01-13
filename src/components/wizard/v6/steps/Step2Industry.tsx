@@ -1,11 +1,11 @@
 /**
  * V6 Step 2: Industry Selection with Images
  * Updated: December 30, 2025 - Larger fonts for better readability
+ * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
  */
 import React from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import type { WizardState } from '../types';
-import { MerlinGuide } from '../MerlinGuide';
 import { INDUSTRY_NAMES } from '@/services/googlePlacesService';
 
 // Industry images
@@ -55,8 +55,7 @@ export function Step2Industry({ state, updateState }: Props) {
   
   return (
     <div className="relative space-y-8 pb-8">
-      {/* Merlin Advisor - Fixed Position */}
-      <MerlinGuide step={2} industry={state.industry} />
+      {/* NOTE: MerlinAdvisor is now rendered at WizardV6 level for all steps */}
       
       {/* Pre-detected Industry Banner */}
       {state.businessName && detectedSlug && (

@@ -10,12 +10,12 @@
  * Updated: January 2026
  * 
  * SSOT: Imports location data from @/services/data
+ * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Globe, Zap, Sun, Star, ChevronDown, Check, Search, Building2, Loader2 } from 'lucide-react';
 import type { WizardState, EnergyGoal } from '../types';
-import { MerlinGuide } from '../MerlinGuide';
 
 // SSOT Imports - All location data comes from centralized data files
 import { 
@@ -227,15 +227,7 @@ export function Step1Location({ state, updateState }: Props) {
 
   return (
     <div className="relative">
-      {/* Merlin Advisor - Fixed Position with Goal Awareness */}
-      <MerlinGuide 
-        step={1} 
-        state={state.state}
-        goals={state.goals}
-        sunHours={locationData?.sunHours}
-        electricityRate={locationData?.electricityRate}
-        solarRating={locationData?.solarRating}
-      />
+      {/* NOTE: MerlinAdvisor is now rendered at WizardV6 level for all steps */}
       
       {/* MERLIN'S LOCATION INSIGHTS PANEL */}
       {locationData && (
