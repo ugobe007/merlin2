@@ -14,6 +14,7 @@ import { Step4Options } from "./steps/Step4Options";
 import { Step5MagicFit } from "./steps/Step5MagicFit";
 import { Step6Quote } from "./steps/Step6Quote";
 import { ValueTicker } from "./components/ValueTicker";
+import { MerlinAdvisor } from "./MerlinAdvisor";
 
 // ============================================================================
 // START OVER CONFIRMATION MODAL
@@ -423,6 +424,28 @@ export default function WizardV6() {
         isOpen={showStartOverModal}
         onClose={() => setShowStartOverModal(false)}
         onConfirm={handleStartOver}
+      />
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          MERLIN ADVISOR - Fixed right panel, the Star of the wizard!
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <MerlinAdvisor
+        currentStep={currentStep}
+        state={state.state}
+        city={state.city}
+        goals={state.goals}
+        sunHours={state.solarData?.sunHours}
+        electricityRate={state.electricityRate}
+        solarRating={state.solarData?.rating}
+        industry={state.industry}
+        industryName={state.industryName}
+        hasSolar={state.selectedOptions?.includes('solar')}
+        hasGenerator={state.selectedOptions?.includes('generator')}
+        hasEv={state.selectedOptions?.includes('ev')}
+        solarKw={state.customSolarKw || state.calculations?.selected?.solarKW}
+        generatorKw={state.customGeneratorKw || state.calculations?.selected?.generatorKW}
+        selectedTier={state.selectedPowerLevel || undefined}
+        annualSavings={state.calculations?.selected?.annualSavings}
       />
 
       {/* Request Quote Modal - only show when on step 6 */}
