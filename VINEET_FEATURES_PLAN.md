@@ -3,6 +3,93 @@
 
 ---
 
+## 🧙 MERLIN ADVISOR "CONCIERGE" ENHANCEMENT - January 13, 2026
+
+### The Request
+Vineet wants the Merlin Advisor to act like a concierge and help users understand their solar/EV options earlier. He suggested splitting Step 1 (Location + Goals) into Step 1 and Step 1.5.
+
+### Our Recommendation: DON'T Split the Steps
+
+**Why splitting would be problematic:**
+
+| Issue | Impact |
+|-------|--------|
+| Step renumbering | All 6 steps become 7 steps - header, footer, progress bar, URL routing all change |
+| Code changes | Every `currentStep` reference needs updating |
+| Test changes | All test files reference step numbers |
+| UX regression | Users see more steps = feels longer |
+| No real benefit | Goals don't need a separate step - they work fine in the current layout |
+
+**Why we CAN'T show specific solar/EV sizing in Step 1:**
+
+| Data Point | Available at Step 1? | Why It Matters |
+|------------|---------------------|----------------|
+| Sun hours / Solar grade | ✅ Yes | From location |
+| Electricity rate | ✅ Yes | From state data |
+| User's goals | ✅ Yes | From goal cards |
+| **Industry type** | ❌ No | Step 2 |
+| **Facility size/details** | ❌ No | Step 3 |
+| **Actual load profile** | ❌ No | Step 3 |
+
+Without industry + facility details, any kW/$ numbers would be guesses:
+- A 100-room hotel in Nevada needs ~400 kW solar
+- A 4-bay car wash in Nevada needs ~50 kW solar
+- A data center in Nevada might need 2 MW solar
+
+Same location, wildly different needs. Showing numbers in Step 1 = misleading.
+
+### Our Solution: Enhanced MerlinGuide "Concierge" ✅ IMPLEMENTED
+
+Instead of splitting steps, we enhanced the MerlinGuide to be more conversational and forward-looking:
+
+**What MerlinGuide now does:**
+
+1. **Goal-Aware Messaging** - Changes message based on selected goals + location
+2. **Dynamic Tips** - Tips change based on what user selected
+3. **Goal Preview Section** - Shows benefits + "coming attractions" for each goal
+4. **Teases Next Steps** - "We'll size your solar in Step 4" without making promises
+
+**Example Messages:**
+
+| User State | Merlin Says |
+|------------|-------------|
+| No location, no goals | "I'm Merlin, your energy advisor. Let's find the perfect solution..." |
+| Location set, no goals | "Nevada has great energy potential! Now tell me your goals..." |
+| 1 goal selected | "Good start! Select 1 more goal so I can tailor your solution." |
+| 2+ goals + NV + high sun | "Great choices! Based on your goals, I'm already planning your solar + BESS strategy for NV." |
+
+**Goal-Specific Dynamic Tips:**
+
+| Goal Selected | Tip Shows |
+|--------------|-----------|
+| `reduce_costs` + high rates | "With NV's high rates ($0.12/kWh), BESS pays for itself fast!" |
+| `sustainability` + good sun | "NV gets 6.4 hrs/day of sun - solar will crush your carbon footprint!" |
+| `backup_power` | "We'll size your backup system in Step 4 based on your critical loads." |
+| `generate_revenue` | "I'll show you grid services and arbitrage opportunities in Step 4!" |
+
+**New Goal Preview Section:**
+```
+📋 Your Goals Preview:
+✓ Cut 20-40% off energy bills — I'll calculate exact savings in Step 5
+✓ 8-24 hours backup during outages — We'll size your backup in Step 4
+✓ Eliminate 30-50% of demand charges — BESS handles this automatically
+```
+
+### Why This Is Better
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Split Step 1 → 1 + 1.5** | Goals get dedicated screen | 7 steps feels longer, code churn, can't show real numbers anyway |
+| **Enhanced MerlinGuide** ✅ | Concierge feeling, forward-looking, no code churn, accurate promises | Requires creative messaging |
+
+**Key Principle:** We give users the feeling of being guided and understood WITHOUT making promises we can't keep. Actual calculations happen in Step 4/5 where we have the data.
+
+### Files Changed
+- `src/components/wizard/v6/MerlinGuide.tsx` - Added goal awareness, dynamic messaging
+- `src/components/wizard/v6/steps/Step1Location.tsx` - Passes goals + location data to MerlinGuide
+
+---
+
 ## ✅ WORKFLOW AUDIT - January 13, 2026
 
 ### Architecture Verified - All Links Working
