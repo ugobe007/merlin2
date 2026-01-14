@@ -562,7 +562,7 @@ function getDiscoveryClues(props: MerlinBarProps): DiscoveryClue[] {
 // ============================================================================
 const MerlinBar: React.FC<MerlinBarProps> = (props) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'discoveries' | 'tips'>('discoveries');
+  const [activeTab, setActiveTab] = useState<'discoveries' | 'tips'>('tips');
   const { currentStep } = props;
   
   // Get step-specific message
