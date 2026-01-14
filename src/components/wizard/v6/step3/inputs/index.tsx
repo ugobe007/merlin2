@@ -158,7 +158,7 @@ type NumberQuestionConfig = {
 // UTILITY: Get Icon (supports Lucide, Emoji, SVG, Images)
 // ============================================
 
-import { getQuestionIcon } from "../../../QuestionIconMap";
+import { getQuestionIcon, hasOptionMapping } from "../../../QuestionIconMap";
 
 const getIcon = (
   iconName: string | undefined,
@@ -166,23 +166,29 @@ const getIcon = (
   questionField?: string,
   optionValue?: string
 ) => {
+  // PRIORITY: If we have a known mapping for this option value, use it first
+  // This ensures emoji icons from QuestionIconMap override any Lucide icons in DB
+  if (optionValue && hasOptionMapping(optionValue)) {
+    return getQuestionIcon(questionField, optionValue);
+  }
+
   // If no icon name, try to get from question/option mapping
   if (!iconName && (questionField || optionValue)) {
     return getQuestionIcon(questionField, optionValue);
   }
 
-  // Try as Lucide icon first
+  // Try as emoji first (higher priority than Lucide)
+  if (iconName && /[\u{1F300}-\u{1F9FF}]/u.test(iconName)) {
+    return <span className={className || "text-2xl"}>{iconName}</span>;
+  }
+
+  // Try as Lucide icon
   if (iconName) {
     const Icon = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
       iconName
     ];
     if (Icon) {
       return <Icon className={className || "w-5 h-5"} />;
-    }
-
-    // Try as emoji
-    if (/[\u{1F300}-\u{1F9FF}]/u.test(iconName)) {
-      return <span className={className || "text-2xl"}>{iconName}</span>;
     }
 
     // Try question/option mapping
@@ -250,19 +256,17 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
               </div>
             )}
 
-            {/* Icon */}
-            {option.icon && (
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center mb-2",
-                  isSelected
-                    ? `bg-gradient-to-br ${scheme.primaryGradient} text-white`
-                    : "bg-slate-700/50 text-slate-300"
-                )}
-              >
-                {getIcon(option.icon, "w-5 h-5", undefined, option.value)}
-              </div>
-            )}
+            {/* Icon - always render, using option.value to look up from QuestionIconMap */}
+            <div
+              className={cn(
+                "w-10 h-10 rounded-lg flex items-center justify-center mb-2",
+                isSelected
+                  ? `bg-gradient-to-br ${scheme.primaryGradient} text-white`
+                  : "bg-slate-700/50 text-slate-300"
+              )}
+            >
+              {getIcon(option.icon, "w-5 h-5", undefined, option.value)}
+            </div>
 
             {/* Label */}
             <span
