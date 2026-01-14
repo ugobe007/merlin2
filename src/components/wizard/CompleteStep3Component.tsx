@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CompleteQuestionRenderer } from "./CompleteQuestionRenderer";
+import { IndustryOpportunityPanel } from "./IndustryOpportunityPanel";
 import {
   carWashQuestionsComplete,
   carWashSections,
@@ -17,6 +18,11 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 interface CompleteStep3ComponentProps {
   state?: {
     industry?: string;
+    industryName?: string;
+    location?: string;
+    electricityRate?: number;
+    sunHours?: number;
+    goals?: string[];
     useCaseData?: Record<string, unknown>;
   };
   updateState?: (updates: Record<string, unknown>) => void;
@@ -258,7 +264,7 @@ export function CompleteStep3Component({
         <main className="flex-1 overflow-y-auto px-8 py-12">
           <div className="max-w-4xl mx-auto">
             {/* Page Title */}
-            <div className="mb-12 text-center">
+            <div className="mb-8 text-center">
               <h1 className="text-4xl font-bold text-white mb-3">
                 Let's Learn About Your Car Wash
               </h1>
@@ -266,6 +272,16 @@ export function CompleteStep3Component({
                 Answer a few questions so Merlin can size the perfect energy system for you.
               </p>
             </div>
+            
+            {/* Industry Opportunity Panel */}
+            <IndustryOpportunityPanel
+              industry={state.industry || 'car-wash'}
+              industryName={state.industryName}
+              state={state.location}
+              electricityRate={state.electricityRate}
+              sunHours={state.sunHours}
+              goals={state.goals}
+            />
 
             {/* Questions */}
             <div className="space-y-12">
