@@ -214,12 +214,12 @@ class BufferService {
       // ✅ MIGRATION: Remove old derived values from useCaseData (Step 3 no longer computes these)
       // These should only exist in state.calculations (Step 5 SSOT)
       if (buffer.state.useCaseData) {
-        const useCaseData = buffer.state.useCaseData as unknown;
+        const useCaseData = buffer.state.useCaseData as Record<string, unknown>;
         // Remove old Step 3 computed values (they violate the new contract)
         if ('estimatedAnnualKwh' in useCaseData || 'peakDemandKw' in useCaseData) {
           console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
-          const { estimatedAnnualKwh: _estimatedAnnualKwh, peakDemandKw: _peakDemandKw, ...cleanUseCaseData } = useCaseData;
-          buffer.state.useCaseData = cleanUseCaseData;
+          const { estimatedAnnualKwh: _e, peakDemandKw: _p, ...cleanUseCaseData } = useCaseData;
+          buffer.state.useCaseData = cleanUseCaseData as typeof buffer.state.useCaseData;
           console.log('✅ Migration complete: Derived values removed (TrueQuote is SSOT)');
         }
       }
@@ -228,14 +228,14 @@ class BufferService {
 
     // Migration: v1.0.0 → v1.1.0 (example)
     // Add migration logic here as versions evolve
-    if (buffer.version === '1.0.0' && currentVersion === '1.1.0') {
+    if (buffer.version === '1.0.0') {
       // Add new fields with defaults
       buffer.state = {
         ...buffer.state,
         // Example: Add new optional fields
         // newField: buffer.state.newField || defaultValue,
       };
-      buffer.version = '1.1.0';
+      buffer.version = currentVersion;
     }
 
     // Future migrations can be added here
@@ -243,11 +243,11 @@ class BufferService {
 
     // Always clean up old derived values regardless of version
     if (buffer.state.useCaseData) {
-      const useCaseData = buffer.state.useCaseData as unknown;
+      const useCaseData = buffer.state.useCaseData as Record<string, unknown>;
       if ('estimatedAnnualKwh' in useCaseData || 'peakDemandKw' in useCaseData) {
         console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
-        const { estimatedAnnualKwh: _estimatedAnnualKwh2, peakDemandKw: _peakDemandKw2, ...cleanUseCaseData } = useCaseData;
-        buffer.state.useCaseData = cleanUseCaseData;
+        const { estimatedAnnualKwh: _e2, peakDemandKw: _p2, ...cleanUseCaseData } = useCaseData;
+        buffer.state.useCaseData = cleanUseCaseData as typeof buffer.state.useCaseData;
       }
     }
 

@@ -244,14 +244,14 @@ export function Step3Details({ state, updateState, goToStep }: Props) {
     questions.forEach(q => {
       initial[q.field] = q.smartDefault;
     });
-    return { ...initial, ...(state.useCaseData || {}) };
+    return { ...initial, ...(state.useCaseData?.inputs || {}) };
   });
 
   const [activeQuestion, setActiveQuestion] = useState(1);
 
   // Update parent state
   useEffect(() => {
-    updateState({ useCaseData: answers });
+    updateState({ useCaseData: { inputs: answers } });
   }, [answers, updateState]);
 
   // Auto-advance when question is answered (optional)

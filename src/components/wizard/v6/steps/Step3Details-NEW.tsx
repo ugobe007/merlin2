@@ -40,12 +40,11 @@ export function Step3Details({
       }}
       onNext={(quoteData) => {
         // Save complete data and proceed
+        // Note: TrueQuote is SSOT for calculations (Step 5)
         updateState({
           useCaseData: {
             ...state.useCaseData,
             inputs: quoteData.answers,
-            calculated: quoteData.quote,
-            timestamp: quoteData.timestamp
           }
         });
         onNext();

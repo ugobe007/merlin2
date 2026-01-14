@@ -247,19 +247,20 @@ export function mapWizardStateToTrueQuoteInput(state: WizardState): TrueQuoteInp
   
   // Extract subtype using configuration
   const subtypeFieldName = getSubtypeFieldName(industryType);
-  const dbSubtypeValue = state.useCaseData?.[subtypeFieldName] || 
+  const useCaseInputs = state.useCaseData?.inputs as Record<string, unknown> | undefined;
+  const dbSubtypeValue = useCaseInputs?.[subtypeFieldName] || 
                          state.facilityDetails?.[subtypeFieldName as keyof typeof state.facilityDetails];
   
-  // Map database value to TrueQuote format
-  const mappedSubtype = dbSubtypeValue 
+  // Map database value to TrueQuote format (ensure string)
+  const mappedSubtype = (typeof dbSubtypeValue === 'string' && dbSubtypeValue)
     ? mapSubtype(industryType, dbSubtypeValue)
     : DEFAULT_SUBTYPES[industryType] || 'standard';
 
-  // Build facility data from useCaseData
+  // Build facility data from useCaseData.inputs
   const facilityData: Record<string, number | string | boolean> = {};
   
-  if (state.useCaseData) {
-    Object.entries(state.useCaseData).forEach(([key, value]) => {
+  if (state.useCaseData?.inputs) {
+    Object.entries(state.useCaseData.inputs).forEach(([key, value]) => {
       const mappedKey = mapFieldName(industryType, key);
       if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
         facilityData[mappedKey] = value;

@@ -127,30 +127,17 @@ export function validateWizardStateForTrueQuote(state: WizardState): ValidationR
       }
 
       // Industry-specific validation (optional but recommended)
+      const inputsRecord = state.useCaseData.inputs as Record<string, unknown>;
       const industryValidation = validateIndustrySpecificInputs(
         state.industry,
-        state.useCaseData.inputs
+        inputsRecord
       );
       errors.push(...industryValidation.errors);
       warnings.push(...industryValidation.warnings);
     }
 
-    // Optional: Check if derived values exist (will be computed by TrueQuote if missing)
-    if (!state.useCaseData.estimatedAnnualKwh) {
-      warnings.push({
-        field: "useCaseData.estimatedAnnualKwh",
-        message: "estimatedAnnualKwh not pre-calculated, TrueQuote will compute it",
-        step: 3,
-      });
-    }
-
-    if (!state.useCaseData.peakDemandKw) {
-      warnings.push({
-        field: "useCaseData.peakDemandKw",
-        message: "peakDemandKw not pre-calculated, TrueQuote will compute it",
-        step: 3,
-      });
-    }
+    // Note: estimatedAnnualKwh and peakDemandKw are now computed by TrueQuote, not stored in useCaseData
+    // They will exist in state.calculations after Step 5 runs
   }
 
   // ============================================================================
@@ -192,7 +179,7 @@ function validateIndustrySpecificInputs(
       errors.push({
         field: "facilityType",
         expected: 'car wash facility type (e.g., "express_tunnel", "in_bay_automatic")',
-        received: inputs.facilityType || null,
+        received: String(inputs.facilityType ?? null),
         step: 3,
       });
     }
@@ -201,7 +188,7 @@ function validateIndustrySpecificInputs(
       errors.push({
         field: "bayCount",
         expected: "number of bays",
-        received: inputs.bayCount || null,
+        received: String(inputs.bayCount ?? null),
         step: 3,
       });
     }
@@ -213,7 +200,7 @@ function validateIndustrySpecificInputs(
       errors.push({
         field: "roomCount",
         expected: "number of rooms",
-        received: inputs.roomCount || null,
+        received: String(inputs.roomCount ?? null),
         step: 3,
       });
     }
@@ -416,8 +403,9 @@ export function logWizardStateSchema(state: WizardState): void {
       state.useCaseData?.inputs && Object.keys(state.useCaseData.inputs).length > 0
     ),
     calculations: !!state.calculations,
-    "calculations.annualConsumptionKWh": !!state.calculations?.annualConsumptionKWh,
-    "calculations.peakDemandKW": !!state.calculations?.peakDemandKW,
+    "calculations.base": !!state.calculations?.base,
+    "calculations.base.annualConsumptionKWh": !!state.calculations?.base?.annualConsumptionKWh,
+    "calculations.base.peakDemandKW": !!state.calculations?.base?.peakDemandKW,
   });
 
   // Location details
@@ -463,10 +451,10 @@ export function logWizardStateSchema(state: WizardState): void {
   // Calculations (Step 5 SSOT)
   console.log("💾 Calculations (Step 5 SSOT):", {
     hasCalculations: !!state.calculations,
-    annualConsumptionKWh: state.calculations?.annualConsumptionKWh || "NOT SET (will be computed)",
-    peakDemandKW: state.calculations?.peakDemandKW || "NOT SET (will be computed)",
-    utilityRate: state.calculations?.utilityRate || "NOT SET (will be computed)",
-    demandCharge: state.calculations?.demandCharge || "NOT SET (will be computed)",
+    annualConsumptionKWh: state.calculations?.base?.annualConsumptionKWh || "NOT SET (will be computed)",
+    peakDemandKW: state.calculations?.base?.peakDemandKW || "NOT SET (will be computed)",
+    utilityRate: state.calculations?.base?.utilityRate || "NOT SET (will be computed)",
+    demandCharge: state.calculations?.base?.demandCharge || "NOT SET (will be computed)",
     selectedPowerLevel: state.selectedPowerLevel || "NOT SET (user will select)",
   });
 

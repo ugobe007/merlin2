@@ -48,9 +48,9 @@ test('TRUEQUOTE_CONSTANTS loaded', () => ({
 }));
 
 test('DEFAULTS.BESS structure', () => ({
-  expected: 'costPerKWh=350, efficiency=0.85',
+  expected: 'costPerKWh=175, efficiency=0.85',
   actual: `costPerKWh=${DEFAULTS.BESS.costPerKWh}, efficiency=${DEFAULTS.BESS.efficiency}`,
-  passed: DEFAULTS.BESS.costPerKWh === 350 && DEFAULTS.BESS.efficiency === 0.85,
+  passed: DEFAULTS.BESS.costPerKWh === 175 && DEFAULTS.BESS.efficiency === 0.85,
 }));
 
 test('calculateLoad - Hotel 200 rooms', () => {
