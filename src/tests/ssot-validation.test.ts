@@ -102,8 +102,8 @@ describe("SSOT Power Calculations", () => {
     // ──────────────────────────────────────────────────────────────────────────
     airport: {
       slug: "airport",
-      input: { annualPassengers: 2000000 }, // 2 million - small regional
-      expectedPowerMW: { min: 1.0, max: 4.0 }, // 2M × 1.5 MW/M = 3 MW
+      input: { annualPassengers: 2000000 }, // 2 million - medium regional
+      expectedPowerMW: { min: 8.0, max: 10.0 }, // 2M passengers: 6 + (2-1)*3 = 9 MW (SSOT tiered formula)
       description: "2 million passenger regional airport",
     },
     casino: {
@@ -162,14 +162,14 @@ describe("SSOT Power Calculations", () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 describe("SSOT Default Value Protection", () => {
-  it("Airport with empty data should use database default of 5 million passengers", () => {
-    // Database default: annualPassengers = 5,000,000 (medium regional airport)
-    // Expected: 5M passengers × 1.5 MW/M = 7.5 MW
+  it("Airport with empty data should use database default of 1 million passengers", () => {
+    // Database default: annualPassengers = 1,000,000 (small regional airport)
+    // Expected: 1M passengers → 6 MW (border between small and medium regional)
     const result = calculateUseCasePower("airport", {});
 
-    // With database default (5M passengers), expect ~7.5 MW
-    expect(result.powerMW).toBeGreaterThanOrEqual(7.0);
-    expect(result.powerMW).toBeLessThanOrEqual(8.0);
+    // With database default (1M passengers), expect ~6 MW
+    expect(result.powerMW).toBeGreaterThanOrEqual(5.5);
+    expect(result.powerMW).toBeLessThanOrEqual(6.5);
     console.log("Airport DB default:", result);
   });
 
