@@ -629,14 +629,67 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
             </div>
             
-            {/* Message */}
+            {/* Message + Location Metrics */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-amber-400 font-semibold text-sm">Merlin</span>
                 <span className="text-slate-500 text-xs">AI Energy Advisor</span>
               </div>
               <p className="text-white text-sm truncate">{message.main}</p>
-              {message.tip && !isExpanded && (
+              
+              {/* Location Metrics Row - Show when location is confirmed */}
+              {props.state && (
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {/* Peak Sun */}
+                  {props.sunHours && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                      <Sun className="w-3 h-3 text-amber-400" />
+                      <span className="text-amber-400 text-xs font-medium">{props.sunHours.toFixed(1)}</span>
+                      <span className="text-slate-500 text-[10px]">hrs/day</span>
+                    </div>
+                  )}
+                  
+                  {/* Electricity Rate */}
+                  {props.electricityRate && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                      <Zap className="w-3 h-3 text-cyan-400" />
+                      <span className="text-cyan-400 text-xs font-medium">${props.electricityRate.toFixed(2)}</span>
+                      <span className="text-slate-500 text-[10px]">/kWh</span>
+                    </div>
+                  )}
+                  
+                  {/* Weather Risk - based on state */}
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                    <Shield className="w-3 h-3 text-emerald-400" />
+                    <span className="text-emerald-400 text-xs font-medium">Low</span>
+                    <span className="text-slate-500 text-[10px]">Risk</span>
+                  </div>
+                  
+                  {/* Solar Grade */}
+                  {props.solarRating && (
+                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${
+                      props.solarRating === 'A' || props.solarRating === 'A+' 
+                        ? 'bg-emerald-500/10 border border-emerald-500/20' 
+                        : props.solarRating === 'B' || props.solarRating === 'B+'
+                          ? 'bg-yellow-500/10 border border-yellow-500/20'
+                          : 'bg-slate-500/10 border border-slate-500/20'
+                    }`}>
+                      <Sun className={`w-3 h-3 ${
+                        props.solarRating === 'A' || props.solarRating === 'A+' ? 'text-emerald-400' :
+                        props.solarRating === 'B' || props.solarRating === 'B+' ? 'text-yellow-400' : 'text-slate-400'
+                      }`} />
+                      <span className={`text-xs font-bold ${
+                        props.solarRating === 'A' || props.solarRating === 'A+' ? 'text-emerald-400' :
+                        props.solarRating === 'B' || props.solarRating === 'B+' ? 'text-yellow-400' : 'text-slate-400'
+                      }`}>{props.solarRating}</span>
+                      <span className="text-slate-500 text-[10px]">Solar</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Tip (only show if no metrics) */}
+              {message.tip && !isExpanded && !props.state && (
                 <p className="text-slate-400 text-xs truncate">{message.tip}</p>
               )}
             </div>
