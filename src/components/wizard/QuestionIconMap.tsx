@@ -113,17 +113,17 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'standard_4': { type: 'emoji', value: '💨' },
   'premium_6': { type: 'emoji', value: '💨💨' },
   'heated': { type: 'emoji', value: '🔥' },
-  'none': { type: 'emoji', value: '❄️' },
+  'no-heating': { type: 'emoji', value: '❄️' },
 
   // Water Heater Types
   'electric': { type: 'emoji', value: '⚡' },
   'gas': { type: 'emoji', value: '🔥' },
-  'none': { type: 'emoji', value: '❄️' },
+  'no-water-heater': { type: 'emoji', value: '❄️' },
 
   // Water Reclaim
   'full': { type: 'emoji', value: '♻️' },
   'partial': { type: 'emoji', value: '🔄' },
-  'none': { type: 'emoji', value: '💧' },
+  'no-reclaim': { type: 'emoji', value: '💧' },
 };
 
 // ============================================================================

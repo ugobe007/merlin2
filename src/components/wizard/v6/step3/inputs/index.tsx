@@ -173,7 +173,7 @@ const getIcon = (
 
   // Try as Lucide icon first
   if (iconName) {
-    const Icon = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[
+    const Icon = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
       iconName
     ];
     if (Icon) {
@@ -763,7 +763,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         const boolConfig = (config as BooleanQuestionConfig | null) ?? null;
         return (
           <ToggleButtons
-            value={value}
+            value={value as boolean | null}
             onChange={(v) => onChange(field_name, v)}
             trueLabel={boolConfig?.trueLabel}
             falseLabel={boolConfig?.falseLabel}
@@ -776,7 +776,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         return (
           <CheckboxGrid
             options={parsedOptions}
-            value={value || []}
+            value={Array.isArray(value) ? value : []}
             onChange={(v) => onChange(field_name, v)}
             colorScheme={scheme}
           />
@@ -787,7 +787,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
           return (
             <PanelButtonGroup
               options={parsedOptions}
-              value={value}
+              value={value as string | null}
               onChange={(v) => onChange(field_name, v)}
               colorScheme={scheme}
             />
@@ -796,7 +796,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         // Fallback to dropdown for 7+ options
         return (
           <select
-            value={value || ""}
+            value={(value as string) || ""}
             onChange={(e) => onChange(field_name, e.target.value)}
             className={cn(
               "w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2",
@@ -824,7 +824,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         if (range > 20) {
           return (
             <SliderWithButtons
-              value={(value ?? numConfig.default ?? numConfig.min ?? 0) as number}
+              value={((value as number | null) ?? numConfig.default ?? numConfig.min ?? 0)}
               onChange={(v) => onChange(field_name, v)}
               min={numConfig.min ?? 0}
               max={numConfig.max ?? 1000}
@@ -837,7 +837,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
 
         return (
           <NumberInput
-            value={value}
+            value={value as number | null}
             onChange={(v) => onChange(field_name, v)}
             min={numConfig.min}
             max={numConfig.max}
@@ -852,7 +852,7 @@ export const SmartQuestion: React.FC<SmartQuestionProps> = ({
         return (
           <input
             type="text"
-            value={value || ""}
+            value={(value as string) || ""}
             onChange={(e) => onChange(field_name, e.target.value)}
             className={cn(
               "w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2",

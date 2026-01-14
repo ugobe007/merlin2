@@ -204,8 +204,8 @@ function buildWorksheetData(
       industry: {
         type: state.industry || "",
         typeName: quoteResult.facility?.industryName || state.industry || "",
-        subtype: state.useCaseData?.facilityType || state.industry || "",
-        subtypeName: state.useCaseData?.facilitySubtype || state.industry || "",
+        subtype: (state.useCaseData?.inputs as Record<string, unknown>)?.facilityType as string || state.industry || "",
+        subtypeName: (state.useCaseData?.inputs as Record<string, unknown>)?.facilitySubtype as string || state.industry || "",
         facilityDetails: state.useCaseData || {},
       },
     },

@@ -39,16 +39,27 @@ interface Props {
   updateState: (updates: Partial<WizardState>) => void;
 }
 
-// UI display types (extend the service results with display fields)
-interface SolarTier extends SolarPreviewResult {
+// UI display types (standalone types that include formatted strings)
+interface SolarTier {
+  name: string;
+  sizeKw: number;
+  sizeLabel: string;
+  coveragePercent: number;
+  panelCount: number;
+  annualProductionKwh: number;
+  annualSavings: number;  // raw number from service
+  installCost: number;    // raw number from service
+  netCostAfterITC: number;
+  paybackYears: number;
+  co2OffsetTons: number;
+  // Display strings
   size: string;
   coverage: string;
   panels: number;
   annualProduction: string;
-  annualProductionRaw: number;
-  annualSavings: string;
+  annualSavingsStr: string;
   annualSavingsRaw: number;
-  installCost: string;
+  installCostStr: string;
   installCostRaw: number;
   netCost: string;
   netCostRaw: number;
@@ -57,10 +68,19 @@ interface SolarTier extends SolarPreviewResult {
   tag?: string;
 }
 
-interface EvTier extends EvPreviewResult {
+interface EvTier {
+  name: string;
+  l2Count: number;
+  dcfcCount: number;
+  totalPowerKw: number;
+  chargersLabel: string;
+  carsPerDay: string;
+  monthlyRevenue: number;
+  installCost: number;
+  tenYearRevenue: number;
+  // Display strings
   chargers: string;
   power: string;
-  carsPerDay: string;
   monthlyRevenueStr: string;
   monthlyRevenueRaw: number;
   installCostStr: string;
@@ -69,7 +89,17 @@ interface EvTier extends EvPreviewResult {
   tag?: string;
 }
 
-interface GeneratorTier extends GeneratorPreviewResult {
+interface GeneratorTier {
+  name: string;
+  sizeKw: number;
+  sizeLabel: string;
+  fuelType: string;
+  runtimeHours: number;
+  installCost: number;
+  netCostAfterITC: number;
+  annualMaintenance: number;
+  coverage: string;
+  // Display strings
   size: string;
   runtime: string;
   installCostStr: string;
@@ -85,15 +115,25 @@ function calcSolar(name: string, pct: number, usage: number, sun: number): Solar
     name
   );
   return {
-    ...result,
+    name: result.name,
+    sizeKw: result.sizeKw,
+    sizeLabel: result.sizeLabel,
+    coveragePercent: result.coveragePercent,
+    panelCount: result.panelCount,
+    annualProductionKwh: result.annualProductionKwh,
+    annualSavings: result.annualSavings,
+    installCost: result.installCost,
+    netCostAfterITC: result.netCostAfterITC,
+    paybackYears: result.paybackYears,
+    co2OffsetTons: result.co2OffsetTons,
+    // Display strings
     size: result.sizeLabel,
     coverage: `${Math.round(pct * 100)}%`,
     panels: result.panelCount,
     annualProduction: result.annualProductionKwh.toLocaleString(),
-    annualProductionRaw: result.annualProductionKwh,
-    annualSavings: `$${result.annualSavings.toLocaleString()}`,
+    annualSavingsStr: `$${result.annualSavings.toLocaleString()}`,
     annualSavingsRaw: result.annualSavings,
-    installCost: `$${result.installCost.toLocaleString()}`,
+    installCostStr: `$${result.installCost.toLocaleString()}`,
     installCostRaw: result.installCost,
     netCost: `$${result.netCostAfterITC.toLocaleString()}`,
     netCostRaw: result.netCostAfterITC,
@@ -142,17 +182,21 @@ const Step4Options = ({ state, updateState }: Props) => {
   const [generatorTier, setGeneratorTier] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>("solar");
 
+  // Access inputs from useCaseData.inputs
+  const inputs = state.useCaseData?.inputs as Record<string, unknown> || {};
+  
   const loc = {
     city: state.city || "Las Vegas",
     state: state.state || "NV",
-    sunHours: state.useCaseData?.sunHours || 6.3,
+    sunHours: state.solarData?.sunHours || 6.3,
   };
   const ind = {
     type: state.industryName || "Hotel / Hospitality",
-    rooms: state.useCaseData?.roomCount || 150,
+    rooms: (inputs.roomCount as number) || 150,
   };
-  const usage = state.useCaseData?.estimatedAnnualKwh || 1850000;
-  const peak = state.useCaseData?.peakDemandKw || Math.round((usage / 8760) * 1.5);
+  // Get usage/peak from calculations (SSOT) or estimate from industry
+  const usage = state.calculations?.base?.annualConsumptionKWh || 1850000;
+  const peak = state.calculations?.base?.peakDemandKW || Math.round((usage / 8760) * 1.5);
 
   const solarOpts = useMemo(
     () => ({
@@ -282,7 +326,7 @@ const Step4Options = ({ state, updateState }: Props) => {
             subtitle="Hotels with solar see 15% boost in eco-conscious bookings"
             badge="High Opportunity"
             badgeColor="emerald"
-            value={curSolar ? curSolar.annualSavings : `$${maxSolar.toLocaleString()}`}
+            value={curSolar ? curSolar.annualSavingsStr : `$${maxSolar.toLocaleString()}`}
             valueLabel={curSolar ? "Selected" : "Up to"}
             valueSuffix="/yr"
             isSelected={selectedOptions.includes("solar")}
@@ -310,9 +354,9 @@ const Step4Options = ({ state, updateState }: Props) => {
                     metrics={[
                       { label: "Coverage", value: o.coverage },
                       { label: "Production", value: `${o.annualProduction} kWh` },
-                      { label: "Savings", value: o.annualSavings, highlight: true },
+                      { label: "Savings", value: o.annualSavingsStr, highlight: true },
                       { label: "Payback", value: o.payback },
-                      { label: "Cost", value: o.installCost },
+                      { label: "Cost", value: o.installCostStr },
                       { label: "After ITC", value: o.netCost, highlight: true, color: "purple" },
                     ]}
                   />
@@ -362,8 +406,8 @@ const Step4Options = ({ state, updateState }: Props) => {
                     metrics={[
                       { label: "Power", value: o.power },
                       { label: "Cars/Day", value: o.carsPerDay },
-                      { label: "Monthly Rev", value: o.monthlyRevenue, highlight: true },
-                      { label: "Install Cost", value: o.installCost },
+                      { label: "Monthly Rev", value: o.monthlyRevenueStr, highlight: true },
+                      { label: "Install Cost", value: o.installCostStr },
                       {
                         label: "10yr Revenue",
                         value: `$${(o.tenYearRevenue / 1000).toFixed(0)}k`,
@@ -405,7 +449,7 @@ const Step4Options = ({ state, updateState }: Props) => {
             subtitle="Protect against outages • Critical for 24/7 operations"
             badge="Business Continuity"
             badgeColor="amber"
-            value={curGen ? curGen.netCost : "$73k"}
+            value={curGen ? curGen.netCostStr : "$73k"}
             valueLabel={curGen ? "Selected" : "From"}
             isSelected={selectedOptions.includes("generator")}
             isExpanded={expandedCard === "generator"}
@@ -430,14 +474,14 @@ const Step4Options = ({ state, updateState }: Props) => {
                       { label: "Coverage", value: o.coverage },
                       { label: "Fuel", value: o.fuelType },
                       { label: "Runtime", value: o.runtime },
-                      { label: "Install", value: o.installCost },
+                      { label: "Install", value: o.installCostStr },
                       {
                         label: "After Credits",
-                        value: o.netCost,
+                        value: o.netCostStr,
                         highlight: true,
                         color: "purple",
                       },
-                      { label: "Maintenance", value: o.annualMaintenance },
+                      { label: "Maintenance", value: o.annualMaintenanceStr },
                     ]}
                   />
                 ))}
@@ -468,7 +512,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                     {curSolar.size} — {curSolar.name}
                   </div>
                   <div className="text-sm font-semibold text-emerald-400">
-                    {curSolar.annualSavings}/year
+                    {curSolar.annualSavingsStr}/year
                   </div>
                 </div>
               )}
@@ -479,7 +523,7 @@ const Step4Options = ({ state, updateState }: Props) => {
                     {curEv.chargers} — {curEv.name}
                   </div>
                   <div className="text-sm font-semibold text-cyan-400">
-                    {curEv.monthlyRevenue}/month
+                    {curEv.monthlyRevenueStr}/month
                   </div>
                 </div>
               )}

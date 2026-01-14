@@ -22,7 +22,7 @@ import type {
 // ============================================================================
 // SSOT IMPORTS - Use TrueQuoteEngine for ALL calculations
 // ============================================================================
-import { calculateTrueQuote } from "@/services/TrueQuoteEngine";
+import { calculateTrueQuote } from "@/services/_deprecated/TrueQuoteEngine";
 import { TRUEQUOTE_CONSTANTS } from "@/services/data/constants";
 import { mapWizardStateToTrueQuoteInput } from "@/components/wizard/v6/utils/trueQuoteMapper";
 
@@ -169,18 +169,20 @@ export function useTrueQuote(wizardState: any): TrueQuoteWorksheetData {
     // STEP 2: Extract calculation steps from TrueQuoteEngine result
     // The engine already provides detailed steps!
     // ========================================
-    const steps: CalculationStep[] = trueQuoteResult.calculationSteps.map(step => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const steps: CalculationStep[] = trueQuoteResult.calculationSteps.map((step: any) => ({
       stepNumber: step.stepNumber,
       category: step.category,
       name: step.name,
       description: step.description,
       formula: step.formula,
       calculation: step.calculation,
-      inputs: step.inputs.map(input => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputs: step.inputs.map((input: any) => ({
         name: input.name,
-        value: input.value,
+        value: String(input.value),
         unit: input.unit,
-        source: input.source,
+        source: input.source || '',
       })),
       output: step.output,
       benchmark: step.benchmark,

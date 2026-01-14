@@ -48,12 +48,12 @@ export function Step3Details({
       }}
       onNext={(quoteData) => {
         // Save complete data and proceed to Step 4
+        // Note: 'calculated' and 'timestamp' are not part of useCaseData type
+        // TrueQuote is SSOT for calculations (Step 5)
         updateState({
           useCaseData: {
             ...state.useCaseData,
             inputs: quoteData.answers,
-            calculated: quoteData.quote,
-            timestamp: quoteData.timestamp
           }
         });
         onNext();
