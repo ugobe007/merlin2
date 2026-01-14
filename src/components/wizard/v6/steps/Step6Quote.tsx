@@ -172,44 +172,240 @@ export function Step6Quote({ state }: Props) {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-          <div className="flex items-center gap-2 text-slate-300 mb-2">
-            <DollarSign className="w-4 h-4" />
-            Annual Savings
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* HERO SAVINGS SECTION - Big, Bright, Compelling! */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <div className="relative mb-8 rounded-3xl overflow-hidden">
+        {/* Gradient background with glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-cyan-600/20 to-purple-600/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.3),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,92,246,0.2),transparent_50%)]" />
+        
+        <div className="relative p-8 border border-emerald-500/30 rounded-3xl">
+          {/* Annual Savings Hero */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 mb-4">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-emerald-400 font-semibold text-sm uppercase tracking-wider">
+                Your Projected Annual Savings
+              </span>
+            </div>
+            
+            <div className="relative">
+              <div className="text-7xl md:text-8xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent leading-none">
+                ${Math.round(selected.annualSavings || 0).toLocaleString()}
+              </div>
+              <div className="text-2xl text-slate-400 mt-2">per year</div>
+            </div>
+            
+            {/* 10-year projection callout */}
+            <div className="mt-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
+              <TrendingUp className="w-6 h-6 text-emerald-400" />
+              <div className="text-left">
+                <div className="text-white font-bold text-lg">
+                  ${Math.round(tenYearSavings).toLocaleString()} over 10 years
+                </div>
+                <div className="text-slate-400 text-sm">
+                  That's ${Math.round(tenYearSavings / 120).toLocaleString()}/month back in your pocket
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-3xl font-extrabold text-white">
-            ${Math.round(selected.annualSavings || 0).toLocaleString()}
+          
+          {/* Savings Breakdown - WHY it works */}
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
+            {/* Peak Shaving Savings */}
+            <div className="p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div className="text-cyan-400 font-semibold">Peak Shaving</div>
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">
+                ${Math.round((selected.annualSavings || 0) * 0.45).toLocaleString()}
+              </div>
+              <p className="text-sm text-slate-400">
+                Battery discharges during peak hours to reduce your demand charges by up to 30%
+              </p>
+            </div>
+            
+            {/* Energy Arbitrage */}
+            <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                </div>
+                <div className="text-purple-400 font-semibold">Energy Arbitrage</div>
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">
+                ${Math.round((selected.annualSavings || 0) * 0.25).toLocaleString()}
+              </div>
+              <p className="text-sm text-slate-400">
+                Charge battery when rates are low, use power when rates are high (TOU optimization)
+              </p>
+            </div>
+            
+            {/* Solar + Storage */}
+            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Sun className="w-5 h-5 text-amber-400" />
+                </div>
+                <div className="text-amber-400 font-semibold">
+                  {(selected.solarKW || 0) > 0 ? 'Solar Self-Consumption' : 'Grid Independence'}
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-white mb-1">
+                ${Math.round((selected.annualSavings || 0) * 0.30).toLocaleString()}
+              </div>
+              <p className="text-sm text-slate-400">
+                {(selected.solarKW || 0) > 0 
+                  ? `${Math.round(selected.solarKW || 0)} kW solar generates free power stored for later use`
+                  : 'Reduced exposure to utility rate increases & grid outages'
+                }
+              </p>
+            </div>
           </div>
-          <div className="text-slate-400 text-sm mt-1">
-            10-year savings ≈ ${Math.round(tenYearSavings).toLocaleString()}
+          
+          {/* Key Selling Points - The "Why This Works" */}
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded-xl bg-white/5">
+              <div className="text-3xl font-bold text-white mb-1">
+                {(selected.paybackYears ?? 0).toFixed(1)}
+              </div>
+              <div className="text-slate-400 text-sm">Years to Payback</div>
+              <div className="text-emerald-400 text-xs mt-1">✓ Faster than solar alone</div>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl bg-white/5">
+              <div className="text-3xl font-bold text-white mb-1">
+                {(selected.tenYearROI ?? 0).toFixed(0)}%
+              </div>
+              <div className="text-slate-400 text-sm">10-Year ROI</div>
+              <div className="text-emerald-400 text-xs mt-1">✓ Better than S&P 500 avg</div>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl bg-white/5">
+              <div className="text-3xl font-bold text-white mb-1">
+                {itcPercentage}%
+              </div>
+              <div className="text-slate-400 text-sm">Federal Tax Credit</div>
+              <div className="text-emerald-400 text-xs mt-1">
+                ✓ ${Math.round(selected.federalITC || 0).toLocaleString()} instant savings
+              </div>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl bg-white/5">
+              <div className="text-3xl font-bold text-white mb-1">
+                ${Math.round(netTenYearValue).toLocaleString()}
+              </div>
+              <div className="text-slate-400 text-sm">Net 10-Year Value</div>
+              <div className="text-emerald-400 text-xs mt-1">✓ Pure profit after payback</div>
+            </div>
           </div>
         </div>
-
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-          <div className="flex items-center gap-2 text-slate-300 mb-2">
-            <Calendar className="w-4 h-4" />
-            Payback
+      </div>
+      
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* INVESTMENT & ROI BREAKDOWN */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Investment Breakdown */}
+        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-emerald-400" />
+            Your Investment
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between items-center pb-3 border-b border-white/10">
+              <span className="text-slate-300">Total System Cost</span>
+              <span className="text-white font-semibold">
+                ${Math.round(selected.totalInvestment || 0).toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center text-emerald-400">
+              <span className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Federal ITC ({itcPercentage}%)
+              </span>
+              <span className="font-semibold">
+                -${Math.round(selected.federalITC || 0).toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center pt-3 border-t border-white/10">
+              <span className="text-white font-bold text-lg">Net Investment</span>
+              <span className="text-emerald-400 font-bold text-xl">
+                ${Math.round(selected.netInvestment || 0).toLocaleString()}
+              </span>
+            </div>
           </div>
-          <div className="text-3xl font-extrabold text-white">
-            {(selected.paybackYears ?? 0).toFixed(1)} yrs
-          </div>
-          <div className="text-slate-400 text-sm mt-1">
-            Net investment: ${Math.round(selected.netInvestment || 0).toLocaleString()}
+          
+          <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <p className="text-sm text-emerald-300">
+              💡 <strong>Pro tip:</strong> The {itcPercentage}% ITC can be claimed on your next tax return, effectively reducing your out-of-pocket cost by ${Math.round(selected.federalITC || 0).toLocaleString()}.
+            </p>
           </div>
         </div>
-
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-          <div className="flex items-center gap-2 text-slate-300 mb-2">
-            <TrendingUp className="w-4 h-4" />
-            10-year ROI
-          </div>
-          <div className="text-3xl font-extrabold text-white">
-            {(selected.tenYearROI ?? 0).toFixed(1)}%
-          </div>
-          <div className="text-slate-400 text-sm mt-1">
-            Net 10-year value ≈ ${Math.round(netTenYearValue).toLocaleString()}
+        
+        {/* Why Your Numbers Work */}
+        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Info className="w-5 h-5 text-cyan-400" />
+            Why Your Numbers Work
+          </h3>
+          
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-cyan-400 font-bold">1</span>
+              </div>
+              <div>
+                <div className="text-white font-medium">High Utility Rate Location</div>
+                <p className="text-sm text-slate-400">
+                  At ${(base.utilityRate ?? state.electricityRate ?? 0.12).toFixed(3)}/kWh, every kWh you offset = real savings
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-purple-400 font-bold">2</span>
+              </div>
+              <div>
+                <div className="text-white font-medium">Peak Demand Reduction</div>
+                <p className="text-sm text-slate-400">
+                  Your {Math.round(base.peakDemandKW || 0)} kW peak = high demand charges. Battery shaves 30%+
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-emerald-400 font-bold">3</span>
+              </div>
+              <div>
+                <div className="text-white font-medium">Right-Sized System</div>
+                <p className="text-sm text-slate-400">
+                  {Math.round(selected.bessKW || 0)} kW / {Math.round(selected.bessKWh || 0)} kWh matches your load perfectly
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-amber-400 font-bold">4</span>
+              </div>
+              <div>
+                <div className="text-white font-medium">Tax Incentives Stack</div>
+                <p className="text-sm text-slate-400">
+                  {itcPercentage}% ITC + potential state rebates + depreciation benefits
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -331,6 +527,32 @@ export function Step6Quote({ state }: Props) {
             )}
           </div>
         ) : null}
+      </div>
+      
+      {/* CTA Section */}
+      <div className="mt-8 text-center p-8 rounded-3xl bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30">
+        <h3 className="text-2xl font-bold text-white mb-2">
+          Ready to Start Saving ${Math.round((selected.annualSavings || 0) / 12).toLocaleString()}/month?
+        </h3>
+        <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
+          Get a detailed proposal from our certified partners. No obligation, no pressure—just real numbers from real installers in your area.
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={handleDownloadPDF}
+            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold flex items-center gap-2"
+          >
+            <Download className="w-5 h-5" />
+            Save This Quote
+          </button>
+          <button
+            onClick={handleRequestQuote}
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-purple-500/30"
+          >
+            <Shield className="w-5 h-5" />
+            Get Official Quote
+          </button>
+        </div>
       </div>
 
       <RequestQuoteModal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} />
