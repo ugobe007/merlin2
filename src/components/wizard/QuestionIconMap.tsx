@@ -124,6 +124,165 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'full': { type: 'emoji', value: '♻️' },
   'partial': { type: 'emoji', value: '🔄' },
   'no-reclaim': { type: 'emoji', value: '💧' },
+  'no_reclaim': { type: 'emoji', value: '💧' },
+  'partial_reclaim': { type: 'emoji', value: '🔄' },
+  'full_reclaim': { type: 'emoji', value: '♻️' },
+  'advanced_treatment': { type: 'emoji', value: '✨' },
+
+  // ============================================================================
+  // NUMBERS (for tunnel count, days, charger count, etc.)
+  // ============================================================================
+  '1': { type: 'emoji', value: '1️⃣' },
+  '2': { type: 'emoji', value: '2️⃣' },
+  '3': { type: 'emoji', value: '3️⃣' },
+  '4': { type: 'emoji', value: '4️⃣' },
+  '5': { type: 'emoji', value: '5️⃣' },
+  '6': { type: 'emoji', value: '6️⃣' },
+  '7': { type: 'emoji', value: '7️⃣' },
+  '8': { type: 'emoji', value: '8️⃣' },
+  '9': { type: 'emoji', value: '9️⃣' },
+  '10': { type: 'emoji', value: '🔟' },
+  '12': { type: 'emoji', value: '🕛' },
+  '16': { type: 'emoji', value: '⏰' },
+  '20': { type: 'emoji', value: '⏰' },
+  '24': { type: 'emoji', value: '🌙' },
+
+  // ============================================================================
+  // YES / NO / BOOLEAN OPTIONS
+  // ============================================================================
+  'yes': { type: 'emoji', value: '✅' },
+  'no': { type: 'emoji', value: '❌' },
+  'true': { type: 'emoji', value: '✅' },
+  'false': { type: 'emoji', value: '❌' },
+  'not_sure': { type: 'emoji', value: '🤔' },
+  'unknown': { type: 'emoji', value: '🤔' },
+  'maybe': { type: 'emoji', value: '🤷' },
+
+  // ============================================================================
+  // SIZE OPTIONS
+  // ============================================================================
+  'none': { type: 'emoji', value: '🚫' },
+  'small': { type: 'emoji', value: '📦' },
+  'medium': { type: 'emoji', value: '📦' },
+  'large': { type: 'emoji', value: '📦' },
+  'extra_large': { type: 'emoji', value: '🏭' },
+
+  // ============================================================================
+  // LIGHTING OPTIONS
+  // ============================================================================
+  'basic_led': { type: 'emoji', value: '💡' },
+  'enhanced_led': { type: 'emoji', value: '✨' },
+  'premium_effects': { type: 'emoji', value: '🌈' },
+  'basic': { type: 'emoji', value: '📋' },
+  'premium': { type: 'emoji', value: '⭐' },
+  'signature': { type: 'emoji', value: '🌟' },
+
+  // ============================================================================
+  // SIGNAGE OPTIONS
+  // ============================================================================
+  'basic_signage': { type: 'emoji', value: '📋' },
+  'premium_signage': { type: 'emoji', value: '⭐' },
+  'signature_signage': { type: 'emoji', value: '🌟' },
+  'led_display': { type: 'emoji', value: '📺' },
+  'digital': { type: 'emoji', value: '📺' },
+
+  // ============================================================================
+  // FACILITY / AMENITY OPTIONS
+  // ============================================================================
+  'office': { type: 'emoji', value: '🏢' },
+  'break_room': { type: 'emoji', value: '☕' },
+  'breakroom': { type: 'emoji', value: '☕' },
+  'bathrooms': { type: 'emoji', value: '🚻' },
+  'restrooms': { type: 'emoji', value: '🚻' },
+  'security_cameras': { type: 'emoji', value: '📹' },
+  'security': { type: 'emoji', value: '🔒' },
+  'lobby': { type: 'emoji', value: '🛋️' },
+  'waiting_area': { type: 'emoji', value: '🛋️' },
+
+  // ============================================================================
+  // SOLAR / RENEWABLE OPTIONS
+  // ============================================================================
+  'yes_interested': { type: 'emoji', value: '☀️' },
+  'tell_me_more': { type: 'emoji', value: '🤔' },
+  'no_thanks': { type: 'emoji', value: '👋' },
+  'already_have': { type: 'emoji', value: '✅' },
+  'solar_yes': { type: 'emoji', value: '☀️' },
+  'solar_no': { type: 'emoji', value: '🌙' },
+
+  // ============================================================================
+  // EQUIPMENT / PUMP OPTIONS
+  // ============================================================================
+  'standard': { type: 'emoji', value: '⚙️' },
+  'high_pressure': { type: 'emoji', value: '💪' },
+  'low_pressure': { type: 'emoji', value: '🌊' },
+  'variable_speed': { type: 'emoji', value: '🔄' },
+  'fixed_speed': { type: 'emoji', value: '▶️' },
+
+  // ============================================================================
+  // PAYMENT / KIOSK OPTIONS
+  // ============================================================================
+  'cash_only': { type: 'emoji', value: '💵' },
+  'card_only': { type: 'emoji', value: '💳' },
+  'all_payments': { type: 'emoji', value: '💰' },
+  'contactless': { type: 'emoji', value: '📱' },
+
+  // ============================================================================
+  // PRIORITY / IMPORTANCE OPTIONS
+  // ============================================================================
+  'high': { type: 'emoji', value: '🔴' },
+  'medium_priority': { type: 'emoji', value: '🟡' },
+  'low': { type: 'emoji', value: '🟢' },
+  'critical': { type: 'emoji', value: '⚠️' },
+
+  // ============================================================================
+  // TIMING / SCHEDULE OPTIONS
+  // ============================================================================
+  'morning': { type: 'emoji', value: '🌅' },
+  'afternoon': { type: 'emoji', value: '☀️' },
+  'evening': { type: 'emoji', value: '🌆' },
+  'night': { type: 'emoji', value: '🌙' },
+  '24_7': { type: 'emoji', value: '⏰' },
+  'weekdays': { type: 'emoji', value: '📅' },
+  'weekends': { type: 'emoji', value: '🎉' },
+
+  // ============================================================================
+  // EV CHARGER TYPES
+  // ============================================================================
+  'level_2': { type: 'emoji', value: '🔌' },
+  'level2': { type: 'emoji', value: '🔌' },
+  'dcfc': { type: 'emoji', value: '⚡' },
+  'dc_fast': { type: 'emoji', value: '⚡' },
+  'hpc': { type: 'emoji', value: '🚀' },
+  'supercharger': { type: 'emoji', value: '🚀' },
+
+  // ============================================================================
+  // HOTEL / HOSPITALITY OPTIONS
+  // ============================================================================
+  'economy': { type: 'emoji', value: '💰' },
+  'midscale': { type: 'emoji', value: '🏨' },
+  'upscale': { type: 'emoji', value: '⭐' },
+  'luxury': { type: 'emoji', value: '👑' },
+  'boutique': { type: 'emoji', value: '🎀' },
+  'resort': { type: 'emoji', value: '🏝️' },
+
+  // ============================================================================
+  // GENERATOR / BACKUP OPTIONS
+  // ============================================================================
+  'diesel': { type: 'emoji', value: '⛽' },
+  'natural_gas': { type: 'emoji', value: '🔥' },
+  'dual_fuel': { type: 'emoji', value: '🔄' },
+  'propane': { type: 'emoji', value: '🛢️' },
+  'battery_backup': { type: 'emoji', value: '🔋' },
+
+  // ============================================================================
+  // GENERAL INTEREST OPTIONS
+  // ============================================================================
+  'interested': { type: 'emoji', value: '👍' },
+  'not_interested': { type: 'emoji', value: '👎' },
+  'learn_more': { type: 'emoji', value: '📚' },
+  'contact_me': { type: 'emoji', value: '📞' },
+  'skip': { type: 'emoji', value: '⏭️' },
+  'other': { type: 'emoji', value: '📝' },
 };
 
 // ============================================================================

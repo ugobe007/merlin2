@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { PanelButtonGroup, SliderWithButtons, CheckboxGrid, NumberInput } from './v6/step3/inputs';
-import { Info, AlertCircle, Check } from 'lucide-react';
+import { Info, Check } from 'lucide-react';
 import type { Question } from '@/data/carwash-questions-complete.config';
 
 interface CompleteQuestionRendererProps {
@@ -110,14 +110,6 @@ export function CompleteQuestionRenderer({
       <div className="py-4">
         {renderInputComponent(question, value, onChange, modifiedOptions, allAnswers)}
       </div>
-
-      {/* Validation Feedback */}
-      {question.validation?.required && !value && (
-        <div className="flex items-center gap-2 text-amber-400 text-sm">
-          <AlertCircle className="w-4 h-4" />
-          <span>This question is required</span>
-        </div>
-      )}
     </div>
   );
 }
