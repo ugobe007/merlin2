@@ -30,6 +30,9 @@ import {
 } from 'lucide-react';
 import { DEFAULTS } from '@/services/data/constants';
 
+// Merlin avatar image
+import merlinAvatar from '@/assets/images/new_small_profile_.png';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -610,7 +613,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
             {/* Avatar */}
             <div className="flex-shrink-0 relative">
               <img 
-                src="/images/new_small_profile_.png" 
+                src={merlinAvatar} 
                 alt="Merlin"
                 className="w-10 h-10 rounded-full border-2 border-amber-400 shadow-lg shadow-amber-500/30"
                 onError={(e) => {
