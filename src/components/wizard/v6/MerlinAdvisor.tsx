@@ -5,17 +5,20 @@
  * Merlin is the NARRATOR. ValueTracker is the SCOREBOARD. They work together.
  * 
  * Features:
- * - Fixed right panel with glassmorphism effect
+ * - Sticky floating panel that scrolls with page
+ * - Pulsing effect when important suggestions available
+ * - "Suggestions" button for recommendations
  * - Progressive reveal of savings potential (Easter Egg hunt)
  * - Explains what the numbers mean at each step
  * - Educational content about energy opportunities
  * - Never fully hideable (minimizes to avatar)
  * 
  * Created: January 13, 2026
+ * Updated: January 14, 2026 - Made sticky + added pulsing + suggestions CTA
  */
 
-import React, { useState, useMemo } from 'react';
-import { Sparkles, ChevronLeft, ChevronRight, Sun, Zap, Battery, Car, Flame, TrendingUp } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Sparkles, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, Zap, Battery, Car, Flame, TrendingUp, Lightbulb, MessageCircle } from 'lucide-react';
 import merlinImage from '@/assets/images/new_small_profile_.png';
 import type { EnergyGoal } from './types';
 import { US_STATE_DATA } from '@/services/data/stateElectricityRates';
@@ -309,9 +312,27 @@ function getMerlinMessage(props: MerlinAdvisorProps): { title: string; message: 
 export function MerlinAdvisor(props: MerlinAdvisorProps) {
   const { currentStep, state, sunHours, electricityRate, goals } = props;
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true); // Start OPEN by default
+  const [hasPendingSuggestion, setHasPendingSuggestion] = useState(true);
+  const [lastStep, setLastStep] = useState(currentStep);
   
   const estimate = useMemo(() => getProgressiveEstimate(props), [props]);
   const message = useMemo(() => getMerlinMessage(props), [props]);
+  
+  // AUTO-OPEN suggestions panel when step changes or important data arrives
+  useEffect(() => {
+    // Only auto-open if step changed or key data changed
+    if (currentStep !== lastStep || props.industry || props.state) {
+      setHasPendingSuggestion(true);
+      setShowSuggestions(true); // AUTO-OPEN the panel!
+      setLastStep(currentStep);
+      
+      // Auto-dismiss the pulse (but keep panel open) after 8 seconds
+      const timer = setTimeout(() => setHasPendingSuggestion(false), 8000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentStep, props.industry, props.state, lastStep]);
   
   // Determine which opportunities are relevant
   const relevantOpportunities = useMemo(() => {
@@ -322,6 +343,42 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
       .slice(0, 4); // Show max 4
   }, [state, electricityRate, sunHours]);
   
+  // Get step-specific suggestions
+  const suggestions = useMemo(() => {
+    const tips: string[] = [];
+    
+    if (currentStep === 1) {
+      if (!state) tips.push("Select your state to unlock local energy rates and solar data");
+      if (state && (!goals || goals.length === 0)) tips.push("Choose your energy goals to personalize recommendations");
+      if (sunHours && sunHours >= 5) tips.push("☀️ Great solar potential! Consider solar + storage combo");
+      if (electricityRate && electricityRate >= 0.15) tips.push("💡 High rates = bigger savings! Peak shaving could save 30%+");
+    }
+    
+    if (currentStep === 2) {
+      if (!props.industry) tips.push("Select your industry for tailored energy analysis");
+      if (props.industry) tips.push(`${props.industryName || 'Your industry'} typically saves ${formatCurrency(estimate.savingsLow)} - ${formatCurrency(estimate.savingsHigh)}/year`);
+    }
+    
+    if (currentStep === 3) {
+      tips.push("Answer questions accurately for the most precise quote");
+      tips.push("Operating hours greatly impact your savings potential");
+      tips.push("Equipment age affects efficiency - older = more savings potential");
+    }
+    
+    if (currentStep === 4) {
+      tips.push("Solar + BESS = Maximum savings (up to 60% more)");
+      tips.push("Consider backup power if you're in an area with outages");
+      tips.push("EV chargers can generate revenue and attract customers");
+    }
+    
+    if (currentStep === 5) {
+      tips.push("Compare tier options carefully - payback differs");
+      tips.push("Tax credits (ITC) can cover 30-50% of costs");
+    }
+    
+    return tips;
+  }, [currentStep, state, goals, props.industry, props.industryName, sunHours, electricityRate, estimate]);
+  
   // Format currency
   const formatCurrency = (value: number) => {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
@@ -329,7 +386,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
     return `$${value.toLocaleString()}`;
   };
 
-  // Minimized state - just show avatar
+  // Minimized state - floating avatar with pulse
   if (isMinimized) {
     return (
       <button
@@ -338,7 +395,11 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
         style={{ zIndex: 9999 }}
       >
         <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 p-1 shadow-2xl shadow-purple-500/50 group-hover:scale-110 transition-transform">
+          {/* Pulsing ring when has suggestion */}
+          {hasPendingSuggestion && (
+            <div className="absolute inset-0 rounded-full animate-ping bg-purple-500/40" style={{ animationDuration: '1.5s' }} />
+          )}
+          <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 p-1 shadow-2xl shadow-purple-500/50 group-hover:scale-110 transition-transform ${hasPendingSuggestion ? 'ring-4 ring-purple-400/50 ring-offset-2 ring-offset-slate-900' : ''}`}>
             <img 
               src={merlinImage} 
               alt="Merlin" 
@@ -346,14 +407,14 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
             />
           </div>
           {/* Notification badge */}
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
-            <Sparkles className="w-3 h-3 text-white" />
+          <div className={`absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg ${hasPendingSuggestion ? 'animate-bounce' : ''}`}>
+            <Lightbulb className="w-3 h-3 text-white" />
           </div>
-          {/* Expand hint */}
+          {/* CTA tooltip */}
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap border border-purple-500/30">
+            <div className={`bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap border ${hasPendingSuggestion ? 'border-amber-500 bg-amber-900/50' : 'border-purple-500/30'}`}>
               <ChevronLeft className="w-3 h-3 inline mr-1" />
-              Expand Merlin
+              {hasPendingSuggestion ? '💡 See Suggestions!' : 'Ask Merlin'}
             </div>
           </div>
         </div>
@@ -363,23 +424,38 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
 
   return (
     <div 
-      className="fixed right-0 top-0 h-full z-40 pointer-events-none"
-      style={{ zIndex: 9998 }}
+      className="fixed right-4 top-20 z-40 w-80"
+      style={{ 
+        zIndex: 9998,
+        maxHeight: 'calc(100vh - 120px)',
+      }}
     >
+      {/* Pulsing glow effect when has suggestions */}
+      {hasPendingSuggestion && (
+        <div 
+          className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-amber-500 opacity-30 blur-sm animate-pulse"
+          style={{ animationDuration: '2s' }}
+        />
+      )}
+      
       {/* Glassmorphism Panel */}
       <div 
-        className="absolute right-4 top-24 bottom-24 w-80 pointer-events-auto rounded-2xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.80))',
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.90))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(139, 92, 246, 0.3)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+          border: hasPendingSuggestion 
+            ? '2px solid rgba(251, 191, 36, 0.5)' 
+            : '1px solid rgba(139, 92, 246, 0.3)',
+          boxShadow: hasPendingSuggestion
+            ? '0 8px 32px rgba(251, 191, 36, 0.3), 0 0 60px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
+            : '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
         }}
       >
         {/* Header */}
         <div 
-          className="px-5 py-4 flex items-center justify-between"
+          className="px-4 py-3 flex items-center justify-between"
           style={{
             background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.15))',
             borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
@@ -390,57 +466,148 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
               <img 
                 src={merlinImage} 
                 alt="Merlin" 
-                className="w-12 h-12 rounded-full border-2 border-purple-400 shadow-lg shadow-purple-500/30 object-cover"
+                className="w-10 h-10 rounded-full border-2 border-purple-400 shadow-lg shadow-purple-500/30 object-cover"
               />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-800">
-                <span className="text-[10px]">✓</span>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-800">
+                <span className="text-[8px]">✓</span>
               </div>
             </div>
             <div>
-              <h3 className="text-white font-bold text-base">Merlin</h3>
-              <p className="text-purple-300 text-xs">AI Energy Advisor</p>
+              <h3 className="text-white font-bold text-sm">Merlin Advisor</h3>
+              <p className="text-purple-300 text-xs">AI Energy Guide</p>
             </div>
           </div>
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             title="Minimize"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
+        {/* 🔥 PROMINENT SUGGESTIONS BANNER - Always visible, auto-opens */}
+        {suggestions.length > 0 && (
+          <div className="relative">
+            {/* Attention-grabbing pulsing border when new */}
+            {hasPendingSuggestion && (
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 animate-pulse opacity-50" />
+            )}
+            <button
+              onClick={() => {
+                setShowSuggestions(!showSuggestions);
+                setHasPendingSuggestion(false);
+              }}
+              className={`relative w-full px-4 py-3 flex items-center justify-between transition-all ${
+                hasPendingSuggestion 
+                  ? 'bg-gradient-to-r from-amber-600/40 via-orange-500/30 to-amber-600/40' 
+                  : showSuggestions
+                    ? 'bg-purple-500/20'
+                    : 'bg-purple-500/10 hover:bg-purple-500/20'
+              }`}
+              style={{
+                borderBottom: hasPendingSuggestion ? '2px solid rgba(251, 191, 36, 0.6)' : '1px solid rgba(139, 92, 246, 0.2)',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                {/* Animated lightbulb icon */}
+                <div className={`relative w-8 h-8 rounded-full flex items-center justify-center ${
+                  hasPendingSuggestion 
+                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/50' 
+                    : 'bg-purple-500/30'
+                }`}>
+                  <Lightbulb className={`w-4 h-4 ${hasPendingSuggestion ? 'text-white' : 'text-purple-300'}`} />
+                  {hasPendingSuggestion && (
+                    <div className="absolute inset-0 rounded-full animate-ping bg-amber-400/40" style={{ animationDuration: '1.5s' }} />
+                  )}
+                </div>
+                
+                {/* Text with speech bubble feel */}
+                <div className="text-left">
+                  <span className={`font-bold text-sm block ${hasPendingSuggestion ? 'text-amber-300' : 'text-purple-300'}`}>
+                    {hasPendingSuggestion ? '🧙‍♂️ Merlin says...' : 'My Suggestions'}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {hasPendingSuggestion ? 'I have tips for you!' : `${suggestions.length} recommendation${suggestions.length > 1 ? 's' : ''}`}
+                  </span>
+                </div>
+                
+                {/* Count badge */}
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  hasPendingSuggestion 
+                    ? 'bg-amber-500 text-white animate-bounce' 
+                    : 'bg-purple-500/30 text-purple-300'
+                }`}>
+                  {suggestions.length}
+                </span>
+              </div>
+              
+              {/* Expand/collapse indicator */}
+              <div className={`flex items-center gap-1 ${hasPendingSuggestion ? 'text-amber-300' : 'text-slate-400'}`}>
+                <span className="text-xs">{showSuggestions ? 'Hide' : 'Show'}</span>
+                {showSuggestions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Suggestions Panel (Expandable) - Now more prominent */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div 
+            className="px-4 py-3 space-y-2.5 max-h-56 overflow-y-auto"
+            style={{
+              background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(249, 115, 22, 0.05))',
+              borderBottom: '1px solid rgba(251, 191, 36, 0.2)',
+            }}
+          >
+            <p className="text-amber-400/80 text-[10px] font-semibold uppercase tracking-wider mb-2">
+              💡 Merlin's Recommendations
+            </p>
+            {suggestions.map((tip, i) => (
+              <div 
+                key={i} 
+                className="flex items-start gap-2.5 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+              >
+                <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <MessageCircle className="w-3 h-3 text-amber-400" />
+                </div>
+                <span className="text-slate-200 text-sm leading-relaxed">{tip}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Scrollable Content */}
-        <div className="overflow-y-auto h-[calc(100%-80px)] px-5 py-4 space-y-5">
+        <div className="overflow-y-auto px-4 py-3 space-y-4" style={{ maxHeight: showSuggestions ? '250px' : '380px' }}>
           
           {/* Main Message */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-start gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-amber-400 font-bold text-sm">{message.title}</p>
-                <p className="text-slate-300 text-sm mt-1 leading-relaxed">{message.message}</p>
+                <p className="text-slate-300 text-xs mt-0.5 leading-relaxed">{message.message}</p>
               </div>
             </div>
           </div>
 
           {/* Progressive Savings Estimate */}
           <div 
-            className="rounded-xl p-4"
+            className="rounded-xl p-3"
             style={{
               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.10))',
               border: '1px solid rgba(16, 185, 129, 0.3)',
             }}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                💰 Estimated Annual Savings
+                💰 Est. Annual Savings
               </span>
               <div className="flex gap-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span 
                     key={star} 
-                    className={`text-sm ${star <= estimate.confidence ? 'text-amber-400' : 'text-slate-600'}`}
+                    className={`text-xs ${star <= estimate.confidence ? 'text-amber-400' : 'text-slate-600'}`}
                   >
                     ★
                   </span>
@@ -449,27 +616,27 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
             </div>
             
             {/* Savings Range */}
-            <div className="text-center mb-3">
+            <div className="text-center mb-2">
               {estimate.savingsLow === estimate.savingsHigh ? (
-                <span className="text-3xl font-bold text-white">
+                <span className="text-2xl font-bold text-white">
                   {formatCurrency(estimate.savingsLow)}
                 </span>
               ) : (
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl font-bold text-emerald-300">
+                  <span className="text-xl font-bold text-emerald-300">
                     {formatCurrency(estimate.savingsLow)}
                   </span>
-                  <span className="text-slate-400">—</span>
-                  <span className="text-2xl font-bold text-emerald-300">
+                  <span className="text-slate-400 text-sm">—</span>
+                  <span className="text-xl font-bold text-emerald-300">
                     {formatCurrency(estimate.savingsHigh)}
                   </span>
                 </div>
               )}
-              <p className="text-slate-400 text-xs mt-1">per year</p>
+              <p className="text-slate-400 text-[10px] mt-0.5">per year</p>
             </div>
 
             {/* Progress/Confidence indicator */}
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-2">
+            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-1.5">
               <div 
                 className="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-500"
                 style={{ width: `${estimate.confidence * 20}%` }}
@@ -477,35 +644,35 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
             </div>
             
             {/* Next unlock hint */}
-            <p className="text-emerald-300 text-xs text-center">
+            <p className="text-emerald-300 text-[10px] text-center">
               🔓 {estimate.nextUnlock}
             </p>
           </div>
 
           {/* Energy Opportunities (Step 1+) */}
           {currentStep >= 1 && state && relevantOpportunities.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                ⚡ Your Energy Opportunities
+            <div className="space-y-2">
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
+                ⚡ Your Opportunities
               </p>
-              <div className="space-y-2">
-                {relevantOpportunities.map(([key, opp]) => {
+              <div className="space-y-1.5">
+                {relevantOpportunities.slice(0, 3).map(([key, opp]) => {
                   const Icon = opp.icon;
                   return (
                     <div 
                       key={key}
-                      className="flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/5"
+                      className="flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/5"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.08)',
                       }}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-purple-400" />
+                      <div className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-3.5 h-3.5 text-purple-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-white text-sm font-medium">{opp.title}</p>
-                        <p className="text-slate-400 text-xs truncate">{opp.description}</p>
+                        <p className="text-white text-xs font-medium">{opp.title}</p>
+                        <p className="text-slate-400 text-[10px] truncate">{opp.description}</p>
                       </div>
                     </div>
                   );
@@ -514,44 +681,33 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
             </div>
           )}
 
-          {/* Location Stats (Step 1+) */}
+          {/* Location Stats (Step 1+) - Compact */}
           {state && (sunHours || electricityRate) && (
-            <div 
-              className="rounded-xl p-4 space-y-3"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                📍 Location Analysis
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {sunHours && (
-                  <div className="text-center p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <Sun className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                    <p className="text-amber-300 text-lg font-bold">{sunHours}</p>
-                    <p className="text-slate-400 text-[10px]">Sun hrs/day</p>
-                  </div>
-                )}
-                {electricityRate && (
-                  <div className="text-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                    <Zap className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
-                    <p className="text-yellow-300 text-lg font-bold">${electricityRate.toFixed(2)}</p>
-                    <p className="text-slate-400 text-[10px]">per kWh</p>
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              {sunHours && (
+                <div className="text-center p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <Sun className="w-3.5 h-3.5 text-amber-400 mx-auto mb-0.5" />
+                  <p className="text-amber-300 text-base font-bold">{sunHours}</p>
+                  <p className="text-slate-400 text-[9px]">Sun hrs/day</p>
+                </div>
+              )}
+              {electricityRate && (
+                <div className="text-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <Zap className="w-3.5 h-3.5 text-yellow-400 mx-auto mb-0.5" />
+                  <p className="text-yellow-300 text-base font-bold">${electricityRate.toFixed(2)}</p>
+                  <p className="text-slate-400 text-[9px]">per kWh</p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Step Progress */}
-          <div className="pt-2">
-            <div className="flex gap-1">
+          {/* Step Progress - Compact */}
+          <div className="pt-1">
+            <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5, 6].map((s) => (
                 <div
                   key={s}
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                  className={`h-1 flex-1 rounded-full transition-all duration-300 ${
                     s === currentStep 
                       ? 'bg-gradient-to-r from-purple-500 to-cyan-500' 
                       : s < currentStep 
@@ -561,7 +717,7 @@ export function MerlinAdvisor(props: MerlinAdvisorProps) {
                 />
               ))}
             </div>
-            <p className="text-center text-slate-500 text-xs mt-2">Step {currentStep} of 6</p>
+            <p className="text-center text-slate-500 text-[10px] mt-1">Step {currentStep} of 6</p>
           </div>
         </div>
       </div>

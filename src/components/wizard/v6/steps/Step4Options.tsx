@@ -29,9 +29,6 @@ import {
   calculateSolarPreview,
   calculateEvPreview,
   calculateGeneratorPreview,
-  type SolarPreviewResult,
-  type EvPreviewResult,
-  type GeneratorPreviewResult,
 } from "@/services/step4PreviewService";
 
 interface Props {

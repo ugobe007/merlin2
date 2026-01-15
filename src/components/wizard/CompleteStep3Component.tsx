@@ -22,18 +22,24 @@ import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 // Industry header images
 import hotelImg from '@/assets/images/hotel_motel_holidayinn_1.jpg';
 import carWashImg from '@/assets/images/Car_Wash_PitStop.jpg';
-import evChargingImg from '@/assets/images/ev_charging_station.jpg';
+import evChargingImg from '@/assets/images/EV charger_2.jpg';
 import manufacturingImg from '@/assets/images/manufacturing_1.jpg';
-import dataCenterImg from '@/assets/images/data-centers/data-center-1.jpg';
+import dataCenterImg from '@/assets/images/data-center-1.jpg';
 import hospitalImg from '@/assets/images/hospital_1.jpg';
-import retailImg from '@/assets/images/retail_1.jpg';
+import retailImg from '@/assets/images/retail_2.jpg';
 import officeImg from '@/assets/images/office_building1.jpg';
 import collegeImg from '@/assets/images/college_1.jpg';
 import warehouseImg from '@/assets/images/logistics_1.jpg';
 import restaurantImg from '@/assets/images/restaurant_1.jpg';
-import agricultureImg from '@/assets/images/indoor_farm1.jpeg';
+import agricultureImg from '@/assets/images/agriculture_1.jpg';
 import truckStopImg from '@/assets/images/truck_stop.png';
-import airportImg from '@/assets/images/airports_1.jpg';
+import airportImg from '@/assets/images/airport_11.jpeg';
+import shoppingCenterImg from '@/assets/images/shopping_center.jpg';
+import coldStorageImg from '@/assets/images/cold_storage.jpg';
+import apartmentImg from '@/assets/images/apartment_building.jpg';
+import residentialImg from '@/assets/images/residential.jpg';
+import indoorFarmImg from '@/assets/images/indoor_farm1.jpg';
+import casinoImg from '@/assets/images/casino_gaming1.jpg';
 
 // Map industry slugs to header images
 const INDUSTRY_IMAGES: Record<string, string> = {
@@ -57,17 +63,153 @@ const INDUSTRY_IMAGES: Record<string, string> = {
   'heavy_duty_truck_stop': truckStopImg,
   'truck_stop': truckStopImg,
   'airport': airportImg,
+  'shopping-center': shoppingCenterImg,
+  'shopping_center': shoppingCenterImg,
+  'cold-storage': coldStorageImg,
+  'cold_storage': coldStorageImg,
+  'apartment': apartmentImg,
+  'residential': residentialImg,
+  'indoor-farm': indoorFarmImg,
+  'indoor_farm': indoorFarmImg,
+  'casino': casinoImg,
+  'casino-gaming': casinoImg,
+};
+
+// ============================================================================
+// BUSINESS SIZE → PRE-FILL MAPPING
+// Maps the businessSizeTier from Step 2 to pre-fill values for Step 3 questions
+// This prevents asking redundant questions about facility size
+// ============================================================================
+const BUSINESS_SIZE_PREFILLS: Record<string, Record<string, Record<string, unknown>>> = {
+  // Data Center: Maps tier to facilityType and powerCapacity
+  'data-center': {
+    small: { facilityType: 'edge', powerCapacity: '0.5', dataCenterType: 'edge', totalITLoad: '500' },
+    medium: { facilityType: 'enterprise', powerCapacity: '5', dataCenterType: 'enterprise', totalITLoad: '5000' },
+    large: { facilityType: 'hyperscale', powerCapacity: '25', dataCenterType: 'hyperscale', totalITLoad: '25000' },
+    enterprise: { facilityType: 'hyperscale', powerCapacity: '75', dataCenterType: 'campus', totalITLoad: '75000' },
+  },
+  'data_center': {
+    small: { facilityType: 'edge', powerCapacity: '0.5', dataCenterType: 'edge', totalITLoad: '500' },
+    medium: { facilityType: 'enterprise', powerCapacity: '5', dataCenterType: 'enterprise', totalITLoad: '5000' },
+    large: { facilityType: 'hyperscale', powerCapacity: '25', dataCenterType: 'hyperscale', totalITLoad: '25000' },
+    enterprise: { facilityType: 'hyperscale', powerCapacity: '75', dataCenterType: 'campus', totalITLoad: '75000' },
+  },
+  // Hotel: Maps tier to roomCount and hotelClass
+  'hotel': {
+    small: { roomCount: '40', hotelClass: 'budget', numberOfRooms: '40' },
+    medium: { roomCount: '100', hotelClass: 'midscale', numberOfRooms: '100' },
+    large: { roomCount: '300', hotelClass: 'upscale', numberOfRooms: '300' },
+    enterprise: { roomCount: '500', hotelClass: 'luxury', numberOfRooms: '500' },
+  },
+  // Car Wash: Maps tier to bayCount
+  'car-wash': {
+    small: { bayCount: '2', numberOfBays: '2', washType: 'self_service' },
+    medium: { bayCount: '5', numberOfBays: '5', washType: 'automatic' },
+    large: { bayCount: '10', numberOfBays: '10', washType: 'tunnel' },
+    enterprise: { bayCount: '20', numberOfBays: '20', washType: 'full_service' },
+  },
+  'car_wash': {
+    small: { bayCount: '2', numberOfBays: '2', washType: 'self_service' },
+    medium: { bayCount: '5', numberOfBays: '5', washType: 'automatic' },
+    large: { bayCount: '10', numberOfBays: '10', washType: 'tunnel' },
+    enterprise: { bayCount: '20', numberOfBays: '20', washType: 'full_service' },
+  },
+  // EV Charging: Maps tier to charger counts
+  'ev-charging': {
+    small: { totalChargers: '4', level2Chargers: '2', dcfcChargers: '2', stationSize: 'small' },
+    medium: { totalChargers: '12', level2Chargers: '6', dcfcChargers: '6', stationSize: 'medium' },
+    large: { totalChargers: '30', level2Chargers: '12', dcfcChargers: '18', stationSize: 'large' },
+    enterprise: { totalChargers: '60', level2Chargers: '20', dcfcChargers: '40', stationSize: 'hub' },
+  },
+  'ev_charging': {
+    small: { totalChargers: '4', level2Chargers: '2', dcfcChargers: '2', stationSize: 'small' },
+    medium: { totalChargers: '12', level2Chargers: '6', dcfcChargers: '6', stationSize: 'medium' },
+    large: { totalChargers: '30', level2Chargers: '12', dcfcChargers: '18', stationSize: 'large' },
+    enterprise: { totalChargers: '60', level2Chargers: '20', dcfcChargers: '40', stationSize: 'hub' },
+  },
+  // Hospital: Maps tier to bedCount
+  'hospital': {
+    small: { bedCount: '30', numberOfBeds: '30', facilityType: 'clinic' },
+    medium: { bedCount: '125', numberOfBeds: '125', facilityType: 'community' },
+    large: { bedCount: '350', numberOfBeds: '350', facilityType: 'regional' },
+    enterprise: { bedCount: '600', numberOfBeds: '600', facilityType: 'medicalCenter' },
+  },
+  // Manufacturing: Maps tier to square footage
+  'manufacturing': {
+    small: { squareFootage: '15000', facilitySize: '15000' },
+    medium: { squareFootage: '60000', facilitySize: '60000' },
+    large: { squareFootage: '250000', facilitySize: '250000' },
+    enterprise: { squareFootage: '750000', facilitySize: '750000' },
+  },
+  // Office: Maps tier to square footage
+  'office': {
+    small: { squareFootage: '15000', buildingSize: '15000' },
+    medium: { squareFootage: '50000', buildingSize: '50000' },
+    large: { squareFootage: '200000', buildingSize: '200000' },
+    enterprise: { squareFootage: '750000', buildingSize: '750000' },
+  },
+  // Warehouse: Maps tier to square footage
+  'warehouse': {
+    small: { squareFootage: '30000', warehouseSize: '30000' },
+    medium: { squareFootage: '150000', warehouseSize: '150000' },
+    large: { squareFootage: '500000', warehouseSize: '500000' },
+    enterprise: { squareFootage: '1500000', warehouseSize: '1500000' },
+  },
+  // Retail: Maps tier to square footage
+  'retail': {
+    small: { squareFootage: '5000', storeSize: '5000' },
+    medium: { squareFootage: '25000', storeSize: '25000' },
+    large: { squareFootage: '100000', storeSize: '100000' },
+    enterprise: { squareFootage: '300000', storeSize: '300000' },
+  },
+  // College: Maps tier to student count
+  'college': {
+    small: { studentCount: '3000', numberOfStudents: '3000' },
+    medium: { studentCount: '10000', numberOfStudents: '10000' },
+    large: { studentCount: '25000', numberOfStudents: '25000' },
+    enterprise: { studentCount: '50000', numberOfStudents: '50000' },
+  },
+  // Restaurant: Maps tier to square footage and seating
+  'restaurant': {
+    small: { squareFootage: '1500', seatingCapacity: '30', restaurantType: 'quick_service' },
+    medium: { squareFootage: '3500', seatingCapacity: '80', restaurantType: 'full_service' },
+    large: { squareFootage: '7000', seatingCapacity: '150', restaurantType: 'large' },
+    enterprise: { squareFootage: '12000', seatingCapacity: '250', restaurantType: 'multi_location' },
+  },
+  // Cold Storage: Maps tier to square footage and temperature
+  'cold-storage': {
+    small: { squareFootage: '10000', warehouseSize: '10000', coldStorageType: 'refrigerated' },
+    medium: { squareFootage: '50000', warehouseSize: '50000', coldStorageType: 'frozen' },
+    large: { squareFootage: '150000', warehouseSize: '150000', coldStorageType: 'mixed' },
+    enterprise: { squareFootage: '400000', warehouseSize: '400000', coldStorageType: 'distribution' },
+  },
+  'cold_storage': {
+    small: { squareFootage: '10000', warehouseSize: '10000', coldStorageType: 'refrigerated' },
+    medium: { squareFootage: '50000', warehouseSize: '50000', coldStorageType: 'frozen' },
+    large: { squareFootage: '150000', warehouseSize: '150000', coldStorageType: 'mixed' },
+    enterprise: { squareFootage: '400000', warehouseSize: '400000', coldStorageType: 'distribution' },
+  },
+  // Apartment: Maps tier to unit count
+  'apartment': {
+    small: { unitCount: '20', numberOfUnits: '20' },
+    medium: { unitCount: '75', numberOfUnits: '75' },
+    large: { unitCount: '200', numberOfUnits: '200' },
+    enterprise: { unitCount: '500', numberOfUnits: '500' },
+  },
 };
 
 // Transform database question to component format
-function transformDatabaseQuestion(dbQuestion: Record<string, unknown>, index: number): Question {
+function transformDatabaseQuestion(dbQuestion: Record<string, unknown>, index: number): Question & { questionTier?: string } {
   // Map database options to component format
   let options: { value: string; label: string; description?: string; icon?: string }[] = [];
   
-  // Try different field names for options (DB schema variations)
-  const rawOptions = (dbQuestion.select_options || dbQuestion.options || []) as unknown[];
+  // Get database options - can be array (select options) or object (slider/range config)
+  const dbOptions = dbQuestion.options as Record<string, unknown> | unknown[] | null;
   
-  if (Array.isArray(rawOptions)) {
+  // Try different field names for select/multiselect options (DB schema variations)
+  const rawOptions = (dbQuestion.select_options || (Array.isArray(dbOptions) ? dbOptions : null) || []) as unknown[];
+  
+  if (Array.isArray(rawOptions) && rawOptions.length > 0) {
     options = rawOptions.map((opt: unknown) => {
       if (typeof opt === 'string') {
         return { value: opt, label: opt };
@@ -82,15 +224,53 @@ function transformDatabaseQuestion(dbQuestion: Record<string, unknown>, index: n
     });
   }
 
-  // Map section to valid values
-  const sectionRaw = (dbQuestion.section || 'facility') as string;
+  // Map section to valid values (check both 'section' and 'section_name' from DB)
+  const sectionRaw = (dbQuestion.section_name || dbQuestion.section || 'facility') as string;
+  // Normalize section names: "Facility Basics" → "facility", "Site & Infrastructure" → "facility", etc.
+  const sectionNormalized = sectionRaw.toLowerCase().includes('facility') || sectionRaw.toLowerCase().includes('infrastructure') || sectionRaw.toLowerCase().includes('basic') 
+    ? 'facility' 
+    : sectionRaw.toLowerCase().includes('operation') 
+    ? 'operations'
+    : sectionRaw.toLowerCase().includes('equipment') || sectionRaw.toLowerCase().includes('charger')
+    ? 'equipment'
+    : sectionRaw.toLowerCase().includes('solar') || sectionRaw.toLowerCase().includes('energy')
+    ? 'solar'
+    : 'facility';
   const validSections = ['facility', 'operations', 'equipment', 'solar'] as const;
-  const section: typeof validSections[number] = validSections.includes(sectionRaw as typeof validSections[number]) 
-    ? sectionRaw as typeof validSections[number]
+  const section: typeof validSections[number] = validSections.includes(sectionNormalized as typeof validSections[number]) 
+    ? sectionNormalized as typeof validSections[number]
     : 'facility';
 
+  // ============================================================================
+  // CRITICAL FIX: Extract slider/number range from options JSON
+  // Database stores: options = '{"min":0,"max":1000,"step":10,"suffix":" kW"}'
+  // ============================================================================
+  const optionsObj = (!Array.isArray(dbOptions) && dbOptions && typeof dbOptions === 'object') 
+    ? dbOptions as Record<string, unknown>
+    : null;
+  
+  // Extract range config for sliders and number inputs
+  const rangeMin = optionsObj?.min as number | undefined ?? dbQuestion.min_value as number | undefined ?? 0;
+  const rangeMax = optionsObj?.max as number | undefined ?? dbQuestion.max_value as number | undefined ?? 1000;
+  const rangeStep = optionsObj?.step as number | undefined ?? 1;
+  const rangeSuffix = optionsObj?.suffix as string | undefined ?? '';
+
+  // Extract range_buttons config from options if present
+  const rangeConfig = (optionsObj && 'ranges' in optionsObj) 
+    ? {
+        ranges: (optionsObj.ranges as Array<{ label: string; min: number; max: number | null }>) || [],
+        suffix: (optionsObj.suffix as string) || '',
+      }
+    : undefined;
+
+  // ============================================================================
+  // CRITICAL FIX: Use field_name as ID (not question_key)
+  // Calculations look up values by field_name (bedCount, squareFeet, etc.)
+  // ============================================================================
+  const fieldName = (dbQuestion.field_name || dbQuestion.question_key || `q_${index}`) as string;
+
   return {
-    id: (dbQuestion.question_key || dbQuestion.field_name || `q_${index}`) as string,
+    id: fieldName,  // CRITICAL: Use field_name so calculations can find the value
     type: mapQuestionType((dbQuestion.input_type || dbQuestion.question_type || 'text') as string),
     section,
     title: (dbQuestion.question_text || dbQuestion.label || 'Question') as string,
@@ -101,25 +281,59 @@ function transformDatabaseQuestion(dbQuestion: Record<string, unknown>, index: n
     },
     smartDefault: dbQuestion.default_value,
     merlinTip: dbQuestion.merlin_tip as string | undefined,
+    // Add question tier for filtering (default to 'essential' so questions without tier always show)
+    questionTier: (dbQuestion.question_tier || 'essential') as string,
+    // CRITICAL FIX: Extract range from options JSON, not just min_value/max_value columns
+    range: {
+      min: rangeMin,
+      max: rangeMax,
+      step: rangeStep,
+    },
+    // Store field name for smart input selection
+    fieldName: fieldName,
+    // Store suffix from options
+    suffix: rangeSuffix,
+    // NEW: Range buttons config from database
+    rangeConfig,
   };
 }
 
 // Map database question types to component types
 function mapQuestionType(dbType: string): Question['type'] {
   const typeMap: Record<string, Question['type']> = {
+    // Selection types
     'select': 'buttons',
     'dropdown': 'buttons',
     'radio': 'buttons',
-    'checkbox': 'multiselect',
-    'number': 'number_input',
-    'text': 'buttons',
-    'slider': 'slider',
-    'toggle': 'toggle',
     'buttons': 'buttons',
+    
+    // Multi-selection types
+    'checkbox': 'multiselect',
     'multi-select': 'multiselect',
     'multiselect': 'multiselect',
+    
+    // Numeric types
+    'number': 'number_input',
+    'number_input': 'number_input',
+    'slider': 'slider',
+    'range_buttons': 'range_buttons',
+    
+    // Boolean types
+    'toggle': 'toggle',
+    'boolean': 'toggle',
+    'yes_no': 'toggle',
+    
+    // Text types - CRITICAL FIX: 'text' should NOT become buttons!
+    'text': 'number_input',  // Most "text" in our DB are actually numeric
+    'text_input': 'number_input',
+    'freeform': 'number_input',
   };
-  return typeMap[dbType] || 'buttons';
+  
+  const mappedType = typeMap[dbType];
+  if (!mappedType) {
+    console.warn(`⚠️ Unknown question type: "${dbType}" - defaulting to 'buttons'`);
+  }
+  return mappedType || 'buttons';
 }
 
 // Create sections from questions
@@ -167,6 +381,8 @@ interface CompleteStep3ComponentProps {
     sunHours?: number;
     goals?: string[];
     useCaseData?: Record<string, unknown>;
+    questionnaireDepth?: 'minimal' | 'standard' | 'detailed';
+    businessSizeTier?: 'small' | 'medium' | 'large' | 'enterprise';
   };
   updateState?: (updates: Record<string, unknown>) => void;
   onNext?: () => void;
@@ -197,10 +413,49 @@ export function CompleteStep3Component({
   const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // ✅ NEW: Dynamic questions loading based on industry
-  const [questions, setQuestions] = useState<Question[]>(carWashQuestionsComplete);
-  const [sections, setSections] = useState(carWashSections);
+  // Start with empty arrays - will be populated based on industry
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [sections, setSections] = useState<typeof carWashSections>([]);
   const [loading, setLoading] = useState(true);
-  const [industryTitle, setIndustryTitle] = useState("Car Wash");
+  const [industryTitle, setIndustryTitle] = useState("");
+
+  // ✅ Apply business size pre-fills to answers (e.g., "Hyperscale" → dataCenterType: 'hyperscale')
+  useEffect(() => {
+    const industry = state.industry;
+    const businessSizeTier = state.businessSizeTier as 'small' | 'medium' | 'large' | 'enterprise' | undefined;
+    
+    if (!industry || !businessSizeTier) {
+      console.log('📋 No business size pre-fill: industry=', industry, 'tier=', businessSizeTier);
+      return;
+    }
+    
+    const industryPrefills = BUSINESS_SIZE_PREFILLS[industry];
+    if (!industryPrefills) {
+      console.log(`📋 No pre-fill mapping for industry: ${industry}`);
+      return;
+    }
+    
+    const tierPrefills = industryPrefills[businessSizeTier];
+    if (!tierPrefills) {
+      console.log(`📋 No pre-fill mapping for tier: ${businessSizeTier}`);
+      return;
+    }
+    
+    console.log(`✅ Applying business size pre-fills for ${industry} (${businessSizeTier}):`, tierPrefills);
+    
+    // Merge pre-fills into answers, but DON'T override existing user answers
+    setAnswers(prevAnswers => {
+      const merged = { ...tierPrefills };
+      // User's existing answers take precedence
+      Object.keys(prevAnswers).forEach(key => {
+        if (prevAnswers[key] !== undefined && prevAnswers[key] !== '' && prevAnswers[key] !== null) {
+          merged[key] = prevAnswers[key];
+        }
+      });
+      console.log('📋 Merged answers with pre-fills:', merged);
+      return merged;
+    });
+  }, [state.industry, state.businessSizeTier]);
 
   // ✅ Load questions dynamically based on industry
   useEffect(() => {
@@ -217,35 +472,73 @@ export function CompleteStep3Component({
       }
 
       try {
-        // Normalize slug: convert underscores to hyphens for DB
-        let slug = industry.replace(/_/g, '-');
-        console.log(`📋 Loading questions for industry: ${industry} (slug: ${slug})`);
-
-        // Fetch from database
-        let useCase = await useCaseService.getUseCaseBySlug(slug);
+        // Try multiple slug formats since DB has inconsistent naming:
+        // - heavy_duty_truck_stop (underscores)
+        // - data-center (hyphens)
+        // - hotel (no separator)
+        const slugVariants = [
+          industry,                           // Original: heavy_duty_truck_stop
+          industry.replace(/_/g, '-'),        // With hyphens: heavy-duty-truck-stop
+          industry.replace(/-/g, '_'),        // With underscores: data_center
+        ].filter((s, i, arr) => arr.indexOf(s) === i); // Remove duplicates
         
-        // Fallback: try with underscores if hyphens don't work
-        if (!useCase && slug.includes('-')) {
-          slug = industry;
-          console.log(`⚠️ Not found with hyphen, trying: ${slug}`);
+        console.log(`📋 Loading questions for industry: ${industry}, trying slugs:`, slugVariants);
+
+        // Try each slug variant until one works
+        let useCase = null;
+        let successSlug = null;
+        for (const slug of slugVariants) {
+          console.log(`🔎 Trying slug: "${slug}"...`);
           useCase = await useCaseService.getUseCaseBySlug(slug);
+          console.log(`   Result for "${slug}":`, useCase ? 
+            `✅ Found! Name: ${useCase.name}, Questions: ${useCase.custom_questions?.length || 0}` : 
+            '❌ Not found');
+          if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
+            console.log(`✅ Found use case with slug: ${slug}`);
+            successSlug = slug;
+            break;
+          }
         }
 
         if (useCase && useCase.custom_questions && useCase.custom_questions.length > 0) {
           const dbQuestions = useCase.custom_questions as Record<string, unknown>[];
           console.log(`✅ Loaded ${dbQuestions.length} questions from database for ${useCase.name}`);
           
+          // Debug: Log first few questions to see what fields we're getting
+          if (dbQuestions.length > 0) {
+            console.log('📋 Sample question from DB:', JSON.stringify(dbQuestions[0], null, 2));
+          }
+          
           // Transform to component format
           const transformedQuestions = dbQuestions.map((q, i) => 
             transformDatabaseQuestion(q, i)
           );
           
-          setQuestions(transformedQuestions);
-          setSections(createSectionsFromQuestions(transformedQuestions));
+          // DEDUPLICATION: Remove questions with duplicate IDs (keep first occurrence)
+          const seenIds = new Set<string>();
+          const dedupedQuestions = transformedQuestions.filter(q => {
+            if (seenIds.has(q.id)) {
+              console.warn(`⚠️ Duplicate question ID removed: ${q.id}`);
+              return false;
+            }
+            seenIds.add(q.id);
+            return true;
+          });
+          
+          console.log(`📋 Transformed ${transformedQuestions.length} questions, ${dedupedQuestions.length} after deduplication`);
+          if (dedupedQuestions.length > 0) {
+            console.log('📋 Sample transformed question:', JSON.stringify(dedupedQuestions[0], null, 2));
+          }
+          
+          setQuestions(dedupedQuestions);
+          setSections(createSectionsFromQuestions(dedupedQuestions));
           setIndustryTitle(useCase.name || state.industryName || industry);
         } else {
+          // Log what we actually got from the service
+          console.log('🔍 useCase result:', useCase ? { name: useCase.name, slug: useCase.slug, questionCount: useCase.custom_questions?.length || 0 } : 'null');
+          
           // Fallback to car wash if no DB questions
-          console.log(`⚠️ No database questions found for ${slug}, using car wash fallback`);
+          console.log(`⚠️ No database questions found for ${industry}, using car wash fallback`);
           
           if (industry === 'car_wash' || industry === 'car-wash') {
             setQuestions(carWashQuestionsComplete);
@@ -261,10 +554,10 @@ export function CompleteStep3Component({
         }
       } catch (error) {
         console.error(`Error loading questions for ${industry}:`, error);
-        // Fallback to car wash on error
-        setQuestions(carWashQuestionsComplete);
-        setSections(carWashSections);
-        setIndustryTitle("Car Wash");
+        // Show error state instead of defaulting to car wash
+        setQuestions([]);
+        setSections([]);
+        setIndustryTitle(`Error loading ${state.industryName || industry}`);
       } finally {
         setLoading(false);
       }
@@ -292,12 +585,65 @@ export function CompleteStep3Component({
     }
   }, [initialAnswers]);
 
-  // Filter visible questions based on conditional logic
-  const visibleQuestions = questions.filter((q) => {
+  // Helper: Check if a question should be shown based on questionnaire depth
+  // Questionnaire depths (from BusinessSizePanel): 'minimal', 'standard', 'detailed'
+  // Question tiers (from DB): 'essential', 'standard', 'detailed'
+  // 
+  // Mapping:
+  // - 'minimal' depth → shows 'essential' questions only (quick wizard for small businesses)
+  // UPDATED: All depths now show 'essential' + 'standard' questions
+  // - 'minimal' depth → shows 'essential' + 'standard' questions (for small businesses)
+  // - 'standard' depth → shows 'essential' + 'standard' questions
+  // - 'detailed' depth → shows ALL questions (essential + standard + detailed)
+  // NOTE: The tier distinction is now about business SIZE context, not question count
+  const shouldShowByDepth = (questionTier: string | undefined): boolean => {
+    const depth = state.questionnaireDepth || 'standard'; // Default to standard if not set
+    const tier = questionTier || 'essential'; // Default to essential (always show) if not set
+    
+    // Essential questions ALWAYS show regardless of depth
+    if (tier === 'essential') return true;
+    
+    // Standard questions show for ALL depths (minimal, standard, detailed)
+    // This ensures users always see meaningful questionnaires
+    if (tier === 'standard') return true;
+    
+    // Detailed questions only show for 'detailed' depth
+    if (tier === 'detailed') return depth === 'detailed';
+    
+    return true; // Fallback: show if unknown tier
+  };
+
+  // Filter visible questions based on:
+  // 1. Questionnaire depth (based on business size tier)
+  // 2. Conditional logic (dynamic show/hide based on answers)
+  const visibleQuestions = (questions as (Question & { questionTier?: string })[]).filter((q) => {
+    // First filter by questionnaire depth
+    if (!shouldShowByDepth(q.questionTier)) return false;
+    
+    // Then filter by conditional logic
     if (!q.conditionalLogic) return true;
     const dependentValue = answers[q.conditionalLogic.dependsOn];
     return q.conditionalLogic.showIf(dependentValue);
   });
+
+  // DEBUG: Log filtering results
+  if (import.meta.env.DEV && questions.length > 0) {
+    const allQuestions = questions as (Question & { questionTier?: string })[];
+    const depthFilteredOut = allQuestions.filter(q => !shouldShowByDepth(q.questionTier));
+    console.log('📊 Question filtering:', {
+      totalLoaded: questions.length,
+      visibleAfterFilters: visibleQuestions.length,
+      hiddenByDepth: depthFilteredOut.length,
+      questionnaireDepth: state.questionnaireDepth || 'not set (defaulting to standard)',
+      tierBreakdown: {
+        essential: allQuestions.filter(q => q.questionTier === 'essential').length,
+        standard: allQuestions.filter(q => q.questionTier === 'standard').length,
+        detailed: allQuestions.filter(q => q.questionTier === 'detailed').length,
+        undefined: allQuestions.filter(q => !q.questionTier).length,
+      },
+      hiddenQuestions: depthFilteredOut.map(q => ({ id: q.id, tier: q.questionTier })),
+    });
+  }
 
   // Current question
   const currentQuestion = visibleQuestions[currentQuestionIndex];
@@ -307,9 +653,12 @@ export function CompleteStep3Component({
   const totalQuestions = visibleQuestions.length;
   const overallProgress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
-  // Section progress
+  // Section progress (also filtered by questionnaire depth)
   const sectionProgress = sections.map((section) => {
-    const sectionQuestions = section.questions.filter((q: Question) => {
+    const sectionQuestions = (section.questions as (Question & { questionTier?: string })[]).filter((q) => {
+      // Filter by questionnaire depth
+      if (!shouldShowByDepth(q.questionTier)) return false;
+      // Filter by conditional logic
       if (!q.conditionalLogic) return true;
       const dependentValue = answers[q.conditionalLogic.dependsOn];
       return q.conditionalLogic.showIf(dependentValue);
@@ -333,6 +682,11 @@ export function CompleteStep3Component({
   // HANDLERS
   // ============================================================================
   const handleAnswer = (questionId: string, value: unknown) => {
+    // DEBUG: Log answer capture for troubleshooting
+    if (import.meta.env.DEV) {
+      console.log(`📝 Answer captured: ${questionId} =`, value, `(type: ${typeof value})`);
+    }
+    
     const newAnswers = {
       ...answers,
       [questionId]: value,
@@ -347,6 +701,11 @@ export function CompleteStep3Component({
           inputs: newAnswers,
         },
       });
+      
+      // DEBUG: Log state update
+      if (import.meta.env.DEV) {
+        console.log(`📊 State updated with ${Object.keys(newAnswers).length} answers:`, newAnswers);
+      }
     }
 
     // DISABLED: Auto-scroll removed per user request
@@ -451,57 +810,57 @@ export function CompleteStep3Component({
       {/* Main Content - Full Width (no sidebar) */}
       <div className="flex flex-col min-h-screen">
         {/* Compact Header with Progress */}
-        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
-          <div className="px-8 py-3">
+        <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/50">
+          <div className="px-6 py-2.5">
             <div className="flex items-center justify-between">
-              {/* Left: Navigation */}
-              <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-white text-sm transition-colors">
+              {/* Left: Navigation - sleeker */}
+              <div className="flex items-center gap-2">
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-violet-600/90 hover:bg-violet-500 rounded-lg text-white text-xs transition-all hover:scale-105 shadow-sm">
                   <span>🏠</span>
                   <span className="font-medium">Home</span>
                 </button>
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-white text-sm transition-colors">
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-600/80 hover:bg-orange-500 rounded-lg text-white text-xs transition-all hover:scale-105 shadow-sm">
                   <span>🔄</span>
                   <span className="font-medium">Start Over</span>
                 </button>
               </div>
 
-              {/* Center: Progress Ring */}
-              <div className="flex items-center gap-4">
+              {/* Center: Progress Ring - compact */}
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="relative w-10 h-10">
-                    <svg className="w-10 h-10 transform -rotate-90">
-                      <circle cx="20" cy="20" r="16" fill="none" stroke="#334155" strokeWidth="3" />
+                  <div className="relative w-9 h-9">
+                    <svg className="w-9 h-9 transform -rotate-90">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="#1e293b" strokeWidth="2.5" />
                       <circle 
-                        cx="20" cy="20" r="16" fill="none" 
+                        cx="18" cy="18" r="14" fill="none" 
                         stroke="url(#progress-gradient)" 
-                        strokeWidth="3"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeDasharray={`${overallProgress} ${100 - overallProgress}`}
                         strokeDashoffset="0"
-                        style={{ strokeDasharray: `${overallProgress * 1.005} 100` }}
+                        style={{ strokeDasharray: `${overallProgress * 0.88} 100` }}
                       />
                       <defs>
                         <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#9333ea" />
+                          <stop offset="0%" stopColor="#8b5cf6" />
                           <stop offset="50%" stopColor="#ec4899" />
                           <stop offset="100%" stopColor="#f97316" />
                         </linearGradient>
                       </defs>
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
                       {Math.round(overallProgress)}%
                     </span>
                   </div>
-                  <div className="text-sm">
-                    <div className="text-white font-medium">{answeredCount}/{totalQuestions}</div>
-                    <div className="text-slate-400 text-xs">answered</div>
+                  <div className="text-xs">
+                    <div className="text-white font-semibold">{answeredCount}/{totalQuestions}</div>
+                    <div className="text-slate-500 text-[10px]">answered</div>
                   </div>
                 </div>
               </div>
 
               {/* Right: Step indicator */}
-              <div className="text-slate-400 text-sm">
+              <div className="text-slate-500 text-xs">
                 Step <span className="text-white font-semibold">3</span> of{" "}
                 <span className="text-white font-semibold">6</span>
               </div>
@@ -510,25 +869,25 @@ export function CompleteStep3Component({
         </header>
 
         {/* Scrollable Questions Area */}
-        <main className="flex-1 overflow-y-auto px-8 py-8">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="max-w-3xl mx-auto">
             
-            {/* Industry Header Image */}
+            {/* Industry Header Image - Slimmer */}
             {state.industry && INDUSTRY_IMAGES[state.industry] && (
-              <div className="mb-8 rounded-2xl overflow-hidden shadow-2xl shadow-purple-900/20">
-                <div className="relative h-48 md:h-56">
+              <div className="mb-6 rounded-xl overflow-hidden shadow-xl shadow-purple-900/20">
+                <div className="relative h-36 md:h-44">
                   <img 
                     src={INDUSTRY_IMAGES[state.industry]} 
                     alt={industryTitle}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">
-                      Let's Learn About Your {industryTitle}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-0.5">
+                      Your {industryTitle} Details
                     </h1>
-                    <p className="text-slate-300 text-lg">
-                      Answer a few questions so Merlin can size the perfect energy system for you.
+                    <p className="text-slate-300 text-sm">
+                      Help Merlin size the perfect energy system for you.
                     </p>
                   </div>
                 </div>
@@ -537,12 +896,12 @@ export function CompleteStep3Component({
             
             {/* Fallback title if no image */}
             {(!state.industry || !INDUSTRY_IMAGES[state.industry]) && (
-              <div className="mb-8 text-center">
-                <h1 className="text-4xl font-bold text-white mb-3">
-                  Let's Learn About Your {industryTitle}
+              <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-white mb-1">
+                  Your {industryTitle} Details
                 </h1>
-                <p className="text-xl text-slate-400">
-                  Answer a few questions so Merlin can size the perfect energy system for you.
+                <p className="text-base text-slate-400">
+                  Help Merlin size the perfect energy system for you.
                 </p>
               </div>
             )}
@@ -557,8 +916,8 @@ export function CompleteStep3Component({
               goals={state.goals}
             />
 
-            {/* Questions */}
-            <div className="space-y-12">
+            {/* Questions - Compact Grid */}
+            <div className="space-y-6">
               {visibleQuestions.map((question, index) => (
                 <div
                   key={question.id}
@@ -568,7 +927,7 @@ export function CompleteStep3Component({
                   className="scroll-mt-24 transition-all duration-300 opacity-100"
                   onClick={() => setCurrentQuestionIndex(index)}
                 >
-                  <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl">
+                  <div className="group p-5 bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl hover:border-violet-500/30 hover:bg-slate-900/80 transition-all duration-200">
                     <CompleteQuestionRenderer
                       question={
                         {
@@ -588,10 +947,10 @@ export function CompleteStep3Component({
 
             {/* Completion Message */}
             {answeredCount === totalQuestions && totalQuestions > 0 && (
-              <div className="mt-12 p-8 bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-2 border-green-500 rounded-2xl text-center">
-                <div className="text-6xl mb-4">🎉</div>
-                <h3 className="text-2xl font-bold text-white mb-2">Questionnaire Complete!</h3>
-                <p className="text-slate-300 mb-6">
+              <div className="mt-8 p-5 bg-gradient-to-br from-emerald-900/30 to-green-900/20 border border-emerald-500/50 rounded-xl text-center">
+                <div className="text-4xl mb-2">🎉</div>
+                <h3 className="text-lg font-bold text-white mb-1">Questionnaire Complete!</h3>
+                <p className="text-slate-300 text-sm">
                   All questions answered. Click Continue below to proceed.
                 </p>
               </div>
@@ -600,43 +959,44 @@ export function CompleteStep3Component({
         </main>
 
         {/* Fixed Bottom Navigation */}
-        <footer className="sticky bottom-0 z-40 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-8 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            {/* Back Button */}
+        <footer className="sticky bottom-0 z-40 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-6 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            {/* Back Button - Compact */}
             <button
               onClick={goToPreviousQuestion}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-all text-sm"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-semibold">Back</span>
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-medium">Back</span>
             </button>
 
-            {/* Progress Indicator */}
+            {/* Progress Indicator - Minimal */}
             <div className="text-center">
-              <div className="text-sm text-slate-400 mb-1">
-                Question {currentQuestionIndex + 1} of {totalQuestions}
+              <div className="text-xs text-slate-400">
+                <span className="text-white font-medium">{currentQuestionIndex + 1}</span>
+                <span className="text-slate-500 mx-1">/</span>
+                <span>{totalQuestions}</span>
               </div>
-              <div className="text-xs text-slate-500">{answeredCount} answered</div>
             </div>
 
-            {/* Next/Finish Button */}
+            {/* Next/Finish Button - Compact with glow */}
             {currentQuestionIndex < totalQuestions - 1 ? (
               <button
                 onClick={goToNextQuestion}
                 disabled={!answers[currentQuestion?.id]}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all hover:scale-105 shadow-md shadow-violet-500/25"
               >
                 <span>Continue</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={handleComplete}
                 disabled={!canProceed()}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-bold transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm transition-all hover:scale-105 shadow-md shadow-violet-500/25"
               >
                 <span>Continue</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

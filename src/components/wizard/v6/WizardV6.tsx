@@ -271,7 +271,8 @@ export default function WizardV6() {
       case 1:
         return state.zipCode.length === 5 && state.state !== "" && state.goals.length >= 2;
       case 2:
-        return state.industry !== "";
+        // Industry must be selected AND business size tier must be set
+        return state.industry !== "" && state.businessSizeTier !== undefined;
       case 3:
         return true; // Database-driven questions handle their own validation
       case 4:
@@ -288,9 +289,16 @@ export default function WizardV6() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1Location state={state} updateState={updateState} />;
+        return (
+          <Step1Location 
+            state={state} 
+            updateState={updateState} 
+            onNext={() => goToStep(3)}  // Skip to Step 3 if business found
+            onGoToStep2={() => goToStep(2)}  // Go to Step 2 to change industry
+          />
+        );
       case 2:
-        return <Step2Industry state={state} updateState={updateState} />;
+        return <Step2Industry state={state} updateState={updateState} onNext={() => goToStep(3)} />;
       case 3:
         return <Step3Details state={state} updateState={updateState} onNext={() => goToStep(4)} />;
       case 4:
@@ -367,10 +375,15 @@ export default function WizardV6() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          MERLIN BAR - Unified command center, shows on all steps
+          MERLIN BAR - Unified command center, FIXED at top below header
           ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="max-w-6xl mx-auto">
-        <MerlinBar currentStep={currentStep} {...merlinBarProps} />
+      <div 
+        className="sticky z-40"
+        style={{ top: '105px' }} /* Below the header (~105px) */
+      >
+        <div className="max-w-6xl mx-auto">
+          <MerlinBar currentStep={currentStep} {...merlinBarProps} />
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════

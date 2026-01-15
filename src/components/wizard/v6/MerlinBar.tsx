@@ -25,10 +25,9 @@ import React, { useState, useMemo } from 'react';
 import { 
   ChevronDown, ChevronUp, Sun, Zap, Battery, Car, Flame,
   TrendingUp, Shield, Leaf, DollarSign, Sparkles, Info,
-  Calculator, BarChart3, HelpCircle, ArrowRight, Star, CheckCircle,
-  Lock, Unlock, Gift, Lightbulb, Eye, Target, Award, AlertTriangle
+  Calculator, BarChart3, ArrowRight, Star, CheckCircle,
+  Lock, Unlock, Gift, Lightbulb, Target, Award, AlertTriangle
 } from 'lucide-react';
-import { DEFAULTS } from '@/services/data/constants';
 
 // Merlin avatar image
 import merlinAvatar from '@/assets/images/new_small_profile_.png';
@@ -561,9 +560,31 @@ function getDiscoveryClues(props: MerlinBarProps): DiscoveryClue[] {
 // MAIN COMPONENT
 // ============================================================================
 const MerlinBar: React.FC<MerlinBarProps> = (props) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // Start CLOSED
   const [activeTab, setActiveTab] = useState<'discoveries' | 'tips'>('tips');
+  const [hasPendingSuggestion, setHasPendingSuggestion] = useState(false);
+  const [lastStep, setLastStep] = useState(props.currentStep);
+  const [userDismissedThisStep, setUserDismissedThisStep] = useState(false);
   const { currentStep } = props;
+  
+  // AUTO-OPEN only when [A] step changes AND [B] there are suggestions
+  React.useEffect(() => {
+    // Only trigger when step actually changes (not on initial load or same step)
+    if (currentStep !== lastStep) {
+      setLastStep(currentStep);
+      setUserDismissedThisStep(false); // Reset dismiss flag for new step
+      
+      // Only auto-open if user hasn't dismissed AND we have suggestions
+      // Suggestions are always available per step, so open on step change
+      setHasPendingSuggestion(true);
+      setIsExpanded(true); // Auto-open on new step
+      
+      // Dismiss pulse after 8 seconds (but keep panel open until user closes)
+      const timer = setTimeout(() => setHasPendingSuggestion(false), 8000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentStep, lastStep]);
   
   // Get step-specific message
   const messageGetter = STEP_MESSAGES[currentStep] || STEP_MESSAGES[1];
@@ -596,7 +617,7 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
 
   return (
     <div 
-      className="sticky top-0 z-50"
+      className="relative z-50"
       style={{
         background: 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95))',
         backdropFilter: 'blur(16px)',
@@ -733,21 +754,45 @@ const MerlinBar: React.FC<MerlinBarProps> = (props) => {
               </div>
             )}
             
-            {/* Expand/Collapse with unlock badge */}
+            {/* Expand/Collapse with PROMINENT pulsing effect */}
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-sm transition-colors relative"
+              onClick={() => {
+                const newExpanded = !isExpanded;
+                setIsExpanded(newExpanded);
+                setHasPendingSuggestion(false);
+                if (!newExpanded) {
+                  setUserDismissedThisStep(true); // User closed it, don't auto-reopen this step
+                }
+              }}
+              className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                hasPendingSuggestion && !isExpanded
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/50'
+                  : isExpanded
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-400'
+              }`}
             >
+              {/* Pulsing ring when has new suggestions */}
+              {hasPendingSuggestion && !isExpanded && (
+                <div className="absolute inset-0 rounded-lg animate-ping bg-amber-500/40" style={{ animationDuration: '1.5s' }} />
+              )}
+              
+              {/* Badge showing count */}
               {unlockedClues.length > 0 && !isExpanded && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg animate-pulse">
+                <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg ${
+                  hasPendingSuggestion 
+                    ? 'bg-white text-amber-600 animate-bounce' 
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white animate-pulse'
+                }`}>
                   {unlockedClues.length}
                 </span>
               )}
-              <Lightbulb className="w-4 h-4" />
+              
+              <Lightbulb className={`w-4 h-4 ${hasPendingSuggestion && !isExpanded ? 'animate-pulse' : ''}`} />
               {isExpanded ? (
                 <>Hide <ChevronUp className="w-4 h-4" /></>
               ) : (
-                <>Suggestions <ChevronDown className="w-4 h-4" /></>
+                <>{hasPendingSuggestion ? '🧙‍♂️ See Tips!' : 'Suggestions'} <ChevronDown className="w-4 h-4" /></>
               )}
             </button>
           </div>

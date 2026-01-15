@@ -27,9 +27,9 @@ import hotelHolidayInn1 from "../../assets/images/hotel_motel_holidayinn_1.jpg";
 import hotelHolidayInn2 from "../../assets/images/hotel_motel_holidayinn_2.jpg";
 import hotelHolidayInn3 from "../../assets/images/hotel_motel_holidayinn_3.jpg";
 // Data center images
-import dataCenter1 from "../../assets/images/data-centers/data-center-1.jpg";
-import dataCenter2 from "../../assets/images/data-centers/data-center-2.jpg";
-import dataCenter3 from "../../assets/images/data-centers/data-center-3.jpg";
+import dataCenter1 from "../../assets/images/data-center-1.jpg";
+import dataCenter2 from "../../assets/images/data-center-2.jpg";
+import dataCenter3 from "../../assets/images/data-center-3.jpg";
 // Manufacturing images
 import manufacturing1 from "../../assets/images/manufacturing_1.jpg";
 import manufacturing2 from "../../assets/images/manufacturing_2.jpg";

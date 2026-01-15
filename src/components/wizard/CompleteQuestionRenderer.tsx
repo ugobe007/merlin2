@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { PanelButtonGroup, SliderWithButtons, CheckboxGrid, NumberInput } from './v6/step3/inputs';
+import { PanelButtonGroup, SliderWithButtons, CheckboxGrid, NumberInput, ToggleButtons, RangeButtonGroup } from './v6/step3/inputs';
 import { Info, Check } from 'lucide-react';
 import type { Question } from '@/data/carwash-questions-complete.config';
 
@@ -26,7 +26,28 @@ export function CompleteQuestionRenderer({
   questionNumber
 }: CompleteQuestionRendererProps) {
   // ============================================================================
-  // CONDITIONAL LOGIC HANDLING
+  // SMART CONDITIONAL DISPLAY (for database questions without explicit logic)
+  // ============================================================================
+  const fieldName = (question as any).fieldName || question.id || '';
+  
+  // Hide follow-up questions until parent is answered
+  const conditionalFields: Record<string, { dependsOn: string; showWhen: (v: any) => boolean }> = {
+    // Solar capacity only shows if user HAS existing solar
+    'existingSolarKW': { dependsOn: 'hasExistingSolar', showWhen: (v) => v === true || v === 'true' || v === 'yes' },
+    // EV charger count only shows if user HAS existing chargers
+    'existingEVChargers': { dependsOn: 'hasExistingEV', showWhen: (v) => v === true || v === 'true' || v === 'yes' },
+  };
+  
+  if (conditionalFields[fieldName]) {
+    const { dependsOn, showWhen } = conditionalFields[fieldName];
+    const parentValue = allAnswers[dependsOn];
+    if (!showWhen(parentValue)) {
+      return null; // Don't show until parent question is answered appropriately
+    }
+  }
+
+  // ============================================================================
+  // CONDITIONAL LOGIC HANDLING (for questions with explicit logic)
   // ============================================================================
   // Check if question should be shown
   if (question.conditionalLogic) {
@@ -50,55 +71,55 @@ export function CompleteQuestionRenderer({
   }
 
   // ============================================================================
-  // QUESTION CONTAINER
+  // QUESTION CONTAINER - Compact Professional Design
   // ============================================================================
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Question Header */}
-      <div className="space-y-3">
-        {/* Section Tag & Number */}
-        <div className="flex items-center gap-3">
+      <div className="space-y-2">
+        {/* Section Tag & Number - Inline compact */}
+        <div className="flex items-center gap-2">
           {questionNumber && (
-            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-violet-600/30">
               {questionNumber}
             </div>
           )}
-          <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full capitalize">
+          <span className="px-2 py-0.5 bg-violet-500/15 text-violet-300 text-xs font-medium rounded-full capitalize border border-violet-500/20">
             {question.section}
           </span>
         </div>
 
-        {/* Title */}
-        <h2 className="text-3xl font-bold text-white">
+        {/* Title - More compact */}
+        <h2 className="text-xl font-bold text-white leading-tight">
           {question.title}
         </h2>
 
         {/* Subtitle */}
         {question.subtitle && (
-          <p className="text-lg text-slate-400">
+          <p className="text-sm text-slate-400">
             {question.subtitle}
           </p>
         )}
 
-        {/* Help Text */}
+        {/* Help Text - Slimmer */}
         {question.helpText && (
-          <div className="flex items-start gap-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-300">
+          <div className="flex items-start gap-2 p-2 bg-blue-950/40 border border-blue-500/20 rounded-lg">
+            <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-300/90">
               {question.helpText}
             </p>
           </div>
         )}
 
-        {/* Merlin's Tip */}
+        {/* Merlin's Tip - Compact */}
         {question.merlinTip && (
-          <div className="flex items-start gap-3 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-lg">🧙‍♂️</span>
+          <div className="flex items-start gap-2 p-2.5 bg-purple-950/40 border border-purple-500/20 rounded-lg">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <span className="text-sm">🧙‍♂️</span>
             </div>
             <div>
-              <div className="font-semibold text-purple-200 mb-1">Merlin's Tip</div>
-              <p className="text-sm text-purple-300">
+              <div className="font-semibold text-purple-200 text-xs mb-0.5">Merlin's Tip</div>
+              <p className="text-xs text-purple-300/90 leading-relaxed">
                 {question.merlinTip}
               </p>
             </div>
@@ -107,7 +128,7 @@ export function CompleteQuestionRenderer({
       </div>
 
       {/* Input Component */}
-      <div className="py-4">
+      <div className="pt-1">
         {renderInputComponent(question, value, onChange, modifiedOptions, allAnswers)}
       </div>
     </div>
@@ -124,6 +145,9 @@ function renderInputComponent(
   options?: any[],
   allAnswers?: Record<string, any>
 ) {
+  // Get fieldName for icon lookup
+  const questionFieldName = (question as any).fieldName || question.id || '';
+  
   switch (question.type) {
     // ========================================================================
     // BUTTONS - Standard button selection
@@ -134,6 +158,7 @@ function renderInputComponent(
           options={options || question.options || []}
           value={value || question.smartDefault}
           onChange={onChange}
+          questionField={questionFieldName}
         />
       );
 
@@ -231,58 +256,152 @@ function renderInputComponent(
 
     // ========================================================================
     // SLIDER - Range selection with live value
+    // CRITICAL: Range and suffix now come from database options JSON
     // ========================================================================
     case 'slider':
       return (
         <SliderWithButtons
-          value={value || question.smartDefault}
+          value={value ?? question.smartDefault ?? question.range?.min ?? 0}
           onChange={onChange}
-          min={question.range?.min || 0}
-          max={question.range?.max || 100}
-          step={question.range?.step || 1}
+          min={question.range?.min ?? 0}
+          max={question.range?.max ?? 100}
+          step={question.range?.step ?? 1}
+          suffix={(question as any).suffix || ''}
         />
       );
 
     // ========================================================================
-    // NUMBER INPUT - +/- controls
+    // NUMBER INPUT - Smart selection based on range
+    // For small ranges (< 100): Use +/- buttons
+    // For large ranges (> 1000 or specific field types): Use text input with formatting
     // ========================================================================
     case 'number_input':
-    case 'increment_box':
+    case 'increment_box': {
+      const range = question.range || { min: 0, max: 100 };
+      const rangeSize = (range.max || 100) - (range.min || 0);
+      const fieldName = (question as any).fieldName || '';
+      const fieldLower = fieldName.toLowerCase();
+      
+      // Fields that should use formatted text input (not +/- buttons):
+      // - Large ranges (> 500)
+      // - Square footage fields
+      // - Count fields for data centers, large facilities
+      // - kW/MW capacity fields
+      const isLargeRangeField = rangeSize > 500 || 
+        fieldLower.includes('sqft') ||
+        fieldLower.includes('square') ||
+        fieldLower.includes('capacity') ||
+        fieldLower.includes('area') ||
+        fieldLower.includes('rack') ||        // covers rackCount, serverRacks
+        fieldLower.includes('server') ||       // serverRacks, serverCount
+        fieldLower.includes('itkw') ||
+        fieldLower.includes('itloadkw') ||
+        fieldLower.includes('itload') ||
+        fieldLower.includes('watts') ||
+        fieldLower.includes('kw') ||
+        fieldLower.includes('mw') ||
+        fieldLower.includes('density') ||      // rackDensityKW
+        fieldLower.includes('feet') ||         // squareFeet
+        fieldLower.includes('footage');        // totalFootage
+      
+      // Determine appropriate suffix based on field name
+      const getSuffix = () => {
+        if (fieldLower.includes('sqft') || fieldLower.includes('square') || fieldLower.includes('feet') || fieldLower.includes('footage')) return 'sq ft';
+        if (fieldLower.includes('densitykw')) return 'kW/rack';
+        if (fieldLower.includes('kw')) return 'kW';
+        if (fieldLower.includes('mw')) return 'MW';
+        if (fieldLower.includes('rack') || fieldLower.includes('server')) return 'racks';
+        return '';
+      };
+      
+      // Better placeholder based on field type
+      const getPlaceholder = () => {
+        if (fieldLower.includes('sqft') || fieldLower.includes('square') || fieldLower.includes('feet') || fieldLower.includes('footage')) return 'Enter square footage';
+        if (fieldLower.includes('rack') || fieldLower.includes('server')) return 'Enter number of racks';
+        if (fieldLower.includes('density')) return 'Enter kW per rack';
+        if (fieldLower.includes('kw') || fieldLower.includes('itload')) return 'Enter kW capacity';
+        return 'Enter value';
+      };
+        
+      if (isLargeRangeField) {
+        return (
+          <div className="flex justify-center">
+            <div className="relative w-72">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={value ? Number(value).toLocaleString() : ''}
+                onChange={(e) => {
+                  const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                  const num = numericValue ? parseInt(numericValue, 10) : null;
+                  if (num === null || (num >= (range.min || 0) && num <= (range.max || 10000000))) {
+                    onChange(num);
+                  }
+                }}
+                placeholder={getPlaceholder()}
+                className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl text-white text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 placeholder:text-slate-500"
+              />
+              {getSuffix() && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                  {getSuffix()}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      }
+      
+      // Small range - use +/- buttons
       return (
         <div className="flex justify-center">
           <NumberInput
             value={value || question.smartDefault || 0}
             onChange={onChange}
-            min={question.range?.min || 0}
-            max={question.range?.max || 100}
+            min={range.min || 0}
+            max={range.max || 100}
+          />
+        </div>
+      );
+    }
+
+    // ========================================================================
+    // TOGGLE - Yes/No buttons (for boolean questions)
+    // CRITICAL: Always store as boolean (true/false) for consistent calculations
+    // ========================================================================
+    case 'toggle':
+      return (
+        <div className="flex justify-center">
+          <ToggleButtons
+            value={value === true || value === 'true' || value === 'yes'}
+            onChange={(v) => onChange(Boolean(v))}  // CRITICAL: Always store as boolean
+            trueLabel="Yes"
+            falseLabel="No"
           />
         </div>
       );
 
     // ========================================================================
-    // TOGGLE - On/Off switch
+    // RANGE BUTTONS - Discrete count ranges (chargers, bays, rooms, etc.)
+    // Stores the MIN value of the selected range (e.g., "6-15" stores 6)
     // ========================================================================
-    case 'toggle':
+    case 'range_buttons': {
+      const rangeConfig = (question as any).rangeConfig;
+      const defaultRanges = [
+        { label: '1-5', min: 1, max: 5 },
+        { label: '6-10', min: 6, max: 10 },
+        { label: '11-20', min: 11, max: 20 },
+        { label: '21-50', min: 21, max: 50 },
+        { label: '50+', min: 51, max: null },
+      ];
       return (
-        <div className="flex justify-center">
-          <div className="flex items-center gap-4 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
-            <span className="text-white font-medium">No</span>
-            <button
-              onClick={() => onChange(!value)}
-              className={`
-                relative w-16 h-8 rounded-full transition-colors
-                ${value ? 'bg-purple-600' : 'bg-slate-600'}
-              `}
-            >
-              <div className={`
-                absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform
-                ${value ? 'translate-x-8' : 'translate-x-0'}
-              `} />
-            </button>
-            <span className="text-white font-medium">Yes</span>
-          </div>
-        </div>
+        <RangeButtonGroup
+          ranges={rangeConfig?.ranges || defaultRanges}
+          value={typeof value === 'number' ? value : null}
+          onChange={(v) => onChange(v)}
+          suffix={rangeConfig?.suffix}
+        />
       );
+    }
 
     // ========================================================================
     // CONDITIONAL BUTTONS - Buttons with enabled/disabled states
@@ -293,6 +412,7 @@ function renderInputComponent(
           options={options || question.options || []}
           value={value || question.smartDefault}
           onChange={onChange}
+          questionField={questionFieldName}
         />
       );
 
@@ -345,6 +465,7 @@ function renderInputComponent(
 // ============================================================================
 function TypeThenQuantity({ question, value, onChange }: { question: Question; value: any; onChange: (value: any) => void }) {
   const [selectedType, setSelectedType] = useState(value?.type || null);
+  const fieldName = (question as any).fieldName || question.id || '';
 
   if (!selectedType) {
     // Step 1: Select type
@@ -360,6 +481,7 @@ function TypeThenQuantity({ question, value, onChange }: { question: Question; v
             setSelectedType(type);
             onChange({ type, quantity: null });
           }}
+          questionField={fieldName}
         />
       </div>
     );
@@ -392,6 +514,7 @@ function TypeThenQuantity({ question, value, onChange }: { question: Question; v
           options={question.quantityOptions || []}
           value={value?.quantity}
           onChange={(quantity) => onChange({ type: selectedType, quantity })}
+          questionField={fieldName}
         />
       </div>
     );
@@ -405,6 +528,7 @@ function ExistingThenPlanned({ question, value, onChange }: { question: Question
   const [hasExisting, setHasExisting] = useState(
     value?.hasExisting !== undefined ? value.hasExisting : null
   );
+  const fieldName = (question as any).fieldName || question.id || '';
 
   if (hasExisting === null) {
     // Step 1: Check for existing
@@ -477,6 +601,7 @@ function ExistingThenPlanned({ question, value, onChange }: { question: Question
           options={question.plannedOptions || []}
           value={value?.planned}
           onChange={(planned) => onChange({ ...value, planned })}
+          questionField={fieldName}
         />
       </div>
     );

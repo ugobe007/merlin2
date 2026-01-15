@@ -88,25 +88,105 @@ const QUESTION_ICON_MAP: Record<string, IconMapping> = {
   // ============================================================================
   // OPERATIONS
   // ============================================================================
-  'operatingHours': { type: 'lucide', value: 'Clock' },
-  'hoursPerDay': { type: 'lucide', value: 'Clock' },
-  'operatingDays': { type: 'lucide', value: 'Calendar' },
-  'daysOpen': { type: 'lucide', value: 'Calendar' },
+  'operatingHours': { type: 'emoji', value: '🕐' },
+  'hoursPerDay': { type: 'emoji', value: '🕐' },
+  'operatingDays': { type: 'emoji', value: '📅' },
+  'daysOpen': { type: 'emoji', value: '📅' },
 
   // ============================================================================
   // FACILITY SIZE
   // ============================================================================
-  'siteSqFt': { type: 'lucide', value: 'Maximize2' },
-  'roofSqFt': { type: 'lucide', value: 'Home' },
-  'rooftopSquareFootage': { type: 'lucide', value: 'Home' },
-  'squareFootage': { type: 'lucide', value: 'Maximize2' },
+  'siteSqFt': { type: 'emoji', value: '📐' },
+  'roofSqFt': { type: 'emoji', value: '🏠' },
+  'rooftopSquareFootage': { type: 'emoji', value: '🏠' },
+  'squareFootage': { type: 'emoji', value: '📐' },
+  'squareFeet': { type: 'emoji', value: '📐' },
+
+  // ============================================================================
+  // POWER & GRID (Standard Questions)
+  // ============================================================================
+  'gridCapacity': { type: 'emoji', value: '⚡' },
+  'monthlyElectricBill': { type: 'emoji', value: '💵' },
+  'peakDemand': { type: 'emoji', value: '📈' },
+  'needsBackupPower': { type: 'emoji', value: '🔋' },
+  'primaryBESSApplication': { type: 'emoji', value: '🎯' },
+
+  // ============================================================================
+  // EQUIPMENT (Standard Questions)
+  // ============================================================================
+  'equipmentTier': { type: 'emoji', value: '⚙️' },
+  
+  // ============================================================================
+  // SOLAR & RENEWABLES (Standard Questions)
+  // ============================================================================
+  'hasExistingSolar': { type: 'emoji', value: '☀️' },
+  'existingSolarKW': { type: 'emoji', value: '🌞' },
+  'wantsSolar': { type: 'emoji', value: '🌤️' },
+  'hasExistingEV': { type: 'emoji', value: '🔌' },
+  'existingEVChargers': { type: 'emoji', value: '⚡' },
+  'wantsEVCharging': { type: 'emoji', value: '🚗' },
 
   // ============================================================================
   // EV CHARGING
   // ============================================================================
-  'evL2Count': { type: 'lucide', value: 'Zap' },
-  'evDcfcCount': { type: 'lucide', value: 'Zap' },
-  'evChargers': { type: 'lucide', value: 'Zap' },
+  'evL2Count': { type: 'emoji', value: '🔌' },
+  'evDcfcCount': { type: 'emoji', value: '⚡' },
+  'evChargers': { type: 'emoji', value: '🔋' },
+  'hubSize': { type: 'emoji', value: '🔌' },
+
+  // ============================================================================
+  // INDUSTRY-SPECIFIC PRIMARY QUESTIONS
+  // ============================================================================
+  'bedCount': { type: 'emoji', value: '🛏️' },
+  'bayCount': { type: 'emoji', value: '🚿' },
+  'tierLevel': { type: 'emoji', value: '📊' },
+  'manufacturingSqFt': { type: 'emoji', value: '🏭' },
+  'warehouseSqFt': { type: 'emoji', value: '📦' },
+  'officeSqFt': { type: 'emoji', value: '🏢' },
+  'retailSqFt': { type: 'emoji', value: '🛒' },
+  'studentCount': { type: 'emoji', value: '🎓' },
+  'unitCount': { type: 'emoji', value: '🏠' },
+  'annualPassengers': { type: 'emoji', value: '✈️' },
+  'governmentSqFt': { type: 'emoji', value: '🏛️' },
+  'dispenserCount': { type: 'emoji', value: '⛽' },
+  'gamingFloorSqFt': { type: 'emoji', value: '🎰' },
+  'farmAcres': { type: 'emoji', value: '🌾' },
+  'growingAreaSqFt': { type: 'emoji', value: '🌱' },
+  'storageCapacity': { type: 'emoji', value: '🧊' },
+  'mallSqFt': { type: 'emoji', value: '🛍️' },
+  'homeSqFt': { type: 'emoji', value: '🏠' },
+  'microgridScale': { type: 'emoji', value: '🔲' },
+  
+  // ============================================================================
+  // HOSPITAL-SPECIFIC QUESTIONS
+  // ============================================================================
+  'hospitalType': { type: 'emoji', value: '🏥' },
+  'icuBeds': { type: 'emoji', value: '🏥' },
+  'icuCcuBeds': { type: 'emoji', value: '💓' },
+  'operatingRooms': { type: 'emoji', value: '⚕️' },
+  'numberOfBuildings': { type: 'emoji', value: '🏗️' },
+  'buildingCount': { type: 'emoji', value: '🏗️' },
+  'numBuildings': { type: 'emoji', value: '🏗️' },
+  'totalBuildings': { type: 'emoji', value: '🏗️' },
+  'totalSqFt': { type: 'emoji', value: '📐' },
+  'emergencyRoom': { type: 'emoji', value: '🚨' },
+  'hasEmergencyRoom': { type: 'emoji', value: '🚨' },
+  'imagingEquipment': { type: 'emoji', value: '🩻' },
+  'mriMachines': { type: 'emoji', value: '🧲' },
+  'ctScanners': { type: 'emoji', value: '📡' },
+  'dataCenter': { type: 'emoji', value: '💻' },
+  'serverRoom': { type: 'emoji', value: '🖥️' },
+  'refrigeration': { type: 'emoji', value: '❄️' },
+  'labEquipment': { type: 'emoji', value: '🔬' },
+  'sterilization': { type: 'emoji', value: '🧪' },
+  
+  // ============================================================================
+  // REDUNDANCY / RELIABILITY OPTIONS
+  // ============================================================================
+  'redundancyLevel': { type: 'emoji', value: '🛡️' },
+  'backupRequired': { type: 'emoji', value: '🔋' },
+  'uptimeRequirement': { type: 'emoji', value: '⏱️' },
+  'criticalLoads': { type: 'emoji', value: '⚠️' },
 
   // ============================================================================
   // DEFAULT FALLBACKS
@@ -163,10 +243,20 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   '8': { type: 'emoji', value: '8️⃣' },
   '9': { type: 'emoji', value: '9️⃣' },
   '10': { type: 'emoji', value: '🔟' },
+  '11': { type: 'emoji', value: '🔢' },
   '12': { type: 'emoji', value: '🕛' },
+  '13': { type: 'emoji', value: '🔢' },
+  '14': { type: 'emoji', value: '🔢' },
+  '15': { type: 'emoji', value: '🔢' },
   '16': { type: 'emoji', value: '⏰' },
+  '18': { type: 'emoji', value: '🔢' },
   '20': { type: 'emoji', value: '⏰' },
   '24': { type: 'emoji', value: '🌙' },
+
+  // Range values (e.g., "1-2 bays", "3-4 tunnels")
+  '1-2': { type: 'emoji', value: '1️⃣' },
+  '3-4': { type: 'emoji', value: '3️⃣' },
+  '5-6': { type: 'emoji', value: '5️⃣' },
 
   // ============================================================================
   // YES / NO / BOOLEAN OPTIONS
@@ -177,16 +267,66 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'false': { type: 'emoji', value: '❌' },
   'not_sure': { type: 'emoji', value: '🤔' },
   'unknown': { type: 'emoji', value: '🤔' },
+  'unsure': { type: 'emoji', value: '🤔' },
   'maybe': { type: 'emoji', value: '🤷' },
 
   // ============================================================================
-  // SIZE OPTIONS
+  // SIZE OPTIONS (for gridCapacity, peakDemand, etc.)
   // ============================================================================
   'none': { type: 'emoji', value: '🚫' },
   'small': { type: 'emoji', value: '📦' },
   'medium': { type: 'emoji', value: '📦' },
-  'large': { type: 'emoji', value: '📦' },
-  'extra_large': { type: 'emoji', value: '🏭' },
+  'large': { type: 'emoji', value: '🏭' },
+  'extra_large': { type: 'emoji', value: '🏢' },
+  'utility': { type: 'emoji', value: '⚡' },
+  'sqft': { type: 'emoji', value: '📐' },
+  'low': { type: 'emoji', value: '📉' },
+  'high': { type: 'emoji', value: '📈' },
+  'very_high': { type: 'emoji', value: '🔥' },
+
+  // ============================================================================
+  // MONTHLY ELECTRICITY BILL OPTIONS (dollar values)
+  // Using single emoji per option to prevent icon stacking/overflow
+  // ============================================================================
+  '3000': { type: 'emoji', value: '💵' },
+  '10000': { type: 'emoji', value: '💵' },
+  '25000': { type: 'emoji', value: '💰' },
+  '50000': { type: 'emoji', value: '💰' },
+  '100000': { type: 'emoji', value: '🏦' },
+  '200000': { type: 'emoji', value: '🏦' },
+
+  // ============================================================================
+  // DATA CENTER TIER OPTIONS
+  // ============================================================================
+  'tier1': { type: 'emoji', value: '🔷' },
+  'tier2': { type: 'emoji', value: '🔷🔷' },
+  'tier3': { type: 'emoji', value: '🔷🔷🔷' },
+  'tier4': { type: 'emoji', value: '💎' },
+
+  // ============================================================================
+  // EQUIPMENT TIER OPTIONS
+  // ============================================================================
+  'legacy': { type: 'emoji', value: '🏚️' },
+  'standard': { type: 'emoji', value: '🏠' },
+  'modern': { type: 'emoji', value: '🏢' },
+
+  // ============================================================================
+  // BESS APPLICATION OPTIONS  
+  // ============================================================================
+  'peak_shaving': { type: 'emoji', value: '📉' },
+  'arbitrage': { type: 'emoji', value: '💰' },
+  'resilience': { type: 'emoji', value: '🔋' },
+  'renewable': { type: 'emoji', value: '☀️' },
+  'demand_response': { type: 'emoji', value: '📊' },
+
+  // ============================================================================
+  // HVAC TYPE OPTIONS
+  // ============================================================================
+  'central_ac': { type: 'emoji', value: '❄️' },
+  'rooftop': { type: 'emoji', value: '🏭' },
+  'chiller': { type: 'emoji', value: '🧊' },
+  'split': { type: 'emoji', value: '🌡️' },
+  'vrf': { type: 'emoji', value: '✨' },
 
   // ============================================================================
   // LIGHTING OPTIONS
@@ -233,7 +373,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   // ============================================================================
   // EQUIPMENT / PUMP OPTIONS
   // ============================================================================
-  'standard': { type: 'emoji', value: '⚙️' },
+  'standard_pump': { type: 'emoji', value: '⚙️' },
   'high_pressure': { type: 'emoji', value: '💪' },
   'low_pressure': { type: 'emoji', value: '🌊' },
   'variable_speed': { type: 'emoji', value: '🔄' },
@@ -250,9 +390,9 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   // ============================================================================
   // PRIORITY / IMPORTANCE OPTIONS
   // ============================================================================
-  'high': { type: 'emoji', value: '🔴' },
+  'high_priority': { type: 'emoji', value: '🔴' },
   'medium_priority': { type: 'emoji', value: '🟡' },
-  'low': { type: 'emoji', value: '🟢' },
+  'low_priority': { type: 'emoji', value: '🟢' },
   'critical': { type: 'emoji', value: '⚠️' },
 
   // ============================================================================
@@ -333,8 +473,8 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   // ============================================================================
   'ptac': { type: 'emoji', value: '❄️' },
   'central_vav': { type: 'emoji', value: '🌀' },
-  'vrf': { type: 'emoji', value: '🔄' },
-  'chiller': { type: 'emoji', value: '🧊' },
+  'vrf_system': { type: 'emoji', value: '🔄' },
+  'chiller_system': { type: 'emoji', value: '🧊' },
   'geothermal': { type: 'emoji', value: '🌍' },
   'water_source_hp': { type: 'emoji', value: '💧' },
   'boiler_chiller': { type: 'emoji', value: '🔥' },
@@ -458,7 +598,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'brand_requirements': { type: 'emoji', value: '🏷️' },
   'green_cert': { type: 'emoji', value: '🌿' },
   'grid_independence': { type: 'emoji', value: '🔌' },
-  'demand_response': { type: 'emoji', value: '📊' },
+  'demand_response_goal': { type: 'emoji', value: '📊' },
   'tou_optimization': { type: 'emoji', value: '⏰' },
 
   // ============================================================================
@@ -525,6 +665,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'academic': { type: 'emoji', value: '🎓' },
   'community': { type: 'emoji', value: '🏘️' },
   'teaching_hospital': { type: 'emoji', value: '📚' },
+  'teaching': { type: 'emoji', value: '📚' },
   'research': { type: 'emoji', value: '🔬' },
   'outpatient': { type: 'emoji', value: '🚶' },
   'urgent_care': { type: 'emoji', value: '🚑' },
@@ -532,6 +673,24 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'medical_school': { type: 'emoji', value: '🩺' },
   'cafeteria': { type: 'emoji', value: '🍽️' },
   'chp': { type: 'emoji', value: '⚡' },
+  // Hospital facility types
+  'acute_care': { type: 'emoji', value: '🏥' },
+  'general_hospital': { type: 'emoji', value: '🏥' },
+  'specialty_hospital': { type: 'emoji', value: '⚕️' },
+  'rehabilitation': { type: 'emoji', value: '🦽' },
+  'rehab': { type: 'emoji', value: '🦽' },
+  'psychiatric': { type: 'emoji', value: '🧠' },
+  'childrens': { type: 'emoji', value: '👶' },
+  'children': { type: 'emoji', value: '👶' },
+  'pediatric': { type: 'emoji', value: '👶' },
+  'va': { type: 'emoji', value: '🎖️' },
+  'veterans': { type: 'emoji', value: '🎖️' },
+  'critical_access': { type: 'emoji', value: '🚨' },
+  'long_term_care': { type: 'emoji', value: '🏠' },
+  'ltac': { type: 'emoji', value: '🏠' },
+  'surgical_center': { type: 'emoji', value: '⚕️' },
+  'cancer_center': { type: 'emoji', value: '🎗️' },
+  'trauma_center': { type: 'emoji', value: '🚑' },
 
   // ============================================================================
   // WAREHOUSE / LOGISTICS OPTIONS
@@ -585,6 +744,9 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'automatic': { type: 'emoji', value: '🤖' },
   'tunnel': { type: 'emoji', value: '🚇' },
   'fullservice': { type: 'emoji', value: '✨' },
+  'flex_serve': { type: 'emoji', value: '🔀' },
+  'blower_only': { type: 'emoji', value: '💨' },
+  'multi_pump': { type: 'emoji', value: '⛽' },
   'inbay': { type: 'emoji', value: '🚗' },
   'tommys-express': { type: 'emoji', value: '⚡' },
   'el-car-wash': { type: 'emoji', value: '💧' },
@@ -631,7 +793,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'high_rise': { type: 'emoji', value: '🏙️' },
   'campus': { type: 'emoji', value: '🏫' },
   'historic': { type: 'emoji', value: '🏛️' },
-  'modern': { type: 'emoji', value: '🏗️' },
+  'modern_building': { type: 'emoji', value: '🏗️' },
   'older': { type: 'emoji', value: '🏚️' },
   'new': { type: 'emoji', value: '✨' },
 
@@ -697,7 +859,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   // ============================================================================
   // BESS APPLICATION / GOALS OPTIONS
   // ============================================================================
-  'peak_shaving': { type: 'emoji', value: '📉' },
+  'peak_shaving_goal': { type: 'emoji', value: '📉' },
   'load_shifting': { type: 'emoji', value: '⏰' },
   'load_balancing': { type: 'emoji', value: '⚖️' },
   'load_leveling': { type: 'emoji', value: '📊' },
@@ -714,7 +876,7 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   'time_of_use': { type: 'emoji', value: '⏰' },
   'avoid_grid_fees': { type: 'emoji', value: '💵' },
   'stacked': { type: 'emoji', value: '📚' },
-  'resilience': { type: 'emoji', value: '🛡️' },
+  'resilience_goal': { type: 'emoji', value: '🛡️' },
   'reliability': { type: 'emoji', value: '✅' },
   'independence': { type: 'emoji', value: '🔓' },
   'power_quality': { type: 'emoji', value: '⚡' },
@@ -758,12 +920,25 @@ const OPTION_VALUE_MAP: Record<string, IconMapping> = {
   '15_minutes': { type: 'emoji', value: '⏰' },
   'business': { type: 'emoji', value: '💼' },
   'extended': { type: 'emoji', value: '🌙' },
+  'hrs': { type: 'emoji', value: '⏰' },
+  'days': { type: 'emoji', value: '📅' },
+
+  // ============================================================================
+  // CAR WASH SPECIFIC OPTIONS (missing mappings)
+  // ============================================================================
+  'blowers': { type: 'emoji', value: '💨' },
+  'cold_water': { type: 'emoji', value: '❄️' },
+  'dcfast': { type: 'emoji', value: '⚡' },
+  'level2_only': { type: 'emoji', value: '🔌' },
+  'vfd': { type: 'emoji', value: '🔄' },
+  'no_plans': { type: 'emoji', value: '🚫' },
+  'enhanced': { type: 'emoji', value: '✨' },
 
   // ============================================================================
   // SIZE / SCALE OPTIONS (additional)
   // ============================================================================
   'very_large': { type: 'emoji', value: '🏢' },
-  'very_high': { type: 'emoji', value: '📈' },
+  'very_high_scale': { type: 'emoji', value: '📈' },
   'high_density': { type: 'emoji', value: '📊' },
   'multiple': { type: 'emoji', value: '🔢' },
   'general': { type: 'emoji', value: '📋' },
